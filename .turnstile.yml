@@ -1,0 +1,3 @@
+# This configuration the branch type and does code validation
+checks:
+    - codevalidator
