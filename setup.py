@@ -13,7 +13,7 @@ setup(
     author='Zalando SE',
     url='https://github.com/zalando/',
     license='Apache License Version 2.0',
-    install_requires=['flask', 'PyYAML'],
+    install_requires=['flask', 'PyYAML', 'tornado'],
     classifiers=[
         'Programming Language :: Python',
         'Programming Language :: Python :: 3.4',
