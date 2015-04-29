@@ -20,7 +20,7 @@ logger = logging.getLogger('connexion')
 class App:
 
     # TODO also accept document that it accepts strings
-    def __init__(self, import_name: str, port: int, specification_dir: pathlib.Path):
+    def __init__(self, import_name: str, port: int=5000, specification_dir: pathlib.Path=''):
         self.app = flask.Flask(import_name)
 
         # we get our application root path from flask to avoid duplicating logic
