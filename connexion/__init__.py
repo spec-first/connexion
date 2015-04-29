@@ -8,6 +8,10 @@ import tornado
 import yaml
 
 
+# Make flask request available here so apps don't need to import flask
+request = flask.request
+
+
 class App:
 
     # TODO also accept document that it accepts strings
