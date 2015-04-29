@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import importlib
+import logging
 import pathlib
 
 import flask
@@ -13,6 +14,8 @@ import yaml
 # Make flask request available here so apps don't need to import flask
 request = flask.request
 
+logger = logging.getLogger('connexion')
+
 
 class App:
 
@@ -22,12 +25,15 @@ class App:
 
         # we get our application root path from flask to avoid duplicating logic
         self.root_path = pathlib.Path(self.app.root_path)
+        logger.debug('Root Path: %s', self.root_path)
 
         specification_dir = pathlib.Path(specification_dir)  # Ensure specification dir is a Path
         if specification_dir.is_absolute():
             self.specification_dir = specification_dir
         else:
             self.specification_dir = self.root_path / specification_dir
+
+        logger.debug('Specification directory: %s', self.specification_dir)
 
         self.port = port
 
@@ -49,21 +55,25 @@ class App:
 
     # TODO also accept document that it accepts strings
     def add_api(self, swagger_file: pathlib.Path, base_path: str=None):
+        logger.debug('Adding API: %s', swagger_file)
         # TODO test if base_url starts with an / (if not none)
         specification = self.load_specification(swagger_file, base_path)
 
         # base_url will either be specified, found from the specification or be '/'
         base_path = base_path or specification.get('basePath', '/')
 
+        logger.debug('Creating API blueprint: %s', base_path)
         api_endpoint = self.flaskify_endpoint(base_path)
         api_blueprint = flask.Blueprint(api_endpoint, __name__, url_prefix=base_path)
 
         # Add specification json
+        logger.debug('Adding swagger.json: %s/swagger.json', base_path)
         endpoint_name = "{name}_swagger_json".format(name=api_endpoint)
         api_blueprint.add_url_rule('/swagger.json', endpoint_name, lambda: flask.jsonify(**specification))
 
         paths = specification.get('paths', dict())
         for path, methods in paths.items():
+            logger.debug('Adding %s%s...', base_path, path)
             path = self.flaskify_path(path)
             # TODO Error handling
             for method, item in methods.items():
@@ -76,10 +86,12 @@ class App:
         """
         Adds one endpoint to the api
         """
+        logger.debug('... adding %s -> %s', method.upper(), operation_id)
         endpoint_name = self.flaskify_endpoint(operation_id)
         module_name, function_name = operation_id.rsplit('.', maxsplit=1)
         module = importlib.import_module(module_name)
         function = getattr(module, function_name)
+        # TODO wrap function with json.dumps if produces is ['application/json']
         api_blueprint.add_url_rule(path, endpoint_name, function, methods=[method])
 
     # TODO also accept document that it accepts strings
@@ -88,6 +100,7 @@ class App:
         Loads specification and makes some changes to make it work inside the blueprint.
         """
         yaml_path = self.specification_dir / filename
+        logger.debug('Loading specification: %s', yaml_path)
         with yaml_path.open() as swagger_yaml:
             specification = yaml.load(swagger_yaml)
 
@@ -100,7 +113,7 @@ class App:
         wsgi_container = tornado.wsgi.WSGIContainer(self.app)
         http_server = tornado.httpserver.HTTPServer(wsgi_container)
         http_server.listen(self.port)
-        print('Listening on http://127.0.0.1:{port}/'.format(port=self.port))
+        logger.info('Listening on http://127.0.0.1:{port}/'.format(port=self.port))
         tornado.ioloop.IOLoop.instance().start()
 
 # TODO Add swagger UI
