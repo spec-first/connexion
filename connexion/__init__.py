@@ -4,7 +4,9 @@ import importlib
 import pathlib
 
 import flask
-import tornado
+import tornado.wsgi
+import tornado.httpserver
+import tornado.ioloop
 import yaml
 
 
@@ -45,7 +47,6 @@ class App:
         """
         return identifier.replace('.', '_')
 
-
     # TODO also accept document that it accepts strings
     def add_api(self, swagger_file: pathlib.Path, base_path: str=None):
         # TODO test if base_url starts with an / (if not none)
@@ -71,7 +72,7 @@ class App:
 
         self.app.register_blueprint(api_blueprint)
 
-    def add_endpoint(self, api_blueprint: flask.Blueprint, method: str, path: str, operation_id:str):
+    def add_endpoint(self, api_blueprint: flask.Blueprint, method: str, path: str, operation_id: str):
         """
         Adds one endpoint to the api
         """
@@ -101,6 +102,5 @@ class App:
         http_server.listen(self.port)
         print('Listening on http://127.0.0.1:{port}/'.format(port=self.port))
         tornado.ioloop.IOLoop.instance().start()
-
 
 # TODO Add swagger UI
