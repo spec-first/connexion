@@ -7,9 +7,9 @@ import tornado.httpserver
 import tornado.ioloop
 
 import connexion.api
-import connexion.utils as utils
 
 logger = logging.getLogger('api')
+
 
 class App:
 
@@ -44,3 +44,5 @@ class App:
         http_server.listen(self.port)
         logger.info('Listening on http://127.0.0.1:{port}/'.format(port=self.port))
         tornado.ioloop.IOLoop.instance().start()
+
+# TODO: default and changeable json errors

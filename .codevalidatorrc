@@ -21,7 +21,7 @@
         "*pom.xml": ["xml", "pomdesc"],
         "*.pp": ["utf8", "nobom", "notabs", "nocr", "notrailingws", "puppet"],
         "*.properties": ["utf8", "nobom", "notabs", "nocr", "notrailingws"],
-        "*.py": ["utf8", "nobom", "notabs", "nocr", "notrailingws", "pyflakes", "pep8"],
+        "*.py": ["utf8", "nobom", "notabs", "nocr", "notrailingws", "pep8"],
         "*.rst": ["utf8", "nobom", "notabs", "nocr", "notrailingws"],
         "* *": ["invalidpath"],
         "*.sh": ["utf8", "nobom", "notabs", "nocr", "notrailingws"],

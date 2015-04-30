@@ -1,5 +1,7 @@
+import functools
 import logging
 import pathlib
+import types
 
 import flask
 import yaml
@@ -7,6 +9,16 @@ import yaml
 import connexion.utils as utils
 
 logger = logging.getLogger('connexion.api')
+
+
+def jsonify(function: types.FunctionType) -> types.FunctionType:
+    """
+    Decorator to jsonify the return value of the wrapped function
+    """
+    @functools.wraps(function)
+    def wrapper(*args, **kwargs):
+        return flask.jsonify(function(*args, **kwargs))
+    return wrapper
 
 
 class Api:
@@ -19,28 +31,47 @@ class Api:
         with swagger_yaml_path.open() as swagger_yaml:
             self.specification = yaml.load(swagger_yaml)
 
+        # https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#fixed-fields
+        # TODO Validate yaml
         # TO_DOC:
         # If base_url is not on provided then we try to read it from the swagger.yaml or use / by default
         if base_url is None:
-            self.base_url = self.specification.get('basePath', '/')
+            self.base_url = self.specification.get('basePath', '/')  # type: dict
         else:
             self.base_url = base_url
             self.specification['basePath'] = base_url
 
+        # A list of MIME types the APIs can produce. This is global to all APIs but can be overridden on specific
+        # API calls.
+        self.produces = self.specification.get('produces', [])  # type: List[str]
+
+        # Create blueprint and enpoints
         self.blueprint = self.create_blueprint()
 
         self.add_swagger_json()
         self.add_paths()
 
-    def add_endpoint(self, method: str, path: str, endpoint: dict):
+    def add_endpoint(self, method: str, path: str, operation: dict):
         """
         Adds one endpoint to the api.
         """
-        operation_id = endpoint['operationId']
+        # https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#fixed-fields-5
+        # From Spec: A friendly name for the operation. The id MUST be unique among all operations described in the API.
+        #            Tools and libraries MAY use the operation id to uniquely identify an operation.
+        # In connexion: Used to identify the module and function
+        operation_id = operation['operationId']
+
+        # From Spec: A list of MIME types the operation can produce. This overrides the produces definition at the
+        #            Swagger Object. An empty value MAY be used to clear the global definition.
+        # In connexion: if produces == ['application/json'] then the function return value s jsonified
+        produces = operation['produces'] if 'produces' in operation else self.produces
+        returns_json = produces == ['application/json']
 
         logger.debug('... adding %s -> %s', method.upper(), operation_id)
         endpoint_name = utils.flaskify_endpoint(operation_id)
         function = utils.get_function_from_name(operation_id)
+        if returns_json:
+            function = jsonify(function)
         # TODO wrap function with json.dumps if produces is ['application/json']
         self.blueprint.add_url_rule(path, endpoint_name, function, methods=[method])
 
