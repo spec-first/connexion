@@ -8,6 +8,9 @@ import yaml
 
 import connexion.utils as utils
 
+MODULE_PATH = pathlib.Path(__file__).absolute().parent
+SWAGGER_UI_PATH = MODULE_PATH / 'swagger-ui'
+
 logger = logging.getLogger('connexion.api')
 
 
@@ -19,6 +22,10 @@ def jsonify(function: types.FunctionType) -> types.FunctionType:
     def wrapper(*args, **kwargs):
         return flask.jsonify(function(*args, **kwargs))
     return wrapper
+
+
+def swagger_ui_static(filename: str):
+    return flask.send_from_directory(str(SWAGGER_UI_PATH), filename)
 
 
 class Api:
@@ -49,6 +56,7 @@ class Api:
         self.blueprint = self.create_blueprint()
 
         self.add_swagger_json()
+        self.add_swagger_ui()
         self.add_paths()
 
     def add_endpoint(self, method: str, path: str, operation: dict):
@@ -94,6 +102,14 @@ class Api:
         logger.debug('Adding swagger.json: %s/swagger.json', self.base_url)
         endpoint_name = "{name}_swagger_json".format(name=self.blueprint.name)
         self.blueprint.add_url_rule('/swagger.json', endpoint_name, lambda: flask.jsonify(self.specification))
+
+    def add_swagger_ui(self):
+        """
+        Adds swagger ui to base_url}/ui/
+        """
+        logger.debug('Adding swagger-ui: %s/ui/', self.base_url)
+        static_endpoint_name = "{name}_swagger_ui_static".format(name=self.blueprint.name)
+        self.blueprint.add_url_rule('/ui/<path:filename>', static_endpoint_name, swagger_ui_static)
 
     def create_blueprint(self, base_url: str=None) -> flask.Blueprint:
         base_url = base_url or self.base_url

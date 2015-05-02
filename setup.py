@@ -22,5 +22,6 @@ setup(
         'Operating System :: OS Independent',
     ],
     long_description='Connexion - API first applications with swagger and flask',
+    include_package_data=True,  # needed to include swagger-ui (see MANIFEST.in)
 
 )
