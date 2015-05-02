@@ -24,6 +24,10 @@ def jsonify(function: types.FunctionType) -> types.FunctionType:
     return wrapper
 
 
+def swagger_ui_index(api_url):
+    return flask.render_template('index.html', api_url=api_url)
+
+
 def swagger_ui_static(filename: str):
     return flask.send_from_directory(str(SWAGGER_UI_PATH), filename)
 
@@ -110,10 +114,13 @@ class Api:
         logger.debug('Adding swagger-ui: %s/ui/', self.base_url)
         static_endpoint_name = "{name}_swagger_ui_static".format(name=self.blueprint.name)
         self.blueprint.add_url_rule('/ui/<path:filename>', static_endpoint_name, swagger_ui_static)
+        index_endpoint_name = "{name}_swagger_ui_index".format(name=self.blueprint.name)
+        partial_index = functools.partial(swagger_ui_index, self.base_url)
+        self.blueprint.add_url_rule('/ui/', index_endpoint_name, partial_index)
 
     def create_blueprint(self, base_url: str=None) -> flask.Blueprint:
         base_url = base_url or self.base_url
         logger.debug('Creating API blueprint: %s', base_url)
         endpoint = utils.flaskify_endpoint(base_url)
-        blueprint = flask.Blueprint(endpoint, __name__, url_prefix=base_url)
+        blueprint = flask.Blueprint(endpoint, __name__, url_prefix=base_url, template_folder=str(SWAGGER_UI_PATH))
         return blueprint
