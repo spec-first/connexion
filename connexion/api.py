@@ -47,7 +47,7 @@ class Api:
         # TO_DOC:
         # If base_url is not on provided then we try to read it from the swagger.yaml or use / by default
         if base_url is None:
-            self.base_url = self.specification.get('basePath', '/')  # type: dict
+            self.base_url = self.specification.get('basePath', '')  # type: dict
         else:
             self.base_url = base_url
             self.specification['basePath'] = base_url
