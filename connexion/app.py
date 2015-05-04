@@ -1,10 +1,12 @@
 import logging
 import pathlib
+import types
 
 import flask
 import tornado.wsgi
 import tornado.httpserver
 import tornado.ioloop
+import werkzeug.exceptions
 
 import connexion.api
 
@@ -28,6 +30,9 @@ class App:
 
         logger.debug('Specification directory: %s', self.specification_dir)
 
+        self.add_error_handler(404, self.common_error_handler)
+        self.add_error_handler(500, self.common_error_handler)
+
         self.port = port
         self.server = server
 
@@ -38,6 +43,16 @@ class App:
         yaml_path = self.specification_dir / swagger_file
         api = connexion.api.Api(yaml_path, base_path)
         self.app.register_blueprint(api.blueprint)
+        print(self.app.error_handler_spec)
+
+    def add_error_handler(self, error_code: int, function: types.FunctionType):
+        logger.debug('Setting error handler for %d', error_code)
+        decorator = self.app.errorhandler(error_code)
+        decorator(function)
+
+    @staticmethod
+    def common_error_handler(e: werkzeug.exceptions.HTTPException):
+        return flask.jsonify({'status_code': e.code, 'status_name': e.name}), e.code
 
     def run(self):
 
