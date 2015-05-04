@@ -13,7 +13,7 @@ logger = logging.getLogger('api')
 
 class App:
 
-    def __init__(self, import_name: str, port: int=5000, specification_dir: pathlib.Path=''):
+    def __init__(self, import_name: str, port: int=5000, specification_dir: pathlib.Path='', server: str=None):
         self.app = flask.Flask(import_name)
 
         # we get our application root path from flask to avoid duplicating logic
@@ -29,6 +29,7 @@ class App:
         logger.debug('Specification directory: %s', self.specification_dir)
 
         self.port = port
+        self.server = server
 
     def add_api(self, swagger_file: pathlib.Path, base_path: str=None):
         logger.debug('Adding API: %s', swagger_file)
@@ -39,10 +40,16 @@ class App:
         self.app.register_blueprint(api.blueprint)
 
     def run(self):
-        wsgi_container = tornado.wsgi.WSGIContainer(self.app)
-        http_server = tornado.httpserver.HTTPServer(wsgi_container)
-        http_server.listen(self.port)
-        logger.info('Listening on http://127.0.0.1:{port}/'.format(port=self.port))
-        tornado.ioloop.IOLoop.instance().start()
+
+        if self.server is None:
+            self.app.run('0.0.0.0', port=self.port)
+        elif self.server == 'tornado':
+            wsgi_container = tornado.wsgi.WSGIContainer(self.app)
+            http_server = tornado.httpserver.HTTPServer(wsgi_container)
+            http_server.listen(self.port)
+            logger.info('Listening on http://127.0.0.1:{port}/'.format(port=self.port))
+            tornado.ioloop.IOLoop.instance().start()
+        else:
+            raise Exception('Server {} not recognized'.format(self.server))
 
 # TODO: default and changeable json errors
