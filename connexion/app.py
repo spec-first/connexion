@@ -43,7 +43,6 @@ class App:
         yaml_path = self.specification_dir / swagger_file
         api = connexion.api.Api(yaml_path, base_path)
         self.app.register_blueprint(api.blueprint)
-        print(self.app.error_handler_spec)
 
     def add_error_handler(self, error_code: int, function: types.FunctionType):
         logger.debug('Setting error handler for %d', error_code)
