@@ -30,6 +30,7 @@ class App:
 
         logger.debug('Specification directory: %s', self.specification_dir)
 
+        logger.debug('Setting error handlers')
         for error_code in range(400, 600):  # All http status from 400 to 599 are errors
             self.add_error_handler(error_code, self.common_error_handler)
 
@@ -45,11 +46,12 @@ class App:
         self.app.register_blueprint(api.blueprint)
 
     def add_error_handler(self, error_code: int, function: types.FunctionType):
-        logger.debug('Setting error handler for %d', error_code)
         self.app.error_handler_spec[None][error_code] = function
 
     @staticmethod
     def common_error_handler(e: werkzeug.exceptions.HTTPException):
+        if not isinstance(e, werkzeug.exceptions.HTTPException):
+            e = werkzeug.exceptions.InternalServerError()
         return flask.jsonify({'status_code': e.code, 'status_name': e.name, 'description': e.description}), e.code
 
     def run(self):
