@@ -51,7 +51,7 @@ class App:
 
     @staticmethod
     def common_error_handler(e: werkzeug.exceptions.HTTPException):
-        return flask.jsonify({'status_code': e.code, 'status_name': e.name}), e.code
+        return flask.jsonify({'status_code': e.code, 'status_name': e.name, 'description': e.description}), e.code
 
     def run(self):
 
