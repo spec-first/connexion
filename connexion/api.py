@@ -1,3 +1,16 @@
+"""
+Copyright 2015 Zalando SE
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
+License. You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ language governing permissions and limitations under the License.
+"""
+
 import functools
 import logging
 import pathlib
@@ -5,46 +18,16 @@ import types
 
 import flask
 import yaml
-import requests
 
+from connexion.decorators.produces import jsonify
+from connexion.decorators.security import verify_oauth
 import connexion.utils as utils
+
 
 MODULE_PATH = pathlib.Path(__file__).absolute().parent
 SWAGGER_UI_PATH = MODULE_PATH / 'swagger-ui'
 
 logger = logging.getLogger('connexion.api')
-
-
-def jsonify(function: types.FunctionType) -> types.FunctionType:
-    """
-    Decorator to jsonify the return value of the wrapped function
-    """
-    @functools.wraps(function)
-    def wrapper(*args, **kwargs):
-        return flask.jsonify(function(*args, **kwargs))
-    return wrapper
-
-
-def verify_oauth(token_info_url: str, scope: list, function: types.FunctionType) -> types.FunctionType:
-    """
-    Decorator to verify oauth
-    """
-    @functools.wraps(function)
-    def wrapper(*args, **kwargs):
-        authorization = flask.request.headers.get('Authorization')
-        if authorization is None:
-            logger.error('No auth provided')
-            raise flask.abort(401)
-        else:
-            _, token = authorization.split()
-            logger.error(token)
-            token_request = requests.get(token_info_url, params={'access_token': token})
-            logger.debug("Token verification (%d): %s", token_request.status_code, token_request.text)
-            if not token_request.ok:
-                raise flask.abort(401)
-            # TODO verify scopes
-        return function(*args, **kwargs)
-    return wrapper
 
 
 def swagger_ui_index(api_url):
@@ -89,25 +72,25 @@ class Api:
         self.add_swagger_ui()
         self.add_paths()
 
-    def add_endpoint(self, method: str, path: str, operation: dict):
+    def _get_produces_decorator(self, operation: dict) -> types.FunctionType:
         """
-        Adds one endpoint to the api.
-        """
-        # https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#fixed-fields-5
-        # From Spec: A friendly name for the operation. The id MUST be unique among all operations described in the API.
-        #            Tools and libraries MAY use the operation id to uniquely identify an operation.
-        # In connexion: Used to identify the module and function
-        operation_id = operation['operationId']
-        logger.debug('... adding %s -> %s', method.upper(), operation_id)
+        Get produces decorator
 
-        # From Spec: A list of MIME types the operation can produce. This overrides the produces definition at the
-        #            Swagger Object. An empty value MAY be used to clear the global definition.
-        # In connexion: if produces == ['application/json'] then the function return value s jsonified
+        From Spec: A list of MIME types the operation can produce. This overrides the produces definition at the
+                   Swagger Object. An empty value MAY be used to clear the global definition.
+        In connexion: if produces == ['application/json'] then the function return value is jsonified
+        """
+        # TODO document that connexions wraps function with jsonify if produces is ['application/json']
         produces = operation['produces'] if 'produces' in operation else self.produces
-        returns_json = produces == ['application/json']
 
+        if produces == ['application/json']:  # endpoint will return json
+            return jsonify
+
+    def _get_security_decorator(self, operation: dict) -> types.FunctionType:
+        """
+        Gets the security decorator for operation
+        """
         security = operation['security'] if 'security' in operation else self.security
-        security_decorator = None
         if security:
             if len(security) > 1:
                 raise Exception('INVALID DEFINITION: Connexion only supports one authentication for operation')
@@ -119,18 +102,35 @@ class Api:
                 token_info_url = security_definition['x-tokenInfoUrl']  # TODO Document custom property
                 # and that connexion adds authentication
                 scopes = security_definition['scopes']
-                security_decorator = functools.partial(verify_oauth, token_info_url, scopes)
+                return functools.partial(verify_oauth, token_info_url, scopes)
             else:
                 logger.debug("... Security type '%s' ignored", security_definition['type'])
+        return None  # if we don't know how to handle the security or it's not defined we will not decorate the function
+
+    def add_endpoint(self, method: str, path: str, operation: dict):
+        """
+        Adds one endpoint to the api.
+        """
+        # https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#fixed-fields-5
+        # From Spec: A friendly name for the operation. The id MUST be unique among all operations described in the API.
+        #            Tools and libraries MAY use the operation id to uniquely identify an operation.
+        # In connexion: Used to identify the module and function
+        operation_id = operation['operationId']
+        logger.debug('... adding %s -> %s', method.upper(), operation_id)
 
         endpoint_name = utils.flaskify_endpoint(operation_id)
         function = utils.get_function_from_name(operation_id)
-        if returns_json:
-            function = jsonify(function)
+
+        produces_decorator = self._get_produces_decorator(operation)
+        security_decorator = self._get_security_decorator(operation)
+
+        if produces_decorator:
+            logger.debug('... Adding produces decorator')
+            function = produces_decorator(function)
         if security_decorator:
             logger.debug('... Adding security decorator')
             function = security_decorator(function)
-        # TODO document that connexions wraps function with jsonify if produces is ['application/json']
+
         self.blueprint.add_url_rule(path, endpoint_name, function, methods=[method])
 
     def add_paths(self, paths: list=None):
