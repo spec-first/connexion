@@ -5,6 +5,7 @@ from setuptools import setup, find_packages
 
 from connexion.version import version
 
+
 setup(
     name='connexion',
     packages=find_packages(),
@@ -13,7 +14,7 @@ setup(
     author='Zalando SE',
     url='https://github.com/zalando/',
     license='Apache License Version 2.0',
-    install_requires=['flask', 'PyYAML', 'tornado'],
+    install_requires=['flask', 'PyYAML', 'tornado', 'requests'],
     classifiers=[
         'Programming Language :: Python',
         'Programming Language :: Python :: 3.4',

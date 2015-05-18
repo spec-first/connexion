@@ -5,6 +5,7 @@ import types
 
 import flask
 import yaml
+import requests
 
 import connexion.utils as utils
 
@@ -21,6 +22,28 @@ def jsonify(function: types.FunctionType) -> types.FunctionType:
     @functools.wraps(function)
     def wrapper(*args, **kwargs):
         return flask.jsonify(function(*args, **kwargs))
+    return wrapper
+
+
+def verify_oauth(token_info_url: str, scope: list, function: types.FunctionType) -> types.FunctionType:
+    """
+    Decorator to verify oauth
+    """
+    @functools.wraps(function)
+    def wrapper(*args, **kwargs):
+        authorization = flask.request.headers.get('Authorization')
+        if authorization is None:
+            logger.error('No auth provided')
+            raise flask.abort(401)
+        else:
+            _, token = authorization.split()
+            logger.error(token)
+            token_request = requests.get(token_info_url, params={'access_token': token})
+            logger.debug("Token verification (%d): %s", token_request.status_code, token_request.text)
+            if not token_request.ok:
+                raise flask.abort(401)
+            # TODO verify scopes
+        return function(*args, **kwargs)
     return wrapper
 
 
@@ -54,7 +77,10 @@ class Api:
 
         # A list of MIME types the APIs can produce. This is global to all APIs but can be overridden on specific
         # API calls.
-        self.produces = self.specification.get('produces', [])  # type: List[str]
+        self.produces = self.specification.get('produces', list())  # type: List[str]
+
+        self.security = self.specification.get('security', None)
+        self.security_definitions = self.specification.get('securityDefinitions', dict())
 
         # Create blueprint and enpoints
         self.blueprint = self.create_blueprint()
@@ -72,6 +98,7 @@ class Api:
         #            Tools and libraries MAY use the operation id to uniquely identify an operation.
         # In connexion: Used to identify the module and function
         operation_id = operation['operationId']
+        logger.debug('... adding %s -> %s', method.upper(), operation_id)
 
         # From Spec: A list of MIME types the operation can produce. This overrides the produces definition at the
         #            Swagger Object. An empty value MAY be used to clear the global definition.
@@ -79,12 +106,31 @@ class Api:
         produces = operation['produces'] if 'produces' in operation else self.produces
         returns_json = produces == ['application/json']
 
-        logger.debug('... adding %s -> %s', method.upper(), operation_id)
+        security = operation['security'] if 'security' in operation else self.security
+        security_decorator = None
+        if security:
+            if len(security) > 1:
+                raise Exception('INVALID DEFINITION: Connexion only supports one authentication for operation')
+                # TODO Proper invalid definition exception
+
+            for scheme in security:
+                security_definition = self.security_definitions[scheme]
+            if security_definition['type'] == 'oauth2':
+                token_info_url = security_definition['x-tokenInfoUrl']  # TODO Document custom property
+                # and that connexion adds authentication
+                scopes = security_definition['scopes']
+                security_decorator = functools.partial(verify_oauth, token_info_url, scopes)
+            else:
+                logger.debug("... Security type '%s' ignored", security_definition['type'])
+
         endpoint_name = utils.flaskify_endpoint(operation_id)
         function = utils.get_function_from_name(operation_id)
         if returns_json:
             function = jsonify(function)
-        # TODO wrap function with json.dumps if produces is ['application/json']
+        if security_decorator:
+            logger.debug('... Adding security decorator')
+            function = security_decorator(function)
+        # TODO document that connexions wraps function with jsonify if produces is ['application/json']
         self.blueprint.add_url_rule(path, endpoint_name, function, methods=[method])
 
     def add_paths(self, paths: list=None):
