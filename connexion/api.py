@@ -50,7 +50,6 @@ class Api:
 
         # https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#fixed-fields
         # TODO Validate yaml
-        # TO_DOC:
         # If base_url is not on provided then we try to read it from the swagger.yaml or use / by default
         if base_url is None:
             self.base_url = self.specification.get('basePath', '')  # type: dict
@@ -80,7 +79,6 @@ class Api:
                    Swagger Object. An empty value MAY be used to clear the global definition.
         In connexion: if produces == ['application/json'] then the function return value is jsonified
         """
-        # TODO document that connexions wraps function with jsonify if produces is ['application/json']
         produces = operation['produces'] if 'produces' in operation else self.produces
 
         if produces == ['application/json']:  # endpoint will return json
@@ -121,7 +119,6 @@ class Api:
             scheme_name, scopes = next(iter(security.items()))
             security_definition = self.security_definitions[scheme_name]
             if security_definition['type'] == 'oauth2':
-                # TODO Document custom property and that connexion adds authentication
                 token_info_url = security_definition['x-tokenInfoUrl']
                 scopes = set(scopes)  # convert scopes to set because this is needed for verify_oauth
                 return functools.partial(verify_oauth, token_info_url, scopes)
