@@ -42,6 +42,7 @@ class Api:
     """
     Single API that corresponds to a flask blueprint
     """
+
     def __init__(self, swagger_yaml_path: pathlib.Path, base_url: str=None):
         self.swagger_yaml_path = pathlib.Path(swagger_yaml_path)
         logger.debug('Loading specification: %s', swagger_yaml_path)
@@ -73,11 +74,16 @@ class Api:
 
     def _get_produces_decorator(self, operation: dict) -> types.FunctionType:
         """
-        Get produces decorator
+        Get produces decorator.
 
-        From Spec: A list of MIME types the operation can produce. This overrides the produces definition at the
-                   Swagger Object. An empty value MAY be used to clear the global definition.
-        In connexion: if produces == ['application/json'] then the function return value is jsonified
+        If produces == ['application/json'] then the function return value is jsonified
+
+        From Swagger Specfication:
+
+        **Produces**
+
+        A list of MIME types the operation can produce. This overrides the produces definition at the Swagger Object.
+        An empty value MAY be used to clear the global definition.
         """
         produces = operation['produces'] if 'produces' in operation else self.produces
 
@@ -111,8 +117,8 @@ class Api:
         security = operation['security'] if 'security' in operation else self.security
         if security:
             if len(security) > 1:
-                raise Exception('INVALID DEFINITION: Connexion only supports one authentication for operation')
-                # TODO Proper invalid definition exception
+                logger.warning("... More than security requirement defined. **IGNORING SECURITY REQUIREMENTS**")
+                return None
 
             # the following line gets the first (and because of the previous condition only) scheme and scopes
             # from the operation's security requirements
@@ -123,21 +129,27 @@ class Api:
                 scopes = set(scopes)  # convert scopes to set because this is needed for verify_oauth
                 return functools.partial(verify_oauth, token_info_url, scopes)
             else:
-                logger.debug("... Security type '%s' ignored", security_definition['type'])
+                logger.warning("... Security type '%s' unknown. **IGNORING SECURITY REQUIREMENTS**",
+                               security_definition['type'])
 
         # if we don't know how to handle the security or it's not defined we will not decorate the function
         return None
 
-    def add_endpoint(self, method: str, path: str, operation: dict):
+    def add_operation(self, method: str, path: str, operation: dict):
         """
-        Adds one endpoint to the api.
+        Adds one operation to the api.
+
+        This method uses the OperationID identify the module and function that will handle the operation
+
+        From Swagger Specification:
+
+        **OperationID**
+
+        A friendly name for the operation. The id MUST be unique among all operations described in the API.
+        Tools and libraries MAY use the operation id to uniquely identify an operation.
         """
-        # https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#fixed-fields-5
-        # From Spec: A friendly name for the operation. The id MUST be unique among all operations described in the API.
-        #            Tools and libraries MAY use the operation id to uniquely identify an operation.
-        # In connexion: Used to identify the module and function
         operation_id = operation['operationId']
-        logger.debug('... adding %s -> %s', method.upper(), operation_id)
+        logger.debug('... Adding %s -> %s', method.upper(), operation_id)
 
         endpoint_name = utils.flaskify_endpoint(operation_id)
         function = utils.get_function_from_name(operation_id)
@@ -164,7 +176,7 @@ class Api:
             path = utils.flaskify_path(path)
             # TODO Error handling
             for method, endpoint in methods.items():
-                self.add_endpoint(method, path, endpoint)
+                self.add_operation(method, path, endpoint)
 
     def add_swagger_json(self):
         """
@@ -176,7 +188,7 @@ class Api:
 
     def add_swagger_ui(self):
         """
-        Adds swagger ui to base_url}/ui/
+        Adds swagger ui to {base_url}/ui/
         """
         logger.debug('Adding swagger-ui: %s/ui/', self.base_url)
         static_endpoint_name = "{name}_swagger_ui_static".format(name=self.blueprint.name)
