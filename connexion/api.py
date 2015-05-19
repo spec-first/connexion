@@ -86,9 +86,29 @@ class Api:
         if produces == ['application/json']:  # endpoint will return json
             return jsonify
 
+        # If we don't know how to handle the `produces` type then we will not decorate the function
+        return None
+
     def _get_security_decorator(self, operation: dict) -> types.FunctionType:
         """
         Gets the security decorator for operation
+
+        From Swagger Specification:
+
+        **Security Definitions Object**
+
+        A declaration of the security schemes available to be used in the specification.
+
+        This does not enforce the security schemes on the operations and only serves to provide the relevant details
+        for each scheme.
+
+
+        **Security Requirement Object**
+
+        Lists the required security schemes to execute this operation. The object can have multiple security schemes
+        declared in it which are all required (that is, there is a logical AND between the schemes).
+
+        The name used for each property **MUST** correspond to a security scheme declared in the Security Definitions.
         """
         security = operation['security'] if 'security' in operation else self.security
         if security:
@@ -96,16 +116,20 @@ class Api:
                 raise Exception('INVALID DEFINITION: Connexion only supports one authentication for operation')
                 # TODO Proper invalid definition exception
 
-            for scheme in security:
-                security_definition = self.security_definitions[scheme]
+            # the following line gets the first (and because of the previous condition only) scheme and scopes
+            # from the operation's security requirements
+            scheme_name, scopes = next(iter(security.items()))
+            security_definition = self.security_definitions[scheme_name]
             if security_definition['type'] == 'oauth2':
-                token_info_url = security_definition['x-tokenInfoUrl']  # TODO Document custom property
-                # and that connexion adds authentication
-                scopes = security_definition['scopes']
+                # TODO Document custom property and that connexion adds authentication
+                token_info_url = security_definition['x-tokenInfoUrl']
+                scopes = set(scopes)  # convert scopes to set because this is needed for verify_oauth
                 return functools.partial(verify_oauth, token_info_url, scopes)
             else:
                 logger.debug("... Security type '%s' ignored", security_definition['type'])
-        return None  # if we don't know how to handle the security or it's not defined we will not decorate the function
+
+        # if we don't know how to handle the security or it's not defined we will not decorate the function
+        return None
 
     def add_endpoint(self, method: str, path: str, operation: dict):
         """

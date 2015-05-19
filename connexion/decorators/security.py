@@ -17,30 +17,39 @@ import logging
 import functools
 import types
 
-import flask
+from flask import abort, request
 import requests
 
 
 logger = logging.getLogger('connexion.api.security')
 
 
-def verify_oauth(token_info_url: str, scope: list, function: types.FunctionType) -> types.FunctionType:
+def verify_oauth(token_info_url: str, allowed_scopes: set, function: types.FunctionType) -> types.FunctionType:
     """
     Decorator to verify oauth
     """
     @functools.wraps(function)
     def wrapper(*args, **kwargs):
-        authorization = flask.request.headers.get('Authorization')
+        logger.debug("%s Oauth verification...", request.url)
+        authorization = request.headers.get('Authorization')
         if authorization is None:
-            logger.error('No auth provided')
-            raise flask.abort(401)
+            logger.error("... No auth provided. Aborting with 401.")
+            raise abort(401)
         else:
             _, token = authorization.split()
-            logger.error(token)
+            logger.debug("... Getting token '%s' from %s", token, token_info_url)
             token_request = requests.get(token_info_url, params={'access_token': token})
-            logger.debug("Token verification (%d): %s", token_request.status_code, token_request.text)
+            logger.debug("... Token info (%d): %s", token_request.status_code, token_request.text)
             if not token_request.ok:
-                raise flask.abort(401)
-            # TODO verify scopes
+                raise abort(401)
+            token_info = token_request.json()
+            user_scopes = set(token_info['scope'])
+            scopes_intersection = user_scopes & allowed_scopes
+            logger.debug("... Scope intersection: %s", scopes_intersection)
+            if not scopes_intersection:
+                logger.error("... User scopes (%s) don't include one of the allowed scopes (%s). Aborting with 401.",
+                             user_scopes, allowed_scopes)
+                raise abort(401)
+            logger.info("... Token authenticated.")
         return function(*args, **kwargs)
     return wrapper
