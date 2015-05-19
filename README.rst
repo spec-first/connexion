@@ -14,7 +14,7 @@ Put your API YAML inside a folder in the root path of your application (e.g ``sw
 
     import connexion
 
-    app = connexion.App(__name__, config.port, specification_dir='swagger/')
+    app = connexion.App(__name__, port = 8080, specification_dir='swagger/')
     app.add_api('my_api.yaml')
     app.run()
 
@@ -67,7 +67,26 @@ operations that have `Security Requirements <swager.spec.security_requirement_>`
 Oauth flow and the one connexion uses is that the API Security Definition **must** include a 'x-tokenInfoUrl' with the
 url to use to validate and get the token information.
 Connexion expects to receive the Oauth token in the ``Authorization`` header field in the format described in
-`RFC 6750 <RFC6750_>`_ section 2.1.
+`RFC 6750 <rfc6750_>`_ section 2.1.
+
+Swagger Json
+------------
+Connexion makes the Swagger specification in json format available from ``swagger.json`` in the base path of the api.
+
+Swagger UI
+----------
+The Swagger UI for an API is available in ``{base_path}/ui/`` where ``base_path`` is the base path of the api.
+
+Server Backend
+--------------
+By default connexion uses the default flask server but you can also use Tornado_ as the http server, to do so set server
+to ``tornado``:
+
+.. code-block:: python
+
+    import connexion
+
+    app = connexion.App(__name__, port = 8080, specification_dir='swagger/', server='tornado')
 
 License
 -------
@@ -86,8 +105,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 .. _Flask: http://flask.pocoo.org/
-.. _rfc6750:https://tools.ietf.org/html/rfc6750
+.. _rfc6750: https://tools.ietf.org/html/rfc6750
 .. _swagger.spec: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md
 .. _swagger.spec.operation: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#operation-object
 .. _swager.spec.security_definition: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-definitions-object
 .. _swager.spec.security_requirement: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-requirement-object
+.. _Tornado: http://www.tornadoweb.org/en/stable/
