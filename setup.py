@@ -11,8 +11,9 @@ setup(
     packages=find_packages(),
     version=version,
     description='Connexion - API first applications with swagger and flask',
+    long_description=open('README.rst').read(),
     author='Zalando SE',
-    url='https://github.com/zalando/',
+    url='https://github.com/zalando/connexion',
     license='Apache License Version 2.0',
     install_requires=['flask', 'PyYAML', 'tornado', 'requests'],
     classifiers=[
@@ -22,7 +23,6 @@ setup(
         'Intended Audience :: Developers',
         'Operating System :: OS Independent',
     ],
-    long_description='Connexion - API first applications with swagger and flask',
     include_package_data=True,  # needed to include swagger-ui (see MANIFEST.in)
 
 )
