@@ -59,13 +59,15 @@ Response Serialization
 If the specification defines that a endpoint returns **only** ``application/json`` connexion will automatically
 serialize the return value with JSON and set the right content type in the HTTP header using Flask's jsonify.
 
-Security
---------
+Authentication and Authorization
+--------------------------------
 If the specification includes a Oauth2 `Security Definition <swager.spec.security_definition_>`_ compatible with the
 Zalando Greendale Team's infrastructure connexion will automatically handle token validation and authorization for
 operations that have `Security Requirements <swager.spec.security_requirement_>`_. One main difference between the usual
 Oauth flow and the one connexion uses is that the API Security Definition **must** include a 'x-tokenInfoUrl' with the
 url to use to validate and get the token information.
+Connexion expects to receive the Oauth token in the ``Authorization`` header field in the format described in
+`RFC 6750 <RFC6750_>`_ section 2.1.
 
 License
 -------
@@ -84,6 +86,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 .. _Flask: http://flask.pocoo.org/
+.. _rfc6750:https://tools.ietf.org/html/rfc6750
 .. _swagger.spec: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md
 .. _swagger.spec.operation: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#operation-object
 .. _swager.spec.security_definition: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-definitions-object
