@@ -53,7 +53,6 @@ class Api:
             swagger_string = jinja2.Template(swagger_template).render(**arguments)
             self.specification = yaml.load(swagger_string)
 
-
         # https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#fixed-fields
         # TODO Validate yaml
         # If base_url is not on provided then we try to read it from the swagger.yaml or use / by default
