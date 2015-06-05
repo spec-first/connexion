@@ -29,7 +29,15 @@ logger = logging.getLogger('api')
 
 class App:
 
-    def __init__(self, import_name: str, port: int=5000, specification_dir: pathlib.Path='', server: str=None):
+    def __init__(self, import_name: str, port: int=5000, specification_dir: pathlib.Path='', server: str=None,
+                 arguments: dict=None):
+        """
+        :param import_name: the name of the application package
+        :param port: port to listen to
+        :param specification_dir: directory where to look for specifications
+        :param server: which wsgi server to use
+        :param arguments: arguments to replace on the specification
+        """
         self.app = flask.Flask(import_name)
 
         # we get our application root path from flask to avoid duplicating logic
@@ -50,13 +58,19 @@ class App:
 
         self.port = port
         self.server = server
+        self.arguments = arguments or {}
 
-    def add_api(self, swagger_file: pathlib.Path, base_path: str=None):
+    def add_api(self, swagger_file: pathlib.Path, base_path: str=None, arguments: dict=None):
+        """
+        :param swagger_file: swagger file with the specification
+        :param base_path: base path where to add this api
+        :param arguments: api version specific arguments to replace on the specification
+        """
         logger.debug('Adding API: %s', swagger_file)
         # TODO test if base_url starts with an / (if not none)
-
+        arguments = dict(self.arguments, **arguments)  # copy global arguments and update with api specfic
         yaml_path = self.specification_dir / swagger_file
-        api = connexion.api.Api(yaml_path, base_path)
+        api = connexion.api.Api(yaml_path, base_path, arguments)
         self.app.register_blueprint(api.blueprint)
 
     def add_error_handler(self, error_code: int, function: types.FunctionType):

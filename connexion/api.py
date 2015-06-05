@@ -17,6 +17,7 @@ import pathlib
 import types
 
 import flask
+import jinja2
 import yaml
 
 from connexion.decorators.produces import jsonify
@@ -43,11 +44,15 @@ class Api:
     Single API that corresponds to a flask blueprint
     """
 
-    def __init__(self, swagger_yaml_path: pathlib.Path, base_url: str=None):
+    def __init__(self, swagger_yaml_path: pathlib.Path, base_url: str=None, arguments: dict=None):
         self.swagger_yaml_path = pathlib.Path(swagger_yaml_path)
         logger.debug('Loading specification: %s', swagger_yaml_path)
+        arguments = arguments or {}
         with swagger_yaml_path.open() as swagger_yaml:
-            self.specification = yaml.load(swagger_yaml)
+            swagger_template = swagger_yaml.read()
+            swagger_string = jinja2.Template(swagger_template).render(**arguments)
+            self.specification = yaml.load(swagger_string)
+
 
         # https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#fixed-fields
         # TODO Validate yaml

@@ -1,7 +1,7 @@
 swagger: "2.0"
 
 info:
-  title: swagger1st helloworld example
+  title: {{title}}
   version: "1.0"
 
 basePath: /v1.0
