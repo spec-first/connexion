@@ -31,6 +31,20 @@ Put your API YAML inside a folder in the root path of your application (e.g ``sw
     app.add_api('my_api.yaml')
     app.run()
 
+Parametrization
+---------------
+Connexion uses Jinja2_ to allow the parametrization of specifications.
+
+The specification arguments can be defined globally for the application or for each specific api:
+
+.. code-block:: python
+
+    app = connexion.App(__name__, port = 8080, specification_dir='swagger/', arguments={'global': 'global_value'})
+    app.add_api('my_api.yaml', arguments={'api_local', 'local_value'})
+    app.run()
+
+If a value is provided both globally and on the api then the api value will take precedence.
+
 Endpoint Routing
 ----------------
 Connexion uses the ``OperationId`` from each `Operation Object <swagger.spec.operation_>`_  to identify which function
@@ -118,9 +132,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 .. _Flask: http://flask.pocoo.org/
+.. _Jinja2: http://jinja.pocoo.org/
 .. _rfc6750: https://tools.ietf.org/html/rfc6750
 .. _swagger.spec: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md
 .. _swagger.spec.operation: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#operation-object
 .. _swager.spec.security_definition: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-definitions-object
 .. _swager.spec.security_requirement: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-requirement-object
 .. _Tornado: http://www.tornadoweb.org/en/stable/
+
