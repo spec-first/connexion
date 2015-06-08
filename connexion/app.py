@@ -68,6 +68,7 @@ class App:
         """
         logger.debug('Adding API: %s', swagger_file)
         # TODO test if base_url starts with an / (if not none)
+        arguments = arguments or dict()
         arguments = dict(self.arguments, **arguments)  # copy global arguments and update with api specfic
         yaml_path = self.specification_dir / swagger_file
         api = connexion.api.Api(yaml_path, base_path, arguments)
