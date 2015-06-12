@@ -22,16 +22,16 @@ def flaskify_endpoint(identifier: str) -> str:
 
 
 def flaskify_path(swagger_path: str) -> str:
-        """
-        Convert swagger path templates to flask path templates
-        """
-        translation_table = str.maketrans('{-}', '<_>')
-        # TODO add types
-        return swagger_path.translate(translation_table)
+    """
+    Convert swagger path templates to flask path templates
+    """
+    translation_table = str.maketrans('{-}', '<_>')
+    # TODO add types
+    return swagger_path.translate(translation_table)
 
 
 def get_function_from_name(operation_id: str):
-        module_name, function_name = operation_id.rsplit('.', maxsplit=1)
-        module = importlib.import_module(module_name)
-        function = getattr(module, function_name)
-        return function
+    module_name, function_name = operation_id.rsplit('.', maxsplit=1)
+    module = importlib.import_module(module_name)
+    function = getattr(module, function_name)
+    return function
