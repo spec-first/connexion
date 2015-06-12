@@ -66,7 +66,7 @@ class Api:
         # API calls.
         self.produces = self.specification.get('produces', list())  # type: List[str]
 
-        self.security = self.specification.get('security', None)
+        self.security = self.specification.get('security', [None]).pop()
         self.security_definitions = self.specification.get('securityDefinitions', dict())
 
         # Create blueprint and enpoints
@@ -118,7 +118,7 @@ class Api:
 
         The name used for each property **MUST** correspond to a security scheme declared in the Security Definitions.
         """
-        security = operation['security'] if 'security' in operation else self.security
+        security = operation['security'].pop() if 'security' in operation else self.security
         if security:
             if len(security) > 1:
                 logger.warning("... More than security requirement defined. **IGNORING SECURITY REQUIREMENTS**")
