@@ -25,9 +25,9 @@ def flaskify_path(swagger_path: str) -> str:
         """
         Convert swagger path templates to flask path templates
         """
-
+        translation_table = str.maketrans('{-}', '<_>')
         # TODO add types
-        return swagger_path.replace('{', '<').replace('}', '>')
+        return swagger_path.translate(translation_table)
 
 
 def get_function_from_name(operation_id: str):
