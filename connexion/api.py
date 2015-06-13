@@ -51,7 +51,7 @@ class Api:
         with swagger_yaml_path.open() as swagger_yaml:
             swagger_template = swagger_yaml.read()
             swagger_string = jinja2.Template(swagger_template).render(**arguments)
-            self.specification = yaml.load(swagger_string)
+            self.specification = yaml.load(swagger_string)  # type: dict
 
         # https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#fixed-fields
         # TODO Validate yaml
