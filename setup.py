@@ -6,7 +6,7 @@ import sys
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 
-from connexion.version import version
+version = '0.4.1'
 
 
 class PyTest(TestCommand):
