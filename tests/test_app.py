@@ -33,3 +33,11 @@ def test_app():
     assert post_greeting.content_type == 'application/json'
     greeting_reponse = json.loads(post_greeting.data.decode('utf-8'))
     assert greeting_reponse['greeting'] == 'Hello jsantos'
+
+    get_greeting = app_client.get('/v1.0/greeting/jsantos') # type: flask.Response
+    assert get_greeting.status_code == 405
+    assert get_greeting.content_type == 'application/json'
+
+    get_bye = app_client.get('/v1.0/bye/jsantos') # type: flask.Response
+    assert get_bye.status_code == 200
+    assert get_bye.data == b'Goodbye jsantos'
