@@ -30,7 +30,7 @@ logger = logging.getLogger('api')
 class App:
 
     def __init__(self, import_name: str, port: int=5000, specification_dir: pathlib.Path='', server: str=None,
-                 arguments: dict=None):
+                 arguments: dict=None, debug: bool=False):
         """
         :param import_name: the name of the application package
         :param port: port to listen to
@@ -58,6 +58,7 @@ class App:
 
         self.port = port
         self.server = server
+        self.debug = debug
         self.arguments = arguments or {}
 
     def add_api(self, swagger_file: pathlib.Path, base_path: str=None, arguments: dict=None):
@@ -86,7 +87,7 @@ class App:
     def run(self):
 
         if self.server is None:
-            self.app.run('0.0.0.0', port=self.port)
+            self.app.run('0.0.0.0', port=self.port, debug=self.debug)
         elif self.server == 'tornado':
             wsgi_container = tornado.wsgi.WSGIContainer(self.app)
             http_server = tornado.httpserver.HTTPServer(wsgi_container)

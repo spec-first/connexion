@@ -81,9 +81,12 @@ class Api:
         A list of MIME types the operation can produce. This overrides the produces definition at the Swagger Object.
         An empty value MAY be used to clear the global definition.
         """
+
         produces = operation['produces'] if 'produces' in operation else self.produces
+        logger.debug('... Produces: %s', produces)
 
         if produces == ['application/json']:  # endpoint will return json
+            logger.debug('... Produces json')
             return jsonify
 
         # If we don't know how to handle the `produces` type then we will not decorate the function
@@ -154,10 +157,10 @@ class Api:
         security_decorator = self._get_security_decorator(operation)
 
         if produces_decorator:
-            logger.debug('... Adding produces decorator')
+            logger.debug('... Adding produces decorator (%r)', produces_decorator)
             function = produces_decorator(function)
         if security_decorator:
-            logger.debug('... Adding security decorator')
+            logger.debug('... Adding security decorator (%r)', security_decorator)
             function = security_decorator(function)
 
         self.blueprint.add_url_rule(path, endpoint_name, function, methods=[method])
