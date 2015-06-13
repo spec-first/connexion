@@ -60,6 +60,7 @@ class Api:
 
         self.security = self.specification.get('security', [None]).pop()
         self.security_definitions = self.specification.get('securityDefinitions', dict())
+        logger.debug('Security Definitions: %s', self.security_definitions)
 
         # Create blueprint and enpoints
         self.blueprint = self.create_blueprint()
@@ -114,6 +115,7 @@ class Api:
         The name used for each property **MUST** correspond to a security scheme declared in the Security Definitions.
         """
         security = operation['security'].pop() if 'security' in operation else self.security
+        logger.debug('... Security: %s', security)
         if security:
             if len(security) > 1:
                 logger.warning("... More than security requirement defined. **IGNORING SECURITY REQUIREMENTS**")
@@ -208,5 +210,3 @@ class Api:
     @staticmethod
     def swagger_ui_static(filename: str):
         return flask.send_from_directory(str(SWAGGER_UI_PATH), filename)
-
-
