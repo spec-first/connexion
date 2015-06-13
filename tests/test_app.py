@@ -21,7 +21,6 @@ def test_app():
 
     swagger_icon = app_client.get('/v1.0/ui/images/favicon.ico')  # type: flask.Response
     assert swagger_icon.status_code == 200
-    assert swagger_icon.content_type == 'image/vnd.microsoft.icon'
 
     greeting404 = app_client.get('/v1.0/greeting')  # type: flask.Response
     assert greeting404.status_code == 404
