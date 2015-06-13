@@ -1,0 +1,10 @@
+language: python
+python:
+  - "3.4"
+install:
+  - pip install -e .
+  - pip install coveralls
+script:
+  - python setup.py test
+after_success:
+  - coveralls
