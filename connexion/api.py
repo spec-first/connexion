@@ -31,14 +31,6 @@ SWAGGER_UI_PATH = MODULE_PATH / 'swagger-ui'
 logger = logging.getLogger('connexion.api')
 
 
-def swagger_ui_index(api_url):
-    return flask.render_template('index.html', api_url=api_url)
-
-
-def swagger_ui_static(filename: str):
-    return flask.send_from_directory(str(SWAGGER_UI_PATH), filename)
-
-
 class Api:
     """
     Single API that corresponds to a flask blueprint
@@ -51,7 +43,7 @@ class Api:
         with swagger_yaml_path.open() as swagger_yaml:
             swagger_template = swagger_yaml.read()
             swagger_string = jinja2.Template(swagger_template).render(**arguments)
-            self.specification = yaml.load(swagger_string)
+            self.specification = yaml.load(swagger_string)  # type: dict
 
         # https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#fixed-fields
         # TODO Validate yaml
@@ -68,6 +60,7 @@ class Api:
 
         self.security = self.specification.get('security', [None]).pop()
         self.security_definitions = self.specification.get('securityDefinitions', dict())
+        logger.debug('Security Definitions: %s', self.security_definitions)
 
         # Create blueprint and enpoints
         self.blueprint = self.create_blueprint()
@@ -89,9 +82,12 @@ class Api:
         A list of MIME types the operation can produce. This overrides the produces definition at the Swagger Object.
         An empty value MAY be used to clear the global definition.
         """
+
         produces = operation['produces'] if 'produces' in operation else self.produces
+        logger.debug('... Produces: %s', produces)
 
         if produces == ['application/json']:  # endpoint will return json
+            logger.debug('... Produces json')
             return jsonify
 
         # If we don't know how to handle the `produces` type then we will not decorate the function
@@ -119,6 +115,7 @@ class Api:
         The name used for each property **MUST** correspond to a security scheme declared in the Security Definitions.
         """
         security = operation['security'].pop() if 'security' in operation else self.security
+        logger.debug('... Security: %s', security)
         if security:
             if len(security) > 1:
                 logger.warning("... More than security requirement defined. **IGNORING SECURITY REQUIREMENTS**")
@@ -162,10 +159,10 @@ class Api:
         security_decorator = self._get_security_decorator(operation)
 
         if produces_decorator:
-            logger.debug('... Adding produces decorator')
+            logger.debug('... Adding produces decorator (%r)', produces_decorator)
             function = produces_decorator(function)
         if security_decorator:
-            logger.debug('... Adding security decorator')
+            logger.debug('... Adding security decorator (%r)', security_decorator)
             function = security_decorator(function)
 
         self.blueprint.add_url_rule(path, endpoint_name, function, methods=[method])
@@ -196,10 +193,9 @@ class Api:
         """
         logger.debug('Adding swagger-ui: %s/ui/', self.base_url)
         static_endpoint_name = "{name}_swagger_ui_static".format(name=self.blueprint.name)
-        self.blueprint.add_url_rule('/ui/<path:filename>', static_endpoint_name, swagger_ui_static)
+        self.blueprint.add_url_rule('/ui/<path:filename>', static_endpoint_name, self.swagger_ui_static)
         index_endpoint_name = "{name}_swagger_ui_index".format(name=self.blueprint.name)
-        partial_index = functools.partial(swagger_ui_index, self.base_url)
-        self.blueprint.add_url_rule('/ui/', index_endpoint_name, partial_index)
+        self.blueprint.add_url_rule('/ui/', index_endpoint_name, self.swagger_ui_index)
 
     def create_blueprint(self, base_url: str=None) -> flask.Blueprint:
         base_url = base_url or self.base_url
@@ -207,3 +203,10 @@ class Api:
         endpoint = utils.flaskify_endpoint(base_url)
         blueprint = flask.Blueprint(endpoint, __name__, url_prefix=base_url, template_folder=str(SWAGGER_UI_PATH))
         return blueprint
+
+    def swagger_ui_index(self):
+        return flask.render_template('index.html', api_url=self.base_url)
+
+    @staticmethod
+    def swagger_ui_static(filename: str):
+        return flask.send_from_directory(str(SWAGGER_UI_PATH), filename)

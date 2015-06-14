@@ -30,7 +30,7 @@ def flaskify_path(swagger_path: str) -> str:
     return swagger_path.translate(translation_table)
 
 
-def get_function_from_name(operation_id: str):
+def get_function_from_name(operation_id: str) -> str:
     module_name, function_name = operation_id.rsplit('.', maxsplit=1)
     module = importlib.import_module(module_name)
     function = getattr(module, function_name)

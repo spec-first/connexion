@@ -1,0 +1,12 @@
+language: python
+python:
+  - "3.4"
+install:
+  - pip install -e .
+  - pip install coveralls
+  - pip install flake8
+script:
+  - python setup.py test
+  - python setup.py flake8
+after_success:
+  - coveralls
