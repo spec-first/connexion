@@ -13,6 +13,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 # Authentication and authorization related decorators
 
+import certifi
 import logging
 import functools
 import types
@@ -38,7 +39,7 @@ def verify_oauth(token_info_url: str, allowed_scopes: set, function: types.Funct
         else:
             _, token = authorization.split()
             logger.debug("... Getting token '%s' from %s", token, token_info_url)
-            token_request = requests.get(token_info_url, params={'access_token': token})
+            token_request = requests.get(token_info_url, params={'access_token': token}, verify=certifi.where())
             logger.debug("... Token info (%d): %s", token_request.status_code, token_request.text)
             if not token_request.ok:
                 raise abort(401)

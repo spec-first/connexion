@@ -36,7 +36,7 @@ setup(
     author='Zalando SE',
     url='https://github.com/zalando/connexion',
     license='Apache License Version 2.0',
-    install_requires=['flask', 'PyYAML', 'tornado', 'requests'],
+    install_requires=['flask', 'PyYAML', 'tornado', 'requests', 'certifi'],
     tests_require=['pytest-cov', 'pytest'],
     cmdclass={'test': PyTest},
     classifiers=[
