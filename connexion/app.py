@@ -22,6 +22,7 @@ import tornado.httpserver
 import tornado.ioloop
 import werkzeug.exceptions
 
+from connexion.problem import problem
 import connexion.api
 
 logger = logging.getLogger('api')
@@ -82,7 +83,7 @@ class App:
     def common_error_handler(e: werkzeug.exceptions.HTTPException):
         if not isinstance(e, werkzeug.exceptions.HTTPException):
             e = werkzeug.exceptions.InternalServerError()
-        return flask.jsonify({'status_code': e.code, 'status_name': e.name, 'description': e.description}), e.code
+        return problem(title=e.name, detail=e.description, status=e.code)
 
     def run(self):
 

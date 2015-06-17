@@ -52,6 +52,30 @@ paths:
           description: Name of the person to say bye.
           required: true
           type: string
+  /problem:
+    get:
+      summary: Fails
+      description: Fails
+      operationId: fakeapi.hello.with_problem
+      produces:
+        - application/json
+      responses:
+        200:
+          description: goodbye response
+          schema:
+            type: string
+  /other_problem:
+    get:
+      summary: Fails
+      description: Fails
+      operationId: fakeapi.hello.with_problem_txt
+      produces:
+        - text/plain
+      responses:
+        200:
+          description: goodbye response
+          schema:
+            type: string
   /list/{name}:
     get:
       summary: Generate a greeting in a list
@@ -91,3 +115,15 @@ paths:
           description: Name of the person to say bye.
           required: true
           type: string
+  /except:
+    get:
+      summary: Fails badly
+      description: Fails badly
+      operationId: fakeapi.hello.internal_error
+      produces:
+        - text/plain
+      responses:
+        200:
+          description: goodbye response
+          schema:
+            type: string
