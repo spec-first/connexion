@@ -26,7 +26,7 @@ class FakeResponse:
 
 @pytest.fixture
 def oauth_requests(monkeypatch: '_pytest.monkeypatch.monkeypatch'):
-    def fake_get(url:str, params:dict=None):
+    def fake_get(url: str, params: dict=None):
         params = params or {}
         if url == "https://ouath.example/token_info":
             token = params['access_token']
@@ -73,6 +73,33 @@ def test_app():
     get_bye = app_client.get('/v1.0/bye/jsantos')  # type: flask.Response
     assert get_bye.status_code == 200
     assert get_bye.data == b'Goodbye jsantos'
+
+    post_greeting = app_client.post('/v1.0/greeting/jsantos', data={})  # type: flask.Response
+    assert post_greeting.status_code == 200
+    assert post_greeting.content_type == 'application/json'
+    greeting_reponse = json.loads(post_greeting.data.decode('utf-8'))
+    assert greeting_reponse['greeting'] == 'Hello jsantos'
+
+
+def test_jsonifier():
+    app1 = App(__name__, 5001, SPEC_FOLDER, debug=True)
+    app1.add_api('api.yaml')
+
+    app_client = app1.app.test_client()
+
+    post_greeting = app_client.post('/v1.0/greeting/jsantos', data={})  # type: flask.Response
+    assert post_greeting.status_code == 200
+    assert post_greeting.content_type == 'application/json'
+    greeting_reponse = json.loads(post_greeting.data.decode('utf-8'))
+    assert greeting_reponse['greeting'] == 'Hello jsantos'
+
+    get_list_greeting = app_client.get('/v1.0/list/jsantos', data={})  # type: flask.Response
+    assert get_list_greeting.status_code == 200
+    assert get_list_greeting.content_type == 'application/json'
+    greeting_reponse = json.loads(get_list_greeting.data.decode('utf-8'))
+    assert len(greeting_reponse) == 2
+    assert greeting_reponse[0] == 'hello'
+    assert greeting_reponse[1] == 'jsantos'
 
 
 def test_security(oauth_requests):

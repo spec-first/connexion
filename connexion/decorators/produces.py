@@ -12,9 +12,10 @@ Unless required by applicable law or agreed to in writing, software distributed 
 """
 
 # Decorators to change the return type of endpoints
-import functools
-import types
 import flask
+import functools
+import json
+import types
 
 
 def jsonify(function: types.FunctionType) -> types.FunctionType:
@@ -23,5 +24,7 @@ def jsonify(function: types.FunctionType) -> types.FunctionType:
     """
     @functools.wraps(function)
     def wrapper(*args, **kwargs):
-        return flask.jsonify(function(*args, **kwargs))
+        data = json.dumps(function(*args, **kwargs), indent=2, )
+        response = flask.current_app.response_class(data, mimetype='application/json')  # type: flask.Response
+        return response
     return wrapper
