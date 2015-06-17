@@ -37,7 +37,7 @@ paths:
   /bye/{name}:
     get:
       summary: Generate goodbye
-      description: Generates a goobye message.
+      description: Generates a goodbye message.
       operationId: fakeapi.hello.get_bye
       produces:
         - text/plain
@@ -52,10 +52,28 @@ paths:
           description: Name of the person to say bye.
           required: true
           type: string
+  /list/{name}:
+    get:
+      summary: Generate a greeting in a list
+      description: Generate a greeting in a list
+      operationId: fakeapi.hello.get_list
+      produces:
+        - application/json
+      responses:
+        200:
+          description: a greeting in a list
+          schema:
+            type: string
+      parameters:
+        - name: name
+          in: path
+          description: Name of the person to say hello to.
+          required: true
+          type: string
   /byesecure/{name}:
     get:
       summary: Generate goodbye
-      description: Generates a goobye message.
+      description: Generates a goodbye message.
       operationId: fakeapi.hello.get_bye_secure
       security:
         - oauth:

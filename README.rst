@@ -84,7 +84,7 @@ the API to your application:
 Response Serialization
 ----------------------
 If the specification defines that a endpoint returns **only** ``application/json`` connexion will automatically
-serialize the return value with JSON and set the right content type in the HTTP header using Flask's jsonify.
+serialize the return value with JSON and set the right content type in the HTTP header.
 
 Authentication and Authorization
 --------------------------------
