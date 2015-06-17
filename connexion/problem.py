@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """
 Copyright 2015 Zalando SE
 
@@ -12,10 +10,15 @@ Unless required by applicable law or agreed to in writing, software distributed 
 "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
  language governing permissions and limitations under the License.
 """
+import flask
+import json
 
 
-from flask import abort, request, send_file, send_from_directory, render_template, render_template_string, url_for  # noqa
-from connexion.app import App  # noqa
-from connexion.api import Api  # noqa
-from connexion.problem import problem  # noqa
-import werkzeug.exceptions as exceptions  # noqa
+def problem(type='about:blank', *, title: str, detail: str, status: int, instance: str=None):
+    problem_response = {'type': type, 'title': title, 'detail': detail, 'status': status, }
+    if instance:
+        problem_response['instance'] = instance
+
+    return flask.current_app.response_class(json.dumps(problem_response),
+                                            mimetype='application/problem+json',
+                                            status=status)

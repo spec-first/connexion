@@ -95,6 +95,7 @@ def test_errors(app):
     assert error404['detail'] == 'The requested URL was not found on the server.  ' \
                                  'If you entered the URL manually please check your spelling and try again.'
     assert error404['status'] == 404
+    assert 'instance' not in error404
 
     get_greeting = app_client.get('/v1.0/greeting/jsantos')  # type: flask.Response
     assert get_greeting.content_type == 'application/problem+json'
@@ -104,6 +105,38 @@ def test_errors(app):
     assert error405['title'] == 'Method Not Allowed'
     assert error405['detail'] == 'The method is not allowed for the requested URL.'
     assert error405['status'] == 405
+    assert 'instance' not in error405
+
+    get500 = app_client.get('/v1.0/except')  # type: flask.Response
+    assert get500.content_type == 'application/problem+json'
+    assert get500.status_code == 500
+    error500 = json.loads(get500.data.decode('utf-8'))
+    assert error500['type'] == 'about:blank'
+    assert error500['title'] == 'Internal Server Error'
+    assert error500['detail'] == 'The server encountered an internal error and was unable to complete your request.  '\
+                                 'Either the server is overloaded or there is an error in the application.'
+    assert error500['status'] == 500
+    assert 'instance' not in error500
+
+    get_problem = app_client.get('/v1.0/problem')  # type: flask.Response
+    assert get_problem.content_type == 'application/problem+json'
+    assert get_problem.status_code == 418
+    error_problem = json.loads(get_problem.data.decode('utf-8'))
+    assert error_problem['type'] == 'http://www.example.com/error'
+    assert error_problem['title'] == 'Some Error'
+    assert error_problem['detail'] == 'Something went wrong somewhere'
+    assert error_problem['status'] == 418
+    assert error_problem['instance'] == 'instance1'
+
+    get_problem2 = app_client.get('/v1.0/other_problem')  # type: flask.Response
+    assert get_problem2.content_type == 'application/problem+json'
+    assert get_problem2.status_code == 418
+    error_problem2 = json.loads(get_problem2.data.decode('utf-8'))
+    assert error_problem2['type'] == 'about:blank'
+    assert error_problem2['title'] == 'Some Error'
+    assert error_problem2['detail'] == 'Something went wrong somewhere'
+    assert error_problem2['status'] == 418
+    assert error_problem2['instance'] == 'instance1'
 
 
 def test_jsonifier(app):

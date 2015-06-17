@@ -22,7 +22,7 @@ import tornado.httpserver
 import tornado.ioloop
 import werkzeug.exceptions
 
-from connexion.decorators.produces import Jsonifier
+from connexion.problem import problem
 import connexion.api
 
 logger = logging.getLogger('api')
@@ -80,15 +80,10 @@ class App:
         self.app.error_handler_spec[None][error_code] = function
 
     @staticmethod
-    @Jsonifier('application/problem+json')
     def common_error_handler(e: werkzeug.exceptions.HTTPException):
         if not isinstance(e, werkzeug.exceptions.HTTPException):
             e = werkzeug.exceptions.InternalServerError()
-        problem = {'type': 'about:blank',
-                   'title': e.name,
-                   'detail': e.description,
-                   'status': e.code, }
-        return problem, e.code
+        return problem(title=e.name, detail=e.description, status=e.code)
 
     def run(self):
 
