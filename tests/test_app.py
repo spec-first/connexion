@@ -59,21 +59,11 @@ def test_app(app):
     swagger_icon = app_client.get('/v1.0/ui/images/favicon.ico')  # type: flask.Response
     assert swagger_icon.status_code == 200
 
-    greeting404 = app_client.get('/v1.0/greeting')  # type: flask.Response
-    assert greeting404.status_code == 404
-    error404 = json.loads(greeting404.data.decode('utf-8'))
-    assert error404['status_name'] == 'Not Found'
-    assert error404['status_code'] == 404
-
     post_greeting = app_client.post('/v1.0/greeting/jsantos', data={})  # type: flask.Response
     assert post_greeting.status_code == 200
     assert post_greeting.content_type == 'application/json'
     greeting_reponse = json.loads(post_greeting.data.decode('utf-8'))
     assert greeting_reponse['greeting'] == 'Hello jsantos'
-
-    get_greeting = app_client.get('/v1.0/greeting/jsantos')  # type: flask.Response
-    assert get_greeting.status_code == 405
-    assert get_greeting.content_type == 'application/json'
 
     get_bye = app_client.get('/v1.0/bye/jsantos')  # type: flask.Response
     assert get_bye.status_code == 200
@@ -91,6 +81,29 @@ def test_produce_decorator(app):
 
     get_bye = app_client.get('/v1.0/bye/jsantos')  # type: flask.Response
     assert get_bye.content_type == 'text/plain; charset=utf-8'
+
+
+def test_errors(app):
+    app_client = app.app.test_client()
+
+    greeting404 = app_client.get('/v1.0/greeting')  # type: flask.Response
+    assert greeting404.content_type == 'application/problem+json'
+    assert greeting404.status_code == 404
+    error404 = json.loads(greeting404.data.decode('utf-8'))
+    assert error404['type'] == 'about:blank'
+    assert error404['title'] == 'Not Found'
+    assert error404['detail'] == 'The requested URL was not found on the server.  ' \
+                                 'If you entered the URL manually please check your spelling and try again.'
+    assert error404['status'] == 404
+
+    get_greeting = app_client.get('/v1.0/greeting/jsantos')  # type: flask.Response
+    assert get_greeting.content_type == 'application/problem+json'
+    assert get_greeting.status_code == 405
+    error405 = json.loads(get_greeting.data.decode('utf-8'))
+    assert error405['type'] == 'about:blank'
+    assert error405['title'] == 'Method Not Allowed'
+    assert error405['detail'] == 'The method is not allowed for the requested URL.'
+    assert error405['status'] == 405
 
 
 def test_jsonifier(app):

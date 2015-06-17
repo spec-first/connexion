@@ -26,8 +26,12 @@ class Produces:
         @functools.wraps(function)
         def wrapper(*args, **kwargs):
             data = function(*args, **kwargs)
+            if isinstance(data, tuple) and len(data) == 2:
+                data, status_code = data
+            else:
+                status_code = 200
             response = flask.current_app.response_class(data, mimetype=self.mimetype)  # type: flask.Response
-            return response
+            return response, status_code
         return wrapper
 
 
@@ -36,7 +40,13 @@ class Jsonifier(Produces):
     def __call__(self, function: types.FunctionType):
         @functools.wraps(function)
         def wrapper(*args, **kwargs):
-            data = json.dumps(function(*args, **kwargs), indent=2, )
+            data = function(*args, **kwargs)
+
+            if isinstance(data, tuple) and len(data) == 2:
+                data, status_code = data
+            else:
+                status_code = 200
+            data = json.dumps(data, indent=2)
             response = flask.current_app.response_class(data, mimetype=self.mimetype)  # type: flask.Response
-            return response
+            return response, status_code
         return wrapper

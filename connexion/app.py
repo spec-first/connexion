@@ -22,6 +22,7 @@ import tornado.httpserver
 import tornado.ioloop
 import werkzeug.exceptions
 
+from connexion.decorators.produces import Jsonifier
 import connexion.api
 
 logger = logging.getLogger('api')
@@ -79,10 +80,15 @@ class App:
         self.app.error_handler_spec[None][error_code] = function
 
     @staticmethod
+    @Jsonifier('application/problem+json')
     def common_error_handler(e: werkzeug.exceptions.HTTPException):
         if not isinstance(e, werkzeug.exceptions.HTTPException):
             e = werkzeug.exceptions.InternalServerError()
-        return flask.jsonify({'status_code': e.code, 'status_name': e.name, 'description': e.description}), e.code
+        problem = {'type': 'about:blank',
+                   'title': e.name,
+                   'detail': e.description,
+                   'status': e.code, }
+        return problem, e.code
 
     def run(self):
 

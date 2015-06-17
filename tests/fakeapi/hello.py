@@ -12,7 +12,7 @@ def get_list(name: str) -> list:
 
 
 def get_bye(name: str) -> str:
-    return 'Goodbye {name}'.format(name=name)
+    return 'Goodbye {name}'.format(name=name), 200
 
 
 def get_bye_secure(name: str) -> str:
