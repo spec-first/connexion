@@ -26,7 +26,7 @@ class FakeResponse:
 
 @pytest.fixture
 def oauth_requests(monkeypatch: '_pytest.monkeypatch.monkeypatch'):
-    def fake_get(url:str, params:dict=None):
+    def fake_get(url:str, params:dict=None, verify=None):
         params = params or {}
         if url == "https://ouath.example/token_info":
             token = params['access_token']
