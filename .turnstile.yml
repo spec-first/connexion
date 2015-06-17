@@ -1,3 +1,9 @@
-# This configuration the branch type and does code validation
 checks:
+    - specification
+    - branch-release
     - codevalidator
+    - protect-master
+specification:
+    allowed_schemes: ['https']
+branch-release:
+    pattern: '^v(?:\d|\_|\.)+$'
