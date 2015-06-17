@@ -25,14 +25,18 @@ class Produces:
     def __call__(self, function: types.FunctionType):
         @functools.wraps(function)
         def wrapper(*args, **kwargs):
-            data = function(*args, **kwargs)
-            if isinstance(data, tuple) and len(data) == 2:
-                data, status_code = data
-            else:
-                status_code = 200
+            data, status_code = self.get_data_status_code(function(*args, **kwargs))
             response = flask.current_app.response_class(data, mimetype=self.mimetype)  # type: flask.Response
             return response, status_code
         return wrapper
+
+    @staticmethod
+    def get_data_status_code(data):
+        if isinstance(data, tuple) and len(data) == 2:
+            data, status_code = data
+        else:
+            status_code = 200
+        return data, status_code
 
 
 class Jsonifier(Produces):
@@ -40,12 +44,7 @@ class Jsonifier(Produces):
     def __call__(self, function: types.FunctionType):
         @functools.wraps(function)
         def wrapper(*args, **kwargs):
-            data = function(*args, **kwargs)
-
-            if isinstance(data, tuple) and len(data) == 2:
-                data, status_code = data
-            else:
-                status_code = 200
+            data, status_code = self.get_data_status_code(function(*args, **kwargs))
             data = json.dumps(data, indent=2)
             response = flask.current_app.response_class(data, mimetype=self.mimetype)  # type: flask.Response
             return response, status_code
