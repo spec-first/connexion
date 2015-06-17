@@ -20,7 +20,7 @@ import flask
 import jinja2
 import yaml
 
-from connexion.decorators.produces import Jsonifier
+from connexion.decorators.produces import Produces, Jsonifier
 from connexion.decorators.security import verify_oauth
 import connexion.utils as utils
 
@@ -90,6 +90,11 @@ class Api:
             logger.debug('... Produces json')
             jsonify = Jsonifier()
             return jsonify
+        elif len(produces) == 1:
+            mimetype = produces.pop()
+            logger.debug('... Produces {}'.format(mimetype))
+            decorator = Produces(mimetype)
+            return decorator
 
         # If we don't know how to handle the `produces` type then we will not decorate the function
         return None

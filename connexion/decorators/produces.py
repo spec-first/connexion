@@ -18,15 +18,25 @@ import json
 import types
 
 
-class Jsonifier:
-
+class Produces:
     def __init__(self, mimetype='application/json'):
         self.mimetype = mimetype
 
     def __call__(self, function: types.FunctionType):
         @functools.wraps(function)
         def wrapper(*args, **kwargs):
+            data = function(*args, **kwargs)
+            response = flask.current_app.response_class(data, mimetype=self.mimetype)  # type: flask.Response
+            return response
+        return wrapper
+
+
+class Jsonifier(Produces):
+
+    def __call__(self, function: types.FunctionType):
+        @functools.wraps(function)
+        def wrapper(*args, **kwargs):
             data = json.dumps(function(*args, **kwargs), indent=2, )
-            response = flask.current_app.response_class(data, mimetype='application/json')  # type: flask.Response
+            response = flask.current_app.response_class(data, mimetype=self.mimetype)  # type: flask.Response
             return response
         return wrapper

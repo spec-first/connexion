@@ -41,12 +41,17 @@ def oauth_requests(monkeypatch: '_pytest.monkeypatch.monkeypatch'):
     monkeypatch.setattr(requests, 'get', fake_get)
 
 
-def test_app():
-    app1 = App(__name__, 5001, SPEC_FOLDER, debug=True)
-    app1.add_api('api.yaml')
-    assert app1.port == 5001
+@pytest.fixture
+def app():
+    app = App(__name__, 5001, SPEC_FOLDER, debug=True)
+    app.add_api('api.yaml')
+    return app
 
-    app_client = app1.app.test_client()
+
+def test_app(app):
+    assert app.port == 5001
+
+    app_client = app.app.test_client()
     swagger_ui = app_client.get('/v1.0/ui/')  # type: flask.Response
     assert swagger_ui.status_code == 200
     assert b"Swagger UI" in swagger_ui.data
@@ -81,11 +86,15 @@ def test_app():
     assert greeting_reponse['greeting'] == 'Hello jsantos'
 
 
-def test_jsonifier():
-    app1 = App(__name__, 5001, SPEC_FOLDER, debug=True)
-    app1.add_api('api.yaml')
+def test_produce_decorator(app):
+    app_client = app.app.test_client()
 
-    app_client = app1.app.test_client()
+    get_bye = app_client.get('/v1.0/bye/jsantos')  # type: flask.Response
+    assert get_bye.content_type == 'text/plain; charset=utf-8'
+
+
+def test_jsonifier(app):
+    app_client = app.app.test_client()
 
     post_greeting = app_client.post('/v1.0/greeting/jsantos', data={})  # type: flask.Response
     assert post_greeting.status_code == 200
