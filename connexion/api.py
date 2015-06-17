@@ -20,7 +20,7 @@ import flask
 import jinja2
 import yaml
 
-from connexion.decorators.produces import jsonify
+from connexion.decorators.produces import Jsonifier
 from connexion.decorators.security import verify_oauth
 import connexion.utils as utils
 
@@ -88,6 +88,7 @@ class Api:
 
         if produces == ['application/json']:  # endpoint will return json
             logger.debug('... Produces json')
+            jsonify = Jsonifier()
             return jsonify
 
         # If we don't know how to handle the `produces` type then we will not decorate the function

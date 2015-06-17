@@ -18,13 +18,15 @@ import json
 import types
 
 
-def jsonify(function: types.FunctionType) -> types.FunctionType:
-    """
-    Decorator to jsonify the return value of the wrapped function
-    """
-    @functools.wraps(function)
-    def wrapper(*args, **kwargs):
-        data = json.dumps(function(*args, **kwargs), indent=2, )
-        response = flask.current_app.response_class(data, mimetype='application/json')  # type: flask.Response
-        return response
-    return wrapper
+class Jsonifier:
+
+    def __init__(self, mimetype='application/json'):
+        self.mimetype = mimetype
+
+    def __call__(self, function: types.FunctionType):
+        @functools.wraps(function)
+        def wrapper(*args, **kwargs):
+            data = json.dumps(function(*args, **kwargs), indent=2, )
+            response = flask.current_app.response_class(data, mimetype='application/json')  # type: flask.Response
+            return response
+        return wrapper
