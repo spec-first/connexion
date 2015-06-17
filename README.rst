@@ -1,10 +1,14 @@
-.. image:: https://pypip.in/version/connexion/badge.svg
+.. image:: https://img.shields.io/pypi/v/connexion.svg
    :target: https://pypi.python.org/pypi/connexion
    :alt: Latest Version
 
-.. image:: https://pypip.in/status/connexion/badge.svg
+.. image:: https://img.shields.io/pypi/status/connexion.svg
    :target: https://pypi.python.org/pypi/connexion
    :alt: Development Status
+
+.. image:: https://img.shields.io/pypi/pyversions/connexion.svg
+   :target: https://pypi.python.org/pypi/connexion
+   :alt: Python Versions
 
 .. image:: https://img.shields.io/pypi/l/connexion.svg
    :target: https://github.com/zalando/connexion/blob/master/LICENSE
