@@ -72,9 +72,12 @@ Response Serialization
 If the specification defines that a endpoint returns **only** ``application/json`` connexion will automatically
 serialize the return value with JSON and set the right content type in the HTTP header.
 
+
 Error Handling
 --------------
-By default connexion errors messages are JSON serialized according to `Problem Details for HTTP APIs <http_problem_>`_.
+By default connexion error messages are JSON serialized according to `Problem Details for HTTP APIs <http_problem_>`_.
+
+Application can return error using ``connexion.problem``.
 
 Swagger Json
 ------------
