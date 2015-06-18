@@ -24,11 +24,37 @@ from connexion.decorators.produces import Produces, Jsonifier
 from connexion.decorators.security import verify_oauth
 import connexion.utils as utils
 
-
 MODULE_PATH = pathlib.Path(__file__).absolute().parent
 SWAGGER_UI_PATH = MODULE_PATH / 'swagger-ui'
 
 logger = logging.getLogger('connexion.api')
+
+
+def produces_json(produces: list) -> bool:
+    """
+    >>> produces_json(['application/json'])
+    True
+    >>> produces_json(['application/x.custom+json'])
+    True
+    >>> produces_json([])
+    False
+    >>> produces_json(['application/xml'])
+    False
+    >>> produces_json(['text/json'])
+    False
+    >>> produces_json(['application/json', 'other/type'])
+    False
+    """
+    if len(produces) != 1:
+        return False
+
+    mimetype = produces[0]  # type: str
+    if mimetype == 'application/json':
+        return True
+
+    # todo handle parameters
+    maintype, subtype = mimetype.split('/')  # type: str, str
+    return maintype == 'application' and subtype.endswith('+json')
 
 
 class Api:
@@ -86,9 +112,10 @@ class Api:
         produces = operation['produces'] if 'produces' in operation else self.produces
         logger.debug('... Produces: %s', produces)
 
-        if produces == ['application/json']:  # endpoint will return json
+        if produces_json(produces):  # endpoint will return json
+            mimetype = produces.pop()
             logger.debug('... Produces json')
-            jsonify = Jsonifier()
+            jsonify = Jsonifier(mimetype)
             return jsonify
         elif len(produces) == 1:
             mimetype = produces.pop()

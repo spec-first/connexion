@@ -156,6 +156,13 @@ def test_jsonifier(app):
     assert greeting_reponse[0] == 'hello'
     assert greeting_reponse[1] == 'jsantos'
 
+    get_greetings = app_client.get('/v1.0/greetings/jsantos', data={})  # type: flask.Response
+    assert get_greetings.status_code == 200
+    assert get_greetings.content_type == 'application/x.connexion+json'
+    greetings_reponse = json.loads(get_greetings.data.decode('utf-8'))
+    assert len(greetings_reponse) == 1
+    assert greetings_reponse['greetings'] == 'Hello jsantos'
+
 
 def test_security(oauth_requests):
     app1 = App(__name__, 5001, SPEC_FOLDER, debug=True)

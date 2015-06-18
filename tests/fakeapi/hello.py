@@ -38,3 +38,11 @@ def with_problem_txt():
 
 def internal_error():
     return 42 / 0
+
+
+def get_greetings(name: str) -> dict:
+    """
+    Used to test custom mimetypes
+    """
+    data = {'greetings': 'Hello {name}'.format(name=name)}
+    return data
