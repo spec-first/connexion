@@ -20,41 +20,13 @@ import flask
 import jinja2
 import yaml
 
-from connexion.decorators.produces import Produces, Jsonifier
-from connexion.decorators.security import verify_oauth
+from connexion.operation import Operation
 import connexion.utils as utils
 
 MODULE_PATH = pathlib.Path(__file__).absolute().parent
 SWAGGER_UI_PATH = MODULE_PATH / 'swagger-ui'
 
 logger = logging.getLogger('connexion.api')
-
-
-def produces_json(produces: list) -> bool:
-    """
-    >>> produces_json(['application/json'])
-    True
-    >>> produces_json(['application/x.custom+json'])
-    True
-    >>> produces_json([])
-    False
-    >>> produces_json(['application/xml'])
-    False
-    >>> produces_json(['text/json'])
-    False
-    >>> produces_json(['application/json', 'other/type'])
-    False
-    """
-    if len(produces) != 1:
-        return False
-
-    mimetype = produces[0]  # type: str
-    if mimetype == 'application/json':
-        return True
-
-    # todo handle parameters
-    maintype, subtype = mimetype.split('/')  # type: str, str
-    return maintype == 'application' and subtype.endswith('+json')
 
 
 class Api:
@@ -84,7 +56,7 @@ class Api:
         # API calls.
         self.produces = self.specification.get('produces', list())  # type: List[str]
 
-        self.security = self.specification.get('security', [None]).pop()
+        self.security = self.specification.get('security')
         self.security_definitions = self.specification.get('securityDefinitions', dict())
         logger.debug('Security Definitions: %s', self.security_definitions)
 
@@ -95,81 +67,7 @@ class Api:
         self.add_swagger_ui()
         self.add_paths()
 
-    def _get_produces_decorator(self, operation: dict) -> types.FunctionType:
-        """
-        Get produces decorator.
-
-        If produces == ['application/json'] then the function return value is jsonified
-
-        From Swagger Specfication:
-
-        **Produces**
-
-        A list of MIME types the operation can produce. This overrides the produces definition at the Swagger Object.
-        An empty value MAY be used to clear the global definition.
-        """
-
-        produces = operation['produces'] if 'produces' in operation else self.produces
-        logger.debug('... Produces: %s', produces)
-
-        if produces_json(produces):  # endpoint will return json
-            mimetype = produces.pop()
-            logger.debug('... Produces json')
-            jsonify = Jsonifier(mimetype)
-            return jsonify
-        elif len(produces) == 1:
-            mimetype = produces.pop()
-            logger.debug('... Produces {}'.format(mimetype))
-            decorator = Produces(mimetype)
-            return decorator
-
-        # If we don't know how to handle the `produces` type then we will not decorate the function
-        return None
-
-    def _get_security_decorator(self, operation: dict) -> types.FunctionType:
-        """
-        Gets the security decorator for operation
-
-        From Swagger Specification:
-
-        **Security Definitions Object**
-
-        A declaration of the security schemes available to be used in the specification.
-
-        This does not enforce the security schemes on the operations and only serves to provide the relevant details
-        for each scheme.
-
-
-        **Security Requirement Object**
-
-        Lists the required security schemes to execute this operation. The object can have multiple security schemes
-        declared in it which are all required (that is, there is a logical AND between the schemes).
-
-        The name used for each property **MUST** correspond to a security scheme declared in the Security Definitions.
-        """
-        security = operation['security'].pop() if 'security' in operation else self.security
-        logger.debug('... Security: %s', security)
-        if security:
-            if len(security) > 1:
-                logger.warning("... More than security requirement defined. **IGNORING SECURITY REQUIREMENTS**")
-                return None
-
-            # the following line gets the first (and because of the previous condition only) scheme and scopes
-            # from the operation's security requirements
-            scheme_name, scopes = next(iter(security.items()))
-            security_definition = self.security_definitions[scheme_name]
-            if security_definition['type'] == 'oauth2':
-                token_info_url = security_definition['x-tokenInfoUrl']
-                scopes = set(scopes)  # convert scopes to set because this is needed for verify_oauth
-                return functools.partial(verify_oauth, token_info_url, scopes)
-            else:
-                logger.warning("... Security type '%s' unknown. **IGNORING SECURITY REQUIREMENTS**",
-                               security_definition['type'])
-
-        # if we don't know how to handle the security or it's not defined we will not decorate the function
-        return None
-
-    def add_operation(self, method: str, path: str, operation: dict):
+    def add_operation(self, method: str, path: str, swagger_operation: dict):
         """
         Adds one operation to the api.
 
@@ -182,23 +80,13 @@ class Api:
         A friendly name for the operation. The id MUST be unique among all operations described in the API.
         Tools and libraries MAY use the operation id to uniquely identify an operation.
         """
-        operation_id = operation['operationId']
+        operation = Operation(method=method, path=path, operation=swagger_operation,
+                              app_produces=self.produces, app_security=self.security,
+                              security_definitions=self.security_definitions)
+        operation_id = operation.operation_id
         logger.debug('... Adding %s -> %s', method.upper(), operation_id)
 
-        endpoint_name = utils.flaskify_endpoint(operation_id)
-        function = utils.get_function_from_name(operation_id)
-
-        produces_decorator = self._get_produces_decorator(operation)
-        security_decorator = self._get_security_decorator(operation)
-
-        if produces_decorator:
-            logger.debug('... Adding produces decorator (%r)', produces_decorator)
-            function = produces_decorator(function)
-        if security_decorator:
-            logger.debug('... Adding security decorator (%r)', security_decorator)
-            function = security_decorator(function)
-
-        self.blueprint.add_url_rule(path, endpoint_name, function, methods=[method])
+        self.blueprint.add_url_rule(path, operation.endpoint_name, operation.function, methods=[method])
 
     def add_paths(self, paths: list=None):
         """
