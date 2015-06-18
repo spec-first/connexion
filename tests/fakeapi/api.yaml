@@ -14,6 +14,8 @@ securityDefinitions:
         x-tokenInfoUrl: https://ouath.example/token_info
         scopes:
             myscope: can do stuff
+    something_else:
+        type: something_else
 
 paths:
   /greeting/{name}:
@@ -89,6 +91,9 @@ paths:
       operationId: fakeapi.hello.with_problem_txt
       produces:
         - text/plain
+      security:  # this will be ignored
+        - something_else:
+          - scope
       responses:
         200:
           description: goodbye response
@@ -101,6 +106,10 @@ paths:
       operationId: fakeapi.hello.get_list
       produces:
         - application/json
+      security:  # this will disable security
+        - oauth:
+            - myscope
+        - something_else
       responses:
         200:
           description: a greeting in a list
@@ -140,6 +149,19 @@ paths:
       operationId: fakeapi.hello.internal_error
       produces:
         - text/plain
+      responses:
+        200:
+          description: goodbye response
+          schema:
+            type: string
+  /multimime:
+    get:
+      summary: Has multiple content types
+      description: Has multiple content types
+      operationId: fakeapi.hello.multimime
+      produces:
+        - application/json
+        - application/xml
       responses:
         200:
           description: goodbye response

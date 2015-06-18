@@ -15,8 +15,8 @@ import functools
 import logging
 import types
 
-from connexion.decorators.produces import Produces, Jsonifier
-from connexion.decorators.security import verify_oauth
+from connexion.decorators.produces import BaseSerializer, Produces, Jsonifier
+from connexion.decorators.security import security_passthrough, verify_oauth
 import connexion.utils as utils
 
 logger = logging.getLogger('connexion.operation')
@@ -88,14 +88,12 @@ class Operation:
     @property
     def function(self):
         produces_decorator = self.__content_type_decorator
-        if produces_decorator:
-            logger.debug('... Adding produces decorator (%r)', produces_decorator)
-            function = produces_decorator(self.__undecorated_function)
+        logger.debug('... Adding produces decorator (%r)', produces_decorator)
+        function = produces_decorator(self.__undecorated_function)
 
         security_decorator = self.__security_decorator
-        if security_decorator:
-            logger.debug('... Adding security decorator (%r)', security_decorator)
-            function = security_decorator(function)
+        logger.debug('... Adding security decorator (%r)', security_decorator)
+        function = security_decorator(function)
         return function
 
     @property
@@ -126,9 +124,8 @@ class Operation:
             logger.debug('... Produces {}'.format(mimetype))
             decorator = Produces(mimetype)
             return decorator
-        # TODO pass decorator
-        # If we don't know how to handle the `produces` type then we will not decorate the function
-        return None
+        else:
+            return BaseSerializer()
 
     @property
     def __security_decorator(self) -> types.FunctionType:
@@ -157,7 +154,7 @@ class Operation:
         if security:
             if len(security) > 1:
                 logger.warning("... More than security requirement defined. **IGNORING SECURITY REQUIREMENTS**")
-                return None
+                return security_passthrough
 
             security = security.pop()  # type: dict
             # the following line gets the first (and because of the previous condition only) scheme and scopes
@@ -173,5 +170,5 @@ class Operation:
                 logger.warning("... Security type '%s' unknown. **IGNORING SECURITY REQUIREMENTS**",
                                security_definition['type'])
 
-        # if we don't know how to handle the security or it's not defined we will not decorate the function
-        return None
+        # if we don't know how to handle the security or it's not defined we will usa a passthrough decorator
+        return security_passthrough

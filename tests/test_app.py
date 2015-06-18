@@ -113,7 +113,7 @@ def test_errors(app):
     error500 = json.loads(get500.data.decode('utf-8'))
     assert error500['type'] == 'about:blank'
     assert error500['title'] == 'Internal Server Error'
-    assert error500['detail'] == 'The server encountered an internal error and was unable to complete your request.  '\
+    assert error500['detail'] == 'The server encountered an internal error and was unable to complete your request.  ' \
                                  'Either the server is overloaded or there is an error in the application.'
     assert error500['status'] == 500
     assert 'instance' not in error500
@@ -162,6 +162,13 @@ def test_jsonifier(app):
     greetings_reponse = json.loads(get_greetings.data.decode('utf-8'))
     assert len(greetings_reponse) == 1
     assert greetings_reponse['greetings'] == 'Hello jsantos'
+
+
+def test_pass_through(app):
+    app_client = app.app.test_client()
+
+    response = app_client.get('/v1.0/multimime', data={})  # type: flask.Response
+    assert response.status_code == 200
 
 
 def test_security(oauth_requests):

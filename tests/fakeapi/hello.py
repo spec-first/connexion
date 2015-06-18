@@ -46,3 +46,7 @@ def get_greetings(name: str) -> dict:
     """
     data = {'greetings': 'Hello {name}'.format(name=name)}
     return data
+
+
+def multimime() -> str:
+    return 'Goodbye'

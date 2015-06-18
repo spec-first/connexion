@@ -20,14 +20,18 @@ import types
 from flask import abort, request
 import requests
 
-
 logger = logging.getLogger('connexion.api.security')
+
+
+def security_passthrough(function: types.FunctionType) -> types.FunctionType:
+    return function
 
 
 def verify_oauth(token_info_url: str, allowed_scopes: set, function: types.FunctionType) -> types.FunctionType:
     """
     Decorator to verify oauth
     """
+
     @functools.wraps(function)
     def wrapper(*args, **kwargs):
         logger.debug("%s Oauth verification...", request.url)
@@ -52,4 +56,5 @@ def verify_oauth(token_info_url: str, allowed_scopes: set, function: types.Funct
                 raise abort(401)
             logger.info("... Token authenticated.")
         return function(*args, **kwargs)
+
     return wrapper
