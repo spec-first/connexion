@@ -11,10 +11,8 @@ Unless required by applicable law or agreed to in writing, software distributed 
  language governing permissions and limitations under the License.
 """
 
-import functools
 import logging
 import pathlib
-import types
 
 import flask
 import jinja2
