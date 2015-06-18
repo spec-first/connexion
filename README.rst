@@ -87,8 +87,8 @@ the API to your application:
 
 Response Serialization
 ----------------------
-If the specification defines that a endpoint returns **only** ``application/json`` connexion will automatically
-serialize the return value with JSON and set the right content type in the HTTP header.
+If the specification defines that a endpoint returns json connexion will automatically serialize the return value for
+you and set the right content type in the HTTP header.
 
 Authentication and Authorization
 --------------------------------
