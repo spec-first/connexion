@@ -17,36 +17,9 @@ import types
 
 from connexion.decorators.produces import BaseSerializer, Produces, Jsonifier
 from connexion.decorators.security import security_passthrough, verify_oauth
-import connexion.utils as utils
+from connexion.utils import flaskify_endpoint, get_function_from_name, produces_json
 
 logger = logging.getLogger('connexion.operation')
-
-
-def produces_json(produces: list) -> bool:
-    """
-    >>> produces_json(['application/json'])
-    True
-    >>> produces_json(['application/x.custom+json'])
-    True
-    >>> produces_json([])
-    False
-    >>> produces_json(['application/xml'])
-    False
-    >>> produces_json(['text/json'])
-    False
-    >>> produces_json(['application/json', 'other/type'])
-    False
-    """
-    if len(produces) != 1:
-        return False
-
-    mimetype = produces[0]  # type: str
-    if mimetype == 'application/json':
-        return True
-
-    # todo handle parameters
-    maintype, subtype = mimetype.split('/')  # type: str, str
-    return maintype == 'application' and subtype.endswith('+json')
 
 
 class Operation:
@@ -81,9 +54,9 @@ class Operation:
         self.operation = operation
         self.operation_id = operation['operationId']
         self.produces = operation.get('produces')
-        self.endpoint_name = utils.flaskify_endpoint(self.operation_id)
+        self.endpoint_name = flaskify_endpoint(self.operation_id)
         self.security = operation.get('security')
-        self.__undecorated_function = utils.get_function_from_name(self.operation_id)
+        self.__undecorated_function = get_function_from_name(self.operation_id)
 
     @property
     def function(self):

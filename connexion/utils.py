@@ -35,3 +35,30 @@ def get_function_from_name(operation_id: str) -> str:
     module = importlib.import_module(module_name)
     function = getattr(module, function_name)
     return function
+
+
+def produces_json(produces: list) -> bool:
+    """
+    >>> produces_json(['application/json'])
+    True
+    >>> produces_json(['application/x.custom+json'])
+    True
+    >>> produces_json([])
+    False
+    >>> produces_json(['application/xml'])
+    False
+    >>> produces_json(['text/json'])
+    False
+    >>> produces_json(['application/json', 'other/type'])
+    False
+    """
+    if len(produces) != 1:
+        return False
+
+    mimetype = produces[0]  # type: str
+    if mimetype == 'application/json':
+        return True
+
+    # todo handle parameters
+    maintype, subtype = mimetype.split('/')  # type: str, str
+    return maintype == 'application' and subtype.endswith('+json')
