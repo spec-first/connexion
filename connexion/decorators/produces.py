@@ -18,23 +18,12 @@ import json
 import types
 
 
-class Produces:
-    def __init__(self, mimetype='application/json'):
+class BaseSerializer:
+    def __init__(self, mimetype='text/plain'):
         self.mimetype = mimetype
 
-    def __call__(self, function: types.FunctionType):
-        @functools.wraps(function)
-        def wrapper(*args, **kwargs):
-            data, status_code = self.get_data_status_code(function(*args, **kwargs))
-            if isinstance(data, flask.Response):  # if the function returns a Response object don't change it
-                return data
-
-            response = flask.current_app.response_class(data, mimetype=self.mimetype)  # type: flask.Response
-            return response, status_code
-        return wrapper
-
     @staticmethod
-    def get_data_status_code(data):
+    def get_data_status_code(data) -> ('Any', int):
         if isinstance(data, flask.Response):
             data = data
             status_code = data.status_code
@@ -44,10 +33,32 @@ class Produces:
             status_code = 200
         return data, status_code
 
+    def __call__(self, function: types.FunctionType) -> types.FunctionType:
+        return function
 
-class Jsonifier(Produces):
+    def __repr__(self) -> str:
+        return '<BaseSerializer: {}>'.format(self.mimetype)
 
-    def __call__(self, function: types.FunctionType):
+
+class Produces(BaseSerializer):
+    def __call__(self, function: types.FunctionType) -> types.FunctionType:
+        @functools.wraps(function)
+        def wrapper(*args, **kwargs):
+            data, status_code = self.get_data_status_code(function(*args, **kwargs))
+            if isinstance(data, flask.Response):  # if the function returns a Response object don't change it
+                return data
+
+            response = flask.current_app.response_class(data, mimetype=self.mimetype)  # type: flask.Response
+            return response, status_code
+
+        return wrapper
+
+    def __repr__(self) -> str:
+        return '<Produces: {}>'.format(self.mimetype)
+
+
+class Jsonifier(BaseSerializer):
+    def __call__(self, function: types.FunctionType) -> types.FunctionType:
         @functools.wraps(function)
         def wrapper(*args, **kwargs):
             data, status_code = self.get_data_status_code(function(*args, **kwargs))
@@ -57,4 +68,8 @@ class Jsonifier(Produces):
             data = json.dumps(data, indent=2)
             response = flask.current_app.response_class(data, mimetype=self.mimetype)  # type: flask.Response
             return response, status_code
+
         return wrapper
+
+    def __repr__(self) -> str:
+        return '<Jsonifier: {}>'.format(self.mimetype)
