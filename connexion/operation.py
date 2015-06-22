@@ -88,12 +88,12 @@ class Operation:
         logger.debug('... Produces: %s', produces)
 
         if produces_json(produces):  # endpoint will return json
-            mimetype = produces.pop()
+            mimetype = produces[0]
             logger.debug('... Produces json')
             jsonify = Jsonifier(mimetype)
             return jsonify
         elif len(produces) == 1:
-            mimetype = produces.pop()
+            mimetype = produces[0]
             logger.debug('... Produces {}'.format(mimetype))
             decorator = Produces(mimetype)
             return decorator
@@ -129,7 +129,7 @@ class Operation:
                 logger.warning("... More than security requirement defined. **IGNORING SECURITY REQUIREMENTS**")
                 return security_passthrough
 
-            security = security.pop()  # type: dict
+            security = security[0]  # type: dict
             # the following line gets the first (and because of the previous condition only) scheme and scopes
             # from the operation's security requirements
 
