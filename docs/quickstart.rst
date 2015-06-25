@@ -86,7 +86,23 @@ Connexion makes the Swagger specification in json format available from ``swagge
 
 Swagger UI
 ----------
-The Swagger UI for an API is available in ``{base_path}/ui/`` where ``base_path`` is the base path of the api.
+The Swagger UI for an API is available, by default, in ``{base_path}/ui/`` where ``base_path`` is the base path of the
+api.
+
+You can disable the swagger ui either at application level:
+
+.. code-block:: python
+
+    app = connexion.App(__name__, port = 8080, specification_dir='swagger/', swagger_ui=False)
+    app.add_api('my_api.yaml')
+
+
+You can also disable it at api level:
+
+.. code-block:: python
+
+    app = connexion.App(__name__, port = 8080, specification_dir='swagger/')
+    app.add_api('my_api.yaml', swagger_ui=False)
 
 
 Server Backend
