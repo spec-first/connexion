@@ -76,6 +76,20 @@ def test_app(app):
     assert greeting_reponse['greeting'] == 'Hello jsantos'
 
 
+def test_no_swagger():
+    app = App(__name__, 5001, SPEC_FOLDER, swagger_ui=False, debug=True)
+    app.add_api('api.yaml')
+    app_client = app.app.test_client()
+    swagger_ui = app_client.get('/v1.0/ui/')  # type: flask.Response
+    assert swagger_ui.status_code == 404
+
+    app2 = App(__name__, 5001, SPEC_FOLDER, debug=True)
+    app2.add_api('api.yaml', swagger_ui=False)
+    app2_client = app2.app.test_client()
+    swagger_ui2 = app2_client.get('/v1.0/ui/')  # type: flask.Response
+    assert swagger_ui2.status_code == 404
+
+
 def test_produce_decorator(app):
     app_client = app.app.test_client()
 

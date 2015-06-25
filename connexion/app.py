@@ -31,13 +31,15 @@ logger = logging.getLogger('api')
 class App:
 
     def __init__(self, import_name: str, port: int=5000, specification_dir: pathlib.Path='', server: str=None,
-                 arguments: dict=None, debug: bool=False):
+                 arguments: dict=None, debug: bool=False, swagger_ui: bool=True):
         """
         :param import_name: the name of the application package
         :param port: port to listen to
         :param specification_dir: directory where to look for specifications
         :param server: which wsgi server to use
         :param arguments: arguments to replace on the specification
+        :param debug: include debugging information
+        :param swagger_ui: whether to include swagger ui or not
         """
         self.app = flask.Flask(import_name)
 
@@ -61,19 +63,22 @@ class App:
         self.server = server
         self.debug = debug
         self.arguments = arguments or {}
+        self.swagger_ui = swagger_ui
 
-    def add_api(self, swagger_file: pathlib.Path, base_path: str=None, arguments: dict=None):
+    def add_api(self, swagger_file: pathlib.Path, base_path: str=None, arguments: dict=None, swagger_ui: bool=None):
         """
         :param swagger_file: swagger file with the specification
         :param base_path: base path where to add this api
         :param arguments: api version specific arguments to replace on the specification
+        :param swagger_ui: whether to include swagger ui or not
         """
+        swagger_ui = swagger_ui if swagger_ui is not None else self.swagger_ui
         logger.debug('Adding API: %s', swagger_file)
         # TODO test if base_url starts with an / (if not none)
         arguments = arguments or dict()
         arguments = dict(self.arguments, **arguments)  # copy global arguments and update with api specfic
         yaml_path = self.specification_dir / swagger_file
-        api = connexion.api.Api(yaml_path, base_path, arguments)
+        api = connexion.api.Api(yaml_path, base_path, arguments, swagger_ui)
         self.app.register_blueprint(api.blueprint)
 
     def add_error_handler(self, error_code: int, function: types.FunctionType):

@@ -32,7 +32,8 @@ class Api:
     Single API that corresponds to a flask blueprint
     """
 
-    def __init__(self, swagger_yaml_path: pathlib.Path, base_url: str=None, arguments: dict=None):
+    def __init__(self, swagger_yaml_path: pathlib.Path, base_url: str=None, arguments: dict=None,
+                 swagger_ui: bool=None):
         self.swagger_yaml_path = pathlib.Path(swagger_yaml_path)
         logger.debug('Loading specification: %s', swagger_yaml_path)
         arguments = arguments or {}
@@ -62,7 +63,8 @@ class Api:
         self.blueprint = self.create_blueprint()
 
         self.add_swagger_json()
-        self.add_swagger_ui()
+        if swagger_ui:
+            self.add_swagger_ui()
         self.add_paths()
 
     def add_operation(self, method: str, path: str, swagger_operation: dict):
