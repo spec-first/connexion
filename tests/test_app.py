@@ -208,3 +208,11 @@ def test_security(oauth_requests):
     headers = {"Authorization": "Bearer 300"}
     get_bye_bad_token = app_client.get('/v1.0/byesecure/jsantos', headers=headers)  # type: flask.Response
     assert get_bye_bad_token.status_code == 401
+
+
+def test_empty(app):
+    app_client = app.app.test_client()
+
+    response = app_client.get('/v1.0/empty')  # type: flask.Response
+    assert response.status_code == 204
+    assert not response.data
