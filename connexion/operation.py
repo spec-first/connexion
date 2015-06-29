@@ -42,7 +42,6 @@ class Operation:
         :param method: HTTP method
         :param path:
         :param operation: swagger operation object
-        :return:
         """
 
         self.method = method

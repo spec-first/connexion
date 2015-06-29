@@ -35,12 +35,17 @@ class Api:
     def __init__(self, swagger_yaml_path: pathlib.Path, base_url: str=None, arguments: dict=None,
                  swagger_ui: bool=None):
         self.swagger_yaml_path = pathlib.Path(swagger_yaml_path)
-        logger.debug('Loading specification: %s', swagger_yaml_path)
+        logger.debug('Loading specification: %s', swagger_yaml_path, extra={'swagger_yaml': swagger_yaml_path,
+                                                                            'base_url': base_url,
+                                                                            'arguments': arguments,
+                                                                            'swagger_ui': swagger_ui})
         arguments = arguments or {}
         with swagger_yaml_path.open() as swagger_yaml:
             swagger_template = swagger_yaml.read()
             swagger_string = jinja2.Template(swagger_template).render(**arguments)
             self.specification = yaml.load(swagger_string)  # type: dict
+
+        logger.debug('Read specification', extra=self.specification)
 
         # https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#fixed-fields
         # TODO Validate yaml
@@ -59,7 +64,7 @@ class Api:
         self.security_definitions = self.specification.get('securityDefinitions', dict())
         logger.debug('Security Definitions: %s', self.security_definitions)
 
-        # Create blueprint and enpoints
+        # Create blueprint and endpoints
         self.blueprint = self.create_blueprint()
 
         self.add_swagger_json()
@@ -84,7 +89,7 @@ class Api:
                               app_produces=self.produces, app_security=self.security,
                               security_definitions=self.security_definitions)
         operation_id = operation.operation_id
-        logger.debug('... Adding %s -> %s', method.upper(), operation_id)
+        logger.debug('... Adding %s -> %s', method.upper(), operation_id, extra=vars(operation))
 
         self.blueprint.add_url_rule(path, operation.endpoint_name, operation.function, methods=[method])
 

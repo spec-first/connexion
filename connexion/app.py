@@ -25,7 +25,7 @@ import werkzeug.exceptions
 from connexion.problem import problem
 import connexion.api
 
-logger = logging.getLogger('api')
+logger = logging.getLogger('connexion.app')
 
 
 class App:
