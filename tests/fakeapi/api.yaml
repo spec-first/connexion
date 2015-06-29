@@ -167,3 +167,13 @@ paths:
           description: goodbye response
           schema:
             type: string
+  /empty:
+    get:
+      summary: Returns empty response
+      description: Returns empty response
+      operationId: fakeapi.hello.empty
+      produces:
+        - application/json
+      responses:
+        204:
+          description: empty

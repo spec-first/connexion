@@ -50,3 +50,7 @@ def get_greetings(name: str) -> dict:
 
 def multimime() -> str:
     return 'Goodbye'
+
+
+def empty():
+    return None, 204
