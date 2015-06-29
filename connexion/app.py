@@ -91,7 +91,7 @@ class App:
         return problem(title=e.name, detail=e.description, status=e.code)
 
     def run(self):
-
+        logger.debug('Starting http server.', extra=vars(self))
         if self.server is None:
             self.app.run('0.0.0.0', port=self.port, debug=self.debug)
         elif self.server == 'tornado':
