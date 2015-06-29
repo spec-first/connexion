@@ -15,7 +15,11 @@ Unless required by applicable law or agreed to in writing, software distributed 
 import flask
 import functools
 import json
+import logging
 import types
+
+
+logger = logging.getLogger('connexion.decorators.produces')
 
 
 class BaseSerializer:
@@ -24,6 +28,7 @@ class BaseSerializer:
 
     @staticmethod
     def get_data_status_code(data) -> ('Any', int):
+        logger.debug('Getting data and status code', extra={'data': data, 'data_type': type(data)})
         if isinstance(data, flask.Response):
             data = data
             status_code = data.status_code
@@ -31,6 +36,7 @@ class BaseSerializer:
             data, status_code = data
         else:
             status_code = 200
+        logger.debug('Got data and status code (%d)', status_code, extra={'data': data, 'data_type': type(data)})
         return data, status_code
 
     def __call__(self, function: types.FunctionType) -> types.FunctionType:

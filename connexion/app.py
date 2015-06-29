@@ -25,7 +25,7 @@ import werkzeug.exceptions
 from connexion.problem import problem
 import connexion.api
 
-logger = logging.getLogger('api')
+logger = logging.getLogger('connexion.app')
 
 
 class App:
@@ -91,7 +91,7 @@ class App:
         return problem(title=e.name, detail=e.description, status=e.code)
 
     def run(self):
-
+        logger.debug('Starting http server.', extra=vars(self))
         if self.server is None:
             self.app.run('0.0.0.0', port=self.port, debug=self.debug)
         elif self.server == 'tornado':

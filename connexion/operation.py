@@ -42,30 +42,27 @@ class Operation:
         :param method: HTTP method
         :param path:
         :param operation: swagger operation object
-        :return:
         """
 
         self.method = method
         self.path = path
-        self.app_produces = app_produces  # app level mimetypes
-        self.app_security = app_security  # app level security
         self.security_definitions = security_definitions
 
         self.operation = operation
         self.operation_id = operation['operationId']
-        self.produces = operation.get('produces')
+        self.produces = operation.get('produces', app_produces)
         self.endpoint_name = flaskify_endpoint(self.operation_id)
-        self.security = operation.get('security')
+        self.security = operation.get('security', app_security)
         self.__undecorated_function = get_function_from_name(self.operation_id)
 
     @property
     def function(self):
         produces_decorator = self.__content_type_decorator
-        logger.debug('... Adding produces decorator (%r)', produces_decorator)
+        logger.debug('... Adding produces decorator (%r)', produces_decorator, extra=vars(self))
         function = produces_decorator(self.__undecorated_function)
 
         security_decorator = self.__security_decorator
-        logger.debug('... Adding security decorator (%r)', security_decorator)
+        logger.debug('... Adding security decorator (%r)', security_decorator, extra=vars(self))
         function = security_decorator(function)
         return function
 
@@ -84,17 +81,16 @@ class Operation:
         An empty value MAY be used to clear the global definition.
         """
 
-        produces = self.produces if self.produces is not None else self.app_produces
-        logger.debug('... Produces: %s', produces)
+        logger.debug('... Produces: %s', self.produces, extra=vars(self))
 
-        if produces_json(produces):  # endpoint will return json
-            mimetype = produces[0]
-            logger.debug('... Produces json')
+        if produces_json(self.produces):  # endpoint will return json
+            mimetype = self.produces[0]
+            logger.debug('... Produces json', extra=vars(self))
             jsonify = Jsonifier(mimetype)
             return jsonify
-        elif len(produces) == 1:
-            mimetype = produces[0]
-            logger.debug('... Produces {}'.format(mimetype))
+        elif len(self.produces) == 1:
+            mimetype = self.produces[0]
+            logger.debug('... Produces {}'.format(mimetype), extra=vars(self))
             decorator = Produces(mimetype)
             return decorator
         else:
@@ -122,14 +118,14 @@ class Operation:
 
         The name used for each property **MUST** correspond to a security scheme declared in the Security Definitions.
         """
-        security = self.security if self.security is not None else self.security
-        logger.debug('... Security: %s', security)
-        if security:
-            if len(security) > 1:
-                logger.warning("... More than security requirement defined. **IGNORING SECURITY REQUIREMENTS**")
+        logger.debug('... Security: %s', self.security, extra=vars(self))
+        if self.security:
+            if len(self.security) > 1:
+                logger.warning("... More than security requirement defined. **IGNORING SECURITY REQUIREMENTS**",
+                               extra=vars(self))
                 return security_passthrough
 
-            security = security[0]  # type: dict
+            security = self.security[0]  # type: dict
             # the following line gets the first (and because of the previous condition only) scheme and scopes
             # from the operation's security requirements
 
@@ -141,7 +137,7 @@ class Operation:
                 return functools.partial(verify_oauth, token_info_url, scopes)
             else:
                 logger.warning("... Security type '%s' unknown. **IGNORING SECURITY REQUIREMENTS**",
-                               security_definition['type'])
+                               security_definition['type'], extra=vars(self))
 
         # if we don't know how to handle the security or it's not defined we will usa a passthrough decorator
         return security_passthrough
