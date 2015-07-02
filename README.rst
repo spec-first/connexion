@@ -14,6 +14,14 @@
    :target: https://github.com/zalando/connexion/blob/master/LICENSE
    :alt: License
 
+.. image:: https://travis-ci.org/zalando/connexion.svg?branch=master
+   :target: https://travis-ci.org/zalando/connexion
+   :alt: Travis CI build status
+
+.. image:: https://coveralls.io/repos/zalando/connexion/badge.svg?branch=master
+   :target: https://coveralls.io/r/zalando/connexion?branch=master
+   :alt: Coveralls status
+
 
 Connexion
 =========
