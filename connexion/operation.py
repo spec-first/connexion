@@ -17,6 +17,7 @@ import types
 
 from connexion.decorators.produces import BaseSerializer, Produces, Jsonifier
 from connexion.decorators.security import security_passthrough, verify_oauth
+from connexion.exceptions import InvalidSpecification
 from connexion.utils import flaskify_endpoint, get_function_from_name, produces_json
 
 logger = logging.getLogger('connexion.operation')
@@ -28,7 +29,7 @@ class Operation:
     """
 
     def __init__(self, method: str, path: str, operation: dict,
-                 app_produces: list, app_security: list, security_definitions: dict):
+                 app_produces: list, app_security: list, security_definitions: dict, definitions: dict):
         """
         This class uses the OperationID identify the module and function that will handle the operation
 
@@ -47,16 +48,56 @@ class Operation:
         self.method = method
         self.path = path
         self.security_definitions = security_definitions
+        self.definitions = definitions
 
         self.operation = operation
         self.operation_id = operation['operationId']
+        # todo support definition references
+        # todo support references to application level parameters
+        self.parameters = operation.get('parameters', [])
         self.produces = operation.get('produces', app_produces)
         self.endpoint_name = flaskify_endpoint(self.operation_id)
         self.security = operation.get('security', app_security)
         self.__undecorated_function = get_function_from_name(self.operation_id)
 
     @property
-    def function(self):
+    def body_schema(self) -> dict:
+        """
+        `About operation parameters
+        <https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#fixed-fields-4>`_
+
+        A list of parameters that are applicable for all the operations described under this path. These parameters can
+        be overridden at the operation level, but cannot be removed there. The list MUST NOT include duplicated
+        parameters. A unique parameter is defined by a combination of a name and location. The list can use the
+        Reference Object to link to parameters that are defined at the Swagger Object's parameters.
+        **There can be one "body" parameter at most.**
+        """
+        body_parameters = [parameter for parameter in self.parameters if parameter['in'] == 'body']
+        if len(body_parameters) > 1:
+            raise InvalidSpecification(
+                "{method} {path} There can be one 'body' parameter at most".format_map(vars(self)))
+
+        body_parameters = body_parameters[0] if body_parameters else {}
+        schema = body_parameters.get('schema')  # type: dict
+
+        if schema:
+            schema = schema.copy()  # avoid changing the original schema
+            reference = schema.get('$ref')  # type: str
+            if reference:
+                if not reference.startswith('#/definitions/'):
+                    raise InvalidSpecification(
+                        "{method} {path}  '$ref' needs to to point to definitions".format_map(vars(self)))
+                definition_name = reference[14:]
+                try:
+                    schema.update(self.definitions[definition_name])
+                except KeyError:
+                    raise InvalidSpecification("{method} {path} Definition '{definition_name}' not found".format(
+                        definition_name=definition_name, method=self.method, path=self.path))
+                del schema['$ref']
+        return schema
+
+    @property
+    def function(self) -> types.FunctionType:
         produces_decorator = self.__content_type_decorator
         logger.debug('... Adding produces decorator (%r)', produces_decorator, extra=vars(self))
         function = produces_decorator(self.__undecorated_function)
