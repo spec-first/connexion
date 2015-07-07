@@ -22,7 +22,7 @@ git add setup.py
 git commit -m "Bumped version to $version"
 git push
 
-python3 setup.py sdist upload
+python3 setup.py sdist bdist_wheel upload
 
 git tag ${version}
 git push --tags
