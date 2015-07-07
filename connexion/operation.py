@@ -191,6 +191,7 @@ class Operation:
 
     @property
     def __validation_decorator(self) -> types.FunctionType:
+        # TODO create tests and then replace with if self.body_schema
         for parameter in self.operation.get('parameters', []):
             if parameter.get('in') == 'body':
-                return RequestBodyValidator(parameter.get('schema'))
+                return RequestBodyValidator(self.body_schema)
