@@ -54,3 +54,7 @@ def multimime() -> str:
 
 def empty():
     return None, 204
+
+
+def schema():
+    return ''

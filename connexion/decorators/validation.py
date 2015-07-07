@@ -30,24 +30,34 @@ TYPE_MAP = {'integer': int,
             'boolean': bool}  # map of swagger types to python types
 
 
-def validate_schema_type(data, schema):
+def validate_schema(data, schema):
     schema_type = schema.get('type')
     if schema_type == 'array':
         if not isinstance(data, list):
             raise abort(400)
         for item in data:
-            validate_schema_type(item, schema.get('items'))
+            validate_schema(item, schema.get('items'))
 
     if schema_type == 'object':
         if not isinstance(data, dict):
             raise abort(400)
-        for required_key in schema.get('required', []):
+
+        # verify if required keys are present
+        required_keys = schema.get('required', [])
+        logger.debug('... required keys: %s', required_keys)
+        for required_key in schema.get('required', required_keys):
             if required_key not in data:
+                logger.debug("... '%s' missing", required_key)
                 raise abort(400)
 
-    expected_type = TYPE_MAP.get(schema_type)
-    if expected_type and not isinstance(data, expected_type):
-        raise abort(400)
+        # verify if value types are correct
+        for key in data.keys():
+            key_properties = schema['properties'].get(key)
+            if key_properties:
+                expected_type = TYPE_MAP.get(key_properties['type'])
+                if expected_type and not isinstance(data[key], expected_type):
+                    logger.debug("... '%s' is not a '%s'", key, expected_type)
+                    raise abort(400)
 
 
 class RequestBodyValidator:
@@ -59,7 +69,9 @@ class RequestBodyValidator:
         @functools.wraps(function)
         def wrapper(*args, **kwargs):
             data = flask.request.json
-            validate_schema_type(data, self.schema)
+            logger.debug("%s validating schema...", flask.request.url)
+            logger.debug(str(self.schema))
+            validate_schema(data, self.schema)
             response = function(*args, **kwargs)
             return response
 
