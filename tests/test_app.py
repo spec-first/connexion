@@ -216,3 +216,19 @@ def test_empty(app):
     response = app_client.get('/v1.0/empty')  # type: flask.Response
     assert response.status_code == 204
     assert not response.data
+
+
+def test_schema(app):
+    app_client = app.app.test_client()
+    headers = {'Content-type': 'application/json'}
+
+    empty_request = app_client.post('/v1.0/test_schema', headers=headers, data={})  # type: flask.Response
+    assert empty_request.status_code == 400
+
+    bad_type = app_client.post('/v1.0/test_schema', headers=headers,
+                               data=json.dumps({'image_version': 22}))  # type: flask.Response
+    assert bad_type.status_code == 400
+
+    good_request = app_client.post('/v1.0/test_schema', headers=headers,
+                                   data=json.dumps({'image_version': 'version'}))  # type: flask.Response
+    assert good_request.status_code == 200
