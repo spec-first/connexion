@@ -17,6 +17,7 @@ import types
 
 from connexion.decorators.produces import BaseSerializer, Produces, Jsonifier
 from connexion.decorators.security import security_passthrough, verify_oauth
+from connexion.decorators.validation import RequestBodyValidator
 from connexion.exceptions import InvalidSpecification
 from connexion.utils import flaskify_endpoint, get_function_from_name, produces_json
 
@@ -105,6 +106,11 @@ class Operation:
         security_decorator = self.__security_decorator
         logger.debug('... Adding security decorator (%r)', security_decorator, extra=vars(self))
         function = security_decorator(function)
+
+        validation_decorator = self.__validation_decorator
+        if validation_decorator:
+            function = validation_decorator(function)
+
         return function
 
     @property
@@ -182,3 +188,9 @@ class Operation:
 
         # if we don't know how to handle the security or it's not defined we will usa a passthrough decorator
         return security_passthrough
+
+    @property
+    def __validation_decorator(self) -> types.FunctionType:
+        for parameter in self.operation.get('parameters', []):
+            if parameter.get('in') == 'body':
+                return RequestBodyValidator(parameter.get('schema'))
