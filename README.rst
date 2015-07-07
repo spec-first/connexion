@@ -1,3 +1,14 @@
+Connexion
+=========
+
+.. image:: https://travis-ci.org/zalando/connexion.svg?branch=master
+   :target: https://travis-ci.org/zalando/connexion
+   :alt: Travis CI build status
+
+.. image:: https://coveralls.io/repos/zalando/connexion/badge.svg?branch=master
+   :target: https://coveralls.io/r/zalando/connexion?branch=master
+   :alt: Coveralls status
+
 .. image:: https://img.shields.io/pypi/v/connexion.svg
    :target: https://pypi.python.org/pypi/connexion
    :alt: Latest Version
@@ -13,18 +24,6 @@
 .. image:: https://img.shields.io/pypi/l/connexion.svg
    :target: https://github.com/zalando/connexion/blob/master/LICENSE
    :alt: License
-
-.. image:: https://travis-ci.org/zalando/connexion.svg?branch=master
-   :target: https://travis-ci.org/zalando/connexion
-   :alt: Travis CI build status
-
-.. image:: https://coveralls.io/repos/zalando/connexion/badge.svg?branch=master
-   :target: https://coveralls.io/r/zalando/connexion?branch=master
-   :alt: Coveralls status
-
-
-Connexion
-=========
 
 Connexion is a framework on top of Flask_ to automagically handle your REST API requests
 based on `Swagger 2.0 Specification <swagger.spec_>`_ files
@@ -142,6 +141,15 @@ to ``tornado``:
     import connexion
 
     app = connexion.App(__name__, port = 8080, specification_dir='swagger/', server='tornado')
+
+Releasing Connexion
+===================
+
+Build and upload new version to PyPI:
+
+.. code-block:: bash
+
+    $ ./release.sh <NEW-VERSION>
 
 License
 -------
