@@ -103,8 +103,6 @@ def test_operation():
     assert operation.security == [{'oauth': ['uid']}]
     assert operation.body_schema == DEFINITIONS['new_stack']
 
-    # TODO test more than one body parameter
-
 
 def test_non_existent_reference():
     operation = Operation(method='GET',
