@@ -70,7 +70,6 @@ class RequestBodyValidator:
         def wrapper(*args, **kwargs):
             data = flask.request.json
             logger.debug("%s validating schema...", flask.request.url)
-            logger.debug(str(self.schema))
             validate_schema(data, self.schema)
             response = function(*args, **kwargs)
             return response
