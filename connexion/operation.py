@@ -179,9 +179,13 @@ class Operation:
             scheme_name, scopes = next(iter(security.items()))  # type: str, list
             security_definition = self.security_definitions[scheme_name]
             if security_definition['type'] == 'oauth2':
-                token_info_url = security_definition['x-tokenInfoUrl']
-                scopes = set(scopes)  # convert scopes to set because this is needed for verify_oauth
-                return functools.partial(verify_oauth, token_info_url, scopes)
+                token_info_url = security_definition.get('x-tokenInfoUrl')
+                if token_info_url:
+                    scopes = set(scopes)  # convert scopes to set because this is needed for verify_oauth
+                    return functools.partial(verify_oauth, token_info_url, scopes)
+                else:
+                    logger.warning("... OAuth2 token info URL missing. **IGNORING SECURITY REQUIREMENTS**",
+                                   extra=vars(self))
             else:
                 logger.warning("... Security type '%s' unknown. **IGNORING SECURITY REQUIREMENTS**",
                                security_definition['type'], extra=vars(self))
