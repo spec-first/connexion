@@ -12,13 +12,12 @@ Unless required by applicable law or agreed to in writing, software distributed 
 """
 
 import flask
-import logging
 import functools
+import logging
 import numbers
 import types
 
-from flask import abort
-
+from connexion.problem import problem
 
 logger = logging.getLogger('connexion.decorators.parameters')
 
@@ -30,25 +29,30 @@ TYPE_MAP = {'integer': int,
             'boolean': bool}  # map of swagger types to python types
 
 
-def validate_schema(data, schema):
+def validate_schema(data, schema) -> flask.Response:
     schema_type = schema.get('type')
+    log_extra = {'url': flask.request.url, 'schema_type': schema_type}
+
     if schema_type == 'array':
         if not isinstance(data, list):
-            raise abort(400)
+            logger.error("Wrong data type, expected 'list' got '%s'", type(data), extra=log_extra)
+            return problem(400, 'Bad Request', "Wrong type, expected 'array' got '{}'".format(type(data)))
         for item in data:
             validate_schema(item, schema.get('items'))
 
     if schema_type == 'object':
         if not isinstance(data, dict):
-            raise abort(400)
+            logger.error("Wrong data type, expected 'dict' got '%s'", type(data), extra=log_extra)
+            return problem(400, 'Bad Request', "Wrong type, expected 'object' got '{}'".format(type(data)))
 
         # verify if required keys are present
         required_keys = schema.get('required', [])
         logger.debug('... required keys: %s', required_keys)
+        log_extra['required_keys'] = required_keys
         for required_key in schema.get('required', required_keys):
             if required_key not in data:
-                logger.debug("... '%s' missing", required_key)
-                raise abort(400)
+                logger.error("Missing parameter '%s'", required_key, extra=log_extra)
+                return problem(400, 'Bad Request', "Missing parameter '{}'".format(required_key))
 
         # verify if value types are correct
         for key in data.keys():
@@ -56,12 +60,11 @@ def validate_schema(data, schema):
             if key_properties:
                 expected_type = TYPE_MAP.get(key_properties['type'])
                 if expected_type and not isinstance(data[key], expected_type):
-                    logger.debug("... '%s' is not a '%s'", key, expected_type)
-                    raise abort(400)
+                    logger.error("'%s' is not a '%s'", key, expected_type)
+                    return problem(400, 'Bad Request', "Missing parameter '{}'".format(required_key))
 
 
 class RequestBodyValidator:
-
     def __init__(self, schema):
         self.schema = schema
 
@@ -69,8 +72,12 @@ class RequestBodyValidator:
         @functools.wraps(function)
         def wrapper(*args, **kwargs):
             data = flask.request.json
+
             logger.debug("%s validating schema...", flask.request.url)
-            validate_schema(data, self.schema)
+            error = validate_schema(data, self.schema)
+            if error:
+                return error
+
             response = function(*args, **kwargs)
             return response
 
