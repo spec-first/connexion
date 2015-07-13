@@ -224,10 +224,12 @@ def test_schema(app):
 
     empty_request = app_client.post('/v1.0/test_schema', headers=headers, data={})  # type: flask.Response
     assert empty_request.status_code == 400
+    assert empty_request.content_type == 'application/problem+json'
 
     bad_type = app_client.post('/v1.0/test_schema', headers=headers,
                                data=json.dumps({'image_version': 22}))  # type: flask.Response
     assert bad_type.status_code == 400
+    assert bad_type.content_type == 'application/problem+json'
 
     good_request = app_client.post('/v1.0/test_schema', headers=headers,
                                    data=json.dumps({'image_version': 'version'}))  # type: flask.Response
