@@ -39,9 +39,11 @@ def validate_schema(data, schema) -> flask.Response:
             logger.error("Wrong data type, expected 'list' got '%s'", actual_type_name, extra=log_extra)
             return problem(400, 'Bad Request', "Wrong type, expected 'array' got '{}'".format(actual_type_name))
         for item in data:
-            validate_schema(item, schema.get('items'))
+            error = validate_schema(item, schema.get('items'))
+            if error:
+                return error
 
-    if schema_type == 'object':
+    elif schema_type == 'object':
         if not isinstance(data, dict):
             actual_type_name = type(data).__name__
             logger.error("Wrong data type, expected 'dict' got '%s'", actual_type_name, extra=log_extra)
@@ -67,6 +69,15 @@ def validate_schema(data, schema) -> flask.Response:
                     logger.error("'%s' is not a '%s'", key, expected_type_name)
                     return problem(400, 'Bad Request',
                                    "Wrong type, expected '{}' got '{}'".format(expected_type_name, actual_type_name))
+    else:
+        expected_type = TYPE_MAP.get(schema_type)  # type: type
+        actual_type = type(data)  # type: type
+        if expected_type and not isinstance(data, expected_type):
+            expected_type_name = expected_type.__name__
+            actual_type_name = actual_type.__name__
+            logger.error("'%s' is not a '%s'", data, expected_type_name)
+            return problem(400, 'Bad Request',
+                           "Wrong type, expected '{}' got '{}'".format(schema_type, actual_type_name))
 
 
 class RequestBodyValidator:

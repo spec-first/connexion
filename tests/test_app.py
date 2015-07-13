@@ -239,8 +239,7 @@ def test_schema(app):
     assert empty_request.content_type == 'application/problem+json'
     empty_request_response = json.loads(empty_request.data.decode())  # type: dict
     assert empty_request_response['title'] == 'Bad Request'
-    assert empty_request_response[
-               'detail'] == "Missing parameter 'image_version'"
+    assert empty_request_response['detail'] == "Missing parameter 'image_version'"
 
     bad_type = app_client.post('/v1.0/test_schema', headers=headers,
                                data=json.dumps({'image_version': 22}))  # type: flask.Response
@@ -253,3 +252,30 @@ def test_schema(app):
     good_request = app_client.post('/v1.0/test_schema', headers=headers,
                                    data=json.dumps({'image_version': 'version'}))  # type: flask.Response
     assert good_request.status_code == 200
+
+    wrong_type = app_client.post('/v1.0/test_schema', headers=headers, data=json.dumps(42))  # type: flask.Response
+    assert wrong_type.status_code == 400
+    assert wrong_type.content_type == 'application/problem+json'
+    wrong_type_response = json.loads(wrong_type.data.decode())  # type: dict
+    assert wrong_type_response['title'] == 'Bad Request'
+    assert wrong_type_response['detail'] == "Wrong type, expected 'object' got 'int'"
+
+
+def test_schema_list(app):
+    app_client = app.app.test_client()
+    headers = {'Content-type': 'application/json'}
+
+    wrong_type = app_client.post('/v1.0/test_schema_list', headers=headers, data=json.dumps(42))  # type: flask.Response
+    assert wrong_type.status_code == 400
+    assert wrong_type.content_type == 'application/problem+json'
+    wrong_type_response = json.loads(wrong_type.data.decode())  # type: dict
+    assert wrong_type_response['title'] == 'Bad Request'
+    assert wrong_type_response['detail'] == "Wrong type, expected 'array' got 'int'"
+
+    wrong_items = app_client.post('/v1.0/test_schema_list', headers=headers,
+                                  data=json.dumps([42]))  # type: flask.Response
+    assert wrong_items.status_code == 400
+    assert wrong_items.content_type == 'application/problem+json'
+    wrong_items_response = json.loads(wrong_items.data.decode())  # type: dict
+    assert wrong_items_response['title'] == 'Bad Request'
+    assert wrong_items_response['detail'] == "Wrong type, expected 'string' got 'int'"
