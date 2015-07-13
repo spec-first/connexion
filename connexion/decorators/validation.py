@@ -35,15 +35,17 @@ def validate_schema(data, schema) -> flask.Response:
 
     if schema_type == 'array':
         if not isinstance(data, list):
-            logger.error("Wrong data type, expected 'list' got '%s'", type(data), extra=log_extra)
-            return problem(400, 'Bad Request', "Wrong type, expected 'array' got '{}'".format(type(data)))
+            actual_type_name = type(data).__name__
+            logger.error("Wrong data type, expected 'list' got '%s'", actual_type_name, extra=log_extra)
+            return problem(400, 'Bad Request', "Wrong type, expected 'array' got '{}'".format(actual_type_name))
         for item in data:
             validate_schema(item, schema.get('items'))
 
     if schema_type == 'object':
         if not isinstance(data, dict):
-            logger.error("Wrong data type, expected 'dict' got '%s'", type(data), extra=log_extra)
-            return problem(400, 'Bad Request', "Wrong type, expected 'object' got '{}'".format(type(data)))
+            actual_type_name = type(data).__name__
+            logger.error("Wrong data type, expected 'dict' got '%s'", actual_type_name, extra=log_extra)
+            return problem(400, 'Bad Request', "Wrong type, expected 'object' got '{}'".format(actual_type_name))
 
         # verify if required keys are present
         required_keys = schema.get('required', [])
@@ -58,10 +60,13 @@ def validate_schema(data, schema) -> flask.Response:
         for key in data.keys():
             key_properties = schema['properties'].get(key)
             if key_properties:
-                expected_type = TYPE_MAP.get(key_properties['type'])
+                expected_type = TYPE_MAP.get(key_properties['type'])  # type: type
                 if expected_type and not isinstance(data[key], expected_type):
-                    logger.error("'%s' is not a '%s'", key, expected_type)
-                    return problem(400, 'Bad Request', "Missing parameter '{}'".format(required_key))
+                    expected_type_name = expected_type.__name__
+                    actual_type_name = type(data[key]).__name__
+                    logger.error("'%s' is not a '%s'", key, expected_type_name)
+                    return problem(400, 'Bad Request',
+                                   "Wrong type, expected '{}' got '{}'".format(expected_type_name, actual_type_name))
 
 
 class RequestBodyValidator:

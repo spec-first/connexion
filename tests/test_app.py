@@ -193,6 +193,7 @@ def test_security(oauth_requests):
     app_client = app1.app.test_client()
     get_bye_no_auth = app_client.get('/v1.0/byesecure/jsantos')  # type: flask.Response
     assert get_bye_no_auth.status_code == 401
+    assert get_bye_no_auth.content_type == 'application/problem+json'
 
     headers = {"Authorization": "Bearer 100"}
     get_bye_good_auth = app_client.get('/v1.0/byesecure/jsantos', headers=headers)  # type: flask.Response
@@ -203,11 +204,13 @@ def test_security(oauth_requests):
     headers = {"Authorization": "Bearer 200"}
     get_bye_wrong_scope = app_client.get('/v1.0/byesecure/jsantos', headers=headers)  # type: flask.Response
     assert get_bye_wrong_scope.status_code == 401
+    assert get_bye_wrong_scope.content_type == 'application/problem+json'
 
     app_client = app1.app.test_client()
     headers = {"Authorization": "Bearer 300"}
     get_bye_bad_token = app_client.get('/v1.0/byesecure/jsantos', headers=headers)  # type: flask.Response
     assert get_bye_bad_token.status_code == 401
+    assert get_bye_bad_token.content_type == 'application/problem+json'
 
 
 def test_empty(app):
@@ -222,14 +225,21 @@ def test_schema(app):
     app_client = app.app.test_client()
     headers = {'Content-type': 'application/json'}
 
-    empty_request = app_client.post('/v1.0/test_schema', headers=headers, data={})  # type: flask.Response
+    empty_request = app_client.post('/v1.0/test_schema', headers=headers, data=json.dumps({}))  # type: flask.Response
     assert empty_request.status_code == 400
     assert empty_request.content_type == 'application/problem+json'
+    empty_request_response = json.loads(empty_request.data.decode())  # type: dict
+    assert empty_request_response['title'] == 'Bad Request'
+    assert empty_request_response[
+               'detail'] == "Missing parameter 'image_version'"
 
     bad_type = app_client.post('/v1.0/test_schema', headers=headers,
                                data=json.dumps({'image_version': 22}))  # type: flask.Response
     assert bad_type.status_code == 400
     assert bad_type.content_type == 'application/problem+json'
+    bad_type_response = json.loads(bad_type.data.decode())  # type: dict
+    assert bad_type_response['title'] == 'Bad Request'
+    assert bad_type_response['detail'] == "Wrong type, expected 'str' got 'int'"
 
     good_request = app_client.post('/v1.0/test_schema', headers=headers,
                                    data=json.dumps({'image_version': 'version'}))  # type: flask.Response
