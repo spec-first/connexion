@@ -13,7 +13,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 # Authentication and authorization related decorators
 
-from flask import abort, request
+from flask import request
 import functools
 import logging
 import requests
