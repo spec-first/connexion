@@ -247,7 +247,7 @@ def test_schema(app):
     assert bad_type.content_type == 'application/problem+json'
     bad_type_response = json.loads(bad_type.data.decode())  # type: dict
     assert bad_type_response['title'] == 'Bad Request'
-    assert bad_type_response['detail'] == "Wrong type, expected 'str' got 'int'"
+    assert bad_type_response['detail'] == "Wrong type, expected 'string' got 'int'"
 
     good_request = app_client.post('/v1.0/test_schema', headers=headers,
                                    data=json.dumps({'image_version': 'version'}))  # type: flask.Response
