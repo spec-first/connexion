@@ -285,10 +285,35 @@ def test_schema_format(app):
     app_client = app.app.test_client()
     headers = {'Content-type': 'application/json'}
 
-    wrong_type = app_client.post('/v1.0/test_schema_format', headers=headers, data=json.dumps("xy"))  # type: flask.Response
+    wrong_type = app_client.post('/v1.0/test_schema_format', headers=headers,
+                                 data=json.dumps("xy"))  # type: flask.Response
     assert wrong_type.status_code == 400
     assert wrong_type.content_type == 'application/problem+json'
     wrong_type_response = json.loads(wrong_type.data.decode())  # type: dict
     assert wrong_type_response['title'] == 'Bad Request'
     assert wrong_type_response['detail'] == "Invalid value, expected string in 'date-time' format"
 
+
+def test_single_route(app):
+    def route1():
+        return 'single 1'
+
+    @app.route('/single2', methods=['POST'])
+    def route2():
+        return 'single 2'
+
+    app_client = app.app.test_client()
+
+    app.add_url_rule('/single1', 'single1', route1, methods=['GET'])
+
+    get_single1 = app_client.get('/single1')  # type: flask.Response
+    assert get_single1.data == b'single 1'
+
+    post_single1 = app_client.post('/single1')  # type: flask.Response
+    assert post_single1.status_code == 405
+
+    post_single2 = app_client.post('/single2')  # type: flask.Response
+    assert post_single2.data == b'single 2'
+
+    get_single2 = app_client.get('/single2')  # type: flask.Response
+    assert get_single2.status_code == 405
