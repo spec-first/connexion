@@ -58,3 +58,7 @@ def empty():
 
 def schema():
     return ''
+
+
+def schema_list():
+    return ''

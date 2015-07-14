@@ -1,7 +1,10 @@
 import pathlib
 import pytest
+import types
+
 from connexion.exceptions import InvalidSpecification
 from connexion.operation import Operation
+from connexion.decorators.security import security_passthrough, verify_oauth
 
 TEST_FOLDER = pathlib.Path(__file__).parent
 
@@ -89,6 +92,15 @@ OPERATION3 = {'description': 'Adds a new stack to be created by lizzy and return
               'security': [{'oauth': ['uid']}],
               'summary': 'Create new stack'}
 
+SECURITY_DEFINITIONS = {'oauth': {'type': 'oauth2',
+                                  'flow': 'password',
+                                  'x-tokenInfoUrl': 'https://ouath.example/token_info',
+                                  'scopes': {'myscope': 'can do stuff'}}}
+
+SECURITY_DEFINITIONS_WO_INFO = {'oauth': {'type': 'oauth2',
+                                          'flow': 'password',
+                                          'scopes': {'myscope': 'can do stuff'}}}
+
 
 def test_operation():
     operation = Operation(method='GET',
@@ -96,8 +108,14 @@ def test_operation():
                           operation=OPERATION1,
                           app_produces=['application/json'],
                           app_security=[],
-                          security_definitions={},
+                          security_definitions=SECURITY_DEFINITIONS,
                           definitions=DEFINITIONS)
+    assert isinstance(operation.function, types.FunctionType)
+    # security decorator should be a partial with verify_oauth as the function and token url and scopes as arguments.
+    # See https://docs.python.org/2/library/functools.html#partial-objects
+    assert operation._Operation__security_decorator.func is verify_oauth
+    assert operation._Operation__security_decorator.args == ('https://ouath.example/token_info', set(['uid']))
+
     assert operation.method == 'GET'
     assert operation.produces == ['application/json']
     assert operation.security == [{'oauth': ['uid']}]
@@ -150,3 +168,20 @@ def test_invalid_reference():
     exception = exc_info.value
     assert str(exception) == "<InvalidSpecification: GET endpoint  '$ref' needs to to point to definitions>"
     assert repr(exception) == "<InvalidSpecification: GET endpoint  '$ref' needs to to point to definitions>"
+
+
+def test_no_token_info():
+    operation = Operation(method='GET',
+                          path='endpoint',
+                          operation=OPERATION1,
+                          app_produces=['application/json'],
+                          app_security=SECURITY_DEFINITIONS_WO_INFO,
+                          security_definitions=SECURITY_DEFINITIONS_WO_INFO,
+                          definitions=DEFINITIONS)
+    assert isinstance(operation.function, types.FunctionType)
+    assert operation._Operation__security_decorator is security_passthrough
+
+    assert operation.method == 'GET'
+    assert operation.produces == ['application/json']
+    assert operation.security == [{'oauth': ['uid']}]
+    assert operation.body_schema == DEFINITIONS['new_stack']
