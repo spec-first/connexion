@@ -11,7 +11,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
  language governing permissions and limitations under the License.
 """
 
-
 import logging
 import pathlib
 import types
@@ -29,7 +28,6 @@ logger = logging.getLogger('connexion.app')
 
 
 class App:
-
     def __init__(self, import_name: str, port: int=5000, specification_dir: pathlib.Path='', server: str=None,
                  arguments: dict=None, debug: bool=False, swagger_ui: bool=True):
         """
@@ -65,6 +63,12 @@ class App:
         self.arguments = arguments or {}
         self.swagger_ui = swagger_ui
 
+    @staticmethod
+    def common_error_handler(e: werkzeug.exceptions.HTTPException):
+        if not isinstance(e, werkzeug.exceptions.HTTPException):
+            e = werkzeug.exceptions.InternalServerError()
+        return problem(title=e.name, detail=e.description, status=e.code)
+
     def add_api(self, swagger_file: pathlib.Path, base_path: str=None, arguments: dict=None, swagger_ui: bool=None):
         """
         :param swagger_file: swagger file with the specification
@@ -84,11 +88,69 @@ class App:
     def add_error_handler(self, error_code: int, function: types.FunctionType):
         self.app.error_handler_spec[None][error_code] = function
 
-    @staticmethod
-    def common_error_handler(e: werkzeug.exceptions.HTTPException):
-        if not isinstance(e, werkzeug.exceptions.HTTPException):
-            e = werkzeug.exceptions.InternalServerError()
-        return problem(title=e.name, detail=e.description, status=e.code)
+    def add_url_rule(self, rule, endpoint=None, view_func=None, **options):
+        """
+        Connects a URL rule.  Works exactly like the `route` decorator.  If a view_func is provided it will be
+        registered with the endpoint.
+
+        Basically this example::
+
+            @app.route('/')
+            def index():
+                pass
+
+        Is equivalent to the following::
+
+            def index():
+                pass
+            app.add_url_rule('/', 'index', index)
+
+        If the view_func is not provided you will need to connect the endpoint to a view function like so::
+
+            app.view_functions['index'] = index
+
+        Internally`route` invokes `add_url_rule` so if you want to customize the behavior via subclassing you only need
+        to change this method.
+
+        :param rule: the URL rule as string
+        :type rule: str
+        :param endpoint: the endpoint for the registered URL rule. Flask itself assumes the name of the view function as
+                         endpoint
+        :type endpoint: str
+        :param view_func: the function to call when serving a request to the provided endpoint
+        :type view_func: types.FunctionType
+        :param options: the options to be forwarded to the underlying `werkzeug.routing.Rule` object.  A change
+                        to Werkzeug is handling of method options. methods is a list of methods this rule should be
+                        limited to (`GET`, `POST` etc.).  By default a rule just listens for `GET` (and implicitly
+                        `HEAD`).
+        """
+        log_details = {'endpoint': endpoint, 'view_func': view_func.__name__}
+        log_details.update(options)
+        logger.debug('Adding %s', rule, extra=log_details)
+        self.app.add_url_rule(rule, endpoint, view_func, **options)
+
+    def route(self, rule, **options):
+        """
+        A decorator that is used to register a view function for a
+        given URL rule.  This does the same thing as `add_url_rule`
+        but is intended for decorator usage::
+
+            @app.route('/')
+            def index():
+                return 'Hello World'
+
+        :param rule: the URL rule as string
+        :type rule: str
+        :param endpoint: the endpoint for the registered URL rule.  Flask
+                         itself assumes the name of the view function as
+                         endpoint
+        :param options: the options to be forwarded to the underlying `werkzeug.routing.Rule` object.  A change
+                        to Werkzeug is handling of method options.  methods is a list of methods this rule should be
+                        limited to (`GET`, `POST` etc.).  By default a rule just listens for `GET` (and implicitly
+                        `HEAD`).
+        """
+        logger.debug('Adding %s with decorator', rule, extra=options)
+        return self.app.route(rule, **options)
 
     def run(self):
         logger.debug('Starting http server.', extra=vars(self))

@@ -279,3 +279,27 @@ def test_schema_list(app):
     wrong_items_response = json.loads(wrong_items.data.decode())  # type: dict
     assert wrong_items_response['title'] == 'Bad Request'
     assert wrong_items_response['detail'] == "Wrong type, expected 'string' got 'int'"
+
+def test_single_route(app):
+    def route1():
+        return 'single 1'
+
+    @app.route('/single2', methods=['POST'])
+    def route2():
+        return 'single 2'
+
+    app_client = app.app.test_client()
+
+    app.add_url_rule('/single1', 'single1', route1, methods=['GET'])
+
+    get_single1 = app_client.get('/single1')  # type: flask.Response
+    assert get_single1.data == b'single 1'
+
+    post_single1 = app_client.post('/single1')  # type: flask.Response
+    assert post_single1.status_code == 405
+
+    post_single2 = app_client.post('/single2')  # type: flask.Response
+    assert post_single2.data == b'single 2'
+
+    get_single2 = app_client.get('/single2')  # type: flask.Response
+    assert get_single2.status_code == 405
