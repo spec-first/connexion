@@ -2,5 +2,5 @@
 languages:
     Python: true
 exclude_paths:
-    - "tests"
-    - "connexion/swagger-ui"
+    - "tests/*"
+    - "connexion/swagger-ui/*"
