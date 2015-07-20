@@ -193,6 +193,10 @@ def test_security(oauth_requests):
     app_client = app1.app.test_client()
     get_bye_no_auth = app_client.get('/v1.0/byesecure/jsantos')  # type: flask.Response
     assert get_bye_no_auth.status_code == 401
+    assert get_bye_no_auth.content_type == 'application/problem+json'
+    get_bye_no_auth_reponse = json.loads(get_bye_no_auth.data.decode())  # type: dict
+    assert get_bye_no_auth_reponse['title'] == 'Unauthorized'
+    assert get_bye_no_auth_reponse['detail'] == "No authorization token provided"
 
     headers = {"Authorization": "Bearer 100"}
     get_bye_good_auth = app_client.get('/v1.0/byesecure/jsantos', headers=headers)  # type: flask.Response
@@ -202,12 +206,20 @@ def test_security(oauth_requests):
     app_client = app1.app.test_client()
     headers = {"Authorization": "Bearer 200"}
     get_bye_wrong_scope = app_client.get('/v1.0/byesecure/jsantos', headers=headers)  # type: flask.Response
-    assert get_bye_wrong_scope.status_code == 401
+    assert get_bye_wrong_scope.status_code == 403
+    assert get_bye_wrong_scope.content_type == 'application/problem+json'
+    get_bye_wrong_scope_reponse = json.loads(get_bye_wrong_scope.data.decode())  # type: dict
+    assert get_bye_wrong_scope_reponse['title'] == 'Forbidden'
+    assert get_bye_wrong_scope_reponse['detail'] == "Provided token doesn't have the required scope"
 
     app_client = app1.app.test_client()
     headers = {"Authorization": "Bearer 300"}
     get_bye_bad_token = app_client.get('/v1.0/byesecure/jsantos', headers=headers)  # type: flask.Response
     assert get_bye_bad_token.status_code == 401
+    assert get_bye_bad_token.content_type == 'application/problem+json'
+    get_bye_bad_token_reponse = json.loads(get_bye_bad_token.data.decode())  # type: dict
+    assert get_bye_bad_token_reponse['title'] == 'Unauthorized'
+    assert get_bye_bad_token_reponse['detail'] == "Provided oauth token is not valid"
 
 
 def test_empty(app):
@@ -222,13 +234,48 @@ def test_schema(app):
     app_client = app.app.test_client()
     headers = {'Content-type': 'application/json'}
 
-    empty_request = app_client.post('/v1.0/test_schema', headers=headers, data={})  # type: flask.Response
+    empty_request = app_client.post('/v1.0/test_schema', headers=headers, data=json.dumps({}))  # type: flask.Response
     assert empty_request.status_code == 400
+    assert empty_request.content_type == 'application/problem+json'
+    empty_request_response = json.loads(empty_request.data.decode())  # type: dict
+    assert empty_request_response['title'] == 'Bad Request'
+    assert empty_request_response['detail'] == "Missing parameter 'image_version'"
 
     bad_type = app_client.post('/v1.0/test_schema', headers=headers,
                                data=json.dumps({'image_version': 22}))  # type: flask.Response
     assert bad_type.status_code == 400
+    assert bad_type.content_type == 'application/problem+json'
+    bad_type_response = json.loads(bad_type.data.decode())  # type: dict
+    assert bad_type_response['title'] == 'Bad Request'
+    assert bad_type_response['detail'] == "Wrong type, expected 'string' got 'int'"
 
     good_request = app_client.post('/v1.0/test_schema', headers=headers,
                                    data=json.dumps({'image_version': 'version'}))  # type: flask.Response
     assert good_request.status_code == 200
+
+    wrong_type = app_client.post('/v1.0/test_schema', headers=headers, data=json.dumps(42))  # type: flask.Response
+    assert wrong_type.status_code == 400
+    assert wrong_type.content_type == 'application/problem+json'
+    wrong_type_response = json.loads(wrong_type.data.decode())  # type: dict
+    assert wrong_type_response['title'] == 'Bad Request'
+    assert wrong_type_response['detail'] == "Wrong type, expected 'object' got 'int'"
+
+
+def test_schema_list(app):
+    app_client = app.app.test_client()
+    headers = {'Content-type': 'application/json'}
+
+    wrong_type = app_client.post('/v1.0/test_schema_list', headers=headers, data=json.dumps(42))  # type: flask.Response
+    assert wrong_type.status_code == 400
+    assert wrong_type.content_type == 'application/problem+json'
+    wrong_type_response = json.loads(wrong_type.data.decode())  # type: dict
+    assert wrong_type_response['title'] == 'Bad Request'
+    assert wrong_type_response['detail'] == "Wrong type, expected 'array' got 'int'"
+
+    wrong_items = app_client.post('/v1.0/test_schema_list', headers=headers,
+                                  data=json.dumps([42]))  # type: flask.Response
+    assert wrong_items.status_code == 400
+    assert wrong_items.content_type == 'application/problem+json'
+    wrong_items_response = json.loads(wrong_items.data.decode())  # type: dict
+    assert wrong_items_response['title'] == 'Bad Request'
+    assert wrong_items_response['detail'] == "Wrong type, expected 'string' got 'int'"
