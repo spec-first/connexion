@@ -12,6 +12,9 @@ Unless required by applicable law or agreed to in writing, software distributed 
 """
 
 import importlib
+import re
+
+PATH_PARAMETER = re.compile(r'\{([^}]*)\}')
 
 
 def flaskify_endpoint(identifier: str) -> str:
@@ -21,13 +24,19 @@ def flaskify_endpoint(identifier: str) -> str:
     return identifier.replace('.', '_')
 
 
+def convert_path_parameter(match):
+    return '<{}>'.format(match.group(1).replace('-', '_'))
+
+
 def flaskify_path(swagger_path: str) -> str:
     """
     Convert swagger path templates to flask path templates
+
+    >>> flaskify_path('/foo-bar/{my-param}')
+    '/foo-bar/<my_param>'
     """
-    translation_table = str.maketrans('{-}', '<_>')
     # TODO add types
-    return swagger_path.translate(translation_table)
+    return PATH_PARAMETER.sub(convert_path_parameter, swagger_path)
 
 
 def get_function_from_name(operation_id: str) -> str:
