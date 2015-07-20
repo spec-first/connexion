@@ -215,6 +215,25 @@ paths:
           description: goodbye response
           schema:
             type: string
+  /test_schema_format:
+    post:
+      summary: Returns empty response
+      description: Returns empty response
+      operationId: fakeapi.hello.schema_format
+      parameters:
+        - name: timestamp
+          required: true
+          in: body
+          schema:
+            type: string
+            format: date-time
+      produces:
+        - application/json
+      responses:
+        200:
+          description: goodbye response
+          schema:
+            type: string
   /test_not_implemented:
     post:
       summary: Returns empty response

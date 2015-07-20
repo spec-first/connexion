@@ -279,3 +279,16 @@ def test_schema_list(app):
     wrong_items_response = json.loads(wrong_items.data.decode())  # type: dict
     assert wrong_items_response['title'] == 'Bad Request'
     assert wrong_items_response['detail'] == "Wrong type, expected 'string' got 'int'"
+
+
+def test_schema_format(app):
+    app_client = app.app.test_client()
+    headers = {'Content-type': 'application/json'}
+
+    wrong_type = app_client.post('/v1.0/test_schema_format', headers=headers, data=json.dumps("xy"))  # type: flask.Response
+    assert wrong_type.status_code == 400
+    assert wrong_type.content_type == 'application/problem+json'
+    wrong_type_response = json.loads(wrong_type.data.decode())  # type: dict
+    assert wrong_type_response['title'] == 'Bad Request'
+    assert wrong_type_response['detail'] == "Invalid value, expected string in 'date-time' format"
+

@@ -62,3 +62,7 @@ def schema():
 
 def schema_list():
     return ''
+
+
+def schema_format():
+    return ''
