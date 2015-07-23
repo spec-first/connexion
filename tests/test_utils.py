@@ -26,3 +26,4 @@ def test_get_function_from_name():
 def test_parse_datetime():
     utils.parse_datetime('2015-05-05T01:01:01.001+02:00')
     utils.parse_datetime('2015-05-05T01:01:01Z')
+    utils.parse_datetime('2015-07-23T18:34:32+02:00')

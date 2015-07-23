@@ -76,15 +76,18 @@ def produces_json(produces: list) -> bool:
 
 def parse_datetime(s: str):
     '''http://xml2rfc.ietf.org/public/rfc/html/rfc3339.html#anchor14'''
-    if '.' not in s:
-        # hacked way of inserting the missing "time-secfrac" (milliseconds)
-        s1, sep, s2 = s.rpartition(':')
-        s = s1 + sep + s2[:2] + '.000' + s2[2:]
     try:
         # "Z" for UTC
-        datetime.datetime.strptime(s, '%Y-%m-%dT%H:%M:%S.%fZ')
+        if '.' in s:
+            datetime.datetime.strptime(s, '%Y-%m-%dT%H:%M:%S.%fZ')
+        else:
+            # missing "time-secfrac" (milliseconds)
+            datetime.datetime.strptime(s, '%Y-%m-%dT%H:%M:%SZ')
     except:
         # "+02:00" time zone offset
         # remove the ":" first (%z expects "+0200")
         x = s[:-3] + s[-2:]
-        datetime.datetime.strptime(x, '%Y-%m-%dT%H:%M:%S.%f%z')
+        if '.' in s:
+            datetime.datetime.strptime(x, '%Y-%m-%dT%H:%M:%S.%f%z')
+        else:
+            datetime.datetime.strptime(x, '%Y-%m-%dT%H:%M:%S%z')
