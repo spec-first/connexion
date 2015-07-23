@@ -21,3 +21,8 @@ def test_get_function_from_name():
     function = utils.get_function_from_name('math.ceil')
     assert function == math.ceil
     assert function(2.7) == 3
+
+
+def test_parse_datetime():
+    utils.parse_datetime('2015-05-05T01:01:01.001+02:00')
+    utils.parse_datetime('2015-05-05T01:01:01Z')

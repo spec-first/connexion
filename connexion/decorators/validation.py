@@ -11,13 +11,13 @@ Unless required by applicable law or agreed to in writing, software distributed 
  language governing permissions and limitations under the License.
 """
 
-import datetime
 import flask
 import functools
 import logging
 import numbers
 import types
 
+from connexion.utils import parse_datetime
 from connexion.problem import problem
 
 logger = logging.getLogger('connexion.decorators.parameters')
@@ -28,18 +28,6 @@ TYPE_MAP = {'integer': int,
             'number': numbers.Number,
             'string': str,
             'boolean': bool}  # map of swagger types to python types
-
-
-def parse_datetime(s: str):
-    '''http://xml2rfc.ietf.org/public/rfc/html/rfc3339.html#anchor14'''
-    try:
-        # "Z" for UTC
-        datetime.datetime.strptime(s, '%Y-%m-%dT%H:%M:%S.%fZ')
-    except:
-        # "+02:00" time zone offset
-        # remove the ":" first (%z expects "+0200")
-        x = s[:-3] + s[-2:]
-        datetime.datetime.strptime(x, '%Y-%m-%dT%H:%M:%S.%f%z')
 
 
 FORMAT_MAP = {('string', 'date-time'): parse_datetime}
