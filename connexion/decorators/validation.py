@@ -94,7 +94,7 @@ class RequestBodyValidator:
 
             # verify if value types are correct
             for key in data.keys():
-                key_properties = schema['properties'].get(key)
+                key_properties = schema.get('properties', {}).get(key)
                 if key_properties:
                     error = self.validate_schema(data[key], key_properties)
                     if error:
