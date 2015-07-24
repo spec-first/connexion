@@ -50,11 +50,23 @@ def validate_format(schema, data):
 def validate_pattern(schema, data):
     pattern = schema.get('pattern')
     # TODO: check Swagger pattern format
-    if pattern and not re.match(pattern, data):
+    if pattern is not None and not re.match(pattern, data):
         return 'Invalid value, pattern "{}" does not match'.format(pattern)
 
 
-VALIDATORS = [validate_format, validate_pattern]
+def validate_minimum(schema, data):
+    minimum = schema.get('minimum')
+    if minimum is not None and data < minimum:
+        return 'Invalid value, must be at least {}'.format(minimum)
+
+
+def validate_maximum(schema, data):
+    maximum = schema.get('maximum')
+    if maximum is not None and data > maximum:
+        return 'Invalid value, must be at most {}'.format(maximum)
+
+
+VALIDATORS = [validate_format, validate_pattern, validate_minimum, validate_maximum]
 
 
 class RequestBodyValidator:
