@@ -27,10 +27,27 @@ logger = logging.getLogger('connexion.decorators.parameters')
 TYPE_MAP = {'integer': int,
             'number': numbers.Number,
             'string': str,
-            'boolean': bool}  # map of swagger types to python types
+            'boolean': bool,
+            'array': list,
+            'object': dict}  # map of swagger types to python types
 
 
 FORMAT_MAP = {('string', 'date-time'): parse_datetime}
+
+
+def validate_format(schema, data):
+    schema_type = schema.get('type')
+    schema_format = schema.get('format')
+    func = FORMAT_MAP.get((schema_type, schema_format))
+    if func:
+        try:
+            func(data)
+        except:
+            yield problem(400, 'Bad Request',
+                          "Invalid value, expected {} in '{}' format".format(schema_type, schema_format))
+
+
+VALIDATORS = [validate_format]
 
 
 class RequestBodyValidator:
@@ -56,21 +73,21 @@ class RequestBodyValidator:
         schema_type = schema.get('type')
         log_extra = {'url': flask.request.url, 'schema_type': schema_type}
 
+        expected_type = TYPE_MAP.get(schema_type)  # type: type
+        actual_type = type(data)  # type: type
+        if expected_type and not isinstance(data, expected_type):
+            expected_type_name = expected_type.__name__
+            actual_type_name = actual_type.__name__
+            logger.error("'%s' is not a '%s'", data, expected_type_name)
+            return problem(400, 'Bad Request',
+                           "Wrong type, expected '{}' got '{}'".format(schema_type, actual_type_name))
+
         if schema_type == 'array':
-            if not isinstance(data, list):
-                actual_type_name = type(data).__name__
-                logger.error("Wrong data type, expected 'list' got '%s'", actual_type_name, extra=log_extra)
-                return problem(400, 'Bad Request', "Wrong type, expected 'array' got '{}'".format(actual_type_name))
             for item in data:
                 error = self.validate_schema(item, schema.get('items'))
                 if error:
                     return error
         elif schema_type == 'object':
-            if not isinstance(data, dict):
-                actual_type_name = type(data).__name__
-                logger.error("Wrong data type, expected 'dict' got '%s'", actual_type_name, extra=log_extra)
-                return problem(400, 'Bad Request', "Wrong type, expected 'object' got '{}'".format(actual_type_name))
-
             # verify if required keys are present
             required_keys = schema.get('required', [])
             logger.debug('... required keys: %s', required_keys)
@@ -88,20 +105,6 @@ class RequestBodyValidator:
                     if error:
                         return error
         else:
-            expected_type = TYPE_MAP.get(schema_type)  # type: type
-            actual_type = type(data)  # type: type
-            if expected_type and not isinstance(data, expected_type):
-                expected_type_name = expected_type.__name__
-                actual_type_name = actual_type.__name__
-                logger.error("'%s' is not a '%s'", data, expected_type_name)
-                return problem(400, 'Bad Request',
-                               "Wrong type, expected '{}' got '{}'".format(schema_type, actual_type_name))
-
-            schema_format = schema.get('format')
-            func = FORMAT_MAP.get((schema_type, schema_format))
-            if func:
-                try:
-                    func(data)
-                except:
-                    return problem(400, 'Bad Request',
-                                   "Invalid value, expected {} in '{}' format".format(schema_type, schema_format))
+            for func in VALIDATORS:
+                for err in func(schema, data):
+                    return err
