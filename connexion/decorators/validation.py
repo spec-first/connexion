@@ -15,6 +15,7 @@ import flask
 import functools
 import logging
 import numbers
+import re
 import types
 
 from connexion.utils import parse_datetime
@@ -43,11 +44,17 @@ def validate_format(schema, data):
         try:
             func(data)
         except:
-            yield problem(400, 'Bad Request',
-                          "Invalid value, expected {} in '{}' format".format(schema_type, schema_format))
+            return "Invalid value, expected {} in '{}' format".format(schema_type, schema_format)
 
 
-VALIDATORS = [validate_format]
+def validate_pattern(schema, data):
+    pattern = schema.get('pattern')
+    # TODO: check Swagger pattern format
+    if pattern and not re.match(pattern, data):
+        return 'Invalid value, pattern "{}" does not match'.format(pattern)
+
+
+VALIDATORS = [validate_format, validate_pattern]
 
 
 class RequestBodyValidator:
@@ -106,5 +113,6 @@ class RequestBodyValidator:
                         return error
         else:
             for func in VALIDATORS:
-                for err in func(schema, data):
-                    return err
+                error = func(schema, data)
+                if error:
+                    return problem(400, 'Bad Request', error)
