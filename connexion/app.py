@@ -60,7 +60,7 @@ class App:
             self.add_error_handler(error_code, self.common_error_handler)
 
         self.port = port
-        self.server = server
+        self.server = server or 'flask'
         self.debug = debug
         self.arguments = arguments or {}
         self.swagger_ui = swagger_ui
@@ -91,14 +91,22 @@ class App:
         return problem(title=e.name, detail=e.description, status=e.code)
 
     def run(self):
-        logger.debug('Starting http server.', extra=vars(self))
-        if self.server is None:
+        logger.debug('Starting {} HTTP server..', self.server, extra=vars(self))
+        if self.server == 'flask':
             self.app.run('0.0.0.0', port=self.port, debug=self.debug)
         elif self.server == 'tornado':
             wsgi_container = tornado.wsgi.WSGIContainer(self.app)
             http_server = tornado.httpserver.HTTPServer(wsgi_container)
             http_server.listen(self.port)
-            logger.info('Listening on http://127.0.0.1:{port}/'.format(port=self.port))
+            logger.info('Listening on port {port}..'.format(port=self.port))
             tornado.ioloop.IOLoop.instance().start()
+        elif self.server == 'gevent':
+            try:
+                import gevent.wsgi
+            except:
+                raise Exception('gevent library not installed')
+            http_server = gevent.wsgi.WSGIServer(('', 8080), self.app)
+            logger.info('Listening on port {port}..'.format(port=self.port))
+            http_server.serve_forever()
         else:
             raise Exception('Server {} not recognized'.format(self.server))
