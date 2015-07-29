@@ -13,7 +13,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 import logging
 import pathlib
-import types
 
 import flask
 import tornado.wsgi
@@ -28,16 +27,23 @@ logger = logging.getLogger('connexion.app')
 
 
 class App:
-    def __init__(self, import_name: str, port: int=5000, specification_dir: pathlib.Path='', server: str=None,
-                 arguments: dict=None, debug: bool=False, swagger_ui: bool=True):
+    def __init__(self, import_name, port=5000, specification_dir='', server=None, arguments=None, debug=False,
+                 swagger_ui=True):
         """
         :param import_name: the name of the application package
+        :type import_name: str
         :param port: port to listen to
+        :type port: int
         :param specification_dir: directory where to look for specifications
+        :type specification_dir: pathlib.Path | str
         :param server: which wsgi server to use
+        :type server: str | None
         :param arguments: arguments to replace on the specification
+        :type arguments: dict | None
         :param debug: include debugging information
+        :type debug: bool
         :param swagger_ui: whether to include swagger ui or not
+        :type swagger_ui: bool
         """
         self.app = flask.Flask(import_name)
 
@@ -64,17 +70,24 @@ class App:
         self.swagger_ui = swagger_ui
 
     @staticmethod
-    def common_error_handler(e: werkzeug.exceptions.HTTPException):
+    def common_error_handler(e):
+        """
+        :type e: Exception
+        """
         if not isinstance(e, werkzeug.exceptions.HTTPException):
             e = werkzeug.exceptions.InternalServerError()
         return problem(title=e.name, detail=e.description, status=e.code)
 
-    def add_api(self, swagger_file: pathlib.Path, base_path: str=None, arguments: dict=None, swagger_ui: bool=None):
+    def add_api(self, swagger_file, base_path=None, arguments=None, swagger_ui=None):
         """
         :param swagger_file: swagger file with the specification
+        :type swagger_file: pathlib.Path
         :param base_path: base path where to add this api
+        :type base_path: str | None
         :param arguments: api version specific arguments to replace on the specification
+        :type arguments: dict | None
         :param swagger_ui: whether to include swagger ui or not
+        :type swagger_ui: bool
         """
         swagger_ui = swagger_ui if swagger_ui is not None else self.swagger_ui
         logger.debug('Adding API: %s', swagger_file)
@@ -85,7 +98,12 @@ class App:
         api = connexion.api.Api(yaml_path, base_path, arguments, swagger_ui)
         self.app.register_blueprint(api.blueprint)
 
-    def add_error_handler(self, error_code: int, function: types.FunctionType):
+    def add_error_handler(self, error_code, function):
+        """
+
+        :type error_code: int
+        :type function: types.FunctionType
+        """
         self.app.error_handler_spec[None][error_code] = function
 
     def add_url_rule(self, rule, endpoint=None, view_func=None, **options):

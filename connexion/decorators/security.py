@@ -17,7 +17,6 @@ from flask import request
 import functools
 import logging
 import requests
-import types
 
 from connexion.problem import problem
 
@@ -25,13 +24,24 @@ from connexion.problem import problem
 logger = logging.getLogger('connexion.api.security')
 
 
-def security_passthrough(function: types.FunctionType) -> types.FunctionType:
+def security_passthrough(function):
+    """
+    :type function: types.FunctionType
+    :rtype: types.FunctionType
+    """
     return function
 
 
-def verify_oauth(token_info_url: str, allowed_scopes: set, function: types.FunctionType) -> types.FunctionType:
+def verify_oauth(token_info_url, allowed_scopes, function):
     """
     Decorator to verify oauth
+
+    :param token_info_url: Url to get information about the token
+    :type token_info_url: str
+    :param allowed_scopes: Set with scopes that are allowed to access the endpoint
+    :type allowed_scopes: set
+    :type function: types.FunctionType
+    :rtype: types.FunctionType
     """
 
     @functools.wraps(function)

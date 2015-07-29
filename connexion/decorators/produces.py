@@ -16,18 +16,23 @@ import flask
 import functools
 import json
 import logging
-import types
-
 
 logger = logging.getLogger('connexion.decorators.produces')
 
 
 class BaseSerializer:
     def __init__(self, mimetype='text/plain'):
+        """
+        :type mimetype: str
+        """
         self.mimetype = mimetype
 
     @staticmethod
-    def get_data_status_code(data) -> ('Any', int):
+    def get_data_status_code(data):
+        """
+        :type data: flask.Response | (object, int) | object
+        :rtype: (object, int)
+        """
         url = flask.request.url
         logger.debug('Getting data and status code', extra={'data': data, 'data_type': type(data), 'url': url})
         if isinstance(data, flask.Response):
@@ -42,15 +47,27 @@ class BaseSerializer:
                                                                           'url': url})
         return data, status_code
 
-    def __call__(self, function: types.FunctionType) -> types.FunctionType:
+    def __call__(self, function):
+        """
+        :type function: types.FunctionType
+        :rtype: types.FunctionType
+        """
         return function
 
-    def __repr__(self) -> str:
+    def __repr__(self):
+        """
+        :rtype: str
+        """
         return '<BaseSerializer: {}>'.format(self.mimetype)
 
 
 class Produces(BaseSerializer):
-    def __call__(self, function: types.FunctionType) -> types.FunctionType:
+    def __call__(self, function):
+        """
+        :type function: types.FunctionType
+        :rtype: types.FunctionType
+        """
+
         @functools.wraps(function)
         def wrapper(*args, **kwargs):
             url = flask.request.url
@@ -65,12 +82,20 @@ class Produces(BaseSerializer):
 
         return wrapper
 
-    def __repr__(self) -> str:
+    def __repr__(self):
+        """
+        :rtype: str
+        """
         return '<Produces: {}>'.format(self.mimetype)
 
 
 class Jsonifier(BaseSerializer):
-    def __call__(self, function: types.FunctionType) -> types.FunctionType:
+    def __call__(self, function):
+        """
+        :type function: types.FunctionType
+        :rtype: types.FunctionType
+        """
+
         @functools.wraps(function)
         def wrapper(*args, **kwargs):
             url = flask.request.url
@@ -89,5 +114,8 @@ class Jsonifier(BaseSerializer):
 
         return wrapper
 
-    def __repr__(self) -> str:
+    def __repr__(self):
+        """
+        :rtype: str
+        """
         return '<Jsonifier: {}>'.format(self.mimetype)

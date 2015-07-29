@@ -1,5 +1,7 @@
 language: python
 python:
+  - "pypy"
+  - "2.7"
   - "3.4"
 install:
   - pip install -e .

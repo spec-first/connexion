@@ -32,8 +32,13 @@ class Api:
     Single API that corresponds to a flask blueprint
     """
 
-    def __init__(self, swagger_yaml_path: pathlib.Path, base_url: str=None, arguments: dict=None,
-                 swagger_ui: bool=None):
+    def __init__(self, swagger_yaml_path, base_url=None, arguments=None, swagger_ui=None):
+        """
+        :type swagger_yaml_path: pathlib.Path
+        :type base_url: str | None
+        :type arguments: dict | None
+        :type swagger_ui: bool
+        """
         self.swagger_yaml_path = pathlib.Path(swagger_yaml_path)
         logger.debug('Loading specification: %s', swagger_yaml_path, extra={'swagger_yaml': swagger_yaml_path,
                                                                             'base_url': base_url,
@@ -74,7 +79,7 @@ class Api:
             self.add_swagger_ui()
         self.add_paths()
 
-    def add_operation(self, method: str, path: str, swagger_operation: dict):
+    def add_operation(self, method, path, swagger_operation):
         """
         Adds one operation to the api.
 
@@ -86,6 +91,10 @@ class Api:
 
         A friendly name for the operation. The id MUST be unique among all operations described in the API.
         Tools and libraries MAY use the operation id to uniquely identify an operation.
+
+        :type method: str
+        :type path: str
+        :type swagger_operation: dict
         """
         operation = Operation(method=method, path=path, operation=swagger_operation,
                               app_produces=self.produces, app_security=self.security,
@@ -95,9 +104,11 @@ class Api:
 
         self.blueprint.add_url_rule(path, operation.endpoint_name, operation.function, methods=[method])
 
-    def add_paths(self, paths: list=None):
+    def add_paths(self, paths=None):
         """
         Adds the paths defined in the specification as endpoints
+
+        :type paths: list
         """
         paths = paths or self.specification.get('paths', dict())
         for path, methods in paths.items():
@@ -128,7 +139,11 @@ class Api:
         index_endpoint_name = "{name}_swagger_ui_index".format(name=self.blueprint.name)
         self.blueprint.add_url_rule('/ui/', index_endpoint_name, self.swagger_ui_index)
 
-    def create_blueprint(self, base_url: str=None) -> flask.Blueprint:
+    def create_blueprint(self, base_url=None):
+        """
+        :type base_url: str | None
+        :rtype: flask.Blueprint
+        """
         base_url = base_url or self.base_url
         logger.debug('Creating API blueprint: %s', base_url)
         endpoint = utils.flaskify_endpoint(base_url)
@@ -139,5 +154,8 @@ class Api:
         return flask.render_template('index.html', api_url=self.base_url)
 
     @staticmethod
-    def swagger_ui_static(filename: str):
+    def swagger_ui_static(filename):
+        """
+        :type filename: str
+        """
         return flask.send_from_directory(str(SWAGGER_UI_PATH), filename)
