@@ -170,7 +170,7 @@ class App:
         logger.debug('Adding %s with decorator', rule, extra=options)
         return self.app.route(rule, **options)
 
-    def run(self):
+    def run(self):  # pragma: no cover
         logger.debug('Starting http server.', extra=vars(self))
         if self.server is None:
             self.app.run('0.0.0.0', port=self.port, debug=self.debug)
@@ -180,5 +180,10 @@ class App:
             http_server.listen(self.port)
             logger.info('Listening on http://127.0.0.1:{port}/'.format(port=self.port))
             tornado.ioloop.IOLoop.instance().start()
+        elif self.server == 'gevent':
+            from gevent.wsgi import WSGIServer
+            http_server = WSGIServer(('', self.port), self.app)
+            logger.info('Listening on http://127.0.0.1:{port}/'.format(port=self.port))
+            http_server.serve_forever()
         else:
             raise Exception('Server {} not recognized'.format(self.server))
