@@ -13,11 +13,15 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 
 class ConnexionException(BaseException):
-    ...
+    pass
 
 
 class InvalidSpecification(ConnexionException):
-    def __init__(self, reason: str='Unknown Reason'):
+    def __init__(self, reason='Unknown Reason'):
+        """
+        :param reason: Reason why the specification is invalid
+        :type reason: str
+        """
         self.reason = reason
 
     def __str__(self):

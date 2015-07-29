@@ -16,22 +16,21 @@ import functools
 import logging
 import numbers
 import re
-import types
+import six
 
 from connexion.utils import parse_datetime
 from connexion.problem import problem
 
-logger = logging.getLogger('connexion.decorators.parameters')
+logger = logging.getLogger('connexion.decorators.validation')
 
 
 # https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#data-types
 TYPE_MAP = {'integer': int,
             'number': numbers.Number,
-            'string': str,
+            'string': six.string_types[0],
             'boolean': bool,
             'array': list,
             'object': dict}  # map of swagger types to python types
-
 
 FORMAT_MAP = {('string', 'date-time'): parse_datetime}
 
@@ -73,7 +72,12 @@ class RequestBodyValidator:
     def __init__(self, schema):
         self.schema = schema
 
-    def __call__(self, function: types.FunctionType) -> types.FunctionType:
+    def __call__(self, function):
+        """
+        :type function: types.FunctionType
+        :rtype: types.FunctionType
+        """
+
         @functools.wraps(function)
         def wrapper(*args, **kwargs):
             data = flask.request.json
@@ -88,7 +92,11 @@ class RequestBodyValidator:
 
         return wrapper
 
-    def validate_schema(self, data, schema) -> flask.Response:
+    def validate_schema(self, data, schema):
+        """
+        :type schema: dict
+        :rtype: flask.Response | None
+        """
         schema_type = schema.get('type')
         log_extra = {'url': flask.request.url, 'schema_type': schema_type}
 

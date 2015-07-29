@@ -15,7 +15,11 @@ SPEC_FOLDER = TEST_FOLDER / "fakeapi"
 
 
 class FakeResponse:
-    def __init__(self, status_code: int, text: str):
+    def __init__(self, status_code, text):
+        """
+        :type status_code: int
+        :type text: ste
+        """
         self.status_code = status_code
         self.text = text
         self.ok = status_code == 200
@@ -25,8 +29,12 @@ class FakeResponse:
 
 
 @pytest.fixture
-def oauth_requests(monkeypatch: '_pytest.monkeypatch.monkeypatch'):
-    def fake_get(url: str, params: dict=None):
+def oauth_requests(monkeypatch):
+    def fake_get(url, params=None):
+        """
+        :type url: str
+        :type params: dict| None
+        """
         params = params or {}
         if url == "https://ouath.example/token_info":
             token = params['access_token']
