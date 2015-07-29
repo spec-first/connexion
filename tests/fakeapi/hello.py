@@ -3,21 +3,21 @@
 from connexion import problem
 
 
-def post_greeting(name: str) -> dict:
+def post_greeting(name):
     data = {'greeting': 'Hello {name}'.format(name=name)}
     return data
 
 
-def get_list(name: str) -> list:
+def get_list(name):
     data = ['hello', name]
     return data
 
 
-def get_bye(name: str) -> str:
+def get_bye(name):
     return 'Goodbye {name}'.format(name=name), 200
 
 
-def get_bye_secure(name: str) -> str:
+def get_bye_secure(name):
     return 'Goodbye {name} (Secure)'.format(name=name)
 
 
@@ -40,7 +40,7 @@ def internal_error():
     return 42 / 0
 
 
-def get_greetings(name: str) -> dict:
+def get_greetings(name):
     """
     Used to test custom mimetypes
     """
@@ -48,7 +48,7 @@ def get_greetings(name: str) -> dict:
     return data
 
 
-def multimime() -> str:
+def multimime():
     return 'Goodbye'
 
 

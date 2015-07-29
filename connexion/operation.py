@@ -13,7 +13,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 import functools
 import logging
-import types
 
 from connexion.decorators.produces import BaseSerializer, Produces, Jsonifier
 from connexion.decorators.security import security_passthrough, verify_oauth
@@ -29,8 +28,7 @@ class Operation:
     A single API operation on a path.
     """
 
-    def __init__(self, method: str, path: str, operation: dict,
-                 app_produces: list, app_security: list, security_definitions: dict, definitions: dict):
+    def __init__(self, method, path, operation, app_produces, app_security, security_definitions, definitions):
         """
         This class uses the OperationID identify the module and function that will handle the operation
 
@@ -42,8 +40,21 @@ class Operation:
         Tools and libraries MAY use the operation id to uniquely identify an operation.
 
         :param method: HTTP method
+        :type method: str
         :param path:
+        :type path: str
         :param operation: swagger operation object
+        :type operation: dict
+        :param app_produces: list of content types the application can return by default
+        :type app_produces: list
+        :param app_security: list of security rules the application uses by default
+        :type app_security: list
+        :param security_definitions: `Security Definitions Object
+            <https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-definitions-object>`_
+        :type security_definitions: dict
+        :param definitions: `Definitions Object
+            <https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#definitionsObject>`_
+        :type definitions: dict
         """
 
         self.method = method
@@ -62,7 +73,7 @@ class Operation:
         self.__undecorated_function = get_function_from_name(self.operation_id)
 
     @property
-    def body_schema(self) -> dict:
+    def body_schema(self):
         """
         `About operation parameters
         <https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#fixed-fields-4>`_
@@ -72,11 +83,13 @@ class Operation:
         parameters. A unique parameter is defined by a combination of a name and location. The list can use the
         Reference Object to link to parameters that are defined at the Swagger Object's parameters.
         **There can be one "body" parameter at most.**
+
+        :rtype: dict
         """
         body_parameters = [parameter for parameter in self.parameters if parameter['in'] == 'body']
         if len(body_parameters) > 1:
             raise InvalidSpecification(
-                "{method} {path} There can be one 'body' parameter at most".format_map(vars(self)))
+                "{method} {path} There can be one 'body' parameter at most".format(**vars(self)))
 
         body_parameters = body_parameters[0] if body_parameters else {}
         schema = body_parameters.get('schema')  # type: dict
@@ -87,7 +100,7 @@ class Operation:
             if reference:
                 if not reference.startswith('#/definitions/'):
                     raise InvalidSpecification(
-                        "{method} {path}  '$ref' needs to to point to definitions".format_map(vars(self)))
+                        "{method} {path}  '$ref' needs to to point to definitions".format(**vars(self)))
                 definition_name = reference[14:]
                 try:
                     schema.update(self.definitions[definition_name])
@@ -98,7 +111,12 @@ class Operation:
         return schema
 
     @property
-    def function(self) -> types.FunctionType:
+    def function(self):
+        """
+        Operation function with decorators
+
+        :rtype: types.FunctionType
+        """
         produces_decorator = self.__content_type_decorator
         logger.debug('... Adding produces decorator (%r)', produces_decorator, extra=vars(self))
         function = produces_decorator(self.__undecorated_function)
@@ -114,7 +132,7 @@ class Operation:
         return function
 
     @property
-    def __content_type_decorator(self) -> types.FunctionType:
+    def __content_type_decorator(self):
         """
         Get produces decorator.
 
@@ -126,6 +144,8 @@ class Operation:
 
         A list of MIME types the operation can produce. This overrides the produces definition at the Swagger Object.
         An empty value MAY be used to clear the global definition.
+
+        :rtype: types.FunctionType
         """
 
         logger.debug('... Produces: %s', self.produces, extra=vars(self))
@@ -144,7 +164,7 @@ class Operation:
             return BaseSerializer()
 
     @property
-    def __security_decorator(self) -> types.FunctionType:
+    def __security_decorator(self):
         """
         Gets the security decorator for operation
 
@@ -164,6 +184,8 @@ class Operation:
         declared in it which are all required (that is, there is a logical AND between the schemes).
 
         The name used for each property **MUST** correspond to a security scheme declared in the Security Definitions.
+
+        :rtype: types.FunctionType
         """
         logger.debug('... Security: %s', self.security, extra=vars(self))
         if self.security:
@@ -194,6 +216,9 @@ class Operation:
         return security_passthrough
 
     @property
-    def __validation_decorator(self) -> types.FunctionType:
+    def __validation_decorator(self):
+        """
+        :rtype: types.FunctionType
+        """
         if self.body_schema:
             return RequestBodyValidator(self.body_schema)
