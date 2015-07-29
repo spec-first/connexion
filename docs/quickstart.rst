@@ -107,8 +107,8 @@ You can also disable it at api level:
 
 Server Backend
 --------------
-By default connexion uses the default flask server but you can also use Tornado_ as the http server, to do so set server
-to ``tornado``:
+By default connexion uses the default flask server.But you can also use Tornado_ or Gevent_ as the http server, to use
+one them just specify it, in lowercase, with the server argument:
 
 .. code-block:: python
 
@@ -118,6 +118,7 @@ to ``tornado``:
 
 
 .. _http_problem: https://tools.ietf.org/html/draft-ietf-appsawg-http-problem-00
+.. _Gevent: http://www.gevent.org/
 .. _Jinja2: http://jinja.pocoo.org/
 .. _swagger.spec: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md
 .. _swagger.spec.operation: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#operation-object
