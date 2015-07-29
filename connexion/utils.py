@@ -86,8 +86,11 @@ def produces_json(produces):
     return maintype == 'application' and subtype.endswith('+json')
 
 
-def parse_datetime(s: str):
-    '''http://xml2rfc.ietf.org/public/rfc/html/rfc3339.html#anchor14'''
+def parse_datetime(s):
+    """
+    http://xml2rfc.ietf.org/public/rfc/html/rfc3339.html#anchor14'''
+    :type s: str
+    """
     if '.' in s:
         time_secfrac = '.%f'
     else:
