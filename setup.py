@@ -1,12 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import platform
 import sys
 
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 
 version = '0.8'
+py_major_version, py_minor_version, _ = platform.python_version_tuple()
+
+requires = ['flask', 'PyYAML', 'tornado', 'requests', 'six']
+
+if py_major_version == 2 or (py_major_version == 3 and py_minor_version < 4):
+    requires.append('pathlib')
 
 
 class PyTest(TestCommand):
@@ -36,7 +43,7 @@ setup(
     author='Zalando SE',
     url='https://github.com/zalando/connexion',
     license='Apache License Version 2.0',
-    install_requires=['flask', 'PyYAML', 'tornado', 'requests', 'six'],
+    install_requires=requires,
     tests_require=['pytest-cov', 'pytest'],
     cmdclass={'test': PyTest},
     classifiers=[
