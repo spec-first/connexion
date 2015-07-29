@@ -6,7 +6,7 @@ import sys
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 
-version = '0.7.1'
+version = '0.8'
 
 
 class PyTest(TestCommand):
@@ -41,6 +41,7 @@ setup(
     cmdclass={'test': PyTest},
     classifiers=[
         'Programming Language :: Python',
+        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.4',
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
