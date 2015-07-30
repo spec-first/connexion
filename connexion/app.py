@@ -170,7 +170,8 @@ class App:
         logger.debug('Adding %s with decorator', rule, extra=options)
         return self.app.route(rule, **options)
 
-    def run(self):
+    def run(self):  # pragma: no cover
+        # this functions is not covered in unit tests because we would effectively testing the mocks
         logger.debug('Starting {} HTTP server..'.format(self.server), extra=vars(self))
         if self.server == 'flask':
             self.app.run('0.0.0.0', port=self.port, debug=self.debug)
