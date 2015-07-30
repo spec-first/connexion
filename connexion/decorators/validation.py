@@ -17,8 +17,8 @@ import logging
 import numbers
 import re
 import six
+import strict_rfc3339
 
-from connexion.utils import parse_datetime
 from connexion.problem import problem
 
 logger = logging.getLogger('connexion.decorators.validation')
@@ -32,18 +32,15 @@ TYPE_MAP = {'integer': int,
             'array': list,
             'object': dict}  # map of swagger types to python types
 
-FORMAT_MAP = {('string', 'date-time'): parse_datetime}
+FORMAT_MAP = {('string', 'date-time'): strict_rfc3339.validate_rfc3339}
 
 
 def validate_format(schema, data):
     schema_type = schema.get('type')
     schema_format = schema.get('format')
     func = FORMAT_MAP.get((schema_type, schema_format))
-    if func:
-        try:
-            func(data)
-        except:
-            return "Invalid value, expected {} in '{}' format".format(schema_type, schema_format)
+    if func and not func(data):
+        return "Invalid value, expected {} in '{}' format".format(schema_type, schema_format)
 
 
 def validate_pattern(schema, data):

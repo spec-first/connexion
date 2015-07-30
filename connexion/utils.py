@@ -84,23 +84,3 @@ def produces_json(produces):
     # todo handle parameters
     maintype, subtype = mimetype.split('/')  # type: str, str
     return maintype == 'application' and subtype.endswith('+json')
-
-
-def parse_datetime(s):
-    """
-    http://xml2rfc.ietf.org/public/rfc/html/rfc3339.html#anchor14'''
-    :type s: str
-    """
-    if '.' in s:
-        time_secfrac = '.%f'
-    else:
-        # missing "time-secfrac" (milliseconds)
-        time_secfrac = ''
-    try:
-        # "Z" for UTC
-        datetime.datetime.strptime(s, '%Y-%m-%dT%H:%M:%S{}Z'.format(time_secfrac))
-    except:
-        # "+02:00" time zone offset
-        # remove the ":" first (%z expects "+0200")
-        x = s[:-3] + s[-2:]
-        datetime.datetime.strptime(x, '%Y-%m-%dT%H:%M:%S{}%z'.format(time_secfrac))
