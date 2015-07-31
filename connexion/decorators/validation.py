@@ -65,7 +65,21 @@ def validate_maximum(schema, data):
         return 'Invalid value, must be at most {}'.format(maximum)
 
 
-VALIDATORS = [validate_format, validate_pattern, validate_minimum, validate_maximum]
+def validate_min_length(schema, data):
+    minimum = schema.get('minLength')
+    if minimum is not None and len(data) < minimum:
+        return 'Length must be at least {}'.format(minimum)
+
+
+def validate_max_length(schema, data):
+    maximum = schema.get('maxLength')
+    if maximum is not None and len(data) > maximum:
+        return 'Length must be at most {}'.format(maximum)
+
+
+VALIDATORS = [validate_format, validate_pattern,
+              validate_minimum, validate_maximum,
+              validate_min_length, validate_max_length]
 
 
 class RequestBodyValidator:
