@@ -77,9 +77,16 @@ def validate_max_length(schema, data):
         return 'Length must be at most {}'.format(maximum)
 
 
+def validate_enum(schema, data):
+    enum_values = schema.get('enum')
+    if enum_values is not None and data not in enum_values:
+        return 'Enum value must be one of {}'.format(enum_values)
+
+
 VALIDATORS = [validate_format, validate_pattern,
               validate_minimum, validate_maximum,
-              validate_min_length, validate_max_length]
+              validate_min_length, validate_max_length,
+              validate_enum]
 
 
 class RequestBodyValidator:
