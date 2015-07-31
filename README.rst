@@ -26,7 +26,7 @@ Connexion
    :alt: License
 
 Connexion is a framework on top of Flask_ to automagically handle your REST API requests
-based on `Swagger 2.0 Specification <swagger.spec_>`_ files
+based on `Swagger 2.0 Specification`_ files
 in YAML.
 
 How to use
@@ -58,7 +58,7 @@ If a value is provided both globally and on the api then the api value will take
 
 Endpoint Routing
 ----------------
-Connexion uses the ``OperationId`` from each `Operation Object <swagger.spec.operation_>`_  to identify which function
+Connexion uses the ``OperationId`` from each `Operation Object`_  to identify which function
 should handle each url.
 
 For example:
@@ -170,8 +170,8 @@ limitations under the License.
 .. _Flask: http://flask.pocoo.org/
 .. _Jinja2: http://jinja.pocoo.org/
 .. _rfc6750: https://tools.ietf.org/html/rfc6750
-.. _swagger.spec: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md
-.. _swagger.spec.operation: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#operation-object
+.. _Swagger 2.0 Specification: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md
+.. _Operation Object: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#operation-object
 .. _swager.spec.security_definition: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-definitions-object
 .. _swager.spec.security_requirement: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-requirement-object
 .. _Tornado: http://www.tornadoweb.org/en/stable/
