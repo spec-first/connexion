@@ -24,7 +24,8 @@ logger = logging.getLogger('connexion.decorators.produces')
 class JSONEncoder(json.JSONEncoder):
     def default(self, o):
         if isinstance(o, datetime.datetime):
-            return o.isoformat('T')
+            # only supports UTC timestamps
+            return o.isoformat('T') + 'Z'
         return json.JSONEncoder.default(self, o)
 
 
