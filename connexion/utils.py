@@ -88,6 +88,8 @@ def produces_json(produces):
 
 def validate_date(s):
     '''
+    Validate date as defined by "full-date" on http://xml2rfc.ietf.org/public/rfc/html/rfc3339.html#anchor14
+
     >>> validate_date('foo')
     False
 
