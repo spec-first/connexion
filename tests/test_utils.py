@@ -21,3 +21,10 @@ def test_get_function_from_name():
     function = utils.get_function_from_name('math.ceil')
     assert function == math.ceil
     assert function(2.7) == 3
+
+
+def test_validate_date():
+    assert not utils.validate_date('foo')
+    assert utils.validate_date('2015-07-31')
+    assert not utils.validate_date('2015-07-31T19:51:00Z')
+    assert utils.validate_date('9999-12-31')

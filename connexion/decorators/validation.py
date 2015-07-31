@@ -20,6 +20,7 @@ import six
 import strict_rfc3339
 
 from connexion.problem import problem
+from connexion.utils import validate_date
 
 logger = logging.getLogger('connexion.decorators.validation')
 
@@ -32,7 +33,9 @@ TYPE_MAP = {'integer': int,
             'array': list,
             'object': dict}  # map of swagger types to python types
 
-FORMAT_MAP = {('string', 'date-time'): strict_rfc3339.validate_rfc3339}
+
+FORMAT_MAP = {('string', 'date-time'): strict_rfc3339.validate_rfc3339,
+              ('string', 'date'): validate_date}
 
 
 def validate_format(schema, data):

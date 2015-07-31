@@ -13,6 +13,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 import importlib
 import re
+import strict_rfc3339
 
 PATH_PARAMETER = re.compile(r'\{([^}]*)\}')
 
@@ -83,3 +84,14 @@ def produces_json(produces):
     # todo handle parameters
     maintype, subtype = mimetype.split('/')  # type: str, str
     return maintype == 'application' and subtype.endswith('+json')
+
+
+def validate_date(s):
+    '''
+    >>> validate_date('foo')
+    False
+
+    >>> validate_date('2015-07-31')
+    True
+    '''
+    return strict_rfc3339.validate_rfc3339(s + 'T00:00:00Z')
