@@ -11,16 +11,18 @@ Unless required by applicable law or agreed to in writing, software distributed 
  language governing permissions and limitations under the License.
 """
 
-import datetime
 import importlib
 import re
 
 PATH_PARAMETER = re.compile(r'\{([^}]*)\}')
 
 
-def flaskify_endpoint(identifier: str) -> str:
+def flaskify_endpoint(identifier):
     """
     Converts the provided identifier in a valid flask endpoint name
+
+    :type identifier: str
+    :rtype: str
     """
     return identifier.replace('.', '_')
 
@@ -29,9 +31,12 @@ def convert_path_parameter(match):
     return '<{}>'.format(match.group(1).replace('-', '_'))
 
 
-def flaskify_path(swagger_path: str) -> str:
+def flaskify_path(swagger_path):
     """
     Convert swagger path templates to flask path templates
+
+    :type swagger_path: str
+    :rtype: str
 
     >>> flaskify_path('/foo-bar/{my-param}')
     '/foo-bar/<my_param>'
@@ -40,15 +45,21 @@ def flaskify_path(swagger_path: str) -> str:
     return PATH_PARAMETER.sub(convert_path_parameter, swagger_path)
 
 
-def get_function_from_name(operation_id: str) -> str:
-    module_name, function_name = operation_id.rsplit('.', maxsplit=1)
+def get_function_from_name(operation_id):
+    """
+    :type operation_id: str
+    """
+    module_name, function_name = operation_id.rsplit('.', 1)
     module = importlib.import_module(module_name)
     function = getattr(module, function_name)
     return function
 
 
-def produces_json(produces: list) -> bool:
+def produces_json(produces):
     """
+    :type produces: list
+    :rtype: bool
+
     >>> produces_json(['application/json'])
     True
     >>> produces_json(['application/x.custom+json'])
@@ -72,20 +83,3 @@ def produces_json(produces: list) -> bool:
     # todo handle parameters
     maintype, subtype = mimetype.split('/')  # type: str, str
     return maintype == 'application' and subtype.endswith('+json')
-
-
-def parse_datetime(s: str):
-    '''http://xml2rfc.ietf.org/public/rfc/html/rfc3339.html#anchor14'''
-    if '.' in s:
-        time_secfrac = '.%f'
-    else:
-        # missing "time-secfrac" (milliseconds)
-        time_secfrac = ''
-    try:
-        # "Z" for UTC
-        datetime.datetime.strptime(s, '%Y-%m-%dT%H:%M:%S{}Z'.format(time_secfrac))
-    except:
-        # "+02:00" time zone offset
-        # remove the ":" first (%z expects "+0200")
-        x = s[:-3] + s[-2:]
-        datetime.datetime.strptime(x, '%Y-%m-%dT%H:%M:%S{}%z'.format(time_secfrac))
