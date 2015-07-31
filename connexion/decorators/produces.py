@@ -12,12 +12,20 @@ Unless required by applicable law or agreed to in writing, software distributed 
 """
 
 # Decorators to change the return type of endpoints
+import datetime
 import flask
 import functools
 import json
 import logging
 
 logger = logging.getLogger('connexion.decorators.produces')
+
+
+class JSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, datetime.datetime):
+            return o.isoformat('T')
+        return json.JSONEncoder.default(self, o)
 
 
 class BaseSerializer:
@@ -108,7 +116,7 @@ class Jsonifier(BaseSerializer):
                 logger.debug('Endpoint returned an empty response (204)', extra={'url': url, 'mimetype': self.mimetype})
                 return '', 204
 
-            data = json.dumps(data, indent=2)
+            data = json.dumps(data, indent=2, cls=JSONEncoder)
             response = flask.current_app.response_class(data, mimetype=self.mimetype)  # type: flask.Response
             return response, status_code
 
