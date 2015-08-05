@@ -41,6 +41,8 @@ Put your API YAML inside a folder in the root path of your application (e.g ``sw
     app = connexion.App(__name__, port = 8080, specification_dir='swagger/')
     app.add_api('my_api.yaml')
     app.run()
+    
+See the `Connexion Pet Store Example Application`_ for details.
 
 Parametrization
 ---------------
@@ -175,4 +177,5 @@ limitations under the License.
 .. _swager.spec.security_definition: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-definitions-object
 .. _swager.spec.security_requirement: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-requirement-object
 .. _Tornado: http://www.tornadoweb.org/en/stable/
+.. _Connexion Pet Store Example Application: https://github.com/hjacobs/connexion-example
 
