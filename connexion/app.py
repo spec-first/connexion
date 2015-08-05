@@ -186,7 +186,7 @@ class App:
                 import gevent.wsgi
             except:
                 raise Exception('gevent library not installed')
-            http_server = gevent.wsgi.WSGIServer(('', 8080), self.app)
+            http_server = gevent.wsgi.WSGIServer(('', self.port), self.app)
             logger.info('Listening on port {port}..'.format(port=self.port))
             http_server.serve_forever()
         else:
