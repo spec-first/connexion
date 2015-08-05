@@ -20,8 +20,13 @@ import requests
 
 from connexion.problem import problem
 
-
 logger = logging.getLogger('connexion.api.security')
+
+# use connection pool for OAuth tokeninfo
+adapter = requests.adapters.HTTPAdapter(pool_connections=100, pool_maxsize=100)
+session = requests.Session()
+session.mount('http://', adapter)
+session.mount('https://', adapter)
 
 
 def security_passthrough(function):
@@ -54,7 +59,7 @@ def verify_oauth(token_info_url, allowed_scopes, function):
         else:
             _, token = authorization.split()
             logger.debug("... Getting token '%s' from %s", token, token_info_url)
-            token_request = requests.get(token_info_url, params={'access_token': token})
+            token_request = session.get(token_info_url, params={'access_token': token}, timeout=5)
             logger.debug("... Token info (%d): %s", token_request.status_code, token_request.text)
             if not token_request.ok:
                 return problem(401, 'Unauthorized', "Provided oauth token is not valid")

@@ -30,7 +30,7 @@ class FakeResponse:
 
 @pytest.fixture
 def oauth_requests(monkeypatch):
-    def fake_get(url, params=None):
+    def fake_get(url, params=None, timeout=None):
         """
         :type url: str
         :type params: dict| None
@@ -46,7 +46,7 @@ def oauth_requests(monkeypatch):
                 return FakeResponse(404, '')
         return url
 
-    monkeypatch.setattr(requests, 'get', fake_get)
+    monkeypatch.setattr('connexion.decorators.security.session.get', fake_get)
 
 
 @pytest.fixture
