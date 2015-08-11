@@ -20,6 +20,10 @@ import logging
 
 logger = logging.getLogger('connexion.decorators.produces')
 
+# special marker object to return empty content for any status code
+# e.g. in app method do "return NoContent, 201"
+NoContent = object()
+
 
 class JSONEncoder(json.JSONEncoder):
     def default(self, o):
@@ -113,6 +117,8 @@ class Jsonifier(BaseSerializer):
             if isinstance(data, flask.Response):  # if the function returns a Response object don't change it
                 logger.debug('Endpoint returned a Flask Response', extra={'url': url, 'mimetype': data.mimetype})
                 return data
+            elif data is NoContent:
+                return '', status_code
             elif status_code == 204:
                 logger.debug('Endpoint returned an empty response (204)', extra={'url': url, 'mimetype': self.mimetype})
                 return '', 204
