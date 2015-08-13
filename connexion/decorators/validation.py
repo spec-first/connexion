@@ -161,6 +161,7 @@ class RequestBodyValidator:
 
 class ParameterValidator():
     def __init__(self, parameters):
+        # TODO: this is wrong
         self.parameters = {p.get('in'): p for p in parameters}
 
     def __call__(self, function):
@@ -172,6 +173,8 @@ class ParameterValidator():
         @functools.wraps(function)
         def wrapper(*args, **kwargs):
             logger.debug("%s validating parameters...", flask.request.url)
+
+            # TODO
 
             response = function(*args, **kwargs)
             return response
