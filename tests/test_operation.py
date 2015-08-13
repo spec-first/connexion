@@ -21,7 +21,7 @@ DEFINITIONS = {'new_stack': {'required': ['image_version', 'keep_stacks', 'new_t
                                             'new_traffic': {'type': 'integer',
                                                             'description':
                                                                 'Percentage of the traffic'}}}}
-PARAMETER_DEFINITIONS = {}
+PARAMETER_DEFINITIONS = {'myparam': {'in': 'path', 'type': 'integer'}}
 
 OPERATION1 = {'description': 'Adds a new stack to be created by lizzy and returns the '
                              'information needed to keep track of deployment',
@@ -92,6 +92,9 @@ OPERATION3 = {'description': 'Adds a new stack to be created by lizzy and return
                                   'schema': {'$ref': '#/definitions/problem'}}},
               'security': [{'oauth': ['uid']}],
               'summary': 'Create new stack'}
+
+OPERATION4 = {'operationId': 'fakeapi.hello.post_greeting',
+              'parameters': [{'$ref': '#/parameters/myparam'}]}
 
 SECURITY_DEFINITIONS = {'oauth': {'type': 'oauth2',
                                   'flow': 'password',
@@ -191,3 +194,15 @@ def test_no_token_info():
     assert operation.produces == ['application/json']
     assert operation.security == [{'oauth': ['uid']}]
     assert operation.body_schema == DEFINITIONS['new_stack']
+
+
+def test_parameter_reference():
+    operation = Operation(method='GET',
+                          path='endpoint',
+                          operation=OPERATION4,
+                          app_produces=['application/json'],
+                          app_security=[],
+                          security_definitions={},
+                          definitions={},
+                          parameter_definitions=PARAMETER_DEFINITIONS)
+    assert operation.parameters == [{'in': 'path', 'type': 'integer'}]
