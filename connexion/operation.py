@@ -28,7 +28,7 @@ class Operation:
     A single API operation on a path.
     """
 
-    def __init__(self, method, path, operation, app_produces, app_security, security_definitions, definitions):
+    def __init__(self, method, path, operation, app_produces, app_security, security_definitions, definitions, parameter_definitions):
         """
         This class uses the OperationID identify the module and function that will handle the operation
 
@@ -61,16 +61,49 @@ class Operation:
         self.path = path
         self.security_definitions = security_definitions
         self.definitions = definitions
+        self.parameter_definitions = parameter_definitions
+        self.definitions_map = {
+                'definitions': self.definitions,
+                'parameters': self.parameter_definitions
+        }
 
         self.operation = operation
         self.operation_id = operation['operationId']
         # todo support definition references
         # todo support references to application level parameters
-        self.parameters = operation.get('parameters', [])
+        self.parameters = list(self.resolve_parameters(operation.get('parameters', [])))
         self.produces = operation.get('produces', app_produces)
         self.endpoint_name = flaskify_endpoint(self.operation_id)
         self.security = operation.get('security', app_security)
         self.__undecorated_function = get_function_from_name(self.operation_id)
+
+    def resolve_reference(self, schema):
+        schema = schema.copy()  # avoid changing the original schema
+        reference = schema.get('$ref')  # type: str
+        if reference:
+            if not reference.startswith('#/'):
+                raise InvalidSpecification(
+                    "{method} {path}  '$ref' needs to start with '#/'".format(**vars(self)))
+            path = reference.split('/')
+            definition_type = path[1]
+            try:
+                definitions = self.definitions_map[definition_type]
+            except KeyError:
+                raise InvalidSpecification(
+                       "{method} {path}  '$ref' needs to point to definitions or parameters".format(**vars(self)))
+            definition_name = path[-1]
+            try:
+                schema.update(definitions[definition_name])
+            except KeyError:
+                raise InvalidSpecification("{method} {path} Definition '{definition_name}' not found".format(
+                    definition_name=definition_name, method=self.method, path=self.path))
+            del schema['$ref']
+        return schema
+
+    def resolve_parameters(self, parameters):
+        for param in parameters:
+            param = self.resolve_reference(param)
+            yield param
 
     @property
     def body_schema(self):
@@ -95,19 +128,7 @@ class Operation:
         schema = body_parameters.get('schema')  # type: dict
 
         if schema:
-            schema = schema.copy()  # avoid changing the original schema
-            reference = schema.get('$ref')  # type: str
-            if reference:
-                if not reference.startswith('#/definitions/'):
-                    raise InvalidSpecification(
-                        "{method} {path}  '$ref' needs to to point to definitions".format(**vars(self)))
-                definition_name = reference[14:]
-                try:
-                    schema.update(self.definitions[definition_name])
-                except KeyError:
-                    raise InvalidSpecification("{method} {path} Definition '{definition_name}' not found".format(
-                        definition_name=definition_name, method=self.method, path=self.path))
-                del schema['$ref']
+            schema = self.resolve_reference(schema)
         return schema
 
     @property

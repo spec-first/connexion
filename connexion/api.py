@@ -70,6 +70,7 @@ class Api:
         logger.debug('Security Definitions: %s', self.security_definitions)
 
         self.definitions = self.specification.get('definitions', {})
+        self.parameter_definitions = self.specification.get('parameters', {})
 
         # Create blueprint and endpoints
         self.blueprint = self.create_blueprint()
@@ -98,7 +99,8 @@ class Api:
         """
         operation = Operation(method=method, path=path, operation=swagger_operation,
                               app_produces=self.produces, app_security=self.security,
-                              security_definitions=self.security_definitions, definitions=self.definitions)
+                              security_definitions=self.security_definitions, definitions=self.definitions,
+                              parameter_definitions=self.parameter_definitions)
         operation_id = operation.operation_id
         logger.debug('... Adding %s -> %s', method.upper(), operation_id, extra=vars(operation))
 

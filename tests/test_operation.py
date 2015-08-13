@@ -21,6 +21,7 @@ DEFINITIONS = {'new_stack': {'required': ['image_version', 'keep_stacks', 'new_t
                                             'new_traffic': {'type': 'integer',
                                                             'description':
                                                                 'Percentage of the traffic'}}}}
+PARAMETER_DEFINITIONS = {}
 
 OPERATION1 = {'description': 'Adds a new stack to be created by lizzy and returns the '
                              'information needed to keep track of deployment',
@@ -109,7 +110,8 @@ def test_operation():
                           app_produces=['application/json'],
                           app_security=[],
                           security_definitions=SECURITY_DEFINITIONS,
-                          definitions=DEFINITIONS)
+                          definitions=DEFINITIONS,
+                          parameter_definitions=PARAMETER_DEFINITIONS)
     assert isinstance(operation.function, types.FunctionType)
     # security decorator should be a partial with verify_oauth as the function and token url and scopes as arguments.
     # See https://docs.python.org/2/library/functools.html#partial-objects
@@ -129,7 +131,8 @@ def test_non_existent_reference():
                           app_produces=['application/json'],
                           app_security=[],
                           security_definitions={},
-                          definitions={})
+                          definitions={},
+                          parameter_definitions={})
     with pytest.raises(InvalidSpecification) as exc_info:  # type: py.code.ExceptionInfo
         schema = operation.body_schema
 
@@ -145,7 +148,8 @@ def test_multi_body():
                           app_produces=['application/json'],
                           app_security=[],
                           security_definitions={},
-                          definitions=DEFINITIONS)
+                          definitions=DEFINITIONS,
+                          parameter_definitions=PARAMETER_DEFINITIONS)
     with pytest.raises(InvalidSpecification) as exc_info:  # type: py.code.ExceptionInfo
         schema = operation.body_schema
 
@@ -161,13 +165,14 @@ def test_invalid_reference():
                           app_produces=['application/json'],
                           app_security=[],
                           security_definitions={},
-                          definitions=DEFINITIONS)
+                          definitions=DEFINITIONS,
+                          parameter_definitions=PARAMETER_DEFINITIONS)
     with pytest.raises(InvalidSpecification) as exc_info:  # type: py.code.ExceptionInfo
         schema = operation.body_schema
 
     exception = exc_info.value
-    assert str(exception) == "<InvalidSpecification: GET endpoint  '$ref' needs to to point to definitions>"
-    assert repr(exception) == "<InvalidSpecification: GET endpoint  '$ref' needs to to point to definitions>"
+    assert str(exception) == "<InvalidSpecification: GET endpoint  '$ref' needs to point to definitions or parameters>"
+    assert repr(exception) == "<InvalidSpecification: GET endpoint  '$ref' needs to point to definitions or parameters>"
 
 
 def test_no_token_info():
@@ -177,7 +182,8 @@ def test_no_token_info():
                           app_produces=['application/json'],
                           app_security=SECURITY_DEFINITIONS_WO_INFO,
                           security_definitions=SECURITY_DEFINITIONS_WO_INFO,
-                          definitions=DEFINITIONS)
+                          definitions=DEFINITIONS,
+                          parameter_definitions=PARAMETER_DEFINITIONS)
     assert isinstance(operation.function, types.FunctionType)
     assert operation._Operation__security_decorator is security_passthrough
 
