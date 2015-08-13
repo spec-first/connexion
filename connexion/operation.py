@@ -16,7 +16,7 @@ import logging
 
 from connexion.decorators.produces import BaseSerializer, Produces, Jsonifier
 from connexion.decorators.security import security_passthrough, verify_oauth
-from connexion.decorators.validation import RequestBodyValidator
+from connexion.decorators.validation import RequestBodyValidator, ParameterValidator
 from connexion.exceptions import InvalidSpecification
 from connexion.utils import flaskify_endpoint, get_function_from_name, produces_json
 
@@ -147,8 +147,7 @@ class Operation:
         logger.debug('... Adding security decorator (%r)', security_decorator, extra=vars(self))
         function = security_decorator(function)
 
-        validation_decorator = self.__validation_decorator
-        if validation_decorator:
+        for validation_decorator in self.__validation_decorators:
             function = validation_decorator(function)
 
         return function
@@ -238,9 +237,11 @@ class Operation:
         return security_passthrough
 
     @property
-    def __validation_decorator(self):
+    def __validation_decorators(self):
         """
         :rtype: types.FunctionType
         """
+        if self.parameters:
+            yield ParameterValidator(self.parameters)
         if self.body_schema:
-            return RequestBodyValidator(self.body_schema)
+            yield RequestBodyValidator(self.body_schema)

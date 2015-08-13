@@ -5,3 +5,4 @@ __pycache__
 .coverage
 *.egg
 htmlcov/
+*.pyc

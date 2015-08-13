@@ -157,3 +157,23 @@ class RequestBodyValidator:
                 error = func(schema, data)
                 if error:
                     return problem(400, 'Bad Request', error)
+
+
+class ParameterValidator():
+    def __init__(self, parameters):
+        self.parameters = {p.get('in'): p for p in parameters}
+
+    def __call__(self, function):
+        """
+        :type function: types.FunctionType
+        :rtype: types.FunctionType
+        """
+
+        @functools.wraps(function)
+        def wrapper(*args, **kwargs):
+            logger.debug("%s validating parameters...", flask.request.url)
+
+            response = function(*args, **kwargs)
+            return response
+
+        return wrapper
