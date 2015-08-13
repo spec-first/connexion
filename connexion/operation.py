@@ -28,7 +28,8 @@ class Operation:
     A single API operation on a path.
     """
 
-    def __init__(self, method, path, operation, app_produces, app_security, security_definitions, definitions, parameter_definitions):
+    def __init__(self, method, path, operation, app_produces, app_security,
+                 security_definitions, definitions, parameter_definitions):
         """
         This class uses the OperationID identify the module and function that will handle the operation
 
@@ -63,8 +64,8 @@ class Operation:
         self.definitions = definitions
         self.parameter_definitions = parameter_definitions
         self.definitions_map = {
-                'definitions': self.definitions,
-                'parameters': self.parameter_definitions
+            'definitions': self.definitions,
+            'parameters': self.parameter_definitions
         }
 
         self.operation = operation
@@ -90,7 +91,7 @@ class Operation:
                 definitions = self.definitions_map[definition_type]
             except KeyError:
                 raise InvalidSpecification(
-                       "{method} {path}  '$ref' needs to point to definitions or parameters".format(**vars(self)))
+                    "{method} {path}  '$ref' needs to point to definitions or parameters".format(**vars(self)))
             definition_name = path[-1]
             try:
                 schema.update(definitions[definition_name])
