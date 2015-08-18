@@ -30,6 +30,10 @@ class JSONEncoder(json.JSONEncoder):
         if isinstance(o, datetime.datetime):
             # only supports UTC timestamps
             return o.isoformat('T') + 'Z'
+
+        if isinstance(o, datetime.date):
+            return o.isoformat()
+
         return json.JSONEncoder.default(self, o)
 
 
