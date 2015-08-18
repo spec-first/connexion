@@ -33,7 +33,7 @@ class JSONEncoder(json.JSONEncoder):
 
         if isinstance(o, datetime.date):
             return o.isoformat()
-            
+
         return json.JSONEncoder.default(self, o)
 
 
