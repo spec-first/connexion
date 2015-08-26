@@ -23,8 +23,6 @@ paths:
       summary: Generate greeting
       description: Generates a greeting message.
       operationId: fakeapi.hello.post_greeting
-      produces:
-        - application/json
       responses:
         200:
           description: greeting response

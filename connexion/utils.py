@@ -56,8 +56,19 @@ def get_function_from_name(operation_id):
     return function
 
 
+def is_json_mimetype(mimetype):
+    """
+    :type mimetype: str
+    :rtype: bool
+    """
+    maintype, subtype = mimetype.split('/')  # type: str, str
+    return maintype == 'application' and (subtype == 'json' or subtype.endswith('+json'))
+
+
 def produces_json(produces):
     """
+    Returns True if all mimetypes in produces are serialized with json
+
     :type produces: list
     :rtype: bool
 
@@ -66,24 +77,17 @@ def produces_json(produces):
     >>> produces_json(['application/x.custom+json'])
     True
     >>> produces_json([])
-    False
+    True
     >>> produces_json(['application/xml'])
     False
     >>> produces_json(['text/json'])
     False
     >>> produces_json(['application/json', 'other/type'])
     False
+    >>> produces_json(['application/json', 'application/x.custom+json'])
+    True
     """
-    if len(produces) != 1:
-        return False
-
-    mimetype = produces[0]  # type: str
-    if mimetype == 'application/json':
-        return True
-
-    # todo handle parameters
-    maintype, subtype = mimetype.split('/')  # type: str, str
-    return maintype == 'application' and subtype.endswith('+json')
+    return all(is_json_mimetype(mimetype) for mimetype in produces)
 
 
 def validate_date(s):

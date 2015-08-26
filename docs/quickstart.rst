@@ -69,8 +69,10 @@ the API to your application:
 
 Response Serialization
 ----------------------
-If the specification defines that a endpoint returns json connexion will automatically serialize the return value for
-you and set the right content type in the HTTP header.
+By default and if the specification defines that a endpoint produces only json connexion will automatically serialize
+the return value for you and set the right content type in the HTTP header.
+If the endpoint produces a single non json mimetype then connexion will automatically  set the right content type in the
+HTTP header.
 
 
 Error Handling

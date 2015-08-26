@@ -7,10 +7,10 @@ import sys
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 
-version = '0.8.6'
+version = '0.9.0'
 py_major_version, py_minor_version, _ = (int(v) for v in platform.python_version_tuple())
 
-requires = ['flask', 'PyYAML', 'tornado', 'requests', 'six', 'strict-rfc3339']
+requires = ['flask', 'PyYAML', 'requests', 'six', 'strict-rfc3339']
 
 if py_major_version == 2 or (py_major_version == 3 and py_minor_version < 4):
     requires.append('pathlib')
