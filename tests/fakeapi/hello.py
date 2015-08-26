@@ -66,3 +66,6 @@ def schema_list():
 
 def schema_format():
     return ''
+
+def test_parameter_validation():
+    return ''

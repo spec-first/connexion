@@ -250,6 +250,14 @@ paths:
           description: goodbye response
           schema:
             type: string
+  /test_parameter_validation:
+    get:
+      operationId: fakeapi.hello.test_parameter_validation
+      parameters:
+        - name: date
+          in: query
+          type: string
+          format: date
 definitions:
   new_stack:
     type: object

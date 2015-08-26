@@ -325,3 +325,9 @@ def test_single_route(app):
 
     get_single2 = app_client.get('/single2')  # type: flask.Response
     assert get_single2.status_code == 405
+
+
+def test_parameter_validation(app):
+    app_client = app.app.test_client()
+    response = app_client.get('/v1.0/test_parameter_validation', query_string={'date': ''})  # type: flask.Response
+    assert response.status_code == 400
