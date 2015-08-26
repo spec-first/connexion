@@ -15,9 +15,6 @@ import logging
 import pathlib
 
 import flask
-import tornado.wsgi
-import tornado.httpserver
-import tornado.ioloop
 import werkzeug.exceptions
 
 from connexion.problem import problem
@@ -176,6 +173,12 @@ class App:
         if self.server == 'flask':
             self.app.run('0.0.0.0', port=self.port, debug=self.debug)
         elif self.server == 'tornado':
+            try:
+                import tornado.wsgi
+                import tornado.httpserver
+                import tornado.ioloop
+            except:
+                raise Exception('tornado library not installed')
             wsgi_container = tornado.wsgi.WSGIContainer(self.app)
             http_server = tornado.httpserver.HTTPServer(wsgi_container)
             http_server.listen(self.port)
