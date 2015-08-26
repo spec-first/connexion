@@ -143,12 +143,13 @@ class Operation:
         logger.debug('... Adding produces decorator (%r)', produces_decorator, extra=vars(self))
         function = produces_decorator(self.__undecorated_function)
 
+        for validation_decorator in self.__validation_decorators:
+            function = validation_decorator(function)
+
+        # NOTE: the security decorator should be applied last to check auth before anything else :-)
         security_decorator = self.__security_decorator
         logger.debug('... Adding security decorator (%r)', security_decorator, extra=vars(self))
         function = security_decorator(function)
-
-        for validation_decorator in self.__validation_decorators:
-            function = validation_decorator(function)
 
         return function
 
