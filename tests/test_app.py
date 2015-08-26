@@ -353,3 +353,14 @@ def test_parameter_validation(app):
 
     response = app_client.get(url, query_string={'bool': 'true'})  # type: flask.Response
     assert response.status_code == 200
+
+
+def test_required_query_param(app):
+    app_client = app.app.test_client()
+
+    url = '/v1.0/test_required_query_param'
+    response = app_client.get(url)
+    assert response.status_code == 400
+
+    response = app_client.get(url, query_string={'n': '1.23'})
+    assert response.status_code == 200

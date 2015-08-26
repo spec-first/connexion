@@ -69,3 +69,6 @@ def schema_format():
 
 def test_parameter_validation():
     return ''
+
+def test_required_query_param():
+    return ''

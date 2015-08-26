@@ -264,6 +264,14 @@ paths:
         - name: bool
           in: query
           type: boolean
+  /test_required_query_param:
+    get:
+      operationId: fakeapi.hello.test_required_query_param
+      parameters:
+        - name: n
+          in: query
+          type: number
+          required: true
 definitions:
   new_stack:
     type: object
