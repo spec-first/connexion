@@ -21,7 +21,7 @@ import six
 import strict_rfc3339
 
 from connexion.problem import problem
-from connexion.utils import validate_date
+from connexion.utils import validate_date, boolean
 
 logger = logging.getLogger('connexion.decorators.validation')
 
@@ -33,6 +33,12 @@ TYPE_MAP = {'integer': int,
             'boolean': bool,
             'array': list,
             'object': dict}  # map of swagger types to python types
+
+TYPE_VALIDATION_MAP = {
+    'integer': int,
+    'number': float,
+    'boolean': boolean
+}
 
 
 FORMAT_MAP = {('string', 'date-time'): strict_rfc3339.validate_rfc3339,
@@ -178,6 +184,14 @@ class ParameterValidator():
             for param in self.parameters.get('query', []):
                 val = flask.request.args.get(param['name'])
                 if val is not None:
+                    schema_type = param.get('type')
+                    expected_type = TYPE_VALIDATION_MAP.get(schema_type)
+                    if expected_type:
+                        try:
+                            expected_type(val)
+                        except:
+                            m = "Wrong type, expected '{}' for query parameter '{}'".format(schema_type, param['name'])
+                            return problem(400, 'Bad Request', m)
                     for func in VALIDATORS:
                         error = func(param, val)
                         if error:

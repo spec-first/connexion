@@ -258,6 +258,12 @@ paths:
           in: query
           type: string
           format: date
+        - name: int
+          in: query
+          type: integer
+        - name: bool
+          in: query
+          type: boolean
 definitions:
   new_stack:
     type: object

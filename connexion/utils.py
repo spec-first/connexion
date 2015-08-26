@@ -101,3 +101,21 @@ def validate_date(s):
     True
     '''
     return strict_rfc3339.validate_rfc3339(s + 'T00:00:00Z')
+
+
+def boolean(s):
+    '''
+    Convert JSON/Swagger boolean value to Python, raise ValueError otherwise
+
+    >>> boolean('true')
+    True
+
+    >>> boolean('false')
+    False
+    '''
+    if s == 'true':
+        return True
+    elif s == 'false':
+        return False
+    else:
+        raise ValueError('Invalid boolean value')
