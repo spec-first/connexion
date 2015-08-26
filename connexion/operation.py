@@ -172,7 +172,11 @@ class Operation:
         logger.debug('... Produces: %s', self.produces, extra=vars(self))
 
         if produces_json(self.produces):  # endpoint will return json
-            mimetype = self.produces[0]
+            try:
+                mimetype = self.produces[0]
+            except IndexError:
+                # if the endpoint as no 'produces' then the default is 'application/json'
+                mimetype = 'application/json'
             logger.debug('... Produces json', extra=vars(self))
             jsonify = Jsonifier(mimetype)
             return jsonify

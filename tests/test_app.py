@@ -167,6 +167,7 @@ def test_jsonifier(app):
     post_greeting = app_client.post('/v1.0/greeting/jsantos', data={})  # type: flask.Response
     assert post_greeting.status_code == 200
     assert post_greeting.content_type == 'application/json'
+    print(post_greeting.data)
     greeting_reponse = json.loads(post_greeting.data.decode('utf-8'))
     assert greeting_reponse['greeting'] == 'Hello jsantos'
 
