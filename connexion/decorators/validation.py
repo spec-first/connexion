@@ -168,7 +168,6 @@ class RequestBodyValidator:
 
 class ParameterValidator():
     def __init__(self, parameters):
-        # TODO: this is wrong
         self.parameters = {k: list(g) for k, g in itertools.groupby(parameters, key=lambda p: p['in'])}
 
     def __call__(self, function):
