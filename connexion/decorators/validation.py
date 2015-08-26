@@ -170,6 +170,29 @@ class ParameterValidator():
     def __init__(self, parameters):
         self.parameters = {k: list(g) for k, g in itertools.groupby(parameters, key=lambda p: p['in'])}
 
+    def validate_query_parameter(self, param):
+        '''
+        Validate a single query parameter (request.args in Flask)
+
+        :type param: dict
+        :rtype: str
+        '''
+        val = flask.request.args.get(param['name'])
+        if val is not None:
+            schema_type = param.get('type')
+            expected_type = TYPE_VALIDATION_MAP.get(schema_type)
+            if expected_type:
+                try:
+                    expected_type(val)
+                except:
+                    return "Wrong type, expected '{}' for query parameter '{}'".format(schema_type, param['name'])
+            for func in VALIDATORS:
+                error = func(param, val)
+                if error:
+                    return error
+        elif param.get('required'):
+            return "Missing query parameter '{}'".format(param['name'])
+
     def __call__(self, function):
         """
         :type function: types.FunctionType
@@ -181,22 +204,9 @@ class ParameterValidator():
             logger.debug("%s validating parameters...", flask.request.url)
 
             for param in self.parameters.get('query', []):
-                val = flask.request.args.get(param['name'])
-                if val is not None:
-                    schema_type = param.get('type')
-                    expected_type = TYPE_VALIDATION_MAP.get(schema_type)
-                    if expected_type:
-                        try:
-                            expected_type(val)
-                        except:
-                            m = "Wrong type, expected '{}' for query parameter '{}'".format(schema_type, param['name'])
-                            return problem(400, 'Bad Request', m)
-                    for func in VALIDATORS:
-                        error = func(param, val)
-                        if error:
-                            return problem(400, 'Bad Request', error)
-                elif param.get('required'):
-                    return problem(400, 'Bad Request', "Missing query parameter '{}'".format(param['name']))
+                error = self.validate_query_parameter(param)
+                if error:
+                    return problem(400, 'Bad Request', error)
 
             response = function(*args, **kwargs)
             return response
