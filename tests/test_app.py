@@ -329,5 +329,11 @@ def test_single_route(app):
 
 def test_parameter_validation(app):
     app_client = app.app.test_client()
-    response = app_client.get('/v1.0/test_parameter_validation', query_string={'date': ''})  # type: flask.Response
-    assert response.status_code == 400
+
+    for invalid_date in '', 'foo', '2015-01-01T12:00:00Z':
+        response = app_client.get('/v1.0/test_parameter_validation', query_string={'date': invalid_date})  # type: flask.Response
+        assert response.status_code == 400
+        assert response.content_type == 'application/problem+json'
+
+    response = app_client.get('/v1.0/test_parameter_validation', query_string={'date': '2015-08-26'})  # type: flask.Response
+    assert response.status_code == 200

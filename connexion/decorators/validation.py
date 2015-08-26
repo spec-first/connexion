@@ -13,6 +13,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 import flask
 import functools
+import itertools
 import logging
 import numbers
 import re
@@ -162,7 +163,7 @@ class RequestBodyValidator:
 class ParameterValidator():
     def __init__(self, parameters):
         # TODO: this is wrong
-        self.parameters = {p.get('in'): p for p in parameters}
+        self.parameters = {k: list(g) for k, g in itertools.groupby(parameters, key=lambda p: p['in'])}
 
     def __call__(self, function):
         """
@@ -174,7 +175,15 @@ class ParameterValidator():
         def wrapper(*args, **kwargs):
             logger.debug("%s validating parameters...", flask.request.url)
 
-            # TODO
+            for param in self.parameters.get('query', []):
+                val = flask.request.args.get(param['name'])
+                if val is not None:
+                    for func in VALIDATORS:
+                        error = func(param, val)
+                        if error:
+                            return problem(400, 'Bad Request', error)
+                elif param.get('required'):
+                    return problem(400, 'Bad Request', "Missing query parameter '{}'".format(param['name']))
 
             response = function(*args, **kwargs)
             return response
