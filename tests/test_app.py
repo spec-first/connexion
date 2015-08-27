@@ -325,3 +325,42 @@ def test_single_route(app):
 
     get_single2 = app_client.get('/single2')  # type: flask.Response
     assert get_single2.status_code == 405
+
+
+def test_parameter_validation(app):
+    app_client = app.app.test_client()
+
+    url = '/v1.0/test_parameter_validation'
+
+    for invalid_date in '', 'foo', '2015-01-01T12:00:00Z':
+        response = app_client.get(url, query_string={'date': invalid_date})  # type: flask.Response
+        assert response.status_code == 400
+        assert response.content_type == 'application/problem+json'
+
+    response = app_client.get(url, query_string={'date': '2015-08-26'})  # type: flask.Response
+    assert response.status_code == 200
+
+    for invalid_int in '', 'foo', '0.1':
+        response = app_client.get(url, query_string={'int': invalid_int})  # type: flask.Response
+        assert response.status_code == 400
+
+    response = app_client.get(url, query_string={'int': '123'})  # type: flask.Response
+    assert response.status_code == 200
+
+    for invalid_bool in '', 'foo', 'yes', 'False':
+        response = app_client.get(url, query_string={'bool': invalid_bool})  # type: flask.Response
+        assert response.status_code == 400
+
+    response = app_client.get(url, query_string={'bool': 'true'})  # type: flask.Response
+    assert response.status_code == 200
+
+
+def test_required_query_param(app):
+    app_client = app.app.test_client()
+
+    url = '/v1.0/test_required_query_param'
+    response = app_client.get(url)
+    assert response.status_code == 400
+
+    response = app_client.get(url, query_string={'n': '1.23'})
+    assert response.status_code == 200

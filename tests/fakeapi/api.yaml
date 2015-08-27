@@ -250,6 +250,28 @@ paths:
           description: goodbye response
           schema:
             type: string
+  /test_parameter_validation:
+    get:
+      operationId: fakeapi.hello.test_parameter_validation
+      parameters:
+        - name: date
+          in: query
+          type: string
+          format: date
+        - name: int
+          in: query
+          type: integer
+        - name: bool
+          in: query
+          type: boolean
+  /test_required_query_param:
+    get:
+      operationId: fakeapi.hello.test_required_query_param
+      parameters:
+        - name: n
+          in: query
+          type: number
+          required: true
 definitions:
   new_stack:
     type: object

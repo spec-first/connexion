@@ -13,6 +13,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 import flask
 import functools
+import itertools
 import logging
 import numbers
 import re
@@ -20,7 +21,7 @@ import six
 import strict_rfc3339
 
 from connexion.problem import problem
-from connexion.utils import validate_date
+from connexion.utils import validate_date, boolean
 
 logger = logging.getLogger('connexion.decorators.validation')
 
@@ -32,6 +33,12 @@ TYPE_MAP = {'integer': int,
             'boolean': bool,
             'array': list,
             'object': dict}  # map of swagger types to python types
+
+TYPE_VALIDATION_MAP = {
+    'integer': int,
+    'number': float,
+    'boolean': boolean
+}
 
 
 FORMAT_MAP = {('string', 'date-time'): strict_rfc3339.validate_rfc3339,
@@ -161,8 +168,30 @@ class RequestBodyValidator:
 
 class ParameterValidator():
     def __init__(self, parameters):
-        # TODO: this is wrong
-        self.parameters = {p.get('in'): p for p in parameters}
+        self.parameters = {k: list(g) for k, g in itertools.groupby(parameters, key=lambda p: p['in'])}
+
+    def validate_query_parameter(self, param):
+        '''
+        Validate a single query parameter (request.args in Flask)
+
+        :type param: dict
+        :rtype: str
+        '''
+        val = flask.request.args.get(param['name'])
+        if val is not None:
+            schema_type = param.get('type')
+            expected_type = TYPE_VALIDATION_MAP.get(schema_type)
+            if expected_type:
+                try:
+                    expected_type(val)
+                except:
+                    return "Wrong type, expected '{}' for query parameter '{}'".format(schema_type, param['name'])
+            for func in VALIDATORS:
+                error = func(param, val)
+                if error:
+                    return error
+        elif param.get('required'):
+            return "Missing query parameter '{}'".format(param['name'])
 
     def __call__(self, function):
         """
@@ -174,7 +203,10 @@ class ParameterValidator():
         def wrapper(*args, **kwargs):
             logger.debug("%s validating parameters...", flask.request.url)
 
-            # TODO
+            for param in self.parameters.get('query', []):
+                error = self.validate_query_parameter(param)
+                if error:
+                    return problem(400, 'Bad Request', error)
 
             response = function(*args, **kwargs)
             return response
