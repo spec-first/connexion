@@ -193,6 +193,25 @@ class ParameterValidator():
         elif param.get('required'):
             return "Missing query parameter '{}'".format(param['name'])
 
+    def validate_path_parameter(self, args, param):
+        val = args.get(param['name'].replace('-', '_'))
+        if val is not None:
+            schema_type = param.get('type')
+            expected_type = TYPE_VALIDATION_MAP.get(schema_type)
+            if expected_type:
+                try:
+                    expected_type(val)
+                except:
+                    return "Wrong type, expected '{}' for path parameter '{}'".format(schema_type, param['name'])
+            for func in VALIDATORS:
+                error = func(param, val)
+                if error:
+                    return error
+        else:
+            # NOTE: this branch should never be reached when using Flask
+            # as the URL will not match (Flask returns 404)
+            return "Missing path parameter '{}'".format(param['name'])
+
     def __call__(self, function):
         """
         :type function: types.FunctionType
@@ -205,6 +224,11 @@ class ParameterValidator():
 
             for param in self.parameters.get('query', []):
                 error = self.validate_query_parameter(param)
+                if error:
+                    return problem(400, 'Bad Request', error)
+
+            for param in self.parameters.get('path', []):
+                error = self.validate_path_parameter(kwargs, param)
                 if error:
                     return problem(400, 'Bad Request', error)
 
