@@ -1,7 +1,8 @@
 import flask
 import json
 import pytest
-from unittest.mock import MagicMock
+# we are using "mock" module here for Py 2.7 support
+from mock import MagicMock
 
 from connexion.problem import problem
 from connexion.decorators.validation import validate_pattern, validate_minimum, validate_maximum, ParameterValidator
