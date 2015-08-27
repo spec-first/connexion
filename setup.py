@@ -45,7 +45,7 @@ setup(
     keywords='swagger rest api oauth flask microservice framework',
     license='Apache License Version 2.0',
     install_requires=requires,
-    tests_require=['pytest-cov', 'pytest'],
+    tests_require=['pytest-cov', 'pytest', 'mock'],
     cmdclass={'test': PyTest},
     classifiers=[
         'Programming Language :: Python',

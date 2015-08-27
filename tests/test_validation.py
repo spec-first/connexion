@@ -1,6 +1,11 @@
+import flask
+import json
 import pytest
+# we are using "mock" module here for Py 2.7 support
+from mock import MagicMock
 
-from connexion.decorators.validation import validate_pattern, validate_minimum, validate_maximum
+from connexion.problem import problem
+from connexion.decorators.validation import validate_pattern, validate_minimum, validate_maximum, ParameterValidator
 
 def test_validate_pattern():
     assert validate_pattern({}, '') is None
@@ -18,3 +23,33 @@ def test_validate_maximum():
     assert validate_maximum({}, 1) is None
     assert validate_maximum({'maximum': 1}, 1) is None
     assert validate_maximum({'maximum': 0}, 1) == 'Invalid value, must be at most 0'
+
+
+def test_parameter_validator(monkeypatch):
+
+    request = MagicMock(name='request')
+    request.headers = {}
+    app = MagicMock(name='app')
+    app.response_class = lambda a, mimetype, status: json.loads(a)['detail']
+    monkeypatch.setattr('flask.request', request)
+    monkeypatch.setattr('flask.current_app', app)
+
+    def orig_handler(*args, **kwargs):
+        return 'OK'
+
+    params = [{'name': 'p1', 'in': 'path', 'type': 'integer', 'required': True},
+              {'name': 'h1', 'in': 'header', 'type': 'string', 'enum': ['a', 'b']}]
+    validator = ParameterValidator(params)
+    handler = validator(orig_handler)
+
+    assert handler() == "Missing path parameter 'p1'"
+    assert handler(p1='123') == 'OK'
+    assert handler(p1='') == "Wrong type, expected 'integer' for path parameter 'p1'"
+    assert handler(p1='foo') == "Wrong type, expected 'integer' for path parameter 'p1'"
+    assert handler(p1='1.2') == "Wrong type, expected 'integer' for path parameter 'p1'"
+
+    request.headers = {'h1': 'a'}
+    assert handler(p1='123') == 'OK'
+
+    request.headers = {'h1': 'x'}
+    assert handler(p1='123') == "Enum value must be one of ['a', 'b']"

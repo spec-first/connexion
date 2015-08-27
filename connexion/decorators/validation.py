@@ -170,6 +170,23 @@ class ParameterValidator():
     def __init__(self, parameters):
         self.parameters = {k: list(g) for k, g in itertools.groupby(parameters, key=lambda p: p['in'])}
 
+    def validate_parameter(self, parameter_type, value, param):
+        if value is not None:
+            schema_type = param.get('type')
+            expected_type = TYPE_VALIDATION_MAP.get(schema_type)
+            if expected_type:
+                try:
+                    expected_type(value)
+                except:
+                    return "Wrong type, expected '{}' for {} parameter '{}'".format(
+                        schema_type, parameter_type, param['name'])
+            for func in VALIDATORS:
+                error = func(param, value)
+                if error:
+                    return error
+        elif param.get('required'):
+            return "Missing {} parameter '{}'".format(parameter_type, param['name'])
+
     def validate_query_parameter(self, param):
         '''
         Validate a single query parameter (request.args in Flask)
@@ -178,20 +195,16 @@ class ParameterValidator():
         :rtype: str
         '''
         val = flask.request.args.get(param['name'])
-        if val is not None:
-            schema_type = param.get('type')
-            expected_type = TYPE_VALIDATION_MAP.get(schema_type)
-            if expected_type:
-                try:
-                    expected_type(val)
-                except:
-                    return "Wrong type, expected '{}' for query parameter '{}'".format(schema_type, param['name'])
-            for func in VALIDATORS:
-                error = func(param, val)
-                if error:
-                    return error
-        elif param.get('required'):
-            return "Missing query parameter '{}'".format(param['name'])
+        return self.validate_parameter('query', val, param)
+
+    def validate_path_parameter(self, args, param):
+        val = args.get(param['name'].replace('-', '_'))
+        return self.validate_parameter('path', val, param)
+
+    def validate_header_parameter(self, param):
+        val = flask.request.headers.get(param['name'])
+        print(val, param)
+        return self.validate_parameter('header', val, param)
 
     def __call__(self, function):
         """
@@ -205,6 +218,16 @@ class ParameterValidator():
 
             for param in self.parameters.get('query', []):
                 error = self.validate_query_parameter(param)
+                if error:
+                    return problem(400, 'Bad Request', error)
+
+            for param in self.parameters.get('path', []):
+                error = self.validate_path_parameter(kwargs, param)
+                if error:
+                    return problem(400, 'Bad Request', error)
+
+            for param in self.parameters.get('header', []):
+                error = self.validate_header_parameter(param)
                 if error:
                     return problem(400, 'Bad Request', error)
 
