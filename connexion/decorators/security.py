@@ -18,7 +18,7 @@ import functools
 import logging
 import requests
 
-from connexion.problem import problem
+from ..problem import problem
 
 logger = logging.getLogger('connexion.api.security')
 

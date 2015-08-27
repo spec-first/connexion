@@ -20,8 +20,8 @@ import re
 import six
 import strict_rfc3339
 
-from connexion.problem import problem
-from connexion.utils import validate_date, boolean
+from ..problem import problem
+from ..utils import validate_date, boolean
 
 logger = logging.getLogger('connexion.decorators.validation')
 

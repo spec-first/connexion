@@ -15,8 +15,8 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 
 from flask import abort, request, send_file, send_from_directory, render_template, render_template_string, url_for  # noqa
-from connexion.app import App  # noqa
-from connexion.api import Api  # noqa
-from connexion.problem import problem  # noqa
-from connexion.decorators.produces import NoContent  # noqa
+from .app import App  # noqa
+from .api import Api  # noqa
+from .problem import problem  # noqa
+from .decorators.produces import NoContent  # noqa
 import werkzeug.exceptions as exceptions  # noqa

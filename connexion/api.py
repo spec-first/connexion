@@ -18,8 +18,8 @@ import flask
 import jinja2
 import yaml
 
-from connexion.operation import Operation
-import connexion.utils as utils
+from .operation import Operation
+from . import utils as utils
 
 MODULE_PATH = pathlib.Path(__file__).absolute().parent
 SWAGGER_UI_PATH = MODULE_PATH / 'swagger-ui'

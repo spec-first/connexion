@@ -17,8 +17,8 @@ import pathlib
 import flask
 import werkzeug.exceptions
 
-from connexion.problem import problem
-import connexion.api
+from .problem import problem
+from .api import Api
 
 logger = logging.getLogger('connexion.app')
 
@@ -92,7 +92,7 @@ class App:
         arguments = arguments or dict()
         arguments = dict(self.arguments, **arguments)  # copy global arguments and update with api specfic
         yaml_path = self.specification_dir / swagger_file
-        api = connexion.api.Api(yaml_path, base_path, arguments, swagger_ui)
+        api = Api(yaml_path, base_path, arguments, swagger_ui)
         self.app.register_blueprint(api.blueprint)
 
     def add_error_handler(self, error_code, function):

@@ -14,11 +14,11 @@ Unless required by applicable law or agreed to in writing, software distributed 
 import functools
 import logging
 
-from connexion.decorators.produces import BaseSerializer, Produces, Jsonifier
-from connexion.decorators.security import security_passthrough, verify_oauth
-from connexion.decorators.validation import RequestBodyValidator, ParameterValidator
-from connexion.exceptions import InvalidSpecification
-from connexion.utils import flaskify_endpoint, get_function_from_name, produces_json
+from .decorators.produces import BaseSerializer, Produces, Jsonifier
+from .decorators.security import security_passthrough, verify_oauth
+from .decorators.validation import RequestBodyValidator, ParameterValidator
+from .exceptions import InvalidSpecification
+from .utils import flaskify_endpoint, get_function_from_name, produces_json
 
 logger = logging.getLogger('connexion.operation')
 
@@ -216,7 +216,7 @@ class Operation:
         logger.debug('... Security: %s', self.security, extra=vars(self))
         if self.security:
             if len(self.security) > 1:
-                logger.warning("... More than security requirement defined. **IGNORING SECURITY REQUIREMENTS**",
+                logger.warning("... More than one security requirement defined. **IGNORING SECURITY REQUIREMENTS**",
                                extra=vars(self))
                 return security_passthrough
 
@@ -234,6 +234,9 @@ class Operation:
                 else:
                     logger.warning("... OAuth2 token info URL missing. **IGNORING SECURITY REQUIREMENTS**",
                                    extra=vars(self))
+            elif security_definition['type'] in ('apiKey','basic'):
+                logger.debug("... Security type '%s' not natively supported by Connexion; you should handle it yourself",
+                             security_definition['type'], extra=vars(self))
             else:
                 logger.warning("... Security type '%s' unknown. **IGNORING SECURITY REQUIREMENTS**",
                                security_definition['type'], extra=vars(self))
