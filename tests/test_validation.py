@@ -27,6 +27,7 @@ def test_validate_maximum():
 def test_parameter_validator(monkeypatch):
 
     request = MagicMock(name='request')
+    request.headers = {}
     app = MagicMock(name='app')
     app.response_class = lambda a, mimetype, status: json.loads(a)['detail']
     monkeypatch.setattr('flask.request', request)
@@ -35,7 +36,8 @@ def test_parameter_validator(monkeypatch):
     def orig_handler(*args, **kwargs):
         return 'OK'
 
-    params = [{'name': 'p1', 'in': 'path', 'type': 'integer'}]
+    params = [{'name': 'p1', 'in': 'path', 'type': 'integer', 'required': True},
+              {'name': 'h1', 'in': 'header', 'type': 'string', 'enum': ['a', 'b']}]
     validator = ParameterValidator(params)
     handler = validator(orig_handler)
 
@@ -44,3 +46,9 @@ def test_parameter_validator(monkeypatch):
     assert handler(p1='') == "Wrong type, expected 'integer' for path parameter 'p1'"
     assert handler(p1='foo') == "Wrong type, expected 'integer' for path parameter 'p1'"
     assert handler(p1='1.2') == "Wrong type, expected 'integer' for path parameter 'p1'"
+
+    request.headers = {'h1': 'a'}
+    assert handler(p1='123') == 'OK'
+
+    request.headers = {'h1': 'x'}
+    assert handler(p1='123') == "Enum value must be one of ['a', 'b']"
