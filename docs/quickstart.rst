@@ -106,6 +106,15 @@ You can also disable it at api level:
     app = connexion.App(__name__, port = 8080, specification_dir='swagger/')
     app.add_api('my_api.yaml', swagger_ui=False)
 
+Likewise, you can configure the filesystem and URL paths to the Swagger UI
+documentation:
+
+.. code-block:: python
+
+    app = connexion.App(__name__, port = 8080, specification_dir='swagger/')
+    app.add_api('my_api.yaml', swagger_path='/path/to/swagger-ui', swagger_url='doc')
+
+
 
 Server Backend
 --------------
