@@ -96,6 +96,9 @@ OPERATION3 = {'description': 'Adds a new stack to be created by lizzy and return
 OPERATION4 = {'operationId': 'fakeapi.hello.post_greeting',
               'parameters': [{'$ref': '#/parameters/myparam'}]}
 
+OPERATION5 = {'operationId': 'fakeapi.hello.post_greeting',
+              'parameters': [{'$ref': '/parameters/fail'}]}
+
 SECURITY_DEFINITIONS = {'oauth': {'type': 'oauth2',
                                   'flow': 'password',
                                   'x-tokenInfoUrl': 'https://ouath.example/token_info',
@@ -206,3 +209,12 @@ def test_parameter_reference():
                           definitions={},
                           parameter_definitions=PARAMETER_DEFINITIONS)
     assert operation.parameters == [{'in': 'path', 'type': 'integer'}]
+
+
+def test_resolve_invalid_reference():
+    with pytest.raises(InvalidSpecification) as exc_info:
+        Operation(method='GET', path='endpoint', operation=OPERATION5, app_produces=['application/json'],
+                  app_security=[], security_definitions={}, definitions={}, parameter_definitions=PARAMETER_DEFINITIONS)
+
+    exception = exc_info.value  # type: InvalidSpecification
+    assert exception.reason == "GET endpoint  '$ref' needs to start with '#/'"

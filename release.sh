@@ -19,7 +19,7 @@ python3 setup.py flake8
 
 git add setup.py
 
-git commit -m "Bumped version to $version"
+git commit -nm "Bumped version to $version"
 git push
 
 python3 setup.py sdist bdist_wheel upload
