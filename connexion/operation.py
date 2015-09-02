@@ -234,9 +234,10 @@ class Operation:
                 else:
                     logger.warning("... OAuth2 token info URL missing. **IGNORING SECURITY REQUIREMENTS**",
                                    extra=vars(self))
-            elif security_definition['type'] in ('apiKey','basic'):
-                logger.debug("... Security type '%s' not natively supported by Connexion; you should handle it yourself",
-                             security_definition['type'], extra=vars(self))
+            elif security_definition['type'] in ('apiKey', 'basic'):
+                logger.debug(
+                    "... Security type '%s' not natively supported by Connexion; you should handle it yourself",
+                    security_definition['type'], extra=vars(self))
             else:
                 logger.warning("... Security type '%s' unknown. **IGNORING SECURITY REQUIREMENTS**",
                                security_definition['type'], extra=vars(self))

@@ -81,7 +81,8 @@ class App:
             e = werkzeug.exceptions.InternalServerError()
         return problem(title=e.name, detail=e.description, status=e.code)
 
-    def add_api(self, swagger_file, base_path=None, arguments=None, swagger_ui=None, swagger_path=None, swagger_url=None):
+    def add_api(self, swagger_file, base_path=None, arguments=None, swagger_ui=None, swagger_path=None,
+                swagger_url=None):
         """
         :param swagger_file: swagger file with the specification
         :type swagger_file: pathlib.Path

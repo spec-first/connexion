@@ -33,7 +33,8 @@ class Api:
     Single API that corresponds to a flask blueprint
     """
 
-    def __init__(self, swagger_yaml_path, base_url=None, arguments=None, swagger_ui=None, swagger_path=None, swagger_url=None):
+    def __init__(self, swagger_yaml_path, base_url=None, arguments=None, swagger_ui=None, swagger_path=None,
+                 swagger_url=None):
         """
         :type swagger_yaml_path: pathlib.Path
         :type base_url: str | None
