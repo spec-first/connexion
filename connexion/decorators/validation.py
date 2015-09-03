@@ -45,6 +45,18 @@ FORMAT_MAP = {('string', 'date-time'): strict_rfc3339.validate_rfc3339,
               ('string', 'date'): validate_date}
 
 
+def validate_type(schema, data, parameter_type, parameter_name=None):
+    schema_type = schema.get('type')
+    parameter_name = parameter_name if parameter_name else schema['name']
+    expected_type = TYPE_VALIDATION_MAP.get(schema_type)
+    if expected_type:
+        try:
+            expected_type(data)
+        except:
+            return "Wrong type, expected '{}' for {} parameter '{}'".format(
+                schema_type, parameter_type, parameter_name)
+
+
 def validate_format(schema, data):
     schema_type = schema.get('type')
     schema_format = schema.get('format')
@@ -90,10 +102,39 @@ def validate_enum(schema, data):
         return 'Enum value must be one of {}'.format(enum_values)
 
 
+def validate_array(schema, data):
+    if schema.get('type') != 'array' or not schema.get('items'):
+        return
+    col_map = {'csv':   ',',
+               'ssv':   ' ',
+               'tsv':   '\t',
+               'pipes': '|',
+               'multi': '&'}
+    col_fmt = schema.get('collectionFormat', 'csv')
+    delimiter = col_map.get(col_fmt, 'csv')
+    if not delimiter:
+        logger.error("Unrecognized collectionFormat, cannot validate: %s", col_fmt)
+        return
+    if col_fmt == 'multi':
+        logger.debug("collectionFormat 'multi' is not validated by Connexion")
+        return
+    subschema = schema.get('items')
+    items = data.split(delimiter)
+    for subval in items:
+        error = validate_type(subschema, subval, schema['in'], schema['name'])
+        if error:
+            return error
+        # Run each sub-item through the list of validators.
+        for func in VALIDATORS:
+            error = func(subschema, subval)
+            if error:
+                return error
+
+
 VALIDATORS = [validate_format, validate_pattern,
               validate_minimum, validate_maximum,
               validate_min_length, validate_max_length,
-              validate_enum]
+              validate_enum, validate_array]
 
 
 class RequestBodyValidator:
@@ -172,14 +213,9 @@ class ParameterValidator():
 
     def validate_parameter(self, parameter_type, value, param):
         if value is not None:
-            schema_type = param.get('type')
-            expected_type = TYPE_VALIDATION_MAP.get(schema_type)
-            if expected_type:
-                try:
-                    expected_type(value)
-                except:
-                    return "Wrong type, expected '{}' for {} parameter '{}'".format(
-                        schema_type, parameter_type, param['name'])
+            error = validate_type(param, value, parameter_type)
+            if error:
+                return error
             for func in VALIDATORS:
                 error = func(param, value)
                 if error:
