@@ -26,7 +26,6 @@ def test_validate_maximum():
 
 
 def test_parameter_validator(monkeypatch):
-
     request = MagicMock(name='request')
     request.headers = {}
     app = MagicMock(name='app')
@@ -38,7 +37,8 @@ def test_parameter_validator(monkeypatch):
         return 'OK'
 
     params = [{'name': 'p1', 'in': 'path', 'type': 'integer', 'required': True},
-              {'name': 'h1', 'in': 'header', 'type': 'string', 'enum': ['a', 'b']}]
+              {'name': 'h1', 'in': 'header', 'type': 'string', 'enum': ['a', 'b']},
+              {'name': 'a1', 'in': 'query', 'type': 'array', 'items': {'type': 'integer'}}]
     validator = ParameterValidator(params)
     handler = validator(orig_handler)
 
@@ -47,6 +47,12 @@ def test_parameter_validator(monkeypatch):
     assert handler(p1='') == "Wrong type, expected 'integer' for path parameter 'p1'"
     assert handler(p1='foo') == "Wrong type, expected 'integer' for path parameter 'p1'"
     assert handler(p1='1.2') == "Wrong type, expected 'integer' for path parameter 'p1'"
+
+    request.args = {'a1': '1,2'}
+    assert handler(p1=1) == "OK"
+    request.args = {'a1': '1,a'}
+    assert handler(p1=1) == "Wrong type, expected 'integer' for query parameter 'a1'"
+    del request.args['a1']
 
     request.headers = {'h1': 'a'}
     assert handler(p1='123') == 'OK'
