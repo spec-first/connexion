@@ -127,7 +127,7 @@ def validate_array(schema, data):
             return error
         # Run each sub-item through the list of validators.
         for func in VALIDATORS:
-            error = func(subschema, subval)
+            error = func(subschema, converted_value)
             if error:
                 return error
 
