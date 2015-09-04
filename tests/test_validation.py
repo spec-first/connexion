@@ -38,7 +38,7 @@ def test_parameter_validator(monkeypatch):
 
     params = [{'name': 'p1', 'in': 'path', 'type': 'integer', 'required': True},
               {'name': 'h1', 'in': 'header', 'type': 'string', 'enum': ['a', 'b']},
-              {'name': 'a1', 'in': 'query', 'type': 'array', 'items': {'type': 'integer'}}]
+              {'name': 'a1', 'in': 'query', 'type': 'array', 'items': {'type': 'integer', 'minimum': 0}}]
     validator = ParameterValidator(params)
     handler = validator(orig_handler)
 
@@ -52,6 +52,8 @@ def test_parameter_validator(monkeypatch):
     assert handler(p1=1) == "OK"
     request.args = {'a1': '1,a'}
     assert handler(p1=1) == "Wrong type, expected 'integer' for query parameter 'a1'"
+    request.args = {'a1': '1,-1'}
+    assert handler(p1=1) == "Invalid value, must be at least 0"
     del request.args['a1']
 
     request.headers = {'h1': 'a'}

@@ -51,10 +51,11 @@ def validate_type(schema, data, parameter_type, parameter_name=None):
     expected_type = TYPE_VALIDATION_MAP.get(schema_type)
     if expected_type:
         try:
-            expected_type(data)
+            return expected_type(data), None
         except:
-            return "Wrong type, expected '{}' for {} parameter '{}'".format(
+            return None, "Wrong type, expected '{}' for {} parameter '{}'".format(
                 schema_type, parameter_type, parameter_name)
+    return data, None
 
 
 def validate_format(schema, data):
@@ -121,7 +122,7 @@ def validate_array(schema, data):
     subschema = schema.get('items')
     items = data.split(delimiter)
     for subval in items:
-        error = validate_type(subschema, subval, schema['in'], schema['name'])
+        converted_value, error = validate_type(subschema, subval, schema['in'], schema['name'])
         if error:
             return error
         # Run each sub-item through the list of validators.
@@ -213,7 +214,7 @@ class ParameterValidator():
 
     def validate_parameter(self, parameter_type, value, param):
         if value is not None:
-            error = validate_type(param, value, parameter_type)
+            converted_value, error = validate_type(param, value, parameter_type)
             if error:
                 return error
             for func in VALIDATORS:
