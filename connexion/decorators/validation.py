@@ -218,7 +218,7 @@ class ParameterValidator():
             if error:
                 return error
             for func in VALIDATORS:
-                error = func(param, value)
+                error = func(param, converted_value)
                 if error:
                     return error
         elif param.get('required'):
