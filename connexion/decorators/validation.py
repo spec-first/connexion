@@ -111,7 +111,7 @@ def validate_array(schema, data):
                'pipes': '|',
                'multi': '&'}
     col_fmt = schema.get('collectionFormat', 'csv')
-    delimiter = col_map.get(col_fmt, 'csv')
+    delimiter = col_map.get(col_fmt)
     if not delimiter:
         logger.error("Unrecognized collectionFormat, cannot validate: %s", col_fmt)
         return
