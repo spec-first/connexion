@@ -53,11 +53,14 @@ def verify_oauth(token_info_url, allowed_scopes, function):
     def wrapper(*args, **kwargs):
         logger.debug("%s Oauth verification...", request.url)
         authorization = request.headers.get('Authorization')
-        if authorization is None:
+        if not authorization:
             logger.error("... No auth provided. Aborting with 401.")
             return problem(401, 'Unauthorized', "No authorization token provided")
         else:
-            _, token = authorization.split()
+            try:
+                _, token = authorization.split()
+            except:
+                return problem(401, 'Unauthorized', 'Invalid authorization header')
             logger.debug("... Getting token '%s' from %s", token, token_info_url)
             token_request = session.get(token_info_url, params={'access_token': token}, timeout=5)
             logger.debug("... Token info (%d): %s", token_request.status_code, token_request.text)
