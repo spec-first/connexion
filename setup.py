@@ -7,7 +7,7 @@ import sys
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 
-version = '0.10'
+version = '0.10.1'
 py_major_version, py_minor_version, _ = (int(v) for v in platform.python_version_tuple())
 
 requires = ['flask', 'PyYAML', 'requests', 'six', 'strict-rfc3339']
