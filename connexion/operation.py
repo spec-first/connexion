@@ -268,8 +268,9 @@ class Operation:
     def uwsgi_metrics_decorator(self):
         import uwsgi_metrics
         def decorator(func):
+            key = '{}.{}'.format(self.path.strip('/').replace('/', '.'), self.method.upper())
             def wrapper(*args, **kwargs):
-                with uwsgi_metrics.timing(__name__, 'my_timer'):
+                with uwsgi_metrics.timing('connexion.response', key):
                     return func(*args, **kwargs)
             return wrapper
 
