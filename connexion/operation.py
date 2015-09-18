@@ -13,10 +13,12 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 import functools
 import logging
+import os
 
 from .decorators.produces import BaseSerializer, Produces, Jsonifier
 from .decorators.security import security_passthrough, verify_oauth
 from .decorators.validation import RequestBodyValidator, ParameterValidator
+from .decorators.metrics import UWSGIMetricsCollector
 from .exceptions import InvalidSpecification
 from .utils import flaskify_endpoint, get_function_from_name, produces_json
 
@@ -151,6 +153,10 @@ class Operation:
         logger.debug('... Adding security decorator (%r)', security_decorator, extra=vars(self))
         function = security_decorator(function)
 
+        if UWSGIMetricsCollector.is_available():
+            decorator = UWSGIMetricsCollector(self.path, self.method)
+            function = decorator(function)
+
         return function
 
     @property
@@ -227,7 +233,7 @@ class Operation:
             scheme_name, scopes = next(iter(security.items()))  # type: str, list
             security_definition = self.security_definitions[scheme_name]
             if security_definition['type'] == 'oauth2':
-                token_info_url = security_definition.get('x-tokenInfoUrl')
+                token_info_url = security_definition.get('x-tokenInfoUrl', os.getenv('HTTP_TOKENINFO_URL'))
                 if token_info_url:
                     scopes = set(scopes)  # convert scopes to set because this is needed for verify_oauth
                     return functools.partial(verify_oauth, token_info_url, scopes)
