@@ -13,6 +13,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 import functools
 import logging
+import os
 
 from .decorators.produces import BaseSerializer, Produces, Jsonifier
 from .decorators.security import security_passthrough, verify_oauth
@@ -232,7 +233,7 @@ class Operation:
             scheme_name, scopes = next(iter(security.items()))  # type: str, list
             security_definition = self.security_definitions[scheme_name]
             if security_definition['type'] == 'oauth2':
-                token_info_url = security_definition.get('x-tokenInfoUrl')
+                token_info_url = security_definition.get('x-tokenInfoUrl', os.getenv('HTTP_TOKENINFO_URL'))
                 if token_info_url:
                     scopes = set(scopes)  # convert scopes to set because this is needed for verify_oauth
                     return functools.partial(verify_oauth, token_info_url, scopes)
