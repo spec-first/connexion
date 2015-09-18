@@ -41,7 +41,7 @@ Put your API YAML inside a folder in the root path of your application (e.g ``sw
     app = connexion.App(__name__, port = 8080, specification_dir='swagger/')
     app.add_api('my_api.yaml')
     app.run()
-    
+
 See the `Connexion Pet Store Example Application`_ for details.
 
 Parametrization
@@ -143,6 +143,25 @@ to ``tornado``:
     import connexion
 
     app = connexion.App(__name__, port = 8080, specification_dir='swagger/', server='tornado')
+
+You can use the Flask WSGI app with any WSGI container, e.g. `using Flask with uWSGI`_:
+
+.. code-block:: python
+
+    app = connexion.App(specification_dir='swagger/')
+    application = app.app # expose global WSGI application object
+
+.. code-block:: bash
+
+    $ sudo pip3 install uwsgi
+    $ uwsgi --http :8080 -w app -p 16  # use 16 worker processes
+
+You can run uwsgi with a large number of worker processes to get high concurrency.
+
+See the `uWSGI documentation`_ for more information.
+
+.. _using Flask with uWSGI: http://flask.pocoo.org/docs/latest/deploying/uwsgi/
+.. _uWSGI documentation: https://uwsgi-docs.readthedocs.org/
 
 Releasing Connexion
 ===================

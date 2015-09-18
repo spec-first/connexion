@@ -1,5 +1,6 @@
 
 import functools
+import os
 
 try:
     import uwsgi_metrics
@@ -14,6 +15,7 @@ class UWSGIMetricsCollector:
         self.method = method
         self.key = '{}.{}'.format(self.path.strip('/').replace('/', '.').replace('<', '{').replace('>', '}'),
                                   self.method.upper())
+        self.prefix = os.getenv('HTTP_METRICS_PREFIX', 'connexion.response')
 
     @staticmethod
     def is_available():
@@ -27,7 +29,7 @@ class UWSGIMetricsCollector:
 
         @functools.wraps(function)
         def wrapper(*args, **kwargs):
-            with uwsgi_metrics.timing('connexion.response', self.key):
+            with uwsgi_metrics.timing(self.prefix, self.key):
                 return function(*args, **kwargs)
 
         return wrapper
