@@ -21,7 +21,7 @@ from .exceptions import InvalidSpecification
 from .utils import flaskify_endpoint, get_function_from_name, produces_json
 
 try:
-    import uwsgi
+    import uwsgi_metrics
     HAS_UWSGI = True
 except:
     HAS_UWSGI = False
@@ -266,13 +266,13 @@ class Operation:
             yield RequestBodyValidator(self.body_schema)
 
     def uwsgi_metrics_decorator(self):
-        import uwsgi_metrics
         def decorator(func):
-            key = '{}.{}'.format(self.path.strip('/').replace('/', '.'), self.method.upper())
+            key = '{}.{}'.format(self.path.strip('/').replace('/', '.').replace('<', '{').replace('>', '}'),
+                                 self.method.upper())
+
             def wrapper(*args, **kwargs):
                 with uwsgi_metrics.timing('connexion.response', key):
                     return func(*args, **kwargs)
             return wrapper
 
         return decorator
-
