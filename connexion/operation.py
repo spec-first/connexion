@@ -17,14 +17,9 @@ import logging
 from .decorators.produces import BaseSerializer, Produces, Jsonifier
 from .decorators.security import security_passthrough, verify_oauth
 from .decorators.validation import RequestBodyValidator, ParameterValidator
+from .decorators.metrics import UWSGIMetricsCollector
 from .exceptions import InvalidSpecification
 from .utils import flaskify_endpoint, get_function_from_name, produces_json
-
-try:
-    import uwsgi_metrics
-    HAS_UWSGI = True
-except:
-    HAS_UWSGI = False
 
 logger = logging.getLogger('connexion.operation')
 
@@ -157,8 +152,8 @@ class Operation:
         logger.debug('... Adding security decorator (%r)', security_decorator, extra=vars(self))
         function = security_decorator(function)
 
-        if HAS_UWSGI:
-            decorator = self.uwsgi_metrics_decorator()
+        if UWSGIMetricsCollector.is_available():
+            decorator = UWSGIMetricsCollector(self.path, self.method)
             function = decorator(function)
 
         return function
@@ -264,15 +259,3 @@ class Operation:
             yield ParameterValidator(self.parameters)
         if self.body_schema:
             yield RequestBodyValidator(self.body_schema)
-
-    def uwsgi_metrics_decorator(self):
-        def decorator(func):
-            key = '{}.{}'.format(self.path.strip('/').replace('/', '.').replace('<', '{').replace('>', '}'),
-                                 self.method.upper())
-
-            def wrapper(*args, **kwargs):
-                with uwsgi_metrics.timing('connexion.response', key):
-                    return func(*args, **kwargs)
-            return wrapper
-
-        return decorator
