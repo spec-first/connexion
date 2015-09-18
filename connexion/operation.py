@@ -20,6 +20,12 @@ from .decorators.validation import RequestBodyValidator, ParameterValidator
 from .exceptions import InvalidSpecification
 from .utils import flaskify_endpoint, get_function_from_name, produces_json
 
+try:
+    import uwsgi
+    HAS_UWSGI = True
+except:
+    HAS_UWSGI = False
+
 logger = logging.getLogger('connexion.operation')
 
 
@@ -151,6 +157,10 @@ class Operation:
         logger.debug('... Adding security decorator (%r)', security_decorator, extra=vars(self))
         function = security_decorator(function)
 
+        if HAS_UWSGI:
+            decorator = self.uwsgi_metrics_decorator()
+            function = decorator(function)
+
         return function
 
     @property
@@ -254,3 +264,14 @@ class Operation:
             yield ParameterValidator(self.parameters)
         if self.body_schema:
             yield RequestBodyValidator(self.body_schema)
+
+    def uwsgi_metrics_decorator(self):
+        import uwsgi_metrics
+        def decorator(func):
+            def wrapper(*args, **kwargs):
+                with uwsgi_metrics.timing(__name__, 'my_timer'):
+                    return func(*args, **kwargs)
+            return wrapper
+
+        return decorator
+
