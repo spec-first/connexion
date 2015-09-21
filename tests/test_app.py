@@ -260,6 +260,15 @@ def test_schema(app):
     good_request = app_client.post('/v1.0/test_schema', headers=headers,
                                    data=json.dumps({'image_version': 'version'}))  # type: flask.Response
     assert good_request.status_code == 200
+    good_request_response = json.loads(good_request.data.decode())  # type: dict
+    assert good_request_response['image_version'] == 'version'
+
+    good_request_extra = app_client.post('/v1.0/test_schema', headers=headers,
+                                         data=json.dumps({'image_version': 'version',
+                                                          'extra': 'stuff'}))  # type: flask.Response
+    assert good_request_extra.status_code == 200
+    good_request_extra_response = json.loads(good_request.data.decode())  # type: dict
+    assert good_request_extra_response['image_version'] == 'version'
 
     wrong_type = app_client.post('/v1.0/test_schema', headers=headers, data=json.dumps(42))  # type: flask.Response
     assert wrong_type.status_code == 400
@@ -267,6 +276,18 @@ def test_schema(app):
     wrong_type_response = json.loads(wrong_type.data.decode())  # type: dict
     assert wrong_type_response['title'] == 'Bad Request'
     assert wrong_type_response['detail'] == "Wrong type, expected 'object' got 'int'"
+
+
+def test_schema_in_query(app):
+    app_client = app.app.test_client()
+    headers = {'Content-type': 'application/json'}
+
+    good_request = app_client.post('/v1.0/test_schema_in_query', headers=headers,
+                                   query_string={'image_version': 'version',
+                                                 'not_required': 'test'})  # type: flask.Response
+    assert good_request.status_code == 200
+    good_request_response = json.loads(good_request.data.decode())  # type: dict
+    assert good_request_response['image_version'] == 'version'
 
 
 def test_schema_list(app):

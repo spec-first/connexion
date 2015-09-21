@@ -177,8 +177,8 @@ paths:
           description: empty
   /test_schema:
     post:
-      summary: Returns empty response
-      description: Returns empty response
+      summary: Returns the image_version
+      description: Returns the image_version
       operationId: fakeapi.hello.schema
       parameters:
         - name: new_stack
@@ -186,6 +186,27 @@ paths:
           in: body
           schema:
             $ref: '#/definitions/new_stack'
+      produces:
+        - application/json
+      responses:
+        200:
+          description: goodbye response
+          schema:
+            type: string
+  /test_schema_in_query:
+    post:
+      summary: Returns the image_version
+      description: Returns the image_version
+      operationId: fakeapi.hello.schema_query
+      parameters:
+        - name: image_version
+          required: true
+          in: query
+          type: string
+        - name: not_required
+          required: false
+          in: query
+          type: string
       produces:
         - application/json
       responses:

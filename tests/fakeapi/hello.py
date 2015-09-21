@@ -56,8 +56,12 @@ def empty():
     return None, 204
 
 
-def schema():
-    return ''
+def schema(image_version):
+    return {'image_version': image_version}
+
+
+def schema_query(image_version=None):
+    return {'image_version': image_version}
 
 
 def schema_list():
@@ -67,8 +71,10 @@ def schema_list():
 def schema_format():
     return ''
 
+
 def test_parameter_validation():
     return ''
+
 
 def test_required_query_param():
     return ''
