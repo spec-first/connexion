@@ -1,6 +1,9 @@
 
 import functools
 import os
+import time
+
+from connexion.decorators.produces import BaseSerializer
 
 try:
     import uwsgi_metrics
@@ -13,8 +16,8 @@ class UWSGIMetricsCollector:
     def __init__(self, path, method):
         self.path = path
         self.method = method
-        self.key = '{}.{}'.format(self.path.strip('/').replace('/', '.').replace('<', '{').replace('>', '}'),
-                                  self.method.upper())
+        swagger_path = path.strip('/').replace('/', '.').replace('<', '{').replace('>', '}')
+        self.key_suffix = '{method}.{path}'.format(path=swagger_path, method=method.upper())
         self.prefix = os.getenv('HTTP_METRICS_PREFIX', 'connexion.response')
 
     @staticmethod
@@ -29,7 +32,17 @@ class UWSGIMetricsCollector:
 
         @functools.wraps(function)
         def wrapper(*args, **kwargs):
-            with uwsgi_metrics.timing(self.prefix, self.key):
-                return function(*args, **kwargs)
+            status_code = 500
+            start_time_s = time.time()
+            try:
+                response = function(*args, **kwargs)
+                _, status_code = BaseSerializer.get_data_status_code(response)
+            finally:
+                end_time_s = time.time()
+                delta_s = end_time_s - start_time_s
+                delta_ms = delta_s * 1000
+                key = '{status}.{suffix}'.format(status=status_code, suffix=self.key_suffix)
+                uwsgi_metrics.timer(self.prefix, key, delta_ms)
+            return response
 
         return wrapper
