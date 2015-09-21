@@ -3,6 +3,7 @@ import flask
 import functools
 import inspect
 import logging
+import six
 
 
 logger = logging.getLogger(__name__)
@@ -16,6 +17,18 @@ TYPE_MAP = {'integer': int,
             'object': dict}  # map of swagger types to python types
 
 
+def get_function_arguments(function):  # pragma: no cover
+    """
+    Returns the list of arguments of a function
+
+    :rtype: list[str]
+    """
+    if six.PY3:
+        return list(inspect.signature(function).parameters)
+    else:
+        return inspect.getargspec(function).args
+
+
 def parameter_to_arg(body_schema, parameters, function):
     """
     Pass query and body parameters as keyword arguments to handler function.
@@ -26,7 +39,7 @@ def parameter_to_arg(body_schema, parameters, function):
     body_properties = body_schema.get('properties', {})
     body_types = {name: properties['type'] for name, properties in body_properties.items()}
     query_types = {parameter['name']: parameter['type'] for parameter in parameters if parameter['in'] == 'query'}
-    arguments = list(inspect.signature(function).parameters)
+    arguments = get_function_arguments(function)
 
     @functools.wraps(function)
     def wrapper(*args, **kwargs):
