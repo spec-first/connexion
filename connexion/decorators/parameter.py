@@ -5,7 +5,6 @@ import inspect
 import logging
 import six
 
-
 logger = logging.getLogger(__name__)
 
 # https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#data-types
@@ -21,6 +20,7 @@ def get_function_arguments(function):  # pragma: no cover
     """
     Returns the list of arguments of a function
 
+    :type function: Callable
     :rtype: list[str]
     """
     if six.PY3:
@@ -34,11 +34,14 @@ def parameter_to_arg(body_schema, parameters, function):
     Pass query and body parameters as keyword arguments to handler function.
 
     See (https://github.com/zalando/connexion/issues/59)
+    :type body_schema: dict|None
+    :type parameters: dict|None
     """
-    body_schema = body_schema or {}
+    body_schema = body_schema or {}  # type: dict
     body_properties = body_schema.get('properties', {})
-    body_types = {name: properties['type'] for name, properties in body_properties.items()}
-    query_types = {parameter['name']: parameter['type'] for parameter in parameters if parameter['in'] == 'query'}
+    body_types = {name: properties['type'] for name, properties in body_properties.items()}  # type: dict[str, str]
+    query_types = {parameter['name']: parameter['type']
+                   for parameter in parameters if parameter['in'] == 'query'}  # type: dict[str, str]
     arguments = get_function_arguments(function)
 
     @functools.wraps(function)
@@ -46,7 +49,7 @@ def parameter_to_arg(body_schema, parameters, function):
         logger.debug('Function Arguments: %s', arguments)
 
         try:
-            body_parameters = flask.request.json or {}
+            body_parameters = flask.request.json or {}  # type: dict
         except exceptions.BadRequest:
             body_parameters = {}
 
