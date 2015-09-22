@@ -72,8 +72,9 @@ Request Handling
 Connexion validates incoming requests for conformance with the schemas described in swagger specification.
 
 Request parameters will be provided to the handler functions as keyword arguments if they are included in the function's
-signature, otherwise body parameters can be accessed from connexion.request.json and query parameters can be accessed
-from connexion.request.args.
+signature, otherwise body parameters can be accessed from ``connexion.request.json`` and query parameters can be
+accessed from ``connexion.request.args``.
+
 
 Response Serialization
 ----------------------
@@ -87,7 +88,8 @@ Error Handling
 --------------
 By default connexion error messages are JSON serialized according to `Problem Details for HTTP APIs <http_problem_>`_.
 
-Application can return error using ``connexion.problem``.
+Application can return errors using ``connexion.problem``.
+
 
 Swagger Json
 ------------
@@ -121,7 +123,6 @@ documentation:
 
     app = connexion.App(__name__, port = 8080, specification_dir='swagger/')
     app.add_api('my_api.yaml', swagger_path='/path/to/swagger-ui', swagger_url='doc')
-
 
 
 Server Backend
