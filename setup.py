@@ -7,7 +7,7 @@ import sys
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 
-version = '0.10.2'
+version = '0.11'
 py_major_version, py_minor_version, _ = (int(v) for v in platform.python_version_tuple())
 
 requires = ['flask', 'PyYAML', 'requests', 'six', 'strict-rfc3339']
@@ -20,7 +20,7 @@ class PyTest(TestCommand):
     def initialize_options(self):
         TestCommand.initialize_options(self)
         self.cov = None
-        self.pytest_args = ['--cov', 'connexion', '--cov-report', 'term-missing', '--cov-report', 'html']
+        self.pytest_args = ['--cov', 'connexion', '--cov-report', 'term-missing']
 
     def finalize_options(self):
         TestCommand.finalize_options(self)
