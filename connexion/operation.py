@@ -15,6 +15,7 @@ import functools
 import logging
 import os
 
+from .decorators.parameter import parameter_to_arg
 from .decorators.produces import BaseSerializer, Produces, Jsonifier
 from .decorators.security import security_passthrough, verify_oauth
 from .decorators.validation import RequestBodyValidator, ParameterValidator
@@ -141,9 +142,12 @@ class Operation:
 
         :rtype: types.FunctionType
         """
+
+        function = parameter_to_arg(self.body_schema, self.parameters, self.__undecorated_function)
+
         produces_decorator = self.__content_type_decorator
         logger.debug('... Adding produces decorator (%r)', produces_decorator, extra=vars(self))
-        function = produces_decorator(self.__undecorated_function)
+        function = produces_decorator(function)
 
         for validation_decorator in self.__validation_decorators:
             function = validation_decorator(function)
