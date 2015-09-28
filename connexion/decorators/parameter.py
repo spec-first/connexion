@@ -39,9 +39,6 @@ def parameter_to_arg(parameters, function):
     """
     body_parameters = [parameter for parameter in parameters if parameter['in'] == 'body'] or [{}]
     body_name = body_parameters[0].get('name')
-    body_schema = body_parameters[0].get('schema', {})  # type: dict[str, str]
-    body_properties = body_schema.get('properties', {})
-    body_types = {name: properties['type'] for name, properties in body_properties.items()}  # type: dict[str, str]
     query_types = {parameter['name']: parameter['type']
                    for parameter in parameters if parameter['in'] == 'query'}  # type: dict[str, str]
     arguments = get_function_arguments(function)
@@ -51,27 +48,17 @@ def parameter_to_arg(parameters, function):
         logger.debug('Function Arguments: %s', arguments)
 
         try:
-            body_parameters = flask.request.json or {}
+            request_body = flask.request.json
         except exceptions.BadRequest:
-            body_parameters = {}
+            request_body = None
 
         # Add body parameters
-        if isinstance(body_parameters, dict):
-            for key, value in body_parameters.items():
-                if key not in arguments:
-                    logger.debug("Body parameter '%s' not in function arguments", key)
-                else:
-                    logger.debug("Body parameter '%s' in function arguments", key)
-                    key_type = body_types[key]
-                    logger.debug('%s is a %s', key, key_type)
-                    type_func = TYPE_MAP[key_type]  # convert value to right type
-                    kwargs[key] = type_func(value)
-        else:
+        if request_body is not None:
             if body_name not in arguments:
                 logger.debug("Body parameter '%s' not in function arguments", body_name)
             else:
                 logger.debug("Body parameter '%s' in function arguments", body_name)
-                kwargs[body_name] = body_parameters
+                kwargs[body_name] = request_body
 
         # Add query parameters
         for key, value in flask.request.args.items():

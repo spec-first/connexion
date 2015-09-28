@@ -56,8 +56,8 @@ def empty():
     return None, 204
 
 
-def schema(image_version):
-    return {'image_version': image_version}
+def schema(new_stack):
+    return new_stack
 
 
 def schema_query(image_version=None):
