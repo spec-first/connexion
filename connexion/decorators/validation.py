@@ -240,7 +240,6 @@ class ParameterValidator():
 
     def validate_header_parameter(self, param):
         val = flask.request.headers.get(param['name'])
-        print(val, param)
         return self.validate_parameter('header', val, param)
 
     def __call__(self, function):

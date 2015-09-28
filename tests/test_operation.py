@@ -1,7 +1,6 @@
 import pathlib
 import pytest
 import types
-
 from connexion.exceptions import InvalidSpecification
 from connexion.operation import Operation
 from connexion.decorators.security import security_passthrough, verify_oauth

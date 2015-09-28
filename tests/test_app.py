@@ -5,7 +5,6 @@ import pytest
 import requests
 import logging
 import _pytest.monkeypatch
-
 from connexion.app import App
 
 logging.basicConfig(level=logging.DEBUG)
@@ -385,3 +384,27 @@ def test_required_query_param(app):
 
     response = app_client.get(url, query_string={'n': '1.23'})
     assert response.status_code == 200
+
+
+def test_test_schema_array(app):
+    app_client = app.app.test_client()
+    headers = {'Content-type': 'application/json'}
+
+    array_request = app_client.get('/v1.0/schema_array', headers=headers,
+                                   data=json.dumps(['list', 'hello']))  # type: flask.Response
+    assert array_request.status_code == 200
+    assert array_request.content_type == 'application/json'
+    array_response = json.loads(array_request.data.decode())  # type: list
+    assert array_response == ['list', 'hello']
+
+
+def test_test_schema_int(app):
+    app_client = app.app.test_client()
+    headers = {'Content-type': 'application/json'}
+
+    array_request = app_client.get('/v1.0/schema_int', headers=headers,
+                                   data=json.dumps(42))  # type: flask.Response
+    assert array_request.status_code == 200
+    assert array_request.content_type == 'application/json'
+    array_response = json.loads(array_request.data.decode())  # type: list
+    assert array_response == 42

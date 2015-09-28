@@ -56,8 +56,8 @@ def empty():
     return None, 204
 
 
-def schema(image_version):
-    return {'image_version': image_version}
+def schema(new_stack):
+    return new_stack
 
 
 def schema_query(image_version=None):
@@ -78,3 +78,11 @@ def test_parameter_validation():
 
 def test_required_query_param():
     return ''
+
+
+def test_schema_array(test_array):
+    return test_array
+
+
+def test_schema_int(test_int):
+    return test_int

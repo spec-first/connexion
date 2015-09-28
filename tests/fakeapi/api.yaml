@@ -293,6 +293,36 @@ paths:
           in: query
           type: number
           required: true
+  /schema_array:
+    get:
+      tags:
+      description: test schema array
+      operationId: fakeapi.hello.test_schema_array
+      parameters:
+        - name: test_array
+          in: body
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        200:
+          description: OK
+  /schema_int:
+    get:
+      tags:
+      description: test schema int
+      operationId: fakeapi.hello.test_schema_int
+      parameters:
+        - name: test_int
+          in: body
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: OK
 definitions:
   new_stack:
     type: object
