@@ -28,8 +28,13 @@ NoContent = object()
 class JSONEncoder(json.JSONEncoder):
     def default(self, o):
         if isinstance(o, datetime.datetime):
-            # only supports UTC timestamps
-            return o.isoformat('T') + 'Z'
+            if o.tzinfo:
+                # eg: '2015-09-25T23:14:42.588601+00:00'
+                return o.isoformat('T')
+            else:
+                # No timezone present - assume UTC.
+                # eg: '2015-09-25T23:14:42.588601Z'
+                return o.isoformat('T') + 'Z'
 
         if isinstance(o, datetime.date):
             return o.isoformat()
