@@ -78,3 +78,11 @@ def test_parameter_validation():
 
 def test_required_query_param():
     return ''
+
+
+def test_schema_array(test_array):
+    return test_array
+
+
+def test_schema_int(test_int):
+    return test_int
