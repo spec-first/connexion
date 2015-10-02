@@ -75,6 +75,8 @@ def verify_oauth(token_info_url, allowed_scopes, function):
                              user_scopes, allowed_scopes)
                 return problem(403, 'Forbidden', "Provided token doesn't have the required scope")
             logger.info("... Token authenticated.")
+            request.user = token_info['uid']
+            request.token_info = token_info
         return function(*args, **kwargs)
 
     return wrapper

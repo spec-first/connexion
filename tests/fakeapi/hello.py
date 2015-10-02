@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from connexion import problem
+from connexion import problem, request
 
 
 def post_greeting(name):
@@ -18,7 +18,7 @@ def get_bye(name):
 
 
 def get_bye_secure(name):
-    return 'Goodbye {name} (Secure)'.format(name=name)
+    return 'Goodbye {name} (Secure: {user})'.format(name=name, user=request.user)
 
 
 def with_problem():
