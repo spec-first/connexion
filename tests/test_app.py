@@ -38,9 +38,9 @@ def oauth_requests(monkeypatch):
         if url == "https://ouath.example/token_info":
             token = params['access_token']
             if token == "100":
-                return FakeResponse(200, '{"scope": ["myscope"]}')
+                return FakeResponse(200, '{"uid": "test-user", "scope": ["myscope"]}')
             if token == "200":
-                return FakeResponse(200, '{"scope": ["wrongscope"]}')
+                return FakeResponse(200, '{"uid": "test-user", "scope": ["wrongscope"]}')
             if token == "300":
                 return FakeResponse(404, '')
         return url
@@ -208,7 +208,7 @@ def test_security(oauth_requests):
     headers = {"Authorization": "Bearer 100"}
     get_bye_good_auth = app_client.get('/v1.0/byesecure/jsantos', headers=headers)  # type: flask.Response
     assert get_bye_good_auth.status_code == 200
-    assert get_bye_good_auth.data == b'Goodbye jsantos (Secure)'
+    assert get_bye_good_auth.data == b'Goodbye jsantos (Secure: test-user)'
 
     app_client = app1.app.test_client()
     headers = {"Authorization": "Bearer 200"}
