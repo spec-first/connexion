@@ -25,7 +25,7 @@ logger = logging.getLogger('connexion.app')
 
 class App:
     def __init__(self, import_name, port=5000, specification_dir='', server=None, arguments=None, debug=False,
-                 swagger_ui=True, swagger_path=None, swagger_url=None):
+                 swagger_ui=True, swagger_path=None, swagger_url=None, **options):
         """
         :param import_name: the name of the application package
         :type import_name: str
@@ -45,6 +45,8 @@ class App:
         :type swagger_path: string | None
         :param swagger_url: URL to access swagger-ui documentation
         :type swagger_url: string | None
+        :param options: options to be forwarded to the underlying Werkzeug server
+        :type options: dict
         """
         self.app = flask.Flask(import_name)
 
@@ -71,6 +73,7 @@ class App:
         self.swagger_ui = swagger_ui
         self.swagger_path = swagger_path
         self.swagger_url = swagger_url
+        self.options = options
 
     @staticmethod
     def common_error_handler(e):
@@ -185,7 +188,7 @@ class App:
         # this functions is not covered in unit tests because we would effectively testing the mocks
         logger.debug('Starting {} HTTP server..'.format(self.server), extra=vars(self))
         if self.server == 'flask':
-            self.app.run('0.0.0.0', port=self.port, debug=self.debug)
+            self.app.run('0.0.0.0', port=self.port, debug=self.debug, **self.options)
         elif self.server == 'tornado':
             try:
                 import tornado.wsgi
