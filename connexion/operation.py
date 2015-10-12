@@ -14,7 +14,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 import functools
 import logging
 import os
-
 from .decorators.parameter import parameter_to_arg
 from .decorators.produces import BaseSerializer, Produces, Jsonifier
 from .decorators.security import security_passthrough, verify_oauth
@@ -143,7 +142,15 @@ class Operation:
         :rtype: types.FunctionType
         """
 
-        function = parameter_to_arg(self.body_schema, self.parameters, self.__undecorated_function)
+        parameters = []
+        for param in self.parameters:  # resolve references
+            param = param.copy()
+            schema = param.get('schema')
+            if schema:
+                schema = self.resolve_reference(schema)
+            param['schema'] = schema
+            parameters.append(param)
+        function = parameter_to_arg(parameters, self.__undecorated_function)
 
         produces_decorator = self.__content_type_decorator
         logger.debug('... Adding produces decorator (%r)', produces_decorator, extra=vars(self))
