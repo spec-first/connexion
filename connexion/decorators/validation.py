@@ -70,8 +70,6 @@ def validate_type(schema, data, parameter_type, parameter_name=None):
             return expected_type(data)
         except ValueError:
             raise TypeValidationError(schema_type, parameter_type, parameter_name)
-        except Exception as e:
-            raise
     return data
 
 
