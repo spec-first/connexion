@@ -13,8 +13,8 @@ Unless required by applicable law or agreed to in writing, software distributed 
  language governing permissions and limitations under the License.
 """
 
-
-from flask import abort, request, send_file, send_from_directory, render_template, render_template_string, url_for  # noqa
+from flask import abort, request, send_file, send_from_directory, render_template, render_template_string, \
+    url_for  # noqa
 from .app import App  # noqa
 from .api import Api  # noqa
 from .problem import problem  # noqa

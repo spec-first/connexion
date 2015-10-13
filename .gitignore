@@ -6,3 +6,4 @@ __pycache__
 *.egg
 htmlcov/
 *.pyc
+.eggs
