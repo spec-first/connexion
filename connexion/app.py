@@ -24,7 +24,7 @@ logger = logging.getLogger('connexion.app')
 
 
 class App:
-    def __init__(self, import_name, port=5000, specification_dir='', server=None, arguments=None, debug=False,
+    def __init__(self, import_name, port=None, specification_dir='', server=None, arguments=None, debug=False,
                  swagger_ui=True, swagger_path=None, swagger_url=None):
         """
         :param import_name: the name of the application package
@@ -199,6 +199,8 @@ class App:
         # overwrite constructor parameter
         if port is not None:
             self.port = port
+        elif self.port is None:
+            self.port = 5000
 
         if server is not None:
             self.server = server
