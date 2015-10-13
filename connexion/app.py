@@ -191,7 +191,7 @@ class App:
         :type server: str | None
         :param debug: include debugging information
         :type debug: bool
-        :param options: options to be forwarded to the underlying Werkzeug server
+        :param options: options to be forwarded to the underlying server
         :type options: dict
         """
         # this functions is not covered in unit tests because we would effectively testing the mocks
@@ -217,7 +217,7 @@ class App:
             except:
                 raise Exception('tornado library not installed')
             wsgi_container = tornado.wsgi.WSGIContainer(self.app)
-            http_server = tornado.httpserver.HTTPServer(wsgi_container)
+            http_server = tornado.httpserver.HTTPServer(wsgi_container, **options)
             http_server.listen(self.port)
             logger.info('Listening on port {port}..'.format(port=self.port))
             tornado.ioloop.IOLoop.instance().start()
@@ -226,7 +226,7 @@ class App:
                 import gevent.wsgi
             except:
                 raise Exception('gevent library not installed')
-            http_server = gevent.wsgi.WSGIServer(('', self.port), self.app)
+            http_server = gevent.wsgi.WSGIServer(('', self.port), self.app, **options)
             logger.info('Listening on port {port}..'.format(port=self.port))
             http_server.serve_forever()
         else:
