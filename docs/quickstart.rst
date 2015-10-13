@@ -10,9 +10,9 @@ Put your API YAML inside a folder in the root path of your application (e.g ``sw
 
     import connexion
 
-    app = connexion.App(__name__, port = 8080, specification_dir='swagger/')
+    app = connexion.App(__name__, specification_dir='swagger/')
     app.add_api('my_api.yaml')
-    app.run()
+    app.run(port=8080)
 
 
 Parametrization
@@ -23,9 +23,9 @@ The specification arguments can be defined globally for the application or for e
 
 .. code-block:: python
 
-    app = connexion.App(__name__, port = 8080, specification_dir='swagger/', arguments={'global': 'global_value'})
-    app.add_api('my_api.yaml', arguments={'api_local', 'local_value'})
-    app.run()
+    app = connexion.App(__name__, specification_dir='swagger/', arguments={'global': 'global_value'})
+    app.add_api('my_api.yaml', arguments={'api_local': 'local_value'})
+    app.run(port = 8080)
 
 If a value is provided both globally and on the api then the api value will take precedence.
 
