@@ -11,15 +11,13 @@ Unless required by applicable law or agreed to in writing, software distributed 
  language governing permissions and limitations under the License.
 """
 
-import logging
-import pathlib
-
 import flask
 import jinja2
+import logging
+import pathlib
 import yaml
-
 from .operation import Operation
-from . import utils as utils
+from . import utils
 
 MODULE_PATH = pathlib.Path(__file__).absolute().parent
 SWAGGER_UI_PATH = MODULE_PATH / 'swagger-ui'
@@ -129,7 +127,7 @@ class Api:
             for method, endpoint in methods.items():
                 try:
                     self.add_operation(method, path, endpoint)
-                except:
+                except Exception:
                     logger.exception('Failed to add operation for %s %s%s', method.upper(), self.base_url, path)
 
     def add_swagger_json(self):
@@ -146,10 +144,10 @@ class Api:
         """
         logger.debug('Adding swagger-ui: %s/%s/', self.base_url, self.swagger_url)
         static_endpoint_name = "{name}_swagger_ui_static".format(name=self.blueprint.name)
-        self.blueprint.add_url_rule('/%s/<path:filename>' % self.swagger_url,
+        self.blueprint.add_url_rule('/{swagger_url}/<path:filename>'.format(swagger_url=self.swagger_url),
                                     static_endpoint_name, self.swagger_ui_static)
         index_endpoint_name = "{name}_swagger_ui_index".format(name=self.blueprint.name)
-        self.blueprint.add_url_rule('/%s/' % self.swagger_url,
+        self.blueprint.add_url_rule('/{swagger_url}/'.format(swagger_url=self.swagger_url),
                                     index_endpoint_name, self.swagger_ui_index)
 
     def create_blueprint(self, base_url=None):

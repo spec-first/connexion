@@ -52,21 +52,21 @@ def verify_oauth(token_info_url, allowed_scopes, function):
     @functools.wraps(function)
     def wrapper(*args, **kwargs):
         logger.debug("%s Oauth verification...", request.url)
-        authorization = request.headers.get('Authorization')
+        authorization = request.headers.get('Authorization')  # type: str
         if not authorization:
             logger.error("... No auth provided. Aborting with 401.")
             return problem(401, 'Unauthorized', "No authorization token provided")
         else:
             try:
-                _, token = authorization.split()
-            except:
+                _, token = authorization.split()  # type: str, str
+            except ValueError:
                 return problem(401, 'Unauthorized', 'Invalid authorization header')
             logger.debug("... Getting token '%s' from %s", token, token_info_url)
             token_request = session.get(token_info_url, params={'access_token': token}, timeout=5)
             logger.debug("... Token info (%d): %s", token_request.status_code, token_request.text)
             if not token_request.ok:
                 return problem(401, 'Unauthorized', "Provided oauth token is not valid")
-            token_info = token_request.json()
+            token_info = token_request.json()  # type: dict
             user_scopes = set(token_info['scope'])
             scopes_intersection = user_scopes & allowed_scopes
             logger.debug("... Scope intersection: %s", scopes_intersection)

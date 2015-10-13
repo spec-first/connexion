@@ -19,12 +19,10 @@ import numbers
 import re
 import six
 import strict_rfc3339
-
 from ..problem import problem
 from ..utils import validate_date, boolean
 
 logger = logging.getLogger('connexion.decorators.validation')
-
 
 # https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#data-types
 TYPE_MAP = {'integer': int,
@@ -40,9 +38,27 @@ TYPE_VALIDATION_MAP = {
     'boolean': boolean
 }
 
-
 FORMAT_MAP = {('string', 'date-time'): strict_rfc3339.validate_rfc3339,
               ('string', 'date'): validate_date}
+
+
+class TypeValidationError(Exception):
+    def __init__(self, schema_type, parameter_type, parameter_name):
+        """
+        Exception raise when type validation fails
+
+        :type schema_type: str
+        :type parameter_type: str
+        :type parameter_name: str
+        :return:
+        """
+        self.schema_type = schema_type
+        self.parameter_type = parameter_type
+        self.parameter_name = parameter_name
+
+    def __str__(self):
+        msg = "Wrong type, expected '{schema_type}' for {parameter_type} parameter '{parameter_name}'"
+        return msg.format(**vars(self))
 
 
 def validate_type(schema, data, parameter_type, parameter_name=None):
@@ -51,11 +67,12 @@ def validate_type(schema, data, parameter_type, parameter_name=None):
     expected_type = TYPE_VALIDATION_MAP.get(schema_type)
     if expected_type:
         try:
-            return expected_type(data), None
-        except:
-            return None, "Wrong type, expected '{}' for {} parameter '{}'".format(
-                schema_type, parameter_type, parameter_name)
-    return data, None
+            return expected_type(data)
+        except ValueError:
+            raise TypeValidationError(schema_type, parameter_type, parameter_name)
+        except Exception as e:
+            raise
+    return data
 
 
 def validate_format(schema, data):
@@ -63,7 +80,7 @@ def validate_format(schema, data):
     schema_format = schema.get('format')
     func = FORMAT_MAP.get((schema_type, schema_format))
     if func and not func(data):
-        return "Invalid value, expected {} in '{}' format".format(schema_type, schema_format)
+        return "Invalid value, expected {schema_type} in '{schema_format}' format".format(**locals())
 
 
 def validate_pattern(schema, data):
@@ -106,9 +123,9 @@ def validate_enum(schema, data):
 def validate_array(schema, data):
     if schema.get('type') != 'array' or not schema.get('items'):
         return
-    col_map = {'csv':   ',',
-               'ssv':   ' ',
-               'tsv':   '\t',
+    col_map = {'csv': ',',
+               'ssv': ' ',
+               'tsv': '\t',
                'pipes': '|',
                'multi': '&'}
     col_fmt = schema.get('collectionFormat', 'csv')
@@ -122,9 +139,10 @@ def validate_array(schema, data):
     subschema = schema.get('items')
     items = data.split(delimiter)
     for subval in items:
-        converted_value, error = validate_type(subschema, subval, schema['in'], schema['name'])
-        if error:
-            return error
+        try:
+            converted_value = validate_type(subschema, subval, schema['in'], schema['name'])
+        except TypeValidationError as e:
+            return str(e)
         # Run each sub-item through the list of validators.
         for func in VALIDATORS:
             error = func(subschema, converted_value)
@@ -177,7 +195,7 @@ class RequestBodyValidator:
             actual_type_name = actual_type.__name__
             logger.error("'%s' is not a '%s'", data, expected_type_name)
             return problem(400, 'Bad Request',
-                           "Wrong type, expected '{}' got '{}'".format(schema_type, actual_type_name))
+                           "Wrong type, expected '{schema_type}' got '{actual_type_name}'".format(**locals()))
 
         if schema_type == 'array':
             for item in data:
@@ -214,23 +232,24 @@ class ParameterValidator():
 
     def validate_parameter(self, parameter_type, value, param):
         if value is not None:
-            converted_value, error = validate_type(param, value, parameter_type)
-            if error:
-                return error
+            try:
+                converted_value = validate_type(param, value, parameter_type)
+            except TypeValidationError as e:
+                return str(e)
             for func in VALIDATORS:
                 error = func(param, converted_value)
                 if error:
                     return error
         elif param.get('required'):
-            return "Missing {} parameter '{}'".format(parameter_type, param['name'])
+            return "Missing {parameter_type} parameter '{param[name]}'".format(**locals())
 
     def validate_query_parameter(self, param):
-        '''
+        """
         Validate a single query parameter (request.args in Flask)
 
         :type param: dict
         :rtype: str
-        '''
+        """
         val = flask.request.args.get(param['name'])
         return self.validate_parameter('query', val, param)
 

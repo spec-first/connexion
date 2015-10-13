@@ -8,7 +8,7 @@ from connexion.decorators.produces import BaseSerializer
 try:
     import uwsgi_metrics
     HAS_UWSGI_METRICS = True
-except:
+except ImportError:
     HAS_UWSGI_METRICS = False
 
 
