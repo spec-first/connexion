@@ -181,11 +181,34 @@ class App:
         logger.debug('Adding %s with decorator', rule, extra=options)
         return self.app.route(rule, **options)
 
-    def run(self):  # pragma: no cover
+    def run(self, port=None, server=None, debug=None, **options):  # pragma: no cover
+        """
+        Runs the application on a local development server.
+
+        :param port: port to listen to
+        :type port: int
+        :param server: which wsgi server to use
+        :type server: str | None
+        :param debug: include debugging information
+        :type debug: bool
+        :param options: options to be forwarded to the underlying Werkzeug server
+        :type options: dict
+        """
         # this functions is not covered in unit tests because we would effectively testing the mocks
+
+        # overwrite constructor parameter
+        if port is not None:
+            self.port = port
+
+        if server is not None:
+            self.server = server
+
+        if debug is not None:
+            self.debug = debug
+
         logger.debug('Starting {} HTTP server..'.format(self.server), extra=vars(self))
         if self.server == 'flask':
-            self.app.run('0.0.0.0', port=self.port, debug=self.debug)
+            self.app.run('0.0.0.0', port=self.port, debug=self.debug, **options)
         elif self.server == 'tornado':
             try:
                 import tornado.wsgi
