@@ -7,6 +7,10 @@ def post_greeting(name):
     data = {'greeting': 'Hello {name}'.format(name=name)}
     return data
 
+def post_goodday(name):
+    data = {'greeting': 'Hello {name}'.format(name=name)}
+    headers = [("Location", "/my/uri")]
+    return data, 201, headers
 
 def get_list(name):
     data = ['hello', name]

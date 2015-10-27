@@ -184,6 +184,12 @@ def test_jsonifier(app):
     assert len(greetings_reponse) == 1
     assert greetings_reponse['greetings'] == 'Hello jsantos'
 
+def test_headers(app):
+    app_client = app.app.test_client()
+
+    response = app_client.post('/v1.0/goodday/dan', data={})  # type: flask.Response
+    assert response.status_code == 201
+    assert response.headers["Location"] == "http://localhost/my/uri"
 
 def test_pass_through(app):
     app_client = app.app.test_client()

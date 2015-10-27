@@ -57,17 +57,18 @@ class BaseSerializer:
         """
         url = flask.request.url
         logger.debug('Getting data and status code', extra={'data': data, 'data_type': type(data), 'url': url})
+        status_code, headers = 200, []
         if isinstance(data, flask.Response):
             data = data
             status_code = data.status_code
+        elif isinstance(data, tuple) and len(data) == 3:
+            data, status_code, headers = data
         elif isinstance(data, tuple) and len(data) == 2:
             data, status_code = data
-        else:
-            status_code = 200
         logger.debug('Got data and status code (%d)', status_code, extra={'data': data,
                                                                           'data_type': type(data),
                                                                           'url': url})
-        return data, status_code
+        return data, status_code, headers
 
     def __call__(self, function):
         """
@@ -93,13 +94,16 @@ class Produces(BaseSerializer):
         @functools.wraps(function)
         def wrapper(*args, **kwargs):
             url = flask.request.url
-            data, status_code = self.get_data_status_code(function(*args, **kwargs))
+            data, status_code, headers = self.get_data_status_code(function(*args, **kwargs))
             logger.debug('Returning %s', url, extra={'url': url, 'mimetype': self.mimetype})
             if isinstance(data, flask.Response):  # if the function returns a Response object don't change it
                 logger.debug('Endpoint returned a Flask Response', extra={'url': url, 'mimetype': data.mimetype})
                 return data
 
             response = flask.current_app.response_class(data, mimetype=self.mimetype)  # type: flask.Response
+            if headers:
+                for header, value in headers:
+                    response.headers[header] = value
             return response, status_code
 
         return wrapper
@@ -122,7 +126,7 @@ class Jsonifier(BaseSerializer):
         def wrapper(*args, **kwargs):
             url = flask.request.url
             logger.debug('Jsonifing %s', url, extra={'url': url, 'mimetype': self.mimetype})
-            data, status_code = self.get_data_status_code(function(*args, **kwargs))
+            data, status_code, headers = self.get_data_status_code(function(*args, **kwargs))
             if isinstance(data, flask.Response):  # if the function returns a Response object don't change it
                 logger.debug('Endpoint returned a Flask Response', extra={'url': url, 'mimetype': data.mimetype})
                 return data
@@ -134,6 +138,9 @@ class Jsonifier(BaseSerializer):
 
             data = json.dumps(data, indent=2, cls=JSONEncoder)
             response = flask.current_app.response_class(data, mimetype=self.mimetype)  # type: flask.Response
+            if headers:
+                for header, value in headers:
+                    response.headers[header] = value
             return response, status_code
 
         return wrapper

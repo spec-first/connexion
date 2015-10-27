@@ -323,6 +323,22 @@ paths:
       responses:
         200:
           description: OK
+  /goodday/{name}:
+    post:
+      summary: Generate god day greeting
+      description: Generates a good day message.
+      operationId: fakeapi.hello.post_goodday
+      responses:
+        201:
+          description: gooday response
+          schema:
+            type: string
+      parameters:
+        - name: name
+          in: path
+          description: Name of the person to greet.
+          required: true
+          type: string
 definitions:
   new_stack:
     type: object
