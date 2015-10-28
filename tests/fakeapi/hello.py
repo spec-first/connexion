@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from connexion import problem, request
-
+from connexion import NoContent
 
 def post_greeting(name):
     data = {'greeting': 'Hello {name}'.format(name=name)}
@@ -79,6 +79,8 @@ def test_parameter_validation():
 def test_required_query_param():
     return ''
 
+def test_no_content_response():
+    return NoContent, 204
 
 def test_schema_array(test_array):
     return test_array

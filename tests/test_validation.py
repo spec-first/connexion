@@ -6,6 +6,8 @@ from mock import MagicMock
 
 from connexion.problem import problem
 from connexion.decorators.validation import validate_pattern, validate_minimum, validate_maximum, ParameterValidator
+from connexion.decorators.validation import validate_min_length
+from connexion.decorators.validation import validate_max_length
 
 def test_validate_pattern():
     assert validate_pattern({}, '') is None
@@ -23,6 +25,22 @@ def test_validate_maximum():
     assert validate_maximum({}, 1) is None
     assert validate_maximum({'maximum': 1}, 1) is None
     assert validate_maximum({'maximum': 0}, 1) == 'Invalid value, must be at most 0'
+
+
+def test_validate_min_length():
+    assert validate_min_length({}, []) is None
+    assert validate_min_length({}, [1,]) is None
+    assert validate_min_length({"minLength": 1}, [1,]) is None
+    assert validate_min_length({"minLength": 2}, [1, 2,]) is None
+    assert validate_min_length({"minLength": 3}, [1, 2,]) == 'Length must be at least 3'
+
+
+def test_validate_max_length():
+    assert validate_max_length({}, []) is None
+    assert validate_max_length({}, [1,]) is None
+    assert validate_max_length({"maxLength": 2}, [1,]) is None
+    assert validate_max_length({"maxLength": 2}, [1, 2,]) is None
+    assert validate_max_length({"maxLength": 3}, [1, 2, 3, 4]) == 'Length must be at most 3'
 
 
 def test_parameter_validator(monkeypatch):

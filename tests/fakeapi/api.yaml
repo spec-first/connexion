@@ -293,6 +293,12 @@ paths:
           in: query
           type: number
           required: true
+  /test_no_content_response:
+    get:
+      operationId: fakeapi.hello.test_no_content_response
+      responses:
+        204:
+          description: No content returned
   /schema_array:
     get:
       tags:

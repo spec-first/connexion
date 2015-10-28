@@ -6,6 +6,7 @@ import requests
 import logging
 import _pytest.monkeypatch
 from connexion.app import App
+from connexion import NoContent
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -53,6 +54,14 @@ def app():
     app = App(__name__, 5001, SPEC_FOLDER, debug=True)
     app.add_api('api.yaml')
     return app
+
+
+def test_app_with_relative_path():
+    # Create the app with a realative path and run the test_app testcase below.
+    app = App(__name__, 5001, SPEC_FOLDER.relative_to(TEST_FOLDER),
+        debug=True)
+    app.add_api('api.yaml')
+    test_app(app)
 
 
 def test_app(app):
@@ -183,6 +192,14 @@ def test_jsonifier(app):
     greetings_reponse = json.loads(get_greetings.data.decode('utf-8'))
     assert len(greetings_reponse) == 1
     assert greetings_reponse['greetings'] == 'Hello jsantos'
+
+
+def test_not_content_response(app):
+    app_client = app.app.test_client()
+
+    get_no_content_response = app_client.get('/v1.0/test_no_content_response')
+    assert get_no_content_response.status_code == 204
+    assert get_no_content_response.content_length == 0
 
 
 def test_pass_through(app):
