@@ -1,6 +1,5 @@
 import datetime
 import json
-import pytz
 
 from connexion.decorators.produces import JSONEncoder
 
@@ -16,5 +15,12 @@ def test_json_encoder():
 
 
 def test_json_encoder_datetime_with_timezone():
-	s = json.dumps(datetime.datetime.now(pytz.utc), cls=JSONEncoder)
+
+	class DummyTimezone(datetime.tzinfo):
+		def utcoffset(self, dt):
+			return datetime.timedelta(0)
+		def dst(self, dt):
+			return datetime.timedelta(0)
+
+	s = json.dumps(datetime.datetime.now(DummyTimezone()), cls=JSONEncoder)
 	assert s.endswith('+00:00"')
