@@ -9,7 +9,12 @@ def post_greeting(name):
 
 def post_goodday(name):
     data = {'greeting': 'Hello {name}'.format(name=name)}
-    headers = [("Location", "/my/uri")]
+    headers = {"Location": "/my/uri"}
+    return data, 201, headers
+
+def post_goodevening(name):
+    data = 'Good evening {name}'.format(name=name)
+    headers = {"Location": "/my/uri"}
     return data, 201, headers
 
 def get_list(name):

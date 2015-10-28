@@ -325,7 +325,7 @@ paths:
           description: OK
   /goodday/{name}:
     post:
-      summary: Generate god day greeting
+      summary: Generate good day greeting
       description: Generates a good day message.
       operationId: fakeapi.hello.post_goodday
       responses:
@@ -337,6 +337,24 @@ paths:
         - name: name
           in: path
           description: Name of the person to greet.
+          required: true
+          type: string
+  /goodevening/{name}:
+    post:
+      summary: Generate good evening
+      description: Generates a good evening message.
+      operationId: fakeapi.hello.post_goodevening
+      produces:
+        - text/plain
+      responses:
+        201:
+          description: goodevening response
+          schema:
+            type: string
+      parameters:
+        - name: name
+          in: path
+          description: Name of the person to say good evening.
           required: true
           type: string
 definitions:
