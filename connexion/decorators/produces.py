@@ -52,12 +52,12 @@ class BaseSerializer:
     @staticmethod
     def get_data_status_code(data):
         """
-        :type data: flask.Response | (object, int) | object
-        :rtype: (object, int)
+        :type data: flask.Response | (object, int) | (object, int, dict) | object
+        :rtype: (object, int, dict)
         """
         url = flask.request.url
         logger.debug('Getting data and status code', extra={'data': data, 'data_type': type(data), 'url': url})
-        status_code, headers = 200, []
+        status_code, headers = 200, {}
         if isinstance(data, flask.Response):
             data = data
             status_code = data.status_code
@@ -102,7 +102,7 @@ class Produces(BaseSerializer):
 
             response = flask.current_app.response_class(data, mimetype=self.mimetype)  # type: flask.Response
             if headers:
-                for header, value in headers:
+                for header, value in headers.items():
                     response.headers[header] = value
             return response, status_code
 
@@ -139,7 +139,7 @@ class Jsonifier(BaseSerializer):
             data = json.dumps(data, indent=2, cls=JSONEncoder)
             response = flask.current_app.response_class(data, mimetype=self.mimetype)  # type: flask.Response
             if headers:
-                for header, value in headers:
+                for header, value in headers.items():
                     response.headers[header] = value
             return response, status_code
 
