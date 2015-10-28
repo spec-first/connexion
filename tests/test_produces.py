@@ -3,6 +3,7 @@ import json
 
 from connexion.decorators.produces import JSONEncoder
 
+
 def test_json_encoder():
     s = json.dumps({1: 2}, cls=JSONEncoder)
     assert '{"1": 2}' == s
@@ -16,11 +17,13 @@ def test_json_encoder():
 
 def test_json_encoder_datetime_with_timezone():
 
-	class DummyTimezone(datetime.tzinfo):
-		def utcoffset(self, dt):
-			return datetime.timedelta(0)
-		def dst(self, dt):
-			return datetime.timedelta(0)
+    class DummyTimezone(datetime.tzinfo):
 
-	s = json.dumps(datetime.datetime.now(DummyTimezone()), cls=JSONEncoder)
-	assert s.endswith('+00:00"')
+        def utcoffset(self, dt):
+            return datetime.timedelta(0)
+
+        def dst(self, dt):
+            return datetime.timedelta(0)
+
+    s = json.dumps(datetime.datetime.now(DummyTimezone()), cls=JSONEncoder)
+    assert s.endswith('+00:00"')
