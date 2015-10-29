@@ -50,8 +50,13 @@ class BaseSerializer:
         self.mimetype = mimetype
 
     @staticmethod
-    def get_data_status_code(data):
+    def get_full_response(data):
         """
+        Gets Data. Status Code and Headers for response.
+        If only body data is returned by the endpoint function, then the status code will be set to 200 and no headers
+        will be added.
+        If the returned object is a flask.Response then it will just pass the information needed to recreate it.
+
         :type data: flask.Response | (object, int) | (object, int, dict) | object
         :rtype: (object, int, dict)
         """
@@ -61,6 +66,7 @@ class BaseSerializer:
         if isinstance(data, flask.Response):
             data = data
             status_code = data.status_code
+            headers = data.headers
         elif isinstance(data, tuple) and len(data) == 3:
             data, status_code, headers = data
         elif isinstance(data, tuple) and len(data) == 2:
@@ -94,7 +100,7 @@ class Produces(BaseSerializer):
         @functools.wraps(function)
         def wrapper(*args, **kwargs):
             url = flask.request.url
-            data, status_code, headers = self.get_data_status_code(function(*args, **kwargs))
+            data, status_code, headers = self.get_full_response(function(*args, **kwargs))
             logger.debug('Returning %s', url, extra={'url': url, 'mimetype': self.mimetype})
             if isinstance(data, flask.Response):  # if the function returns a Response object don't change it
                 logger.debug('Endpoint returned a Flask Response', extra={'url': url, 'mimetype': data.mimetype})
@@ -126,7 +132,7 @@ class Jsonifier(BaseSerializer):
         def wrapper(*args, **kwargs):
             url = flask.request.url
             logger.debug('Jsonifing %s', url, extra={'url': url, 'mimetype': self.mimetype})
-            data, status_code, headers = self.get_data_status_code(function(*args, **kwargs))
+            data, status_code, headers = self.get_full_response(function(*args, **kwargs))
             if isinstance(data, flask.Response):  # if the function returns a Response object don't change it
                 logger.debug('Endpoint returned a Flask Response', extra={'url': url, 'mimetype': data.mimetype})
                 return data

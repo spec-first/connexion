@@ -36,7 +36,7 @@ class UWSGIMetricsCollector:
             start_time_s = time.time()
             try:
                 response = function(*args, **kwargs)
-                _, status_code = BaseSerializer.get_data_status_code(response)
+                _, status_code, _ = BaseSerializer.get_full_response(response)
             finally:
                 end_time_s = time.time()
                 delta_s = end_time_s - start_time_s

@@ -200,7 +200,7 @@ class Operation:
             return jsonify
         elif len(self.produces) == 1:
             mimetype = self.produces[0]
-            logger.debug('... Produces {}'.format(mimetype), extra=vars(self))
+            logger.debug('... Produces %s', mimetype, extra=vars(self))
             decorator = Produces(mimetype)
             return decorator
         else:

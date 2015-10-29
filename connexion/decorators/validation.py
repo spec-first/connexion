@@ -192,8 +192,9 @@ class RequestBodyValidator:
             expected_type_name = expected_type.__name__
             actual_type_name = actual_type.__name__
             logger.error("'%s' is not a '%s'", data, expected_type_name)
-            return problem(400, 'Bad Request',
-                           "Wrong type, expected '{schema_type}' got '{actual_type_name}'".format(**locals()))
+            error_template = "Wrong type, expected '{schema_type}' got '{actual_type_name}'"
+            error_message = error_template.format(schema_type=schema_type, actual_type_name=actual_type_name)
+            return problem(400, 'Bad Request', error_message)
 
         if schema_type == 'array':
             for item in data:

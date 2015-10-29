@@ -127,7 +127,7 @@ class Api:
             for method, endpoint in methods.items():
                 try:
                     self.add_operation(method, path, endpoint)
-                except Exception:
+                except Exception:  # pylint: disable= W0703
                     logger.exception('Failed to add operation for %s %s%s', method.upper(), self.base_url, path)
 
     def add_swagger_json(self):
