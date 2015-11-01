@@ -12,6 +12,9 @@ def post_goodday(name):
     headers = {"Location": "/my/uri"}
     return data, 201, headers
 
+def post_goodday_no_header():
+    return {'greeting': 'Hello.'}, 201
+
 def post_goodevening(name):
     data = 'Good evening {name}'.format(name=name)
     headers = {"Location": "/my/uri"}
@@ -67,6 +70,58 @@ def empty():
 
 def schema(new_stack):
     return new_stack
+
+
+def schema_response_object(valid):
+    if valid == "invalid_requirements":
+        return {"docker_version": 1.0}
+    elif valid == "invalid_type":
+        return {"image_version": 1.0}
+    else:
+        return {"image_version": "1.0"}  # valid
+
+
+def schema_response_string(valid):
+    if valid == "valid":
+        return "Image version 2.0"
+    else:
+        return 2.0
+
+
+def schema_response_integer(valid):
+    if valid == "valid":
+        return 3
+    else:
+        return 3.0
+
+
+def schema_response_number(valid):
+    if valid == "valid":
+        return 4.0
+    else:
+        return "Four"
+
+
+def schema_response_boolean(valid):
+    if valid == "valid":
+        return True
+    else:
+        return "yes"
+
+
+def schema_response_array(valid):
+    if valid == "invalid_dict":
+        return {
+            {"image_version": "1.0"}:
+            {"image_version": "2.0"}
+        }
+    elif valid == "invalid_string":
+        return "Not an array."
+    else:
+        return [
+            {"image_version": "1.0"},
+            {"image_version": "2.0"}
+        ]
 
 
 def schema_query(image_version=None):

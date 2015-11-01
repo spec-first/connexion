@@ -17,6 +17,10 @@ import flask
 import functools
 import json
 import logging
+from ..exceptions import NonConformingResponse
+from ..problem import problem
+from .validation import RequestBodyValidator
+import ast
 
 logger = logging.getLogger('connexion.decorators.produces')
 
@@ -43,11 +47,13 @@ class JSONEncoder(json.JSONEncoder):
 
 
 class BaseSerializer:
-    def __init__(self, mimetype='text/plain'):
+    def __init__(self, mimetype='text/plain', operation={}):
         """
         :type mimetype: str
+        :type operation: Operation
         """
         self.mimetype = mimetype
+        self.operation = operation
 
     @staticmethod
     def get_full_response(data):
@@ -76,6 +82,81 @@ class BaseSerializer:
                                                                           'url': url})
         return data, status_code, headers
 
+    @staticmethod
+    def process_headers(response, headers):
+        """
+        A convenience function for updating the Response headers with any additional headers
+        generated in the view. If more complex logic should be needed later then it can be handled here.
+
+        :type response: flask.Response
+        :type headers: dict
+        :rtype flask.Response
+        """
+        if headers:
+            for header, value in headers.items():
+                response.headers[header] = value
+        return response
+
+    def get_as_type(self, data_string, schema_type, mimetype):
+        """
+        A function to convert the serialized response body back into its intended types for validation.
+        If the schema is declared as an "object" and the mimetype is a form of JSON, then load as JSON.
+        The string is tested in this order: json, boolean, float, integer - or return as string.
+
+        :type data_string: string The response body as a string
+        :type schema_type: dict The schema type declared in the spec for the response body
+        :rtype dict | bool | float | int | str
+        """
+        if schema_type == "object" and "json" in mimetype:  # json
+            return json.loads(data_string)
+        if data_string[:1] == "[":  # array?
+            try:
+                return ast.literal_eval(data_string)
+            except ValueError:
+                pass
+        if data_string.lower() == "true":  # boolean?
+            return True
+        elif data_string.lower() == "false":
+            return False
+        if "." in data_string:  # float?
+            try:
+                return float(data_string)
+            except ValueError:
+                pass
+        try:  # integer?
+            return int(data_string)
+        except ValueError:
+            pass
+        return data_string  # leave as a string
+
+    def validate_response(self, response, status_code, mimetype):
+        """
+        Validates the Response object based on what has been declared in the specification.
+        Ensures the response body matches the declated schema.
+        :type response: flask.Response
+        :type status_code: int
+        :type mimetype: str
+        :rtype bool | None
+        """
+        response_definitions = self.operation.operation.get("responses", {})
+        if not response_definitions:
+            return response
+        response_definition = response_definitions.get(status_code, {})
+        # TODO handle default response definitions
+
+        if response_definition and response_definition.get("schema"):
+            schema = self.operation.resolve_reference(response_definition.get("schema"))
+            data = self.get_as_type(response.get_data(), schema.get("type"), mimetype)
+            v = RequestBodyValidator(schema)
+            error = v.validate_schema(data, schema)
+            if error:
+                raise NonConformingResponse("Response body does not conform to specification")
+
+        if response_definition and response_definition.get("headers"):
+            if not all(item in response.headers.keys() for item in response_definition.get("headers").keys()):
+                raise NonConformingResponse("Response headers do not conform to specification")
+        return True
+
     def __call__(self, function):
         """
         :type function: types.FunctionType
@@ -101,15 +182,21 @@ class Produces(BaseSerializer):
         def wrapper(*args, **kwargs):
             url = flask.request.url
             data, status_code, headers = self.get_full_response(function(*args, **kwargs))
+            logger.debug((data, status_code, headers))
             logger.debug('Returning %s', url, extra={'url': url, 'mimetype': self.mimetype})
             if isinstance(data, flask.Response):  # if the function returns a Response object don't change it
                 logger.debug('Endpoint returned a Flask Response', extra={'url': url, 'mimetype': data.mimetype})
                 return data
 
+            data = str(data)
             response = flask.current_app.response_class(data, mimetype=self.mimetype)  # type: flask.Response
-            if headers:
-                for header, value in headers.items():
-                    response.headers[header] = value
+            response = self.process_headers(response, headers)
+
+            try:
+                self.validate_response(response, status_code, self.mimetype)
+            except NonConformingResponse as e:
+                return problem(500, 'Internal Server Error', e.reason)
+
             return response, status_code
 
         return wrapper
@@ -144,9 +231,13 @@ class Jsonifier(BaseSerializer):
 
             data = json.dumps(data, indent=2, cls=JSONEncoder)
             response = flask.current_app.response_class(data, mimetype=self.mimetype)  # type: flask.Response
-            if headers:
-                for header, value in headers.items():
-                    response.headers[header] = value
+            response = self.process_headers(response, headers)
+
+            try:
+                self.validate_response(response, status_code, self.mimetype)
+            except NonConformingResponse as e:
+                return problem(500, 'Internal Server Error', e.reason)
+
             return response, status_code
 
         return wrapper

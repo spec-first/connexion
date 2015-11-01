@@ -196,12 +196,12 @@ class Operation:
                 # if the endpoint as no 'produces' then the default is 'application/json'
                 mimetype = 'application/json'
             logger.debug('... Produces json', extra=vars(self))
-            jsonify = Jsonifier(mimetype)
+            jsonify = Jsonifier(mimetype, self)
             return jsonify
         elif len(self.produces) == 1:
             mimetype = self.produces[0]
             logger.debug('... Produces %s', mimetype, extra=vars(self))
-            decorator = Produces(mimetype)
+            decorator = Produces(mimetype, self)
             return decorator
         else:
             return BaseSerializer()

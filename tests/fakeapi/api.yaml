@@ -27,7 +27,7 @@ paths:
         200:
           description: greeting response
           schema:
-            type: string
+            type: object
       parameters:
         - name: name
           in: path
@@ -45,7 +45,7 @@ paths:
         200:
           description: greeting response
           schema:
-            type: string
+            type: object
       parameters:
         - name: name
           in: path
@@ -112,7 +112,9 @@ paths:
         200:
           description: a greeting in a list
           schema:
-            type: string
+            type: array
+            items:
+              type: string
       parameters:
         - name: name
           in: path
@@ -193,6 +195,117 @@ paths:
           description: goodbye response
           schema:
             type: string
+  /test_schema/response/object/{valid}:
+    get:
+      summary: Returns an image_version as an object
+      description: Returns image_version
+      operationId: fakeapi.hello.schema_response_object
+      produces:
+        - application/json
+      parameters:
+        - name: valid
+          in: path
+          description: Whether to return a valid or invalid schema in the response body
+          required: true
+          type: string
+      responses:
+        200:
+          description: Requested new_stack data model
+          schema:
+            $ref: '#/definitions/new_stack'
+  /test_schema/response/string/{valid}:
+    get:
+      summary: Returns an image_version as a string
+      description: Returns image_version
+      operationId: fakeapi.hello.schema_response_string
+      produces:
+        - text/plain
+      parameters:
+        - name: valid
+          in: path
+          description: Whether to return a valid or invalid schema in the response body
+          required: true
+          type: string
+      responses:
+        200:
+          description: Requested new_stack data model
+          schema:
+            type: string
+  /test_schema/response/integer/{valid}:
+    get:
+      summary: Returns an image_version as an integer
+      description: Returns image_version
+      operationId: fakeapi.hello.schema_response_integer
+      produces:
+        - text/plain
+      parameters:
+        - name: valid
+          in: path
+          description: Whether to return a valid or invalid schema in the response body
+          required: true
+          type: string
+      responses:
+        200:
+          description: Requested new_stack data model
+          schema:
+            type: integer
+  /test_schema/response/number/{valid}:
+    get:
+      summary: Returns an image_version as a number(float)
+      description: Returns image_version
+      operationId: fakeapi.hello.schema_response_number
+      produces:
+        - text/plain
+      parameters:
+        - name: valid
+          in: path
+          description: Whether to return a valid or invalid schema in the response body
+          required: true
+          type: string
+      responses:
+        200:
+          description: Requested new_stack data model
+          schema:
+            type: number
+  /test_schema/response/boolean/{valid}:
+    get:
+      summary: Returns an image_version as a boolean
+      description: Returns image_version
+      operationId: fakeapi.hello.schema_response_boolean
+      produces:
+        - text/plain
+      parameters:
+        - name: valid
+          in: path
+          description: Whether to return a valid or invalid schema in the response body
+          required: true
+          type: string
+      responses:
+        200:
+          description: Requested new_stack data model
+          schema:
+            type: boolean
+  /test_schema/response/array/{valid}:
+    get:
+      summary: Returns an image_version as a boolean
+      description: Returns image_version
+      operationId: fakeapi.hello.schema_response_array
+      produces:
+        - application/json
+      parameters:
+        - name: valid
+          in: path
+          description: Whether to return a valid or invalid schema in the response body
+          required: true
+          type: string
+      responses:
+        200:
+          description: Requested new_stack data model          
+          schema:
+            type: array
+            items:
+              schema: 
+                $ref: '#/definitions/new_stack'
   /test_schema_in_query:
     post:
       summary: Returns the image_version
@@ -333,10 +446,18 @@ paths:
     post:
       summary: Generate good day greeting
       description: Generates a good day message.
+      headers:
+        Location:
+          type: string
+          description: The URI of the created resource
       operationId: fakeapi.hello.post_goodday
       responses:
         201:
           description: gooday response
+          headers:
+            Location:
+              type: string
+              description: The URI of the created resource
           schema:
             type: string
       parameters:
@@ -345,16 +466,38 @@ paths:
           description: Name of the person to greet.
           required: true
           type: string
+  /goodday/noheader:
+    post:
+      summary: Generate good day greeting
+      description: Generates a good day message.
+      operationId: fakeapi.hello.post_goodday_no_header
+      responses:
+        201:
+          description: gooday response
+          headers:
+            Location:
+              type: string
+              description: The URI of the created resource
+          schema:
+            type: string
   /goodevening/{name}:
     post:
       summary: Generate good evening
       description: Generates a good evening message.
+      headers:
+        Location:
+          type: string
+          description: The URI of the created resource
       operationId: fakeapi.hello.post_goodevening
       produces:
         - text/plain
       responses:
         201:
           description: goodevening response
+          headers:
+            Location:
+              type: string
+              description: The URI of the created resource
           schema:
             type: string
       parameters:

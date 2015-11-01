@@ -29,3 +29,18 @@ class InvalidSpecification(ConnexionException):
 
     def __repr__(self):
         return '<InvalidSpecification: {}>'.format(self.reason)
+
+
+class NonConformingResponse(ConnexionException):
+    def __init__(self, reason='Unknown Reason'):
+        """
+        :param reason: Reason why the response did not conform to the specification
+        :type reason: str
+        """
+        self.reason = reason
+
+    def __str__(self):
+        return '<NonConformingResponse: {}>'.format(self.reason)
+
+    def __repr__(self):
+        return '<NonConformingResponse: {}>'.format(self.reason)
