@@ -146,7 +146,7 @@ class BaseSerializer:
 
         if response_definition and response_definition.get("schema"):
             schema = self.operation.resolve_reference(response_definition.get("schema"))
-            data = self.get_as_type(response.get_data(), schema.get("type"), mimetype)
+            data = self.get_as_type(response.get_data(as_text=True), schema.get("type"), mimetype)
             v = RequestBodyValidator(schema)
             error = v.validate_schema(data, schema)
             if error:
