@@ -19,6 +19,7 @@ from .decorators.produces import BaseSerializer, Produces, Jsonifier
 from .decorators.security import security_passthrough, verify_oauth
 from .decorators.validation import RequestBodyValidator, ParameterValidator
 from .decorators.metrics import UWSGIMetricsCollector
+from.decorators.response import ResponseValidator
 from .exceptions import InvalidSpecification
 from .utils import flaskify_endpoint, get_function_from_name, produces_json
 
@@ -31,7 +32,7 @@ class Operation:
     """
 
     def __init__(self, method, path, operation, app_produces, app_security,
-                 security_definitions, definitions, parameter_definitions):
+                 security_definitions, definitions, parameter_definitions, validate_responses=False):
         """
         This class uses the OperationID identify the module and function that will handle the operation
 
@@ -58,6 +59,8 @@ class Operation:
         :param definitions: `Definitions Object
             <https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#definitionsObject>`_
         :type definitions: dict
+        :param validate_responses: True enables validation. Validation errors generate HTTP 500 responses.
+        :type validate_responses: bool
         """
 
         self.method = method
@@ -69,6 +72,7 @@ class Operation:
             'definitions': self.definitions,
             'parameters': self.parameter_definitions
         }
+        self.validate_responses = validate_responses
 
         self.operation = operation
         self.operation_id = operation['operationId']
@@ -102,6 +106,18 @@ class Operation:
                     definition_name=definition_name, method=self.method, path=self.path))
             del schema['$ref']
         return schema
+
+    def get_mimetype(self):
+        if produces_json(self.produces):  # endpoint will return json
+            try:
+                return self.produces[0]
+            except IndexError:
+                # if the endpoint as no 'produces' then the default is 'application/json'
+                return 'application/json'
+        elif len(self.produces) == 1:
+            return self.produces[0]
+        else:
+            return None
 
     def resolve_parameters(self, parameters):
         for param in parameters:
@@ -152,6 +168,12 @@ class Operation:
             parameters.append(param)
         function = parameter_to_arg(parameters, self.__undecorated_function)
 
+        if self.validate_responses:
+            logger.debug('... Response validation enabled.')
+            response_decorator = self.__response_validation_decorator
+            logger.debug('... Adding response decorator (%r)', response_decorator)
+            function = response_decorator(function)
+
         produces_decorator = self.__content_type_decorator
         logger.debug('... Adding produces decorator (%r)', produces_decorator, extra=vars(self))
         function = produces_decorator(function)
@@ -189,19 +211,14 @@ class Operation:
 
         logger.debug('... Produces: %s', self.produces, extra=vars(self))
 
+        mimetype = self.get_mimetype()
         if produces_json(self.produces):  # endpoint will return json
-            try:
-                mimetype = self.produces[0]
-            except IndexError:
-                # if the endpoint as no 'produces' then the default is 'application/json'
-                mimetype = 'application/json'
             logger.debug('... Produces json', extra=vars(self))
-            jsonify = Jsonifier(mimetype, self)
+            jsonify = Jsonifier(mimetype)
             return jsonify
         elif len(self.produces) == 1:
-            mimetype = self.produces[0]
             logger.debug('... Produces %s', mimetype, extra=vars(self))
-            decorator = Produces(mimetype, self)
+            decorator = Produces(mimetype)
             return decorator
         else:
             return BaseSerializer()
@@ -271,3 +288,11 @@ class Operation:
             yield ParameterValidator(self.parameters)
         if self.body_schema:
             yield RequestBodyValidator(self.body_schema)
+
+    @property
+    def __response_validation_decorator(self):
+        """
+        Get a decorator for validating the generated Response.
+        :rtype: types.FunctionType
+        """
+        return ResponseValidator(self, self.get_mimetype())
