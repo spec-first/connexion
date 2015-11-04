@@ -12,11 +12,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 """
 
 # Decorators to change the return type of endpoints
-import datetime
-import flask
 import functools
-import json
-import ast
 import logging
 from ..exceptions import NonConformingResponse
 from ..problem import problem
@@ -25,6 +21,7 @@ from .decorator import BaseDecorator
 
 
 logger = logging.getLogger('connexion.decorators.response')
+
 
 class ResponseValidator(BaseDecorator):
     def __init__(self, operation={},  mimetype='text/plain'):
