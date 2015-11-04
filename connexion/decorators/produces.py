@@ -82,7 +82,7 @@ class Produces(BaseSerializer):
         @functools.wraps(function)
         def wrapper(*args, **kwargs):
             url = flask.request.url
-            data, status_code, headers = self.get_full_response("Produces", function(*args, **kwargs))
+            data, status_code, headers = self.get_full_response(function(*args, **kwargs))
             logger.debug('Returning %s', url, extra={'url': url, 'mimetype': self.mimetype})
             if isinstance(data, flask.Response):  # if the function returns a Response object don't change it
                 logger.debug('Endpoint returned a Flask Response', extra={'url': url, 'mimetype': data.mimetype})
@@ -114,7 +114,7 @@ class Jsonifier(BaseSerializer):
         def wrapper(*args, **kwargs):
             url = flask.request.url
             logger.debug('Jsonifing %s', url, extra={'url': url, 'mimetype': self.mimetype})
-            data, status_code, headers = self.get_full_response("Jsonifier", function(*args, **kwargs))
+            data, status_code, headers = self.get_full_response(function(*args, **kwargs))
             if isinstance(data, flask.Response):  # if the function returns a Response object don't change it
                 logger.debug('Endpoint returned a Flask Response', extra={'url': url, 'mimetype': data.mimetype})
                 return data

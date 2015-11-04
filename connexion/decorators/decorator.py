@@ -19,9 +19,7 @@ logger = logging.getLogger('connexion.decorators.decorator')
 class BaseDecorator:
 
     @staticmethod
-    def get_full_response(classname, data):
-        import datetime
-        logger.debug(classname + " get_full_response:" + str(datetime.datetime.now()))
+    def get_full_response(data):
         """
         Gets Data. Status Code and Headers for response.
         If only body data is returned by the endpoint function, then the status code will be set to 200 and no headers

@@ -68,7 +68,7 @@ class ResponseValidator(BaseDecorator):
         def wrapper(*args, **kwargs):
             result = function(*args, **kwargs)
             try:
-                data, status_code, headers = self.get_full_response("Response", result)
+                data, status_code, headers = self.get_full_response(result)
                 self.validate_response(data, status_code, headers, self.mimetype)
             except NonConformingResponse as e:
                 return problem(500, 'Internal Server Error', e.reason)
