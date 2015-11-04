@@ -52,7 +52,7 @@ def oauth_requests(monkeypatch):
 @pytest.fixture
 def app():
     app = App(__name__, 5001, SPEC_FOLDER, debug=True)
-    app.add_api('api.yaml')
+    app.add_api('api.yaml', validate_responses=True)
     return app
 
 

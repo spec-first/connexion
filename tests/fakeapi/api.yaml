@@ -194,7 +194,7 @@ paths:
         200:
           description: goodbye response
           schema:
-            type: string
+            $ref: '#/definitions/new_stack'
   /test_schema/response/object/{valid}:
     get:
       summary: Returns an image_version as an object
@@ -326,7 +326,8 @@ paths:
         200:
           description: goodbye response
           schema:
-            type: string
+            $ref: '#/definitions/new_stack'
+
   /test_schema_list:
     post:
       summary: Returns empty response
@@ -459,7 +460,7 @@ paths:
               type: string
               description: The URI of the created resource
           schema:
-            type: string
+            type: object
       parameters:
         - name: name
           in: path
@@ -479,7 +480,7 @@ paths:
               type: string
               description: The URI of the created resource
           schema:
-            type: string
+            type: object
   /goodevening/{name}:
     post:
       summary: Generate good evening
