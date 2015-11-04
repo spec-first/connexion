@@ -82,7 +82,7 @@ class App:
         return problem(title=exception.name, detail=exception.description, status=exception.code)
 
     def add_api(self, swagger_file, base_path=None, arguments=None, swagger_ui=None, swagger_path=None,
-                swagger_url=None):
+                swagger_url=None, validate_responses=False):
         """
         Adds an API to the application based on a swagger file
 
@@ -98,6 +98,8 @@ class App:
         :type swagger_path: string | None
         :param swagger_url: URL to access swagger-ui documentation
         :type swagger_url: string | None
+        :param validate_responses: True enables validation. Validation errors generate HTTP 500 responses.
+        :type validate_responses: bool
         :rtype: Api
         """
         swagger_ui = swagger_ui if swagger_ui is not None else self.swagger_ui
@@ -109,7 +111,7 @@ class App:
         arguments = dict(self.arguments, **arguments)  # copy global arguments and update with api specfic
         yaml_path = self.specification_dir / swagger_file
         api = Api(yaml_path, base_path, arguments,
-                  swagger_ui, swagger_path, swagger_url)
+                  swagger_ui, swagger_path, swagger_url, validate_responses)
         self.app.register_blueprint(api.blueprint)
         return api
 

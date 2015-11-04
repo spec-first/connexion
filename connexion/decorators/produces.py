@@ -17,6 +17,7 @@ import flask
 import functools
 import json
 import logging
+from .decorator import BaseDecorator
 
 logger = logging.getLogger('connexion.decorators.produces')
 
@@ -42,7 +43,7 @@ class JSONEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, o)
 
 
-class BaseSerializer:
+class BaseSerializer(BaseDecorator):
     def __init__(self, mimetype='text/plain'):
         """
         :type mimetype: str
@@ -50,38 +51,19 @@ class BaseSerializer:
         self.mimetype = mimetype
 
     @staticmethod
-    def get_full_response(data):
+    def process_headers(response, headers):
         """
-        Gets Data. Status Code and Headers for response.
-        If only body data is returned by the endpoint function, then the status code will be set to 200 and no headers
-        will be added.
-        If the returned object is a flask.Response then it will just pass the information needed to recreate it.
+        A convenience function for updating the Response headers with any additional headers
+        generated in the view. If more complex logic should be needed later then it can be handled here.
 
-        :type data: flask.Response | (object, int) | (object, int, dict) | object
-        :rtype: (object, int, dict)
+        :type response: flask.Response
+        :type headers: dict
+        :rtype flask.Response
         """
-        url = flask.request.url
-        logger.debug('Getting data and status code', extra={'data': data, 'data_type': type(data), 'url': url})
-        status_code, headers = 200, {}
-        if isinstance(data, flask.Response):
-            data = data
-            status_code = data.status_code
-            headers = data.headers
-        elif isinstance(data, tuple) and len(data) == 3:
-            data, status_code, headers = data
-        elif isinstance(data, tuple) and len(data) == 2:
-            data, status_code = data
-        logger.debug('Got data and status code (%d)', status_code, extra={'data': data,
-                                                                          'data_type': type(data),
-                                                                          'url': url})
-        return data, status_code, headers
-
-    def __call__(self, function):
-        """
-        :type function: types.FunctionType
-        :rtype: types.FunctionType
-        """
-        return function
+        if headers:
+            for header, value in headers.items():
+                response.headers[header] = value
+        return response
 
     def __repr__(self):
         """
@@ -106,10 +88,10 @@ class Produces(BaseSerializer):
                 logger.debug('Endpoint returned a Flask Response', extra={'url': url, 'mimetype': data.mimetype})
                 return data
 
+            data = str(data)
             response = flask.current_app.response_class(data, mimetype=self.mimetype)  # type: flask.Response
-            if headers:
-                for header, value in headers.items():
-                    response.headers[header] = value
+            response = self.process_headers(response, headers)
+
             return response, status_code
 
         return wrapper
@@ -144,9 +126,8 @@ class Jsonifier(BaseSerializer):
 
             data = json.dumps(data, indent=2, cls=JSONEncoder)
             response = flask.current_app.response_class(data, mimetype=self.mimetype)  # type: flask.Response
-            if headers:
-                for header, value in headers.items():
-                    response.headers[header] = value
+            response = self.process_headers(response, headers)
+
             return response, status_code
 
         return wrapper

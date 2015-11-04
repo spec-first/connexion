@@ -52,7 +52,7 @@ def oauth_requests(monkeypatch):
 @pytest.fixture
 def app():
     app = App(__name__, 5001, SPEC_FOLDER, debug=True)
-    app.add_api('api.yaml')
+    app.add_api('api.yaml', validate_responses=True)
     return app
 
 
@@ -193,6 +193,7 @@ def test_jsonifier(app):
     assert len(greetings_reponse) == 1
     assert greetings_reponse['greetings'] == 'Hello jsantos'
 
+
 def test_headers_jsonifier(app):
     app_client = app.app.test_client()
 
@@ -200,12 +201,27 @@ def test_headers_jsonifier(app):
     assert response.status_code == 201
     assert response.headers["Location"] == "http://localhost/my/uri"
 
+
 def test_headers_produces(app):
     app_client = app.app.test_client()
 
     response = app_client.post('/v1.0/goodevening/dan', data={})  # type: flask.Response
     assert response.status_code == 201
     assert response.headers["Location"] == "http://localhost/my/uri"
+
+
+def test_header_not_returned(app):
+    app_client = app.app.test_client()
+
+    response = app_client.post('/v1.0/goodday/noheader', data={})  # type: flask.Response
+    assert response.content_type == 'application/problem+json'
+    assert response.status_code == 500   # view_func has not returned what was promised in spec
+    data = json.loads(response.data.decode('utf-8'))
+    assert data['type'] == 'about:blank'
+    assert data['title'] == 'Internal Server Error'
+    assert data['detail'] == 'Response headers do not conform to specification'
+    assert data['status'] == 500
+
 
 def test_not_content_response(app):
     app_client = app.app.test_client()
@@ -305,6 +321,39 @@ def test_schema(app):
     wrong_type_response = json.loads(wrong_type.data.decode())  # type: dict
     assert wrong_type_response['title'] == 'Bad Request'
     assert wrong_type_response['detail'] == "Wrong type, expected 'object' got 'int'"
+
+
+def test_schema_response(app):
+    app_client = app.app.test_client()
+
+    request = app_client.get('/v1.0/test_schema/response/object/valid', headers={}, data=None)  # type: flask.Response
+    assert request.status_code == 200
+    request = app_client.get('/v1.0/test_schema/response/object/invalid_type', headers={}, data=None)  # type: flask.Response
+    assert request.status_code == 500
+    request = app_client.get('/v1.0/test_schema/response/object/invalid_requirements', headers={}, data=None)  # type: flask.Response
+    assert request.status_code == 500
+    request = app_client.get('/v1.0/test_schema/response/string/valid', headers={}, data=None)  # type: flask.Response
+    assert request.status_code == 200
+    request = app_client.get('/v1.0/test_schema/response/string/invalid', headers={}, data=None)  # type: flask.Response
+    assert request.status_code == 500
+    request = app_client.get('/v1.0/test_schema/response/integer/valid', headers={}, data=None)  # type: flask.Response
+    assert request.status_code == 200
+    request = app_client.get('/v1.0/test_schema/response/integer/invalid', headers={}, data=None)  # type: flask.Response
+    assert request.status_code == 500
+    request = app_client.get('/v1.0/test_schema/response/number/valid', headers={}, data=None)  # type: flask.Response
+    assert request.status_code == 200
+    request = app_client.get('/v1.0/test_schema/response/number/invalid', headers={}, data=None)  # type: flask.Response
+    assert request.status_code == 500
+    request = app_client.get('/v1.0/test_schema/response/boolean/valid', headers={}, data=None)  # type: flask.Response
+    assert request.status_code == 200
+    request = app_client.get('/v1.0/test_schema/response/boolean/invalid', headers={}, data=None)  # type: flask.Response
+    assert request.status_code == 500
+    request = app_client.get('/v1.0/test_schema/response/array/valid', headers={}, data=None)  # type: flask.Response
+    assert request.status_code == 200
+    request = app_client.get('/v1.0/test_schema/response/array/invalid_dict', headers={}, data=None)  # type: flask.Response
+    assert request.status_code == 500
+    request = app_client.get('/v1.0/test_schema/response/array/invalid_string', headers={}, data=None)  # type: flask.Response
+    assert request.status_code == 500
 
 
 def test_schema_in_query(app):
