@@ -14,9 +14,10 @@ import flask
 import json
 
 
-def problem(status, title, detail, type='about:blank', instance=None):
+def problem(status, title, detail, type='about:blank', instance=None, headers=None):
     """
     Returns a `Problem Details <https://tools.ietf.org/html/draft-ietf-appsawg-http-problem-00>`_ error response.
+
 
     :param type: An absolute URI that identifies the problem type.  When dereferenced, it SHOULD provide human-readable
                  documentation for the problem type (e.g., using HTML).  When this member is not present its value is
@@ -33,12 +34,21 @@ def problem(status, title, detail, type='about:blank', instance=None):
                      further information if dereferenced.
     :type instance: str
     :type type: str | None
+    :param headers: HTTP headers to include in the response
+    :type headers: dict | None
     :return: Json serialized error response
+    :rtype: flask.Response
     """
     problem_response = {'type': type, 'title': title, 'detail': detail, 'status': status, }
     if instance:
         problem_response['instance'] = instance
 
-    return flask.current_app.response_class(json.dumps(problem_response),
-                                            mimetype='application/problem+json',
-                                            status=status)
+    body = json.dumps(problem_response)
+    response = flask.current_app.response_class(body, mimetype='application/problem+json',
+                                                status=status)  # type: flask.Response
+
+    if headers:
+        for key, value in headers.items():
+            response.headers[key] = value
+
+    return response
