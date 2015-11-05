@@ -3,22 +3,27 @@
 from connexion import problem, request
 from connexion import NoContent
 
+
 def post_greeting(name):
     data = {'greeting': 'Hello {name}'.format(name=name)}
     return data
+
 
 def post_goodday(name):
     data = {'greeting': 'Hello {name}'.format(name=name)}
     headers = {"Location": "/my/uri"}
     return data, 201, headers
 
+
 def post_goodday_no_header():
     return {'greeting': 'Hello.'}, 201
+
 
 def post_goodevening(name):
     data = 'Good evening {name}'.format(name=name)
     headers = {"Location": "/my/uri"}
     return data, 201, headers
+
 
 def get_list(name):
     data = ['hello', name]
@@ -38,7 +43,8 @@ def with_problem():
                    title='Some Error',
                    detail='Something went wrong somewhere',
                    status=418,
-                   instance='instance1')
+                   instance='instance1',
+                   headers={'x-Test-Header': 'In Test'})
 
 
 def with_problem_txt():
@@ -113,7 +119,7 @@ def schema_response_array(valid):
     if valid == "invalid_dict":
         return {
             {"image_version": "1.0"}:
-            {"image_version": "2.0"}
+                {"image_version": "2.0"}
         }
     elif valid == "invalid_string":
         return "Not an array."
@@ -143,8 +149,10 @@ def test_parameter_validation():
 def test_required_query_param():
     return ''
 
+
 def test_no_content_response():
     return NoContent, 204
+
 
 def test_schema_array(test_array):
     return test_array
