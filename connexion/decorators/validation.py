@@ -129,7 +129,7 @@ def validate_array(schema, data):
     col_fmt = schema.get('collectionFormat', 'csv')
     delimiter = col_map.get(col_fmt)
     if not delimiter:
-        logger.error("Unrecognized collectionFormat, cannot validate: %s", col_fmt)
+        logger.debug("Unrecognized collectionFormat, cannot validate: %s", col_fmt)
         return
     if col_fmt == 'multi':
         logger.debug("collectionFormat 'multi' is not validated by Connexion")
@@ -191,7 +191,7 @@ class RequestBodyValidator:
         if expected_type and not isinstance(data, expected_type):
             expected_type_name = expected_type.__name__
             actual_type_name = actual_type.__name__
-            logger.error("'%s' is not a '%s'", data, expected_type_name)
+            logger.debug("'%s' is not a '%s'", data, expected_type_name)
             error_template = "Wrong type, expected '{schema_type}' got '{actual_type_name}'"
             error_message = error_template.format(schema_type=schema_type, actual_type_name=actual_type_name)
             return problem(400, 'Bad Request', error_message)
@@ -208,7 +208,7 @@ class RequestBodyValidator:
             log_extra['required_keys'] = required_keys
             for required_key in schema.get('required', required_keys):
                 if required_key not in data:
-                    logger.error("Missing parameter '%s'", required_key, extra=log_extra)
+                    logger.debug("Missing parameter '%s'", required_key, extra=log_extra)
                     return problem(400, 'Bad Request', "Missing parameter '{}'".format(required_key))
 
             # verify if value types are correct

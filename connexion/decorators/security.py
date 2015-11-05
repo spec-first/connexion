@@ -17,7 +17,6 @@ from flask import request
 import functools
 import logging
 import requests
-
 from ..problem import problem
 
 logger = logging.getLogger('connexion.api.security')
@@ -54,7 +53,7 @@ def verify_oauth(token_info_url, allowed_scopes, function):
         logger.debug("%s Oauth verification...", request.url)
         authorization = request.headers.get('Authorization')  # type: str
         if not authorization:
-            logger.error("... No auth provided. Aborting with 401.")
+            logger.info("... No auth provided. Aborting with 401.")
             return problem(401, 'Unauthorized', "No authorization token provided")
         else:
             try:
@@ -71,8 +70,8 @@ def verify_oauth(token_info_url, allowed_scopes, function):
             scopes_intersection = user_scopes & allowed_scopes
             logger.debug("... Scope intersection: %s", scopes_intersection)
             if not scopes_intersection:
-                logger.error("... User scopes (%s) don't include one of the allowed scopes (%s). Aborting with 401.",
-                             user_scopes, allowed_scopes)
+                logger.info("... User scopes (%s) don't include one of the allowed scopes (%s). Aborting with 401.",
+                            user_scopes, allowed_scopes)
                 return problem(403, 'Forbidden', "Provided token doesn't have the required scope")
             logger.info("... Token authenticated.")
             request.user = token_info.get('uid')
