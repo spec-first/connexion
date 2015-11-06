@@ -46,9 +46,7 @@ def problem(status, title, detail, type='about:blank', instance=None, headers=No
     body = json.dumps(problem_response)
     response = flask.current_app.response_class(body, mimetype='application/problem+json',
                                                 status=status)  # type: flask.Response
-
     if headers:
-        for key, value in headers.items():
-            response.headers[key] = value
+        response.headers.extend(headers)
 
     return response

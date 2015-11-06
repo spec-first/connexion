@@ -61,8 +61,7 @@ class BaseSerializer(BaseDecorator):
         :rtype flask.Response
         """
         if headers:
-            for header, value in headers.items():
-                response.headers[header] = value
+            response.headers.extend(headers)
         return response
 
     def __repr__(self):
