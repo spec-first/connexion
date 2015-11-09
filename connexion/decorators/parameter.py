@@ -29,6 +29,24 @@ def get_function_arguments(function):  # pragma: no cover
         return inspect.getargspec(function).args
 
 
+def make_type(value, type):
+    type_func = TYPE_MAP[type]  # convert value to right type
+    return type_func(value)
+
+
+def get_val_from_param(value, query_param):
+    if query_param["type"] == "array":  # then logic is more complex
+        if not query_param.get("collectionFormat") or query_param.get("collectionFormat") == "csv":  # default
+            parts = value.split(",")
+        elif query_param["collectionFormat"] == "pipes":  # pipe separated
+            parts = value.split("|")
+        else:  # not supported currently, return as original behaviour
+            return make_type(value, query_param["type"])
+        return [make_type(part, query_param["items"]["type"]) for part in parts]
+    else:
+        return make_type(value, query_param["type"])
+
+
 def parameter_to_arg(parameters, function):
     """
     Pass query and body parameters as keyword arguments to handler function.
@@ -39,7 +57,7 @@ def parameter_to_arg(parameters, function):
     """
     body_parameters = [parameter for parameter in parameters if parameter['in'] == 'body'] or [{}]
     body_name = body_parameters[0].get('name')
-    query_types = {parameter['name']: parameter['type']
+    query_types = {parameter['name']: parameter
                    for parameter in parameters if parameter['in'] == 'query'}  # type: dict[str, str]
     arguments = get_function_arguments(function)
 
@@ -66,10 +84,9 @@ def parameter_to_arg(parameters, function):
                 logger.debug("Query Parameter '%s' not in function arguments", key)
             else:
                 logger.debug("Query Parameter '%s' in function arguments", key)
-                key_type = query_types[key]
-                logger.debug('%s is a %s', key, key_type)
-                type_func = TYPE_MAP[key_type]  # convert value to right type
-                kwargs[key] = type_func(value)
+                query_param = query_types[key]
+                logger.debug('%s is a %s', key, query_param)
+                kwargs[key] = get_val_from_param(value, query_param)
 
         return function(*args, **kwargs)
 

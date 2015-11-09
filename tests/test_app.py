@@ -472,6 +472,19 @@ def test_required_query_param(app):
     assert response.status_code == 200
 
 
+def test_array_query_param(app):
+    app_client = app.app.test_client()
+    headers = {'Content-type': 'application/json'}
+    url = '/v1.0/test_array_csv_query_param?items=one,two,three'
+    response = app_client.get(url, headers=headers)
+    array_response = json.loads(response.data.decode())  # type: list
+    assert array_response == ['one', 'two', 'three']
+    url = '/v1.0/test_array_pipes_query_param?items=1|2|3'
+    response = app_client.get(url, headers=headers)
+    array_response = json.loads(response.data.decode())  # type: list
+    assert array_response == [1, 2, 3]
+
+
 def test_test_schema_array(app):
     app_client = app.app.test_client()
     headers = {'Content-type': 'application/json'}
