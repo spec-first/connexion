@@ -91,6 +91,10 @@ def test_app(app):
     greeting_reponse = json.loads(post_greeting.data.decode('utf-8'))
     assert greeting_reponse['greeting'] == 'Hello jsantos'
 
+def test_app_compress():
+    app = App(__name__, 5001, SPEC_FOLDER, debug=True, compress=True)
+    app.add_api('api.yaml')
+    test_app(app)
 
 def test_no_swagger():
     app = App(__name__, 5001, SPEC_FOLDER, swagger_ui=False, debug=True)

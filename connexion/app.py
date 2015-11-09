@@ -15,6 +15,7 @@ import logging
 import pathlib
 
 import flask
+from flask.ext.compress import Compress
 import werkzeug.exceptions
 
 from .problem import problem
@@ -25,7 +26,7 @@ logger = logging.getLogger('connexion.app')
 
 class App:
     def __init__(self, import_name, port=None, specification_dir='', server=None, arguments=None, debug=False,
-                 swagger_ui=True, swagger_path=None, swagger_url=None):
+                 swagger_ui=True, swagger_path=None, swagger_url=None, compress=False):
         """
         :param import_name: the name of the application package
         :type import_name: str
@@ -47,6 +48,11 @@ class App:
         :type swagger_url: string | None
         """
         self.app = flask.Flask(import_name)
+
+        # compress
+        if compress:
+            compress = Compress()
+            compress.init_app(self.app)
 
         # we get our application root path from flask to avoid duplicating logic
         self.root_path = pathlib.Path(self.app.root_path)
