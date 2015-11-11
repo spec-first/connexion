@@ -12,17 +12,23 @@ git --version
 
 version=$1
 
-sed -i "s/version = .*/version = '${version}'/" setup.py
-python3 setup.py clean
-python3 setup.py test
-python3 setup.py flake8
+sed -i "s/__version__ = .*/__version__ = '${version}'/" */__init__.py
 
-git add setup.py
+# Do not tag/push on Go CD
+if [ -z "$GO_PIPELINE_LABEL" ]; then
+    python3 setup.py clean
+    python3 setup.py test
+    python3 setup.py flake8
 
-git commit -nm "Bumped version to $version"
-git push
+    git add */__init__.py
 
-python3 setup.py sdist bdist_wheel --universal upload
+    git commit -m "Bumped version to $version"
+    git push
+fi
 
-git tag ${version}
-git push --tags
+python3 setup.py sdist bdist_wheel upload
+
+if [ -z "$GO_PIPELINE_LABEL" ]; then
+    git tag ${version}
+    git push --tags
+fi
