@@ -36,12 +36,10 @@ def make_type(value, type):
 
 def get_val_from_param(value, query_param):
     if query_param["type"] == "array":  # then logic is more complex
-        if not query_param.get("collectionFormat") or query_param.get("collectionFormat") == "csv":  # default
-            parts = value.split(",")
-        elif query_param["collectionFormat"] == "pipes":  # pipe separated
+        if query_param.get("collectionFormat") and query_param.get("collectionFormat") == "pipes":
             parts = value.split("|")
-        else:  # not supported currently, return as original behaviour
-            return make_type(value, query_param["type"])
+        else:  # default: csv
+            parts = value.split(",")
         return [make_type(part, query_param["items"]["type"]) for part in parts]
     else:
         return make_type(value, query_param["type"])

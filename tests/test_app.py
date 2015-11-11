@@ -477,12 +477,16 @@ def test_array_query_param(app):
     headers = {'Content-type': 'application/json'}
     url = '/v1.0/test_array_csv_query_param?items=one,two,three'
     response = app_client.get(url, headers=headers)
-    array_response = json.loads(response.data.decode())  # type: list
+    array_response = json.loads(response.data.decode())  # type: [str]
     assert array_response == ['one', 'two', 'three']
     url = '/v1.0/test_array_pipes_query_param?items=1|2|3'
     response = app_client.get(url, headers=headers)
-    array_response = json.loads(response.data.decode())  # type: list
+    array_response = json.loads(response.data.decode())  # type: [int]
     assert array_response == [1, 2, 3]
+    url = '/v1.0/test_array_unsupported_query_param?items=1;2;3'
+    response = app_client.get(url, headers=headers)
+    array_response = json.loads(response.data.decode())  # [str] unsupported collectionFormat
+    assert array_response == ["1;2;3"]
 
 
 def test_test_schema_array(app):
