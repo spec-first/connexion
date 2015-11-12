@@ -26,15 +26,21 @@ if py_major_version == 2 or (py_major_version == 3 and py_minor_version < 4):
 
 
 class PyTest(TestCommand):
+
+    user_options = [('cov-html=', None, 'Generate junit html report')]
+
     def initialize_options(self):
         TestCommand.initialize_options(self)
         self.cov = None
         self.pytest_args = ['--cov', 'connexion', '--cov-report', 'term-missing']
+        self.cov_html = False
 
     def finalize_options(self):
         TestCommand.finalize_options(self)
         self.test_args = []
         self.test_suite = True
+        if self.cov_html:
+            self.pytest_args.extend(['--cov-report', 'html'])
 
     def run_tests(self):
         import pytest
@@ -53,6 +59,7 @@ setup(
     url='https://github.com/zalando/connexion',
     keywords='swagger rest api oauth flask microservice framework',
     license='Apache License Version 2.0',
+    setup_requires=['flake8'],
     install_requires=requires,
     tests_require=['pytest-cov', 'pytest', 'mock'],
     cmdclass={'test': PyTest},
