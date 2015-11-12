@@ -407,6 +407,42 @@ paths:
           in: query
           type: number
           required: true
+  /test_array_csv_query_param:
+    get:
+      operationId: fakeapi.hello.test_array_csv_query_param
+      parameters:
+        - name: items
+          in: query
+          description: An comma separated array of items
+          required: true
+          type: array
+          items:
+            type: string
+          collectionFormat: csv
+  /test_array_pipes_query_param:
+    get:
+      operationId: fakeapi.hello.test_array_pipes_query_param
+      parameters:
+        - name: items
+          in: query
+          description: An pipe separated array of items
+          required: true
+          type: array
+          items:
+            type: integer
+          collectionFormat: pipes
+  /test_array_unsupported_query_param:
+    get:
+      operationId: fakeapi.hello.test_array_unsupported_query_param
+      parameters:
+        - name: items
+          in: query
+          description: An pipe separated array of items
+          required: true
+          type: array
+          items:
+            type: string
+          collectionFormat: unsupported
   /test_no_content_response:
     get:
       operationId: fakeapi.hello.test_no_content_response

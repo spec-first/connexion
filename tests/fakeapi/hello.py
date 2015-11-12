@@ -150,6 +150,18 @@ def test_required_query_param():
     return ''
 
 
+def test_array_csv_query_param(items):
+    return items
+
+
+def test_array_pipes_query_param(items):
+    return items
+
+
+def test_array_unsupported_query_param(items):
+    return items
+
+
 def test_no_content_response():
     return NoContent, 204
 
