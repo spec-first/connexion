@@ -37,8 +37,6 @@ class PyTest(TestCommand):
 
     def finalize_options(self):
         TestCommand.finalize_options(self)
-        self.test_args = []
-        self.test_suite = True
         if self.cov_html:
             self.pytest_args.extend(['--cov-report', 'html'])
 
@@ -63,6 +61,7 @@ setup(
     install_requires=requires,
     tests_require=['pytest-cov', 'pytest', 'mock'],
     cmdclass={'test': PyTest},
+    test_suite='tests',
     classifiers=[
         'Programming Language :: Python',
         'Programming Language :: Python :: 2.7',
