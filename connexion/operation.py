@@ -32,7 +32,7 @@ class Operation:
     """
 
     def __init__(self, method, path, operation, app_produces, app_security,
-                 security_definitions, definitions, parameter_definitions, validate_responses=False):
+                 security_definitions, definitions, parameter_definitions, resolver, validate_responses=False):
         """
         This class uses the OperationID identify the module and function that will handle the operation
 
@@ -59,6 +59,7 @@ class Operation:
         :param definitions: `Definitions Object
             <https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#definitionsObject>`_
         :type definitions: dict
+        :param resolver: Callable that maps operationID to a function
         :param validate_responses: True enables validation. Validation errors generate HTTP 500 responses.
         :type validate_responses: bool
         """
@@ -82,7 +83,7 @@ class Operation:
         self.produces = operation.get('produces', app_produces)
         self.endpoint_name = flaskify_endpoint(self.operation_id)
         self.security = operation.get('security', app_security)
-        self.__undecorated_function = get_function_from_name(self.operation_id)
+        self.__undecorated_function = resolver(self.operation_id)
 
     def resolve_reference(self, schema):
         schema = schema.copy()  # avoid changing the original schema
