@@ -21,7 +21,7 @@ from .decorators.validation import RequestBodyValidator, ParameterValidator
 from .decorators.metrics import UWSGIMetricsCollector
 from.decorators.response import ResponseValidator
 from .exceptions import InvalidSpecification
-from .utils import flaskify_endpoint, get_function_from_name, produces_json
+from .utils import flaskify_endpoint, produces_json
 
 logger = logging.getLogger('connexion.operation')
 
