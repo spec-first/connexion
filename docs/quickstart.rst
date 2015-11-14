@@ -32,8 +32,8 @@ If a value is provided both globally and on the api then the api value will take
 
 Routing
 -------
-Connexion uses the ``OperationId`` from each `Operation Object <swagger.spec.operation_>`_  to identify which function
-should handle each url.
+By default, Connexion uses the ``OperationId`` from each `Operation Object <swagger.spec.operation_>`_  to identify
+which function should handle each url.
 
 For example:
 
@@ -65,6 +65,14 @@ the API to your application:
 .. code-block:: python
 
     app.add_api('my_api.yaml', base_path='/1.0')
+
+
+If you want a different behaviour you can provide a custom resolver callable to convert the OperationID to a function:
+
+
+.. code-block:: python
+
+    app.add_api('my_api.yaml', base_path='/1.0', resolver=my_custom_resolver)
 
 
 Request Handling
