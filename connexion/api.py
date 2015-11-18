@@ -13,6 +13,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 import flask
 import jinja2
+import json
 import logging
 import pathlib
 import yaml
@@ -142,7 +143,7 @@ class Api:
         """
         logger.debug('Adding swagger.json: %s/swagger.json', self.base_url)
         endpoint_name = "{name}_swagger_json".format(name=self.blueprint.name)
-        self.blueprint.add_url_rule('/swagger.json', endpoint_name, lambda: flask.jsonify(self.specification))
+        self.blueprint.add_url_rule('/swagger.json', endpoint_name, lambda: json.dumps(self.specification))
 
     def add_swagger_ui(self):
         """
