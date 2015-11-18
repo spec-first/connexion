@@ -77,10 +77,8 @@ class Operation:
 
         self.operation = operation
         operation_id = operation['operationId']
-        router_controller = None
 
-        if 'x-swagger-router-controller' in operation:
-            router_controller = operation['x-swagger-router-controller']
+        router_controller = operation.get('x-swagger-router-controller')
 
         self.operation_id = self.detect_controller(operation_id, router_controller)
         # todo support definition references
