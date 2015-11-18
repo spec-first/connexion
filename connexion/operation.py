@@ -76,7 +76,13 @@ class Operation:
         self.validate_responses = validate_responses
 
         self.operation = operation
-        self.operation_id = operation['operationId']
+        operation_id = operation['operationId']
+        router_controller = None
+
+        if 'x-swagger-router-controller' in operation:
+            router_controller = operation['x-swagger-router-controller']
+
+        self.operation_id = self.detect_controller(operation_id, router_controller)
         # todo support definition references
         # todo support references to application level parameters
         self.parameters = list(self.resolve_parameters(operation.get('parameters', [])))
@@ -84,6 +90,11 @@ class Operation:
         self.endpoint_name = flaskify_endpoint(self.operation_id)
         self.security = operation.get('security', app_security)
         self.__undecorated_function = resolver(self.operation_id)
+
+    def detect_controller(self, operation_id, router_controller):
+        if router_controller is None:
+            return operation_id
+        return router_controller + '.' + operation_id
 
     def resolve_reference(self, schema):
         schema = schema.copy()  # avoid changing the original schema
