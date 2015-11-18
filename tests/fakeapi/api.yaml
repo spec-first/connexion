@@ -64,6 +64,10 @@ paths:
           description: goodbye response
           schema:
             type: string
+        default:
+          description: "unexpected error"
+          schema:
+            $ref: "#/definitions/errorModel"
       parameters:
         - name: name
           in: path
@@ -300,11 +304,11 @@ paths:
           type: string
       responses:
         200:
-          description: Requested new_stack data model          
+          description: Requested new_stack data model
           schema:
             type: array
             items:
-              schema: 
+              schema:
                 $ref: '#/definitions/new_stack'
   /test_schema_in_query:
     post:
