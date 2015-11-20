@@ -42,6 +42,7 @@ Put your API YAML inside a folder in the root path of your application (e.g ``sw
     app.add_api('my_api.yaml')
     app.run(port=8080)
 
+See the `Connexion Pet Store Example Application`_ for details.
 
 Parameterization
 ----------------
@@ -53,7 +54,7 @@ The specification arguments can be defined globally for the application or for e
 
     app = connexion.App(__name__, specification_dir='swagger/', arguments={'global': 'global_value'})
     app.add_api('my_api.yaml', arguments={'api_local': 'local_value'})
-    app.run(port = 8080)
+    app.run(port=8080)
 
 If a value is provided both globally and on the API then the API value will take precedence.
 
@@ -109,7 +110,7 @@ URL to use to validate and get the token information.
 Connexion expects to receive the Oauth token in the ``Authorization`` header field in the format described in
 `RFC 6750 <rfc6750_>`_ section 2.1.
 
-Swagger Json
+Swagger JSON
 ------------
 Connexion makes the Swagger specification in JSON format available from ``swagger.json`` in the base path of the API.
 
