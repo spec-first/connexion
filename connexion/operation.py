@@ -16,7 +16,7 @@ import logging
 import os
 from .decorators.parameter import parameter_to_arg
 from .decorators.produces import BaseSerializer, Produces, Jsonifier
-from .decorators.security import security_passthrough, verify_oauth
+from .decorators.security import security_passthrough, verify_oauth, verify_gitkit
 from .decorators.validation import RequestBodyValidator, ParameterValidator
 from .decorators.metrics import UWSGIMetricsCollector
 from.decorators.response import ResponseValidator
@@ -277,6 +277,14 @@ class Operation:
                     return functools.partial(verify_oauth, token_info_url, scopes)
                 else:
                     logger.warning("... OAuth2 token info URL missing. **IGNORING SECURITY REQUIREMENTS**",
+                                   extra=vars(self))
+            elif security_definition['type'] == 'gitkit':
+                gitkit_config = security_definition.get('x-gitkitConfigFile', os.getenv('GITKIT_CONFIGFILE'))
+                if gitkit_config:
+                    cookie_name = security_definition.get('x-gitkitCookieName', 'gtoken')
+                    return functools.partial(verify_gitkit, gitkit_config, cookie_name)
+                else:
+                    logger.warning("... Gitkit config missing. **IGNORING SECURITY REQUIREMENTS**",
                                    extra=vars(self))
             elif security_definition['type'] in ('apiKey', 'basic'):
                 logger.debug(
