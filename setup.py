@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import inspect
 import os
 import platform
 import sys
 
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
+
+__location__ = os.path.join(os.getcwd(), os.path.dirname(inspect.getfile(inspect.currentframe())))
 
 
 def read_version(package):
@@ -19,10 +22,12 @@ version = read_version('connexion')
 
 py_major_version, py_minor_version, _ = (int(v.rstrip('+')) for v in platform.python_version_tuple())
 
-requires = ['flask', 'PyYAML', 'requests', 'six', 'strict-rfc3339']
 
-if py_major_version == 2 or (py_major_version == 3 and py_minor_version < 4):
-    requires.append('pathlib')
+def get_install_requirements(path):
+    content = open(os.path.join(__location__, path)).read()
+    requires = [req for req in content.split('\\n') if req != '']
+    if py_major_version == 2 or (py_major_version == 3 and py_minor_version < 4):
+        requires.append('pathlib')
 
 
 class PyTest(TestCommand):
@@ -58,7 +63,7 @@ setup(
     keywords='swagger rest api oauth flask microservice framework',
     license='Apache License Version 2.0',
     setup_requires=['flake8'],
-    install_requires=requires,
+    install_requires=get_install_requirements('requirements.txt'),
     tests_require=['pytest-cov', 'pytest', 'mock'],
     cmdclass={'test': PyTest},
     test_suite='tests',

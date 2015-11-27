@@ -1,0 +1,5 @@
+flask
+PyYAML
+requests
+six
+strict-rfc3339
