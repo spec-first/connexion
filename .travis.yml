@@ -3,6 +3,7 @@ python:
   - "pypy"
   - "2.7"
   - "3.4"
+  - "3.5"
 install:
   - pip install -e .
   - pip install coveralls
