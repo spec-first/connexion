@@ -27,7 +27,8 @@ def get_install_requirements(path):
     content = open(os.path.join(__location__, path)).read()
     requires = [req for req in content.split('\\n') if req != '']
     if py_major_version == 2 or (py_major_version == 3 and py_minor_version < 4):
-        requires.append('pathlib')
+        requires.append('pathlib2')
+    return requires
 
 
 class PyTest(TestCommand):
