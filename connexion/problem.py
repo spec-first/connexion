@@ -14,7 +14,7 @@ import flask
 import json
 
 
-def problem(status, title, detail, type='about:blank', instance=None, headers=None):
+def problem(status, title, detail, type='about:blank', instance=None, headers=None, ext=None):
     """
     Returns a `Problem Details <https://tools.ietf.org/html/draft-ietf-appsawg-http-problem-00>`_ error response.
 
@@ -36,12 +36,16 @@ def problem(status, title, detail, type='about:blank', instance=None, headers=No
     :type type: str | None
     :param headers: HTTP headers to include in the response
     :type headers: dict | None
+    :param ext: Extension members to include in the body
+    :type ext: dict | None
     :return: Json serialized error response
     :rtype: flask.Response
     """
     problem_response = {'type': type, 'title': title, 'detail': detail, 'status': status, }
     if instance:
         problem_response['instance'] = instance
+    if ext:
+        problem_response.update(ext)
 
     body = json.dumps(problem_response)
     response = flask.current_app.response_class(body, mimetype='application/problem+json',
