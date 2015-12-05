@@ -11,6 +11,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
  language governing permissions and limitations under the License.
 """
 
+import functools
 import importlib
 import re
 import strict_rfc3339
@@ -46,13 +47,31 @@ def flaskify_path(swagger_path):
     return PATH_PARAMETER.sub(convert_path_parameter, swagger_path)
 
 
+def deep_getattr(obj, attr):
+    """
+    Recurses through an attribute chain to get the ultimate value.
+
+    Stolen from http://pingfive.typepad.com/blog/2010/04/deep-getattr-python-function.html
+    """
+    return functools.reduce(getattr, attr.split('.'), obj)
+
+
 def get_function_from_name(operation_id):
     """
+    Default operation resolver, tries to get function by fully qualified name (e.g. "mymodule.myobj.myfunc")
+
     :type operation_id: str
     """
-    module_name, function_name = operation_id.rsplit('.', 1)
-    module = importlib.import_module(module_name)
-    function = getattr(module, function_name)
+    module_name, attr_path = operation_id.rsplit('.', 1)
+    module = None
+
+    while not module:
+        try:
+            module = importlib.import_module(module_name)
+        except ImportError:
+            module_name, attr_path1 = module_name.rsplit('.', 1)
+            attr_path = '{}.{}'.format(attr_path1, attr_path)
+    function = deep_getattr(module, attr_path)
     return function
 
 
