@@ -4,6 +4,17 @@ from connexion import problem, request
 from connexion import NoContent
 
 
+class DummyClass:
+    @classmethod
+    def test_classmethod(cls):
+        return cls.__name__
+
+    def test_method(self):
+        return self.__class__.__name__
+
+class_instance = DummyClass()
+
+
 def post_greeting(name):
     data = {'greeting': 'Hello {name}'.format(name=name)}
     return data

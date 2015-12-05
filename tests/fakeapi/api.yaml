@@ -547,6 +547,14 @@ paths:
           description: Name of the person to say good evening.
           required: true
           type: string
+  /resolver-test/method:
+    get:
+      summary: Test class instance method
+      operationId: fakeapi.hello.class_instance.test_method
+  /resolver-test/classmethod:
+    get:
+      summary: Test class instance method
+      operationId: fakeapi.hello.DummyClass.test_classmethod
 definitions:
   new_stack:
     type: object

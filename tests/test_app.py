@@ -511,3 +511,15 @@ def test_test_schema_int(app):
     assert array_request.content_type == 'application/json'
     array_response = json.loads(array_request.data.decode())  # type: list
     assert array_response == 42
+
+
+def test_resolve_method(app):
+    app_client = app.app.test_client()
+    resp = app_client.get('/v1.0/resolver-test/method')  # type: flask.Response
+    assert resp.data.decode() == '"DummyClass"'
+
+
+def test_resolve_classmethod(app):
+    app_client = app.app.test_client()
+    resp = app_client.get('/v1.0/resolver-test/classmethod')  # type: flask.Response
+    assert resp.data.decode() == '"DummyClass"'
