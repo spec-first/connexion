@@ -559,6 +559,10 @@ paths:
     get:
       summary: Test type casting of path parameter
       operationId: fakeapi.hello.test_get_someint
+      parameters:
+        - name: someint
+          in: path
+          type: integer
 definitions:
   new_stack:
     type: object
