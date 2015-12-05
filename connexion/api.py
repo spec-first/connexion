@@ -118,7 +118,8 @@ class Api:
         operation_id = operation.operation_id
         logger.debug('... Adding %s -> %s', method.upper(), operation_id, extra=vars(operation))
 
-        self.blueprint.add_url_rule(path, operation.endpoint_name, operation.function, methods=[method])
+        flask_path = utils.flaskify_path(path, operation.get_path_parameter_types())
+        self.blueprint.add_url_rule(flask_path, operation.endpoint_name, operation.function, methods=[method])
 
     def add_paths(self, paths=None):
         """
@@ -129,7 +130,6 @@ class Api:
         paths = paths or self.specification.get('paths', dict())
         for path, methods in paths.items():
             logger.debug('Adding %s%s...', self.base_url, path)
-            path = utils.flaskify_path(path)
             # TODO Error handling
             for method, endpoint in methods.items():
                 try:

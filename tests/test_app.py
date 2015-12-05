@@ -528,4 +528,10 @@ def test_resolve_classmethod(app):
 def test_path_parameter_someint(app):
     app_client = app.app.test_client()
     resp = app_client.get('/v1.0/test-int-path/123')  # type: flask.Response
-    assert resp.data.decode() == '"<type \'int\'>"'
+    assert resp.data.decode() == '"int"'
+
+
+def test_path_parameter_somefloat(app):
+    app_client = app.app.test_client()
+    resp = app_client.get('/v1.0/test-float-path/123.45')  # type: flask.Response
+    assert resp.data.decode() == '"float"'

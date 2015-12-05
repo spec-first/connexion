@@ -186,4 +186,8 @@ def test_schema_int(test_int):
 
 
 def test_get_someint(someint):
-    return str(type(someint))
+    return type(someint).__name__
+
+
+def test_get_somefloat(somefloat):
+    return type(somefloat).__name__

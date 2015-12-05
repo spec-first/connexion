@@ -563,6 +563,14 @@ paths:
         - name: someint
           in: path
           type: integer
+  /test-float-path/{somefloat}:
+    get:
+      summary: Test type casting of path parameter
+      operationId: fakeapi.hello.test_get_somefloat
+      parameters:
+        - name: somefloat
+          in: path
+          type: number
 definitions:
   new_stack:
     type: object
