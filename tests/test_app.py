@@ -523,3 +523,9 @@ def test_resolve_classmethod(app):
     app_client = app.app.test_client()
     resp = app_client.get('/v1.0/resolver-test/classmethod')  # type: flask.Response
     assert resp.data.decode() == '"DummyClass"'
+
+
+def test_path_parameter_someint(app):
+    app_client = app.app.test_client()
+    resp = app_client.get('/v1.0/test-int-path/123')  # type: flask.Response
+    assert resp.data.decode() == '"<type \'int\'>"'

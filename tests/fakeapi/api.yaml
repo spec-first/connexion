@@ -555,6 +555,10 @@ paths:
     get:
       summary: Test class instance method
       operationId: fakeapi.hello.DummyClass.test_classmethod
+  /test-int-path/{someint}:
+    get:
+      summary: Test type casting of path parameter
+      operationId: fakeapi.hello.test_get_someint
 definitions:
   new_stack:
     type: object
