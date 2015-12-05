@@ -21,7 +21,7 @@ from .operation import Operation
 from . import utils
 
 MODULE_PATH = pathlib.Path(__file__).absolute().parent
-SWAGGER_UI_PATH = MODULE_PATH / 'swagger-ui'
+SWAGGER_UI_PATH = MODULE_PATH / 'vendor' / 'swagger-ui'
 SWAGGER_UI_URL = 'ui'
 
 logger = logging.getLogger('connexion.api')
