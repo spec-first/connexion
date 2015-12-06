@@ -17,6 +17,12 @@ class_instance = DummyClass()
 def get():
     return ''
 
+def search():
+    return ''
+
+def post():
+    return ''
+
 def post_greeting(name):
     data = {'greeting': 'Hello {name}'.format(name=name)}
     return data

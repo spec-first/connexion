@@ -13,10 +13,8 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 import logging
 import pathlib
-
 import flask
 import werkzeug.exceptions
-
 from .problem import problem
 from .api import Api
 from .utils import get_function_from_name
@@ -26,7 +24,7 @@ logger = logging.getLogger('connexion.app')
 
 class App:
     def __init__(self, import_name, port=None, specification_dir='', server=None, arguments=None, debug=False,
-                 swagger_ui=True, swagger_path=None, swagger_url=None, default_controller_name=''):
+                 swagger_ui=True, swagger_path=None, swagger_url=None):
         """
         :param import_name: the name of the application package
         :type import_name: str
@@ -46,8 +44,6 @@ class App:
         :type swagger_path: string | None
         :param swagger_url: URL to access swagger-ui documentation
         :type swagger_url: string | None
-        :param default_controller_name: Default controller name for operations
-        :type default_controller_name: string | import_name
         """
         self.app = flask.Flask(import_name)
 
@@ -70,11 +66,11 @@ class App:
         self.port = port
         self.server = server or 'flask'
         self.debug = debug
+        self.import_name = import_name
         self.arguments = arguments or {}
         self.swagger_ui = swagger_ui
         self.swagger_path = swagger_path
         self.swagger_url = swagger_url
-        self.default_controller_name = default_controller_name or import_name
 
     @staticmethod
     def common_error_handler(exception):
@@ -86,7 +82,8 @@ class App:
         return problem(title=exception.name, detail=exception.description, status=exception.code)
 
     def add_api(self, swagger_file, base_path=None, arguments=None, swagger_ui=None, swagger_path=None,
-                swagger_url=None, validate_responses=False, resolver=get_function_from_name):
+                swagger_url=None, validate_responses=False, resolver=get_function_from_name,
+                default_module_name=''):
         """
         Adds an API to the application based on a swagger file
 
@@ -104,6 +101,8 @@ class App:
         :type swagger_url: string | None
         :param validate_responses: True enables validation. Validation errors generate HTTP 500 responses.
         :type validate_responses: bool
+        :param default_module_name: Default controller name for operations
+        :type default_module_name: string | import_name
         :rtype: Api
         """
         swagger_ui = swagger_ui if swagger_ui is not None else self.swagger_ui
@@ -120,6 +119,7 @@ class App:
                   swagger_path=swagger_path,
                   swagger_url=swagger_url,
                   resolver=resolver,
+                  default_module_name=default_module_name,
                   validate_responses=validate_responses)
         self.app.register_blueprint(api.blueprint)
         return api

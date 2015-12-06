@@ -122,8 +122,6 @@ OPERATION6 = {'description': 'Adds a new stack to be created by lizzy and return
               'security': [{'oauth': ['uid']}],
               'summary': 'Create new stack'}
 
-OPERATION7 = {'x-swagger-router-controller': 'fakeapi.hello'}
-
 SECURITY_DEFINITIONS = {'oauth': {'type': 'oauth2',
                                   'flow': 'password',
                                   'x-tokenInfoUrl': 'https://ouath.example/token_info',
@@ -268,7 +266,7 @@ def test_detect_controller():
 def test_controller_resolution_with_x_controller_router():
     operation = Operation(method='GET',
                           path='endpoint',
-                          operation=OPERATION7,
+                          operation={'x-swagger-router-controller': 'fakeapi.hello'},
                           app_produces=['application/json'],
                           app_security=[],
                           security_definitions={},
@@ -278,11 +276,11 @@ def test_controller_resolution_with_x_controller_router():
     assert operation.operation_id == 'fakeapi.hello.get'
 
 
-def test_controller_resolution_with_default_controller_name():
+def test_controller_resolution_with_default_module_name():
     operation = Operation(method='GET',
-                          path='endpoint',
+                          path='/hello/{id}',
                           operation={},
-                          default_controller_name='fakeapi.hello',
+                          default_module_name='fakeapi',
                           app_produces=['application/json'],
                           app_security=[],
                           security_definitions={},
@@ -290,3 +288,45 @@ def test_controller_resolution_with_default_controller_name():
                           parameter_definitions=PARAMETER_DEFINITIONS,
                           resolver=get_function_from_name)
     assert operation.operation_id == 'fakeapi.hello.get'
+
+
+def test_controller_resolution_with_default_module_name_can_resolve_api_root():
+    operation = Operation(method='GET',
+                          path='/',
+                          operation={},
+                          default_module_name='fakeapi',
+                          app_produces=['application/json'],
+                          app_security=[],
+                          security_definitions={},
+                          definitions={},
+                          parameter_definitions=PARAMETER_DEFINITIONS,
+                          resolver=get_function_from_name)
+    assert operation.operation_id == 'fakeapi.get'
+
+
+def test_controller_resolution_with_default_module_name_will_resolve_resource_root_get_as_search():
+    operation = Operation(method='GET',
+                          path='/hello',
+                          operation={},
+                          default_module_name='fakeapi',
+                          app_produces=['application/json'],
+                          app_security=[],
+                          security_definitions={},
+                          definitions={},
+                          parameter_definitions=PARAMETER_DEFINITIONS,
+                          resolver=get_function_from_name)
+    assert operation.operation_id == 'fakeapi.hello.search'
+
+
+def test_controller_resolution_with_default_module_name_will_resolve_resource_root_post_as_post():
+    operation = Operation(method='POST',
+                          path='/hello',
+                          operation={},
+                          default_module_name='fakeapi',
+                          app_produces=['application/json'],
+                          app_security=[],
+                          security_definitions={},
+                          definitions={},
+                          parameter_definitions=PARAMETER_DEFINITIONS,
+                          resolver=get_function_from_name)
+    assert operation.operation_id == 'fakeapi.hello.post'
