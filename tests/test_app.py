@@ -56,6 +56,12 @@ def app():
     return app
 
 
+def test_add_api_with_function_resolver_function_is_wrapped():
+    app = App(__name__, specification_dir=SPEC_FOLDER)
+    api = app.add_api('api.yaml', resolver=lambda oid: (lambda foo: 'bar'))
+    assert api.resolver.resolve_function_from_operation_id('faux')('bah') == 'bar'
+
+
 def test_app_with_relative_path():
     # Create the app with a realative path and run the test_app testcase below.
     app = App(__name__, 5001, SPEC_FOLDER.relative_to(TEST_FOLDER),

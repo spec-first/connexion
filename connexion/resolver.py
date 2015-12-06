@@ -31,9 +31,14 @@ class Resolution:
 
 
 class Resolver:
-    """
-    Standard resolver
-    """
+    def __init__(self, function_resolver=utils.get_function_from_name):
+        """
+        Standard resolver
+
+        :param function_resolver: Function that resolves functions using an operationId
+        :type function_resolver: function
+        """
+        self.function_resolver = function_resolver
 
     def resolve(self, operation):
         """
@@ -59,11 +64,11 @@ class Resolver:
 
     def resolve_function_from_operation_id(self, operation_id):
         """
-        Default function resolver, tries to get function by fully qualified name (e.g. "mymodule.myobj.myfunc")
+        Invokes the function_resolver
 
         :type operation_id: str
         """
-        return utils.get_function_from_name(operation_id)
+        return self.function_resolver(operation_id)
 
 
 class RestyResolver(Resolver):
@@ -76,6 +81,7 @@ class RestyResolver(Resolver):
         :param default_module_name: Default module name for operations
         :type default_module_name: string
         """
+        Resolver.__init__(self)
         self.default_module_name = default_module_name
         self.collection_endpoint_name = collection_endpoint_name
 

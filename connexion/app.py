@@ -103,6 +103,8 @@ class App:
 
         :rtype: Api
         """
+        resolver = Resolver(resolver) if hasattr(resolver, '__call__') else resolver
+
         swagger_ui = swagger_ui if swagger_ui is not None else self.swagger_ui
         swagger_path = swagger_path if swagger_path is not None else self.swagger_path
         swagger_url = swagger_url if swagger_url is not None else self.swagger_url
