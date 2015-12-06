@@ -276,6 +276,25 @@ def test_controller_resolution_with_x_controller_router():
     assert operation.operation_id == 'fakeapi.hello.get'
 
 
+def test_controller_resolution_without_default_module_name_will_fail():
+    with pytest.raises(InvalidSpecification) as exc_info:  # type: py.code.ExceptionInfo
+        Operation(method='GET',
+                  path='/hello',
+                  operation={},
+                  app_produces=['application/json'],
+                  app_security=[],
+                  security_definitions={},
+                  definitions={},
+                  parameter_definitions=PARAMETER_DEFINITIONS,
+                  resolver=get_function_from_name)
+
+    exception = exc_info.value
+    assert str(exception) == "<InvalidSpecification: Neither operationId or x-swagger-router-controller was " \
+                             + "configured and no default module set for Api>"
+    assert repr(exception) == "<InvalidSpecification: Neither operationId or x-swagger-router-controller was " \
+                              + "configured and no default module set for Api>"
+
+
 def test_controller_resolution_with_default_module_name():
     operation = Operation(method='GET',
                           path='/hello/{id}',
