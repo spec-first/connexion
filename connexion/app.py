@@ -17,7 +17,7 @@ import flask
 import werkzeug.exceptions
 from .problem import problem
 from .api import Api
-from .utils import get_function_from_name
+from connexion.resolver import Resolver
 
 logger = logging.getLogger('connexion.app')
 
@@ -82,8 +82,7 @@ class App:
         return problem(title=exception.name, detail=exception.description, status=exception.code)
 
     def add_api(self, swagger_file, base_path=None, arguments=None, swagger_ui=None, swagger_path=None,
-                swagger_url=None, validate_responses=False, resolver=get_function_from_name,
-                default_module_name=''):
+                swagger_url=None, validate_responses=False, resolver=Resolver()):
         """
         Adds an API to the application based on a swagger file
 
@@ -101,8 +100,7 @@ class App:
         :type swagger_url: string | None
         :param validate_responses: True enables validation. Validation errors generate HTTP 500 responses.
         :type validate_responses: bool
-        :param default_module_name: Default controller name for operations
-        :type default_module_name: string | import_name
+
         :rtype: Api
         """
         swagger_ui = swagger_ui if swagger_ui is not None else self.swagger_ui
@@ -119,7 +117,6 @@ class App:
                   swagger_path=swagger_path,
                   swagger_url=swagger_url,
                   resolver=resolver,
-                  default_module_name=default_module_name,
                   validate_responses=validate_responses)
         self.app.register_blueprint(api.blueprint)
         return api

@@ -19,6 +19,7 @@ import pathlib
 import yaml
 from .operation import Operation
 from . import utils
+from . import resolver
 
 MODULE_PATH = pathlib.Path(__file__).absolute().parent
 SWAGGER_UI_PATH = MODULE_PATH / 'vendor' / 'swagger-ui'
@@ -33,8 +34,7 @@ class Api:
     """
 
     def __init__(self, swagger_yaml_path, base_url=None, arguments=None, swagger_ui=None, swagger_path=None,
-                 swagger_url=None, validate_responses=False, default_module_name='',
-                 resolver=utils.get_function_from_name):
+                 swagger_url=None, validate_responses=False, resolver=resolver.Resolver()):
         """
         :type swagger_yaml_path: pathlib.Path
         :type base_url: str | None
@@ -77,7 +77,6 @@ class Api:
 
         self.definitions = self.specification.get('definitions', {})
         self.parameter_definitions = self.specification.get('parameters', {})
-        self.default_module_name = default_module_name
 
         self.swagger_path = swagger_path or SWAGGER_UI_PATH
         self.swagger_url = swagger_url or SWAGGER_UI_URL
@@ -112,8 +111,7 @@ class Api:
         :type path: str
         :type swagger_operation: dict
         """
-        operation = Operation(method=method, path=path, operation=swagger_operation,
-                              default_module_name=self.default_module_name, app_produces=self.produces,
+        operation = Operation(method=method, path=path, operation=swagger_operation, app_produces=self.produces,
                               app_security=self.security, security_definitions=self.security_definitions,
                               definitions=self.definitions, parameter_definitions=self.parameter_definitions,
                               validate_responses=self.validate_responses, resolver=self.resolver)

@@ -14,7 +14,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 import functools
 import logging
 import os
-import re
 from .decorators.parameter import parameter_to_arg
 from .decorators.produces import BaseSerializer, Produces, Jsonifier
 from .decorators.security import security_passthrough, verify_oauth
@@ -33,7 +32,7 @@ class Operation:
     """
 
     def __init__(self, method, path, operation, app_produces, app_security, security_definitions, definitions,
-                 parameter_definitions, resolver, default_module_name='', validate_responses=False):
+                 parameter_definitions, resolver, validate_responses=False):
         """
         This class uses the OperationID identify the module and function that will handle the operation
 
@@ -75,46 +74,18 @@ class Operation:
             'parameters': self.parameter_definitions
         }
         self.validate_responses = validate_responses
-        self.default_module_name = default_module_name
         self.operation = operation
 
-        self.operation_id = self.detect_controller()
         # todo support definition references
         # todo support references to application level parameters
         self.parameters = list(self.resolve_parameters(operation.get('parameters', [])))
-        self.produces = operation.get('produces', app_produces)
-        self.endpoint_name = flaskify_endpoint(self.operation_id)
         self.security = operation.get('security', app_security)
-        self.__undecorated_function = resolver(self.operation_id)
+        self.produces = operation.get('produces', app_produces)
 
-    def detect_controller(self):
-
-        operation_id = self.operation.get('operationId')
-        x_router_controller = self.operation.get('x-swagger-router-controller')
-
-        if operation_id:
-            if x_router_controller:
-                return x_router_controller + '.' + operation_id
-            return operation_id
-
-        function = self.method.lower()
-
-        if x_router_controller:
-            mod_name = x_router_controller
-        else:
-            if not self.default_module_name:
-                raise InvalidSpecification(
-                    "Neither operationId or x-swagger-router-controller was "
-                    + "configured and no default module set for Api"
-                )
-
-            mod_name = self.default_module_name
-            match = re.search('^/(.+?)(/.?|$)', self.path)
-            if match:
-                mod_name += '.' + match.group(1)
-                function = ('search' if function == 'get' and match.group(2).strip('/') == '' else function)
-
-        return mod_name + '.' + function
+        resolution = resolver.resolve(self)
+        self.operation_id = resolution.operation_id
+        self.endpoint_name = flaskify_endpoint(self.operation_id)
+        self.__undecorated_function = resolution.function
 
     def resolve_reference(self, schema):
         schema = schema.copy()  # avoid changing the original schema

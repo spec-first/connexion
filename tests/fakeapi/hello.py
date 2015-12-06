@@ -20,6 +20,9 @@ def get():
 def search():
     return ''
 
+def list():
+    return ''
+
 def post():
     return ''
 

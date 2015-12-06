@@ -4,7 +4,7 @@ import types
 from connexion.exceptions import InvalidSpecification
 from connexion.operation import Operation
 from connexion.decorators.security import security_passthrough, verify_oauth
-from connexion.utils import get_function_from_name
+from connexion.resolver import Resolver
 
 TEST_FOLDER = pathlib.Path(__file__).parent
 
@@ -99,29 +99,6 @@ OPERATION4 = {'operationId': 'fakeapi.hello.post_greeting',
 OPERATION5 = {'operationId': 'fakeapi.hello.post_greeting',
               'parameters': [{'$ref': '/parameters/fail'}]}
 
-OPERATION6 = {'description': 'Adds a new stack to be created by lizzy and returns the '
-                             'information needed to keep track of deployment',
-              'operationId': 'post_greeting',
-              'x-swagger-router-controller': 'fakeapi.hello',
-              'parameters': [{'in': 'body',
-                              'name': 'new_stack',
-                              'required': True,
-                              'schema': {'$ref': '#/definitions/new_stack'}}],
-              'responses': {201: {'description': 'Stack to be created. The '
-                                                 'CloudFormation Stack creation can '
-                                                 "still fail if it's rejected by senza "
-                                                 'or AWS CF.',
-                                  'schema': {'$ref': '#/definitions/stack'}},
-                            400: {'description': 'Stack was not created because request '
-                                                 'was invalid',
-                                  'schema': {'$ref': '#/definitions/problem'}},
-                            401: {'description': 'Stack was not created because the '
-                                                 'access token was not provided or was '
-                                                 'not valid for this operation',
-                                  'schema': {'$ref': '#/definitions/problem'}}},
-              'security': [{'oauth': ['uid']}],
-              'summary': 'Create new stack'}
-
 SECURITY_DEFINITIONS = {'oauth': {'type': 'oauth2',
                                   'flow': 'password',
                                   'x-tokenInfoUrl': 'https://ouath.example/token_info',
@@ -141,7 +118,7 @@ def test_operation():
                           security_definitions=SECURITY_DEFINITIONS,
                           definitions=DEFINITIONS,
                           parameter_definitions=PARAMETER_DEFINITIONS,
-                          resolver=get_function_from_name)
+                          resolver=Resolver())
     assert isinstance(operation.function, types.FunctionType)
     # security decorator should be a partial with verify_oauth as the function and token url and scopes as arguments.
     # See https://docs.python.org/2/library/functools.html#partial-objects
@@ -163,7 +140,7 @@ def test_non_existent_reference():
                           security_definitions={},
                           definitions={},
                           parameter_definitions={},
-                          resolver=get_function_from_name)
+                          resolver=Resolver())
     with pytest.raises(InvalidSpecification) as exc_info:  # type: py.code.ExceptionInfo
         schema = operation.body_schema
 
@@ -181,7 +158,7 @@ def test_multi_body():
                           security_definitions={},
                           definitions=DEFINITIONS,
                           parameter_definitions=PARAMETER_DEFINITIONS,
-                          resolver=get_function_from_name)
+                          resolver=Resolver())
     with pytest.raises(InvalidSpecification) as exc_info:  # type: py.code.ExceptionInfo
         schema = operation.body_schema
 
@@ -199,7 +176,7 @@ def test_invalid_reference():
                           security_definitions={},
                           definitions=DEFINITIONS,
                           parameter_definitions=PARAMETER_DEFINITIONS,
-                          resolver=get_function_from_name)
+                          resolver=Resolver())
     with pytest.raises(InvalidSpecification) as exc_info:  # type: py.code.ExceptionInfo
         schema = operation.body_schema
 
@@ -217,7 +194,7 @@ def test_no_token_info():
                           security_definitions=SECURITY_DEFINITIONS_WO_INFO,
                           definitions=DEFINITIONS,
                           parameter_definitions=PARAMETER_DEFINITIONS,
-                          resolver=get_function_from_name)
+                          resolver=Resolver())
     assert isinstance(operation.function, types.FunctionType)
     assert operation._Operation__security_decorator is security_passthrough
 
@@ -236,7 +213,7 @@ def test_parameter_reference():
                           security_definitions={},
                           definitions={},
                           parameter_definitions=PARAMETER_DEFINITIONS,
-                          resolver=get_function_from_name)
+                          resolver=Resolver())
     assert operation.parameters == [{'in': 'path', 'type': 'integer'}]
 
 
@@ -244,108 +221,9 @@ def test_resolve_invalid_reference():
     with pytest.raises(InvalidSpecification) as exc_info:
         Operation(method='GET', path='endpoint', operation=OPERATION5, app_produces=['application/json'],
                   app_security=[], security_definitions={}, definitions={}, parameter_definitions=PARAMETER_DEFINITIONS,
-                  resolver=get_function_from_name)
+                  resolver=Resolver())
 
     exception = exc_info.value  # type: InvalidSpecification
     assert exception.reason == "GET endpoint  '$ref' needs to start with '#/'"
 
 
-def test_detect_controller():
-    operation = Operation(method='GET',
-                          path='endpoint',
-                          operation=OPERATION6,
-                          app_produces=['application/json'],
-                          app_security=[],
-                          security_definitions={},
-                          definitions={},
-                          parameter_definitions=PARAMETER_DEFINITIONS,
-                          resolver=get_function_from_name)
-    assert operation.operation_id == 'fakeapi.hello.post_greeting'
-
-
-def test_controller_resolution_with_x_controller_router():
-    operation = Operation(method='GET',
-                          path='endpoint',
-                          operation={'x-swagger-router-controller': 'fakeapi.hello'},
-                          app_produces=['application/json'],
-                          app_security=[],
-                          security_definitions={},
-                          definitions={},
-                          parameter_definitions=PARAMETER_DEFINITIONS,
-                          resolver=get_function_from_name)
-    assert operation.operation_id == 'fakeapi.hello.get'
-
-
-def test_controller_resolution_without_default_module_name_will_fail():
-    with pytest.raises(InvalidSpecification) as exc_info:  # type: py.code.ExceptionInfo
-        Operation(method='GET',
-                  path='/hello',
-                  operation={},
-                  app_produces=['application/json'],
-                  app_security=[],
-                  security_definitions={},
-                  definitions={},
-                  parameter_definitions=PARAMETER_DEFINITIONS,
-                  resolver=get_function_from_name)
-
-    exception = exc_info.value
-    assert str(exception) == "<InvalidSpecification: Neither operationId or x-swagger-router-controller was " \
-                             + "configured and no default module set for Api>"
-    assert repr(exception) == "<InvalidSpecification: Neither operationId or x-swagger-router-controller was " \
-                              + "configured and no default module set for Api>"
-
-
-def test_controller_resolution_with_default_module_name():
-    operation = Operation(method='GET',
-                          path='/hello/{id}',
-                          operation={},
-                          default_module_name='fakeapi',
-                          app_produces=['application/json'],
-                          app_security=[],
-                          security_definitions={},
-                          definitions={},
-                          parameter_definitions=PARAMETER_DEFINITIONS,
-                          resolver=get_function_from_name)
-    assert operation.operation_id == 'fakeapi.hello.get'
-
-
-def test_controller_resolution_with_default_module_name_can_resolve_api_root():
-    operation = Operation(method='GET',
-                          path='/',
-                          operation={},
-                          default_module_name='fakeapi',
-                          app_produces=['application/json'],
-                          app_security=[],
-                          security_definitions={},
-                          definitions={},
-                          parameter_definitions=PARAMETER_DEFINITIONS,
-                          resolver=get_function_from_name)
-    assert operation.operation_id == 'fakeapi.get'
-
-
-def test_controller_resolution_with_default_module_name_will_resolve_resource_root_get_as_search():
-    operation = Operation(method='GET',
-                          path='/hello',
-                          operation={},
-                          default_module_name='fakeapi',
-                          app_produces=['application/json'],
-                          app_security=[],
-                          security_definitions={},
-                          definitions={},
-                          parameter_definitions=PARAMETER_DEFINITIONS,
-                          resolver=get_function_from_name)
-    assert operation.operation_id == 'fakeapi.hello.search'
-
-
-def test_controller_resolution_with_default_module_name_will_resolve_resource_root_post_as_post():
-    operation = Operation(method='POST',
-                          path='/hello',
-                          operation={},
-                          default_module_name='fakeapi',
-                          app_produces=['application/json'],
-                          app_security=[],
-                          security_definitions={},
-                          definitions={},
-                          parameter_definitions=PARAMETER_DEFINITIONS,
-                          resolver=get_function_from_name)
-    assert operation.operation_id == 'fakeapi.hello.post'

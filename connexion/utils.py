@@ -56,13 +56,13 @@ def deep_getattr(obj, attr):
     return functools.reduce(getattr, attr.split('.'), obj)
 
 
-def get_function_from_name(operation_id):
+def get_function_from_name(function_name):
     """
-    Default operation resolver, tries to get function by fully qualified name (e.g. "mymodule.myobj.myfunc")
+    Tries to get function by fully qualified name (e.g. "mymodule.myobj.myfunc")
 
-    :type operation_id: str
+    :type function_name: str
     """
-    module_name, attr_path = operation_id.rsplit('.', 1)
+    module_name, attr_path = function_name.rsplit('.', 1)
     module = None
 
     while not module:
