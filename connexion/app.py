@@ -100,7 +100,8 @@ class App:
         :type swagger_url: string | None
         :param validate_responses: True enables validation. Validation errors generate HTTP 500 responses.
         :type validate_responses: bool
-
+        :param resolver: Operation resolver.
+        :type resolver: Resolver | types.FunctionType
         :rtype: Api
         """
         resolver = Resolver(resolver) if hasattr(resolver, '__call__') else resolver

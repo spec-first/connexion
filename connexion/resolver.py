@@ -24,7 +24,7 @@ class Resolution:
         Represents the result of operation resolution
 
         :param function: The endpoint function
-        :type function: function
+        :type function: types.FunctionType
         """
         self.function = function
         self.operation_id = operation_id
@@ -36,7 +36,7 @@ class Resolver:
         Standard resolver
 
         :param function_resolver: Function that resolves functions using an operationId
-        :type function_resolver: function
+        :type function_resolver: types.FunctionType
         """
         self.function_resolver = function_resolver
 
@@ -44,7 +44,7 @@ class Resolver:
         """
         Default operation resolver
 
-        :type operation: Operation
+        :type operation: connexion.operation.Operation
         """
         operation_id = self.resolve_operation_id(operation)
         return Resolution(self.resolve_function_from_operation_id(operation_id), operation_id)
@@ -53,7 +53,7 @@ class Resolver:
         """
         Default operationId resolver
 
-        :type operation: Operation
+        :type operation: connexion.operation.Operation
         """
         spec = operation.operation
         operation_id = spec.get('operationId')
@@ -79,14 +79,18 @@ class RestyResolver(Resolver):
     def __init__(self, default_module_name, collection_endpoint_name='search'):
         """
         :param default_module_name: Default module name for operations
-        :type default_module_name: string
+        :type default_module_name: str
         """
         Resolver.__init__(self)
         self.default_module_name = default_module_name
         self.collection_endpoint_name = collection_endpoint_name
 
     def resolve_operation_id(self, operation):
+        """
+        Resolves the operationId using REST semantics unless explicitly configured in the spec
 
+        :type operation: connexion.operation.Operation
+        """
         spec = operation.operation
         operation_id = spec.get('operationId')
 
