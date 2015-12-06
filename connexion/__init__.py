@@ -20,6 +20,6 @@ from .api import Api
 from .problem import problem
 from .decorators.produces import NoContent
 import werkzeug.exceptions as exceptions
-import resolver
+from .resolver import *
 
 __version__ = '0.13'
