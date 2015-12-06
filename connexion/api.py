@@ -33,7 +33,8 @@ class Api:
     """
 
     def __init__(self, swagger_yaml_path, base_url=None, arguments=None, swagger_ui=None, swagger_path=None,
-                 swagger_url=None, validate_responses=False, resolver=utils.get_function_from_name):
+                 swagger_url=None, validate_responses=False, default_controller_name='',
+                 resolver=utils.get_function_from_name):
         """
         :type swagger_yaml_path: pathlib.Path
         :type base_url: str | None
@@ -76,6 +77,7 @@ class Api:
 
         self.definitions = self.specification.get('definitions', {})
         self.parameter_definitions = self.specification.get('parameters', {})
+        self.default_controller_name = default_controller_name
 
         self.swagger_path = swagger_path or SWAGGER_UI_PATH
         self.swagger_url = swagger_url or SWAGGER_UI_URL
@@ -111,9 +113,9 @@ class Api:
         :type swagger_operation: dict
         """
         operation = Operation(method=method, path=path, operation=swagger_operation,
-                              app_produces=self.produces, app_security=self.security,
-                              security_definitions=self.security_definitions, definitions=self.definitions,
-                              parameter_definitions=self.parameter_definitions,
+                              default_controller_name=self.default_controller_name, app_produces=self.produces,
+                              app_security=self.security, security_definitions=self.security_definitions,
+                              definitions=self.definitions, parameter_definitions=self.parameter_definitions,
                               validate_responses=self.validate_responses, resolver=self.resolver)
         operation_id = operation.operation_id
         logger.debug('... Adding %s -> %s', method.upper(), operation_id, extra=vars(operation))

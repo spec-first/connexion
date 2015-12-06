@@ -122,6 +122,8 @@ OPERATION6 = {'description': 'Adds a new stack to be created by lizzy and return
               'security': [{'oauth': ['uid']}],
               'summary': 'Create new stack'}
 
+OPERATION7 = {'x-swagger-router-controller': 'fakeapi.hello'}
+
 SECURITY_DEFINITIONS = {'oauth': {'type': 'oauth2',
                                   'flow': 'password',
                                   'x-tokenInfoUrl': 'https://ouath.example/token_info',
@@ -249,6 +251,7 @@ def test_resolve_invalid_reference():
     exception = exc_info.value  # type: InvalidSpecification
     assert exception.reason == "GET endpoint  '$ref' needs to start with '#/'"
 
+
 def test_detect_controller():
     operation = Operation(method='GET',
                           path='endpoint',
@@ -260,3 +263,30 @@ def test_detect_controller():
                           parameter_definitions=PARAMETER_DEFINITIONS,
                           resolver=get_function_from_name)
     assert operation.operation_id == 'fakeapi.hello.post_greeting'
+
+
+def test_controller_resolution_with_x_controller_router():
+    operation = Operation(method='GET',
+                          path='endpoint',
+                          operation=OPERATION7,
+                          app_produces=['application/json'],
+                          app_security=[],
+                          security_definitions={},
+                          definitions={},
+                          parameter_definitions=PARAMETER_DEFINITIONS,
+                          resolver=get_function_from_name)
+    assert operation.operation_id == 'fakeapi.hello.get'
+
+
+def test_controller_resolution_with_default_controller_name():
+    operation = Operation(method='GET',
+                          path='endpoint',
+                          operation={},
+                          default_controller_name='fakeapi.hello',
+                          app_produces=['application/json'],
+                          app_security=[],
+                          security_definitions={},
+                          definitions={},
+                          parameter_definitions=PARAMETER_DEFINITIONS,
+                          resolver=get_function_from_name)
+    assert operation.operation_id == 'fakeapi.hello.get'

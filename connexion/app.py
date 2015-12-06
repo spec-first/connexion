@@ -26,7 +26,7 @@ logger = logging.getLogger('connexion.app')
 
 class App:
     def __init__(self, import_name, port=None, specification_dir='', server=None, arguments=None, debug=False,
-                 swagger_ui=True, swagger_path=None, swagger_url=None):
+                 swagger_ui=True, swagger_path=None, swagger_url=None, default_controller_name=''):
         """
         :param import_name: the name of the application package
         :type import_name: str
@@ -46,6 +46,8 @@ class App:
         :type swagger_path: string | None
         :param swagger_url: URL to access swagger-ui documentation
         :type swagger_url: string | None
+        :param default_controller_name: Default controller name for operations
+        :type default_controller_name: string | import_name
         """
         self.app = flask.Flask(import_name)
 
@@ -72,6 +74,7 @@ class App:
         self.swagger_ui = swagger_ui
         self.swagger_path = swagger_path
         self.swagger_url = swagger_url
+        self.default_controller_name = default_controller_name or import_name
 
     @staticmethod
     def common_error_handler(exception):

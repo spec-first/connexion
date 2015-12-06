@@ -64,6 +64,11 @@ def test_app_with_relative_path():
     test_app(app)
 
 
+def test_default_controller_name_defaults_to_app_module(app):
+    app = App(__name__)
+    assert app.default_controller_name == 'test_app'
+
+
 def test_app(app):
     assert app.port == 5001
 
