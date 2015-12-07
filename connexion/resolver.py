@@ -97,18 +97,20 @@ class RestyResolver(Resolver):
         if operation_id:
             return Resolver.resolve_operation_id(self, operation)
 
-        function = operation.method.lower()
         x_router_controller = spec.get('x-swagger-router-controller')
+
+        match = re.search('^/(.+?)(/.?|$)', operation.path)
+
+        mod_name = self.default_module_name
 
         if x_router_controller:
             mod_name = x_router_controller
-        else:
-            mod_name = self.default_module_name
-            match = re.search('^/(.+?)(/.?|$)', operation.path)
-            if match:
-                mod_name += '.' + match.group(1)
-                if function == 'get' and match.group(2).strip('/') == '':
-                    function = self.collection_endpoint_name
+        elif match:
+            mod_name += '.' + match.group(1)
+
+        function = operation.method.lower()
+        if function == 'get' and match and match.group(2).strip('/') == '':
+            function = self.collection_endpoint_name
 
         operation_id = mod_name + '.' + function
 

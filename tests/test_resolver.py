@@ -116,6 +116,21 @@ def test_resty_resolve_with_default_module_name_will_resolve_resource_root_get_a
     assert operation.operation_id == 'fakeapi.hello.search'
 
 
+def test_resty_resolve_with_default_module_name_and_x_router_controller_will_resolve_resource_root_get_as_search():
+    operation = Operation(method='GET',
+                          path='/hello',
+                          operation={
+                              'x-swagger-router-controller': 'fakeapi.hello',
+                          },
+                          app_produces=['application/json'],
+                          app_security=[],
+                          security_definitions={},
+                          definitions={},
+                          parameter_definitions=PARAMETER_DEFINITIONS,
+                          resolver=RestyResolver('fakeapi'))
+    assert operation.operation_id == 'fakeapi.hello.search'
+
+
 def test_resty_resolve_with_default_module_name_will_resolve_resource_root_as_configured():
     operation = Operation(method='GET',
                           path='/hello',
