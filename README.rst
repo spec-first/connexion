@@ -61,7 +61,7 @@ If a value is provided both globally and on the API then the API value will take
 
 Endpoint Routing
 ----------------
-Connexion uses the ``OperationId`` from each `Operation Object`_  to identify which function
+Connexion uses the ``operationId`` from each `Operation Object`_  to identify which function
 should handle each URL.
 
 For example:
@@ -74,7 +74,49 @@ For example:
           operationId: myapp.api.hello_world
 
 If you provided this path in your specification POST requests to ``http://MYHOST/hello_world`` would be handled by the
-function ``hello_world`` in ``myapp.api``.
+function ``hello_world`` in ``myapp.api``. Optionally you can include `x-router-controller` in your operation definition, making ``operationId`` relative:
+
+.. code-block:: yaml
+
+    paths:
+      /hello_world:
+        post:
+          x-router-controller: myapp.api
+          operationId: hello_world
+
+
+To customize this behavior, connexion can use alternative ``Resolvers``, for example ``RestyResolver``. The ``RestyResolver`` will compose an ``operationId`` based on the path and HTTP method of the endpoints in your specification:
+
+.. code-block:: python
+
+    from connexion.resolver import RestyResolver
+
+    app = connexion.App(__name__)
+    app.add_api('swagger.yaml', resolver=RestyResolver('api'))
+
+.. code-block:: yaml
+
+   paths:
+     /:
+       get:
+          # Implied operationId: api.get
+     /foo:
+       get:
+          # Implied operationId: api.foo.search
+       post:
+          # Implied operationId: api.foo.post
+
+     '/foo/{id}':
+       get:
+          # Implied operationId: api.foo.get
+       put:
+          # Implied operationId: api.foo.post
+       copy:
+          # Implied operationId: api.foo.copy
+       delete:
+          # Implied operationId: api.foo.delete
+
+``RestyResolver`` will give precedence to any ``operationId`` encountered in the specification. It will also respect ``x-router-controller``. You may import and extend ``connexion.resolver.Resolver`` to implement your own ``operationId`` (and function) resolution algorithm.
 
 Additionally you can also define a ``basePath`` on the top level of the API specification, which is useful for versioned
 APIs. If you wanted to serve the previous endpoint from  ``http://MYHOST/1.0/hello_world`` you could do:
