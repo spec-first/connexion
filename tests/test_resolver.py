@@ -90,6 +90,19 @@ def test_resty_resolve_with_default_module_name():
     assert operation.operation_id == 'fakeapi.hello.get'
 
 
+def test_resty_resolve_with_default_module_name_will_translate_dashes_in_resource_name():
+    operation = Operation(method='GET',
+                          path='/foo-bar',
+                          operation={},
+                          app_produces=['application/json'],
+                          app_security=[],
+                          security_definitions={},
+                          definitions={},
+                          parameter_definitions=PARAMETER_DEFINITIONS,
+                          resolver=RestyResolver('fakeapi'))
+    assert operation.operation_id == 'fakeapi.foo_bar.search'
+
+
 def test_resty_resolve_with_default_module_name_can_resolve_api_root():
     operation = Operation(method='GET',
                           path='/',

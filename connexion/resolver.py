@@ -103,19 +103,21 @@ class RestyResolver(Resolver):
         :type operation: connexion.operation.Operation
         """
         path_match = re.search(
-            '^/?(?P<resource_name>(\w(?<!/))*)(?P<trailing_slash>/*)(?P<extended_path>.*)$', operation.path
+            '^/?(?P<resource_name>([\w\-](?<!/))*)(?P<trailing_slash>/*)(?P<extended_path>.*)$', operation.path
         )
 
         def get_controller_name():
             x_router_controller = operation.operation.get('x-swagger-router-controller')
 
             name = self.default_module_name
+            resource_name = path_match.group('resource_name')
 
             if x_router_controller:
                 name = x_router_controller
 
-            elif path_match.group('resource_name'):
-                name += '.' + path_match.group('resource_name')
+            elif resource_name:
+                resource_controller_name = resource_name.replace('-', '_')
+                name += '.' + resource_controller_name
 
             return name
 
