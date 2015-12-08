@@ -66,7 +66,7 @@ def test_resty_resolve_x_router_controller_with_operation_id():
 
 def test_resty_resolve_x_router_controller_without_operation_id():
     operation = Operation(method='GET',
-                          path='endpoint',
+                          path='/hello/{id}',
                           operation={'x-swagger-router-controller': 'fakeapi.hello'},
                           app_produces=['application/json'],
                           app_security=[],

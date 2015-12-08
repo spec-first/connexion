@@ -91,27 +91,42 @@ class RestyResolver(Resolver):
 
         :type operation: connexion.operation.Operation
         """
-        spec = operation.operation
-        operation_id = spec.get('operationId')
-
-        if operation_id:
+        if operation.operation.get('operationId'):
             return Resolver.resolve_operation_id(self, operation)
 
-        x_router_controller = spec.get('x-swagger-router-controller')
+        return self.resolve_operation_id_using_rest_semantics(operation)
 
-        match = re.search('^/(.+?)(/.?|$)', operation.path)
+    def resolve_operation_id_using_rest_semantics(self, operation):
+        """
+        Resolves the operationId using REST semantics
 
-        mod_name = self.default_module_name
+        :type operation: connexion.operation.Operation
+        """
+        path_match = re.search(
+            '^/?(?P<resource_name>(\w(?<!/))*)(?P<trailing_slash>/*)(?P<extended_path>.*)$', operation.path
+        )
 
-        if x_router_controller:
-            mod_name = x_router_controller
-        elif match:
-            mod_name += '.' + match.group(1)
+        def get_controller_name():
+            x_router_controller = operation.operation.get('x-swagger-router-controller')
 
-        function = operation.method.lower()
-        if function == 'get' and match and match.group(2).strip('/') == '':
-            function = self.collection_endpoint_name
+            name = self.default_module_name
 
-        operation_id = mod_name + '.' + function
+            if x_router_controller:
+                name = x_router_controller
 
-        return operation_id
+            elif path_match.group('resource_name'):
+                name += '.' + path_match.group('resource_name')
+
+            return name
+
+        def get_function_name():
+            method = operation.method
+
+            is_collection_endpoint = \
+                method == 'GET' \
+                and path_match.group('resource_name') \
+                and not path_match.group('extended_path')
+
+            return self.collection_endpoint_name if is_collection_endpoint else method.lower()
+
+        return get_controller_name() + '.' + get_function_name()
