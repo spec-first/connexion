@@ -18,6 +18,13 @@ import strict_rfc3339
 
 PATH_PARAMETER = re.compile(r'\{([^}]*)\}')
 
+# map Swagger type to flask path converter
+# see http://flask.pocoo.org/docs/0.10/api/#url-route-registrations
+PATH_PARAMETER_CONVERTERS = {
+    'integer': 'int',
+    'number': 'float'
+}
+
 
 def flaskify_endpoint(identifier):
     """
@@ -29,11 +36,14 @@ def flaskify_endpoint(identifier):
     return identifier.replace('.', '_')
 
 
-def convert_path_parameter(match):
-    return '<{}>'.format(match.group(1).replace('-', '_'))
+def convert_path_parameter(match, types):
+    name = match.group(1)
+    swagger_type = types.get(name)
+    converter = PATH_PARAMETER_CONVERTERS.get(swagger_type)
+    return '<{}{}{}>'.format(converter or '', ':' if converter else '', name.replace('-', '_'))
 
 
-def flaskify_path(swagger_path):
+def flaskify_path(swagger_path, types={}):
     """
     Convert swagger path templates to flask path templates
 
@@ -42,9 +52,12 @@ def flaskify_path(swagger_path):
 
     >>> flaskify_path('/foo-bar/{my-param}')
     '/foo-bar/<my_param>'
+
+    >>> flaskify_path('/foo/{someint}', {'someint': 'int'})
+    '/foo/<int:someint>'
     """
-    # TODO add types
-    return PATH_PARAMETER.sub(convert_path_parameter, swagger_path)
+    convert_match = functools.partial(convert_path_parameter, types=types)
+    return PATH_PARAMETER.sub(convert_match, swagger_path)
 
 
 def deep_getattr(obj, attr):

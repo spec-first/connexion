@@ -11,6 +11,8 @@ def test_flaskify_path():
     assert utils.flaskify_path("api/{test-path}") == "api/<test_path>"
     assert utils.flaskify_path("my-api/{test-path}") == "my-api/<test_path>"
     assert utils.flaskify_path("foo_bar/{a-b}/{c_d}") == "foo_bar/<a_b>/<c_d>"
+    assert utils.flaskify_path("foo/{a}/{b}", {'a': 'integer'}) == "foo/<int:a>/<b>"
+    assert utils.flaskify_path("foo/{a}/{b}", {'a': 'number'}) == "foo/<float:a>/<b>"
 
 
 def test_flaskify_endpoint():

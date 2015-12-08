@@ -183,3 +183,11 @@ def test_schema_array(test_array):
 
 def test_schema_int(test_int):
     return test_int
+
+
+def test_get_someint(someint):
+    return type(someint).__name__
+
+
+def test_get_somefloat(somefloat):
+    return type(somefloat).__name__

@@ -523,3 +523,24 @@ def test_resolve_classmethod(app):
     app_client = app.app.test_client()
     resp = app_client.get('/v1.0/resolver-test/classmethod')  # type: flask.Response
     assert resp.data.decode() == '"DummyClass"'
+
+
+def test_path_parameter_someint(app):
+    app_client = app.app.test_client()
+    resp = app_client.get('/v1.0/test-int-path/123')  # type: flask.Response
+    assert resp.data.decode() == '"int"'
+
+    # non-integer values will not match Flask route
+    resp = app_client.get('/v1.0/test-int-path/foo')  # type: flask.Response
+    assert resp.status_code == 404
+
+
+def test_path_parameter_somefloat(app):
+    app_client = app.app.test_client()
+    resp = app_client.get('/v1.0/test-float-path/123.45')  # type: flask.Response
+    assert resp.data.decode() == '"float"'
+
+    # non-float values will not match Flask route
+    resp = app_client.get('/v1.0/test-float-path/123,45')  # type: flask.Response
+    assert resp.status_code == 404
+
