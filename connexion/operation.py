@@ -19,7 +19,7 @@ from .decorators.produces import BaseSerializer, Produces, Jsonifier
 from .decorators.security import security_passthrough, verify_oauth
 from .decorators.validation import RequestBodyValidator, ParameterValidator
 from .decorators.metrics import UWSGIMetricsCollector
-from.decorators.response import ResponseValidator
+from .decorators.response import ResponseValidator
 from .exceptions import InvalidSpecification
 from .utils import flaskify_endpoint, produces_json
 
@@ -31,8 +31,8 @@ class Operation:
     A single API operation on a path.
     """
 
-    def __init__(self, method, path, operation, app_produces, app_security,
-                 security_definitions, definitions, parameter_definitions, resolver, validate_responses=False):
+    def __init__(self, method, path, operation, app_produces, app_security, security_definitions, definitions,
+                 parameter_definitions, resolver, validate_responses=False):
         """
         This class uses the OperationID identify the module and function that will handle the operation
 
@@ -74,25 +74,18 @@ class Operation:
             'parameters': self.parameter_definitions
         }
         self.validate_responses = validate_responses
-
         self.operation = operation
-        operation_id = operation['operationId']
 
-        router_controller = operation.get('x-swagger-router-controller')
-
-        self.operation_id = self.detect_controller(operation_id, router_controller)
         # todo support definition references
         # todo support references to application level parameters
         self.parameters = list(self.resolve_parameters(operation.get('parameters', [])))
-        self.produces = operation.get('produces', app_produces)
-        self.endpoint_name = flaskify_endpoint(self.operation_id)
         self.security = operation.get('security', app_security)
-        self.__undecorated_function = resolver(self.operation_id)
+        self.produces = operation.get('produces', app_produces)
 
-    def detect_controller(self, operation_id, router_controller):
-        if router_controller is None:
-            return operation_id
-        return router_controller + '.' + operation_id
+        resolution = resolver.resolve(self)
+        self.operation_id = resolution.operation_id
+        self.endpoint_name = flaskify_endpoint(self.operation_id)
+        self.__undecorated_function = resolution.function
 
     def resolve_reference(self, schema):
         schema = schema.copy()  # avoid changing the original schema

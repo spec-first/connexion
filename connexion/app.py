@@ -13,13 +13,11 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 import logging
 import pathlib
-
 import flask
 import werkzeug.exceptions
-
 from .problem import problem
 from .api import Api
-from .utils import get_function_from_name
+from connexion.resolver import Resolver
 
 logger = logging.getLogger('connexion.app')
 
@@ -68,6 +66,7 @@ class App:
         self.port = port
         self.server = server or 'flask'
         self.debug = debug
+        self.import_name = import_name
         self.arguments = arguments or {}
         self.swagger_ui = swagger_ui
         self.swagger_path = swagger_path
@@ -83,7 +82,7 @@ class App:
         return problem(title=exception.name, detail=exception.description, status=exception.code)
 
     def add_api(self, swagger_file, base_path=None, arguments=None, swagger_ui=None, swagger_path=None,
-                swagger_url=None, validate_responses=False, resolver=get_function_from_name):
+                swagger_url=None, validate_responses=False, resolver=Resolver()):
         """
         Adds an API to the application based on a swagger file
 
@@ -101,8 +100,12 @@ class App:
         :type swagger_url: string | None
         :param validate_responses: True enables validation. Validation errors generate HTTP 500 responses.
         :type validate_responses: bool
+        :param resolver: Operation resolver.
+        :type resolver: Resolver | types.FunctionType
         :rtype: Api
         """
+        resolver = Resolver(resolver) if hasattr(resolver, '__call__') else resolver
+
         swagger_ui = swagger_ui if swagger_ui is not None else self.swagger_ui
         swagger_path = swagger_path if swagger_path is not None else self.swagger_path
         swagger_url = swagger_url if swagger_url is not None else self.swagger_url
