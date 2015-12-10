@@ -19,11 +19,11 @@ import numbers
 import re
 import six
 import strict_rfc3339
-import jsonschema
 from jsonschema import draft4_format_checker, validate, ValidationError
 
 from ..problem import problem
 from ..utils import validate_date, boolean
+from .parameter import get_val_from_param
 
 logger = logging.getLogger('connexion.decorators.validation')
 
@@ -64,16 +64,34 @@ class TypeValidationError(Exception):
         return msg.format(**vars(self))
 
 
-def validate_type(schema, data, parameter_type, parameter_name=None):
-    schema_type = schema.get('type')
-    parameter_name = parameter_name if parameter_name else schema['name']
-    expected_type = TYPE_VALIDATION_MAP.get(schema_type)
-    if expected_type:
-        try:
-            return expected_type(data)
-        except ValueError:
-            raise TypeValidationError(schema_type, parameter_type, parameter_name)
-    return data
+def validate_type(param, value, parameter_type, parameter_name=None):
+    param_type = param.get('type')
+    parameter_name = parameter_name if parameter_name else param['name']
+    if param_type == "array":  # then logic is more complex
+        if param.get("collectionFormat") and param.get("collectionFormat") == "pipes":
+            parts = value.split("|")
+        else:  # default: csv
+            parts = value.split(",")
+
+        converted_parts = []
+        expected_type = TYPE_VALIDATION_MAP.get(param["items"]["type"])
+        for part in parts:
+            try:
+                converted = expected_type(part)
+            except (ValueError, TypeError):
+                converted = part
+        converted_parts.append(converted)
+        return converted_parts
+    else:
+        expected_type = TYPE_VALIDATION_MAP.get(param_type)
+        if expected_type:
+            try:
+                return expected_type(value)
+            except ValueError:
+                raise TypeValidationError(param_type, parameter_type, parameter_name)
+        elif param_type == 'array':
+            return get_val_from_param(value, param)
+        return value
 
 
 def validate_format(schema, data):
@@ -121,42 +139,6 @@ def validate_enum(schema, data):
         return 'Enum value must be one of {}'.format(enum_values)
 
 
-def validate_array(schema, data):
-    if schema.get('type') != 'array' or not schema.get('items'):
-        return
-    col_map = {'csv': ',',
-               'ssv': ' ',
-               'tsv': '\t',
-               'pipes': '|',
-               'multi': '&'}
-    col_fmt = schema.get('collectionFormat', 'csv')
-    delimiter = col_map.get(col_fmt)
-    if not delimiter:
-        logger.debug("Unrecognized collectionFormat, cannot validate: %s", col_fmt)
-        return
-    if col_fmt == 'multi':
-        logger.debug("collectionFormat 'multi' is not validated by Connexion")
-        return
-    subschema = schema.get('items')
-    items = data.split(delimiter)
-    for subval in items:
-        try:
-            converted_value = validate_type(subschema, subval, schema['in'], schema['name'])
-        except TypeValidationError as e:
-            return str(e)
-        # Run each sub-item through the list of validators.
-        for func in VALIDATORS:
-            error = func(subschema, converted_value)
-            if error:
-                return error
-
-
-VALIDATORS = [validate_format, validate_pattern,
-              validate_minimum, validate_maximum,
-              validate_min_length, validate_max_length,
-              validate_enum, validate_array]
-
-
 class RequestBodyValidator:
     def __init__(self, schema):
         self.schema = schema
@@ -198,16 +180,22 @@ class ParameterValidator():
     def __init__(self, parameters):
         self.parameters = {k: list(g) for k, g in itertools.groupby(parameters, key=lambda p: p['in'])}
 
-    def validate_parameter(self, parameter_type, value, param):
+    @staticmethod
+    def validate_parameter(parameter_type, value, param):
         if value is not None:
             try:
                 converted_value = validate_type(param, value, parameter_type)
             except TypeValidationError as e:
                 return str(e)
-            for func in VALIDATORS:
-                error = func(param, converted_value)
-                if error:
-                    return error
+
+            if 'required' in param:
+                del param['required']
+            try:
+                validate(converted_value, param, format_checker=draft4_format_checker)
+            except ValidationError as exception:
+                print(converted_value, type(converted_value), param.get('type'), param, '<--------------------------')
+                return str(exception)
+
         elif param.get('required'):
             return "Missing {parameter_type} parameter '{param[name]}'".format(**locals())
 

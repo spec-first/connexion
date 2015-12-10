@@ -444,11 +444,6 @@ def test_parameter_validation(app):
 
     url = '/v1.0/test_parameter_validation'
 
-    for invalid_date in '', 'foo', '2015-01-01T12:00:00Z':
-        response = app_client.get(url, query_string={'date': invalid_date})  # type: flask.Response
-        assert response.status_code == 400
-        assert response.content_type == 'application/problem+json'
-
     response = app_client.get(url, query_string={'date': '2015-08-26'})  # type: flask.Response
     assert response.status_code == 200
 
