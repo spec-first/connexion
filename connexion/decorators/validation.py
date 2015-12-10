@@ -16,14 +16,12 @@ import functools
 import itertools
 import logging
 import numbers
-import re
 import six
 import strict_rfc3339
 from jsonschema import draft4_format_checker, validate, ValidationError
 
 from ..problem import problem
 from ..utils import validate_date, boolean
-from .parameter import get_val_from_param
 
 logger = logging.getLogger('connexion.decorators.validation')
 
@@ -84,59 +82,12 @@ def validate_type(param, value, parameter_type, parameter_name=None):
         return converted_parts
     else:
         expected_type = TYPE_VALIDATION_MAP.get(param_type)
-        if expected_type:
-            try:
-                return expected_type(value)
-            except ValueError:
-                raise TypeValidationError(param_type, parameter_type, parameter_name)
-        elif param_type == 'array':
-            return get_val_from_param(value, param)
-        return value
-
-
-def validate_format(schema, data):
-    schema_type = schema.get('type')
-    schema_format = schema.get('format')
-    func = FORMAT_MAP.get((schema_type, schema_format))
-    if func and not func(data):
-        return "Invalid value, expected {schema_type} in '{schema_format}' format".format(**locals())
-
-
-def validate_pattern(schema, data):
-    pattern = schema.get('pattern')
-    # TODO: check Swagger pattern format
-    if pattern is not None and not re.match(pattern, data):
-        return 'Invalid value, pattern "{}" does not match'.format(pattern)
-
-
-def validate_minimum(schema, data):
-    minimum = schema.get('minimum')
-    if minimum is not None and data < minimum:
-        return 'Invalid value, must be at least {}'.format(minimum)
-
-
-def validate_maximum(schema, data):
-    maximum = schema.get('maximum')
-    if maximum is not None and data > maximum:
-        return 'Invalid value, must be at most {}'.format(maximum)
-
-
-def validate_min_length(schema, data):
-    minimum = schema.get('minLength')
-    if minimum is not None and len(data) < minimum:
-        return 'Length must be at least {}'.format(minimum)
-
-
-def validate_max_length(schema, data):
-    maximum = schema.get('maxLength')
-    if maximum is not None and len(data) > maximum:
-        return 'Length must be at most {}'.format(maximum)
-
-
-def validate_enum(schema, data):
-    enum_values = schema.get('enum')
-    if enum_values is not None and data not in enum_values:
-        return 'Enum value must be one of {}'.format(enum_values)
+        try:
+            return expected_type(value)
+        except ValueError:
+            raise TypeValidationError(param_type, parameter_type, parameter_name)
+        except TypeError:
+            return value
 
 
 class RequestBodyValidator:
