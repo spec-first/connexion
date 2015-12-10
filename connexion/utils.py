@@ -14,7 +14,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 import functools
 import importlib
 import re
-import strict_rfc3339
 
 PATH_PARAMETER = re.compile(r'\{([^}]*)\}')
 
