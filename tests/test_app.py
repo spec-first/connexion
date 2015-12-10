@@ -411,7 +411,7 @@ def test_schema_format(app):
     assert wrong_type.content_type == 'application/problem+json'
     wrong_type_response = json.loads(wrong_type.data.decode())  # type: dict
     assert wrong_type_response['title'] == 'Bad Request'
-    assert wrong_type_response['detail'] == "Invalid value, expected string in 'date-time' format"
+    assert wrong_type_response['detail'].startswith("'xy' is not a 'date-time'")
 
 
 def test_single_route(app):

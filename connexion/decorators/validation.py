@@ -19,7 +19,8 @@ import numbers
 import re
 import six
 import strict_rfc3339
-from jsonschema import validate, ValidationError
+import jsonschema
+from jsonschema import draft4_format_checker, validate, ValidationError
 
 from ..problem import problem
 from ..utils import validate_date, boolean
@@ -186,7 +187,7 @@ class RequestBodyValidator:
         :rtype: flask.Response | None
         """
         try:
-            validate(data, schema)
+            validate(data, schema, format_checker=draft4_format_checker)
         except ValidationError as exception:
             return problem(400, 'Bad Request', str(exception))
 
