@@ -31,13 +31,6 @@ def test_get_function_from_name_for_class_method():
     assert function == connexion.app.App.common_error_handler
 
 
-def test_validate_date():
-    assert not utils.validate_date('foo')
-    assert utils.validate_date('2015-07-31')
-    assert not utils.validate_date('2015-07-31T19:51:00Z')
-    assert utils.validate_date('9999-12-31')
-
-
 def test_boolean():
     assert utils.boolean('true')
     assert not utils.boolean('false')

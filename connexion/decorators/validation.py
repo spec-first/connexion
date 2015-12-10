@@ -15,32 +15,18 @@ import flask
 import functools
 import itertools
 import logging
-import numbers
-import six
-import strict_rfc3339
 from jsonschema import draft4_format_checker, validate, ValidationError
 
 from ..problem import problem
-from ..utils import validate_date, boolean
+from ..utils import boolean
 
 logger = logging.getLogger('connexion.decorators.validation')
 
-# https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#data-types
-TYPE_MAP = {'integer': int,
-            'number': numbers.Number,
-            'string': six.string_types[0],
-            'boolean': bool,
-            'array': list,
-            'object': dict}  # map of swagger types to python types
-
-TYPE_VALIDATION_MAP = {
+TYPE_MAP = {
     'integer': int,
     'number': float,
     'boolean': boolean
 }
-
-FORMAT_MAP = {('string', 'date-time'): strict_rfc3339.validate_rfc3339,
-              ('string', 'date'): validate_date}
 
 
 class TypeValidationError(Exception):
@@ -62,6 +48,11 @@ class TypeValidationError(Exception):
         return msg.format(**vars(self))
 
 
+def make_type(value, type):
+    type_func = TYPE_MAP.get(type)  # convert value to right type
+    return type_func(value)
+
+
 def validate_type(param, value, parameter_type, parameter_name=None):
     param_type = param.get('type')
     parameter_name = parameter_name if parameter_name else param['name']
@@ -72,18 +63,16 @@ def validate_type(param, value, parameter_type, parameter_name=None):
             parts = value.split(",")
 
         converted_parts = []
-        expected_type = TYPE_VALIDATION_MAP.get(param["items"]["type"])
         for part in parts:
             try:
-                converted = expected_type(part)
+                converted = make_type(part, param["items"]["type"])
             except (ValueError, TypeError):
                 converted = part
         converted_parts.append(converted)
         return converted_parts
     else:
-        expected_type = TYPE_VALIDATION_MAP.get(param_type)
         try:
-            return expected_type(value)
+            return make_type(value, param_type)
         except ValueError:
             raise TypeValidationError(param_type, parameter_type, parameter_name)
         except TypeError:

@@ -122,19 +122,6 @@ def produces_json(produces):
     return all(is_json_mimetype(mimetype) for mimetype in produces)
 
 
-def validate_date(s):
-    '''
-    Validate date as defined by "full-date" on http://xml2rfc.ietf.org/public/rfc/html/rfc3339.html#anchor14
-
-    >>> validate_date('foo')
-    False
-
-    >>> validate_date('2015-07-31')
-    True
-    '''
-    return strict_rfc3339.validate_rfc3339(s + 'T00:00:00Z')
-
-
 def boolean(s):
     '''
     Convert JSON/Swagger boolean value to Python, raise ValueError otherwise
