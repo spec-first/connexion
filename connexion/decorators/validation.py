@@ -19,6 +19,8 @@ import numbers
 import re
 import six
 import strict_rfc3339
+from jsonschema import validate, ValidationError
+
 from ..problem import problem
 from ..utils import validate_date, boolean
 
@@ -183,46 +185,12 @@ class RequestBodyValidator:
         :type schema: dict
         :rtype: flask.Response | None
         """
-        schema_type = schema.get('type')
-        log_extra = {'url': flask.request.url, 'schema_type': schema_type}
+        try:
+            validate(data, schema)
+        except ValidationError as exception:
+            return problem(400, 'Bad Request', str(exception))
 
-        expected_type = TYPE_MAP.get(schema_type)  # type: type
-        actual_type = type(data)  # type: type
-        if expected_type and not isinstance(data, expected_type):
-            expected_type_name = expected_type.__name__
-            actual_type_name = actual_type.__name__
-            logger.debug("'%s' is not a '%s'", data, expected_type_name)
-            error_template = "Wrong type, expected '{schema_type}' got '{actual_type_name}'"
-            error_message = error_template.format(schema_type=schema_type, actual_type_name=actual_type_name)
-            return problem(400, 'Bad Request', error_message)
-
-        if schema_type == 'array':
-            for item in data:
-                error = self.validate_schema(item, schema.get('items'))
-                if error:
-                    return error
-        elif schema_type == 'object':
-            # verify if required keys are present
-            required_keys = schema.get('required', [])
-            logger.debug('... required keys: %s', required_keys)
-            log_extra['required_keys'] = required_keys
-            for required_key in schema.get('required', required_keys):
-                if required_key not in data:
-                    logger.debug("Missing parameter '%s'", required_key, extra=log_extra)
-                    return problem(400, 'Bad Request', "Missing parameter '{}'".format(required_key))
-
-            # verify if value types are correct
-            for key in data.keys():
-                key_properties = schema.get('properties', {}).get(key)
-                if key_properties:
-                    error = self.validate_schema(data[key], key_properties)
-                    if error:
-                        return error
-        else:
-            for func in VALIDATORS:
-                error = func(schema, data)
-                if error:
-                    return problem(400, 'Bad Request', error)
+        return None
 
 
 class ParameterValidator():
