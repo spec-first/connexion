@@ -5,42 +5,8 @@ import pytest
 from mock import MagicMock
 
 from connexion.problem import problem
-from connexion.decorators.validation import validate_pattern, validate_minimum, validate_maximum, ParameterValidator
-from connexion.decorators.validation import validate_min_length
-from connexion.decorators.validation import validate_max_length
 
-def test_validate_pattern():
-    assert validate_pattern({}, '') is None
-    assert validate_pattern({'pattern': 'a'}, 'a') is None
-    assert validate_pattern({'pattern': 'a'}, 'b') == 'Invalid value, pattern "a" does not match'
-
-
-def test_validate_minimum():
-    assert validate_minimum({}, 1) is None
-    assert validate_minimum({'minimum': 1}, 1) is None
-    assert validate_minimum({'minimum': 1.1}, 1) == 'Invalid value, must be at least 1.1'
-
-
-def test_validate_maximum():
-    assert validate_maximum({}, 1) is None
-    assert validate_maximum({'maximum': 1}, 1) is None
-    assert validate_maximum({'maximum': 0}, 1) == 'Invalid value, must be at most 0'
-
-
-def test_validate_min_length():
-    assert validate_min_length({}, []) is None
-    assert validate_min_length({}, [1,]) is None
-    assert validate_min_length({"minLength": 1}, [1,]) is None
-    assert validate_min_length({"minLength": 2}, [1, 2,]) is None
-    assert validate_min_length({"minLength": 3}, [1, 2,]) == 'Length must be at least 3'
-
-
-def test_validate_max_length():
-    assert validate_max_length({}, []) is None
-    assert validate_max_length({}, [1,]) is None
-    assert validate_max_length({"maxLength": 2}, [1,]) is None
-    assert validate_max_length({"maxLength": 2}, [1, 2,]) is None
-    assert validate_max_length({"maxLength": 3}, [1, 2, 3, 4]) == 'Length must be at most 3'
+from connexion.decorators.validation import ParameterValidator
 
 
 def test_parameter_validator(monkeypatch):
@@ -70,20 +36,20 @@ def test_parameter_validator(monkeypatch):
     assert handler(p1='1.2') == "Wrong type, expected 'integer' for path parameter 'p1'"
 
     request.args = {'q1': '4'}
-    assert handler(p1=1) == 'Invalid value, must be at most 3'
+    assert handler(p1=1).startswith('4 is greater than the maximum of 3')
     request.args = {'q1': '3'}
     assert handler(p1=1) == 'OK'
 
-    request.args = {'a1': '1,2'}
+    request.args = {'a1': "1,2"}
     assert handler(p1=1) == "OK"
-    request.args = {'a1': '1,a'}
-    assert handler(p1=1) == "Wrong type, expected 'integer' for query parameter 'a1'"
-    request.args = {'a1': '1,-1'}
-    assert handler(p1=1) == "Invalid value, must be at least 0"
+    request.args = {'a1': "1,a"}
+    assert handler(p1=1).startswith("'a' is not of type 'integer'")
+    request.args = {'a1': "1,-1"}
+    assert handler(p1=1).startswith("-1 is less than the minimum of 0")
     del request.args['a1']
 
     request.headers = {'h1': 'a'}
     assert handler(p1='123') == 'OK'
 
     request.headers = {'h1': 'x'}
-    assert handler(p1='123') == "Enum value must be one of ['a', 'b']"
+    assert handler(p1='123').startswith("'x' is not one of ['a', 'b']")

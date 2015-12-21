@@ -1,3 +1,4 @@
+jsonschema
 flask
 PyYAML
 requests

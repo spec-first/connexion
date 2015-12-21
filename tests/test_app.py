@@ -299,7 +299,7 @@ def test_schema(app):
     assert empty_request.content_type == 'application/problem+json'
     empty_request_response = json.loads(empty_request.data.decode())  # type: dict
     assert empty_request_response['title'] == 'Bad Request'
-    assert empty_request_response['detail'] == "Missing parameter 'image_version'"
+    assert empty_request_response['detail'].startswith("'image_version' is a required property")
 
     bad_type = app_client.post('/v1.0/test_schema', headers=headers,
                                data=json.dumps({'image_version': 22}))  # type: flask.Response
@@ -307,7 +307,7 @@ def test_schema(app):
     assert bad_type.content_type == 'application/problem+json'
     bad_type_response = json.loads(bad_type.data.decode())  # type: dict
     assert bad_type_response['title'] == 'Bad Request'
-    assert bad_type_response['detail'] == "Wrong type, expected 'string' got 'int'"
+    assert bad_type_response['detail'].startswith("22 is not of type 'string'")
 
     good_request = app_client.post('/v1.0/test_schema', headers=headers,
                                    data=json.dumps({'image_version': 'version'}))  # type: flask.Response
@@ -327,7 +327,7 @@ def test_schema(app):
     assert wrong_type.content_type == 'application/problem+json'
     wrong_type_response = json.loads(wrong_type.data.decode())  # type: dict
     assert wrong_type_response['title'] == 'Bad Request'
-    assert wrong_type_response['detail'] == "Wrong type, expected 'object' got 'int'"
+    assert wrong_type_response['detail'].startswith("42 is not of type 'object'")
 
 
 def test_schema_response(app):
@@ -390,7 +390,7 @@ def test_schema_list(app):
     assert wrong_type.content_type == 'application/problem+json'
     wrong_type_response = json.loads(wrong_type.data.decode())  # type: dict
     assert wrong_type_response['title'] == 'Bad Request'
-    assert wrong_type_response['detail'] == "Wrong type, expected 'array' got 'int'"
+    assert wrong_type_response['detail'].startswith("42 is not of type 'array'")
 
     wrong_items = app_client.post('/v1.0/test_schema_list', headers=headers,
                                   data=json.dumps([42]))  # type: flask.Response
@@ -398,7 +398,7 @@ def test_schema_list(app):
     assert wrong_items.content_type == 'application/problem+json'
     wrong_items_response = json.loads(wrong_items.data.decode())  # type: dict
     assert wrong_items_response['title'] == 'Bad Request'
-    assert wrong_items_response['detail'] == "Wrong type, expected 'string' got 'int'"
+    assert wrong_items_response['detail'].startswith("42 is not of type 'string'")
 
 
 def test_schema_format(app):
@@ -411,7 +411,7 @@ def test_schema_format(app):
     assert wrong_type.content_type == 'application/problem+json'
     wrong_type_response = json.loads(wrong_type.data.decode())  # type: dict
     assert wrong_type_response['title'] == 'Bad Request'
-    assert wrong_type_response['detail'] == "Invalid value, expected string in 'date-time' format"
+    assert "'xy' is not a 'date-time'" in wrong_type_response['detail']
 
 
 def test_single_route(app):
@@ -443,11 +443,6 @@ def test_parameter_validation(app):
     app_client = app.app.test_client()
 
     url = '/v1.0/test_parameter_validation'
-
-    for invalid_date in '', 'foo', '2015-01-01T12:00:00Z':
-        response = app_client.get(url, query_string={'date': invalid_date})  # type: flask.Response
-        assert response.status_code == 400
-        assert response.content_type == 'application/problem+json'
 
     response = app_client.get(url, query_string={'date': '2015-08-26'})  # type: flask.Response
     assert response.status_code == 200
@@ -549,4 +544,3 @@ def test_path_parameter_somefloat(app):
     # non-float values will not match Flask route
     resp = app_client.get('/v1.0/test-float-path/123,45')  # type: flask.Response
     assert resp.status_code == 404
-
