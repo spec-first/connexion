@@ -1,6 +1,8 @@
 import pathlib
 import pytest
 import types
+import jsonschema
+from connexion.decorators.validation import TypeValidationError
 from connexion.exceptions import InvalidSpecification
 from connexion.operation import Operation
 from connexion.decorators.security import security_passthrough, verify_oauth
@@ -98,6 +100,67 @@ OPERATION4 = {'operationId': 'fakeapi.hello.post_greeting',
 
 OPERATION5 = {'operationId': 'fakeapi.hello.post_greeting',
               'parameters': [{'$ref': '/parameters/fail'}]}
+
+OPERATION6 = {'description': 'Adds a new stack to be created by lizzy and returns the '
+                             'information needed to keep track of deployment',
+              'operationId': 'fakeapi.hello.post_greeting',
+              'parameters': [
+                  {
+                      'in': 'body',
+                      'name': 'new_stack',
+                      'required': True,
+                      'schema': {'$ref': '#/notdefinitions/new_stack'}
+                  },
+                  {
+                      'in': 'query',
+                      'name': 'stack_version',
+                      'default': 'one',
+                      'type': 'number'
+                  }
+              ],
+              'responses': {201: {'description': 'Stack to be created. The '
+                                                 'CloudFormation Stack creation can '
+                                                 "still fail if it's rejected by senza "
+                                                 'or AWS CF.',
+                                  'schema': {'$ref': '#/definitions/stack'}},
+                            400: {'description': 'Stack was not created because request '
+                                                 'was invalid',
+                                  'schema': {'$ref': '#/definitions/problem'}},
+                            401: {'description': 'Stack was not created because the '
+                                                 'access token was not provided or was '
+                                                 'not valid for this operation',
+                                  'schema': {'$ref': '#/definitions/problem'}}},
+              'security': [{'oauth': ['uid']}],
+              'summary': 'Create new stack'}
+
+OPERATION7 = {
+    'description': 'Adds a new stack to be created by lizzy and returns the '
+                   'information needed to keep track of deployment',
+    'operationId': 'fakeapi.hello.post_greeting',
+    'parameters': [
+        {
+            'in': 'body',
+            'name': 'new_stack',
+            'required': True,
+            'type': 'integer',
+            'default': 'stack'
+        }
+    ],
+    'responses': {201: {'description': 'Stack to be created. The '
+                                       'CloudFormation Stack creation can '
+                                       "still fail if it's rejected by senza "
+                                       'or AWS CF.',
+                        'schema': {'$ref': '#/definitions/stack'}},
+                  400: {'description': 'Stack was not created because request '
+                                       'was invalid',
+                        'schema': {'$ref': '#/definitions/problem'}},
+                  401: {'description': 'Stack was not created because the '
+                                       'access token was not provided or was '
+                                       'not valid for this operation',
+                        'schema': {'$ref': '#/definitions/problem'}}},
+    'security': [{'oauth': ['uid']}],
+    'summary': 'Create new stack'
+}
 
 SECURITY_DEFINITIONS = {'oauth': {'type': 'oauth2',
                                   'flow': 'password',
@@ -226,4 +289,51 @@ def test_resolve_invalid_reference():
     exception = exc_info.value  # type: InvalidSpecification
     assert exception.reason == "GET endpoint  '$ref' needs to start with '#/'"
 
+DEFAULT_OPERATION = {
+    'operationId': 'fakeapi.hello.post_greeting',
+    'parameters': [
+        {
+            'type': 'object',
+            'in': 'body',
+            'name': 'new_stack',
+            'default': {'keep_stack': 1, 'image_version': 1, 'senza_yaml': 'senza.yaml',
+                        'new_traffic': 100},
+            'schema': {'$ref': '#/definitions/new_stack'}
+        }
+    ],
+    'responses': {},
+    'security': [{'oauth': ['uid']}],
+    'summary': 'Create new stack'
+}
 
+def test_bad_default():
+    with pytest.raises(TypeValidationError) as exc_info:
+        operation = Operation(method='GET', path='endpoint', operation=OPERATION6, app_produces=['application/json'],
+                  app_security=[], security_definitions={}, definitions={}, parameter_definitions=PARAMETER_DEFINITIONS,
+                  resolver=Resolver())
+    exception = exc_info.value
+
+    with pytest.raises(jsonschema.ValidationError) as exc_info:
+        operation = Operation(method='GET', path='endpoint', operation=OPERATION7, app_produces=['application/json'],
+                  app_security=[], security_definitions={}, definitions=DEFINITIONS, parameter_definitions={},
+                  resolver=Resolver())
+
+    with pytest.raises(jsonschema.ValidationError) as exc_info:
+        Operation(
+                method='GET', path='endpoint', operation=DEFAULT_OPERATION, app_produces=['application/json'],
+                app_security=[], security_definitions={}, definitions=DEFINITIONS, parameter_definitions={},
+                resolver=Resolver()
+        )
+
+
+def test_default():
+    op = OPERATION6
+    op['parameters'][1]['default'] = 1
+    operation = Operation(method='GET', path='endpoint', operation=op, app_produces=['application/json'],
+                  app_security=[], security_definitions={}, definitions={}, parameter_definitions=PARAMETER_DEFINITIONS,
+                  resolver=Resolver())
+
+    op = DEFAULT_OPERATION.copy()
+    op['parameters'][0]['default'] = {
+        'keep_stack': 1, 'image_version': 'one', 'senza_yaml': 'senza.yaml', 'new_traffic': 100
+    }

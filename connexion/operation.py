@@ -14,12 +14,16 @@ Unless required by applicable law or agreed to in writing, software distributed 
 import functools
 import logging
 import os
+
+import jsonschema
+
+from .decorators import validation
+from .decorators.metrics import UWSGIMetricsCollector
 from .decorators.parameter import parameter_to_arg
 from .decorators.produces import BaseSerializer, Produces, Jsonifier
+from .decorators.response import ResponseValidator
 from .decorators.security import security_passthrough, verify_oauth
 from .decorators.validation import RequestBodyValidator, ParameterValidator
-from .decorators.metrics import UWSGIMetricsCollector
-from .decorators.response import ResponseValidator
 from .exceptions import InvalidSpecification
 from .utils import flaskify_endpoint, produces_json
 
@@ -86,6 +90,23 @@ class Operation:
         self.operation_id = resolution.operation_id
         self.endpoint_name = flaskify_endpoint(self.operation_id)
         self.__undecorated_function = resolution.function
+        self.validate_defaults()
+
+    def validate_defaults(self):
+        print('In validate_defaults')
+        print(self.parameters)
+        for param in self.parameters:
+            if param['in'] == 'body' and 'default' in param:
+                if 'required' in param:
+                    del param['required']
+                if param['type'] == 'object':
+                    jsonschema.validate(param['default'], self.body_schema,
+                                        format_checker=jsonschema.draft4_format_checker)
+                else:
+                    jsonschema.validate(param['default'], param, format_checker=jsonschema.draft4_format_checker)
+            elif param['in'] == 'query' and 'default' in param:
+                print('Now validation Query Param')
+                validation.validate_type(param, param['default'], 'query', param['name'])
 
     def resolve_reference(self, schema):
         schema = schema.copy()  # avoid changing the original schema

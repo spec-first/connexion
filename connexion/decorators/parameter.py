@@ -50,11 +50,12 @@ def parameter_to_arg(parameters, function):
     Pass query and body parameters as keyword arguments to handler function.
 
     See (https://github.com/zalando/connexion/issues/59)
-    :type body_schema: dict|None
+    :type parameters: dict|None
     :type parameters: dict|None
     """
     body_parameters = [parameter for parameter in parameters if parameter['in'] == 'body'] or [{}]
     body_name = body_parameters[0].get('name')
+    default_body = body_parameters[0].get('default')
     query_types = {parameter['name']: parameter
                    for parameter in parameters if parameter['in'] == 'query'}  # type: dict[str, str]
     arguments = get_function_arguments(function)
@@ -66,7 +67,7 @@ def parameter_to_arg(parameters, function):
         try:
             request_body = flask.request.json
         except exceptions.BadRequest:
-            request_body = None
+            request_body = default_body
 
         # Add body parameters
         if request_body is not None:
@@ -84,7 +85,7 @@ def parameter_to_arg(parameters, function):
                 logger.debug("Query Parameter '%s' in function arguments", key)
                 query_param = query_types[key]
                 logger.debug('%s is a %s', key, query_param)
-                kwargs[key] = get_val_from_param(value, query_param)
+                kwargs[key] = get_val_from_param(value, query_param) or query_param.get('default')
 
         return function(*args, **kwargs)
 
