@@ -162,6 +162,23 @@ OPERATION7 = {
     'summary': 'Create new stack'
 }
 
+OPERATION8 = {
+    'operationId': 'fakeapi.hello.schema',
+    'parameters': [
+        {
+            'type': 'object',
+            'in': 'body',
+            'name': 'new_stack',
+            'default': {'keep_stack': 1, 'image_version': 1, 'senza_yaml': 'senza.yaml',
+                        'new_traffic': 100},
+            'schema': {'$ref': '#/definitions/new_stack'}
+        }
+    ],
+    'responses': {},
+    'security': [{'oauth': ['uid']}],
+    'summary': 'Create new stack'
+}
+
 SECURITY_DEFINITIONS = {'oauth': {'type': 'oauth2',
                                   'flow': 'password',
                                   'x-tokenInfoUrl': 'https://ouath.example/token_info',
@@ -289,51 +306,48 @@ def test_resolve_invalid_reference():
     exception = exc_info.value  # type: InvalidSpecification
     assert exception.reason == "GET endpoint  '$ref' needs to start with '#/'"
 
-DEFAULT_OPERATION = {
-    'operationId': 'fakeapi.hello.post_greeting',
-    'parameters': [
-        {
-            'type': 'object',
-            'in': 'body',
-            'name': 'new_stack',
-            'default': {'keep_stack': 1, 'image_version': 1, 'senza_yaml': 'senza.yaml',
-                        'new_traffic': 100},
-            'schema': {'$ref': '#/definitions/new_stack'}
-        }
-    ],
-    'responses': {},
-    'security': [{'oauth': ['uid']}],
-    'summary': 'Create new stack'
-}
-
 def test_bad_default():
-    with pytest.raises(TypeValidationError) as exc_info:
-        operation = Operation(method='GET', path='endpoint', operation=OPERATION6, app_produces=['application/json'],
+    with pytest.raises(InvalidSpecification) as exc_info:
+        Operation(method='GET', path='endpoint', operation=OPERATION6, app_produces=['application/json'],
                   app_security=[], security_definitions={}, definitions={}, parameter_definitions=PARAMETER_DEFINITIONS,
                   resolver=Resolver())
     exception = exc_info.value
+    assert str(exception) == "<InvalidSpecification: The parameter 'stack_version' has a default value which " \
+                             "is not of type 'number'>"
+    assert repr(exception) == "<InvalidSpecification: The parameter 'stack_version' has a default value which " \
+                              "is not of type 'number'>"
 
-    with pytest.raises(jsonschema.ValidationError) as exc_info:
-        operation = Operation(method='GET', path='endpoint', operation=OPERATION7, app_produces=['application/json'],
+    with pytest.raises(InvalidSpecification) as exc_info:
+        Operation(method='GET', path='endpoint', operation=OPERATION7, app_produces=['application/json'],
                   app_security=[], security_definitions={}, definitions=DEFINITIONS, parameter_definitions={},
                   resolver=Resolver())
+    exception = exc_info.value
+    assert str(exception) == "<InvalidSpecification: The parameter 'new_stack' has a default value which " \
+                             "is not of type 'integer'>"
+    assert repr(exception) == "<InvalidSpecification: The parameter 'new_stack' has a default value which " \
+                              "is not of type 'integer'>"
 
-    with pytest.raises(jsonschema.ValidationError) as exc_info:
+    with pytest.raises(InvalidSpecification) as exc_info:
         Operation(
-                method='GET', path='endpoint', operation=DEFAULT_OPERATION, app_produces=['application/json'],
+                method='GET', path='endpoint', operation=OPERATION8, app_produces=['application/json'],
                 app_security=[], security_definitions={}, definitions=DEFINITIONS, parameter_definitions={},
                 resolver=Resolver()
         )
+    exception = exc_info.value
+    assert str(exception) == "<InvalidSpecification: The parameter 'new_stack' has a default value which " \
+                             "is not of type 'object'>"
+    assert repr(exception) == "<InvalidSpecification: The parameter 'new_stack' has a default value which " \
+                              "is not of type 'object'>"
 
 
 def test_default():
-    op = OPERATION6
+    op = OPERATION6.copy()
     op['parameters'][1]['default'] = 1
-    operation = Operation(method='GET', path='endpoint', operation=op, app_produces=['application/json'],
-                  app_security=[], security_definitions={}, definitions={}, parameter_definitions=PARAMETER_DEFINITIONS,
-                  resolver=Resolver())
+    Operation(method='GET', path='endpoint', operation=op, app_produces=['application/json'],
+              app_security=[], security_definitions={}, definitions={}, parameter_definitions=PARAMETER_DEFINITIONS,
+              resolver=Resolver())
 
-    op = DEFAULT_OPERATION.copy()
+    op = OPERATION8.copy()
     op['parameters'][0]['default'] = {
         'keep_stack': 1, 'image_version': 'one', 'senza_yaml': 'senza.yaml', 'new_traffic': 100
     }

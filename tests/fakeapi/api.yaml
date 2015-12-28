@@ -571,6 +571,41 @@ paths:
         - name: somefloat
           in: path
           type: number
+
+
+  /test-default-query-parameter:
+    get:
+      summary: Test if default parameter is passed to function
+      operationId: fakeapi.hello.test_default_param
+      parameters:
+        - name: name
+          in: query
+          type: string
+          default: connexion
+
+  /test-default-object-body:
+    post:
+      summary: Test if default object body param is passed to handler.
+      operationId: fakeapi.hello.test_default_object_body
+      parameters:
+        - name: stack
+          type: object
+          in: body
+          default:
+            'image_version': 'default_image'
+          schema:
+            $ref: '#/definitions/new_stack'
+
+  /test-default-integer-body:
+    post:
+      summary: Test if default integer body param is passed to handler.
+      operationId: fakeapi.hello.test_default_integer_body
+      parameters:
+        - name: stack_version
+          type: integer
+          in: body
+          default: 1
+
 definitions:
   new_stack:
     type: object

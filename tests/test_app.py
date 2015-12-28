@@ -544,3 +544,25 @@ def test_path_parameter_somefloat(app):
     # non-float values will not match Flask route
     resp = app_client.get('/v1.0/test-float-path/123,45')  # type: flask.Response
     assert resp.status_code == 404
+
+
+def test_default_param(app):
+    app_client = app.app.test_client()
+    resp = app_client.get('/v1.0/test-default-query-parameter')
+    assert resp.status_code == 200
+    response = json.loads(resp.data.decode())
+    assert response['app_name'] == 'connexion'
+
+
+def test_default_object_body(app):
+    app_client = app.app.test_client()
+    resp = app_client.post('/v1.0/test-default-object-body')
+    assert resp.status_code == 200
+    response = json.loads(resp.data.decode())
+    assert response['stack'] == {'image_version': 'default_image'}
+
+    resp = app_client.post('/v1.0/test-default-integer-body')
+    assert resp.status_code == 200
+    response = json.loads(resp.data.decode())
+    assert response == 1
+

@@ -16,6 +16,7 @@ import logging
 import os
 
 import jsonschema
+from jsonschema import ValidationError
 
 from .decorators import validation
 from .decorators.metrics import UWSGIMetricsCollector
@@ -23,7 +24,7 @@ from .decorators.parameter import parameter_to_arg
 from .decorators.produces import BaseSerializer, Produces, Jsonifier
 from .decorators.response import ResponseValidator
 from .decorators.security import security_passthrough, verify_oauth
-from .decorators.validation import RequestBodyValidator, ParameterValidator
+from .decorators.validation import RequestBodyValidator, ParameterValidator, TypeValidationError
 from .exceptions import InvalidSpecification
 from .utils import flaskify_endpoint, produces_json
 
@@ -90,23 +91,34 @@ class Operation:
         self.operation_id = resolution.operation_id
         self.endpoint_name = flaskify_endpoint(self.operation_id)
         self.__undecorated_function = resolution.function
+
+        for param in self.parameters:
+            if param['in'] == 'body' and 'default' in param:
+                self.default_body = param
+                break
+        else:
+            self.default_body = None
+
         self.validate_defaults()
 
     def validate_defaults(self):
-        print('In validate_defaults')
-        print(self.parameters)
         for param in self.parameters:
-            if param['in'] == 'body' and 'default' in param:
-                if 'required' in param:
-                    del param['required']
-                if param['type'] == 'object':
-                    jsonschema.validate(param['default'], self.body_schema,
-                                        format_checker=jsonschema.draft4_format_checker)
-                else:
-                    jsonschema.validate(param['default'], param, format_checker=jsonschema.draft4_format_checker)
-            elif param['in'] == 'query' and 'default' in param:
-                print('Now validation Query Param')
-                validation.validate_type(param, param['default'], 'query', param['name'])
+            try:
+                if param['in'] == 'body' and 'default' in param:
+                    param = param.copy()
+                    if 'required' in param:
+                        del param['required']
+                    if param['type'] == 'object':
+                        jsonschema.validate(param['default'], self.body_schema,
+                                            format_checker=jsonschema.draft4_format_checker)
+                    else:
+                        jsonschema.validate(param['default'], param, format_checker=jsonschema.draft4_format_checker)
+                elif param['in'] == 'query' and 'default' in param:
+                    validation.validate_type(param, param['default'], 'query', param['name'])
+            except (TypeValidationError, ValidationError):
+                raise InvalidSpecification('The parameter \'{param_name}\' has a default value which is not of'
+                                           ' type \'{param_type}\''.format(param_name=param['name'],
+                                                                           param_type=param['type']))
 
     def resolve_reference(self, schema):
         schema = schema.copy()  # avoid changing the original schema
@@ -314,7 +326,7 @@ class Operation:
         if self.parameters:
             yield ParameterValidator(self.parameters)
         if self.body_schema:
-            yield RequestBodyValidator(self.body_schema)
+            yield RequestBodyValidator(self.body_schema, self.default_body is not None)
 
     @property
     def __response_validation_decorator(self):

@@ -59,6 +59,8 @@ def parameter_to_arg(parameters, function):
     query_types = {parameter['name']: parameter
                    for parameter in parameters if parameter['in'] == 'query'}  # type: dict[str, str]
     arguments = get_function_arguments(function)
+    default_query_params = {param['name']: param['default'] for param in parameters if param['in'] == 'query'
+                            and 'default' in param}
 
     @functools.wraps(function)
     def wrapper(*args, **kwargs):
@@ -67,6 +69,9 @@ def parameter_to_arg(parameters, function):
         try:
             request_body = flask.request.json
         except exceptions.BadRequest:
+            request_body = None
+
+        if default_body and not request_body:
             request_body = default_body
 
         # Add body parameters
@@ -78,7 +83,7 @@ def parameter_to_arg(parameters, function):
                 kwargs[body_name] = request_body
 
         # Add query parameters
-        for key, value in flask.request.args.items():
+        for key, value in list(flask.request.args.items()) + list(default_query_params.items()):
             if key not in arguments:
                 logger.debug("Query Parameter '%s' not in function arguments", key)
             else:
