@@ -131,9 +131,9 @@ def boolean(s):
     >>> boolean('false')
     False
     '''
-    if s == 'true':
+    if s in ['true', 'True']:
         return True
-    elif s == 'false':
+    elif s in ['false', 'False']:
         return False
     else:
         raise ValueError('Invalid boolean value')

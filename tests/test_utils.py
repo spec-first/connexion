@@ -33,4 +33,9 @@ def test_get_function_from_name_for_class_method():
 
 def test_boolean():
     assert utils.boolean('true')
+    assert utils.boolean('True')
     assert not utils.boolean('false')
+    assert not utils.boolean('False')
+
+    with pytest.raises(ValueError):
+        utils.boolean('foo')
