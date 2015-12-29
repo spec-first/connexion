@@ -1,11 +1,11 @@
 import pathlib
-import pytest
 import types
-import jsonschema
-from connexion.decorators.validation import TypeValidationError
+
+import pytest
+
+from connexion.decorators.security import security_passthrough, verify_oauth
 from connexion.exceptions import InvalidSpecification
 from connexion.operation import Operation
-from connexion.decorators.security import security_passthrough, verify_oauth
 from connexion.resolver import Resolver
 
 TEST_FOLDER = pathlib.Path(__file__).parent
@@ -109,7 +109,7 @@ OPERATION6 = {'description': 'Adds a new stack to be created by lizzy and return
                       'in': 'body',
                       'name': 'new_stack',
                       'required': True,
-                      'schema': {'$ref': '#/notdefinitions/new_stack'}
+                      'schema': {'$ref': '#/definitions/new_stack'}
                   },
                   {
                       'in': 'query',
@@ -130,7 +130,6 @@ OPERATION6 = {'description': 'Adds a new stack to be created by lizzy and return
                                                  'access token was not provided or was '
                                                  'not valid for this operation',
                                   'schema': {'$ref': '#/definitions/problem'}}},
-              'security': [{'oauth': ['uid']}],
               'summary': 'Create new stack'}
 
 OPERATION7 = {
@@ -306,6 +305,7 @@ def test_resolve_invalid_reference():
     exception = exc_info.value  # type: InvalidSpecification
     assert exception.reason == "GET endpoint  '$ref' needs to start with '#/'"
 
+
 def test_bad_default():
     with pytest.raises(InvalidSpecification) as exc_info:
         Operation(method='GET', path='endpoint', operation=OPERATION6, app_produces=['application/json'],
@@ -343,11 +343,13 @@ def test_bad_default():
 def test_default():
     op = OPERATION6.copy()
     op['parameters'][1]['default'] = 1
-    Operation(method='GET', path='endpoint', operation=op, app_produces=['application/json'],
-              app_security=[], security_definitions={}, definitions={}, parameter_definitions=PARAMETER_DEFINITIONS,
+    Operation(method='GET', path='endpoint', operation=op, app_produces=['application/json'], app_security=[],
+              security_definitions={}, definitions=DEFINITIONS, parameter_definitions=PARAMETER_DEFINITIONS,
               resolver=Resolver())
-
     op = OPERATION8.copy()
     op['parameters'][0]['default'] = {
-        'keep_stack': 1, 'image_version': 'one', 'senza_yaml': 'senza.yaml', 'new_traffic': 100
+        'keep_stacks': 1, 'image_version': 'one', 'senza_yaml': 'senza.yaml', 'new_traffic': 100
     }
+    Operation(method='POST', path='endpoint', operation=op, app_produces=['application/json'],
+              app_security=[], security_definitions={}, definitions=DEFINITIONS, parameter_definitions={},
+              resolver=Resolver())
