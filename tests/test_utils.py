@@ -41,3 +41,6 @@ def test_boolean():
 
     with pytest.raises(ValueError):
         utils.boolean('foo')
+
+    with pytest.raises(ValueError):
+        utils.boolean(None)
