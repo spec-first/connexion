@@ -454,7 +454,7 @@ def test_parameter_validation(app):
     response = app_client.get(url, query_string={'int': '123'})  # type: flask.Response
     assert response.status_code == 200
 
-    for invalid_bool in '', 'foo', 'yes', 'False':
+    for invalid_bool in '', 'foo', 'yes':
         response = app_client.get(url, query_string={'bool': invalid_bool})  # type: flask.Response
         assert response.status_code == 400
 
