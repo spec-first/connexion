@@ -108,7 +108,7 @@ class Operation:
             try:
                 # Get sub definition
                 definition = deepcopy(definitions[definition_name])
-                for prop, prop_spec in definition.get('properties', {}).iteritems():
+                for prop, prop_spec in definition.get('properties', {}).items():
                     resolved = self.resolve_reference(prop_spec.get('schema', {}))
                     if resolved == {}:
                         resolved = self.resolve_reference(prop_spec)
