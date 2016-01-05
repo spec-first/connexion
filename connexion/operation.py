@@ -11,6 +11,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
  language governing permissions and limitations under the License.
 """
 
+from copy import deepcopy
 import functools
 import logging
 import os
@@ -88,8 +89,10 @@ class Operation:
         self.__undecorated_function = resolution.function
 
     def resolve_reference(self, schema):
-        schema = schema.copy()  # avoid changing the original schema
+        schema = deepcopy(schema)  # avoid changing the original schema
         reference = schema.get('$ref')  # type: str
+        if not reference and 'items' in schema:
+            reference = schema['items'].get('$ref')
         if reference:
             if not reference.startswith('#/'):
                 raise InvalidSpecification(
@@ -103,11 +106,28 @@ class Operation:
                     "{method} {path}  '$ref' needs to point to definitions or parameters".format(**vars(self)))
             definition_name = path[-1]
             try:
-                schema.update(definitions[definition_name])
+                # Get sub definition
+                definition = deepcopy(definitions[definition_name])
+                for prop, prop_spec in definition.get('properties', {}).iteritems():
+                    resolved = self.resolve_reference(prop_spec.get('schema', {}))
+                    if resolved == {}:
+                        resolved = self.resolve_reference(prop_spec)
+
+                    if not resolved == {}:
+                        definition['properties'][prop] = resolved
+
+                # Update schema
+                if '$ref' in schema:
+                    schema.update(definition)
+                else:
+                    schema['items'].update(definition)
             except KeyError:
                 raise InvalidSpecification("{method} {path} Definition '{definition_name}' not found".format(
                     definition_name=definition_name, method=self.method, path=self.path))
-            del schema['$ref']
+            if '$ref' in schema:
+                del schema['$ref']
+            else:
+                del schema['items']['$ref']
         return schema
 
     def get_mimetype(self):
