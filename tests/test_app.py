@@ -566,3 +566,16 @@ def test_default_object_body(app):
     response = json.loads(resp.data.decode())
     assert response == 1
 
+
+def test_falsy_param(app):
+    app_client = app.app.test_client()
+    resp = app_client.get('/v1.0/test-falsy-param', query_string={'falsy': 0})
+    assert resp.status_code == 200
+    response = json.loads(resp.data.decode())
+    assert response == 0
+
+    resp = app_client.get('/v1.0/test-falsy-param')
+    assert resp.status_code == 200
+    response = json.loads(resp.data.decode())
+    assert response == 1
+

@@ -1,4 +1,5 @@
 import werkzeug.exceptions as exceptions
+import copy
 import flask
 import functools
 import inspect
@@ -50,8 +51,10 @@ def parameter_to_arg(parameters, function):
     Pass query and body parameters as keyword arguments to handler function.
 
     See (https://github.com/zalando/connexion/issues/59)
+    :param parameters: All the parameters of the handler functions
     :type parameters: dict|None
-    :type parameters: dict|None
+    :param function: The handler function for the REST endpoint.
+    :type function: function|None
     """
     body_parameters = [parameter for parameter in parameters if parameter['in'] == 'body'] or [{}]
     body_name = body_parameters[0].get('name')
@@ -83,14 +86,16 @@ def parameter_to_arg(parameters, function):
                 kwargs[body_name] = request_body
 
         # Add query parameters
-        for key, value in list(flask.request.args.items()) + list(default_query_params.items()):
+        query_arguments = copy.deepcopy(default_query_params)
+        query_arguments.update(flask.request.args.items())
+        for key, value in query_arguments.items():
             if key not in arguments:
                 logger.debug("Query Parameter '%s' not in function arguments", key)
             else:
                 logger.debug("Query Parameter '%s' in function arguments", key)
                 query_param = query_types[key]
                 logger.debug('%s is a %s', key, query_param)
-                kwargs[key] = get_val_from_param(value, query_param) or query_param.get('default')
+                kwargs[key] = get_val_from_param(value, query_param)
 
         return function(*args, **kwargs)
 

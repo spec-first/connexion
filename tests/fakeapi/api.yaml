@@ -606,6 +606,16 @@ paths:
           in: body
           default: 1
 
+  /test-falsy-param:
+    get:
+      summary: Test if default value when argument is falsy.
+      operationId: fakeapi.hello.test_falsy_param
+      parameters:
+        - name: falsy
+          type: integer
+          in: query
+          default: 1
+
 definitions:
   new_stack:
     type: object
