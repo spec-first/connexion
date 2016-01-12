@@ -123,9 +123,11 @@ class Operation:
 
     def resolve_reference(self, schema):
         schema = deepcopy(schema)  # avoid changing the original schema
-        reference = schema.get('$ref')  # type: str
-        if not reference and 'items' in schema:
-            reference = schema['items'].get('$ref')
+        # find the object we need to resolve/update
+        for obj in schema, schema.get('items'):
+            reference = obj and obj.get('$ref')  # type: str
+            if reference:
+                break
         if reference:
             if not reference.startswith('#/'):
                 raise InvalidSpecification(
@@ -141,26 +143,22 @@ class Operation:
             try:
                 # Get sub definition
                 definition = deepcopy(definitions[definition_name])
-                for prop, prop_spec in definition.get('properties', {}).items():
-                    resolved = self.resolve_reference(prop_spec.get('schema', {}))
-                    if resolved == {}:
-                        resolved = self.resolve_reference(prop_spec)
-
-                    if not resolved == {}:
-                        definition['properties'][prop] = resolved
-
-                # Update schema
-                if '$ref' in schema:
-                    schema.update(definition)
-                else:
-                    schema['items'].update(definition)
             except KeyError:
                 raise InvalidSpecification("{method} {path} Definition '{definition_name}' not found".format(
                     definition_name=definition_name, method=self.method, path=self.path))
-            if '$ref' in schema:
-                del schema['$ref']
-            else:
-                del schema['items']['$ref']
+
+            # resolve object properties too
+            for prop, prop_spec in definition.get('properties', {}).items():
+                resolved = self.resolve_reference(prop_spec.get('schema', {}))
+                if not resolved:
+                    resolved = self.resolve_reference(prop_spec)
+
+                if resolved:
+                    definition['properties'][prop] = resolved
+
+            # Update schema
+            obj.update(definition)
+            del obj['$ref']
         return schema
 
     def get_mimetype(self):
