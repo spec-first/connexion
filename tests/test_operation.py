@@ -1,3 +1,4 @@
+from copy import deepcopy
 import pathlib
 import types
 
@@ -22,7 +23,10 @@ DEFINITIONS = {'new_stack': {'required': ['image_version', 'keep_stacks', 'new_t
                                                            'description': 'YAML to provide to senza'},
                                             'new_traffic': {'type': 'integer',
                                                             'description':
-                                                                'Percentage of the traffic'}}}}
+                                                                'Percentage of the traffic'}}},
+               'composed': {'required': ['test'],
+                            'type': 'object',
+                            'properties': {'test': {'schema': {'$ref': '#/definitions/new_stack'}}}}}
 PARAMETER_DEFINITIONS = {'myparam': {'in': 'path', 'type': 'integer'}}
 
 OPERATION1 = {'description': 'Adds a new stack to be created by lizzy and returns the '
@@ -178,6 +182,50 @@ OPERATION8 = {
     'summary': 'Create new stack'
 }
 
+OPERATION9 = {'description': 'Adds a new stack to be created by lizzy and returns the '
+                             'information needed to keep track of deployment',
+              'operationId': 'fakeapi.hello.post_greeting',
+              'parameters': [{'in': 'body',
+                              'name': 'new_stack',
+                              'required': True,
+                              'schema': {'type': 'array', 'items': {'$ref': '#/definitions/new_stack'}}}],
+              'responses': {201: {'description': 'Stack to be created. The '
+                                                 'CloudFormation Stack creation can '
+                                                 "still fail if it's rejected by senza "
+                                                 'or AWS CF.',
+                                  'schema': {'$ref': '#/definitions/stack'}},
+                            400: {'description': 'Stack was not created because request '
+                                                 'was invalid',
+                                  'schema': {'$ref': '#/definitions/problem'}},
+                            401: {'description': 'Stack was not created because the '
+                                                 'access token was not provided or was '
+                                                 'not valid for this operation',
+                                  'schema': {'$ref': '#/definitions/problem'}}},
+              'security': [{'oauth': ['uid']}],
+              'summary': 'Create new stack'}
+
+OPERATION10 = {'description': 'Adds a new stack to be created by lizzy and returns the '
+                              'information needed to keep track of deployment',
+               'operationId': 'fakeapi.hello.post_greeting',
+               'parameters': [{'in': 'body',
+                               'name': 'test',
+                               'required': True,
+                               'schema': {'$ref': '#/definitions/composed'}}],
+               'responses': {201: {'description': 'Stack to be created. The '
+                                                  'CloudFormation Stack creation can '
+                                                  "still fail if it's rejected by senza "
+                                                  'or AWS CF.',
+                                   'schema': {'$ref': '#/definitions/stack'}},
+                             400: {'description': 'Stack was not created because request '
+                                                  'was invalid',
+                                   'schema': {'$ref': '#/definitions/problem'}},
+                             401: {'description': 'Stack was not created because the '
+                                                  'access token was not provided or was '
+                                                  'not valid for this operation',
+                                   'schema': {'$ref': '#/definitions/problem'}}},
+               'security': [{'oauth': ['uid']}],
+               'summary': 'Create new stack'}
+
 SECURITY_DEFINITIONS = {'oauth': {'type': 'oauth2',
                                   'flow': 'password',
                                   'x-tokenInfoUrl': 'https://ouath.example/token_info',
@@ -208,6 +256,52 @@ def test_operation():
     assert operation.produces == ['application/json']
     assert operation.security == [{'oauth': ['uid']}]
     assert operation.body_schema == DEFINITIONS['new_stack']
+
+
+def test_operation_array():
+    operation = Operation(method='GET',
+                          path='endpoint',
+                          operation=OPERATION9,
+                          app_produces=['application/json'],
+                          app_security=[],
+                          security_definitions=SECURITY_DEFINITIONS,
+                          definitions=DEFINITIONS,
+                          parameter_definitions=PARAMETER_DEFINITIONS,
+                          resolver=Resolver())
+    assert isinstance(operation.function, types.FunctionType)
+    # security decorator should be a partial with verify_oauth as the function and token url and scopes as arguments.
+    # See https://docs.python.org/2/library/functools.html#partial-objects
+    assert operation._Operation__security_decorator.func is verify_oauth
+    assert operation._Operation__security_decorator.args == ('https://ouath.example/token_info', set(['uid']))
+
+    assert operation.method == 'GET'
+    assert operation.produces == ['application/json']
+    assert operation.security == [{'oauth': ['uid']}]
+    assert operation.body_schema == {'type': 'array', 'items': DEFINITIONS['new_stack']}
+
+
+def test_operation_composed_definition():
+    operation = Operation(method='GET',
+                          path='endpoint',
+                          operation=OPERATION10,
+                          app_produces=['application/json'],
+                          app_security=[],
+                          security_definitions=SECURITY_DEFINITIONS,
+                          definitions=DEFINITIONS,
+                          parameter_definitions=PARAMETER_DEFINITIONS,
+                          resolver=Resolver())
+    assert isinstance(operation.function, types.FunctionType)
+    # security decorator should be a partial with verify_oauth as the function and token url and scopes as arguments.
+    # See https://docs.python.org/2/library/functools.html#partial-objects
+    assert operation._Operation__security_decorator.func is verify_oauth
+    assert operation._Operation__security_decorator.args == ('https://ouath.example/token_info', set(['uid']))
+
+    assert operation.method == 'GET'
+    assert operation.produces == ['application/json']
+    assert operation.security == [{'oauth': ['uid']}]
+    definition = deepcopy(DEFINITIONS['composed'])
+    definition['properties']['test'] = DEFINITIONS['new_stack']
+    assert operation.body_schema == definition
 
 
 def test_non_existent_reference():
