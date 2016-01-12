@@ -1,12 +1,9 @@
 import pathlib
-import flask
 import json
-import pytest
-import requests
 import logging
+import pytest
 import _pytest.monkeypatch
 from connexion.app import App
-from connexion import NoContent
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -578,4 +575,3 @@ def test_falsy_param(app):
     assert resp.status_code == 200
     response = json.loads(resp.data.decode())
     assert response == 1
-

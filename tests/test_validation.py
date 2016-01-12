@@ -1,10 +1,7 @@
-import flask
 import json
 import pytest
 # we are using "mock" module here for Py 2.7 support
 from mock import MagicMock
-
-from connexion.problem import problem
 
 from connexion.decorators.validation import ParameterValidator
 

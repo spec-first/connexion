@@ -9,6 +9,7 @@ try:
     import uwsgi_metrics
     HAS_UWSGI_METRICS = True
 except ImportError:
+    uwsgi_metrics = None
     HAS_UWSGI_METRICS = False
 
 
