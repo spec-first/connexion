@@ -22,4 +22,4 @@ from .decorators.produces import NoContent
 import werkzeug.exceptions as exceptions
 from .resolver import *
 
-__version__ = '1.0.29'
+__version__ = '1.0.33'

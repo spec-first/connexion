@@ -76,6 +76,8 @@ setup(
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
         'Operating System :: OS Independent',
+        'Topic :: Internet :: WWW/HTTP :: WSGI :: Application',
+        'Topic :: Software Development :: Libraries :: Application Frameworks'
     ],
     include_package_data=True,  # needed to include swagger-ui (see MANIFEST.in)
 
