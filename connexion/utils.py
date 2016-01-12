@@ -131,9 +131,11 @@ def boolean(s):
     >>> boolean('false')
     False
     '''
-    if s == 'true':
+    if not hasattr(s, 'lower'):
+        raise ValueError('Invalid boolean value')
+    elif s.lower() == 'true':
         return True
-    elif s == 'false':
+    elif s.lower() == 'false':
         return False
     else:
         raise ValueError('Invalid boolean value')

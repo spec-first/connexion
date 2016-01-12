@@ -202,3 +202,19 @@ def test_get_someint(someint):
 
 def test_get_somefloat(somefloat):
     return type(somefloat).__name__
+
+
+def test_default_param(name):
+    return {"app_name": name}
+
+
+def test_default_object_body(stack):
+    return {"stack": stack}
+
+
+def test_default_integer_body(stack_version):
+    return stack_version
+
+
+def test_falsy_param(falsy):
+    return falsy

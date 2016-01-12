@@ -80,8 +80,13 @@ def validate_type(param, value, parameter_type, parameter_name=None):
 
 
 class RequestBodyValidator:
-    def __init__(self, schema):
+    def __init__(self, schema, has_default=False):
+        """
+        :param schema: The schema of the request body
+        :param has_default: Flag to indicate if default value is present.
+        """
         self.schema = schema
+        self.has_default = has_default
 
     def __call__(self, function):
         """
@@ -95,7 +100,7 @@ class RequestBodyValidator:
 
             logger.debug("%s validating schema...", flask.request.url)
             error = self.validate_schema(data, self.schema)
-            if error:
+            if error and not self.has_default:
                 return error
 
             response = function(*args, **kwargs)

@@ -1,4 +1,5 @@
 import werkzeug.exceptions as exceptions
+import copy
 import flask
 import functools
 import inspect
@@ -50,14 +51,19 @@ def parameter_to_arg(parameters, function):
     Pass query and body parameters as keyword arguments to handler function.
 
     See (https://github.com/zalando/connexion/issues/59)
-    :type body_schema: dict|None
+    :param parameters: All the parameters of the handler functions
     :type parameters: dict|None
+    :param function: The handler function for the REST endpoint.
+    :type function: function|None
     """
     body_parameters = [parameter for parameter in parameters if parameter['in'] == 'body'] or [{}]
     body_name = body_parameters[0].get('name')
+    default_body = body_parameters[0].get('default')
     query_types = {parameter['name']: parameter
                    for parameter in parameters if parameter['in'] == 'query'}  # type: dict[str, str]
     arguments = get_function_arguments(function)
+    default_query_params = {param['name']: param['default'] for param in parameters if param['in'] == 'query'
+                            and 'default' in param}
 
     @functools.wraps(function)
     def wrapper(*args, **kwargs):
@@ -68,6 +74,9 @@ def parameter_to_arg(parameters, function):
         except exceptions.BadRequest:
             request_body = None
 
+        if default_body and not request_body:
+            request_body = default_body
+
         # Add body parameters
         if request_body is not None:
             if body_name not in arguments:
@@ -77,7 +86,9 @@ def parameter_to_arg(parameters, function):
                 kwargs[body_name] = request_body
 
         # Add query parameters
-        for key, value in flask.request.args.items():
+        query_arguments = copy.deepcopy(default_query_params)
+        query_arguments.update(flask.request.args.items())
+        for key, value in query_arguments.items():
             if key not in arguments:
                 logger.debug("Query Parameter '%s' not in function arguments", key)
             else:
