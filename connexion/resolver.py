@@ -125,7 +125,7 @@ class RestyResolver(Resolver):
             method = operation.method
 
             is_collection_endpoint = \
-                method == 'GET' \
+                method.lower() == 'get' \
                 and path_match.group('resource_name') \
                 and not path_match.group('extended_path')
 
