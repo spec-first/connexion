@@ -26,7 +26,7 @@ Connexion
    :alt: License
 
 Connexion is a framework on top of Flask_ to automagically handle your REST API requests
-based on `Swagger 2.0 Specification`_ files
+based on `OpenAPI 2.0 Specification`_ (formerly known as Swagger Spec) files
 in YAML.
 
 How to use
@@ -154,7 +154,7 @@ Connexion expects to receive the Oauth token in the ``Authorization`` header fie
 
 Swagger JSON
 ------------
-Connexion makes the Swagger specification in JSON format available from ``swagger.json`` in the base path of the API.
+Connexion makes the OpenAPI/Swagger specification in JSON format available from ``swagger.json`` in the base path of the API.
 
 Swagger UI
 ----------
@@ -234,7 +234,7 @@ limitations under the License.
 .. _Flask: http://flask.pocoo.org/
 .. _Jinja2: http://jinja.pocoo.org/
 .. _rfc6750: https://tools.ietf.org/html/rfc6750
-.. _Swagger 2.0 Specification: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md
+.. _OpenAPI 2.0 Specification: https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md
 .. _Operation Object: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#operation-object
 .. _swager.spec.security_definition: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-definitions-object
 .. _swager.spec.security_requirement: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-requirement-object
