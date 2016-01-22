@@ -1,5 +1,9 @@
 swagger: "2.0"
 
+info:
+  title: OAuth Example
+  version: "1.0"
+
 paths:
   /secret:
     get:

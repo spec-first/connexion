@@ -1,5 +1,9 @@
 swagger: "2.0"
 
+info:
+  title: Mock OAuth Token Info
+  version: "1.0"
+
 paths:
   /tokeninfo:
     get:
