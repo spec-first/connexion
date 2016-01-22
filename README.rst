@@ -85,7 +85,7 @@ function ``hello_world`` in ``myapp.api``. Optionally you can include `x-router-
           operationId: hello_world
 
 
-To customize this behavior, connexion can use alternative ``Resolvers``, for example ``RestyResolver``. The ``RestyResolver`` will compose an ``operationId`` based on the path and HTTP method of the endpoints in your specification:
+To customize this behavior, Connexion can use alternative ``Resolvers``, for example ``RestyResolver``. The ``RestyResolver`` will compose an ``operationId`` based on the path and HTTP method of the endpoints in your specification:
 
 .. code-block:: python
 
@@ -139,15 +139,15 @@ the API to your application:
 
 Response Serialization
 ----------------------
-If the specification defines that a endpoint returns json connexion will automatically serialize the return value for
+If the specification defines that a endpoint returns JSON, Connexion will automatically serialize the return value for
 you and set the right content type in the HTTP header.
 
 Authentication and Authorization
 --------------------------------
 If the specification includes a Oauth2 `Security Definition <swager.spec.security_definition_>`_ compatible with the
-Zalando Greendale Team's infrastructure connexion will automatically handle token validation and authorization for
+Zalando Greendale Team's infrastructure Connexion will automatically handle token validation and authorization for
 operations that have `Security Requirements <swager.spec.security_requirement_>`_. One main difference between the usual
-Oauth flow and the one connexion uses is that the API Security Definition **must** include a 'x-tokenInfoUrl' with the
+OAuth flow and the one Connexion uses is that the API Security Definition **must** include a 'x-tokenInfoUrl' (or set ``HTTP_TOKENINFO_URL`` env var) with the
 URL to use to validate and get the token information.
 Connexion expects to receive the Oauth token in the ``Authorization`` header field in the format described in
 `RFC 6750 <rfc6750_>`_ section 2.1.
@@ -178,7 +178,7 @@ You can also disable it at API level:
 
 Server Backend
 --------------
-By default connexion uses the default flask server but you can also use Tornado_ as the HTTP server, to do so set server
+By default Connexion uses the default Flask server but you can also use Tornado_ as the HTTP server, to do so set server
 to ``tornado``:
 
 .. code-block:: python
@@ -200,7 +200,7 @@ You can use the Flask WSGI app with any WSGI container, e.g. `using Flask with u
     $ sudo pip3 install uwsgi
     $ uwsgi --http :8080 -w app -p 16  # use 16 worker processes
 
-You can run uwsgi with a large number of worker processes to get high concurrency.
+You can run uWSGI with a large number of worker processes to get high concurrency.
 
 See the `uWSGI documentation`_ for more information.
 
