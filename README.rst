@@ -161,11 +161,11 @@ Swagger UI
 The Swagger UI for an API is available, by default, in ``{base_path}/ui/`` where ``base_path`` is the base path of the
 API.
 
-You can disable the swagger ui either at application level:
+You can disable the Swagger UI either at application level:
 
 .. code-block:: python
 
-    app = connexion.App(__name__, port = 8080, specification_dir='swagger/', swagger_ui=False)
+    app = connexion.App(__name__, specification_dir='swagger/', swagger_ui=False)
     app.add_api('my_api.yaml')
 
 
@@ -173,19 +173,20 @@ You can also disable it at API level:
 
 .. code-block:: python
 
-    app = connexion.App(__name__, port = 8080, specification_dir='swagger/')
+    app = connexion.App(__name__, specification_dir='swagger/')
     app.add_api('my_api.yaml', swagger_ui=False)
 
 Server Backend
 --------------
-By default connexion uses the default flask server but you can also use Tornado_ as the http server, to do so set server
+By default connexion uses the default flask server but you can also use Tornado_ as the HTTP server, to do so set server
 to ``tornado``:
 
 .. code-block:: python
 
     import connexion
 
-    app = connexion.App(__name__, port = 8080, specification_dir='swagger/', server='tornado')
+    app = connexion.App(__name__, specification_dir='swagger/')
+    app.run(server='tornado', port=8080)
 
 You can use the Flask WSGI app with any WSGI container, e.g. `using Flask with uWSGI`_:
 
