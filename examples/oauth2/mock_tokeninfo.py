@@ -5,6 +5,7 @@ Mock OAuth2 token info
 
 import connexion
 
+# our hardcoded mock "Bearer" access tokens
 TOKENS = {'123': 'jdoe',
           '456': 'rms'}
 

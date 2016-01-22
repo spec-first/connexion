@@ -12,7 +12,7 @@ paths:
           required: true
       responses:
         200:
-          description:
+          description: Token info object
           schema:
             type: object
             properties:
