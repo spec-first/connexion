@@ -10,20 +10,19 @@ import flask
 from functools import wraps
 
 
-def check_auth(username, password):
-    """This function is called to check if a username /
-    password combination is valid.
-    """
+def check_auth(username: str, password: str):
+    '''This function is called to check if a username /
+    password combination is valid.'''
     return username == 'admin' and password == 'secret'
 
 
 def authenticate():
-    """Sends a 401 response that enables basic auth"""
+    '''Sends a 401 response that enables basic auth'''
     return flask.Response('You have to login with proper credentials', 401,
                           {'WWW-Authenticate': 'Basic realm="Login Required"'})
 
 
-def requires_auth(f):
+def requires_auth(f: callable):
     @wraps(f)
     def decorated(*args, **kwargs):
         auth = flask.request.authorization
