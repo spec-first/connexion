@@ -1,8 +1,6 @@
 from connexion import NoContent
-from flask import Response
 import time
 from rfc3339 import rfc3339
-import json
 
 pets = {}
 
@@ -12,7 +10,7 @@ def post(pet):
     pet['id'] = count + 1
     pet['registered'] = rfc3339(time.time())
     pets[pet['id']] = pet
-    return Response(json.dumps(pet), status=201, mimetype='application/json')
+    return pet, 201
 
 
 def put(id, pet):
@@ -21,7 +19,7 @@ def put(id, pet):
         return NoContent, 404
     pets[id] = pet
 
-    return Response(json.dumps(pets[id]), status=200, mimetype='application/json')
+    return pets[id]
 
 
 def delete(id):
@@ -37,8 +35,8 @@ def get(id):
     if pets.get(id) is None:
         return NoContent, 404
 
-    return Response(json.dumps(pets[id]), status=200, mimetype='application/json')
+    return pets[id]
 
 
 def search():
-    return Response(json.dumps(pets.values()), status=200, mimetype='application/json')
+    return pets.values()
