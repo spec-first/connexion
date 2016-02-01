@@ -74,14 +74,14 @@ For example:
           operationId: myapp.api.hello_world
 
 If you provided this path in your specification POST requests to ``http://MYHOST/hello_world`` would be handled by the
-function ``hello_world`` in ``myapp.api``. Optionally you can include `x-router-controller` in your operation definition, making ``operationId`` relative:
+function ``hello_world`` in ``myapp.api``. Optionally you can include ``x-swagger-router-controller`` in your operation definition, making ``operationId`` relative:
 
 .. code-block:: yaml
 
     paths:
       /hello_world:
         post:
-          x-router-controller: myapp.api
+          x-swagger-router-controller: myapp.api
           operationId: hello_world
 
 
