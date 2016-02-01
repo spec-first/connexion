@@ -35,9 +35,11 @@ def test_boolean():
     assert utils.boolean('true')
     assert utils.boolean('True')
     assert utils.boolean('TRUE')
+    assert utils.boolean(True)
     assert not utils.boolean('false')
     assert not utils.boolean('False')
     assert not utils.boolean('FALSE')
+    assert not utils.boolean(False)
 
     with pytest.raises(ValueError):
         utils.boolean('foo')
