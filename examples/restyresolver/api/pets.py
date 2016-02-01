@@ -1,6 +1,5 @@
 from connexion import NoContent
-import time
-from rfc3339 import rfc3339
+import datetime
 
 pets = {}
 
@@ -8,7 +7,7 @@ pets = {}
 def post(pet):
     count = len(pets)
     pet['id'] = count + 1
-    pet['registered'] = rfc3339(time.time())
+    pet['registered'] = datetime.datetime.now()
     pets[pet['id']] = pet
     return pet, 201
 
@@ -39,4 +38,5 @@ def get(id):
 
 
 def search():
-    return pets.values()
+    # NOTE: we need to wrap it with list for Python 3 as dict_values is not JSON serializable
+    return list(pets.values())
