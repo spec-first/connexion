@@ -150,7 +150,7 @@ class Operation:
         visited = set()
         while stack:
             schema = stack.pop()
-            for k,v in schema.items():
+            for k, v in schema.items():
                 if k == "$ref":
                     if v in visited:
                         continue
@@ -162,7 +162,6 @@ class Operation:
                             stack.append(item)
                 elif hasattr(v, "items"):
                     stack.append(v)
-
 
     def _retrieve_reference(self, reference):
         if not reference.startswith('#/'):
@@ -184,8 +183,6 @@ class Operation:
                 definition_name=definition_name, method=self.method, path=self.path))
 
         return definition
-
-
 
     def get_mimetype(self):
         if produces_json(self.produces):  # endpoint will return json
