@@ -352,6 +352,44 @@ paths:
           description: goodbye response
           schema:
             type: string
+  /test_schema_map:
+    post:
+      summary: Returns empty response
+      description: Returns empty response
+      operationId: fakeapi.hello.schema_map
+      parameters:
+        - name: new_stack
+          required: true
+          in: body
+          schema:
+            type: object
+            additionalProperties:
+              $ref: '#/definitions/new_stack'
+      produces:
+        - application/json
+      responses:
+        200:
+          description: goodbye response
+          schema:
+            type: string
+  /test_schema_recursive:
+    post:
+      summary: Returns empty response
+      description: Returns empty response
+      operationId: fakeapi.hello.schema_recursive
+      parameters:
+        - name: new_stack
+          required: true
+          in: body
+          schema:
+            $ref: '#/definitions/simple_tree'
+      produces:
+        - application/json
+      responses:
+        200:
+          description: goodbye response
+          schema:
+            type: string
   /test_schema_format:
     post:
       summary: Returns empty response
@@ -625,3 +663,12 @@ definitions:
         description: Docker image version to deploy
     required:
       - image_version
+  simple_tree:
+    type: object
+    properties:
+      children:
+        type: array
+        items: 
+          $ref: "#/definitions/simple_tree"
+        description: Docker image version to deploy
+    additionalProperties: false

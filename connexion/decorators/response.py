@@ -45,10 +45,11 @@ class ResponseValidator(BaseDecorator):
         if not response_definitions:
             return True
         response_definition = response_definitions.get(status_code, {})
+        response_definition = self.operation.resolve_reference(response_definition)
         # TODO handle default response definitions
-
+        
         if response_definition and response_definition.get("schema"):
-            schema = self.operation.resolve_reference(response_definition.get("schema"))
+            schema = response_definition.get("schema")
             v = RequestBodyValidator(schema)
             error = v.validate_schema(data, schema)
             if error:

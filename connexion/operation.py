@@ -123,43 +123,69 @@ class Operation:
 
     def resolve_reference(self, schema):
         schema = deepcopy(schema)  # avoid changing the original schema
-        # find the object we need to resolve/update
+        self.check_references(schema)
+
+        # find the object we need to resolve/update if this is not a proper SchemaObject
+        # e.g a response or parameter object
         for obj in schema, schema.get('items'):
             reference = obj and obj.get('$ref')  # type: str
             if reference:
                 break
         if reference:
-            if not reference.startswith('#/'):
-                raise InvalidSpecification(
-                    "{method} {path}  '$ref' needs to start with '#/'".format(**vars(self)))
-            path = reference.split('/')
-            definition_type = path[1]
-            try:
-                definitions = self.definitions_map[definition_type]
-            except KeyError:
-                raise InvalidSpecification(
-                    "{method} {path}  '$ref' needs to point to definitions or parameters".format(**vars(self)))
-            definition_name = path[-1]
-            try:
-                # Get sub definition
-                definition = deepcopy(definitions[definition_name])
-            except KeyError:
-                raise InvalidSpecification("{method} {path} Definition '{definition_name}' not found".format(
-                    definition_name=definition_name, method=self.method, path=self.path))
-
-            # resolve object properties too
-            for prop, prop_spec in definition.get('properties', {}).items():
-                resolved = self.resolve_reference(prop_spec.get('schema', {}))
-                if not resolved:
-                    resolved = self.resolve_reference(prop_spec)
-
-                if resolved:
-                    definition['properties'][prop] = resolved
-
+            definition = deepcopy(self._retrieve_reference(reference))
             # Update schema
             obj.update(definition)
             del obj['$ref']
+
+        # if there is a schema object on this param or response, then we just
+        # need to include the defs and it can be validated by jsonschema
+        if 'schema' in schema:
+            schema['schema']['definitions'] = self.definitions
+            return schema
+
         return schema
+
+    def check_references(self, schema):
+        stack = [schema]
+        visited = set()
+        while stack:
+            schema = stack.pop()
+            for k,v in schema.items():
+                if k == "$ref":
+                    if v in visited:
+                        continue
+                    visited.add(v)
+                    stack.append(self._retrieve_reference(v))
+                elif isinstance(v, (list, tuple)):
+                    for item in v:
+                        if hasattr(item, "items"):
+                            stack.append(item)
+                elif hasattr(v, "items"):
+                    stack.append(v)
+
+
+    def _retrieve_reference(self, reference):
+        if not reference.startswith('#/'):
+            raise InvalidSpecification(
+                "{method} {path}  '$ref' needs to start with '#/'".format(**vars(self)))
+        path = reference.split('/')
+        definition_type = path[1]
+        try:
+            definitions = self.definitions_map[definition_type]
+        except KeyError:
+            raise InvalidSpecification(
+                "{method} {path}  '$ref' needs to point to definitions or parameters".format(**vars(self)))
+        definition_name = path[-1]
+        try:
+            # Get sub definition
+            definition = deepcopy(definitions[definition_name])
+        except KeyError:
+            raise InvalidSpecification("{method} {path} Definition '{definition_name}' not found".format(
+                definition_name=definition_name, method=self.method, path=self.path))
+
+        return definition
+
+
 
     def get_mimetype(self):
         if produces_json(self.produces):  # endpoint will return json
@@ -202,9 +228,6 @@ class Operation:
 
         body_parameters = body_parameters[0] if body_parameters else {}
         schema = body_parameters.get('schema')  # type: dict
-
-        if schema:
-            schema = self.resolve_reference(schema)
         return schema
 
     @property
@@ -215,15 +238,7 @@ class Operation:
         :rtype: types.FunctionType
         """
 
-        parameters = []
-        for param in self.parameters:  # resolve references
-            param = param.copy()
-            schema = param.get('schema')
-            if schema:
-                schema = self.resolve_reference(schema)
-            param['schema'] = schema
-            parameters.append(param)
-        function = parameter_to_arg(parameters, self.__undecorated_function)
+        function = parameter_to_arg(self.parameters, self.__undecorated_function)
 
         if self.validate_responses:
             logger.debug('... Response validation enabled.')
