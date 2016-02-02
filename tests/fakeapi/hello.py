@@ -218,3 +218,7 @@ def test_default_integer_body(stack_version):
 
 def test_falsy_param(falsy):
     return falsy
+
+
+def test_formData_param(formData):
+    return formData

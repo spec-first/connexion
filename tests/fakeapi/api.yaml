@@ -616,6 +616,16 @@ paths:
           in: query
           default: 1
 
+  /test-formData-param:
+    post:
+      summary: Test formData parameter
+      operationId: fakeapi.hello.test_formData_param
+      parameters:
+        - name: formData
+          type: string
+          in: formData
+          required: true
+
 definitions:
   new_stack:
     type: object

@@ -575,3 +575,11 @@ def test_falsy_param(app):
     assert resp.status_code == 200
     response = json.loads(resp.data.decode())
     assert response == 1
+
+
+def test_formData_param(app):
+    app_client = app.app.test_client()
+    resp = app_client.post('/v1.0/test-formData-param', data=dict(formData='test'))
+    assert resp.status_code == 200
+    response = json.loads(resp.data.decode())
+    assert response == 'test'
