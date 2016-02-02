@@ -616,6 +616,16 @@ paths:
           in: query
           default: 1
 
+  /test-bool-param:
+    get:
+      summary: Test usage of boolean default value
+      operationId: fakeapi.hello.test_bool_default_param
+      parameters:
+        - name: thruthiness
+          type: boolean
+          in: query
+          default: false
+
 definitions:
   new_stack:
     type: object

@@ -575,3 +575,13 @@ def test_falsy_param(app):
     assert resp.status_code == 200
     response = json.loads(resp.data.decode())
     assert response == 1
+
+def test_bool_as_default_param(app):
+    app_client = app.app.test_client()
+    resp = app_client.get('/v1.0/test-bool-param')
+    assert resp.status_code == 200
+
+    resp = app_client.get('/v1.0/test-bool-param', query_string={'thruthiness': True})
+    assert resp.status_code == 200
+    response = json.loads(resp.data.decode())
+    assert response == True
