@@ -468,7 +468,6 @@ def test_schema_recursive(app):
 
     right_type = app_client.post('/v1.0/test_schema_recursive', headers=headers,
                                   data=json.dumps(valid_object))  # type: flask.Response
-    print(right_type.data.decode())
     assert right_type.status_code == 200
 
 def test_schema_format(app):
