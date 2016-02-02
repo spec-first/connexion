@@ -626,6 +626,16 @@ paths:
           in: formData
           required: true
 
+  /test-formData-missing-param:
+    post:
+      summary: Test formData missing parameter in handler
+      operationId: fakeapi.hello.test_formData_missing_param
+      parameters:
+        - name: missing_formData
+          type: string
+          in: formData
+          required: true
+
   /test-bool-param:
     get:
       summary: Test usage of boolean default value

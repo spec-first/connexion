@@ -585,6 +585,12 @@ def test_formData_param(app):
     assert response == 'test'
 
 
+def test_formData_missing_param(app):
+    app_client = app.app.test_client()
+    resp = app_client.post('/v1.0/test-formData-missing-param', data=dict(missing_formData='test'))
+    assert resp.status_code == 200
+
+
 def test_bool_as_default_param(app):
     app_client = app.app.test_client()
     resp = app_client.get('/v1.0/test-bool-param')
