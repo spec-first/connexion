@@ -146,6 +146,16 @@ class Operation:
         return schema
 
     def check_references(self, schema):
+        """
+        Searches the keys and values of a schema object for json references.
+        If it finds one, it attempts to locate it and will thrown an exception
+        if the reference can't be found in the definitions dictionary.
+
+        :param schema: The schema object to check
+        :type schema: dict
+        :raises InvalidSpecification: raised when a reference isn't found
+        """
+
         stack = [schema]
         visited = set()
         while stack:
