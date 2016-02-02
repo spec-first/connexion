@@ -108,7 +108,7 @@ def parameter_to_arg(parameters, function):
             if key not in arguments:
                 logger.debug("FormData parameter '%s' not in function arguments", key)
             else:
-                logger.debug("FormData parameter '%s' in function arguments, key")
+                logger.debug("FormData parameter '%s' in function arguments", key)
                 form_param = form_types[key]
                 kwargs[key] = get_val_from_param(value, form_param)
 
