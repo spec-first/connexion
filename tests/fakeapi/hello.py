@@ -222,3 +222,7 @@ def test_falsy_param(falsy):
 
 def test_formData_param(formData):
     return formData
+
+
+def test_bool_default_param(thruthiness):
+    return thruthiness
