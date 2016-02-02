@@ -62,12 +62,12 @@ def parameter_to_arg(parameters, function):
     query_types = {parameter['name']: parameter
                    for parameter in parameters if parameter['in'] == 'query'}  # type: dict[str, str]
     form_types = {parameter['name']: parameter
-                    for parameter in parameters if parameter['in'] == 'formData'}
+                  for parameter in parameters if parameter['in'] == 'formData'}
     arguments = get_function_arguments(function)
     default_query_params = {param['name']: param['default']
                             for param in parameters if param['in'] == 'query' and 'default' in param}
     default_form_params = {param['name']: param['default']
-                            for param in parameters if param['in'] == 'formData' and 'default' in param}
+                           for param in parameters if param['in'] == 'formData' and 'default' in param}
 
     @functools.wraps(function)
     def wrapper(*args, **kwargs):
