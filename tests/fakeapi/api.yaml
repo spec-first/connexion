@@ -646,6 +646,16 @@ paths:
           in: query
           default: false
 
+  /test-required-param:
+    get:
+      summary: Test required param without default value
+      operationId: fakeapi.hello.test_required_param
+      parameters:
+        - name: simple
+          type: string
+          in: query
+          required: true
+
 definitions:
   new_stack:
     type: object
