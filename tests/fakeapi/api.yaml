@@ -656,6 +656,22 @@ paths:
           in: query
           required: true
 
+  /test-redirect-endpoint:
+    get:
+      summary: Tests handlers returning flask.Response objects
+      operationId: fakeapi.hello.test_redirect_endpoint
+      responses:
+        302:
+          description: 302 Found
+
+  /test-redirect-response-endpoint:
+    get:
+      summary: Tests handlers returning flask.Response objects
+      operationId: fakeapi.hello.test_redirect_response_endpoint
+      responses:
+        302:
+          description: 302 Found
+
 definitions:
   new_stack:
     type: object

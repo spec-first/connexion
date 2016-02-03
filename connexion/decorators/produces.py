@@ -18,6 +18,7 @@ import functools
 import json
 import logging
 from .decorator import BaseDecorator
+from ..utils import is_flask_response
 
 logger = logging.getLogger('connexion.decorators.produces')
 
@@ -83,7 +84,7 @@ class Produces(BaseSerializer):
             url = flask.request.url
             data, status_code, headers = self.get_full_response(function(*args, **kwargs))
             logger.debug('Returning %s', url, extra={'url': url, 'mimetype': self.mimetype})
-            if isinstance(data, flask.Response):  # if the function returns a Response object don't change it
+            if is_flask_response(data):
                 logger.debug('Endpoint returned a Flask Response', extra={'url': url, 'mimetype': data.mimetype})
                 return data
 
@@ -114,7 +115,7 @@ class Jsonifier(BaseSerializer):
             url = flask.request.url
             logger.debug('Jsonifing %s', url, extra={'url': url, 'mimetype': self.mimetype})
             data, status_code, headers = self.get_full_response(function(*args, **kwargs))
-            if isinstance(data, flask.Response):  # if the function returns a Response object don't change it
+            if is_flask_response(data):
                 logger.debug('Endpoint returned a Flask Response', extra={'url': url, 'mimetype': data.mimetype})
                 return data
             elif data is NoContent:
