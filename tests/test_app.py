@@ -576,6 +576,21 @@ def test_falsy_param(app):
     response = json.loads(resp.data.decode())
     assert response == 1
 
+
+def test_formData_param(app):
+    app_client = app.app.test_client()
+    resp = app_client.post('/v1.0/test-formData-param', data={'formData': 'test'})
+    assert resp.status_code == 200
+    response = json.loads(resp.data.decode())
+    assert response == 'test'
+
+
+def test_formData_missing_param(app):
+    app_client = app.app.test_client()
+    resp = app_client.post('/v1.0/test-formData-missing-param', data={'missing_formData': 'test'})
+    assert resp.status_code == 200
+
+
 def test_bool_as_default_param(app):
     app_client = app.app.test_client()
     resp = app_client.get('/v1.0/test-bool-param')
