@@ -2,6 +2,7 @@
 
 from connexion import problem, request
 from connexion import NoContent
+from flask import redirect
 
 
 class DummyClass:
@@ -234,3 +235,12 @@ def test_bool_default_param(thruthiness):
 
 def test_required_param(simple):
     return simple
+
+
+def test_redirect_endpoint():
+    headers = {'Location': 'http://www.google.com/'}
+    return '', 302, headers
+
+
+def test_redirect_response_endpoint():
+    return redirect('http://www.google.com/')
