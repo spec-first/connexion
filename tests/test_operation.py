@@ -255,7 +255,12 @@ def test_operation():
     assert operation.method == 'GET'
     assert operation.produces == ['application/json']
     assert operation.security == [{'oauth': ['uid']}]
-    assert operation.body_schema == DEFINITIONS['new_stack']
+
+    expected_body_schema = {
+        '$ref': '#/definitions/new_stack',
+        'definitions': DEFINITIONS
+    }
+    assert operation.body_schema == expected_body_schema
 
 
 def test_operation_array():
@@ -277,7 +282,12 @@ def test_operation_array():
     assert operation.method == 'GET'
     assert operation.produces == ['application/json']
     assert operation.security == [{'oauth': ['uid']}]
-    assert operation.body_schema == {'type': 'array', 'items': DEFINITIONS['new_stack']}
+    expected_body_schema = {
+        'type': 'array', 
+        'items': {'$ref': '#/definitions/new_stack'},
+        'definitions': DEFINITIONS
+    }
+    assert operation.body_schema == expected_body_schema
 
 
 def test_operation_composed_definition():
@@ -299,22 +309,24 @@ def test_operation_composed_definition():
     assert operation.method == 'GET'
     assert operation.produces == ['application/json']
     assert operation.security == [{'oauth': ['uid']}]
-    definition = deepcopy(DEFINITIONS['composed'])
-    definition['properties']['test'] = DEFINITIONS['new_stack']
-    assert operation.body_schema == definition
+    expected_body_schema = {
+        '$ref': '#/definitions/composed',
+        'definitions': DEFINITIONS
+    }
+    assert operation.body_schema == expected_body_schema
 
 
 def test_non_existent_reference():
-    operation = Operation(method='GET',
-                          path='endpoint',
-                          operation=OPERATION1,
-                          app_produces=['application/json'],
-                          app_security=[],
-                          security_definitions={},
-                          definitions={},
-                          parameter_definitions={},
-                          resolver=Resolver())
     with pytest.raises(InvalidSpecification) as exc_info:  # type: py.code.ExceptionInfo
+        operation = Operation(method='GET',
+                            path='endpoint',
+                            operation=OPERATION1,
+                            app_produces=['application/json'],
+                            app_security=[],
+                            security_definitions={},
+                            definitions={},
+                            parameter_definitions={},
+                            resolver=Resolver())
         schema = operation.body_schema
 
     exception = exc_info.value
@@ -323,16 +335,16 @@ def test_non_existent_reference():
 
 
 def test_multi_body():
-    operation = Operation(method='GET',
-                          path='endpoint',
-                          operation=OPERATION2,
-                          app_produces=['application/json'],
-                          app_security=[],
-                          security_definitions={},
-                          definitions=DEFINITIONS,
-                          parameter_definitions=PARAMETER_DEFINITIONS,
-                          resolver=Resolver())
     with pytest.raises(InvalidSpecification) as exc_info:  # type: py.code.ExceptionInfo
+        operation = Operation(method='GET',
+                            path='endpoint',
+                            operation=OPERATION2,
+                            app_produces=['application/json'],
+                            app_security=[],
+                            security_definitions={},
+                            definitions=DEFINITIONS,
+                            parameter_definitions=PARAMETER_DEFINITIONS,
+                            resolver=Resolver())
         schema = operation.body_schema
 
     exception = exc_info.value
@@ -341,16 +353,16 @@ def test_multi_body():
 
 
 def test_invalid_reference():
-    operation = Operation(method='GET',
-                          path='endpoint',
-                          operation=OPERATION3,
-                          app_produces=['application/json'],
-                          app_security=[],
-                          security_definitions={},
-                          definitions=DEFINITIONS,
-                          parameter_definitions=PARAMETER_DEFINITIONS,
-                          resolver=Resolver())
     with pytest.raises(InvalidSpecification) as exc_info:  # type: py.code.ExceptionInfo
+        operation = Operation(method='GET',
+                            path='endpoint',
+                            operation=OPERATION3,
+                            app_produces=['application/json'],
+                            app_security=[],
+                            security_definitions={},
+                            definitions=DEFINITIONS,
+                            parameter_definitions=PARAMETER_DEFINITIONS,
+                            resolver=Resolver())
         schema = operation.body_schema
 
     exception = exc_info.value
@@ -374,7 +386,12 @@ def test_no_token_info():
     assert operation.method == 'GET'
     assert operation.produces == ['application/json']
     assert operation.security == [{'oauth': ['uid']}]
-    assert operation.body_schema == DEFINITIONS['new_stack']
+
+    expected_body_schema = {
+        '$ref': '#/definitions/new_stack',
+        'definitions': DEFINITIONS
+    }
+    assert operation.body_schema == expected_body_schema
 
 
 def test_parameter_reference():
@@ -403,7 +420,7 @@ def test_resolve_invalid_reference():
 def test_bad_default():
     with pytest.raises(InvalidSpecification) as exc_info:
         Operation(method='GET', path='endpoint', operation=OPERATION6, app_produces=['application/json'],
-                  app_security=[], security_definitions={}, definitions={}, parameter_definitions=PARAMETER_DEFINITIONS,
+                  app_security=[], security_definitions={}, definitions=DEFINITIONS, parameter_definitions=PARAMETER_DEFINITIONS,
                   resolver=Resolver())
     exception = exc_info.value
     assert str(exception) == "<InvalidSpecification: The parameter 'stack_version' has a default value which " \

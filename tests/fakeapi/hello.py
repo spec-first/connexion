@@ -160,6 +160,11 @@ def schema_query(image_version=None):
 def schema_list():
     return ''
 
+def schema_map():
+    return ''
+
+def schema_recursive():
+    return ''
 
 def schema_format():
     return ''
