@@ -410,7 +410,7 @@ def test_schema_map(app):
         }
     }
 
-    invalid_object = { 
+    invalid_object = {
         "foo": 42
     }
 
@@ -447,7 +447,7 @@ def test_schema_recursive(app):
         ]
     }
 
-    invalid_object = { 
+    invalid_object = {
         "children": [42]
     }
 
@@ -673,6 +673,32 @@ def test_bool_as_default_param(app):
     response = json.loads(resp.data.decode())
     assert response == True
 
+
+def test_bool_param(app):
+    app_client = app.app.test_client()
+    resp = app_client.get('/v1.0/test-bool-param', query_string={'thruthiness': True})
+    assert resp.status_code == 200
+    response = json.loads(resp.data.decode())
+    assert response == True
+
+    resp = app_client.get('/v1.0/test-bool-param', query_string={'thruthiness': False})
+    assert resp.status_code == 200
+    response = json.loads(resp.data.decode())
+    assert response == False
+
+
+def test_bool_array_param(app):
+    app_client = app.app.test_client()
+    resp = app_client.get('/v1.0/test-bool-array-param?thruthiness=true,true,true')
+    assert resp.status_code == 200
+    response = json.loads(resp.data.decode())
+    assert response == True
+
+    app_client = app.app.test_client()
+    resp = app_client.get('/v1.0/test-bool-array-param?thruthiness=true,true,false')
+    assert resp.status_code == 200
+    response = json.loads(resp.data.decode())
+    assert response == False
 
 def test_required_param_miss_config(app):
     app_client = app.app.test_client()

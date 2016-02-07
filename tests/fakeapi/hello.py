@@ -238,6 +238,10 @@ def test_bool_default_param(thruthiness):
     return thruthiness
 
 
+def test_bool_array_param(thruthiness):
+    return all(thruthiness)
+
+
 def test_required_param(simple):
     return simple
 
