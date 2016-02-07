@@ -6,13 +6,15 @@ import inspect
 import logging
 import six
 
+from ..utils import boolean
+
 logger = logging.getLogger(__name__)
 
 # https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#data-types
 TYPE_MAP = {'integer': int,
             'number': float,
             'string': str,
-            'boolean': bool,
+            'boolean': boolean,
             'array': list,
             'object': dict}  # map of swagger types to python types
 
