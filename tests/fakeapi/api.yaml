@@ -684,6 +684,17 @@ paths:
           in: query
           default: false
 
+  /test-bool-array-param:
+    get:
+      summary: Test usage of an array of booleans value
+      operationId: fakeapi.hello.test_bool_array_param
+      parameters:
+        - name: thruthiness
+          in: query
+          type: array
+          items:
+            type: boolean
+
   /test-required-param:
     get:
       summary: Test required param without default value
@@ -724,7 +735,7 @@ definitions:
     properties:
       children:
         type: array
-        items: 
+        items:
           $ref: "#/definitions/simple_tree"
         description: Docker image version to deploy
     additionalProperties: false
