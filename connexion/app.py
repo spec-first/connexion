@@ -23,8 +23,8 @@ logger = logging.getLogger('connexion.app')
 
 
 class App:
-    def __init__(self, import_name, port=None, specification_dir='', server=None, arguments=None, debug=False,
-                 swagger_ui=True, swagger_path=None, swagger_url=None):
+    def __init__(self, import_name, port=None, specification_dir='', server=None, arguments=None, auth_all_paths=False,
+                 debug=False, swagger_ui=True, swagger_path=None, swagger_url=None):
         """
         :param import_name: the name of the application package
         :type import_name: str
@@ -36,6 +36,8 @@ class App:
         :type server: str | None
         :param arguments: arguments to replace on the specification
         :type arguments: dict | None
+        :param auth_all_paths: whether to authenticate not defined paths
+        :type auth_all_paths: bool
         :param debug: include debugging information
         :type debug: bool
         :param swagger_ui: whether to include swagger ui or not
@@ -71,6 +73,7 @@ class App:
         self.swagger_ui = swagger_ui
         self.swagger_path = swagger_path
         self.swagger_url = swagger_url
+        self.auth_all_paths = auth_all_paths
 
     @staticmethod
     def common_error_handler(exception):
@@ -81,8 +84,8 @@ class App:
             exception = werkzeug.exceptions.InternalServerError()
         return problem(title=exception.name, detail=exception.description, status=exception.code)
 
-    def add_api(self, swagger_file, base_path=None, arguments=None, swagger_ui=None, swagger_path=None,
-                swagger_url=None, validate_responses=False, resolver=Resolver()):
+    def add_api(self, swagger_file, base_path=None, arguments=None, auth_all_paths=None, swagger_ui=None,
+                swagger_path=None, swagger_url=None, validate_responses=False, resolver=Resolver()):
         """
         Adds an API to the application based on a swagger file
 
@@ -92,6 +95,8 @@ class App:
         :type base_path: str | None
         :param arguments: api version specific arguments to replace on the specification
         :type arguments: dict | None
+        :param auth_all_paths: whether to authenticate not defined paths
+        :type auth_all_paths: bool
         :param swagger_ui: whether to include swagger ui or not
         :type swagger_ui: bool
         :param swagger_path: path to swagger-ui directory
@@ -109,6 +114,7 @@ class App:
         swagger_ui = swagger_ui if swagger_ui is not None else self.swagger_ui
         swagger_path = swagger_path if swagger_path is not None else self.swagger_path
         swagger_url = swagger_url if swagger_url is not None else self.swagger_url
+        auth_all_paths = auth_all_paths if auth_all_paths is not None else self.auth_all_paths
         logger.debug('Adding API: %s', swagger_file)
         # TODO test if base_url starts with an / (if not none)
         arguments = arguments or dict()
@@ -120,7 +126,8 @@ class App:
                   swagger_path=swagger_path,
                   swagger_url=swagger_url,
                   resolver=resolver,
-                  validate_responses=validate_responses)
+                  validate_responses=validate_responses,
+                  auth_all_paths=auth_all_paths)
         self.app.register_blueprint(api.blueprint)
         return api
 

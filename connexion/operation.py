@@ -32,7 +32,65 @@ from .utils import flaskify_endpoint, produces_json
 logger = logging.getLogger('connexion.operation')
 
 
-class Operation:
+class SecureOperation:
+    @property
+    def security_decorator(self):
+        """
+        Gets the security decorator for operation
+
+        From Swagger Specification:
+
+        **Security Definitions Object**
+
+        A declaration of the security schemes available to be used in the specification.
+
+        This does not enforce the security schemes on the operations and only serves to provide the relevant details
+        for each scheme.
+
+
+        **Security Requirement Object**
+
+        Lists the required security schemes to execute this operation. The object can have multiple security schemes
+        declared in it which are all required (that is, there is a logical AND between the schemes).
+
+        The name used for each property **MUST** correspond to a security scheme declared in the Security Definitions.
+
+        :rtype: types.FunctionType
+        """
+        logger.debug('... Security: %s', self.security, extra=vars(self))
+        if self.security:
+            if len(self.security) > 1:
+                logger.warning("... More than one security requirement defined. **IGNORING SECURITY REQUIREMENTS**",
+                               extra=vars(self))
+                return security_passthrough
+
+            security = self.security[0]  # type: dict
+            # the following line gets the first (and because of the previous condition only) scheme and scopes
+            # from the operation's security requirements
+
+            scheme_name, scopes = next(iter(security.items()))  # type: str, list
+            security_definition = self.security_definitions[scheme_name]
+            if security_definition['type'] == 'oauth2':
+                token_info_url = security_definition.get('x-tokenInfoUrl', os.getenv('HTTP_TOKENINFO_URL'))
+                if token_info_url:
+                    scopes = set(scopes)  # convert scopes to set because this is needed for verify_oauth
+                    return functools.partial(verify_oauth, token_info_url, scopes)
+                else:
+                    logger.warning("... OAuth2 token info URL missing. **IGNORING SECURITY REQUIREMENTS**",
+                                   extra=vars(self))
+            elif security_definition['type'] in ('apiKey', 'basic'):
+                logger.debug(
+                    "... Security type '%s' not natively supported by Connexion; you should handle it yourself",
+                    security_definition['type'], extra=vars(self))
+            else:
+                logger.warning("... Security type '%s' unknown. **IGNORING SECURITY REQUIREMENTS**",
+                               security_definition['type'], extra=vars(self))
+
+        # if we don't know how to handle the security or it's not defined we will usa a passthrough decorator
+        return security_passthrough
+
+
+class Operation(SecureOperation):
     """
     A single API operation on a path.
     """
@@ -239,7 +297,7 @@ class Operation:
             function = validation_decorator(function)
 
         # NOTE: the security decorator should be applied last to check auth before anything else :-)
-        security_decorator = self.__security_decorator
+        security_decorator = self.security_decorator
         logger.debug('... Adding security decorator (%r)', security_decorator, extra=vars(self))
         function = security_decorator(function)
 
@@ -279,62 +337,6 @@ class Operation:
             return decorator
         else:
             return BaseSerializer()
-
-    @property
-    def __security_decorator(self):
-        """
-        Gets the security decorator for operation
-
-        From Swagger Specification:
-
-        **Security Definitions Object**
-
-        A declaration of the security schemes available to be used in the specification.
-
-        This does not enforce the security schemes on the operations and only serves to provide the relevant details
-        for each scheme.
-
-
-        **Security Requirement Object**
-
-        Lists the required security schemes to execute this operation. The object can have multiple security schemes
-        declared in it which are all required (that is, there is a logical AND between the schemes).
-
-        The name used for each property **MUST** correspond to a security scheme declared in the Security Definitions.
-
-        :rtype: types.FunctionType
-        """
-        logger.debug('... Security: %s', self.security, extra=vars(self))
-        if self.security:
-            if len(self.security) > 1:
-                logger.warning("... More than one security requirement defined. **IGNORING SECURITY REQUIREMENTS**",
-                               extra=vars(self))
-                return security_passthrough
-
-            security = self.security[0]  # type: dict
-            # the following line gets the first (and because of the previous condition only) scheme and scopes
-            # from the operation's security requirements
-
-            scheme_name, scopes = next(iter(security.items()))  # type: str, list
-            security_definition = self.security_definitions[scheme_name]
-            if security_definition['type'] == 'oauth2':
-                token_info_url = security_definition.get('x-tokenInfoUrl', os.getenv('HTTP_TOKENINFO_URL'))
-                if token_info_url:
-                    scopes = set(scopes)  # convert scopes to set because this is needed for verify_oauth
-                    return functools.partial(verify_oauth, token_info_url, scopes)
-                else:
-                    logger.warning("... OAuth2 token info URL missing. **IGNORING SECURITY REQUIREMENTS**",
-                                   extra=vars(self))
-            elif security_definition['type'] in ('apiKey', 'basic'):
-                logger.debug(
-                    "... Security type '%s' not natively supported by Connexion; you should handle it yourself",
-                    security_definition['type'], extra=vars(self))
-            else:
-                logger.warning("... Security type '%s' unknown. **IGNORING SECURITY REQUIREMENTS**",
-                               security_definition['type'], extra=vars(self))
-
-        # if we don't know how to handle the security or it's not defined we will usa a passthrough decorator
-        return security_passthrough
 
     @property
     def __validation_decorators(self):
