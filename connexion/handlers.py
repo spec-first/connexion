@@ -7,10 +7,25 @@ logger = logging.getLogger('connexion.handlers')
 
 
 class AuthErrorHandler(SecureOperation):
+    """
+    Wraps an error with authentication.
+    """
+
     def __init__(self, exception, security, security_definitions):
+        """
+        This class uses the exception instance to produce the proper response problem in case the
+        request is authenticated.
+
+        :param exception: the exception to be wrapped with authentication
+        :type exception: werkzeug.exceptions.HTTPException
+        :param security: list of security rules the application uses by default
+        :type security: list
+        :param security_definitions: `Security Definitions Object
+            <https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-definitions-object>`_
+        :type security_definitions: dict
+        """
         self.exception = exception
-        self.security = security
-        self.security_definitions = security_definitions
+        SecureOperation.__init__(self, security, security_definitions)
 
     @property
     def function(self):

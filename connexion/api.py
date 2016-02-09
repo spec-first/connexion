@@ -151,7 +151,7 @@ class Api:
         """
         logger.debug('Adding path not found authentication')
         not_found_error = AuthErrorHandler(werkzeug.exceptions.NotFound(), security=self.security,
-                security_definitions=self.security_definitions)
+                                           security_definitions=self.security_definitions)
         endpoint_name = "{name}_not_found".format(name=self.blueprint.name)
         self.blueprint.add_url_rule('/<path:invalid_path>', endpoint_name, not_found_error.function)
 

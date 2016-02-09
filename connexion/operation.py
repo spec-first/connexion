@@ -34,6 +34,13 @@ logger = logging.getLogger('connexion.operation')
 
 class SecureOperation:
     def __init__(self, security, security_definitions):
+        """
+        :param security: list of security rules the application uses by default
+        :type security: list
+        :param security_definitions: `Security Definitions Object
+            <https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-definitions-object>`_
+        :type security_definitions: dict
+        """
         self.security = security
         self.security_definitions = security_definitions
 
