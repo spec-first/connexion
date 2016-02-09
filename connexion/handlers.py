@@ -1,13 +1,14 @@
 
 import logging
 from .operation import SecureOperation
+from .problem import problem
 
 logger = logging.getLogger('connexion.handlers')
 
 
 class AuthErrorHandler(SecureOperation):
-    def __init__(self, status_code, security, security_definitions):
-        self.status_code = status_code
+    def __init__(self, exception, security, security_definitions):
+        self.exception = exception
         self.security = security
         self.security_definitions = security_definitions
 
@@ -24,4 +25,4 @@ class AuthErrorHandler(SecureOperation):
         """
         Actual handler for the execution after authentication.
         """
-        return '', self.status_code
+        return problem(title=self.exception.name, detail=self.exception.description, status=self.exception.code)

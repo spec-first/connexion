@@ -33,6 +33,10 @@ logger = logging.getLogger('connexion.operation')
 
 
 class SecureOperation:
+    def __init__(self, security, security_definitions):
+        self.security = security
+        self.security_definitions = security_definitions
+
     @property
     def security_decorator(self):
         """

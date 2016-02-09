@@ -636,10 +636,12 @@ def test_security_over_inexistent_endpoints(oauth_requests):
     headers = {"Authorization": "Bearer 300"}
     get_inexistent_endpoint = app_client.get('/v1.0/does-not-exist-invalid-token', headers=headers)  # type: flask.Response
     assert get_inexistent_endpoint.status_code == 401
+    assert get_inexistent_endpoint.content_type == 'application/problem+json'
 
     headers = {"Authorization": "Bearer 100"}
     get_inexistent_endpoint = app_client.get('/v1.0/does-not-exist-valid-token', headers=headers)  # type: flask.Response
     assert get_inexistent_endpoint.status_code == 404
+    assert get_inexistent_endpoint.content_type == 'application/problem+json'
 
     get_inexistent_endpoint = app_client.get('/v1.0/does-not-exist-no-token')  # type: flask.Response
     assert get_inexistent_endpoint.status_code == 401
