@@ -2,7 +2,6 @@ import pathlib
 import json
 import logging
 import pytest
-import _pytest.monkeypatch
 from connexion.app import App
 
 logging.basicConfig(level=logging.DEBUG)
@@ -397,6 +396,7 @@ def test_schema_list(app):
     assert wrong_items_response['title'] == 'Bad Request'
     assert wrong_items_response['detail'].startswith("42 is not of type 'string'")
 
+
 def test_schema_map(app):
     app_client = app.app.test_client()
     headers = {'Content-type': 'application/json'}
@@ -432,6 +432,7 @@ def test_schema_map(app):
     right_type = app_client.post('/v1.0/test_schema_map', headers=headers,
                                   data=json.dumps(valid_object))  # type: flask.Response
     assert right_type.status_code == 200
+
 
 def test_schema_recursive(app):
     app_client = app.app.test_client()
@@ -469,6 +470,7 @@ def test_schema_recursive(app):
     right_type = app_client.post('/v1.0/test_schema_recursive', headers=headers,
                                   data=json.dumps(valid_object))  # type: flask.Response
     assert right_type.status_code == 200
+
 
 def test_schema_format(app):
     app_client = app.app.test_client()
@@ -671,7 +673,7 @@ def test_bool_as_default_param(app):
     resp = app_client.get('/v1.0/test-bool-param', query_string={'thruthiness': True})
     assert resp.status_code == 200
     response = json.loads(resp.data.decode())
-    assert response == True
+    assert response is True
 
 
 def test_bool_param(app):
@@ -679,12 +681,12 @@ def test_bool_param(app):
     resp = app_client.get('/v1.0/test-bool-param', query_string={'thruthiness': True})
     assert resp.status_code == 200
     response = json.loads(resp.data.decode())
-    assert response == True
+    assert response is True
 
     resp = app_client.get('/v1.0/test-bool-param', query_string={'thruthiness': False})
     assert resp.status_code == 200
     response = json.loads(resp.data.decode())
-    assert response == False
+    assert response is False
 
 
 def test_bool_array_param(app):
@@ -692,13 +694,14 @@ def test_bool_array_param(app):
     resp = app_client.get('/v1.0/test-bool-array-param?thruthiness=true,true,true')
     assert resp.status_code == 200
     response = json.loads(resp.data.decode())
-    assert response == True
+    assert response is True
 
     app_client = app.app.test_client()
     resp = app_client.get('/v1.0/test-bool-array-param?thruthiness=true,true,false')
     assert resp.status_code == 200
     response = json.loads(resp.data.decode())
-    assert response == False
+    assert response is False
+
 
 def test_required_param_miss_config(app):
     app_client = app.app.test_client()
@@ -753,3 +756,17 @@ def test_security_over_inexistent_endpoints(oauth_requests):
 
     post_greeting = app_client.post('/v1.0/greeting/rcaricio', data={})  # type: flask.Response
     assert post_greeting.status_code == 401
+
+
+def test_no_content_response_have_headers(app):
+    app_client = app.app.test_client()
+    resp = app_client.get('/v1.0/test-204-with-headers')
+    assert resp.status_code == 204
+    assert 'X-Something' in resp.headers
+
+
+def test_no_content_object_and_have_headers(app):
+    app_client = app.app.test_client()
+    resp = app_client.get('/v1.0/test-204-with-headers-nocontent-obj')
+    assert resp.status_code == 204
+    assert 'X-Something' in resp.headers
