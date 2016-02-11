@@ -723,3 +723,33 @@ def test_redirect_response_endpoint(app):
     app_client = app.app.test_client()
     resp = app_client.get('/v1.0/test-redirect-response-endpoint')
     assert resp.status_code == 302
+
+
+def test_security_over_inexistent_endpoints(oauth_requests):
+    app1 = App(__name__, 5001, SPEC_FOLDER, swagger_ui=False, debug=True, auth_all_paths=True)
+    app1.add_api('secure_api.yaml')
+    assert app1.port == 5001
+
+    app_client = app1.app.test_client()
+    headers = {"Authorization": "Bearer 300"}
+    get_inexistent_endpoint = app_client.get('/v1.0/does-not-exist-invalid-token', headers=headers)  # type: flask.Response
+    assert get_inexistent_endpoint.status_code == 401
+    assert get_inexistent_endpoint.content_type == 'application/problem+json'
+
+    headers = {"Authorization": "Bearer 100"}
+    get_inexistent_endpoint = app_client.get('/v1.0/does-not-exist-valid-token', headers=headers)  # type: flask.Response
+    assert get_inexistent_endpoint.status_code == 404
+    assert get_inexistent_endpoint.content_type == 'application/problem+json'
+
+    get_inexistent_endpoint = app_client.get('/v1.0/does-not-exist-no-token')  # type: flask.Response
+    assert get_inexistent_endpoint.status_code == 401
+
+    swagger_ui = app_client.get('/v1.0/ui/')  # type: flask.Response
+    assert swagger_ui.status_code == 401
+
+    headers = {"Authorization": "Bearer 100"}
+    post_greeting = app_client.post('/v1.0/greeting/rcaricio', data={}, headers=headers)  # type: flask.Response
+    assert post_greeting.status_code == 200
+
+    post_greeting = app_client.post('/v1.0/greeting/rcaricio', data={})  # type: flask.Response
+    assert post_greeting.status_code == 401

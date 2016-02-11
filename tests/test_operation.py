@@ -249,8 +249,8 @@ def test_operation():
     assert isinstance(operation.function, types.FunctionType)
     # security decorator should be a partial with verify_oauth as the function and token url and scopes as arguments.
     # See https://docs.python.org/2/library/functools.html#partial-objects
-    assert operation._Operation__security_decorator.func is verify_oauth
-    assert operation._Operation__security_decorator.args == ('https://ouath.example/token_info', set(['uid']))
+    assert operation.security_decorator.func is verify_oauth
+    assert operation.security_decorator.args == ('https://ouath.example/token_info', set(['uid']))
 
     assert operation.method == 'GET'
     assert operation.produces == ['application/json']
@@ -276,8 +276,8 @@ def test_operation_array():
     assert isinstance(operation.function, types.FunctionType)
     # security decorator should be a partial with verify_oauth as the function and token url and scopes as arguments.
     # See https://docs.python.org/2/library/functools.html#partial-objects
-    assert operation._Operation__security_decorator.func is verify_oauth
-    assert operation._Operation__security_decorator.args == ('https://ouath.example/token_info', set(['uid']))
+    assert operation.security_decorator.func is verify_oauth
+    assert operation.security_decorator.args == ('https://ouath.example/token_info', set(['uid']))
 
     assert operation.method == 'GET'
     assert operation.produces == ['application/json']
@@ -303,8 +303,8 @@ def test_operation_composed_definition():
     assert isinstance(operation.function, types.FunctionType)
     # security decorator should be a partial with verify_oauth as the function and token url and scopes as arguments.
     # See https://docs.python.org/2/library/functools.html#partial-objects
-    assert operation._Operation__security_decorator.func is verify_oauth
-    assert operation._Operation__security_decorator.args == ('https://ouath.example/token_info', set(['uid']))
+    assert operation.security_decorator.func is verify_oauth
+    assert operation.security_decorator.args == ('https://ouath.example/token_info', set(['uid']))
 
     assert operation.method == 'GET'
     assert operation.produces == ['application/json']
@@ -381,7 +381,7 @@ def test_no_token_info():
                           parameter_definitions=PARAMETER_DEFINITIONS,
                           resolver=Resolver())
     assert isinstance(operation.function, types.FunctionType)
-    assert operation._Operation__security_decorator is security_passthrough
+    assert operation.security_decorator is security_passthrough
 
     assert operation.method == 'GET'
     assert operation.produces == ['application/json']
