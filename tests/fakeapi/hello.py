@@ -15,17 +15,22 @@ class DummyClass:
 
 class_instance = DummyClass()
 
+
 def get():
     return ''
+
 
 def search():
     return ''
 
+
 def list():
     return ''
 
+
 def post():
     return ''
+
 
 def post_greeting(name):
     data = {'greeting': 'Hello {name}'.format(name=name)}
@@ -160,11 +165,14 @@ def schema_query(image_version=None):
 def schema_list():
     return ''
 
+
 def schema_map():
     return ''
 
+
 def schema_recursive():
     return ''
+
 
 def schema_format():
     return ''
@@ -253,3 +261,13 @@ def test_redirect_endpoint():
 
 def test_redirect_response_endpoint():
     return redirect('http://www.google.com/')
+
+
+def test_204_with_headers():
+    headers = {'X-Something': 'test'}
+    return '', 204, headers
+
+
+def test_nocontent_obj_with_headers():
+    headers = {'X-Something': 'test'}
+    return NoContent, 204, headers

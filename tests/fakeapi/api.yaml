@@ -721,6 +721,30 @@ paths:
         302:
           description: 302 Found
 
+  /test-204-with-headers:
+    get:
+      summary: Tests that response code 204 can have headers set
+      operationId: fakeapi.hello.test_204_with_headers
+      responses:
+        204:
+          headers:
+            X-Something:
+              description: A value that might be send in the response
+              type: string
+          description: 204 no content
+
+  /test-204-with-headers-nocontent-obj:
+    get:
+      summary: Tests that response code 204 using NoContent obj can have headers set
+      operationId: fakeapi.hello.test_nocontent_obj_with_headers
+      responses:
+        204:
+          headers:
+            X-Something:
+              description: A value that might be send in the response
+              type: string
+          description: 204 no content
+
 definitions:
   new_stack:
     type: object
