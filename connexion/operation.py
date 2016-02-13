@@ -14,7 +14,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 from copy import deepcopy
 import functools
 import logging
-import os
 
 import jsonschema
 from jsonschema import ValidationError
@@ -24,7 +23,7 @@ from .decorators.metrics import UWSGIMetricsCollector
 from .decorators.parameter import parameter_to_arg
 from .decorators.produces import BaseSerializer, Produces, Jsonifier
 from .decorators.response import ResponseValidator
-from .decorators.security import security_passthrough, verify_oauth
+from .decorators.security import security_passthrough, verify_oauth, get_tokeninfo_url
 from .decorators.validation import RequestBodyValidator, ParameterValidator, TypeValidationError
 from .exceptions import InvalidSpecification
 from .utils import flaskify_endpoint, produces_json
@@ -82,7 +81,7 @@ class SecureOperation:
             scheme_name, scopes = next(iter(security.items()))  # type: str, list
             security_definition = self.security_definitions[scheme_name]
             if security_definition['type'] == 'oauth2':
-                token_info_url = security_definition.get('x-tokenInfoUrl', os.getenv('HTTP_TOKENINFO_URL'))
+                token_info_url = get_tokeninfo_url(security_definition)
                 if token_info_url:
                     scopes = set(scopes)  # convert scopes to set because this is needed for verify_oauth
                     return functools.partial(verify_oauth, token_info_url, scopes)

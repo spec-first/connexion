@@ -8,3 +8,4 @@ htmlcov/
 *.pyc
 .eggs
 .cache/
+*.swp
