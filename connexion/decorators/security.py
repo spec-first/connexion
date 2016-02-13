@@ -40,6 +40,9 @@ def get_tokeninfo_url(security_definition):
     token_info_url = security_definition.get('x-tokenInfoUrl') or \
         os.environ.get('HTTP_TOKENINFO_URL') or \
         os.environ.get('TOKENINFO_URL')
+    # https://github.com/zalando/connexion/issues/148
+    if token_info_url and token_info_url == os.environ.get('HTTP_TOKENINFO_URL'):
+        logger.warn('The HTTP_TOKENINFO_URL environment variable is deprecated. Please use TOKENINFO_URL instead.')
     return token_info_url
 
 
