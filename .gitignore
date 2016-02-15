@@ -9,3 +9,4 @@ htmlcov/
 .eggs
 .cache/
 *.swp
+.tox/
