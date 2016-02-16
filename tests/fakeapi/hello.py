@@ -246,7 +246,9 @@ def test_bool_default_param(thruthiness):
     return thruthiness
 
 
-def test_bool_array_param(thruthiness):
+def test_bool_array_param(thruthiness=None):
+    if thruthiness is None:
+        thruthiness = []
     return all(thruthiness)
 
 
@@ -271,3 +273,7 @@ def test_204_with_headers():
 def test_nocontent_obj_with_headers():
     headers = {'X-Something': 'test'}
     return NoContent, 204, headers
+
+
+def path_parameters_in_get_method(title):
+    return [title], 200, {}

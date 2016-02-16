@@ -102,7 +102,7 @@ class Api:
         if auth_all_paths:
             self.add_auth_on_not_found()
 
-    def add_operation(self, method, path, swagger_operation):
+    def add_operation(self, method, path, swagger_operation, path_parameters):
         """
         Adds one operation to the api.
 
@@ -119,7 +119,8 @@ class Api:
         :type path: str
         :type swagger_operation: dict
         """
-        operation = Operation(method=method, path=path, operation=swagger_operation, app_produces=self.produces,
+        operation = Operation(method=method, path=path, path_parameters=path_parameters,
+                              operation=swagger_operation, app_produces=self.produces,
                               app_security=self.security, security_definitions=self.security_definitions,
                               definitions=self.definitions, parameter_definitions=self.parameter_definitions,
                               validate_responses=self.validate_responses, resolver=self.resolver)
@@ -138,12 +139,22 @@ class Api:
         paths = paths or self.specification.get('paths', dict())
         for path, methods in paths.items():
             logger.debug('Adding %s%s...', self.base_url, path)
+
+            # search for parameters definitions in the path level
+            # http://swagger.io/specification/#pathItemObject
+            path_parameters = []
+            if 'parameters' in methods:
+                path_parameters = methods['parameters']
+
             # TODO Error handling
             for method, endpoint in methods.items():
+                if method == 'parameters':
+                    continue
                 try:
-                    self.add_operation(method, path, endpoint)
+                    self.add_operation(method, path, endpoint, path_parameters)
                 except Exception:  # pylint: disable= W0703
-                    logger.exception('Failed to add operation for %s %s%s', method.upper(), self.base_url, path)
+                    logger.exception('Failed to add operation for %s %s%s',
+                            method.upper(), self.base_url, path)
 
     def add_auth_on_not_found(self):
         """

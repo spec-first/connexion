@@ -702,6 +702,10 @@ def test_bool_array_param(app):
     response = json.loads(resp.data.decode())
     assert response is False
 
+    app_client = app.app.test_client()
+    resp = app_client.get('/v1.0/test-bool-array-param')
+    assert resp.status_code == 200
+
 
 def test_required_param_miss_config(app):
     app_client = app.app.test_client()
@@ -770,3 +774,13 @@ def test_no_content_object_and_have_headers(app):
     resp = app_client.get('/v1.0/test-204-with-headers-nocontent-obj')
     assert resp.status_code == 204
     assert 'X-Something' in resp.headers
+
+
+def test_parameters_defined_in_path_level(app):
+    app_client = app.app.test_client()
+    resp = app_client.get('/v1.0/parameters-in-root-path?title=nice-get')
+    assert resp.status_code == 200
+    assert json.loads(resp.data.decode()) == ["nice-get"]
+
+    resp = app_client.get('/v1.0/parameters-in-root-path')
+    assert resp.status_code == 400

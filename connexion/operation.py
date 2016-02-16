@@ -105,7 +105,8 @@ class Operation(SecureOperation):
     A single API operation on a path.
     """
 
-    def __init__(self, method, path, operation, app_produces, app_security, security_definitions, definitions,
+    def __init__(self, method, path, path_parameters, operation, app_produces,
+                 app_security, security_definitions, definitions,
                  parameter_definitions, resolver, validate_responses=False):
         """
         This class uses the OperationID identify the module and function that will handle the operation
@@ -121,6 +122,8 @@ class Operation(SecureOperation):
         :type method: str
         :param path:
         :type path: str
+        :param path_parameters: Parameters defined in the path level
+        :type path_parameters: list
         :param operation: swagger operation object
         :type operation: dict
         :param app_produces: list of content types the application can return by default
@@ -133,6 +136,8 @@ class Operation(SecureOperation):
         :param definitions: `Definitions Object
             <https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#definitionsObject>`_
         :type definitions: dict
+        :param parameter_definitions: Global parameter definitions
+        :type parameter_definitions: dict
         :param resolver: Callable that maps operationID to a function
         :param validate_responses: True enables validation. Validation errors generate HTTP 500 responses.
         :type validate_responses: bool
@@ -153,6 +158,9 @@ class Operation(SecureOperation):
         # todo support definition references
         # todo support references to application level parameters
         self.parameters = list(self.resolve_parameters(operation.get('parameters', [])))
+        if path_parameters:
+            self.parameters += list(self.resolve_parameters(path_parameters))
+
         self.security = operation.get('security', app_security)
         self.produces = operation.get('produces', app_produces)
 

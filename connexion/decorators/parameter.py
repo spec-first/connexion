@@ -99,9 +99,13 @@ def parameter_to_arg(parameters, function):
                 logger.debug("Query Parameter '%s' not in function arguments", key)
             else:
                 logger.debug("Query Parameter '%s' in function arguments", key)
-                query_param = query_types[key]
-                logger.debug('%s is a %s', key, query_param)
-                kwargs[key] = get_val_from_param(value, query_param)
+                try:
+                    query_param = query_types[key]
+                except KeyError:  # pragma: no cover
+                    logger.error("Function argument '{}' not defined in specification".format(key))
+                else:
+                    logger.debug('%s is a %s', key, query_param)
+                    kwargs[key] = get_val_from_param(value, query_param)
 
         # Add formData parameters
         form_arguments = copy.deepcopy(default_form_params)
@@ -111,8 +115,12 @@ def parameter_to_arg(parameters, function):
                 logger.debug("FormData parameter '%s' not in function arguments", key)
             else:
                 logger.debug("FormData parameter '%s' in function arguments", key)
-                form_param = form_types[key]
-                kwargs[key] = get_val_from_param(value, form_param)
+                try:
+                    form_param = form_types[key]
+                except KeyError:  # pragma: no cover
+                    logger.error("Function argument '{}' not defined in specification".format(key))
+                else:
+                    kwargs[key] = get_val_from_param(value, form_param)
 
         return function(*args, **kwargs)
 
