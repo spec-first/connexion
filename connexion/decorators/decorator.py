@@ -12,6 +12,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 """
 import logging
 import flask
+from ..utils import is_flask_response
 
 logger = logging.getLogger('connexion.decorators.decorator')
 
@@ -32,7 +33,7 @@ class BaseDecorator:
         url = flask.request.url
         logger.debug('Getting data and status code', extra={'data': data, 'data_type': type(data), 'url': url})
         status_code, headers = 200, {}
-        if isinstance(data, flask.Response):
+        if is_flask_response(data):
             data = data
             status_code = data.status_code
             headers = data.headers

@@ -1,4 +1,3 @@
-from copy import deepcopy
 import pathlib
 import types
 
@@ -239,6 +238,7 @@ SECURITY_DEFINITIONS_WO_INFO = {'oauth': {'type': 'oauth2',
 def test_operation():
     operation = Operation(method='GET',
                           path='endpoint',
+                          path_parameters=[],
                           operation=OPERATION1,
                           app_produces=['application/json'],
                           app_security=[],
@@ -249,18 +249,24 @@ def test_operation():
     assert isinstance(operation.function, types.FunctionType)
     # security decorator should be a partial with verify_oauth as the function and token url and scopes as arguments.
     # See https://docs.python.org/2/library/functools.html#partial-objects
-    assert operation._Operation__security_decorator.func is verify_oauth
-    assert operation._Operation__security_decorator.args == ('https://ouath.example/token_info', set(['uid']))
+    assert operation.security_decorator.func is verify_oauth
+    assert operation.security_decorator.args == ('https://ouath.example/token_info', set(['uid']))
 
     assert operation.method == 'GET'
     assert operation.produces == ['application/json']
     assert operation.security == [{'oauth': ['uid']}]
-    assert operation.body_schema == DEFINITIONS['new_stack']
+
+    expected_body_schema = {
+        '$ref': '#/definitions/new_stack',
+        'definitions': DEFINITIONS
+    }
+    assert operation.body_schema == expected_body_schema
 
 
 def test_operation_array():
     operation = Operation(method='GET',
                           path='endpoint',
+                          path_parameters=[],
                           operation=OPERATION9,
                           app_produces=['application/json'],
                           app_security=[],
@@ -271,18 +277,24 @@ def test_operation_array():
     assert isinstance(operation.function, types.FunctionType)
     # security decorator should be a partial with verify_oauth as the function and token url and scopes as arguments.
     # See https://docs.python.org/2/library/functools.html#partial-objects
-    assert operation._Operation__security_decorator.func is verify_oauth
-    assert operation._Operation__security_decorator.args == ('https://ouath.example/token_info', set(['uid']))
+    assert operation.security_decorator.func is verify_oauth
+    assert operation.security_decorator.args == ('https://ouath.example/token_info', set(['uid']))
 
     assert operation.method == 'GET'
     assert operation.produces == ['application/json']
     assert operation.security == [{'oauth': ['uid']}]
-    assert operation.body_schema == {'type': 'array', 'items': DEFINITIONS['new_stack']}
+    expected_body_schema = {
+        'type': 'array',
+        'items': {'$ref': '#/definitions/new_stack'},
+        'definitions': DEFINITIONS
+    }
+    assert operation.body_schema == expected_body_schema
 
 
 def test_operation_composed_definition():
     operation = Operation(method='GET',
                           path='endpoint',
+                          path_parameters=[],
                           operation=OPERATION10,
                           app_produces=['application/json'],
                           app_security=[],
@@ -293,29 +305,32 @@ def test_operation_composed_definition():
     assert isinstance(operation.function, types.FunctionType)
     # security decorator should be a partial with verify_oauth as the function and token url and scopes as arguments.
     # See https://docs.python.org/2/library/functools.html#partial-objects
-    assert operation._Operation__security_decorator.func is verify_oauth
-    assert operation._Operation__security_decorator.args == ('https://ouath.example/token_info', set(['uid']))
+    assert operation.security_decorator.func is verify_oauth
+    assert operation.security_decorator.args == ('https://ouath.example/token_info', set(['uid']))
 
     assert operation.method == 'GET'
     assert operation.produces == ['application/json']
     assert operation.security == [{'oauth': ['uid']}]
-    definition = deepcopy(DEFINITIONS['composed'])
-    definition['properties']['test'] = DEFINITIONS['new_stack']
-    assert operation.body_schema == definition
+    expected_body_schema = {
+        '$ref': '#/definitions/composed',
+        'definitions': DEFINITIONS
+    }
+    assert operation.body_schema == expected_body_schema
 
 
 def test_non_existent_reference():
-    operation = Operation(method='GET',
-                          path='endpoint',
-                          operation=OPERATION1,
-                          app_produces=['application/json'],
-                          app_security=[],
-                          security_definitions={},
-                          definitions={},
-                          parameter_definitions={},
-                          resolver=Resolver())
     with pytest.raises(InvalidSpecification) as exc_info:  # type: py.code.ExceptionInfo
-        schema = operation.body_schema
+        operation = Operation(method='GET',
+                            path='endpoint',
+                            path_parameters=[],
+                            operation=OPERATION1,
+                            app_produces=['application/json'],
+                            app_security=[],
+                            security_definitions={},
+                            definitions={},
+                            parameter_definitions={},
+                            resolver=Resolver())
+        operation.body_schema
 
     exception = exc_info.value
     assert str(exception) == "<InvalidSpecification: GET endpoint Definition 'new_stack' not found>"
@@ -323,17 +338,18 @@ def test_non_existent_reference():
 
 
 def test_multi_body():
-    operation = Operation(method='GET',
-                          path='endpoint',
-                          operation=OPERATION2,
-                          app_produces=['application/json'],
-                          app_security=[],
-                          security_definitions={},
-                          definitions=DEFINITIONS,
-                          parameter_definitions=PARAMETER_DEFINITIONS,
-                          resolver=Resolver())
     with pytest.raises(InvalidSpecification) as exc_info:  # type: py.code.ExceptionInfo
-        schema = operation.body_schema
+        operation = Operation(method='GET',
+                            path='endpoint',
+                            path_parameters=[],
+                            operation=OPERATION2,
+                            app_produces=['application/json'],
+                            app_security=[],
+                            security_definitions={},
+                            definitions=DEFINITIONS,
+                            parameter_definitions=PARAMETER_DEFINITIONS,
+                            resolver=Resolver())
+        operation.body_schema
 
     exception = exc_info.value
     assert str(exception) == "<InvalidSpecification: GET endpoint There can be one 'body' parameter at most>"
@@ -341,17 +357,18 @@ def test_multi_body():
 
 
 def test_invalid_reference():
-    operation = Operation(method='GET',
-                          path='endpoint',
-                          operation=OPERATION3,
-                          app_produces=['application/json'],
-                          app_security=[],
-                          security_definitions={},
-                          definitions=DEFINITIONS,
-                          parameter_definitions=PARAMETER_DEFINITIONS,
-                          resolver=Resolver())
     with pytest.raises(InvalidSpecification) as exc_info:  # type: py.code.ExceptionInfo
-        schema = operation.body_schema
+        operation = Operation(method='GET',
+                            path='endpoint',
+                            path_parameters=[],
+                            operation=OPERATION3,
+                            app_produces=['application/json'],
+                            app_security=[],
+                            security_definitions={},
+                            definitions=DEFINITIONS,
+                            parameter_definitions=PARAMETER_DEFINITIONS,
+                            resolver=Resolver())
+        operation.body_schema
 
     exception = exc_info.value
     assert str(exception) == "<InvalidSpecification: GET endpoint  '$ref' needs to point to definitions or parameters>"
@@ -361,6 +378,7 @@ def test_invalid_reference():
 def test_no_token_info():
     operation = Operation(method='GET',
                           path='endpoint',
+                          path_parameters=[],
                           operation=OPERATION1,
                           app_produces=['application/json'],
                           app_security=SECURITY_DEFINITIONS_WO_INFO,
@@ -369,17 +387,23 @@ def test_no_token_info():
                           parameter_definitions=PARAMETER_DEFINITIONS,
                           resolver=Resolver())
     assert isinstance(operation.function, types.FunctionType)
-    assert operation._Operation__security_decorator is security_passthrough
+    assert operation.security_decorator is security_passthrough
 
     assert operation.method == 'GET'
     assert operation.produces == ['application/json']
     assert operation.security == [{'oauth': ['uid']}]
-    assert operation.body_schema == DEFINITIONS['new_stack']
+
+    expected_body_schema = {
+        '$ref': '#/definitions/new_stack',
+        'definitions': DEFINITIONS
+    }
+    assert operation.body_schema == expected_body_schema
 
 
 def test_parameter_reference():
     operation = Operation(method='GET',
                           path='endpoint',
+                          path_parameters=[],
                           operation=OPERATION4,
                           app_produces=['application/json'],
                           app_security=[],
@@ -392,8 +416,10 @@ def test_parameter_reference():
 
 def test_resolve_invalid_reference():
     with pytest.raises(InvalidSpecification) as exc_info:
-        Operation(method='GET', path='endpoint', operation=OPERATION5, app_produces=['application/json'],
-                  app_security=[], security_definitions={}, definitions={}, parameter_definitions=PARAMETER_DEFINITIONS,
+        Operation(method='GET', path='endpoint', path_parameters=[],
+                  operation=OPERATION5, app_produces=['application/json'],
+                  app_security=[], security_definitions={}, definitions={},
+                  parameter_definitions=PARAMETER_DEFINITIONS,
                   resolver=Resolver())
 
     exception = exc_info.value  # type: InvalidSpecification
@@ -402,8 +428,11 @@ def test_resolve_invalid_reference():
 
 def test_bad_default():
     with pytest.raises(InvalidSpecification) as exc_info:
-        Operation(method='GET', path='endpoint', operation=OPERATION6, app_produces=['application/json'],
-                  app_security=[], security_definitions={}, definitions={}, parameter_definitions=PARAMETER_DEFINITIONS,
+        Operation(method='GET', path='endpoint', path_parameters=[],
+                  operation=OPERATION6, app_produces=['application/json'],
+                  app_security=[], security_definitions={},
+                  definitions=DEFINITIONS,
+                  parameter_definitions=PARAMETER_DEFINITIONS,
                   resolver=Resolver())
     exception = exc_info.value
     assert str(exception) == "<InvalidSpecification: The parameter 'stack_version' has a default value which " \
@@ -412,8 +441,10 @@ def test_bad_default():
                               "is not of type 'number'>"
 
     with pytest.raises(InvalidSpecification) as exc_info:
-        Operation(method='GET', path='endpoint', operation=OPERATION7, app_produces=['application/json'],
-                  app_security=[], security_definitions={}, definitions=DEFINITIONS, parameter_definitions={},
+        Operation(method='GET', path='endpoint', path_parameters=[],
+                  operation=OPERATION7, app_produces=['application/json'],
+                  app_security=[], security_definitions={},
+                  definitions=DEFINITIONS, parameter_definitions={},
                   resolver=Resolver())
     exception = exc_info.value
     assert str(exception) == "<InvalidSpecification: The parameter 'new_stack' has a default value which " \
@@ -423,8 +454,10 @@ def test_bad_default():
 
     with pytest.raises(InvalidSpecification) as exc_info:
         Operation(
-                method='GET', path='endpoint', operation=OPERATION8, app_produces=['application/json'],
-                app_security=[], security_definitions={}, definitions=DEFINITIONS, parameter_definitions={},
+                method='GET', path='endpoint', path_parameters=[],
+                operation=OPERATION8, app_produces=['application/json'],
+                app_security=[], security_definitions={},
+                definitions=DEFINITIONS, parameter_definitions={},
                 resolver=Resolver()
         )
     exception = exc_info.value
@@ -437,13 +470,15 @@ def test_bad_default():
 def test_default():
     op = OPERATION6.copy()
     op['parameters'][1]['default'] = 1
-    Operation(method='GET', path='endpoint', operation=op, app_produces=['application/json'], app_security=[],
-              security_definitions={}, definitions=DEFINITIONS, parameter_definitions=PARAMETER_DEFINITIONS,
+    Operation(method='GET', path='endpoint', path_parameters=[], operation=op,
+              app_produces=['application/json'], app_security=[],
+              security_definitions={}, definitions=DEFINITIONS,
+              parameter_definitions=PARAMETER_DEFINITIONS,
               resolver=Resolver())
     op = OPERATION8.copy()
     op['parameters'][0]['default'] = {
         'keep_stacks': 1, 'image_version': 'one', 'senza_yaml': 'senza.yaml', 'new_traffic': 100
     }
-    Operation(method='POST', path='endpoint', operation=op, app_produces=['application/json'],
+    Operation(method='POST', path='endpoint', path_parameters=[], operation=op, app_produces=['application/json'],
               app_security=[], security_definitions={}, definitions=DEFINITIONS, parameter_definitions={},
               resolver=Resolver())

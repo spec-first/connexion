@@ -14,6 +14,8 @@ Unless required by applicable law or agreed to in writing, software distributed 
 import functools
 import importlib
 import re
+import flask
+import werkzeug.wrappers
 
 PATH_PARAMETER = re.compile(r'\{([^}]*)\}')
 
@@ -57,6 +59,21 @@ def flaskify_path(swagger_path, types={}):
     """
     convert_match = functools.partial(convert_path_parameter, types=types)
     return PATH_PARAMETER.sub(convert_match, swagger_path)
+
+
+def is_flask_response(obj):
+    """
+    Verifies if obj is a default Flask response instance.
+
+    :type obj: object
+    :rtype bool
+
+    >>> is_flask_response(redirect('http://example.com/'))
+    True
+    >>> is_flask_response(flask.Response())
+    True
+    """
+    return isinstance(obj, flask.Response) or isinstance(obj, werkzeug.wrappers.Response)
 
 
 def deep_getattr(obj, attr):
@@ -131,7 +148,9 @@ def boolean(s):
     >>> boolean('false')
     False
     '''
-    if not hasattr(s, 'lower'):
+    if isinstance(s, bool):
+        return s
+    elif not hasattr(s, 'lower'):
         raise ValueError('Invalid boolean value')
     elif s.lower() == 'true':
         return True

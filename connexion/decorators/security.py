@@ -16,6 +16,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 from flask import request
 import functools
 import logging
+import os
 import requests
 from ..problem import problem
 
@@ -26,6 +27,23 @@ adapter = requests.adapters.HTTPAdapter(pool_connections=100, pool_maxsize=100)
 session = requests.Session()
 session.mount('http://', adapter)
 session.mount('https://', adapter)
+
+
+def get_tokeninfo_url(security_definition):
+    '''
+    :type security_definition: dict
+    :rtype: str
+
+    >>> get_tokeninfo_url({'x-tokenInfoUrl': 'foo'})
+    'foo'
+    '''
+    token_info_url = security_definition.get('x-tokenInfoUrl') or \
+        os.environ.get('HTTP_TOKENINFO_URL') or \
+        os.environ.get('TOKENINFO_URL')
+    # https://github.com/zalando/connexion/issues/148
+    if token_info_url and token_info_url == os.environ.get('HTTP_TOKENINFO_URL'):
+        logger.warn('The HTTP_TOKENINFO_URL environment variable is deprecated. Please use TOKENINFO_URL instead.')
+    return token_info_url
 
 
 def security_passthrough(function):

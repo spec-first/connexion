@@ -34,6 +34,7 @@ paths:
           description: Name of the person to greet.
           required: true
           type: string
+
   /greetings/{name}:
     get:
       summary: Generate greeting
@@ -52,6 +53,7 @@ paths:
           description: Name of the person to greet.
           required: true
           type: string
+
   /bye/{name}:
     get:
       summary: Generate goodbye
@@ -74,6 +76,7 @@ paths:
           description: Name of the person to say bye.
           required: true
           type: string
+
   /problem:
     get:
       summary: Fails
@@ -86,6 +89,7 @@ paths:
           description: goodbye response
           schema:
             type: string
+
   /other_problem:
     get:
       summary: Fails
@@ -101,6 +105,7 @@ paths:
           description: goodbye response
           schema:
             type: string
+
   /list/{name}:
     get:
       summary: Generate a greeting in a list
@@ -125,6 +130,7 @@ paths:
           description: Name of the person to say hello to.
           required: true
           type: string
+
   /byesecure/{name}:
     get:
       summary: Generate goodbye
@@ -146,6 +152,7 @@ paths:
           description: Name of the person to say bye.
           required: true
           type: string
+
   /except:
     get:
       summary: Fails badly
@@ -158,6 +165,7 @@ paths:
           description: goodbye response
           schema:
             type: string
+
   /multimime:
     get:
       summary: Has multiple content types
@@ -171,6 +179,7 @@ paths:
           description: goodbye response
           schema:
             type: string
+
   /empty:
     get:
       summary: Returns empty response
@@ -181,6 +190,7 @@ paths:
       responses:
         204:
           description: empty
+
   /test_schema:
     post:
       summary: Returns the image_version
@@ -199,6 +209,7 @@ paths:
           description: goodbye response
           schema:
             $ref: '#/definitions/new_stack'
+
   /test_schema/response/object/{valid}:
     get:
       summary: Returns an image_version as an object
@@ -217,6 +228,7 @@ paths:
           description: Requested new_stack data model
           schema:
             $ref: '#/definitions/new_stack'
+
   /test_schema/response/string/{valid}:
     get:
       summary: Returns an image_version as a string
@@ -235,6 +247,7 @@ paths:
           description: Requested new_stack data model
           schema:
             type: string
+
   /test_schema/response/integer/{valid}:
     get:
       summary: Returns an image_version as an integer
@@ -253,6 +266,7 @@ paths:
           description: Requested new_stack data model
           schema:
             type: integer
+
   /test_schema/response/number/{valid}:
     get:
       summary: Returns an image_version as a number(float)
@@ -271,6 +285,7 @@ paths:
           description: Requested new_stack data model
           schema:
             type: number
+
   /test_schema/response/boolean/{valid}:
     get:
       summary: Returns an image_version as a boolean
@@ -289,6 +304,7 @@ paths:
           description: Requested new_stack data model
           schema:
             type: boolean
+
   /test_schema/response/array/{valid}:
     get:
       summary: Returns an image_version as a boolean
@@ -310,6 +326,7 @@ paths:
             items:
               schema:
                 $ref: '#/definitions/new_stack'
+
   /test_schema_in_query:
     post:
       summary: Returns the image_version
@@ -352,6 +369,47 @@ paths:
           description: goodbye response
           schema:
             type: string
+
+  /test_schema_map:
+    post:
+      summary: Returns empty response
+      description: Returns empty response
+      operationId: fakeapi.hello.schema_map
+      parameters:
+        - name: new_stack
+          required: true
+          in: body
+          schema:
+            type: object
+            additionalProperties:
+              $ref: '#/definitions/new_stack'
+      produces:
+        - application/json
+      responses:
+        200:
+          description: goodbye response
+          schema:
+            type: string
+
+  /test_schema_recursive:
+    post:
+      summary: Returns empty response
+      description: Returns empty response
+      operationId: fakeapi.hello.schema_recursive
+      parameters:
+        - name: new_stack
+          required: true
+          in: body
+          schema:
+            $ref: '#/definitions/simple_tree'
+      produces:
+        - application/json
+      responses:
+        200:
+          description: goodbye response
+          schema:
+            type: string
+
   /test_schema_format:
     post:
       summary: Returns empty response
@@ -371,6 +429,7 @@ paths:
           description: goodbye response
           schema:
             type: string
+
   /test_not_implemented:
     post:
       summary: Returns empty response
@@ -389,6 +448,7 @@ paths:
           description: goodbye response
           schema:
             type: string
+
   /test_parameter_validation:
     get:
       operationId: fakeapi.hello.test_parameter_validation
@@ -403,6 +463,7 @@ paths:
         - name: bool
           in: query
           type: boolean
+
   /test_required_query_param:
     get:
       operationId: fakeapi.hello.test_required_query_param
@@ -411,6 +472,7 @@ paths:
           in: query
           type: number
           required: true
+
   /test_array_csv_query_param:
     get:
       operationId: fakeapi.hello.test_array_csv_query_param
@@ -423,6 +485,7 @@ paths:
           items:
             type: string
           collectionFormat: csv
+
   /test_array_pipes_query_param:
     get:
       operationId: fakeapi.hello.test_array_pipes_query_param
@@ -435,6 +498,7 @@ paths:
           items:
             type: integer
           collectionFormat: pipes
+
   /test_array_unsupported_query_param:
     get:
       operationId: fakeapi.hello.test_array_unsupported_query_param
@@ -447,12 +511,14 @@ paths:
           items:
             type: string
           collectionFormat: unsupported
+
   /test_no_content_response:
     get:
       operationId: fakeapi.hello.test_no_content_response
       responses:
         204:
           description: No content returned
+
   /schema_array:
     get:
       tags:
@@ -469,6 +535,7 @@ paths:
       responses:
         200:
           description: OK
+
   /schema_int:
     get:
       tags:
@@ -483,6 +550,7 @@ paths:
       responses:
         200:
           description: OK
+
   /goodday/{name}:
     post:
       summary: Generate good day greeting
@@ -507,6 +575,7 @@ paths:
           description: Name of the person to greet.
           required: true
           type: string
+
   /goodday/noheader:
     post:
       summary: Generate good day greeting
@@ -521,6 +590,7 @@ paths:
               description: The URI of the created resource
           schema:
             type: object
+
   /goodevening/{name}:
     post:
       summary: Generate good evening
@@ -547,14 +617,17 @@ paths:
           description: Name of the person to say good evening.
           required: true
           type: string
+
   /resolver-test/method:
     get:
       summary: Test class instance method
       operationId: fakeapi.hello.class_instance.test_method
+
   /resolver-test/classmethod:
     get:
       summary: Test class instance method
       operationId: fakeapi.hello.DummyClass.test_classmethod
+
   /test-int-path/{someint}:
     get:
       summary: Test type casting of path parameter
@@ -616,6 +689,111 @@ paths:
           in: query
           default: 1
 
+  /test-formData-param:
+    post:
+      summary: Test formData parameter
+      operationId: fakeapi.hello.test_formData_param
+      parameters:
+        - name: formData
+          type: string
+          in: formData
+          required: true
+
+  /test-formData-missing-param:
+    post:
+      summary: Test formData missing parameter in handler
+      operationId: fakeapi.hello.test_formData_missing_param
+      parameters:
+        - name: missing_formData
+          type: string
+          in: formData
+          required: true
+
+  /test-bool-param:
+    get:
+      summary: Test usage of boolean default value
+      operationId: fakeapi.hello.test_bool_default_param
+      parameters:
+        - name: thruthiness
+          type: boolean
+          in: query
+          default: false
+
+  /test-bool-array-param:
+    get:
+      summary: Test usage of an array of booleans value
+      operationId: fakeapi.hello.test_bool_array_param
+      parameters:
+        - name: thruthiness
+          in: query
+          type: array
+          items:
+            type: boolean
+
+  /test-required-param:
+    get:
+      summary: Test required param without default value
+      operationId: fakeapi.hello.test_required_param
+      parameters:
+        - name: simple
+          type: string
+          in: query
+          required: true
+
+  /test-redirect-endpoint:
+    get:
+      summary: Tests handlers returning flask.Response objects
+      operationId: fakeapi.hello.test_redirect_endpoint
+      responses:
+        302:
+          description: 302 Found
+
+  /test-redirect-response-endpoint:
+    get:
+      summary: Tests handlers returning flask.Response objects
+      operationId: fakeapi.hello.test_redirect_response_endpoint
+      responses:
+        302:
+          description: 302 Found
+
+  /test-204-with-headers:
+    get:
+      summary: Tests that response code 204 can have headers set
+      operationId: fakeapi.hello.test_204_with_headers
+      responses:
+        204:
+          headers:
+            X-Something:
+              description: A value that might be send in the response
+              type: string
+          description: 204 no content
+
+  /test-204-with-headers-nocontent-obj:
+    get:
+      summary: Tests that response code 204 using NoContent obj can have headers set
+      operationId: fakeapi.hello.test_nocontent_obj_with_headers
+      responses:
+        204:
+          headers:
+            X-Something:
+              description: A value that might be send in the response
+              type: string
+          description: 204 no content
+
+  /parameters-in-root-path:
+    parameters:
+      - in: query
+        name: title
+        type: string
+        description: Some parameter in the path
+        required: true
+    get:
+      summary: Test the method GET with parameter from path
+      operationId: fakeapi.hello.path_parameters_in_get_method
+      responses:
+        200:
+          description: Everything is OK
+
 definitions:
   new_stack:
     type: object
@@ -625,3 +803,12 @@ definitions:
         description: Docker image version to deploy
     required:
       - image_version
+  simple_tree:
+    type: object
+    properties:
+      children:
+        type: array
+        items:
+          $ref: "#/definitions/simple_tree"
+        description: Docker image version to deploy
+    additionalProperties: false

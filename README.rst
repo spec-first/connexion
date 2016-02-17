@@ -74,14 +74,14 @@ For example:
           operationId: myapp.api.hello_world
 
 If you provided this path in your specification POST requests to ``http://MYHOST/hello_world`` would be handled by the
-function ``hello_world`` in ``myapp.api``. Optionally you can include `x-router-controller` in your operation definition, making ``operationId`` relative:
+function ``hello_world`` in ``myapp.api``. Optionally you can include ``x-swagger-router-controller`` in your operation definition, making ``operationId`` relative:
 
 .. code-block:: yaml
 
     paths:
       /hello_world:
         post:
-          x-router-controller: myapp.api
+          x-swagger-router-controller: myapp.api
           operationId: hello_world
 
 
@@ -147,7 +147,7 @@ Authentication and Authorization
 If the specification includes a Oauth2 `Security Definition <swager.spec.security_definition_>`_ compatible with the
 Zalando Greendale Team's infrastructure Connexion will automatically handle token validation and authorization for
 operations that have `Security Requirements <swager.spec.security_requirement_>`_. One main difference between the usual
-OAuth flow and the one Connexion uses is that the API Security Definition **must** include a 'x-tokenInfoUrl' (or set ``HTTP_TOKENINFO_URL`` env var) with the
+OAuth flow and the one Connexion uses is that the API Security Definition **must** include a 'x-tokenInfoUrl' (or set ``TOKENINFO_URL`` env var) with the
 URL to use to validate and get the token information.
 Connexion expects to receive the Oauth token in the ``Authorization`` header field in the format described in
 `RFC 6750 <rfc6750_>`_ section 2.1.

@@ -17,9 +17,11 @@ import json
 import logging
 import pathlib
 import yaml
+import werkzeug.exceptions
 from .operation import Operation
 from . import utils
 from . import resolver
+from .handlers import AuthErrorHandler
 
 MODULE_PATH = pathlib.Path(__file__).absolute().parent
 SWAGGER_UI_PATH = MODULE_PATH / 'vendor' / 'swagger-ui'
@@ -34,7 +36,7 @@ class Api:
     """
 
     def __init__(self, swagger_yaml_path, base_url=None, arguments=None, swagger_ui=None, swagger_path=None,
-                 swagger_url=None, validate_responses=False, resolver=resolver.Resolver()):
+                 swagger_url=None, validate_responses=False, resolver=resolver.Resolver(), auth_all_paths=False):
         """
         :type swagger_yaml_path: pathlib.Path
         :type base_url: str | None
@@ -42,6 +44,7 @@ class Api:
         :type swagger_ui: bool
         :type swagger_path: string | None
         :type swagger_url: string | None
+        :type auth_all_paths: bool
         :param resolver: Callable that maps operationID to a function
         """
         self.swagger_yaml_path = pathlib.Path(swagger_yaml_path)
@@ -50,7 +53,8 @@ class Api:
                                                                             'arguments': arguments,
                                                                             'swagger_ui': swagger_ui,
                                                                             'swagger_path': swagger_path,
-                                                                            'swagger_url': swagger_url})
+                                                                            'swagger_url': swagger_url,
+                                                                            'auth_all_paths': auth_all_paths})
         arguments = arguments or {}
         with swagger_yaml_path.open() as swagger_yaml:
             swagger_template = swagger_yaml.read()
@@ -92,9 +96,13 @@ class Api:
         self.add_swagger_json()
         if swagger_ui:
             self.add_swagger_ui()
+
         self.add_paths()
 
-    def add_operation(self, method, path, swagger_operation):
+        if auth_all_paths:
+            self.add_auth_on_not_found()
+
+    def add_operation(self, method, path, swagger_operation, path_parameters):
         """
         Adds one operation to the api.
 
@@ -111,7 +119,8 @@ class Api:
         :type path: str
         :type swagger_operation: dict
         """
-        operation = Operation(method=method, path=path, operation=swagger_operation, app_produces=self.produces,
+        operation = Operation(method=method, path=path, path_parameters=path_parameters,
+                              operation=swagger_operation, app_produces=self.produces,
                               app_security=self.security, security_definitions=self.security_definitions,
                               definitions=self.definitions, parameter_definitions=self.parameter_definitions,
                               validate_responses=self.validate_responses, resolver=self.resolver)
@@ -130,12 +139,32 @@ class Api:
         paths = paths or self.specification.get('paths', dict())
         for path, methods in paths.items():
             logger.debug('Adding %s%s...', self.base_url, path)
+
+            # search for parameters definitions in the path level
+            # http://swagger.io/specification/#pathItemObject
+            path_parameters = []
+            if 'parameters' in methods:
+                path_parameters = methods['parameters']
+
             # TODO Error handling
             for method, endpoint in methods.items():
+                if method == 'parameters':
+                    continue
                 try:
-                    self.add_operation(method, path, endpoint)
+                    self.add_operation(method, path, endpoint, path_parameters)
                 except Exception:  # pylint: disable= W0703
-                    logger.exception('Failed to add operation for %s %s%s', method.upper(), self.base_url, path)
+                    logger.exception('Failed to add operation for %s %s%s',
+                                     method.upper(), self.base_url, path)
+
+    def add_auth_on_not_found(self):
+        """
+        Adds a 404 error handler to authenticate and only expose the 404 status if the security validation pass.
+        """
+        logger.debug('Adding path not found authentication')
+        not_found_error = AuthErrorHandler(werkzeug.exceptions.NotFound(), security=self.security,
+                                           security_definitions=self.security_definitions)
+        endpoint_name = "{name}_not_found".format(name=self.blueprint.name)
+        self.blueprint.add_url_rule('/<path:invalid_path>', endpoint_name, not_found_error.function)
 
     def add_swagger_json(self):
         """

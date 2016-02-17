@@ -2,7 +2,6 @@ import pathlib
 import json
 import logging
 import pytest
-import _pytest.monkeypatch
 from connexion.app import App
 
 logging.basicConfig(level=logging.DEBUG)
@@ -398,6 +397,81 @@ def test_schema_list(app):
     assert wrong_items_response['detail'].startswith("42 is not of type 'string'")
 
 
+def test_schema_map(app):
+    app_client = app.app.test_client()
+    headers = {'Content-type': 'application/json'}
+
+    valid_object = {
+        "foo": {
+            "image_version": "string"
+        },
+        "bar": {
+            "image_version": "string"
+        }
+    }
+
+    invalid_object = {
+        "foo": 42
+    }
+
+    wrong_type = app_client.post('/v1.0/test_schema_map', headers=headers, data=json.dumps(42))  # type: flask.Response
+    assert wrong_type.status_code == 400
+    assert wrong_type.content_type == 'application/problem+json'
+    wrong_type_response = json.loads(wrong_type.data.decode())  # type: dict
+    assert wrong_type_response['title'] == 'Bad Request'
+    assert wrong_type_response['detail'].startswith("42 is not of type 'object'")
+
+    wrong_items = app_client.post('/v1.0/test_schema_map', headers=headers,
+                                  data=json.dumps(invalid_object))  # type: flask.Response
+    assert wrong_items.status_code == 400
+    assert wrong_items.content_type == 'application/problem+json'
+    wrong_items_response = json.loads(wrong_items.data.decode())  # type: dict
+    assert wrong_items_response['title'] == 'Bad Request'
+    assert wrong_items_response['detail'].startswith("42 is not of type 'object'")
+
+    right_type = app_client.post('/v1.0/test_schema_map', headers=headers,
+                                  data=json.dumps(valid_object))  # type: flask.Response
+    assert right_type.status_code == 200
+
+
+def test_schema_recursive(app):
+    app_client = app.app.test_client()
+    headers = {'Content-type': 'application/json'}
+
+    valid_object = {
+        "children": [
+            {"children": []},
+            {"children": [
+                {"children": []},
+            ]},
+            {"children": []},
+        ]
+    }
+
+    invalid_object = {
+        "children": [42]
+    }
+
+    wrong_type = app_client.post('/v1.0/test_schema_recursive', headers=headers, data=json.dumps(42))  # type: flask.Response
+    assert wrong_type.status_code == 400
+    assert wrong_type.content_type == 'application/problem+json'
+    wrong_type_response = json.loads(wrong_type.data.decode())  # type: dict
+    assert wrong_type_response['title'] == 'Bad Request'
+    assert wrong_type_response['detail'].startswith("42 is not of type 'object'")
+
+    wrong_items = app_client.post('/v1.0/test_schema_recursive', headers=headers,
+                                  data=json.dumps(invalid_object))  # type: flask.Response
+    assert wrong_items.status_code == 400
+    assert wrong_items.content_type == 'application/problem+json'
+    wrong_items_response = json.loads(wrong_items.data.decode())  # type: dict
+    assert wrong_items_response['title'] == 'Bad Request'
+    assert wrong_items_response['detail'].startswith("42 is not of type 'object'")
+
+    right_type = app_client.post('/v1.0/test_schema_recursive', headers=headers,
+                                  data=json.dumps(valid_object))  # type: flask.Response
+    assert right_type.status_code == 200
+
+
 def test_schema_format(app):
     app_client = app.app.test_client()
     headers = {'Content-type': 'application/json'}
@@ -575,3 +649,138 @@ def test_falsy_param(app):
     assert resp.status_code == 200
     response = json.loads(resp.data.decode())
     assert response == 1
+
+
+def test_formData_param(app):
+    app_client = app.app.test_client()
+    resp = app_client.post('/v1.0/test-formData-param', data={'formData': 'test'})
+    assert resp.status_code == 200
+    response = json.loads(resp.data.decode())
+    assert response == 'test'
+
+
+def test_formData_missing_param(app):
+    app_client = app.app.test_client()
+    resp = app_client.post('/v1.0/test-formData-missing-param', data={'missing_formData': 'test'})
+    assert resp.status_code == 200
+
+
+def test_bool_as_default_param(app):
+    app_client = app.app.test_client()
+    resp = app_client.get('/v1.0/test-bool-param')
+    assert resp.status_code == 200
+
+    resp = app_client.get('/v1.0/test-bool-param', query_string={'thruthiness': True})
+    assert resp.status_code == 200
+    response = json.loads(resp.data.decode())
+    assert response is True
+
+
+def test_bool_param(app):
+    app_client = app.app.test_client()
+    resp = app_client.get('/v1.0/test-bool-param', query_string={'thruthiness': True})
+    assert resp.status_code == 200
+    response = json.loads(resp.data.decode())
+    assert response is True
+
+    resp = app_client.get('/v1.0/test-bool-param', query_string={'thruthiness': False})
+    assert resp.status_code == 200
+    response = json.loads(resp.data.decode())
+    assert response is False
+
+
+def test_bool_array_param(app):
+    app_client = app.app.test_client()
+    resp = app_client.get('/v1.0/test-bool-array-param?thruthiness=true,true,true')
+    assert resp.status_code == 200
+    response = json.loads(resp.data.decode())
+    assert response is True
+
+    app_client = app.app.test_client()
+    resp = app_client.get('/v1.0/test-bool-array-param?thruthiness=true,true,false')
+    assert resp.status_code == 200
+    response = json.loads(resp.data.decode())
+    assert response is False
+
+    app_client = app.app.test_client()
+    resp = app_client.get('/v1.0/test-bool-array-param')
+    assert resp.status_code == 200
+
+
+def test_required_param_miss_config(app):
+    app_client = app.app.test_client()
+
+    resp = app_client.get('/v1.0/test-required-param')
+    assert resp.status_code == 400
+
+    resp = app_client.get('/v1.0/test-required-param', query_string={'simple': 'test'})
+    assert resp.status_code == 200
+
+    resp = app_client.get('/v1.0/test-required-param')
+    assert resp.status_code == 400
+
+
+def test_redirect_endpoint(app):
+    app_client = app.app.test_client()
+    resp = app_client.get('/v1.0/test-redirect-endpoint')
+    assert resp.status_code == 302
+
+
+def test_redirect_response_endpoint(app):
+    app_client = app.app.test_client()
+    resp = app_client.get('/v1.0/test-redirect-response-endpoint')
+    assert resp.status_code == 302
+
+
+def test_security_over_inexistent_endpoints(oauth_requests):
+    app1 = App(__name__, 5001, SPEC_FOLDER, swagger_ui=False, debug=True, auth_all_paths=True)
+    app1.add_api('secure_api.yaml')
+    assert app1.port == 5001
+
+    app_client = app1.app.test_client()
+    headers = {"Authorization": "Bearer 300"}
+    get_inexistent_endpoint = app_client.get('/v1.0/does-not-exist-invalid-token', headers=headers)  # type: flask.Response
+    assert get_inexistent_endpoint.status_code == 401
+    assert get_inexistent_endpoint.content_type == 'application/problem+json'
+
+    headers = {"Authorization": "Bearer 100"}
+    get_inexistent_endpoint = app_client.get('/v1.0/does-not-exist-valid-token', headers=headers)  # type: flask.Response
+    assert get_inexistent_endpoint.status_code == 404
+    assert get_inexistent_endpoint.content_type == 'application/problem+json'
+
+    get_inexistent_endpoint = app_client.get('/v1.0/does-not-exist-no-token')  # type: flask.Response
+    assert get_inexistent_endpoint.status_code == 401
+
+    swagger_ui = app_client.get('/v1.0/ui/')  # type: flask.Response
+    assert swagger_ui.status_code == 401
+
+    headers = {"Authorization": "Bearer 100"}
+    post_greeting = app_client.post('/v1.0/greeting/rcaricio', data={}, headers=headers)  # type: flask.Response
+    assert post_greeting.status_code == 200
+
+    post_greeting = app_client.post('/v1.0/greeting/rcaricio', data={})  # type: flask.Response
+    assert post_greeting.status_code == 401
+
+
+def test_no_content_response_have_headers(app):
+    app_client = app.app.test_client()
+    resp = app_client.get('/v1.0/test-204-with-headers')
+    assert resp.status_code == 204
+    assert 'X-Something' in resp.headers
+
+
+def test_no_content_object_and_have_headers(app):
+    app_client = app.app.test_client()
+    resp = app_client.get('/v1.0/test-204-with-headers-nocontent-obj')
+    assert resp.status_code == 204
+    assert 'X-Something' in resp.headers
+
+
+def test_parameters_defined_in_path_level(app):
+    app_client = app.app.test_client()
+    resp = app_client.get('/v1.0/parameters-in-root-path?title=nice-get')
+    assert resp.status_code == 200
+    assert json.loads(resp.data.decode()) == ["nice-get"]
+
+    resp = app_client.get('/v1.0/parameters-in-root-path')
+    assert resp.status_code == 400

@@ -6,13 +6,15 @@ import inspect
 import logging
 import six
 
+from ..utils import boolean
+
 logger = logging.getLogger(__name__)
 
 # https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#data-types
 TYPE_MAP = {'integer': int,
             'number': float,
             'string': str,
-            'boolean': bool,
+            'boolean': boolean,
             'array': list,
             'object': dict}  # map of swagger types to python types
 
@@ -61,9 +63,13 @@ def parameter_to_arg(parameters, function):
     default_body = body_parameters[0].get('default')
     query_types = {parameter['name']: parameter
                    for parameter in parameters if parameter['in'] == 'query'}  # type: dict[str, str]
+    form_types = {parameter['name']: parameter
+                  for parameter in parameters if parameter['in'] == 'formData'}
     arguments = get_function_arguments(function)
     default_query_params = {param['name']: param['default']
                             for param in parameters if param['in'] == 'query' and 'default' in param}
+    default_form_params = {param['name']: param['default']
+                           for param in parameters if param['in'] == 'formData' and 'default' in param}
 
     @functools.wraps(function)
     def wrapper(*args, **kwargs):
@@ -93,9 +99,28 @@ def parameter_to_arg(parameters, function):
                 logger.debug("Query Parameter '%s' not in function arguments", key)
             else:
                 logger.debug("Query Parameter '%s' in function arguments", key)
-                query_param = query_types[key]
-                logger.debug('%s is a %s', key, query_param)
-                kwargs[key] = get_val_from_param(value, query_param)
+                try:
+                    query_param = query_types[key]
+                except KeyError:  # pragma: no cover
+                    logger.error("Function argument '{}' not defined in specification".format(key))
+                else:
+                    logger.debug('%s is a %s', key, query_param)
+                    kwargs[key] = get_val_from_param(value, query_param)
+
+        # Add formData parameters
+        form_arguments = copy.deepcopy(default_form_params)
+        form_arguments.update(flask.request.form.items())
+        for key, value in form_arguments.items():
+            if key not in arguments:
+                logger.debug("FormData parameter '%s' not in function arguments", key)
+            else:
+                logger.debug("FormData parameter '%s' in function arguments", key)
+                try:
+                    form_param = form_types[key]
+                except KeyError:  # pragma: no cover
+                    logger.error("Function argument '{}' not defined in specification".format(key))
+                else:
+                    kwargs[key] = get_val_from_param(value, form_param)
 
         return function(*args, **kwargs)
 

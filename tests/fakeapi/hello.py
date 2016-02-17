@@ -2,6 +2,7 @@
 
 from connexion import problem, request
 from connexion import NoContent
+from flask import redirect
 
 
 class DummyClass:
@@ -14,17 +15,22 @@ class DummyClass:
 
 class_instance = DummyClass()
 
+
 def get():
     return ''
+
 
 def search():
     return ''
 
+
 def list():
     return ''
 
+
 def post():
     return ''
+
 
 def post_greeting(name):
     data = {'greeting': 'Hello {name}'.format(name=name)}
@@ -160,6 +166,14 @@ def schema_list():
     return ''
 
 
+def schema_map():
+    return ''
+
+
+def schema_recursive():
+    return ''
+
+
 def schema_format():
     return ''
 
@@ -218,3 +232,48 @@ def test_default_integer_body(stack_version):
 
 def test_falsy_param(falsy):
     return falsy
+
+
+def test_formData_param(formData):
+    return formData
+
+
+def test_formData_missing_param():
+    return ''
+
+
+def test_bool_default_param(thruthiness):
+    return thruthiness
+
+
+def test_bool_array_param(thruthiness=None):
+    if thruthiness is None:
+        thruthiness = []
+    return all(thruthiness)
+
+
+def test_required_param(simple):
+    return simple
+
+
+def test_redirect_endpoint():
+    headers = {'Location': 'http://www.google.com/'}
+    return '', 302, headers
+
+
+def test_redirect_response_endpoint():
+    return redirect('http://www.google.com/')
+
+
+def test_204_with_headers():
+    headers = {'X-Something': 'test'}
+    return '', 204, headers
+
+
+def test_nocontent_obj_with_headers():
+    headers = {'X-Something': 'test'}
+    return NoContent, 204, headers
+
+
+def path_parameters_in_get_method(title):
+    return [title], 200, {}

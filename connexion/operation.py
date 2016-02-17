@@ -14,7 +14,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 from copy import deepcopy
 import functools
 import logging
-import os
 
 import jsonschema
 from jsonschema import ValidationError
@@ -24,7 +23,7 @@ from .decorators.metrics import UWSGIMetricsCollector
 from .decorators.parameter import parameter_to_arg
 from .decorators.produces import BaseSerializer, Produces, Jsonifier
 from .decorators.response import ResponseValidator
-from .decorators.security import security_passthrough, verify_oauth
+from .decorators.security import security_passthrough, verify_oauth, get_tokeninfo_url
 from .decorators.validation import RequestBodyValidator, ParameterValidator, TypeValidationError
 from .exceptions import InvalidSpecification
 from .utils import flaskify_endpoint, produces_json
@@ -32,12 +31,82 @@ from .utils import flaskify_endpoint, produces_json
 logger = logging.getLogger('connexion.operation')
 
 
-class Operation:
+class SecureOperation:
+    def __init__(self, security, security_definitions):
+        """
+        :param security: list of security rules the application uses by default
+        :type security: list
+        :param security_definitions: `Security Definitions Object
+            <https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-definitions-object>`_
+        :type security_definitions: dict
+        """
+        self.security = security
+        self.security_definitions = security_definitions
+
+    @property
+    def security_decorator(self):
+        """
+        Gets the security decorator for operation
+
+        From Swagger Specification:
+
+        **Security Definitions Object**
+
+        A declaration of the security schemes available to be used in the specification.
+
+        This does not enforce the security schemes on the operations and only serves to provide the relevant details
+        for each scheme.
+
+
+        **Security Requirement Object**
+
+        Lists the required security schemes to execute this operation. The object can have multiple security schemes
+        declared in it which are all required (that is, there is a logical AND between the schemes).
+
+        The name used for each property **MUST** correspond to a security scheme declared in the Security Definitions.
+
+        :rtype: types.FunctionType
+        """
+        logger.debug('... Security: %s', self.security, extra=vars(self))
+        if self.security:
+            if len(self.security) > 1:
+                logger.warning("... More than one security requirement defined. **IGNORING SECURITY REQUIREMENTS**",
+                               extra=vars(self))
+                return security_passthrough
+
+            security = self.security[0]  # type: dict
+            # the following line gets the first (and because of the previous condition only) scheme and scopes
+            # from the operation's security requirements
+
+            scheme_name, scopes = next(iter(security.items()))  # type: str, list
+            security_definition = self.security_definitions[scheme_name]
+            if security_definition['type'] == 'oauth2':
+                token_info_url = get_tokeninfo_url(security_definition)
+                if token_info_url:
+                    scopes = set(scopes)  # convert scopes to set because this is needed for verify_oauth
+                    return functools.partial(verify_oauth, token_info_url, scopes)
+                else:
+                    logger.warning("... OAuth2 token info URL missing. **IGNORING SECURITY REQUIREMENTS**",
+                                   extra=vars(self))
+            elif security_definition['type'] in ('apiKey', 'basic'):
+                logger.debug(
+                    "... Security type '%s' not natively supported by Connexion; you should handle it yourself",
+                    security_definition['type'], extra=vars(self))
+            else:
+                logger.warning("... Security type '%s' unknown. **IGNORING SECURITY REQUIREMENTS**",
+                               security_definition['type'], extra=vars(self))
+
+        # if we don't know how to handle the security or it's not defined we will usa a passthrough decorator
+        return security_passthrough
+
+
+class Operation(SecureOperation):
     """
     A single API operation on a path.
     """
 
-    def __init__(self, method, path, operation, app_produces, app_security, security_definitions, definitions,
+    def __init__(self, method, path, path_parameters, operation, app_produces,
+                 app_security, security_definitions, definitions,
                  parameter_definitions, resolver, validate_responses=False):
         """
         This class uses the OperationID identify the module and function that will handle the operation
@@ -53,6 +122,8 @@ class Operation:
         :type method: str
         :param path:
         :type path: str
+        :param path_parameters: Parameters defined in the path level
+        :type path_parameters: list
         :param operation: swagger operation object
         :type operation: dict
         :param app_produces: list of content types the application can return by default
@@ -65,6 +136,8 @@ class Operation:
         :param definitions: `Definitions Object
             <https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#definitionsObject>`_
         :type definitions: dict
+        :param parameter_definitions: Global parameter definitions
+        :type parameter_definitions: dict
         :param resolver: Callable that maps operationID to a function
         :param validate_responses: True enables validation. Validation errors generate HTTP 500 responses.
         :type validate_responses: bool
@@ -85,6 +158,9 @@ class Operation:
         # todo support definition references
         # todo support references to application level parameters
         self.parameters = list(self.resolve_parameters(operation.get('parameters', [])))
+        if path_parameters:
+            self.parameters += list(self.resolve_parameters(path_parameters))
+
         self.security = operation.get('security', app_security)
         self.produces = operation.get('produces', app_produces)
 
@@ -123,43 +199,76 @@ class Operation:
 
     def resolve_reference(self, schema):
         schema = deepcopy(schema)  # avoid changing the original schema
-        # find the object we need to resolve/update
+        self.check_references(schema)
+
+        # find the object we need to resolve/update if this is not a proper SchemaObject
+        # e.g a response or parameter object
         for obj in schema, schema.get('items'):
             reference = obj and obj.get('$ref')  # type: str
             if reference:
                 break
         if reference:
-            if not reference.startswith('#/'):
-                raise InvalidSpecification(
-                    "{method} {path}  '$ref' needs to start with '#/'".format(**vars(self)))
-            path = reference.split('/')
-            definition_type = path[1]
-            try:
-                definitions = self.definitions_map[definition_type]
-            except KeyError:
-                raise InvalidSpecification(
-                    "{method} {path}  '$ref' needs to point to definitions or parameters".format(**vars(self)))
-            definition_name = path[-1]
-            try:
-                # Get sub definition
-                definition = deepcopy(definitions[definition_name])
-            except KeyError:
-                raise InvalidSpecification("{method} {path} Definition '{definition_name}' not found".format(
-                    definition_name=definition_name, method=self.method, path=self.path))
-
-            # resolve object properties too
-            for prop, prop_spec in definition.get('properties', {}).items():
-                resolved = self.resolve_reference(prop_spec.get('schema', {}))
-                if not resolved:
-                    resolved = self.resolve_reference(prop_spec)
-
-                if resolved:
-                    definition['properties'][prop] = resolved
-
+            definition = deepcopy(self._retrieve_reference(reference))
             # Update schema
             obj.update(definition)
             del obj['$ref']
+
+        # if there is a schema object on this param or response, then we just
+        # need to include the defs and it can be validated by jsonschema
+        if 'schema' in schema:
+            schema['schema']['definitions'] = self.definitions
+            return schema
+
         return schema
+
+    def check_references(self, schema):
+        """
+        Searches the keys and values of a schema object for json references.
+        If it finds one, it attempts to locate it and will thrown an exception
+        if the reference can't be found in the definitions dictionary.
+
+        :param schema: The schema object to check
+        :type schema: dict
+        :raises InvalidSpecification: raised when a reference isn't found
+        """
+
+        stack = [schema]
+        visited = set()
+        while stack:
+            schema = stack.pop()
+            for k, v in schema.items():
+                if k == "$ref":
+                    if v in visited:
+                        continue
+                    visited.add(v)
+                    stack.append(self._retrieve_reference(v))
+                elif isinstance(v, (list, tuple)):
+                    for item in v:
+                        if hasattr(item, "items"):
+                            stack.append(item)
+                elif hasattr(v, "items"):
+                    stack.append(v)
+
+    def _retrieve_reference(self, reference):
+        if not reference.startswith('#/'):
+            raise InvalidSpecification(
+                "{method} {path}  '$ref' needs to start with '#/'".format(**vars(self)))
+        path = reference.split('/')
+        definition_type = path[1]
+        try:
+            definitions = self.definitions_map[definition_type]
+        except KeyError:
+            raise InvalidSpecification(
+                "{method} {path}  '$ref' needs to point to definitions or parameters".format(**vars(self)))
+        definition_name = path[-1]
+        try:
+            # Get sub definition
+            definition = deepcopy(definitions[definition_name])
+        except KeyError:
+            raise InvalidSpecification("{method} {path} Definition '{definition_name}' not found".format(
+                definition_name=definition_name, method=self.method, path=self.path))
+
+        return definition
 
     def get_mimetype(self):
         if produces_json(self.produces):  # endpoint will return json
@@ -202,9 +311,6 @@ class Operation:
 
         body_parameters = body_parameters[0] if body_parameters else {}
         schema = body_parameters.get('schema')  # type: dict
-
-        if schema:
-            schema = self.resolve_reference(schema)
         return schema
 
     @property
@@ -215,15 +321,7 @@ class Operation:
         :rtype: types.FunctionType
         """
 
-        parameters = []
-        for param in self.parameters:  # resolve references
-            param = param.copy()
-            schema = param.get('schema')
-            if schema:
-                schema = self.resolve_reference(schema)
-            param['schema'] = schema
-            parameters.append(param)
-        function = parameter_to_arg(parameters, self.__undecorated_function)
+        function = parameter_to_arg(self.parameters, self.__undecorated_function)
 
         if self.validate_responses:
             logger.debug('... Response validation enabled.')
@@ -239,7 +337,7 @@ class Operation:
             function = validation_decorator(function)
 
         # NOTE: the security decorator should be applied last to check auth before anything else :-)
-        security_decorator = self.__security_decorator
+        security_decorator = self.security_decorator
         logger.debug('... Adding security decorator (%r)', security_decorator, extra=vars(self))
         function = security_decorator(function)
 
@@ -279,62 +377,6 @@ class Operation:
             return decorator
         else:
             return BaseSerializer()
-
-    @property
-    def __security_decorator(self):
-        """
-        Gets the security decorator for operation
-
-        From Swagger Specification:
-
-        **Security Definitions Object**
-
-        A declaration of the security schemes available to be used in the specification.
-
-        This does not enforce the security schemes on the operations and only serves to provide the relevant details
-        for each scheme.
-
-
-        **Security Requirement Object**
-
-        Lists the required security schemes to execute this operation. The object can have multiple security schemes
-        declared in it which are all required (that is, there is a logical AND between the schemes).
-
-        The name used for each property **MUST** correspond to a security scheme declared in the Security Definitions.
-
-        :rtype: types.FunctionType
-        """
-        logger.debug('... Security: %s', self.security, extra=vars(self))
-        if self.security:
-            if len(self.security) > 1:
-                logger.warning("... More than one security requirement defined. **IGNORING SECURITY REQUIREMENTS**",
-                               extra=vars(self))
-                return security_passthrough
-
-            security = self.security[0]  # type: dict
-            # the following line gets the first (and because of the previous condition only) scheme and scopes
-            # from the operation's security requirements
-
-            scheme_name, scopes = next(iter(security.items()))  # type: str, list
-            security_definition = self.security_definitions[scheme_name]
-            if security_definition['type'] == 'oauth2':
-                token_info_url = security_definition.get('x-tokenInfoUrl', os.getenv('HTTP_TOKENINFO_URL'))
-                if token_info_url:
-                    scopes = set(scopes)  # convert scopes to set because this is needed for verify_oauth
-                    return functools.partial(verify_oauth, token_info_url, scopes)
-                else:
-                    logger.warning("... OAuth2 token info URL missing. **IGNORING SECURITY REQUIREMENTS**",
-                                   extra=vars(self))
-            elif security_definition['type'] in ('apiKey', 'basic'):
-                logger.debug(
-                    "... Security type '%s' not natively supported by Connexion; you should handle it yourself",
-                    security_definition['type'], extra=vars(self))
-            else:
-                logger.warning("... Security type '%s' unknown. **IGNORING SECURITY REQUIREMENTS**",
-                               security_definition['type'], extra=vars(self))
-
-        # if we don't know how to handle the security or it's not defined we will usa a passthrough decorator
-        return security_passthrough
 
     @property
     def __validation_decorators(self):
