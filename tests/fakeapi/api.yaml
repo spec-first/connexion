@@ -34,6 +34,7 @@ paths:
           description: Name of the person to greet.
           required: true
           type: string
+
   /greetings/{name}:
     get:
       summary: Generate greeting
@@ -52,6 +53,7 @@ paths:
           description: Name of the person to greet.
           required: true
           type: string
+
   /bye/{name}:
     get:
       summary: Generate goodbye
@@ -74,6 +76,7 @@ paths:
           description: Name of the person to say bye.
           required: true
           type: string
+
   /problem:
     get:
       summary: Fails
@@ -86,6 +89,7 @@ paths:
           description: goodbye response
           schema:
             type: string
+
   /other_problem:
     get:
       summary: Fails
@@ -101,6 +105,7 @@ paths:
           description: goodbye response
           schema:
             type: string
+
   /list/{name}:
     get:
       summary: Generate a greeting in a list
@@ -125,6 +130,7 @@ paths:
           description: Name of the person to say hello to.
           required: true
           type: string
+
   /byesecure/{name}:
     get:
       summary: Generate goodbye
@@ -146,6 +152,7 @@ paths:
           description: Name of the person to say bye.
           required: true
           type: string
+
   /except:
     get:
       summary: Fails badly
@@ -158,6 +165,7 @@ paths:
           description: goodbye response
           schema:
             type: string
+
   /multimime:
     get:
       summary: Has multiple content types
@@ -171,6 +179,7 @@ paths:
           description: goodbye response
           schema:
             type: string
+
   /empty:
     get:
       summary: Returns empty response
@@ -181,6 +190,7 @@ paths:
       responses:
         204:
           description: empty
+
   /test_schema:
     post:
       summary: Returns the image_version
@@ -199,6 +209,7 @@ paths:
           description: goodbye response
           schema:
             $ref: '#/definitions/new_stack'
+
   /test_schema/response/object/{valid}:
     get:
       summary: Returns an image_version as an object
@@ -217,6 +228,7 @@ paths:
           description: Requested new_stack data model
           schema:
             $ref: '#/definitions/new_stack'
+
   /test_schema/response/string/{valid}:
     get:
       summary: Returns an image_version as a string
@@ -235,6 +247,7 @@ paths:
           description: Requested new_stack data model
           schema:
             type: string
+
   /test_schema/response/integer/{valid}:
     get:
       summary: Returns an image_version as an integer
@@ -253,6 +266,7 @@ paths:
           description: Requested new_stack data model
           schema:
             type: integer
+
   /test_schema/response/number/{valid}:
     get:
       summary: Returns an image_version as a number(float)
@@ -271,6 +285,7 @@ paths:
           description: Requested new_stack data model
           schema:
             type: number
+
   /test_schema/response/boolean/{valid}:
     get:
       summary: Returns an image_version as a boolean
@@ -289,6 +304,7 @@ paths:
           description: Requested new_stack data model
           schema:
             type: boolean
+
   /test_schema/response/array/{valid}:
     get:
       summary: Returns an image_version as a boolean
@@ -310,6 +326,7 @@ paths:
             items:
               schema:
                 $ref: '#/definitions/new_stack'
+
   /test_schema_in_query:
     post:
       summary: Returns the image_version
@@ -352,6 +369,7 @@ paths:
           description: goodbye response
           schema:
             type: string
+
   /test_schema_map:
     post:
       summary: Returns empty response
@@ -372,6 +390,7 @@ paths:
           description: goodbye response
           schema:
             type: string
+
   /test_schema_recursive:
     post:
       summary: Returns empty response
@@ -390,6 +409,7 @@ paths:
           description: goodbye response
           schema:
             type: string
+
   /test_schema_format:
     post:
       summary: Returns empty response
@@ -409,6 +429,7 @@ paths:
           description: goodbye response
           schema:
             type: string
+
   /test_not_implemented:
     post:
       summary: Returns empty response
@@ -427,6 +448,7 @@ paths:
           description: goodbye response
           schema:
             type: string
+
   /test_parameter_validation:
     get:
       operationId: fakeapi.hello.test_parameter_validation
@@ -441,6 +463,7 @@ paths:
         - name: bool
           in: query
           type: boolean
+
   /test_required_query_param:
     get:
       operationId: fakeapi.hello.test_required_query_param
@@ -449,6 +472,7 @@ paths:
           in: query
           type: number
           required: true
+
   /test_array_csv_query_param:
     get:
       operationId: fakeapi.hello.test_array_csv_query_param
@@ -461,6 +485,7 @@ paths:
           items:
             type: string
           collectionFormat: csv
+
   /test_array_pipes_query_param:
     get:
       operationId: fakeapi.hello.test_array_pipes_query_param
@@ -473,6 +498,7 @@ paths:
           items:
             type: integer
           collectionFormat: pipes
+
   /test_array_unsupported_query_param:
     get:
       operationId: fakeapi.hello.test_array_unsupported_query_param
@@ -485,12 +511,14 @@ paths:
           items:
             type: string
           collectionFormat: unsupported
+
   /test_no_content_response:
     get:
       operationId: fakeapi.hello.test_no_content_response
       responses:
         204:
           description: No content returned
+
   /schema_array:
     get:
       tags:
@@ -507,6 +535,7 @@ paths:
       responses:
         200:
           description: OK
+
   /schema_int:
     get:
       tags:
@@ -521,6 +550,7 @@ paths:
       responses:
         200:
           description: OK
+
   /goodday/{name}:
     post:
       summary: Generate good day greeting
@@ -545,6 +575,7 @@ paths:
           description: Name of the person to greet.
           required: true
           type: string
+
   /goodday/noheader:
     post:
       summary: Generate good day greeting
@@ -559,6 +590,7 @@ paths:
               description: The URI of the created resource
           schema:
             type: object
+
   /goodevening/{name}:
     post:
       summary: Generate good evening
@@ -585,14 +617,17 @@ paths:
           description: Name of the person to say good evening.
           required: true
           type: string
+
   /resolver-test/method:
     get:
       summary: Test class instance method
       operationId: fakeapi.hello.class_instance.test_method
+
   /resolver-test/classmethod:
     get:
       summary: Test class instance method
       operationId: fakeapi.hello.DummyClass.test_classmethod
+
   /test-int-path/{someint}:
     get:
       summary: Test type casting of path parameter
@@ -744,6 +779,20 @@ paths:
               description: A value that might be send in the response
               type: string
           description: 204 no content
+
+  /parameters-in-root-path:
+    parameters:
+      - in: query
+        name: title
+        type: string
+        description: Some parameter in the path
+        required: true
+    get:
+      summary: Test the method GET with parameter from path
+      operationId: fakeapi.hello.path_parameters_in_get_method
+      responses:
+        200:
+          description: Everything is OK
 
 definitions:
   new_stack:
