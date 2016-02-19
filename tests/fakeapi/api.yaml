@@ -14,8 +14,6 @@ securityDefinitions:
         x-tokenInfoUrl: https://ouath.example/token_info
         scopes:
             myscope: can do stuff
-    something_else:
-        type: something_else
 
 paths:
   /greeting/{name}:
@@ -165,31 +163,6 @@ paths:
           description: goodbye response
           schema:
             type: string
-
-  /multimime:
-    get:
-      summary: Has multiple content types
-      description: Has multiple content types
-      operationId: fakeapi.hello.multimime
-      produces:
-        - application/json
-        - application/xml
-      responses:
-        200:
-          description: goodbye response
-          schema:
-            type: string
-
-  /empty:
-    get:
-      summary: Returns empty response
-      description: Returns empty response
-      operationId: fakeapi.hello.empty
-      produces:
-        - application/json
-      responses:
-        204:
-          description: empty
 
   /test_schema:
     post:
@@ -493,13 +466,6 @@ paths:
             type: string
           collectionFormat: unsupported
 
-  /test_no_content_response:
-    get:
-      operationId: fakeapi.hello.test_no_content_response
-      responses:
-        204:
-          description: No content returned
-
   /schema_array:
     get:
       tags:
@@ -637,29 +603,6 @@ paths:
           type: string
           default: connexion
 
-  /test-default-object-body:
-    post:
-      summary: Test if default object body param is passed to handler.
-      operationId: fakeapi.hello.test_default_object_body
-      parameters:
-        - name: stack
-          type: object
-          in: body
-          default:
-            'image_version': 'default_image'
-          schema:
-            $ref: '#/definitions/new_stack'
-
-  /test-default-integer-body:
-    post:
-      summary: Test if default integer body param is passed to handler.
-      operationId: fakeapi.hello.test_default_integer_body
-      parameters:
-        - name: stack_version
-          type: integer
-          in: body
-          default: 1
-
   /test-falsy-param:
     get:
       summary: Test if default value when argument is falsy.
@@ -720,22 +663,6 @@ paths:
           type: string
           in: query
           required: true
-
-  /test-redirect-endpoint:
-    get:
-      summary: Tests handlers returning flask.Response objects
-      operationId: fakeapi.hello.test_redirect_endpoint
-      responses:
-        302:
-          description: 302 Found
-
-  /test-redirect-response-endpoint:
-    get:
-      summary: Tests handlers returning flask.Response objects
-      operationId: fakeapi.hello.test_redirect_response_endpoint
-      responses:
-        302:
-          description: 302 Found
 
   /test-204-with-headers:
     get:

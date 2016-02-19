@@ -2,11 +2,13 @@ import pathlib
 import json
 import logging
 import pytest
+
 from connexion.app import App
 
 logging.basicConfig(level=logging.DEBUG)
 
 TEST_FOLDER = pathlib.Path(__file__).parent
+FIXTURES_FOLDER = TEST_FOLDER / 'fixtures'
 SPEC_FOLDER = TEST_FOLDER / "fakeapi"
 
 
@@ -22,6 +24,10 @@ class FakeResponse:
 
     def json(self):
         return json.loads(self.text)
+
+
+# Helper fixtures functions
+# =========================
 
 
 @pytest.fixture
@@ -52,71 +58,145 @@ def app():
     return app
 
 
-def test_add_api_with_function_resolver_function_is_wrapped():
-    app = App(__name__, specification_dir=SPEC_FOLDER)
-    api = app.add_api('api.yaml', resolver=lambda oid: (lambda foo: 'bar'))
+@pytest.fixture
+def simple_api_spec_dir():
+    return FIXTURES_FOLDER / 'simple'
+
+
+@pytest.fixture
+def problem_api_spec_dir():
+    return FIXTURES_FOLDER / 'problem'
+
+
+@pytest.fixture
+def simple_app(simple_api_spec_dir):
+    app = App(__name__, 5001, simple_api_spec_dir, debug=True)
+    app.add_api('swagger.yaml', validate_responses=True)
+    return app
+
+
+@pytest.fixture
+def problem_app(problem_api_spec_dir):
+    app = App(__name__, 5001, problem_api_spec_dir, debug=True)
+    app.add_api('swagger.yaml', validate_responses=True)
+    return app
+
+
+# Test Resolvers
+# ======================
+
+
+def test_add_api_with_function_resolver_function_is_wrapped(simple_api_spec_dir):
+    app = App(__name__, specification_dir=simple_api_spec_dir)
+    api = app.add_api('swagger.yaml', resolver=lambda oid: (lambda foo: 'bar'))
     assert api.resolver.resolve_function_from_operation_id('faux')('bah') == 'bar'
 
 
-def test_app_with_relative_path():
+# Test setup
+# ======================
+
+
+def test_app_with_relative_path(simple_api_spec_dir):
     # Create the app with a realative path and run the test_app testcase below.
-    app = App(__name__, 5001, SPEC_FOLDER.relative_to(TEST_FOLDER),
+    app = App(__name__, 5001, simple_api_spec_dir.relative_to(TEST_FOLDER),
               debug=True)
-    app.add_api('api.yaml')
-    test_app(app)
+    app.add_api('swagger.yaml')
 
-
-def test_app(app):
-    assert app.port == 5001
-
-    app_client = app.app.test_client()
-    swagger_ui = app_client.get('/v1.0/ui/')  # type: flask.Response
-    assert swagger_ui.status_code == 200
-    assert b"Swagger UI" in swagger_ui.data
-
-    swagger_icon = app_client.get('/v1.0/ui/images/favicon.ico')  # type: flask.Response
-    assert swagger_icon.status_code == 200
-
-    post_greeting = app_client.post('/v1.0/greeting/jsantos', data={})  # type: flask.Response
-    assert post_greeting.status_code == 200
-    assert post_greeting.content_type == 'application/json'
-    greeting_reponse = json.loads(post_greeting.data.decode('utf-8'))
-    assert greeting_reponse['greeting'] == 'Hello jsantos'
-
+    app_client = simple_app.app.test_client()
     get_bye = app_client.get('/v1.0/bye/jsantos')  # type: flask.Response
     assert get_bye.status_code == 200
     assert get_bye.data == b'Goodbye jsantos'
 
-    post_greeting = app_client.post('/v1.0/greeting/jsantos', data={})  # type: flask.Response
-    assert post_greeting.status_code == 200
-    assert post_greeting.content_type == 'application/json'
-    greeting_reponse = json.loads(post_greeting.data.decode('utf-8'))
-    assert greeting_reponse['greeting'] == 'Hello jsantos'
 
-
-def test_no_swagger():
-    app = App(__name__, 5001, SPEC_FOLDER, swagger_ui=False, debug=True)
-    app.add_api('api.yaml')
+def test_no_swagger(simple_api_spec_dir):
+    app = App(__name__, 5001, simple_api_spec_dir, swagger_ui=False, debug=True)
+    app.add_api('swagger.yaml')
     app_client = app.app.test_client()
     swagger_ui = app_client.get('/v1.0/ui/')  # type: flask.Response
     assert swagger_ui.status_code == 404
 
-    app2 = App(__name__, 5001, SPEC_FOLDER, debug=True)
-    app2.add_api('api.yaml', swagger_ui=False)
+    app2 = App(__name__, 5001, simple_api_spec_dir, debug=True)
+    app2.add_api('swagger.yaml', swagger_ui=False)
     app2_client = app2.app.test_client()
     swagger_ui2 = app2_client.get('/v1.0/ui/')  # type: flask.Response
     assert swagger_ui2.status_code == 404
 
 
-def test_produce_decorator(app):
+def test_single_route(app):
+    def route1():
+        return 'single 1'
+
+    @app.route('/single2', methods=['POST'])
+    def route2():
+        return 'single 2'
+
     app_client = app.app.test_client()
 
-    get_bye = app_client.get('/v1.0/bye/jsantos')  # type: flask.Response
-    assert get_bye.content_type == 'text/plain; charset=utf-8'
+    app.add_url_rule('/single1', 'single1', route1, methods=['GET'])
+
+    get_single1 = app_client.get('/single1')  # type: flask.Response
+    assert get_single1.data == b'single 1'
+
+    post_single1 = app_client.post('/single1')  # type: flask.Response
+    assert post_single1.status_code == 405
+
+    post_single2 = app_client.post('/single2')  # type: flask.Response
+    assert post_single2.data == b'single 2'
+
+    get_single2 = app_client.get('/single2')  # type: flask.Response
+    assert get_single2.status_code == 405
 
 
-def test_errors(app):
+def test_resolve_method(app):
     app_client = app.app.test_client()
+    resp = app_client.get('/v1.0/resolver-test/method')  # type: flask.Response
+    assert resp.data.decode() == '"DummyClass"'
+
+
+def test_resolve_classmethod(app):
+    app_client = app.app.test_client()
+    resp = app_client.get('/v1.0/resolver-test/classmethod')  # type: flask.Response
+    assert resp.data.decode() == '"DummyClass"'
+
+
+def test_security_over_inexistent_endpoints(oauth_requests):
+    app1 = App(__name__, 5001, SPEC_FOLDER, swagger_ui=False, debug=True, auth_all_paths=True)
+    app1.add_api('secure_api.yaml')
+    assert app1.port == 5001
+
+    app_client = app1.app.test_client()
+    headers = {"Authorization": "Bearer 300"}
+    get_inexistent_endpoint = app_client.get('/v1.0/does-not-exist-invalid-token',
+                                             headers=headers)  # type: flask.Response
+    assert get_inexistent_endpoint.status_code == 401
+    assert get_inexistent_endpoint.content_type == 'application/problem+json'
+
+    headers = {"Authorization": "Bearer 100"}
+    get_inexistent_endpoint = app_client.get('/v1.0/does-not-exist-valid-token',
+                                             headers=headers)  # type: flask.Response
+    assert get_inexistent_endpoint.status_code == 404
+    assert get_inexistent_endpoint.content_type == 'application/problem+json'
+
+    get_inexistent_endpoint = app_client.get('/v1.0/does-not-exist-no-token')  # type: flask.Response
+    assert get_inexistent_endpoint.status_code == 401
+
+    swagger_ui = app_client.get('/v1.0/ui/')  # type: flask.Response
+    assert swagger_ui.status_code == 401
+
+    headers = {"Authorization": "Bearer 100"}
+    post_greeting = app_client.post('/v1.0/greeting/rcaricio', data={}, headers=headers)  # type: flask.Response
+    assert post_greeting.status_code == 200
+
+    post_greeting = app_client.post('/v1.0/greeting/rcaricio', data={})  # type: flask.Response
+    assert post_greeting.status_code == 401
+
+
+# Test errors
+# ==================
+
+
+def test_errors(problem_app):
+    app_client = problem_app.app.test_client()
 
     greeting404 = app_client.get('/v1.0/greeting')  # type: flask.Response
     assert greeting404.content_type == 'application/problem+json'
@@ -172,29 +252,8 @@ def test_errors(app):
     assert error_problem2['instance'] == 'instance1'
 
 
-def test_jsonifier(app):
-    app_client = app.app.test_client()
-
-    post_greeting = app_client.post('/v1.0/greeting/jsantos', data={})  # type: flask.Response
-    assert post_greeting.status_code == 200
-    assert post_greeting.content_type == 'application/json'
-    greeting_reponse = json.loads(post_greeting.data.decode('utf-8'))
-    assert greeting_reponse['greeting'] == 'Hello jsantos'
-
-    get_list_greeting = app_client.get('/v1.0/list/jsantos', data={})  # type: flask.Response
-    assert get_list_greeting.status_code == 200
-    assert get_list_greeting.content_type == 'application/json'
-    greeting_reponse = json.loads(get_list_greeting.data.decode('utf-8'))
-    assert len(greeting_reponse) == 2
-    assert greeting_reponse[0] == 'hello'
-    assert greeting_reponse[1] == 'jsantos'
-
-    get_greetings = app_client.get('/v1.0/greetings/jsantos', data={})  # type: flask.Response
-    assert get_greetings.status_code == 200
-    assert get_greetings.content_type == 'application/x.connexion+json'
-    greetings_reponse = json.loads(get_greetings.data.decode('utf-8'))
-    assert len(greetings_reponse) == 1
-    assert greetings_reponse['greetings'] == 'Hello jsantos'
+# Test headers
+# ====================
 
 
 def test_headers_jsonifier(app):
@@ -226,19 +285,22 @@ def test_header_not_returned(app):
     assert data['status'] == 500
 
 
-def test_not_content_response(app):
+def test_no_content_response_have_headers(app):
     app_client = app.app.test_client()
+    resp = app_client.get('/v1.0/test-204-with-headers')
+    assert resp.status_code == 204
+    assert 'X-Something' in resp.headers
 
-    get_no_content_response = app_client.get('/v1.0/test_no_content_response')
-    assert get_no_content_response.status_code == 204
-    assert get_no_content_response.content_length == 0
 
-
-def test_pass_through(app):
+def test_no_content_object_and_have_headers(app):
     app_client = app.app.test_client()
+    resp = app_client.get('/v1.0/test-204-with-headers-nocontent-obj')
+    assert resp.status_code == 204
+    assert 'X-Something' in resp.headers
 
-    response = app_client.get('/v1.0/multimime', data={})  # type: flask.Response
-    assert response.status_code == 200
+
+# Test Security
+# ===================
 
 
 def test_security(oauth_requests):
@@ -278,12 +340,8 @@ def test_security(oauth_requests):
     assert get_bye_bad_token_reponse['detail'] == "Provided oauth token is not valid"
 
 
-def test_empty(app):
-    app_client = app.app.test_client()
-
-    response = app_client.get('/v1.0/empty')  # type: flask.Response
-    assert response.status_code == 204
-    assert not response.data
+# Test Schema
+# ====================
 
 
 def test_schema(app):
@@ -485,30 +543,32 @@ def test_schema_format(app):
     assert "'xy' is not a 'date-time'" in wrong_type_response['detail']
 
 
-def test_single_route(app):
-    def route1():
-        return 'single 1'
-
-    @app.route('/single2', methods=['POST'])
-    def route2():
-        return 'single 2'
-
+def test_schema_array(app):
     app_client = app.app.test_client()
+    headers = {'Content-type': 'application/json'}
 
-    app.add_url_rule('/single1', 'single1', route1, methods=['GET'])
+    array_request = app_client.get('/v1.0/schema_array', headers=headers,
+                                   data=json.dumps(['list', 'hello']))  # type: flask.Response
+    assert array_request.status_code == 200
+    assert array_request.content_type == 'application/json'
+    array_response = json.loads(array_request.data.decode())  # type: list
+    assert array_response == ['list', 'hello']
 
-    get_single1 = app_client.get('/single1')  # type: flask.Response
-    assert get_single1.data == b'single 1'
 
-    post_single1 = app_client.post('/single1')  # type: flask.Response
-    assert post_single1.status_code == 405
+def test_schema_int(app):
+    app_client = app.app.test_client()
+    headers = {'Content-type': 'application/json'}
 
-    post_single2 = app_client.post('/single2')  # type: flask.Response
-    assert post_single2.data == b'single 2'
+    array_request = app_client.get('/v1.0/schema_int', headers=headers,
+                                   data=json.dumps(42))  # type: flask.Response
+    assert array_request.status_code == 200
+    assert array_request.content_type == 'application/json'
+    array_response = json.loads(array_request.data.decode())  # type: list
+    assert array_response == 42
 
-    get_single2 = app_client.get('/single2')  # type: flask.Response
-    assert get_single2.status_code == 405
 
+# Test Parameters
+# ======================
 
 def test_parameter_validation(app):
     app_client = app.app.test_client()
@@ -561,42 +621,6 @@ def test_array_query_param(app):
     assert array_response == ["1;2;3"]
 
 
-def test_test_schema_array(app):
-    app_client = app.app.test_client()
-    headers = {'Content-type': 'application/json'}
-
-    array_request = app_client.get('/v1.0/schema_array', headers=headers,
-                                   data=json.dumps(['list', 'hello']))  # type: flask.Response
-    assert array_request.status_code == 200
-    assert array_request.content_type == 'application/json'
-    array_response = json.loads(array_request.data.decode())  # type: list
-    assert array_response == ['list', 'hello']
-
-
-def test_test_schema_int(app):
-    app_client = app.app.test_client()
-    headers = {'Content-type': 'application/json'}
-
-    array_request = app_client.get('/v1.0/schema_int', headers=headers,
-                                   data=json.dumps(42))  # type: flask.Response
-    assert array_request.status_code == 200
-    assert array_request.content_type == 'application/json'
-    array_response = json.loads(array_request.data.decode())  # type: list
-    assert array_response == 42
-
-
-def test_resolve_method(app):
-    app_client = app.app.test_client()
-    resp = app_client.get('/v1.0/resolver-test/method')  # type: flask.Response
-    assert resp.data.decode() == '"DummyClass"'
-
-
-def test_resolve_classmethod(app):
-    app_client = app.app.test_client()
-    resp = app_client.get('/v1.0/resolver-test/classmethod')  # type: flask.Response
-    assert resp.data.decode() == '"DummyClass"'
-
-
 def test_path_parameter_someint(app):
     app_client = app.app.test_client()
     resp = app_client.get('/v1.0/test-int-path/123')  # type: flask.Response
@@ -623,19 +647,6 @@ def test_default_param(app):
     assert resp.status_code == 200
     response = json.loads(resp.data.decode())
     assert response['app_name'] == 'connexion'
-
-
-def test_default_object_body(app):
-    app_client = app.app.test_client()
-    resp = app_client.post('/v1.0/test-default-object-body')
-    assert resp.status_code == 200
-    response = json.loads(resp.data.decode())
-    assert response['stack'] == {'image_version': 'default_image'}
-
-    resp = app_client.post('/v1.0/test-default-integer-body')
-    assert resp.status_code == 200
-    response = json.loads(resp.data.decode())
-    assert response == 1
 
 
 def test_falsy_param(app):
@@ -718,62 +729,6 @@ def test_required_param_miss_config(app):
 
     resp = app_client.get('/v1.0/test-required-param')
     assert resp.status_code == 400
-
-
-def test_redirect_endpoint(app):
-    app_client = app.app.test_client()
-    resp = app_client.get('/v1.0/test-redirect-endpoint')
-    assert resp.status_code == 302
-
-
-def test_redirect_response_endpoint(app):
-    app_client = app.app.test_client()
-    resp = app_client.get('/v1.0/test-redirect-response-endpoint')
-    assert resp.status_code == 302
-
-
-def test_security_over_inexistent_endpoints(oauth_requests):
-    app1 = App(__name__, 5001, SPEC_FOLDER, swagger_ui=False, debug=True, auth_all_paths=True)
-    app1.add_api('secure_api.yaml')
-    assert app1.port == 5001
-
-    app_client = app1.app.test_client()
-    headers = {"Authorization": "Bearer 300"}
-    get_inexistent_endpoint = app_client.get('/v1.0/does-not-exist-invalid-token', headers=headers)  # type: flask.Response
-    assert get_inexistent_endpoint.status_code == 401
-    assert get_inexistent_endpoint.content_type == 'application/problem+json'
-
-    headers = {"Authorization": "Bearer 100"}
-    get_inexistent_endpoint = app_client.get('/v1.0/does-not-exist-valid-token', headers=headers)  # type: flask.Response
-    assert get_inexistent_endpoint.status_code == 404
-    assert get_inexistent_endpoint.content_type == 'application/problem+json'
-
-    get_inexistent_endpoint = app_client.get('/v1.0/does-not-exist-no-token')  # type: flask.Response
-    assert get_inexistent_endpoint.status_code == 401
-
-    swagger_ui = app_client.get('/v1.0/ui/')  # type: flask.Response
-    assert swagger_ui.status_code == 401
-
-    headers = {"Authorization": "Bearer 100"}
-    post_greeting = app_client.post('/v1.0/greeting/rcaricio', data={}, headers=headers)  # type: flask.Response
-    assert post_greeting.status_code == 200
-
-    post_greeting = app_client.post('/v1.0/greeting/rcaricio', data={})  # type: flask.Response
-    assert post_greeting.status_code == 401
-
-
-def test_no_content_response_have_headers(app):
-    app_client = app.app.test_client()
-    resp = app_client.get('/v1.0/test-204-with-headers')
-    assert resp.status_code == 204
-    assert 'X-Something' in resp.headers
-
-
-def test_no_content_object_and_have_headers(app):
-    app_client = app.app.test_client()
-    resp = app_client.get('/v1.0/test-204-with-headers-nocontent-obj')
-    assert resp.status_code == 204
-    assert 'X-Something' in resp.headers
 
 
 def test_parameters_defined_in_path_level(app):

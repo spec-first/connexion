@@ -1,0 +1,175 @@
+swagger: "2.0"
+
+info:
+  title: "{{title}}"
+  version: "1.0"
+
+basePath: /v1.0
+
+paths:
+  /greeting/{name}:
+    post:
+      summary: Generate greeting
+      description: Generates a greeting message.
+      operationId: fakeapi.hello.post_greeting
+      responses:
+        '200':
+          description: greeting response
+          schema:
+            type: object
+      parameters:
+        - name: name
+          in: path
+          description: Name of the person to greet.
+          required: true
+          type: string
+
+  /greetings/{name}:
+    get:
+      summary: Generate greeting
+      description: Generates a greeting message with custom mimetype
+      operationId: fakeapi.hello.get_greetings
+      produces:
+        - application/x.connexion+json
+      responses:
+        '200':
+          description: greeting response
+          schema:
+            type: object
+      parameters:
+        - name: name
+          in: path
+          description: Name of the person to greet.
+          required: true
+          type: string
+
+  /bye/{name}:
+    get:
+      summary: Generate goodbye
+      description: Generates a goodbye message.
+      operationId: fakeapi.hello.get_bye
+      produces:
+        - text/plain
+      responses:
+        '200':
+          description: goodbye response
+          schema:
+            type: string
+        default:
+          description: "unexpected error"
+      parameters:
+        - name: name
+          in: path
+          description: Name of the person to say bye.
+          required: true
+          type: string
+
+  /list/{name}:
+    get:
+      summary: Generate a greeting in a list
+      description: Generate a greeting in a list
+      operationId: fakeapi.hello.get_list
+      produces:
+        - application/json
+      responses:
+        200:
+          description: a greeting in a list
+          schema:
+            type: array
+            items:
+              type: string
+      parameters:
+        - name: name
+          in: path
+          description: Name of the person to say hello to.
+          required: true
+          type: string
+
+  /test_no_content_response:
+    get:
+      operationId: fakeapi.hello.test_no_content_response
+      responses:
+        204:
+          description: No content returned
+
+  /multimime:
+    get:
+      summary: Has multiple content types
+      description: Has multiple content types
+      operationId: fakeapi.hello.multimime
+      produces:
+        - application/json
+        - application/xml
+      responses:
+        200:
+          description: goodbye response
+          schema:
+            type: string
+
+  /empty:
+    get:
+      summary: Returns empty response
+      description: Returns empty response
+      operationId: fakeapi.hello.empty
+      produces:
+        - application/json
+      responses:
+        204:
+          description: empty
+
+  /test-redirect-endpoint:
+    get:
+      summary: Tests handlers returning flask.Response objects
+      operationId: fakeapi.hello.test_redirect_endpoint
+      responses:
+        302:
+          description: 302 Found
+
+  /test-redirect-response-endpoint:
+    get:
+      summary: Tests handlers returning flask.Response objects
+      operationId: fakeapi.hello.test_redirect_response_endpoint
+      responses:
+        302:
+          description: 302 Found
+
+  /test-default-object-body:
+    post:
+      summary: Test if default object body param is passed to handler.
+      operationId: fakeapi.hello.test_default_object_body
+      parameters:
+        - name: stack
+          in: body
+          schema:
+            $ref: '#/definitions/new_stack'
+            default:
+                'image_version': 'default_image'
+      responses:
+        200:
+          description: OK
+
+  /test-default-integer-body:
+    post:
+      summary: Test if default integer body param is passed to handler.
+      operationId: fakeapi.hello.test_default_integer_body
+      parameters:
+        - name: stack_version
+          in: body
+          schema:
+            type: integer
+            format: int32
+            example: 1
+            default: 1
+      responses:
+        200:
+          description: OK
+
+definitions:
+  new_stack:
+    type: object
+    properties:
+      image_version:
+        type: string
+        description: Docker image version to deploy
+    required:
+      - image_version
