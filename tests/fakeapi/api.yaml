@@ -583,6 +583,7 @@ paths:
         - name: someint
           in: path
           type: integer
+
   /test-float-path/{somefloat}:
     get:
       summary: Test type casting of path parameter

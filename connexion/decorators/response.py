@@ -44,7 +44,7 @@ class ResponseValidator(BaseDecorator):
         response_definitions = self.operation.operation.get("responses", {})
         if not response_definitions:
             return True
-        response_definition = response_definitions.get(status_code, {})
+        response_definition = response_definitions.get(str(status_code), {})
         response_definition = self.operation.resolve_reference(response_definition)
         # TODO handle default response definitions
 

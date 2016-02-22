@@ -69,14 +69,36 @@ def problem_api_spec_dir():
 
 
 @pytest.fixture
-def simple_app(simple_api_spec_dir):
-    app = App(__name__, 5001, simple_api_spec_dir, debug=True)
+def secure_api_spec_dir():
+    return FIXTURES_FOLDER / 'secure_api'
+
+
+def build_app_from_fixture(api_spec_folder):
+    app = App(__name__, 5001, FIXTURES_FOLDER / api_spec_folder, debug=True)
     app.add_api('swagger.yaml', validate_responses=True)
     return app
 
 
 @pytest.fixture
-def problem_app(problem_api_spec_dir):
-    app = App(__name__, 5001, problem_api_spec_dir, debug=True)
-    app.add_api('swagger.yaml', validate_responses=True)
-    return app
+def simple_app():
+    return build_app_from_fixture('simple')
+
+
+@pytest.fixture
+def problem_app():
+    return build_app_from_fixture('problem')
+
+
+@pytest.fixture
+def schema_app():
+    return build_app_from_fixture('different_schemas')
+
+
+@pytest.fixture
+def secure_endpoint_app():
+    return build_app_from_fixture('secure_endpoint')
+
+
+@pytest.fixture
+def secure_api_app():
+    return build_app_from_fixture('secure_api')
