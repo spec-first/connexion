@@ -1,26 +1,4 @@
-import pathlib
-import logging
 import json
-import pytest
-
-from connexion.app import App
-
-logging.basicConfig(level=logging.DEBUG)
-
-TEST_FOLDER = pathlib.Path(__file__).parent.parent
-FIXTURES_FOLDER = TEST_FOLDER / 'fixtures'
-
-
-@pytest.fixture
-def simple_api_spec_dir():
-    return FIXTURES_FOLDER / 'simple'
-
-
-@pytest.fixture
-def simple_app(simple_api_spec_dir):
-    app = App(__name__, 5001, simple_api_spec_dir, debug=True)
-    app.add_api('swagger.yaml', validate_responses=True)
-    return app
 
 
 def test_app(simple_app):

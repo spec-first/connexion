@@ -1,85 +1,7 @@
-import pathlib
 import json
-import logging
-import pytest
 
 from connexion.app import App
-
-logging.basicConfig(level=logging.DEBUG)
-
-TEST_FOLDER = pathlib.Path(__file__).parent
-FIXTURES_FOLDER = TEST_FOLDER / 'fixtures'
-SPEC_FOLDER = TEST_FOLDER / "fakeapi"
-
-
-class FakeResponse:
-    def __init__(self, status_code, text):
-        """
-        :type status_code: int
-        :type text: ste
-        """
-        self.status_code = status_code
-        self.text = text
-        self.ok = status_code == 200
-
-    def json(self):
-        return json.loads(self.text)
-
-
-# Helper fixtures functions
-# =========================
-
-
-@pytest.fixture
-def oauth_requests(monkeypatch):
-    def fake_get(url, params=None, timeout=None):
-        """
-        :type url: str
-        :type params: dict| None
-        """
-        params = params or {}
-        if url == "https://ouath.example/token_info":
-            token = params['access_token']
-            if token == "100":
-                return FakeResponse(200, '{"uid": "test-user", "scope": ["myscope"]}')
-            if token == "200":
-                return FakeResponse(200, '{"uid": "test-user", "scope": ["wrongscope"]}')
-            if token == "300":
-                return FakeResponse(404, '')
-        return url
-
-    monkeypatch.setattr('connexion.decorators.security.session.get', fake_get)
-
-
-@pytest.fixture
-def app():
-    app = App(__name__, 5001, SPEC_FOLDER, debug=True)
-    app.add_api('api.yaml', validate_responses=True)
-    return app
-
-
-@pytest.fixture
-def simple_api_spec_dir():
-    return FIXTURES_FOLDER / 'simple'
-
-
-@pytest.fixture
-def problem_api_spec_dir():
-    return FIXTURES_FOLDER / 'problem'
-
-
-@pytest.fixture
-def simple_app(simple_api_spec_dir):
-    app = App(__name__, 5001, simple_api_spec_dir, debug=True)
-    app.add_api('swagger.yaml', validate_responses=True)
-    return app
-
-
-@pytest.fixture
-def problem_app(problem_api_spec_dir):
-    app = App(__name__, 5001, problem_api_spec_dir, debug=True)
-    app.add_api('swagger.yaml', validate_responses=True)
-    return app
+from conftest import TEST_FOLDER, SPEC_FOLDER
 
 
 # Test Resolvers
@@ -102,7 +24,7 @@ def test_app_with_relative_path(simple_api_spec_dir):
               debug=True)
     app.add_api('swagger.yaml')
 
-    app_client = simple_app.app.test_client()
+    app_client = app.app.test_client()
     get_bye = app_client.get('/v1.0/bye/jsantos')  # type: flask.Response
     assert get_bye.status_code == 200
     assert get_bye.data == b'Goodbye jsantos'
@@ -111,6 +33,7 @@ def test_app_with_relative_path(simple_api_spec_dir):
 def test_no_swagger(simple_api_spec_dir):
     app = App(__name__, 5001, simple_api_spec_dir, swagger_ui=False, debug=True)
     app.add_api('swagger.yaml')
+
     app_client = app.app.test_client()
     swagger_ui = app_client.get('/v1.0/ui/')  # type: flask.Response
     assert swagger_ui.status_code == 404
@@ -488,7 +411,7 @@ def test_schema_map(app):
     assert wrong_items_response['detail'].startswith("42 is not of type 'object'")
 
     right_type = app_client.post('/v1.0/test_schema_map', headers=headers,
-                                  data=json.dumps(valid_object))  # type: flask.Response
+                                 data=json.dumps(valid_object))  # type: flask.Response
     assert right_type.status_code == 200
 
 
@@ -510,7 +433,8 @@ def test_schema_recursive(app):
         "children": [42]
     }
 
-    wrong_type = app_client.post('/v1.0/test_schema_recursive', headers=headers, data=json.dumps(42))  # type: flask.Response
+    wrong_type = app_client.post('/v1.0/test_schema_recursive', headers=headers,
+                                 data=json.dumps(42))  # type: flask.Response
     assert wrong_type.status_code == 400
     assert wrong_type.content_type == 'application/problem+json'
     wrong_type_response = json.loads(wrong_type.data.decode())  # type: dict
@@ -526,7 +450,7 @@ def test_schema_recursive(app):
     assert wrong_items_response['detail'].startswith("42 is not of type 'object'")
 
     right_type = app_client.post('/v1.0/test_schema_recursive', headers=headers,
-                                  data=json.dumps(valid_object))  # type: flask.Response
+                                 data=json.dumps(valid_object))  # type: flask.Response
     assert right_type.status_code == 200
 
 

@@ -60,7 +60,7 @@ def parameter_to_arg(parameters, function):
     """
     body_parameters = [parameter for parameter in parameters if parameter['in'] == 'body'] or [{}]
     body_name = body_parameters[0].get('name')
-    default_body = body_parameters[0].get('default')
+    default_body = body_parameters[0].get('schema', {}).get('default')
     query_types = {parameter['name']: parameter
                    for parameter in parameters if parameter['in'] == 'query'}  # type: dict[str, str]
     form_types = {parameter['name']: parameter
