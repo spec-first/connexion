@@ -150,11 +150,7 @@ class Api:
             for method, endpoint in methods.items():
                 if method == 'parameters':
                     continue
-                try:
-                    self.add_operation(method, path, endpoint, path_parameters)
-                except Exception:  # pylint: disable= W0703
-                    logger.exception('Failed to add operation for %s %s%s',
-                                     method.upper(), self.base_url, path)
+                self.add_operation(method, path, endpoint, path_parameters)
 
     def add_auth_on_not_found(self):
         """
