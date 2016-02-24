@@ -127,7 +127,8 @@ class App:
                   swagger_url=swagger_url,
                   resolver=resolver,
                   validate_responses=validate_responses,
-                  auth_all_paths=auth_all_paths)
+                  auth_all_paths=auth_all_paths,
+                  debug=self.debug)
         self.app.register_blueprint(api.blueprint)
         return api
 

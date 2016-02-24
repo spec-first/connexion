@@ -27,4 +27,11 @@ def test_template():
 
 def test_invalid_operation_does_stop_application_to_setup():
     with pytest.raises(AttributeError):
-        Api(TEST_FOLDER / "fakeapi/op_error_api.yaml", "/api/v1.0", {})
+        Api(TEST_FOLDER / "fakeapi/op_error_api.yaml", "/api/v1.0",
+            {'title': 'OK'})
+
+
+def test_invalid_operation_does_not_stop_application_in_debug_mode():
+    api = Api(TEST_FOLDER / "fakeapi/op_error_api.yaml", "/api/v1.0",
+              {'title': 'OK'}, debug=True)
+    assert api.specification['info']['title'] == 'OK'
