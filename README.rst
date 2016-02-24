@@ -25,16 +25,18 @@ Connexion
    :target: https://github.com/zalando/connexion/blob/master/LICENSE
    :alt: License
 
-Connexion is a Flask_ application/framework that automagically handles your REST API requests based on `OpenAPI 2.0 Specification`_ (formerly known as Swagger Spec) files in YAML. Written in Python, Connexion enables you to write your Swagger specification, then maps the specification to Python functions. This is what makes it unique from other tools. We built Connexion this way in order to:
+Connexion is a Flask_ framework that automagically handles your REST API requests based on `OpenAPI 2.0 Specification`_ (formerly known as Swagger Spec) files in `YAML format`_. Connexion enables you to write your Swagger specification, then maps the specification to Python functions. This is what makes it unique from other tools. We built Connexion this way in order to:
+
+----------
 - simplify the development process
-- reduces misinterpretation about what an API is going to look like
+- reduce misinterpretation about what an API is going to look like
 - save time
 
 Connexion Features:
 ----------
 - validates requests and endoint parameters automatically, based on your specification  
-- provides the Swagger Console UI so that you can call your API through it
-- handles OAuth 2
+- provides a Swagger Console UI so that you can call your API through it
+- handles OAuth 2 token-based authentication
 - supports API versioning
 - supports automatic serializization. If your specification defines that an endpoint returns JSON, Connexion will automatically serialize the return value for you and set the right content type in the HTTP header.
 
@@ -46,22 +48,22 @@ it’s not like Hug_, which generates the specification based on what code you w
 Other Sources/Mentions
 ----------
 - Zalando Tech blog post `API First`_
-- We're honored that Connexion is Swagger_'s official framework of choice for Python.
+- Connexion listed on Swagger_'s website
 
 How to Use
 =========
 Prerequisites
 ----------
-Python 2.7 - most recent version (3.5)
+Python 2.7 or 3 Python 3.4+
 
 Installing It
 ----------
 In your command line, type this:
 
-.. code-block:: python
-$ pip install Connexion
-$ python hello.py
- * Running on http://localhost:5000/
+.. code-block:: bash
+
+    $ pip install Connexion
+    $ python hello.py
  
 Running It
 ----------
@@ -119,7 +121,9 @@ function ``hello_world`` in ``myapp.api`` module. Optionally, you can include ``
           x-swagger-router-controller: myapp.api
           operationId: hello_world
 
-**Automatic Routing**
+Automatic Routing
+----------
+
 To customize this behavior, Connexion can use alternative ``Resolvers``—for example, ``RestyResolver``. The ``RestyResolver`` will compose an ``operationId`` based on the path and HTTP method of the endpoints in your specification:
 
 .. code-block:: python
@@ -257,11 +261,14 @@ If you'd like to become a more consistent contributor to Connexion, we'd love yo
 - Silencing ImportErrors raised in modules referenced by operationId
 - Overriding default validation error message
 
+Check our `issues waffle board`_ for more info.
+
 Thank You Thank You
 ===================
 We'd like to thank all of Connexion's contributors for working on this project, and to Swagger/OpenAPI for their support.
 
 .. _Flask: http://flask.pocoo.org/
+.._Waffle board: https://waffle.io/zalando/connexion
 .. _API First: https://tech.zalando.com/blog/on-apis-and-the-zalando-api-guild/
 .. _Hug: https://github.com/timothycrosley/hug
 .. _Swagger: http://swagger.io/open-source-integrations/
@@ -271,6 +278,7 @@ We'd like to thank all of Connexion's contributors for working on this project, 
 .. _Operation Object: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#operation-object
 .. _swager.spec.security_definition: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-definitions-object
 .. _swager.spec.security_requirement: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-requirement-object
+.. _YAML format: https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md#format
 .. _token information: https://tools.ietf.org/html/rfc6749
 .. _Tornado: http://www.tornadoweb.org/en/stable/
 .. _Connexion Pet Store Example Application: https://github.com/hjacobs/connexion-example
