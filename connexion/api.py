@@ -158,10 +158,7 @@ class Api:
                 except Exception:  # pylint: disable= W0703
                     logger.exception('Failed to add operation for %s %s%s',
                                      method.upper(), self.base_url, path)
-                    if self.debug:
-                        import traceback
-                        traceback.print_exc()
-                    else:
+                    if not self.debug:
                         import sys
                         et, ei, tb = sys.exc_info()
                         raise ei.with_traceback(tb)
