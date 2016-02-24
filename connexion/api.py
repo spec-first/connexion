@@ -147,9 +147,7 @@ class Api:
 
             # search for parameters definitions in the path level
             # http://swagger.io/specification/#pathItemObject
-            path_parameters = []
-            if 'parameters' in methods:
-                path_parameters = methods['parameters']
+            path_parameters = methods.get('parameters', [])
 
             # TODO Error handling
             for method, endpoint in methods.items():
@@ -165,7 +163,7 @@ class Api:
                         traceback.print_exc()
                     else:
                         import sys
-                        et, ei, tb = sys.exec_info()
+                        et, ei, tb = sys.exc_info()
                         raise ei.with_traceback(tb)
 
     def add_auth_on_not_found(self):
