@@ -430,25 +430,6 @@ paths:
           schema:
             type: string
 
-  /test_not_implemented:
-    post:
-      summary: Returns empty response
-      description: Returns empty response
-      operationId: fakeapi.hello.test_not_implemented
-      parameters:
-        - name: new_stack
-          required: true
-          in: body
-          schema:
-            $ref: '#/definitions/new_stack'
-      produces:
-        - application/json
-      responses:
-        200:
-          description: goodbye response
-          schema:
-            type: string
-
   /test_parameter_validation:
     get:
       operationId: fakeapi.hello.test_parameter_validation
