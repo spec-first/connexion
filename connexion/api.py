@@ -18,7 +18,7 @@ import logging
 import pathlib
 import yaml
 import werkzeug.exceptions
-from bravado_core.spec import Spec
+from swagger_spec_validator.validator20 import validate_spec
 from .operation import Operation
 from . import utils
 from . import resolver
@@ -83,7 +83,7 @@ class Api:
 
         logger.debug('Read specification', extra=self.specification)
 
-        self.spec = Spec.from_dict(compatibility_layer(self.specification))
+        validate_spec(compatibility_layer(self.specification))
 
         # https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#fixed-fields
         # If base_url is not on provided then we try to read it from the swagger.yaml or use / by default
