@@ -84,26 +84,26 @@ def build_app_from_fixture(api_spec_folder):
     return app
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def simple_app():
     return build_app_from_fixture('simple')
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def problem_app():
     return build_app_from_fixture('problem')
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def schema_app():
     return build_app_from_fixture('different_schemas')
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def secure_endpoint_app():
     return build_app_from_fixture('secure_endpoint')
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def secure_api_app():
     return build_app_from_fixture('secure_api')
