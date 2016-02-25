@@ -15,6 +15,11 @@ securityDefinitions:
         scopes:
             myscope: can do stuff
 
+    api_key:
+      type: apiKey
+      name: api_key
+      in: header
+
 paths:
   /byesecure/{name}:
     get:
@@ -23,7 +28,7 @@ paths:
       operationId: fakeapi.hello.get_bye_secure
       security:
         - oauth:
-            - myscope
+          - myscope
       produces:
         - text/plain
       responses:
@@ -37,3 +42,27 @@ paths:
           description: Name of the person to say bye.
           required: true
           type: string
+
+  /more-than-one-security-definition:
+    get:
+      summary: Some external call to API
+      description: External application call
+      operationId: fakeapi.hello.schema_list
+      security:
+        - oauth:
+          - myscope
+        - api_key: []
+      responses:
+        200:
+          description: OK
+
+  /user-handled-security:
+    get:
+      summary: Some external call to API
+      description: External application call
+      operationId: fakeapi.hello.schema_map
+      security:
+        - api_key: []
+      responses:
+        200:
+          description: OK

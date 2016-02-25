@@ -73,6 +73,11 @@ def secure_api_spec_dir():
     return FIXTURES_FOLDER / 'secure_api'
 
 
+@pytest.fixture
+def default_param_error_spec_dir():
+    return FIXTURES_FOLDER / 'default_param_error'
+
+
 def build_app_from_fixture(api_spec_folder):
     app = App(__name__, 5001, FIXTURES_FOLDER / api_spec_folder, debug=True)
     app.add_api('swagger.yaml', validate_responses=True)

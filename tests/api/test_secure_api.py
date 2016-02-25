@@ -66,3 +66,9 @@ def test_security(oauth_requests, secure_endpoint_app):
     get_bye_bad_token_reponse = json.loads(get_bye_bad_token.data.decode())  # type: dict
     assert get_bye_bad_token_reponse['title'] == 'Unauthorized'
     assert get_bye_bad_token_reponse['detail'] == "Provided oauth token is not valid"
+
+    response = app_client.get('/v1.0/more-than-one-security-definition')  # type: flask.Response
+    assert response.status_code == 200
+
+    response = app_client.get('/v1.0/user-handled-security')  # type: flask.Response
+    assert response.status_code == 200
