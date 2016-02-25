@@ -156,10 +156,13 @@ class Api:
                 try:
                     self.add_operation(method, path, endpoint, path_parameters)
                 except Exception:  # pylint: disable= W0703
-                    logger.exception('Failed to add operation for %s %s%s',
-                                     method.upper(), self.base_url, path)
-                    if not self.debug:
+                    error_msg = 'Failed to add operation for {} {}{}'.format(
+                        method.upper(), self.base_url, path)
+                    if self.debug:
+                        logger.exception(error_msg)
+                    else:
                         import sys
+                        logger.error(error_msg)
                         et, ei, tb = sys.exc_info()
                         raise ei.with_traceback(tb)
 
