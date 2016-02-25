@@ -91,9 +91,6 @@ class SecureOperation:
                 logger.debug(
                     "... Security type '%s' not natively supported by Connexion; you should handle it yourself",
                     security_definition['type'], extra=vars(self))
-            else:
-                logger.warning("... Security type '%s' unknown. **IGNORING SECURITY REQUIREMENTS**",
-                               security_definition['type'], extra=vars(self))
 
         # if we don't know how to handle the security or it's not defined we will usa a passthrough decorator
         return security_passthrough
