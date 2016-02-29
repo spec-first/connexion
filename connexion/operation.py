@@ -42,6 +42,7 @@ class SecureOperation:
         """
         self.security = security
         self.security_definitions = security_definitions
+        self.custom_security_decorator = None
 
     @property
     def security_decorator(self):
