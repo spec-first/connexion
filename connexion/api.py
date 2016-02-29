@@ -38,6 +38,7 @@ class Api:
     def __init__(self, swagger_yaml_path, base_url=None, arguments=None,
                  swagger_ui=None, swagger_path=None, swagger_url=None,
                  validate_responses=False, resolver=resolver.Resolver(),
+                 security_decorator=None,
                  auth_all_paths=False, debug=False):
         """
         :type swagger_yaml_path: pathlib.Path
@@ -49,6 +50,8 @@ class Api:
         :type auth_all_paths: bool
         :type debug: bool
         :param resolver: Callable that maps operationID to a function
+        :param security_decorator: decorator function to be used i.s.o the default verify_oath
+        :type security_decorator: function | None
         """
         self.debug = debug
         self.swagger_yaml_path = pathlib.Path(swagger_yaml_path)
@@ -92,6 +95,9 @@ class Api:
 
         self.resolver = resolver
 
+        logger.debug('Adding custom security decorator: %s', str(security_decorator))
+        self.security_decorator = security_decorator
+
         logger.debug('Validate Responses: %s', str(validate_responses))
         self.validate_responses = validate_responses
 
@@ -128,7 +134,8 @@ class Api:
                               operation=swagger_operation, app_produces=self.produces,
                               app_security=self.security, security_definitions=self.security_definitions,
                               definitions=self.definitions, parameter_definitions=self.parameter_definitions,
-                              validate_responses=self.validate_responses, resolver=self.resolver)
+                              validate_responses=self.validate_responses, resolver=self.resolver,
+                              security_decorator=self.security_decorator)
         operation_id = operation.operation_id
         logger.debug('... Adding %s -> %s', method.upper(), operation_id, extra=vars(operation))
 
@@ -164,7 +171,8 @@ class Api:
                         import sys
                         logger.error(error_msg)
                         et, ei, tb = sys.exc_info()
-                        raise ei.with_traceback(tb)
+                        ei.__traceback__ = tb
+                        raise ei
 
     def add_auth_on_not_found(self):
         """
