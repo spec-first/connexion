@@ -96,7 +96,8 @@ class SecureOperation:
                                    extra=vars(self))
             elif security_definition['type'] in ('apiKey', 'basic'):
                 logger.debug(
-                    "... Security type '%s' not natively supported by Connexion; you should handle it yourself by addding a curtom security decorator",
+                    "... Security type '%s' not natively supported by Connexion; "
+                    + "you should handle it yourself by addding a curtom security decorator",
                     security_definition['type'], extra=vars(self))
             else:
                 logger.warning("... Security type '%s' unknown. **IGNORING SECURITY REQUIREMENTS**",

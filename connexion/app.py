@@ -87,7 +87,8 @@ class App:
         return problem(title=exception.name, detail=exception.description, status=exception.code)
 
     def add_api(self, swagger_file, base_path=None, arguments=None, auth_all_paths=None, swagger_ui=None,
-                swagger_path=None, swagger_url=None, validate_responses=False, resolver=Resolver(), security_decorator=None):
+                swagger_path=None, swagger_url=None, validate_responses=False, resolver=Resolver(),
+                security_decorator=None):
         """
         Adds an API to the application based on a swagger file
 
