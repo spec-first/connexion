@@ -170,10 +170,10 @@ class Operation(SecureOperation):
 
         self.security = operation.get('security', app_security)
         self.produces = operation.get('produces', app_produces)
+        self.custom_security_decorator = security_decorator
 
-        if security_decorator:
+        if self.custom_security_decorator:
             logging.debug("set custom security decorator %s for this operation" % str(security_decorator))
-            self.custom_security_decorator = security_decorator
 
         resolution = resolver.resolve(self)
         self.operation_id = resolution.operation_id
