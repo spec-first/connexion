@@ -197,7 +197,7 @@ A custom decorator may look like this:
 
 
 
-  def verify_oauth_nicci_user(allowed_scopes, function):
+  def verify_oauth_at_my_way(allowed_scopes, function):
       """
       Special Decorator to verify oauth and set user and role(s)
 
