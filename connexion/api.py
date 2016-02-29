@@ -164,7 +164,8 @@ class Api:
                         import sys
                         logger.error(error_msg)
                         et, ei, tb = sys.exc_info()
-                        raise ei.with_traceback(tb)
+                        ei.__traceback__ = tb
+                        raise ei
 
     def add_auth_on_not_found(self):
         """
