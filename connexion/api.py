@@ -161,12 +161,15 @@ class Api:
                     if self.debug:
                         logger.exception(error_msg)
                     else:
-                        import sys
                         logger.error(error_msg)
+                        import sys
                         et, ei, tb = sys.exc_info()
-                        ei.__traceback__ = tb
-                        raise ei
-
+                        if sys.version_info[0] == 3:
+                            raise ei.with_traceback(tb)
+                        else:
+                            raise et, "Fatal error found while addding '{}': {}".format(
+                                        endpoint.get('operationId'),
+                                        str(ei) ), tb
     def add_auth_on_not_found(self):
         """
         Adds a 404 error handler to authenticate and only expose the 404 status if the security validation pass.
