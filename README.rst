@@ -25,14 +25,78 @@ Connexion
    :target: https://github.com/zalando/connexion/blob/master/LICENSE
    :alt: License
 
-Connexion is a framework on top of Flask_ to automagically handle your REST API requests
-based on `OpenAPI 2.0 Specification`_ (formerly known as Swagger Spec) files
-in YAML.
+Connexion is a framework on top of Flask_ that automagically handles
+HTTP requests based on `OpenAPI 2.0 Specification`_ (formerly known as
+Swagger Spec) of your API described in `YAML format`_. Connexion
+allows you to write a Swagger specification and then maps the
+endpoints to your Python functions. This is what makes it unique from
+other tools that generate the specification based on your Python
+code. You are free to describe your REST API with as much detail as
+you want and then Connexion guarantees that it will work as
+you specified. We built Connexion this way in order to:
 
-How to use
+- Simplify the development process
+- Reduce misinterpretation about what an API is going to look like
+
+Connexion Features:
+-------------------
+
+- Validates requests and endpoint parameters automatically, based on
+  your specification
+- Provides a Web Swagger Console UI so that the users of your API can
+  have it as a live documentation and even call your API's endpoints
+  through it
+- Handles OAuth 2 token-based authentication
+- Supports API versioning
+- Supports automatic serializization of payloads. If your
+  specification defines that an endpoint returns JSON, Connexion will
+  automatically serialize the return value for you and set the right
+  content type in the HTTP header.
+
+Why Connexion
+-------------
+
+With Connexion, you write the spec first. It then calls your Python
+code handling the mapping from the specification to the code. This
+incentivizes you to write the specification so that all of your
+developers can understand what your API does - even before you write a
+single line of code. If multiple teams depend on your APIs, you can
+already send them the documentation of your API. This guarantees that
+your API will follow the specification that you wrote. it’s not like
+frameworks such as Hug_, which generates the specification based on
+what code you write. Some disadvantages of generating the specification
+based on code is that usually your specification is laking details and
+your documentation is mixed with the code logic of your application.
+
+Other Sources/Mentions
+----------------------
+
+- Zalando Tech blog post `API First`_
+- Connexion listed on Swagger_'s website
+
+How to Use
+==========
+
+Prerequisites
+-------------
+
+Python 2.7 or Python 3.4+
+
+Installing It
+-------------
+
+In your command line, type this:
+
+.. code-block:: bash
+
+    $ pip install Connexion
+    $ python hello.py
+
+Running It
 ----------
 
-Put your API YAML inside a folder in the root path of your application (e.g ``swagger/``) and then do
+Place your API YAML inside a folder in the root
+path of your application (e.g ``swagger/``). Then run:
 
 .. code-block:: python
 
@@ -42,29 +106,48 @@ Put your API YAML inside a folder in the root path of your application (e.g ``sw
     app.add_api('my_api.yaml')
     app.run(port=8080)
 
-See the `Connexion Pet Store Example Application`_ for details.
+See the `Connexion Pet Store Example Application`_ for a sample
+specification.
 
-Parameterization
-----------------
-Connexion uses Jinja2_ to allow the parameterization of specifications.
+Now you’re able run and use Connexion!
 
-The specification arguments can be defined globally for the application or for each specific API:
+
+OAuth 2 Authentication and Authorization
+----------------------------------------
+
+Connexion supports one of the three OAuth 2 handling methods. (See
+"TODO" below.) With Connexion, the API security definition **must**
+include a 'x-tokenInfoUrl' (or set ``TOKENINFO_URL`` env var) with the
+URL to validate and get the `token information`_. Connexion expects to
+receive the OAuth token in the ``Authorization`` header field in the
+format described in `RFC 6750 <rfc6750_>`_ section 2.1. This aspect
+represents a significant difference from the usual OAuth flow.
+
+Dynamic Rendering of Your Specification
+---------------------------------------
+
+Connexion uses Jinja2_ to allow specification parameterization through
+`arguments` parameter. You can either define specification arguments
+globally for the application in the `connexion.App` constructor, or
+for each specific API in the `connexion.App#add_api` method:
 
 .. code-block:: python
 
-    app = connexion.App(__name__, specification_dir='swagger/', arguments={'global': 'global_value'})
+    app = connexion.App(__name__, specification_dir='swagger/',
+                        arguments={'global': 'global_value'})
     app.add_api('my_api.yaml', arguments={'api_local': 'local_value'})
     app.run(port=8080)
 
-If a value is provided both globally and on the API then the API value will take precedence.
+When a value is provided both globally and on the API, the API value
+will take precedence.
 
+Endpoint Routing to Your Python Views
+-------------------------------------
 
-Endpoint Routing
-----------------
-Connexion uses the ``operationId`` from each `Operation Object`_  to identify which function
-should handle each URL.
+Connexion uses the ``operationId`` from each `Operation Object`_ to
+identify which Python function should handle each URL.
 
-For example:
+**Explicit Routing**:
 
 .. code-block:: yaml
 
@@ -73,8 +156,11 @@ For example:
         post:
           operationId: myapp.api.hello_world
 
-If you provided this path in your specification POST requests to ``http://MYHOST/hello_world`` would be handled by the
-function ``hello_world`` in ``myapp.api``. Optionally you can include ``x-swagger-router-controller`` in your operation definition, making ``operationId`` relative:
+If you provided this path in your specification POST requests to
+``http://MYHOST/hello_world``, it would be handled by the function
+``hello_world`` in ``myapp.api`` module. Optionally, you can include
+``x-swagger-router-controller`` in your operation definition, making
+``operationId`` relative:
 
 .. code-block:: yaml
 
@@ -84,8 +170,13 @@ function ``hello_world`` in ``myapp.api``. Optionally you can include ``x-swagge
           x-swagger-router-controller: myapp.api
           operationId: hello_world
 
+Automatic Routing
+-----------------
 
-To customize this behavior, Connexion can use alternative ``Resolvers``, for example ``RestyResolver``. The ``RestyResolver`` will compose an ``operationId`` based on the path and HTTP method of the endpoints in your specification:
+To customize this behavior, Connexion can use alternative
+``Resolvers``—for example, ``RestyResolver``. The ``RestyResolver``
+will compose an ``operationId`` based on the path and HTTP method of
+the endpoints in your specification:
 
 .. code-block:: python
 
@@ -116,10 +207,18 @@ To customize this behavior, Connexion can use alternative ``Resolvers``, for exa
        delete:
           # Implied operationId: api.foo.delete
 
-``RestyResolver`` will give precedence to any ``operationId`` encountered in the specification. It will also respect ``x-router-controller``. You may import and extend ``connexion.resolver.Resolver`` to implement your own ``operationId`` (and function) resolution algorithm.
+``RestyResolver`` will give precedence to any ``operationId``
+encountered in the specification. It will also respect
+``x-router-controller``. You may import and extend
+``connexion.resolver.Resolver`` to implement your own ``operationId``
+(and function) resolution algorithm.
 
-Additionally you can also define a ``basePath`` on the top level of the API specification, which is useful for versioned
-APIs. If you wanted to serve the previous endpoint from  ``http://MYHOST/1.0/hello_world`` you could do:
+API Versioning and basePath
+---------------------------
+
+You can also define a ``basePath`` on the top level of the API
+specification. This is useful for versioned APIs. To serve the
+previous endpoint from ``http://MYHOST/1.0/hello_world``, type:
 
 .. code-block:: yaml
 
@@ -130,46 +229,60 @@ APIs. If you wanted to serve the previous endpoint from  ``http://MYHOST/1.0/hel
         post:
           operationId: myapp.api.hello_world
 
-Other alternative if you don't want to include the base path in your specification is provide the base path when adding
-the API to your application:
+If you don't want to include the base path in your specification, you
+can just provide it when adding the API to your application:
 
 .. code-block:: python
 
     app.add_api('my_api.yaml', base_path='/1.0')
 
-Response Serialization
-----------------------
-If the specification defines that a endpoint returns JSON, Connexion will automatically serialize the return value for
-you and set the right content type in the HTTP header.
+**Swagger JSON**
+----------------
 
-Authentication and Authorization
---------------------------------
-If the specification includes a Oauth2 `Security Definition <swager.spec.security_definition_>`_ compatible with the
-Zalando Greendale Team's infrastructure Connexion will automatically handle token validation and authorization for
-operations that have `Security Requirements <swager.spec.security_requirement_>`_. One main difference between the usual
-OAuth flow and the one Connexion uses is that the API Security Definition **must** include a 'x-tokenInfoUrl' (or set ``TOKENINFO_URL`` env var) with the
-URL to use to validate and get the token information.
-Connexion expects to receive the Oauth token in the ``Authorization`` header field in the format described in
-`RFC 6750 <rfc6750_>`_ section 2.1.
+Connexion makes the OpenAPI/Swagger specification in JSON format
+available from ``swagger.json`` in the base path of the API.
 
-Swagger JSON
-------------
-Connexion makes the OpenAPI/Swagger specification in JSON format available from ``swagger.json`` in the base path of the API.
+HTTPS Support
+-------------
 
-Swagger UI
-----------
-The Swagger UI for an API is available, by default, in ``{base_path}/ui/`` where ``base_path`` is the base path of the
-API.
+When specifying HTTPS as the scheme in the API YAML file, all the URIs
+in the served Swagger UI are HTTPS endpoints. The problem: The default
+server that runs is a "normal" HTTP server. This means that the
+Swagger UI cannot be used to play with the API. What is the correct
+way to start a HTTPS server when using Connexion?
 
-You can disable the Swagger UI either at application level:
+One way, `described by Flask`_, looks like this:
 
 .. code-block:: python
 
-    app = connexion.App(__name__, specification_dir='swagger/', swagger_ui=False)
+   from OpenSSL import SSL
+   context = SSL.Context(SSL.SSLv23_METHOD)
+   context.use_privatekey_file('yourserver.key')
+   context.use_certificate_file('yourserver.crt')
+
+   app.run(host='127.0.0.1', port='12344',
+           debug=False/True, ssl_context=context)
+
+However, Connexion doesn't provide an ssl_context parameter. This is
+because Flask doesn't, either—but it uses `**kwargs` to send the
+parameters to the underlying werkzeug server.
+
+The Swagger UI Console
+----------------------
+
+The Swagger UI for an API is available, by default, in
+``{base_path}/ui/`` where ``base_path`` is the base path of the API.
+
+You can disable the Swagger UI at the application level:
+
+.. code-block:: python
+
+    app = connexion.App(__name__, specification_dir='swagger/',
+                        swagger_ui=False)
     app.add_api('my_api.yaml')
 
 
-You can also disable it at API level:
+You can also disable it at the API level:
 
 .. code-block:: python
 
@@ -178,8 +291,10 @@ You can also disable it at API level:
 
 Server Backend
 --------------
-By default Connexion uses the default Flask server but you can also use Tornado_ as the HTTP server, to do so set server
-to ``tornado``:
+
+Connexion uses the default Flask server. For asynchronous
+applications, you can also use Tornado_ as the HTTP server. To do
+this, set your server to ``tornado``:
 
 .. code-block:: python
 
@@ -188,57 +303,63 @@ to ``tornado``:
     app = connexion.App(__name__, specification_dir='swagger/')
     app.run(server='tornado', port=8080)
 
-You can use the Flask WSGI app with any WSGI container, e.g. `using Flask with uWSGI`_:
+You can use the Flask WSGI app with any WSGI container, e.g. `using
+Flask with uWSGI`_ (this is more common):
 
 .. code-block:: python
 
     app = connexion.App(specification_dir='swagger/')
     application = app.app # expose global WSGI application object
 
+Set up and run the installation code:
+
 .. code-block:: bash
 
     $ sudo pip3 install uwsgi
     $ uwsgi --http :8080 -w app -p 16  # use 16 worker processes
-
-You can run uWSGI with a large number of worker processes to get high concurrency.
 
 See the `uWSGI documentation`_ for more information.
 
 .. _using Flask with uWSGI: http://flask.pocoo.org/docs/latest/deploying/uwsgi/
 .. _uWSGI documentation: https://uwsgi-docs.readthedocs.org/
 
-Releasing Connexion
+Contributing to Connexion/TODOs
+===============================
+
+We welcome your ideas, issues, and pull requests — just follow the
+usual/standard practices.
+
+TODOs
+-----
+
+If you'd like to become a more consistent contributor to Connexion,
+we'd love your help working on these:
+
+- Additional ways to handle OAuth 2 authentications
+- Overriding default validation error message
+- Documentation (Response handling, Passing arguments to functions, etc)
+
+Check our `issues waffle board`_ for more info.
+
+Thank You Thank You
 ===================
 
-Build and upload new version to PyPI:
-
-.. code-block:: bash
-
-    $ ./release.sh <NEW-VERSION>
-
-License
--------
-Copyright 2015 Zalando SE
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+We'd like to thank all of Connexion's contributors for working on this
+project, and to Swagger/OpenAPI for their support.
 
 .. _Flask: http://flask.pocoo.org/
+.. _issues waffle board: https://waffle.io/zalando/connexion
+.. _API First: https://tech.zalando.com/blog/on-apis-and-the-zalando-api-guild/
+.. _Hug: https://github.com/timothycrosley/hug
+.. _Swagger: http://swagger.io/open-source-integrations/
 .. _Jinja2: http://jinja.pocoo.org/
 .. _rfc6750: https://tools.ietf.org/html/rfc6750
 .. _OpenAPI 2.0 Specification: https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md
 .. _Operation Object: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#operation-object
 .. _swager.spec.security_definition: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-definitions-object
 .. _swager.spec.security_requirement: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-requirement-object
+.. _YAML format: https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md#format
+.. _token information: https://tools.ietf.org/html/rfc6749
 .. _Tornado: http://www.tornadoweb.org/en/stable/
 .. _Connexion Pet Store Example Application: https://github.com/hjacobs/connexion-example
-
+.. _described by Flask: http://flask.pocoo.org/snippets/111/
