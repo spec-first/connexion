@@ -169,7 +169,8 @@ class Api:
                         else:
                             raise et, "Fatal error found while addding '{}': {}".format(
                                         endpoint.get('operationId'),
-                                        str(ei) ), tb
+                                        str(ei)), tb
+                                        
     def add_auth_on_not_found(self):
         """
         Adds a 404 error handler to authenticate and only expose the 404 status if the security validation pass.
