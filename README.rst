@@ -48,7 +48,7 @@ Connexion Features:
   through it
 - Handles OAuth 2 token-based authentication
 - Supports API versioning
-- Supports automatic serializization of payloads. If your
+- Supports automatic serialization of payloads. If your
   specification defines that an endpoint returns JSON, Connexion will
   automatically serialize the return value for you and set the right
   content type in the HTTP header.
