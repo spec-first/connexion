@@ -4,3 +4,4 @@ PyYAML
 requests
 six
 strict-rfc3339
+swagger_spec_validator

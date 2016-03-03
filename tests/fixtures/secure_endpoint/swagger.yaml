@@ -1,0 +1,68 @@
+swagger: "2.0"
+
+info:
+  title: "{{title}}"
+  version: "1.0"
+
+basePath: /v1.0
+
+securityDefinitions:
+    oauth:
+        type: oauth2
+        flow: password
+        tokenUrl: https://ouath.example/token
+        x-tokenInfoUrl: https://ouath.example/token_info
+        scopes:
+            myscope: can do stuff
+
+    api_key:
+      type: apiKey
+      name: api_key
+      in: header
+
+paths:
+  /byesecure/{name}:
+    get:
+      summary: Generate goodbye
+      description: Generates a goodbye message.
+      operationId: fakeapi.hello.get_bye_secure
+      security:
+        - oauth:
+          - myscope
+      produces:
+        - text/plain
+      responses:
+        200:
+          description: goodbye response
+          schema:
+            type: string
+      parameters:
+        - name: name
+          in: path
+          description: Name of the person to say bye.
+          required: true
+          type: string
+
+  /more-than-one-security-definition:
+    get:
+      summary: Some external call to API
+      description: External application call
+      operationId: fakeapi.hello.schema_list
+      security:
+        - oauth:
+          - myscope
+        - api_key: []
+      responses:
+        200:
+          description: OK
+
+  /user-handled-security:
+    get:
+      summary: Some external call to API
+      description: External application call
+      operationId: fakeapi.hello.schema_map
+      security:
+        - api_key: []
+      responses:
+        200:
+          description: OK

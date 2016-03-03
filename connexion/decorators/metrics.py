@@ -1,4 +1,3 @@
-
 import functools
 import os
 import time
@@ -7,7 +6,7 @@ from connexion.decorators.produces import BaseSerializer
 
 try:
     import uwsgi_metrics
-    HAS_UWSGI_METRICS = True
+    HAS_UWSGI_METRICS = True  # pragma: no cover
 except ImportError:
     uwsgi_metrics = None
     HAS_UWSGI_METRICS = False

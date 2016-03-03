@@ -15,7 +15,6 @@ from copy import deepcopy
 import functools
 import logging
 
-import jsonschema
 from jsonschema import ValidationError
 
 from .decorators import validation
@@ -92,9 +91,6 @@ class SecureOperation:
                 logger.debug(
                     "... Security type '%s' not natively supported by Connexion; you should handle it yourself",
                     security_definition['type'], extra=vars(self))
-            else:
-                logger.warning("... Security type '%s' unknown. **IGNORING SECURITY REQUIREMENTS**",
-                               security_definition['type'], extra=vars(self))
 
         # if we don't know how to handle the security or it's not defined we will usa a passthrough decorator
         return security_passthrough
@@ -169,28 +165,12 @@ class Operation(SecureOperation):
         self.endpoint_name = flaskify_endpoint(self.operation_id)
         self.__undecorated_function = resolution.function
 
-        for param in self.parameters:
-            if param['in'] == 'body' and 'default' in param:
-                self.default_body = param
-                break
-        else:
-            self.default_body = None
-
         self.validate_defaults()
 
     def validate_defaults(self):
         for param in self.parameters:
             try:
-                if param['in'] == 'body' and 'default' in param:
-                    param = param.copy()
-                    if 'required' in param:
-                        del param['required']
-                    if param['type'] == 'object':
-                        jsonschema.validate(param['default'], self.body_schema,
-                                            format_checker=jsonschema.draft4_format_checker)
-                    else:
-                        jsonschema.validate(param['default'], param, format_checker=jsonschema.draft4_format_checker)
-                elif param['in'] == 'query' and 'default' in param:
+                if param['in'] == 'query' and 'default' in param:
                     validation.validate_type(param, param['default'], 'query', param['name'])
             except (TypeValidationError, ValidationError):
                 raise InvalidSpecification('The parameter \'{param_name}\' has a default value which is not of'
@@ -386,7 +366,7 @@ class Operation(SecureOperation):
         if self.parameters:
             yield ParameterValidator(self.parameters)
         if self.body_schema:
-            yield RequestBodyValidator(self.body_schema, self.default_body is not None)
+            yield RequestBodyValidator(self.body_schema)
 
     @property
     def __response_validation_decorator(self):
