@@ -89,8 +89,8 @@ In your command line, type this:
 
 .. code-block:: bash
 
-    $ pip install Connexion
-    $ python hello.py
+    $ pip install connexion
+    
 
 Running It
 ----------
