@@ -1,0 +1,22 @@
+swagger: "2.0"
+
+info:
+  title: "{{title}}"
+  version: "1.0"
+
+basePath: /v1.0
+
+paths:
+  /default-param-query-does-not-match-type:
+    get:
+      summary: Default value does not match the param type
+      operationId: fakeapi.hello.test_default_missmatch_definition
+      responses:
+        200:
+          description: OK
+      parameters:
+        - name: age
+          in: query
+          type: integer
+          description: Simple age
+          default: 'error'

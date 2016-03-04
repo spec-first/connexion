@@ -148,18 +148,18 @@ OPERATION7 = {
             'default': 'stack'
         }
     ],
-    'responses': {201: {'description': 'Stack to be created. The '
-                                       'CloudFormation Stack creation can '
-                                       "still fail if it's rejected by senza "
-                                       'or AWS CF.',
-                        'schema': {'$ref': '#/definitions/stack'}},
-                  400: {'description': 'Stack was not created because request '
-                                       'was invalid',
-                        'schema': {'$ref': '#/definitions/problem'}},
-                  401: {'description': 'Stack was not created because the '
-                                       'access token was not provided or was '
-                                       'not valid for this operation',
-                        'schema': {'$ref': '#/definitions/problem'}}},
+    'responses': {'201': {'description': 'Stack to be created. The '
+                                         'CloudFormation Stack creation can '
+                                         "still fail if it's rejected by senza "
+                                         'or AWS CF.',
+                          'schema': {'$ref': '#/definitions/stack'}},
+                  '400': {'description': 'Stack was not created because request '
+                                         'was invalid',
+                          'schema': {'$ref': '#/definitions/problem'}},
+                  '401': {'description': 'Stack was not created because the '
+                                         'access token was not provided or was '
+                                         'not valid for this operation',
+                          'schema': {'$ref': '#/definitions/problem'}}},
     'security': [{'oauth': ['uid']}],
     'summary': 'Create new stack'
 }
@@ -188,18 +188,18 @@ OPERATION9 = {'description': 'Adds a new stack to be created by lizzy and return
                               'name': 'new_stack',
                               'required': True,
                               'schema': {'type': 'array', 'items': {'$ref': '#/definitions/new_stack'}}}],
-              'responses': {201: {'description': 'Stack to be created. The '
-                                                 'CloudFormation Stack creation can '
-                                                 "still fail if it's rejected by senza "
-                                                 'or AWS CF.',
-                                  'schema': {'$ref': '#/definitions/stack'}},
-                            400: {'description': 'Stack was not created because request '
-                                                 'was invalid',
-                                  'schema': {'$ref': '#/definitions/problem'}},
-                            401: {'description': 'Stack was not created because the '
-                                                 'access token was not provided or was '
-                                                 'not valid for this operation',
-                                  'schema': {'$ref': '#/definitions/problem'}}},
+              'responses': {'201': {'description': 'Stack to be created. The '
+                                                   'CloudFormation Stack creation can '
+                                                   "still fail if it's rejected by senza "
+                                                   'or AWS CF.',
+                                    'schema': {'$ref': '#/definitions/stack'}},
+                            '400': {'description': 'Stack was not created because request '
+                                                   'was invalid',
+                                    'schema': {'$ref': '#/definitions/problem'}},
+                            '401': {'description': 'Stack was not created because the '
+                                                   'access token was not provided or was '
+                                                   'not valid for this operation',
+                                    'schema': {'$ref': '#/definitions/problem'}}},
               'security': [{'oauth': ['uid']}],
               'summary': 'Create new stack'}
 
@@ -210,18 +210,18 @@ OPERATION10 = {'description': 'Adds a new stack to be created by lizzy and retur
                                'name': 'test',
                                'required': True,
                                'schema': {'$ref': '#/definitions/composed'}}],
-               'responses': {201: {'description': 'Stack to be created. The '
-                                                  'CloudFormation Stack creation can '
-                                                  "still fail if it's rejected by senza "
-                                                  'or AWS CF.',
-                                   'schema': {'$ref': '#/definitions/stack'}},
-                             400: {'description': 'Stack was not created because request '
-                                                  'was invalid',
-                                   'schema': {'$ref': '#/definitions/problem'}},
-                             401: {'description': 'Stack was not created because the '
-                                                  'access token was not provided or was '
-                                                  'not valid for this operation',
-                                   'schema': {'$ref': '#/definitions/problem'}}},
+               'responses': {'201': {'description': 'Stack to be created. The '
+                                                    'CloudFormation Stack creation can '
+                                                    "still fail if it's rejected by senza "
+                                                    'or AWS CF.',
+                                     'schema': {'$ref': '#/definitions/stack'}},
+                             '400': {'description': 'Stack was not created because request '
+                                                    'was invalid',
+                                     'schema': {'$ref': '#/definitions/problem'}},
+                             '401': {'description': 'Stack was not created because the '
+                                                    'access token was not provided or was '
+                                                    'not valid for this operation',
+                                     'schema': {'$ref': '#/definitions/problem'}}},
                'security': [{'oauth': ['uid']}],
                'summary': 'Create new stack'}
 
@@ -424,47 +424,6 @@ def test_resolve_invalid_reference():
 
     exception = exc_info.value  # type: InvalidSpecification
     assert exception.reason == "GET endpoint  '$ref' needs to start with '#/'"
-
-
-def test_bad_default():
-    with pytest.raises(InvalidSpecification) as exc_info:
-        Operation(method='GET', path='endpoint', path_parameters=[],
-                  operation=OPERATION6, app_produces=['application/json'],
-                  app_security=[], security_definitions={},
-                  definitions=DEFINITIONS,
-                  parameter_definitions=PARAMETER_DEFINITIONS,
-                  resolver=Resolver())
-    exception = exc_info.value
-    assert str(exception) == "<InvalidSpecification: The parameter 'stack_version' has a default value which " \
-                             "is not of type 'number'>"
-    assert repr(exception) == "<InvalidSpecification: The parameter 'stack_version' has a default value which " \
-                              "is not of type 'number'>"
-
-    with pytest.raises(InvalidSpecification) as exc_info:
-        Operation(method='GET', path='endpoint', path_parameters=[],
-                  operation=OPERATION7, app_produces=['application/json'],
-                  app_security=[], security_definitions={},
-                  definitions=DEFINITIONS, parameter_definitions={},
-                  resolver=Resolver())
-    exception = exc_info.value
-    assert str(exception) == "<InvalidSpecification: The parameter 'new_stack' has a default value which " \
-                             "is not of type 'integer'>"
-    assert repr(exception) == "<InvalidSpecification: The parameter 'new_stack' has a default value which " \
-                              "is not of type 'integer'>"
-
-    with pytest.raises(InvalidSpecification) as exc_info:
-        Operation(
-                method='GET', path='endpoint', path_parameters=[],
-                operation=OPERATION8, app_produces=['application/json'],
-                app_security=[], security_definitions={},
-                definitions=DEFINITIONS, parameter_definitions={},
-                resolver=Resolver()
-        )
-    exception = exc_info.value
-    assert str(exception) == "<InvalidSpecification: The parameter 'new_stack' has a default value which " \
-                             "is not of type 'object'>"
-    assert repr(exception) == "<InvalidSpecification: The parameter 'new_stack' has a default value which " \
-                              "is not of type 'object'>"
 
 
 def test_default():

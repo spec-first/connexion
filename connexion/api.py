@@ -18,6 +18,7 @@ import logging
 import pathlib
 import yaml
 import werkzeug.exceptions
+from swagger_spec_validator.validator20 import validate_spec
 from .operation import Operation
 from . import utils
 from . import resolver
@@ -30,13 +31,29 @@ SWAGGER_UI_URL = 'ui'
 logger = logging.getLogger('connexion.api')
 
 
+def compatibility_layer(spec):
+    """Make specs compatible with older versions of Connexion."""
+    # Make all response codes be string
+    for path_name, methods_available in spec.get('paths', {}).items():
+        for method_name, method_def in methods_available.items():
+            if method_name == 'parameters':
+                continue
+            response_definitions = {}
+            for response_code, response_def in method_def.get('responses', {}).items():
+                response_definitions[str(response_code)] = response_def
+                method_def['responses'] = response_definitions
+    return spec
+
+
 class Api:
     """
     Single API that corresponds to a flask blueprint
     """
 
-    def __init__(self, swagger_yaml_path, base_url=None, arguments=None, swagger_ui=None, swagger_path=None,
-                 swagger_url=None, validate_responses=False, resolver=resolver.Resolver(), auth_all_paths=False):
+    def __init__(self, swagger_yaml_path, base_url=None, arguments=None,
+                 swagger_ui=None, swagger_path=None, swagger_url=None,
+                 validate_responses=False, resolver=resolver.Resolver(),
+                 auth_all_paths=False, debug=False):
         """
         :type swagger_yaml_path: pathlib.Path
         :type base_url: str | None
@@ -45,16 +62,19 @@ class Api:
         :type swagger_path: string | None
         :type swagger_url: string | None
         :type auth_all_paths: bool
+        :type debug: bool
         :param resolver: Callable that maps operationID to a function
         """
+        self.debug = debug
         self.swagger_yaml_path = pathlib.Path(swagger_yaml_path)
-        logger.debug('Loading specification: %s', swagger_yaml_path, extra={'swagger_yaml': swagger_yaml_path,
-                                                                            'base_url': base_url,
-                                                                            'arguments': arguments,
-                                                                            'swagger_ui': swagger_ui,
-                                                                            'swagger_path': swagger_path,
-                                                                            'swagger_url': swagger_url,
-                                                                            'auth_all_paths': auth_all_paths})
+        logger.debug('Loading specification: %s', swagger_yaml_path,
+                     extra={'swagger_yaml': swagger_yaml_path,
+                            'base_url': base_url,
+                            'arguments': arguments,
+                            'swagger_ui': swagger_ui,
+                            'swagger_path': swagger_path,
+                            'swagger_url': swagger_url,
+                            'auth_all_paths': auth_all_paths})
         arguments = arguments or {}
         with swagger_yaml_path.open() as swagger_yaml:
             swagger_template = swagger_yaml.read()
@@ -62,6 +82,8 @@ class Api:
             self.specification = yaml.load(swagger_string)  # type: dict
 
         logger.debug('Read specification', extra=self.specification)
+
+        validate_spec(compatibility_layer(self.specification))
 
         # https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#fixed-fields
         # If base_url is not on provided then we try to read it from the swagger.yaml or use / by default
@@ -142,9 +164,7 @@ class Api:
 
             # search for parameters definitions in the path level
             # http://swagger.io/specification/#pathItemObject
-            path_parameters = []
-            if 'parameters' in methods:
-                path_parameters = methods['parameters']
+            path_parameters = methods.get('parameters', [])
 
             # TODO Error handling
             for method, endpoint in methods.items():
@@ -153,8 +173,15 @@ class Api:
                 try:
                     self.add_operation(method, path, endpoint, path_parameters)
                 except Exception:  # pylint: disable= W0703
-                    logger.exception('Failed to add operation for %s %s%s',
-                                     method.upper(), self.base_url, path)
+                    error_msg = 'Failed to add operation for {} {}{}'.format(
+                        method.upper(), self.base_url, path)
+                    if self.debug:
+                        logger.exception(error_msg)
+                    else:
+                        import sys
+                        logger.error(error_msg)
+                        et, ei, tb = sys.exc_info()
+                        raise ei.with_traceback(tb)
 
     def add_auth_on_not_found(self):
         """

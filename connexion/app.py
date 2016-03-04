@@ -23,8 +23,10 @@ logger = logging.getLogger('connexion.app')
 
 
 class App:
-    def __init__(self, import_name, port=None, specification_dir='', server=None, arguments=None, auth_all_paths=False,
-                 debug=False, swagger_ui=True, swagger_path=None, swagger_url=None):
+    def __init__(self, import_name, port=None, specification_dir='',
+                 server=None, arguments=None, auth_all_paths=False,
+                 debug=False, swagger_ui=True, swagger_path=None,
+                 swagger_url=None):
         """
         :param import_name: the name of the application package
         :type import_name: str
@@ -127,7 +129,8 @@ class App:
                   swagger_url=swagger_url,
                   resolver=resolver,
                   validate_responses=validate_responses,
-                  auth_all_paths=auth_all_paths)
+                  auth_all_paths=auth_all_paths,
+                  debug=self.debug)
         self.app.register_blueprint(api.blueprint)
         return api
 
