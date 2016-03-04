@@ -6,8 +6,18 @@
 Welcome to Connexion's documentation!
 =====================================
 
-Connexion is a framework on top of Flask_ to automagically handle your REST API requests based on
-`Swagger 2.0 Specification <swagger.spec_>`_ files in YAML.
+Connexion is a framework on top of Flask_ that automagically handles
+HTTP requests based on `OpenAPI 2.0 Specification`_ (formerly known as
+Swagger Spec) of your API described in `YAML format`_. Connexion
+allows you to write a Swagger specification and then maps the
+endpoints to your Python functions. This is what makes it unique from
+other tools that generate the specification based on your Python
+code. You are free to describe your REST API with as much detail as
+you want and then Connexion guarantees that it will work as
+you specified. We built Connexion this way in order to:
+
+- Simplify the development process
+- Reduce misinterpretation about what an API is going to look like
 
 Contents:
 
@@ -15,7 +25,12 @@ Contents:
    :maxdepth: 2
 
    quickstart
+   routing
+   request
+   response
    security
 
 .. _Flask: http://flask.pocoo.org/
-.. _swagger.spec: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md
+.. _OpenAPI 2.0 Specification: https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md
+.. _YAML format: https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md#format
+

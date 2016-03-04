@@ -308,9 +308,8 @@ can just provide it when adding the API to your application:
 
     app.add_api('my_api.yaml', base_path='/1.0')
 
-**Swagger JSON**
-----------------
-
+Swagger JSON
+------------
 Connexion makes the OpenAPI/Swagger specification in JSON format
 available from ``swagger.json`` in the base path of the API.
 
@@ -395,6 +394,10 @@ See the `uWSGI documentation`_ for more information.
 .. _using Flask with uWSGI: http://flask.pocoo.org/docs/latest/deploying/uwsgi/
 .. _uWSGI documentation: https://uwsgi-docs.readthedocs.org/
 
+Documentation
+=============
+Further information is available at `Connexion's Documentation Page`_.
+
 Contributing to Connexion/TODOs
 ===============================
 
@@ -444,3 +447,4 @@ Unless required by applicable law or agreed to in writing, software distributed 
 .. _Tornado: http://www.tornadoweb.org/en/stable/
 .. _Connexion Pet Store Example Application: https://github.com/hjacobs/connexion-example
 .. _described by Flask: http://flask.pocoo.org/snippets/111/
+.. _Connexion's Documentation Page: http://connexion.readthedocs.org/en/latest/
