@@ -31,20 +31,23 @@ Put your API YAML inside a folder in the root path of your application (e.g ``sw
     app.run(port=8080)
 
 
-Parametrization
----------------
-Connexion uses Jinja2_ to allow the parametrization of specifications.
+Dynamic Rendering of Your Specification
+---------------------------------------
 
-The specification arguments can be defined globally for the application or for each specific api:
+Connexion uses Jinja2_ to allow specification parameterization through
+`arguments` parameter. You can either define specification arguments
+globally for the application in the `connexion.App` constructor, or
+for each specific API in the `connexion.App#add_api` method:
 
 .. code-block:: python
 
-    app = connexion.App(__name__, specification_dir='swagger/', arguments={'global': 'global_value'})
+    app = connexion.App(__name__, specification_dir='swagger/',
+                        arguments={'global': 'global_value'})
     app.add_api('my_api.yaml', arguments={'api_local': 'local_value'})
-    app.run(port = 8080)
+    app.run(port=8080)
 
-If a value is provided both globally and on the api then the api value will take precedence.
-
+When a value is provided both globally and on the API, the API value
+will take precedence.
 Request Handling
 ----------------
 Connexion validates incoming requests for conformance with the schemas described in swagger specification.
