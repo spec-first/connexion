@@ -3,7 +3,7 @@ Response Handling
 
 Response Serialization
 ----------------------
-If the endpoint returns a Response object this response will be used as is.
+If the endpoint returns a `Response` object this response will be used as is.
 
 Otherwise, and by default and if the specification defines that a endpoint
 produces only json, connexion will automatically serialize the return value
@@ -12,8 +12,34 @@ for you and set the right content type in the HTTP header.
 If the endpoint produces a single non json mimetype then connexion will
 automatically set the right content type in the HTTP header.
 
-Status codes
-------------
+Returning a status codes
+------------------------
+There are two ways of returning a specific status code.
+
+One way is to return a `Response` object that will be used unchanged.
+
+The other is returning it as second return value in the response. For example
+
+.. code-block:: python
+
+    def my_endpoint():
+        return 'Not Found', 404
+
+Returning Headers
+-----------------
+There are two ways to return headers from you endpoints.
+
+One way is to return a `Response` object that will be used unchanged.
+
+The other is returning a dict with the header values as the third return value
+in the response:
+
+For example
+
+.. code-block:: python
+
+    def my_endpoint():
+        return 'Not Found', 404, {'x-error': 'not found'}
 
 
 Response Validation
