@@ -49,38 +49,8 @@ for each specific API in the `connexion.App#add_api` method:
 When a value is provided both globally and on the API, the API value
 will take precedence.
 
-Request Handling
-----------------
-Connexion validates incoming requests for conformance with the schemas described in swagger specification.
-
-Request parameters will be provided to the handler functions as keyword arguments if they are included in the function's
-signature, otherwise body parameters can be accessed from ``connexion.request.json`` and query parameters can be
-accessed from ``connexion.request.args``.
-
-
-Response Serialization
-----------------------
-By default and if the specification defines that a endpoint produces only json, connexion will automatically serialize
-the return value for you and set the right content type in the HTTP header.
-If the endpoint produces a single non json mimetype then connexion will automatically  set the right content type in the
-HTTP header.
-
-
-Error Handling
---------------
-By default connexion error messages are JSON serialized according to `Problem Details for HTTP APIs <http_problem_>`_.
-
-Application can return errors using ``connexion.problem``.
-
-
-Swagger JSON
-------------
-Connexion makes the OpenAPI/Swagger specification in JSON format
-available from ``swagger.json`` in the base path of the API.
-
 The Swagger UI Console
 ----------------------
-
 The Swagger UI for an API is available, by default, in
 ``{base_path}/ui/`` where ``base_path`` is the base path of the API.
 
@@ -112,7 +82,6 @@ to ``tornado``:
     app = connexion.App(__name__, port = 8080, specification_dir='swagger/', server='tornado')
 
 
-.. _http_problem: https://tools.ietf.org/html/draft-ietf-appsawg-http-problem-00
 .. _Jinja2: http://jinja.pocoo.org/
 .. _swagger.spec: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md
 .. _swagger.spec.operation: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#operation-object

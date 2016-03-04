@@ -26,10 +26,10 @@ Contents:
 
    quickstart
    routing
+   request_response
    security
 
 .. _Flask: http://flask.pocoo.org/
 .. _OpenAPI 2.0 Specification: https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md
-.. _swagger.spec: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md
 .. _YAML format: https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md#format
 
