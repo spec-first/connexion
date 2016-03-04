@@ -15,6 +15,7 @@ Contents:
    :maxdepth: 2
 
    quickstart
+   routing
    security
 
 .. _Flask: http://flask.pocoo.org/

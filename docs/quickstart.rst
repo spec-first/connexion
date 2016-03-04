@@ -1,7 +1,23 @@
 Quickstart
 ==========
 
-How to use
+
+Prerequisites
+-------------
+
+Python 2.7 or Python 3.4+
+
+Installing It
+-------------
+
+In your command line, type this:
+
+.. code-block:: bash
+
+    $ pip install connexion
+
+
+Running It
 ----------
 
 Put your API YAML inside a folder in the root path of your application (e.g ``swagger\``) and then do
@@ -29,52 +45,6 @@ The specification arguments can be defined globally for the application or for e
 
 If a value is provided both globally and on the api then the api value will take precedence.
 
-
-Routing
--------
-By default, Connexion uses the ``OperationId`` from each `Operation Object <swagger.spec.operation_>`_  to identify
-which function should handle each url.
-
-For example:
-
-.. code-block:: yaml
-
-    paths:
-      /hello_world:
-        post:
-          operationId: myapp.api.hello_world
-
-If you provided this path in your specification POST requests to ``http://MYHOST/hello_world`` would be handled by the
-function ``hello_world`` in ``myapp.api``.
-
-Additionally you can also define a ``basePath`` on the top level of the API specification, which is useful for versioned
-APIs. If you wanted to serve the previous endpoint from  ``http://MYHOST/1.0/hello_world`` you could do:
-
-.. code-block:: yaml
-
-    basePath: /1.0
-
-    paths:
-      /hello_world:
-        post:
-          operationId: myapp.api.hello_world
-
-Other alternative if you don't want to include the base path in your specification is provide the base path when adding
-the API to your application:
-
-.. code-block:: python
-
-    app.add_api('my_api.yaml', base_path='/1.0')
-
-
-If you want a different behaviour you can provide a custom resolver callable to convert the OperationID to a function:
-
-
-.. code-block:: python
-
-    app.add_api('my_api.yaml', base_path='/1.0', resolver=my_custom_resolver)
-
-
 Request Handling
 ----------------
 Connexion validates incoming requests for conformance with the schemas described in swagger specification.
@@ -99,10 +69,10 @@ By default connexion error messages are JSON serialized according to `Problem De
 Application can return errors using ``connexion.problem``.
 
 
-Swagger Json
+Swagger JSON
 ------------
-Connexion makes the Swagger specification in json format available from ``swagger.json`` in the base path of the api.
-
+Connexion makes the OpenAPI/Swagger specification in JSON format
+available from ``swagger.json`` in the base path of the API.
 
 Swagger UI
 ----------
