@@ -90,7 +90,7 @@ In your command line, type this:
 .. code-block:: bash
 
     $ pip install connexion
-    
+
 
 Running It
 ----------
@@ -212,6 +212,78 @@ encountered in the specification. It will also respect
 ``x-router-controller``. You may import and extend
 ``connexion.resolver.Resolver`` to implement your own ``operationId``
 (and function) resolution algorithm.
+
+Automatic Parameter Handling
+----------------------------
+
+Connexion automatically maps the parameters defined in your endpoint
+specification to arguments of your Python views as named parameters
+and with value casting whenever possible. All you need to do is define
+the endpoint's parameters with matching names with your views arguments.
+
+As example you have a endpoint specified as:
+
+.. code-block:: yaml
+
+    paths:
+      /foo:
+        get:
+          operationId: api.foo_get
+          parameters:
+            - name: message
+              description: Some message.
+              in: query
+              type: string
+              required: true
+
+And the view function:
+
+.. code-block:: python
+
+    # api.py file
+
+    def foo_get(message):
+        # do something
+        return 'You send the message: {}'.format(message), 200
+
+In this example Connexion will automatically identify that your view
+function expects an argument named `message` and will assign the value
+of the endpoint parameter `message` to your view function.
+
+.. warning:: Please note that when you have a parameter defined as
+             *not* required at your endpoint and your Python view have
+             a non-named argument, when you call this endpoint WITHOUT
+             the parameter you will get an exception of missing
+             positional argument.
+
+Type casting
+^^^^^^^^^^^^
+
+Whenever possible Connexion will try to parse your argument values and
+do type casting to related Python natives values. The current
+available type castings are:
+
++--------------+-------------+
+| Swagger Type | Python Type |
+|              |             |
++==============+=============+
+| integer      | int         |
++--------------+-------------+
+| string       | str         |
++--------------+-------------+
+| number       | float       |
++--------------+-------------+
+| boolean      | bool        |
++--------------+-------------+
+| array        | list        |
++--------------+-------------+
+| object       | dict        |
++--------------+-------------+
+
+In the Swagger definition if the `array` type is used you can define the
+`collectionFormat` that it should be recognized. Connexion currently
+supports collection formats "pipes" and "csv". The default format is "csv".
+
 
 API Versioning and basePath
 ---------------------------
