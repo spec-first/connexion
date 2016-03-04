@@ -236,9 +236,8 @@ can just provide it when adding the API to your application:
 
     app.add_api('my_api.yaml', base_path='/1.0')
 
-**Swagger JSON**
-----------------
-
+Swagger JSON
+------------
 Connexion makes the OpenAPI/Swagger specification in JSON format
 available from ``swagger.json`` in the base path of the API.
 
