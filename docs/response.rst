@@ -44,6 +44,19 @@ For example
 
 Response Validation
 -------------------
+While, by default Connexion doesn't validate the responses it's possible to
+do so by opting in when adding the API:
+
+.. code-block:: python
+
+    import connexion
+
+    app = connexion.App(__name__, specification_dir='swagger/')
+    app.add_api('my_api.yaml', validate_responses=True)
+    app.run(port=8080)
+
+This will validate all the responses using `jsonschema` and is specially useful
+during development.
 
 Error Handling
 --------------
