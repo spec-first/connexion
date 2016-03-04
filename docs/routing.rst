@@ -72,3 +72,31 @@ encountered in the specification. It will also respect
 ``x-router-controller``. You may import and extend
 ``connexion.resolver.Resolver`` to implement your own ``operationId``
 (and function) resolution algorithm.
+
+API Versioning and basePath
+---------------------------
+
+You can also define a ``basePath`` on the top level of the API
+specification. This is useful for versioned APIs. To serve the
+previous endpoint from ``http://MYHOST/1.0/hello_world``, type:
+
+.. code-block:: yaml
+
+    basePath: /1.0
+
+    paths:
+      /hello_world:
+        post:
+          operationId: myapp.api.hello_world
+
+If you don't want to include the base path in your specification, you
+can just provide it when adding the API to your application:
+
+.. code-block:: python
+
+    app.add_api('my_api.yaml', base_path='/1.0')
+
+Swagger JSON
+------------
+Connexion makes the OpenAPI/Swagger specification in JSON format
+available from ``swagger.json`` in the base path of the API.

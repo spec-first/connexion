@@ -48,6 +48,7 @@ for each specific API in the `connexion.App#add_api` method:
 
 When a value is provided both globally and on the API, the API value
 will take precedence.
+
 Request Handling
 ----------------
 Connexion validates incoming requests for conformance with the schemas described in swagger specification.
