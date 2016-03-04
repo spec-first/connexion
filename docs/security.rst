@@ -15,6 +15,15 @@ Connexion expects to receive the Oauth token in the ``Authorization`` header fie
 For authenticated endpoints connexion will add a ``user`` and ``token_info`` properties to ``connexion.request``
 containing the user name and the full token info of the request.
 
+HTTPS Support
+-------------
+
+When specifying HTTPS as the scheme in the API YAML file, all the URIs
+in the served Swagger UI are HTTPS endpoints. The problem: The default
+server that runs is a "normal" HTTP server. This means that the
+Swagger UI cannot be used to play with the API. What is the correct
+way to start a HTTPS server when using Connexion?
+
 .. _rfc6750: https://tools.ietf.org/html/rfc6750
 .. _swager.spec.security_definition: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-definitions-object
 .. _swager.spec.security_requirement: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-requirement-object
