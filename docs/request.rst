@@ -10,7 +10,10 @@ can be accessed from ``connexion.request.args``.
 
 Request Validation
 ------------------
-Both the request body and parameters are validated against the specification.
+Both the request body and parameters are validated against the specification,
+using `jsonschema`_.
 
 If the request doesn't match the specification connexion will return a 400
 error.
+
+.. _jsonschema: https://pypi.python.org/pypi/jsonschema
