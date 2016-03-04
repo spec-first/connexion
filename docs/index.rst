@@ -26,7 +26,8 @@ Contents:
 
    quickstart
    routing
-   request_response
+   request
+   response
    security
 
 .. _Flask: http://flask.pocoo.org/
