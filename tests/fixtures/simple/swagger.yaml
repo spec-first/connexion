@@ -474,6 +474,28 @@ paths:
               type: string
           description: 204 no content
 
+  /test-array-in-path/{names}:
+    get:
+      operationId: fakeapi.hello.test_array_in_path
+      produces:
+        - application/json
+      parameters:
+        - name: names
+          description: List of names.
+          in: path
+          type: array
+          items:
+            type: string
+          required: true
+          collectionFormat: csv
+      responses:
+        200:
+          description: OK
+          schema:
+            type: array
+            items:
+              type: string
+
 
 definitions:
   new_stack:

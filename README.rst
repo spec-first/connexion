@@ -265,7 +265,6 @@ available type castings are:
 
 +--------------+-------------+
 | Swagger Type | Python Type |
-|              |             |
 +==============+=============+
 | integer      | int         |
 +--------------+-------------+

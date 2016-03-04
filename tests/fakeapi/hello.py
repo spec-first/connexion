@@ -281,3 +281,7 @@ def path_parameters_in_get_method(title):
 
 def test_default_missmatch_definition(age):
     return 'OK'
+
+
+def test_array_in_path(names):
+    return names, 200
