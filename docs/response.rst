@@ -12,6 +12,10 @@ for you and set the right content type in the HTTP header.
 If the endpoint produces a single non json mimetype then connexion will
 automatically set the right content type in the HTTP header.
 
+Status codes
+------------
+
+
 Error Handling
 --------------
 By default connexion error messages are JSON serialized according to
