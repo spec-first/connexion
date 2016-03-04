@@ -14,6 +14,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 # Decorators to change the return type of endpoints
 import functools
 import logging
+import ast
 from ..exceptions import NonConformingResponse
 from ..problem import problem
 from .validation import RequestBodyValidator
@@ -51,6 +52,9 @@ class ResponseValidator(BaseDecorator):
             v = RequestBodyValidator(schema)
             error = v.validate_schema(data, schema)
             if error:
+                if isinstance(error.response, list) and len(error.response) > 0:
+                    error_dict = ast.literal_eval(error.response[0])
+                    logger.debug('Validation error in response body was:\n{0}'.format(error_dict["detail"]))
                 raise NonConformingResponse("Response body does not conform to specification")
 
         if response_definition and response_definition.get("headers"):
