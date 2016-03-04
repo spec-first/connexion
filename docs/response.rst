@@ -5,15 +5,15 @@ Response Serialization
 ----------------------
 If the endpoint returns a `Response` object this response will be used as is.
 
-Otherwise, and by default and if the specification defines that a endpoint
-produces only json, connexion will automatically serialize the return value
+Otherwise, and by default and if the specification defines that an endpoint
+produces only JSON, connexion will automatically serialize the return value
 for you and set the right content type in the HTTP header.
 
-If the endpoint produces a single non json mimetype then connexion will
+If the endpoint produces a single non JSON mimetype then Connexion will
 automatically set the right content type in the HTTP header.
 
-Returning a status codes
-------------------------
+Returning status codes
+----------------------
 There are two ways of returning a specific status code.
 
 One way is to return a `Response` object that will be used unchanged.
@@ -27,7 +27,7 @@ The other is returning it as second return value in the response. For example
 
 Returning Headers
 -----------------
-There are two ways to return headers from you endpoints.
+There are two ways to return headers from your endpoints.
 
 One way is to return a `Response` object that will be used unchanged.
 

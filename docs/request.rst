@@ -52,6 +52,8 @@ In this example Connexion will automatically identify that your view
 function expects an argument named `message` and will assign the value
 of the endpoint parameter `message` to your view function.
 
+Connexion will also use default values if they are provided.
+
 .. warning:: Please note that when you have a parameter defined as
              *not* required at your endpoint and your Python view have
              a non-named argument, when you call this endpoint WITHOUT
