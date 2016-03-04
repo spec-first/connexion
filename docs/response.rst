@@ -16,6 +16,9 @@ Status codes
 ------------
 
 
+Response Validation
+-------------------
+
 Error Handling
 --------------
 By default connexion error messages are JSON serialized according to
