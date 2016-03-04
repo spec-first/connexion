@@ -24,7 +24,7 @@ securityDefinitions:
     flow: implicit
     authorizationUrl: https://example.com/oauth2/dialog
     # the token info URL is hardcoded for our mock_tokeninfo.py script
-    # you can also pass it as an environment variable HTTP_TOKENINFO_URL
+    # you can also pass it as an environment variable TOKENINFO_URL
     x-tokenInfoUrl: http://localhost:7979/tokeninfo
     scopes:
       uid: Unique identifier of the user accessing the service.
