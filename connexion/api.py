@@ -163,8 +163,9 @@ class Api:
                     else:
                         logger.error(error_msg)
                         import sys
+                        import six
                         et, ei, tb = sys.exc_info()
-                        if sys.version_info[0] == 3:
+                        if six.PY3:
                             raise ei.with_traceback(tb)
                         else:
                             raise et, "Fatal error found while addding '{}': {}".format(
