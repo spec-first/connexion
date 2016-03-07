@@ -170,3 +170,12 @@ def test_parameters_defined_in_path_level(simple_app):
 
     resp = app_client.get('/v1.0/parameters-in-root-path')
     assert resp.status_code == 400
+
+
+def test_array_in_path(simple_app):
+    app_client = simple_app.app.test_client()
+    resp = app_client.get('/v1.0/test-array-in-path/one_item')
+    assert json.loads(resp.data.decode()) == ["one_item"]
+
+    resp = app_client.get('/v1.0/test-array-in-path/one_item,another_item')
+    assert json.loads(resp.data.decode()) == ["one_item", "another_item"]
