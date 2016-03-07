@@ -165,12 +165,10 @@ class Api:
                         import sys
                         import six
                         et, ei, tb = sys.exc_info()
-                        if six.PY3:
-                            raise ei.with_traceback(tb)
-                        else:
-                            raise et, "Fatal error found while addding '{}': {}".format(
+                        message = "Fatal error found while addding '{}': {}".format(
                                         endpoint.get('operationId'),
-                                        str(ei)), tb
+                                        str(ei))
+                        six.reraise(et, message, exc_traceback=tb)
 
     def add_auth_on_not_found(self):
         """
