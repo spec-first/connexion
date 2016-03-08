@@ -234,11 +234,11 @@ def test_falsy_param(falsy):
     return falsy
 
 
-def test_formData_param(formData):
+def test_formdata_param(formData):
     return formData
 
 
-def test_formData_missing_param():
+def test_formdata_missing_param():
     return ''
 
 

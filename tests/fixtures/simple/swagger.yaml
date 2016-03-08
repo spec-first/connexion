@@ -311,7 +311,7 @@ paths:
   /test-formData-param:
     post:
       summary: Test formData parameter
-      operationId: fakeapi.hello.test_formData_param
+      operationId: fakeapi.hello.test_formdata_param
       parameters:
         - name: formData
           type: string
@@ -324,7 +324,7 @@ paths:
   /test-formData-missing-param:
     post:
       summary: Test formData missing parameter in handler
-      operationId: fakeapi.hello.test_formData_missing_param
+      operationId: fakeapi.hello.test_formdata_missing_param
       parameters:
         - name: missing_formData
           type: string

@@ -93,17 +93,19 @@ def test_falsy_param(simple_app):
     assert response == 1
 
 
-def test_formData_param(simple_app):
+def test_formdata_param(simple_app):
     app_client = simple_app.app.test_client()
-    resp = app_client.post('/v1.0/test-formData-param', data={'formData': 'test'})
+    resp = app_client.post('/v1.0/test-formData-param',
+                           data={'formData': 'test'})
     assert resp.status_code == 200
     response = json.loads(resp.data.decode())
     assert response == 'test'
 
 
-def test_formData_missing_param(simple_app):
+def test_formdata_missing_param(simple_app):
     app_client = simple_app.app.test_client()
-    resp = app_client.post('/v1.0/test-formData-missing-param', data={'missing_formData': 'test'})
+    resp = app_client.post('/v1.0/test-formData-missing-param',
+                           data={'missing_formData': 'test'})
     assert resp.status_code == 200
 
 
