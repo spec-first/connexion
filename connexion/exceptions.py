@@ -24,10 +24,10 @@ class InvalidSpecification(ConnexionException):
         """
         self.reason = reason
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return '<InvalidSpecification: {}>'.format(self.reason)
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return '<InvalidSpecification: {}>'.format(self.reason)
 
 
@@ -39,8 +39,8 @@ class NonConformingResponse(ConnexionException):
         """
         self.reason = reason
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return '<NonConformingResponse: {}>'.format(self.reason)
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return '<NonConformingResponse: {}>'.format(self.reason)

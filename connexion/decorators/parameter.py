@@ -60,11 +60,13 @@ def parameter_to_arg(parameters, function):
     """
     body_parameters = [parameter for parameter in parameters if parameter['in'] == 'body'] or [{}]
     body_name = body_parameters[0].get('name')
-    default_body = body_parameters[0].get('default')
+    default_body = body_parameters[0].get('schema', {}).get('default')
     query_types = {parameter['name']: parameter
                    for parameter in parameters if parameter['in'] == 'query'}  # type: dict[str, str]
     form_types = {parameter['name']: parameter
                   for parameter in parameters if parameter['in'] == 'formData'}
+    path_types = {parameter['name']: parameter
+                  for parameter in parameters if parameter['in'] == 'path'}
     arguments = get_function_arguments(function)
     default_query_params = {param['name']: param['default']
                             for param in parameters if param['in'] == 'query' and 'default' in param}
@@ -82,6 +84,12 @@ def parameter_to_arg(parameters, function):
 
         if default_body and not request_body:
             request_body = default_body
+
+        # Parse path parameters
+        for key, path_param_definitions in path_types.items():
+            if key in kwargs:
+                kwargs[key] = get_val_from_param(kwargs[key],
+                                                 path_param_definitions)
 
         # Add body parameters
         if request_body is not None:

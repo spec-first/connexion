@@ -277,3 +277,11 @@ def test_nocontent_obj_with_headers():
 
 def path_parameters_in_get_method(title):
     return [title], 200, {}
+
+
+def test_default_missmatch_definition(age):
+    return 'OK'
+
+
+def test_array_in_path(names):
+    return names, 200

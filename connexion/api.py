@@ -18,6 +18,7 @@ import logging
 import pathlib
 import yaml
 import werkzeug.exceptions
+from swagger_spec_validator.validator20 import validate_spec
 from .operation import Operation
 from . import utils
 from . import resolver
@@ -28,6 +29,20 @@ SWAGGER_UI_PATH = MODULE_PATH / 'vendor' / 'swagger-ui'
 SWAGGER_UI_URL = 'ui'
 
 logger = logging.getLogger('connexion.api')
+
+
+def compatibility_layer(spec):
+    """Make specs compatible with older versions of Connexion."""
+    # Make all response codes be string
+    for path_name, methods_available in spec.get('paths', {}).items():
+        for method_name, method_def in methods_available.items():
+            if method_name == 'parameters':
+                continue
+            response_definitions = {}
+            for response_code, response_def in method_def.get('responses', {}).items():
+                response_definitions[str(response_code)] = response_def
+                method_def['responses'] = response_definitions
+    return spec
 
 
 class Api:
@@ -70,6 +85,8 @@ class Api:
             self.specification = yaml.load(swagger_string)  # type: dict
 
         logger.debug('Read specification', extra=self.specification)
+
+        validate_spec(compatibility_layer(self.specification))
 
         # https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#fixed-fields
         # If base_url is not on provided then we try to read it from the swagger.yaml or use / by default
