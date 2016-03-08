@@ -24,7 +24,7 @@ logger = logging.getLogger('connexion.decorators.response')
 
 
 class ResponseValidator(BaseDecorator):
-    def __init__(self, operation={},  mimetype='text/plain'):
+    def __init__(self, operation,  mimetype):
         """
         :type operation: Operation
         :type mimetype: str
@@ -32,13 +32,13 @@ class ResponseValidator(BaseDecorator):
         self.operation = operation
         self.mimetype = mimetype
 
-    def validate_response(self, data, status_code, headers, mimetype):
+    def validate_response(self, data, status_code, headers):
         """
         Validates the Response object based on what has been declared in the specification.
         Ensures the response body matches the declated schema.
         :type data: dict
         :type status_code: int
-        :type mimetype: str
+        :type headers: dict
         :rtype bool | None
         """
         response_definitions = self.operation.operation["responses"]
@@ -68,7 +68,7 @@ class ResponseValidator(BaseDecorator):
             result = function(*args, **kwargs)
             try:
                 data, status_code, headers = self.get_full_response(result)
-                self.validate_response(data, status_code, headers, self.mimetype)
+                self.validate_response(data, status_code, headers)
             except NonConformingResponse as e:
                 return problem(500, 'Internal Server Error', e.reason)
             return result

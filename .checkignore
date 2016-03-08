@@ -1,2 +1,4 @@
 tests
+tests/*
 docs
+docs/*

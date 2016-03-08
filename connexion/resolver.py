@@ -18,7 +18,7 @@ import connexion.utils as utils
 logger = logging.getLogger('connexion.resolver')
 
 
-class Resolution:
+class Resolution(object):
     def __init__(self, function, operation_id):
         """
         Represents the result of operation resolution
@@ -30,7 +30,7 @@ class Resolution:
         self.operation_id = operation_id
 
 
-class Resolver:
+class Resolver(object):
     def __init__(self, function_resolver=utils.get_function_from_name):
         """
         Standard resolver

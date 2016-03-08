@@ -12,7 +12,7 @@ except ImportError:
     HAS_UWSGI_METRICS = False
 
 
-class UWSGIMetricsCollector:
+class UWSGIMetricsCollector(object):
     def __init__(self, path, method):
         self.path = path
         self.method = method

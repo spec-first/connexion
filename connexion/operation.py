@@ -30,7 +30,7 @@ from .utils import flaskify_endpoint, produces_json
 logger = logging.getLogger('connexion.operation')
 
 
-class SecureOperation:
+class SecureOperation(object):
     def __init__(self, security, security_definitions):
         """
         :param security: list of security rules the application uses by default

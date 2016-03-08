@@ -5,7 +5,7 @@ from connexion import NoContent
 from flask import redirect
 
 
-class DummyClass:
+class DummyClass(object):
     @classmethod
     def test_classmethod(cls):
         return cls.__name__
@@ -24,8 +24,8 @@ def search():
     return ''
 
 
-def list():
-    return ''
+def api_list():
+    return 'a'
 
 
 def post():
@@ -234,11 +234,11 @@ def test_falsy_param(falsy):
     return falsy
 
 
-def test_formData_param(formData):
+def test_formdata_param(formData):
     return formData
 
 
-def test_formData_missing_param():
+def test_formdata_missing_param():
     return ''
 
 
