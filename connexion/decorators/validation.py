@@ -87,7 +87,7 @@ class RequestBodyValidator(object):
         :param has_default: Flag to indicate if default value is present.
         """
         self.schema = schema
-        self.has_default = schema.get('default', False)
+        self.has_default = schema.get('default', has_default)
 
     def __call__(self, function):
         """
