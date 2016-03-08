@@ -24,8 +24,8 @@ def search():
     return ''
 
 
-def list():
-    return ''
+def api_list():
+    return 'a'
 
 
 def post():

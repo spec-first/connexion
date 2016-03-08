@@ -176,8 +176,8 @@ def test_resty_resolve_with_default_module_name_will_resolve_resource_root_as_co
                           security_definitions={},
                           definitions={},
                           parameter_definitions=PARAMETER_DEFINITIONS,
-                          resolver=RestyResolver('fakeapi', 'list'))
-    assert operation.operation_id == 'fakeapi.hello.list'
+                          resolver=RestyResolver('fakeapi', 'api_list'))
+    assert operation.operation_id == 'fakeapi.hello.api_list'
 
 
 def test_resty_resolve_with_default_module_name_will_resolve_resource_root_post_as_post():
