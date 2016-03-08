@@ -28,15 +28,16 @@ Connexion
 Connexion is a framework on top of Flask_ that automagically handles
 HTTP requests based on `OpenAPI 2.0 Specification`_ (formerly known as
 Swagger Spec) of your API described in `YAML format`_. Connexion
-allows you to write a Swagger specification and then maps the
-endpoints to your Python functions. This is what makes it unique from
-other tools that generate the specification based on your Python
-code. You are free to describe your REST API with as much detail as
-you want and then Connexion guarantees that it will work as
-you specified. We built Connexion this way in order to:
+allows you to write a Swagger specification, then maps the
+endpoints to your Python functions; this makes it unique, as many tools generate the specification based on your Python
+code. You can describe your REST API in as much detail as
+you want; then Connexion guarantees that it will work as
+you specified. 
 
-- Simplify the development process
-- Reduce misinterpretation about what an API is going to look like
+We built Connexion this way in order to:
+
+- simplify the development process
+- confirm expectations about what your API will look like
 
 Connexion Features:
 -------------------
@@ -44,7 +45,7 @@ Connexion Features:
 - Validates requests and endpoint parameters automatically, based on
   your specification
 - Provides a Web Swagger Console UI so that the users of your API can
-  have it as a live documentation and even call your API's endpoints
+  have live documentation and even call your API's endpoints
   through it
 - Handles OAuth 2 token-based authentication
 - Supports API versioning
@@ -56,17 +57,13 @@ Connexion Features:
 Why Connexion
 -------------
 
-With Connexion, you write the spec first. It then calls your Python
-code handling the mapping from the specification to the code. This
+With Connexion, you write the spec first. Connexion then calls your Python
+code, handling the mapping from the specification to the code. This
 incentivizes you to write the specification so that all of your
-developers can understand what your API does - even before you write a
-single line of code. If multiple teams depend on your APIs, you can
-already send them the documentation of your API. This guarantees that
-your API will follow the specification that you wrote. it’s not like
-frameworks such as Hug_, which generates the specification based on
-what code you write. Some disadvantages of generating the specification
-based on code is that usually your specification is laking details and
-your documentation is mixed with the code logic of your application.
+developers can understand what your API does, even before you write a
+single line of code. 
+
+If multiple teams depend on your APIs, you can use Connexion to easily send them the documentation of your API. This guarantees that your API will follow the specification that you wrote. This is a different process from that offered by frameworks such as Hug_, which generates a specification *after* you've written the code. Some disadvantages of generating specifications based on code is that they often end up lacking details or mix your documentation with the code logic of your application.
 
 Other Sources/Mentions
 ----------------------
@@ -119,17 +116,14 @@ Connexion supports one of the three OAuth 2 handling methods. (See
 "TODO" below.) With Connexion, the API security definition **must**
 include a 'x-tokenInfoUrl' (or set ``TOKENINFO_URL`` env var) with the
 URL to validate and get the `token information`_. Connexion expects to
-receive the OAuth token in the ``Authorization`` header field in the
+receive the OAuth token in the ``Authorization`` header field, in the
 format described in `RFC 6750 <rfc6750_>`_ section 2.1. This aspect
 represents a significant difference from the usual OAuth flow.
 
 Dynamic Rendering of Your Specification
 ---------------------------------------
 
-Connexion uses Jinja2_ to allow specification parameterization through
-`arguments` parameter. You can either define specification arguments
-globally for the application in the `connexion.App` constructor, or
-for each specific API in the `connexion.App#add_api` method:
+Connexion uses Jinja2_ to allow specification parameterization through the `arguments` parameter. You can define specification arguments for the application either globally (via the `connexion.App` constructor) or for each specific API (via the `connexion.App#add_api` method):
 
 .. code-block:: python
 
@@ -138,8 +132,7 @@ for each specific API in the `connexion.App#add_api` method:
     app.add_api('my_api.yaml', arguments={'api_local': 'local_value'})
     app.run(port=8080)
 
-When a value is provided both globally and on the API, the API value
-will take precedence.
+When a value is provided both globally and on the API, the API value will take precedence.
 
 Endpoint Routing to Your Python Views
 -------------------------------------
@@ -156,9 +149,9 @@ identify which Python function should handle each URL.
         post:
           operationId: myapp.api.hello_world
 
-If you provided this path in your specification POST requests to
-``http://MYHOST/hello_world``, it would be handled by the function
-``hello_world`` in ``myapp.api`` module. Optionally, you can include
+If you provide this path in your specification POST requests to
+``http://MYHOST/hello_world``, it will be handled by the function
+``hello_world`` in the ``myapp.api`` module. Optionally, you can include
 ``x-swagger-router-controller`` in your operation definition, making
 ``operationId`` relative:
 
@@ -207,21 +200,16 @@ the endpoints in your specification:
        delete:
           # Implied operationId: api.foo.delete
 
-``RestyResolver`` will give precedence to any ``operationId``
-encountered in the specification. It will also respect
-``x-router-controller``. You may import and extend
-``connexion.resolver.Resolver`` to implement your own ``operationId``
+``RestyResolver`` will give precedence to any ``operationId`` encountered in the specification. It will also respect
+``x-router-controller``. You can import and extend ``connexion.resolver.Resolver`` to implement your own ``operationId``
 (and function) resolution algorithm.
 
 Automatic Parameter Handling
 ----------------------------
 
-Connexion automatically maps the parameters defined in your endpoint
-specification to arguments of your Python views as named parameters
-and with value casting whenever possible. All you need to do is define
-the endpoint's parameters with matching names with your views arguments.
+Connexion automatically maps the parameters defined in your endpoint specification to arguments of your Python views as named parameters, and, whenever possible, with value casting. Simply define the endpoint's parameters with matching names with your views arguments.
 
-As example you have a endpoint specified as:
+As an example, say you have a endpoint specified as:
 
 .. code-block:: yaml
 
@@ -246,21 +234,18 @@ And the view function:
         # do something
         return 'You send the message: {}'.format(message), 200
 
-In this example Connexion will automatically identify that your view
-function expects an argument named `message` and will assign the value
+In this example, Connexion automatically recognizes that your view
+function expects an argument named `message` and assigns the value
 of the endpoint parameter `message` to your view function.
 
-.. warning:: Please note that when you have a parameter defined as
-             *not* required at your endpoint and your Python view have
-             a non-named argument, when you call this endpoint WITHOUT
-             the parameter you will get an exception of missing
-             positional argument.
+.. warning:: When you define a parameter at your endpoint as *not* required, and your Python view has
+             a non-named argument, you will get a "missing positional argument" exception whenever you call this endpoin WITHOUT the parameter.
 
 Type casting
 ^^^^^^^^^^^^
 
-Whenever possible Connexion will try to parse your argument values and
-do type casting to related Python natives values. The current
+Whenever possible, Connexion will try to parse your argument values and
+do type casting to related Python native values. The current
 available type castings are:
 
 +--------------+-------------+
@@ -279,10 +264,9 @@ available type castings are:
 | object       | dict        |
 +--------------+-------------+
 
-In the Swagger definition if the `array` type is used you can define the
-`collectionFormat` that it should be recognized. Connexion currently
+If you use the `array` type In the Swagger definition, you can define the
+`collectionFormat` so that it won't be recognized. Connexion currently
 supports collection formats "pipes" and "csv". The default format is "csv".
-
 
 API Versioning and basePath
 ---------------------------
@@ -301,7 +285,7 @@ previous endpoint from ``http://MYHOST/1.0/hello_world``, type:
           operationId: myapp.api.hello_world
 
 If you don't want to include the base path in your specification, you
-can just provide it when adding the API to your application:
+can provide it when adding the API to your application:
 
 .. code-block:: python
 
@@ -374,7 +358,7 @@ this, set your server to ``tornado``:
     app.run(server='tornado', port=8080)
 
 You can use the Flask WSGI app with any WSGI container, e.g. `using
-Flask with uWSGI`_ (this is more common):
+Flask with uWSGI`_ (this is common):
 
 .. code-block:: python
 
@@ -395,13 +379,13 @@ See the `uWSGI documentation`_ for more information.
 
 Documentation
 =============
-Further information is available at `Connexion's Documentation Page`_.
+Additional information is available at `Connexion's Documentation Page`_.
 
 Contributing to Connexion/TODOs
 ===============================
 
-We welcome your ideas, issues, and pull requests — just follow the
-usual/standard practices.
+We welcome your ideas, issues, and pull requests. Just follow the
+usual/standard GitHub practices.
 
 TODOs
 -----
