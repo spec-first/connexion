@@ -168,7 +168,7 @@ class Api:
                         message = "Fatal error found while addding '{}': {}".format(
                                         endpoint.get('operationId'),
                                         str(ei))
-                        six.reraise(et, message, exc_traceback=tb)
+                        six.reraise(et, message, tb)
 
     def add_auth_on_not_found(self):
         """
