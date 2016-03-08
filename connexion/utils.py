@@ -44,11 +44,12 @@ def convert_path_parameter(match, types):
     return '<{}{}{}>'.format(converter or '', ':' if converter else '', name.replace('-', '_'))
 
 
-def flaskify_path(swagger_path, types={}):
+def flaskify_path(swagger_path, types=None):
     """
     Convert swagger path templates to flask path templates
 
     :type swagger_path: str
+    :type types: dict
     :rtype: str
 
     >>> flaskify_path('/foo-bar/{my-param}')
@@ -57,6 +58,8 @@ def flaskify_path(swagger_path, types={}):
     >>> flaskify_path('/foo/{someint}', {'someint': 'int'})
     '/foo/<int:someint>'
     """
+    if types is None:
+        types = {}
     convert_match = functools.partial(convert_path_parameter, types=types)
     return PATH_PARAMETER.sub(convert_match, swagger_path)
 
