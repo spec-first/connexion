@@ -41,7 +41,9 @@ def convert_path_parameter(match, types):
     name = match.group(1)
     swagger_type = types.get(name)
     converter = PATH_PARAMETER_CONVERTERS.get(swagger_type)
-    return '<{}{}{}>'.format(converter or '', ':' if converter else '', name.replace('-', '_'))
+    return '<{0}{1}{2}>'.format(converter or '',
+                                ':' if converter else '',
+                                name.replace('-', '_'))
 
 
 def flaskify_path(swagger_path, types=None):
@@ -102,7 +104,7 @@ def get_function_from_name(function_name):
             module = importlib.import_module(module_name)
         except ImportError:
             module_name, attr_path1 = module_name.rsplit('.', 1)
-            attr_path = '{}.{}'.format(attr_path1, attr_path)
+            attr_path = '{0}.{1}'.format(attr_path1, attr_path)
     function = deep_getattr(module, attr_path)
     return function
 

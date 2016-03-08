@@ -173,8 +173,11 @@ class Api(object):
                 try:
                     self.add_operation(method, path, endpoint, path_parameters)
                 except Exception:  # pylint: disable= W0703
-                    error_msg = 'Failed to add operation for {} {}{}'.format(
-                        method.upper(), self.base_url, path)
+                    url = '{base_url}{path}'.format(base_url=self.base_url,
+                                                    path=path)
+                    error_msg = 'Failed to add operation for {method} {url}'.format(
+                        method=method.upper(),
+                        url=url)
                     if self.debug:
                         logger.exception(error_msg)
                     else:
