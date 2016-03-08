@@ -5,7 +5,7 @@ from connexion import NoContent
 from flask import redirect
 
 
-class DummyClass:
+class DummyClass(object):
     @classmethod
     def test_classmethod(cls):
         return cls.__name__

@@ -17,7 +17,7 @@ from ..utils import is_flask_response
 logger = logging.getLogger('connexion.decorators.decorator')
 
 
-class BaseDecorator:
+class BaseDecorator(object):
 
     @staticmethod
     def get_full_response(data):

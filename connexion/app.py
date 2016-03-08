@@ -22,7 +22,7 @@ from connexion.resolver import Resolver
 logger = logging.getLogger('connexion.app')
 
 
-class App:
+class App(object):
     def __init__(self, import_name, port=None, specification_dir='',
                  server=None, arguments=None, auth_all_paths=False,
                  debug=False, swagger_ui=True, swagger_path=None,

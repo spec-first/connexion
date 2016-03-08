@@ -80,7 +80,7 @@ def validate_type(param, value, parameter_type, parameter_name=None):
             return value
 
 
-class RequestBodyValidator:
+class RequestBodyValidator(object):
     def __init__(self, schema, has_default=False):
         """
         :param schema: The schema of the request body
@@ -122,7 +122,7 @@ class RequestBodyValidator:
         return None
 
 
-class ParameterValidator():
+class ParameterValidator(object):
     def __init__(self, parameters):
         self.parameters = {k: list(g) for k, g in itertools.groupby(parameters, key=lambda p: p['in'])}
 

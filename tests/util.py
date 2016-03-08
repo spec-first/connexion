@@ -12,7 +12,7 @@ FIXTURES_FOLDER = TEST_FOLDER / 'fixtures'
 SPEC_FOLDER = TEST_FOLDER / "fakeapi"
 
 
-class FakeResponse:
+class FakeResponse(object):
     def __init__(self, status_code, text):
         """
         :type status_code: int

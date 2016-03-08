@@ -45,7 +45,7 @@ def compatibility_layer(spec):
     return spec
 
 
-class Api:
+class Api(object):
     """
     Single API that corresponds to a flask blueprint
     """
