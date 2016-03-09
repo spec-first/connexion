@@ -100,7 +100,7 @@ class RequestBodyValidator(object):
             data = flask.request.json
 
             logger.debug("%s validating schema...", flask.request.url)
-            error = self.validate_schema(data, self.schema)
+            error = self.validate_schema(data)
             if error and not self.has_default:
                 return error
 
@@ -109,13 +109,13 @@ class RequestBodyValidator(object):
 
         return wrapper
 
-    def validate_schema(self, data, schema):
+    def validate_schema(self, data):
         """
         :type schema: dict
         :rtype: flask.Response | None
         """
         try:
-            validate(data, schema, format_checker=draft4_format_checker)
+            validate(data, self.schema, format_checker=draft4_format_checker)
         except ValidationError as exception:
             return problem(400, 'Bad Request', str(exception))
 

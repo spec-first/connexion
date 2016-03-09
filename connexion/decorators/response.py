@@ -49,7 +49,7 @@ class ResponseValidator(BaseDecorator):
         if response_definition and response_definition.get("schema"):
             schema = response_definition.get("schema")
             v = RequestBodyValidator(schema)
-            error = v.validate_schema(data, schema)
+            error = v.validate_schema(data)
             if error:
                 raise NonConformingResponse("Response body does not conform to specification")
 
