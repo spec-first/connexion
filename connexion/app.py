@@ -246,7 +246,7 @@ class App(object):
             wsgi_container = tornado.wsgi.WSGIContainer(self.app)
             http_server = tornado.httpserver.HTTPServer(wsgi_container, **options)
             http_server.listen(self.port)
-            logger.info('Listening on port %s..', port=self.port)
+            logger.info('Listening on port %s..', self.port)
             tornado.ioloop.IOLoop.instance().start()
         elif self.server == 'gevent':
             try:
