@@ -207,7 +207,7 @@ the endpoints in your specification:
 Automatic Parameter Handling
 ----------------------------
 
-Connexion automatically maps the parameters defined in your endpoint specification to arguments of your Python views as named parameters, and, whenever possible, with value casting. Simply define the endpoint's parameters with matching names with your views arguments.
+Connexion automatically maps the parameters defined in your endpoint specification to arguments of your Python views as named parameters, and, whenever possible, with value casting. Simply define the endpoint's parameters with the same names as your views arguments.
 
 As an example, say you have a endpoint specified as:
 
@@ -319,7 +319,7 @@ One way, `described by Flask`_, looks like this:
 
 However, Connexion doesn't provide an ssl_context parameter. This is
 because Flask doesn't, either—but it uses `**kwargs` to send the
-parameters to the underlying werkzeug server.
+parameters to the underlying [werkzeug](http://werkzeug.pocoo.org/) server.
 
 The Swagger UI Console
 ----------------------
