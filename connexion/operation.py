@@ -103,7 +103,7 @@ class Operation(SecureOperation):
 
     def __init__(self, method, path, path_parameters, operation, app_produces,
                  app_security, security_definitions, definitions,
-                 parameter_definitions, resolver, validate_responses=False):
+                 parameter_definitions, response_definitions, resolver, validate_responses=False):
         """
         This class uses the OperationID identify the module and function that will handle the operation
 
@@ -144,9 +144,11 @@ class Operation(SecureOperation):
         self.security_definitions = security_definitions
         self.definitions = definitions
         self.parameter_definitions = parameter_definitions
+        self.response_definitions = response_definitions
         self.definitions_map = {
             'definitions': self.definitions,
-            'parameters': self.parameter_definitions
+            'parameters': self.parameter_definitions,
+            'responses': self.response_definitions
         }
         self.validate_responses = validate_responses
         self.operation = operation
@@ -239,7 +241,7 @@ class Operation(SecureOperation):
             definitions = self.definitions_map[definition_type]
         except KeyError:
             raise InvalidSpecification(
-                "{method} {path}  '$ref' needs to point to definitions or parameters".format(**vars(self)))
+                "{method} {path}  '$ref' needs to point to definitions, parameters or responses".format(**vars(self)))
         definition_name = path[-1]
         try:
             # Get sub definition

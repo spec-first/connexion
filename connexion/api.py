@@ -103,6 +103,7 @@ class Api(object):
 
         self.definitions = self.specification.get('definitions', {})
         self.parameter_definitions = self.specification.get('parameters', {})
+        self.response_definitions = self.specification.get('responses', {})
 
         self.swagger_path = swagger_path or SWAGGER_UI_PATH
         self.swagger_url = swagger_url or SWAGGER_UI_URL
@@ -145,6 +146,7 @@ class Api(object):
                               operation=swagger_operation, app_produces=self.produces,
                               app_security=self.security, security_definitions=self.security_definitions,
                               definitions=self.definitions, parameter_definitions=self.parameter_definitions,
+                              response_definitions=self.response_definitions,
                               validate_responses=self.validate_responses, resolver=self.resolver)
         operation_id = operation.operation_id
         logger.debug('... Adding %s -> %s', method.upper(), operation_id, extra=vars(operation))
