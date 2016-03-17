@@ -92,10 +92,10 @@ supports collection formats "pipes" and "csv". The default format is "csv".
 Header Parameters
 -----------------
 
-Currently header parameters are not passed to the handler functions. But they can be accessed through the underlying
-``flask.request.headers`` object.
+Currently header parameters are not passed to the handler functions as parameters. But they can be accessed through the underlying
+``connexion.request.headers`` object which aliases the ``flask.request.headers`` object.
 
 .. code-block:: python
 
     def index():
-        page_number = flask.requests.headers['Page-Number']
+        page_number = connexion.request.headers['Page-Number']
