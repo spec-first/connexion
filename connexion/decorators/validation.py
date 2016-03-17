@@ -117,7 +117,7 @@ class RequestBodyValidator(object):
         try:
             validate(data, self.schema, format_checker=draft4_format_checker)
         except ValidationError as exception:
-            return problem(400, 'Bad Request', str(exception))
+            return problem(400, 'Bad Request', str(exception.message))
 
         return None
 
