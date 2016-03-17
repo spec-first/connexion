@@ -88,3 +88,14 @@ In the Swagger definition if the `array` type is used you can define the
 supports collection formats "pipes" and "csv". The default format is "csv".
 
 .. _jsonschema: https://pypi.python.org/pypi/jsonschema
+
+Header Parameters
+-----------------
+
+Currently header parameters are not passed to the handler functions. But they can be accessed through the underlying
+``flask.request.headers`` object.
+
+.. code-block:: python
+
+    def index():
+        page_number = flask.requests.headers['Page-Number']
