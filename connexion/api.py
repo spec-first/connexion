@@ -16,8 +16,10 @@ import jinja2
 import json
 import logging
 import pathlib
-import yaml
+import six
+import sys
 import werkzeug.exceptions
+import yaml
 from swagger_spec_validator.validator20 import validate_spec
 from .operation import Operation
 from . import utils
@@ -181,10 +183,8 @@ class Api(object):
                     if self.debug:
                         logger.exception(error_msg)
                     else:
-                        import sys
                         logger.error(error_msg)
-                        et, ei, tb = sys.exc_info()
-                        raise ei.with_traceback(tb)
+                        six.reraise(*sys.exc_info())
 
     def add_auth_on_not_found(self):
         """
