@@ -25,13 +25,16 @@ def test_template():
     assert api2.specification['info']['title'] == 'other test'
 
 
+
 def test_invalid_operation_does_stop_application_to_setup():
-    with pytest.raises(AttributeError):
-        Api(TEST_FOLDER / "fakeapi/op_error_api.yaml", "/api/v1.0",
-            {'title': 'OK'})
+    with pytest.raises(AttributeError) as exc_info:
+        Api(TEST_FOLDER / "fakeapi/op_error_api.yaml", "/api/v1.0", {'title': 'OK'})
+
+    assert 'fakeapi.module_with_error.something' in str(exc_info.value)
+    # TODO: I would be nice to show the root cause or the import error of 'module_with_error' like this ?
+    #assert 'No module named foo.bar' in str(exc_info.value)
 
 
 def test_invalid_operation_does_not_stop_application_in_debug_mode():
-    api = Api(TEST_FOLDER / "fakeapi/op_error_api.yaml", "/api/v1.0",
-              {'title': 'OK'}, debug=True)
+    api = Api(TEST_FOLDER / "fakeapi/op_error_api.yaml", "/api/v1.0", {'title': 'OK'}, debug=True)
     assert api.specification['info']['title'] == 'OK'

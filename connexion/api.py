@@ -181,10 +181,14 @@ class Api(object):
                     if self.debug:
                         logger.exception(error_msg)
                     else:
-                        import sys
                         logger.error(error_msg)
+                        import sys
+                        import six
                         et, ei, tb = sys.exc_info()
-                        raise ei.with_traceback(tb)
+                        message = "Fatal error found while addding '{}': {}".format(
+                                        endpoint.get('operationId'),
+                                        str(ei))
+                        six.reraise(et, AttributeError(message), tb)
 
     def add_auth_on_not_found(self):
         """
