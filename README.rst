@@ -291,6 +291,91 @@ can provide it when adding the API to your application:
 
     app.add_api('my_api.yaml', base_path='/1.0')
 
+Use your own security decorator
+-------------------------------
+
+Connexion adds a security decorator for each view function to handle (oauth) security. If you need your own security logic
+like checking the token at your own endpoint and or setting a current user in your request context, you can create your own
+security decorator and pass it to connexion at api creation time, like this
+
+.. code-block:: python
+
+    import my_module.security.decorators
+
+    app.add_api('my_api.yaml',
+                security_decorator = my_module.security.decorators.verify_oauth_at_my_way
+                base_path='/1.0')
+
+
+
+Look for example security decorators in `connexion.decorators.security`
+A custom decorator may look like this:
+
+.. code-block:: python
+
+  """
+  override the connexion security decorators
+  """
+
+  # Authentication and authorization related decorators
+
+  from flask import request
+  import functools
+  import logging
+  import requests
+  from connexion import problem
+
+  logger = logging.getLogger('connexion.api.custom_security')
+
+  # use connection pool for OAuth tokeninfo
+  adapter = requests.adapters.HTTPAdapter(pool_connections=100, pool_maxsize=100)
+  session = requests.Session()
+  session.mount('http://', adapter)
+  session.mount('https://', adapter)
+
+
+
+  def verify_oauth_at_my_way(allowed_scopes, function):
+      """
+      Special Decorator to verify oauth and set user and role(s)
+
+      :param allowed_scopes: Set with scopes that are allowed to access the endpoint
+      :type allowed_scopes: set
+      :type function: types.FunctionType
+      :rtype: types.FunctionType
+      """
+
+      @functools.wraps(function)
+      def wrapper(*args, **kwargs):
+          logger.debug("%s MY SPECAL Oauth verification...", request.url)
+          authorization = request.headers.get('Authorization')  # type: str
+          if not authorization:
+              logger.info("... No auth provided. Aborting with 401.")
+              return problem(401, 'Unauthorized', "No authorization token provided")
+          else:
+              try:
+                  _, token = authorization.split()  # type: str, str
+              except ValueError:
+                  return problem(401, 'Unauthorized', 'Invalid authorization header')
+
+              session.headers['Authorization'] = authorization
+              token_info_url = 'https://MY_OATH_SERVER/me'
+
+              logger.debug("... Getting token '%s' from %s", token, token_info_url)
+
+              token_request = session.get(token_info_url, timeout=15)
+
+              logger.debug("... Token info (%d): %s", token_request.status_code, token_request.text)
+              if not token_request.ok:
+                  return problem(401, 'Unauthorized', "Provided oauth token is not valid")
+
+              # add the user info to the request context for later use in our view functions
+              request.token_info = token_request.json()  # type: dict
+
+          return function(*args, **kwargs)
+
+      return wrapper
+
 Swagger JSON
 ------------
 Connexion makes the OpenAPI/Swagger specification in JSON format
@@ -400,13 +485,13 @@ we'd love your help working on these:
 Check our `issues waffle board`_ for more info.
 
 Thanks
-===================
+======
 
 We'd like to thank all of Connexion's contributors for working on this
 project, and to Swagger/OpenAPI for their support.
 
 License
-===================
+=======
 
 Copyright 2015 Zalando SE
 
@@ -431,3 +516,4 @@ Unless required by applicable law or agreed to in writing, software distributed 
 .. _Connexion Pet Store Example Application: https://github.com/hjacobs/connexion-example
 .. _described by Flask: http://flask.pocoo.org/snippets/111/
 .. _Connexion's Documentation Page: http://connexion.readthedocs.org/en/latest/
+

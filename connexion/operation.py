@@ -41,6 +41,7 @@ class SecureOperation(object):
         """
         self.security = security
         self.security_definitions = security_definitions
+        self.custom_security_decorator = None
 
     @property
     def security_decorator(self):
@@ -79,6 +80,11 @@ class SecureOperation(object):
 
             scheme_name, scopes = next(iter(security.items()))  # type: str, list
             security_definition = self.security_definitions[scheme_name]
+
+            # check for custom decorator and use this to over rule the default security flow
+            if self.custom_security_decorator:
+                return functools.partial(self.custom_security_decorator, set(scopes))
+
             if security_definition['type'] == 'oauth2':
                 token_info_url = get_tokeninfo_url(security_definition)
                 if token_info_url:
@@ -89,7 +95,8 @@ class SecureOperation(object):
                                    extra=vars(self))
             elif security_definition['type'] in ('apiKey', 'basic'):
                 logger.debug(
-                    "... Security type '%s' not natively supported by Connexion; you should handle it yourself",
+                    "... Security type '%s' not natively supported by Connexion; " +
+                    "you should handle it yourself by addding a curtom security decorator",
                     security_definition['type'], extra=vars(self))
 
         # if we don't know how to handle the security or it's not defined we will usa a passthrough decorator
@@ -103,7 +110,7 @@ class Operation(SecureOperation):
 
     def __init__(self, method, path, path_parameters, operation, app_produces,
                  app_security, security_definitions, definitions,
-                 parameter_definitions, resolver, validate_responses=False):
+                 parameter_definitions, resolver, validate_responses=False, security_decorator=None):
         """
         This class uses the OperationID identify the module and function that will handle the operation
 
@@ -136,6 +143,8 @@ class Operation(SecureOperation):
         :type parameter_definitions: dict
         :param resolver: Callable that maps operationID to a function
         :param validate_responses: True enables validation. Validation errors generate HTTP 500 responses.
+        :param security_decorator: decorator function to be used i.s.o the default verify_oath
+        :type security_decorator: function | None
         :type validate_responses: bool
         """
 
@@ -159,6 +168,10 @@ class Operation(SecureOperation):
 
         self.security = operation.get('security', app_security)
         self.produces = operation.get('produces', app_produces)
+        self.custom_security_decorator = security_decorator
+
+        if self.custom_security_decorator:
+            logging.debug("set custom security decorator %s for this operation" % str(security_decorator))
 
         resolution = resolver.resolve(self)
         self.operation_id = resolution.operation_id

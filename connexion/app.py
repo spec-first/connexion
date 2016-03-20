@@ -87,7 +87,8 @@ class App(object):
         return problem(title=exception.name, detail=exception.description, status=exception.code)
 
     def add_api(self, swagger_file, base_path=None, arguments=None, auth_all_paths=None, swagger_ui=None,
-                swagger_path=None, swagger_url=None, validate_responses=False, resolver=Resolver()):
+                swagger_path=None, swagger_url=None, validate_responses=False, resolver=Resolver(),
+                security_decorator=None):
         """
         Adds an API to the application based on a swagger file
 
@@ -109,6 +110,8 @@ class App(object):
         :type validate_responses: bool
         :param resolver: Operation resolver.
         :type resolver: Resolver | types.FunctionType
+        :param security_decorator: decorator function to be used i.s.o the default verify_oath
+        :type security_decorator: function | None
         :rtype: Api
         """
         resolver = Resolver(resolver) if hasattr(resolver, '__call__') else resolver
@@ -129,6 +132,7 @@ class App(object):
                   swagger_url=swagger_url,
                   resolver=resolver,
                   validate_responses=validate_responses,
+                  security_decorator=security_decorator,
                   auth_all_paths=auth_all_paths,
                   debug=self.debug)
         self.app.register_blueprint(api.blueprint)
