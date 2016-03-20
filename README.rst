@@ -355,8 +355,6 @@ A custom decorator may look like this:
       """
       Special Decorator to verify oauth and set user and role(s)
 
-      :param token_info_url: Url to get information about the token
-      :type token_info_url: str
       :param allowed_scopes: Set with scopes that are allowed to access the endpoint
       :type allowed_scopes: set
       :type function: types.FunctionType
@@ -387,23 +385,8 @@ A custom decorator may look like this:
               if not token_request.ok:
                   return problem(401, 'Unauthorized', "Provided oauth token is not valid")
 
-              token_info = token_request.json()  # type: dict
-
-              user_scopes = set(token_info['scope'])
-              scopes_intersection = user_scopes & allowed_scopes
-              logger.debug("... Scope intersection: %s", scopes_intersection)
-              if not scopes_intersection:
-                  logger.info("... User scopes (%s) don't include one of the allowed scopes (%s). Aborting with 401.",
-                              user_scopes, allowed_scopes)
-                  return problem(403, 'Forbidden', "Provided token doesn't have the required scope")
-              logger.info("... Token authenticated.")
-
-              # add the user info to the request context for later us in our view functions
-
-              request.current_user_id = token_info.get('id') # just the user id
-              request.current_user = token_info # the whole token
-
-              # add your own logic here ....
+              # add the user info to the request context for later use in our view functions
+              request.token_info = token_request.json()  # type: dict
 
           return function(*args, **kwargs)
 
