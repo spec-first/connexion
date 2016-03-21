@@ -46,7 +46,7 @@ def problem(status, title, detail, type='about:blank', instance=None, headers=No
     if ext:
         problem_response.update(ext)
 
-    body = json.dumps(problem_response)
+    body = [json.dumps(problem_response, indent=2), '\n']
     response = flask.current_app.response_class(body, mimetype='application/problem+json',
                                                 status=status)  # type: flask.Response
     if headers:
