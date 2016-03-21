@@ -40,7 +40,6 @@ def problem(status, title, detail, type='about:blank', instance=None, headers=No
     :return: Json serialized error response
     :rtype: flask.Response
     """
-
     problem_response = {'type': type, 'title': title, 'detail': detail, 'status': status, }
     if instance:
         problem_response['instance'] = instance
@@ -58,4 +57,3 @@ def problem(status, title, detail, type='about:blank', instance=None, headers=No
         response.headers.extend(headers)
 
     return response
-
