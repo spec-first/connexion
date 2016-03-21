@@ -25,8 +25,8 @@ def test_header_not_returned(simple_app):
     assert response.content_type == 'application/problem+json'
     data = json.loads(response.data.decode('utf-8'))
     assert data['type'] == 'about:blank'
-    assert data['title'] == 'Internal Server Error'
-    assert data['detail'] == 'Response headers do not conform to specification'
+    assert data['title'] == 'Response headers do not conform to specification'
+    assert data['detail'] == "Keys in header don't match response specification. Difference: ['Location']"
     assert data['status'] == 500
 
 

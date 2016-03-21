@@ -32,15 +32,26 @@ class InvalidSpecification(ConnexionException):
 
 
 class NonConformingResponse(ConnexionException):
-    def __init__(self, reason='Unknown Reason'):
+    def __init__(self, reason='Unknown Reason', message=None):
         """
         :param reason: Reason why the response did not conform to the specification
         :type reason: str
         """
         self.reason = reason
+        self.message = message
 
     def __str__(self):  # pragma: no cover
         return '<NonConformingResponse: {}>'.format(self.reason)
 
     def __repr__(self):  # pragma: no cover
         return '<NonConformingResponse: {}>'.format(self.reason)
+
+
+class NonConformingResponseBody(NonConformingResponse):
+    def __init__(self, message, reason="Response body does not conform to specification"):
+        super(NonConformingResponseBody, self).__init__(reason=reason, message=message)
+
+
+class NonConformingResponseHeaders(NonConformingResponse):
+    def __init__(self, message, reason="Response headers do not conform to specification"):
+        super(NonConformingResponseHeaders, self).__init__(reason=reason, message=message)

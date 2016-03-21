@@ -14,10 +14,11 @@ Unless required by applicable law or agreed to in writing, software distributed 
 # Decorators to change the return type of endpoints
 import functools
 import logging
-from ..exceptions import NonConformingResponse
+from ..exceptions import NonConformingResponseBody, NonConformingResponseHeaders
 from ..problem import problem
-from .validation import RequestBodyValidator
+from .validation import ResponseBodyValidator
 from .decorator import BaseDecorator
+from jsonschema import ValidationError
 
 
 logger = logging.getLogger('connexion.decorators.response')
@@ -48,14 +49,18 @@ class ResponseValidator(BaseDecorator):
 
         if response_definition and response_definition.get("schema"):
             schema = response_definition.get("schema")
-            v = RequestBodyValidator(schema)
-            error = v.validate_schema(data)
-            if error:
-                raise NonConformingResponse("Response body does not conform to specification")
+            v = ResponseBodyValidator(schema)
+            try:
+                v.validate_schema(data)
+            except ValidationError as e:
+                raise NonConformingResponseBody(message=str(e))
 
         if response_definition and response_definition.get("headers"):
-            if not all(item in headers.keys() for item in response_definition.get("headers").keys()):
-                raise NonConformingResponse("Response headers do not conform to specification")
+            response_definition_header_keys = response_definition.get("headers").keys()
+            if not all(item in headers.keys() for item in response_definition_header_keys):
+                raise NonConformingResponseHeaders(
+                    message="Keys in header don't match response specification. Difference: %s"
+                    % list(set(headers.keys()).symmetric_difference(set(response_definition_header_keys))))
         return True
 
     def __call__(self, function):
@@ -69,8 +74,10 @@ class ResponseValidator(BaseDecorator):
             try:
                 data, status_code, headers = self.get_full_response(result)
                 self.validate_response(data, status_code, headers)
-            except NonConformingResponse as e:
-                return problem(500, 'Internal Server Error', e.reason)
+            except NonConformingResponseBody as e:
+                return problem(500, e.reason, e.message)
+            except NonConformingResponseHeaders as e:
+                return problem(500, e.reason, e.message)
             return result
 
         return wrapper
