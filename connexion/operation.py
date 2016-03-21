@@ -101,9 +101,10 @@ class Operation(SecureOperation):
     A single API operation on a path.
     """
 
-    def __init__(self, method, path, path_parameters, operation, app_produces,
-                 app_security, security_definitions, definitions,
-                 parameter_definitions, resolver, validate_responses=False):
+    def __init__(self, method, path, operation, resolver, app_produces,
+                 path_parameters=None, app_security=None, security_definitions=None,
+                 definitions=None, parameter_definitions=None, response_definitions=None,
+                 validate_responses=False):
         """
         This class uses the OperationID identify the module and function that will handle the operation
 
@@ -118,12 +119,13 @@ class Operation(SecureOperation):
         :type method: str
         :param path:
         :type path: str
-        :param path_parameters: Parameters defined in the path level
-        :type path_parameters: list
         :param operation: swagger operation object
         :type operation: dict
+        :param resolver: Callable that maps operationID to a function
         :param app_produces: list of content types the application can return by default
         :type app_produces: list
+        :param path_parameters: Parameters defined in the path level
+        :type path_parameters: list
         :param app_security: list of security rules the application uses by default
         :type app_security: list
         :param security_definitions: `Security Definitions Object
@@ -134,19 +136,22 @@ class Operation(SecureOperation):
         :type definitions: dict
         :param parameter_definitions: Global parameter definitions
         :type parameter_definitions: dict
-        :param resolver: Callable that maps operationID to a function
+        :param response_definitions: Global response definitions
+        :type response_definitions: dict
         :param validate_responses: True enables validation. Validation errors generate HTTP 500 responses.
         :type validate_responses: bool
         """
 
         self.method = method
         self.path = path
-        self.security_definitions = security_definitions
-        self.definitions = definitions
-        self.parameter_definitions = parameter_definitions
+        self.security_definitions = security_definitions or {}
+        self.definitions = definitions or {}
+        self.parameter_definitions = parameter_definitions or {}
+        self.response_definitions = response_definitions or {}
         self.definitions_map = {
             'definitions': self.definitions,
-            'parameters': self.parameter_definitions
+            'parameters': self.parameter_definitions,
+            'responses': self.response_definitions
         }
         self.validate_responses = validate_responses
         self.operation = operation
@@ -232,21 +237,29 @@ class Operation(SecureOperation):
     def _retrieve_reference(self, reference):
         if not reference.startswith('#/'):
             raise InvalidSpecification(
-                "{method} {path}  '$ref' needs to start with '#/'".format(**vars(self)))
+                "{method} {path} '$ref' needs to start with '#/'".format(**vars(self)))
         path = reference.split('/')
         definition_type = path[1]
         try:
             definitions = self.definitions_map[definition_type]
         except KeyError:
+            ref_possible = ', '.join(self.definitions_map.keys())
             raise InvalidSpecification(
-                "{method} {path}  '$ref' needs to point to definitions or parameters".format(**vars(self)))
+                "{method} {path} $ref \"{reference}\" needs to point to one of: "
+                "{ref_possible}".format(
+                    method=self.method,
+                    path=self.path,
+                    reference=reference,
+                    ref_possible=ref_possible
+                ))
         definition_name = path[-1]
         try:
             # Get sub definition
             definition = deepcopy(definitions[definition_name])
         except KeyError:
-            raise InvalidSpecification("{method} {path} Definition '{definition_name}' not found".format(
-                definition_name=definition_name, method=self.method, path=self.path))
+            raise InvalidSpecification(
+                "{method} {path} Definition '{definition_name}' not found".format(
+                    definition_name=definition_name, method=self.method, path=self.path))
 
         return definition
 

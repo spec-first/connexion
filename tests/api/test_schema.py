@@ -223,3 +223,9 @@ def test_schema_int(schema_app):
     assert array_request.content_type == 'application/json'
     array_response = json.loads(array_request.data.decode())  # type: list
     assert array_response == 42
+
+
+def test_global_response_definitions(schema_app):
+    app_client = schema_app.app.test_client()
+    resp = app_client.get('/v1.0/define_global_response')
+    assert json.loads(resp.data.decode()) == ['general', 'list']

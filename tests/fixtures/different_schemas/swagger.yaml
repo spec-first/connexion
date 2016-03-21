@@ -6,6 +6,14 @@ info:
 
 basePath: /v1.0
 
+responses:
+  GeneralList:
+    description: A nice string array
+    schema:
+      type: array
+      items:
+        type: string
+
 paths:
   /test_schema:
     post:
@@ -274,6 +282,14 @@ paths:
       responses:
         200:
           description: OK
+
+  /define_global_response:
+    get:
+      description: Should allow global response definitions
+      operationId: fakeapi.hello.test_global_response_definition
+      responses:
+        200:
+          $ref: '#/responses/GeneralList'
 
 definitions:
   new_stack:
