@@ -45,6 +45,10 @@ def problem(status, title, detail, type='about:blank', instance=None, headers=No
         problem_response['instance'] = instance
     if ext:
         problem_response.update(ext)
+    swagger_problem_handler = flask.current_app.config.get(
+        'SWAGGER_PROBLEM_HANDLER')
+    if swagger_problem_handler is not None:
+        swagger_problem_handler(problem_response)
 
     body = json.dumps(problem_response)
     response = flask.current_app.response_class(body, mimetype='application/problem+json',
