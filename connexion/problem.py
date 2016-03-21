@@ -40,11 +40,16 @@ def problem(status, title, detail, type='about:blank', instance=None, headers=No
     :return: Json serialized error response
     :rtype: flask.Response
     """
+
     problem_response = {'type': type, 'title': title, 'detail': detail, 'status': status, }
     if instance:
         problem_response['instance'] = instance
     if ext:
         problem_response.update(ext)
+    swagger_problem_handler = flask.current_app.config.get(
+        'SWAGGER_PROBLEM_HANDLER')
+    if swagger_problem_handler is not None:
+        swagger_problem_handler(problem_response)
 
     body = json.dumps(problem_response)
     response = flask.current_app.response_class(body, mimetype='application/problem+json',
@@ -53,3 +58,4 @@ def problem(status, title, detail, type='about:blank', instance=None, headers=No
         response.headers.extend(headers)
 
     return response
+
