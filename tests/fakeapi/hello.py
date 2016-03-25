@@ -301,3 +301,9 @@ def test_nullable_param_post(post_param):
     if post_param is None:
         return 'it was None'
     return post_param
+
+
+def test_nullable_param_put(contents):
+    if contents is None:
+        return 'it was None'
+    return contents

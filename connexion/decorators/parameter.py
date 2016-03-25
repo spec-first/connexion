@@ -95,12 +95,11 @@ def parameter_to_arg(parameters, function):
                                                  path_param_definitions)
 
         # Add body parameters
-        if request_body is not None:
-            if body_name not in arguments:
-                logger.debug("Body parameter '%s' not in function arguments", body_name)
-            else:
-                logger.debug("Body parameter '%s' in function arguments", body_name)
-                kwargs[body_name] = request_body
+        if body_name not in arguments:
+            logger.debug("Body parameter '%s' not in function arguments", body_name)
+        else:
+            logger.debug("Body parameter '%s' in function arguments", body_name)
+            kwargs[body_name] = request_body
 
         # Add query parameters
         query_arguments = copy.deepcopy(default_query_params)

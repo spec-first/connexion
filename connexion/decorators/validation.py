@@ -83,13 +83,14 @@ def validate_type(param, value, parameter_type, parameter_name=None):
 
 
 class RequestBodyValidator(object):
-    def __init__(self, schema, has_default=False):
+    def __init__(self, schema, is_null_value_valid=False):
         """
         :param schema: The schema of the request body
-        :param has_default: Flag to indicate if default value is present.
+        :param is_nullable: Flag to indicate if null is accepted as valid value.
         """
         self.schema = schema
-        self.has_default = schema.get('default', has_default)
+        self.has_default = schema.get('default', False)
+        self.is_null_value_valid = is_null_value_valid
 
     def __call__(self, function):
         """
@@ -116,6 +117,9 @@ class RequestBodyValidator(object):
         :type schema: dict
         :rtype: flask.Response | None
         """
+        if self.is_null_value_valid and is_null(data):
+            return None
+
         try:
             validate(data, self.schema, format_checker=draft4_format_checker)
         except ValidationError as exception:

@@ -201,3 +201,9 @@ def test_nullable_parameter(simple_app):
 
     resp = app_client.post('/v1.0/nullable-parameters', data={"post_param": 'null'})
     assert json.loads(resp.data.decode()) == 'it was None'
+
+    resp = app_client.put('/v1.0/nullable-parameters', data="null")
+    assert json.loads(resp.data.decode()) == 'it was None'
+
+    resp = app_client.put('/v1.0/nullable-parameters', data="None")
+    assert json.loads(resp.data.decode()) == 'it was None'

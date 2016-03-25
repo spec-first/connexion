@@ -512,8 +512,24 @@ paths:
       responses:
         200:
           description: OK
-
-
+    put:
+      operationId: fakeapi.hello.test_nullable_param_put
+      produces:
+        - application/json
+      parameters:
+        - name: contents
+          description: Just a testing parameter.
+          in: body
+          x-nullable: true
+          required: true
+          schema:
+              type: object
+              properties:
+                name:
+                  type: string
+      responses:
+        200:
+          description: OK
     get:
       operationId: fakeapi.hello.test_nullable_parameters
       produces:
