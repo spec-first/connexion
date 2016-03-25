@@ -89,6 +89,30 @@ supports collection formats "pipes" and "csv". The default format is "csv".
 
 .. _jsonschema: https://pypi.python.org/pypi/jsonschema
 
+Nullable parameters
+^^^^^^^^^^^^^^^^^^^
+
+Sometimes your API should explicitly accept _`nullable parameters`. However
+OpenAPI specification currently does _`not support` officially a way to serve
+this use case, Connexion adds the `x-nullable` vendor extension to parameter
+definitions. It's usage would be:
+
+.. code-block:: yaml
+
+    /countries/cities:
+       parameters:
+         - name: name
+           in: query
+           type: string
+           x-nullable: true
+           required: true
+
+It is supported by Connexion in all parameter types: `body`, `query`,
+`formData`, and `path`. Nullable values are the strings `null` and `None`.
+
+.. _`nullable parameters`: https://github.com/zalando/connexion/issues/182
+.. _`not support`: https://github.com/OAI/OpenAPI-Specification/issues/229
+
 Header Parameters
 -----------------
 
