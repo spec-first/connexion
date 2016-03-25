@@ -6,7 +6,7 @@ import inspect
 import logging
 import six
 
-from ..utils import boolean
+from ..utils import boolean, is_nullable, is_null
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +38,9 @@ def make_type(value, type):
 
 
 def get_val_from_param(value, query_param):
+    if is_nullable(query_param) and is_null(value):
+        return None
+
     if query_param["type"] == "array":  # then logic is more complex
         if query_param.get("collectionFormat") and query_param.get("collectionFormat") == "pipes":
             parts = value.split("|")

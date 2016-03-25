@@ -21,7 +21,7 @@ import sys
 from jsonschema import draft4_format_checker, validate, ValidationError
 
 from ..problem import problem
-from ..utils import boolean
+from ..utils import boolean, is_nullable, is_null
 
 logger = logging.getLogger('connexion.decorators.validation')
 
@@ -155,6 +155,9 @@ class ParameterValidator(object):
     @staticmethod
     def validate_parameter(parameter_type, value, param):
         if value is not None:
+            if is_nullable(param) and is_null(value):
+                return
+
             try:
                 converted_value = validate_type(param, value, parameter_type)
             except TypeValidationError as e:
