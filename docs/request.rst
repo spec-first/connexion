@@ -110,8 +110,12 @@ definitions. It's usage would be:
 It is supported by Connexion in all parameter types: `body`, `query`,
 `formData`, and `path`. Nullable values are the strings `null` and `None`.
 
+.. warning:: Be careful on nullable paramenters for sensitive data where the
+             strings "null" or "None" can be _`valid values`.
+
 .. _`nullable parameters`: https://github.com/zalando/connexion/issues/182
 .. _`not support`: https://github.com/OAI/OpenAPI-Specification/issues/229
+.. _`valid values`: http://www.bbc.com/future/story/20160325-the-names-that-break-computer-systems
 
 Header Parameters
 -----------------
