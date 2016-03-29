@@ -244,7 +244,7 @@ def test_formdata_missing_param():
 
 def test_formdata_file_upload(formData):
     filename = formData.filename
-    contents = formData.read()
+    contents = formData.read().decode('utf-8')
     return {filename: contents}
 
 
