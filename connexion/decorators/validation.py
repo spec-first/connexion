@@ -16,6 +16,8 @@ import flask
 import functools
 import itertools
 import logging
+import six
+import sys
 from jsonschema import draft4_format_checker, validate, ValidationError
 
 from ..problem import problem
@@ -117,7 +119,31 @@ class RequestBodyValidator(object):
         try:
             validate(data, self.schema, format_checker=draft4_format_checker)
         except ValidationError as exception:
+            logger.error("%s validation error: %s" % (flask.request.url, exception))
             return problem(400, 'Bad Request', str(exception))
+
+        return None
+
+
+class ResponseBodyValidator(object):
+    def __init__(self, schema, has_default=False):
+        """
+        :param schema: The schema of the response body
+        :param has_default: Flag to indicate if default value is present.
+        """
+        self.schema = schema
+        self.has_default = schema.get('default', has_default)
+
+    def validate_schema(self, data):
+        """
+        :type schema: dict
+        :rtype: flask.Response | None
+        """
+        try:
+            validate(data, self.schema, format_checker=draft4_format_checker)
+        except ValidationError as exception:
+            logger.error("%s validation error: %s" % (flask.request.url, exception))
+            six.reraise(*sys.exc_info())
 
         return None
 

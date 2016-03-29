@@ -371,8 +371,8 @@ def test_invalid_reference():
         operation.body_schema
 
     exception = exc_info.value
-    assert str(exception) == "<InvalidSpecification: GET endpoint  '$ref' needs to point to definitions or parameters>"
-    assert repr(exception) == "<InvalidSpecification: GET endpoint  '$ref' needs to point to definitions or parameters>"
+    assert str(exception).startswith("<InvalidSpecification: GET endpoint $ref")
+    assert repr(exception).startswith("<InvalidSpecification: GET endpoint $ref")
 
 
 def test_no_token_info():
@@ -423,7 +423,7 @@ def test_resolve_invalid_reference():
                   resolver=Resolver())
 
     exception = exc_info.value  # type: InvalidSpecification
-    assert exception.reason == "GET endpoint  '$ref' needs to start with '#/'"
+    assert exception.reason == "GET endpoint '$ref' needs to start with '#/'"
 
 
 def test_default():

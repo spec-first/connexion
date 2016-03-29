@@ -285,3 +285,7 @@ def test_default_missmatch_definition(age):
 
 def test_array_in_path(names):
     return names, 200
+
+
+def test_global_response_definition():
+    return ['general', 'list'], 200
