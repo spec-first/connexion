@@ -25,7 +25,7 @@ logger = logging.getLogger('connexion.app')
 class App(object):
     def __init__(self, import_name, port=None, specification_dir='',
                  server=None, arguments=None, auth_all_paths=False,
-                 debug=False, swagger_ui=True, swagger_path=None,
+                 debug=False, swagger_json=True, swagger_ui=True, swagger_path=None,
                  swagger_url=None):
         """
         :param import_name: the name of the application package
@@ -42,6 +42,8 @@ class App(object):
         :type auth_all_paths: bool
         :param debug: include debugging information
         :type debug: bool
+        :param swagger_json: whether to include swagger json or not
+        :type swagger_json: bool
         :param swagger_ui: whether to include swagger ui or not
         :type swagger_ui: bool
         :param swagger_path: path to swagger-ui directory
@@ -72,6 +74,7 @@ class App(object):
         self.debug = debug
         self.import_name = import_name
         self.arguments = arguments or {}
+        self.swagger_json = swagger_json
         self.swagger_ui = swagger_ui
         self.swagger_path = swagger_path
         self.swagger_url = swagger_url
@@ -86,8 +89,9 @@ class App(object):
             exception = werkzeug.exceptions.InternalServerError()
         return problem(title=exception.name, detail=exception.description, status=exception.code)
 
-    def add_api(self, swagger_file, base_path=None, arguments=None, auth_all_paths=None, swagger_ui=None,
-                swagger_path=None, swagger_url=None, validate_responses=False, resolver=Resolver()):
+    def add_api(self, swagger_file, base_path=None, arguments=None, auth_all_paths=None, swagger_json=None,
+                swagger_ui=None, swagger_path=None, swagger_url=None, validate_responses=False,
+                resolver=Resolver()):
         """
         Adds an API to the application based on a swagger file
 
@@ -99,6 +103,8 @@ class App(object):
         :type arguments: dict | None
         :param auth_all_paths: whether to authenticate not defined paths
         :type auth_all_paths: bool
+        :param swagger_json: whether to include swagger json or not
+        :type swagger_json: bool
         :param swagger_ui: whether to include swagger ui or not
         :type swagger_ui: bool
         :param swagger_path: path to swagger-ui directory
@@ -113,6 +119,7 @@ class App(object):
         """
         resolver = Resolver(resolver) if hasattr(resolver, '__call__') else resolver
 
+        swagger_json = swagger_json if swagger_json is not None else self.swagger_json
         swagger_ui = swagger_ui if swagger_ui is not None else self.swagger_ui
         swagger_path = swagger_path if swagger_path is not None else self.swagger_path
         swagger_url = swagger_url if swagger_url is not None else self.swagger_url
@@ -124,6 +131,7 @@ class App(object):
         yaml_path = self.specification_dir / swagger_file
         api = Api(swagger_yaml_path=yaml_path,
                   base_url=base_path, arguments=arguments,
+                  swagger_json=swagger_json,
                   swagger_ui=swagger_ui,
                   swagger_path=swagger_path,
                   swagger_url=swagger_url,
