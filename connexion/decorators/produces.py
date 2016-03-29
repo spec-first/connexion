@@ -14,8 +14,8 @@ Unless required by applicable law or agreed to in writing, software distributed 
 # Decorators to change the return type of endpoints
 import datetime
 import flask
+from flask import json
 import functools
-import json
 import logging
 from .decorator import BaseDecorator
 from ..utils import is_flask_response
@@ -124,7 +124,7 @@ class Jsonifier(BaseSerializer):
                 logger.debug('Endpoint returned an empty response (204)', extra={'url': url, 'mimetype': self.mimetype})
                 return '', 204, headers
 
-            data = json.dumps(data, indent=2, cls=JSONEncoder)
+            data = json.dumps(data, indent=2)
             response = flask.current_app.response_class(data, mimetype=self.mimetype)  # type: flask.Response
             response = self.process_headers(response, headers)
 

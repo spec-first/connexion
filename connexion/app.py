@@ -18,6 +18,7 @@ import werkzeug.exceptions
 from .problem import problem
 from .api import Api
 from connexion.resolver import Resolver
+from connexion.decorators.produces import JSONEncoder as ConnexionJSONEncoder
 
 logger = logging.getLogger('connexion.app')
 
@@ -52,6 +53,8 @@ class App(object):
         :type swagger_url: string | None
         """
         self.app = flask.Flask(import_name)
+
+        self.app.json_encoder = ConnexionJSONEncoder
 
         # we get our application root path from flask to avoid duplicating logic
         self.root_path = pathlib.Path(self.app.root_path)

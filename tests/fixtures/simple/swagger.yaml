@@ -576,6 +576,20 @@ paths:
         200:
           description: OK
 
+  /custom-json-response:
+    get:
+      operationId: fakeapi.hello.test_custom_json_response
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            type: object
+            properties:
+              theResult:
+                type: string
+                description: the number we wanna test
 
 definitions:
   new_stack:
