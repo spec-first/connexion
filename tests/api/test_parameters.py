@@ -1,4 +1,5 @@
 import json
+from StringIO import StringIO
 
 
 def test_parameter_validation(simple_app):
@@ -102,10 +103,42 @@ def test_formdata_param(simple_app):
     assert response == 'test'
 
 
+def test_formdata_bad_request(simple_app):
+    app_client = simple_app.app.test_client()
+    resp = app_client.post('/v1.0/test-formData-param')
+    assert resp.status_code == 400
+    response = json.loads(resp.data.decode())
+    assert response['detail'] == "Missing formdata parameter 'formData'"
+
+
 def test_formdata_missing_param(simple_app):
     app_client = simple_app.app.test_client()
     resp = app_client.post('/v1.0/test-formData-missing-param',
                            data={'missing_formData': 'test'})
+    assert resp.status_code == 200
+
+
+def test_formdata_file_upload(simple_app):
+    app_client = simple_app.app.test_client()
+    resp = app_client.post('/v1.0/test-formData-file-upload',
+                           data={'formData': (StringIO('file contents'), 'filename.txt')})
+    assert resp.status_code == 200
+    response = json.loads(resp.data.decode())
+    assert response == {'filename.txt': 'file contents'}
+
+
+def test_formdata_file_upload_bad_request(simple_app):
+    app_client = simple_app.app.test_client()
+    resp = app_client.post('/v1.0/test-formData-file-upload')
+    assert resp.status_code == 400
+    response = json.loads(resp.data.decode())
+    assert response['detail'] == "Missing formdata parameter 'formData'"
+
+
+def test_formdata_file_upload_missing_param(simple_app):
+    app_client = simple_app.app.test_client()
+    resp = app_client.post('/v1.0/test-formData-file-upload-missing-param',
+                           data={'missing_formData': (StringIO('file contents'), 'example.txt')})
     assert resp.status_code == 200
 
 

@@ -242,6 +242,16 @@ def test_formdata_missing_param():
     return ''
 
 
+def test_formdata_file_upload(formData):
+    filename = formData.filename
+    contents = formData.read()
+    return {filename: contents}
+
+
+def test_formdata_file_upload_missing_param():
+    return ''
+
+
 def test_bool_default_param(thruthiness):
     return thruthiness
 

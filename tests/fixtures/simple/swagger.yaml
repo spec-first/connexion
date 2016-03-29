@@ -334,6 +334,36 @@ paths:
         200:
           description: OK
 
+  /test-formData-file-upload:
+    post:
+      summary: Test formData with file type, for file upload
+      operationId: fakeapi.hello.test_formdata_file_upload
+      consumes:
+      - multipart/form-data
+      parameters:
+        - name: formData
+          type: file
+          in: formData
+          required: true
+      responses:
+        200:
+          description: OK
+
+  /test-formData-file-upload-missing-param:
+    post:
+      summary: Test formData with file type, missing parameter in handler
+      operationId: fakeapi.hello.test_formdata_file_upload_missing_param
+      consumes:
+      - multipart/form-data
+      parameters:
+        - name: missing_formData
+          type: file
+          in: formData
+          required: true
+      responses:
+        200:
+          description: OK
+
   /test-bool-param:
     get:
       summary: Test usage of boolean default value
