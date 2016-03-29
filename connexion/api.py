@@ -53,13 +53,14 @@ class Api(object):
     """
 
     def __init__(self, swagger_yaml_path, base_url=None, arguments=None,
-                 swagger_ui=None, swagger_path=None, swagger_url=None,
+                 swagger_json=None, swagger_ui=None, swagger_path=None, swagger_url=None,
                  validate_responses=False, resolver=resolver.Resolver(),
                  auth_all_paths=False, debug=False):
         """
         :type swagger_yaml_path: pathlib.Path
         :type base_url: str | None
         :type arguments: dict | None
+        :type swagger_json: bool
         :type swagger_ui: bool
         :type swagger_path: string | None
         :type swagger_url: string | None
@@ -118,7 +119,8 @@ class Api(object):
         # Create blueprint and endpoints
         self.blueprint = self.create_blueprint()
 
-        self.add_swagger_json()
+        if swagger_json:
+            self.add_swagger_json()
         if swagger_ui:
             self.add_swagger_ui()
 
