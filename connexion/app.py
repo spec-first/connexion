@@ -26,7 +26,7 @@ class App(object):
     def __init__(self, import_name, port=None, specification_dir='',
                  server=None, arguments=None, auth_all_paths=False,
                  debug=False, swagger_ui=True, swagger_path=None,
-                 swagger_url=None):
+                 swagger_url=None, static_folder=None):
         """
         :param import_name: the name of the application package
         :type import_name: str
@@ -49,7 +49,7 @@ class App(object):
         :param swagger_url: URL to access swagger-ui documentation
         :type swagger_url: string | None
         """
-        self.app = flask.Flask(import_name)
+        self.app = flask.Flask(import_name, static_folder=static_folder)
 
         # we get our application root path from flask to avoid duplicating logic
         self.root_path = pathlib.Path(self.app.root_path)
