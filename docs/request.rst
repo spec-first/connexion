@@ -92,8 +92,8 @@ supports collection formats "pipes" and "csv". The default format is "csv".
 Nullable parameters
 ^^^^^^^^^^^^^^^^^^^
 
-Sometimes your API should explicitly accept _`nullable parameters`. However
-OpenAPI specification currently does _`not support` officially a way to serve
+Sometimes your API should explicitly accept `nullable parameters`_. However
+OpenAPI specification currently does `not support`_ officially a way to serve
 this use case, Connexion adds the `x-nullable` vendor extension to parameter
 definitions. It's usage would be:
 
@@ -111,7 +111,11 @@ It is supported by Connexion in all parameter types: `body`, `query`,
 `formData`, and `path`. Nullable values are the strings `null` and `None`.
 
 .. warning:: Be careful on nullable paramenters for sensitive data where the
-             strings "null" or "None" can be _`valid values`.
+             strings "null" or "None" can be `valid values`_.
+
+.. note:: This extension will be removed as soon as OpenAPI/Swagger
+          Specification provide a official way of supporting nullable
+          values.
 
 .. _`nullable parameters`: https://github.com/zalando/connexion/issues/182
 .. _`not support`: https://github.com/OAI/OpenAPI-Specification/issues/229
