@@ -12,6 +12,14 @@ for you and set the right content type in the HTTP header.
 If the endpoint produces a single non JSON mimetype then Connexion will
 automatically set the right content type in the HTTP header.
 
+Customizing JSON encoder
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Connexion allows you to customize the `JSONEncoder` class in the Flask app
+instance `json_encoder` (`connexion.App:app`). If you wanna reuse the
+Connexion's date-time sezialization, inherit your custom encoder from
+`connexion.decorators.produces.JSONEncoder`.
+
 Returning status codes
 ----------------------
 There are two ways of returning a specific status code.

@@ -12,6 +12,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 """
 
 # Decorators to change the return type of endpoints
+from flask import json
 import functools
 import logging
 from ..exceptions import NonConformingResponseBody, NonConformingResponseHeaders
@@ -51,6 +52,11 @@ class ResponseValidator(BaseDecorator):
             schema = response_definition.get("schema")
             v = ResponseBodyValidator(schema)
             try:
+                # For cases of custom encoders, we need to encode and decode to
+                # transform to the actual types that are going to be returned.
+                data = json.dumps(data)
+                data = json.loads(data)
+
                 v.validate_schema(data)
             except ValidationError as e:
                 raise NonConformingResponseBody(message=str(e))

@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+from decimal import Decimal
+
 from connexion import problem, request
 from connexion import NoContent
 from flask import redirect
@@ -317,3 +319,7 @@ def test_nullable_param_put(contents):
     if contents is None:
         return 'it was None'
     return contents
+
+
+def test_custom_json_response():
+    return {'theResult': DummyClass()}, 200
