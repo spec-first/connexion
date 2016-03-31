@@ -6,7 +6,7 @@ import inspect
 import logging
 import six
 
-from ..utils import boolean
+from ..utils import boolean, is_nullable, is_null
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +38,9 @@ def make_type(value, type):
 
 
 def get_val_from_param(value, query_param):
+    if is_nullable(query_param) and is_null(value):
+        return None
+
     if query_param["type"] == "array":  # then logic is more complex
         if query_param.get("collectionFormat") and query_param.get("collectionFormat") == "pipes":
             parts = value.split("|")
@@ -92,12 +95,11 @@ def parameter_to_arg(parameters, function):
                                                  path_param_definitions)
 
         # Add body parameters
-        if request_body is not None:
-            if body_name not in arguments:
-                logger.debug("Body parameter '%s' not in function arguments", body_name)
-            else:
-                logger.debug("Body parameter '%s' in function arguments", body_name)
-                kwargs[body_name] = request_body
+        if body_name not in arguments:
+            logger.debug("Body parameter '%s' not in function arguments", body_name)
+        else:
+            logger.debug("Body parameter '%s' in function arguments", body_name)
+            kwargs[body_name] = request_body
 
         # Add query parameters
         query_arguments = copy.deepcopy(default_query_params)

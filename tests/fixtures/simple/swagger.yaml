@@ -526,6 +526,56 @@ paths:
             items:
               type: string
 
+  /nullable-parameters:
+    post:
+      operationId: fakeapi.hello.test_nullable_param_post
+      produces:
+        - application/json
+      parameters:
+        - name: post_param
+          description: Just a testing parameter.
+          in: formData
+          type: number
+          format: int32
+          x-nullable: true
+          required: true
+      responses:
+        200:
+          description: OK
+    put:
+      operationId: fakeapi.hello.test_nullable_param_put
+      produces:
+        - application/json
+      parameters:
+        - name: contents
+          description: Just a testing parameter.
+          in: body
+          x-nullable: true
+          required: true
+          schema:
+              type: object
+              properties:
+                name:
+                  type: string
+      responses:
+        200:
+          description: OK
+    get:
+      operationId: fakeapi.hello.test_nullable_parameters
+      produces:
+        - application/json
+      parameters:
+        - name: time_start
+          description: Just a testing parameter.
+          in: query
+          type: integer
+          format: int32
+          x-nullable: true
+          required: true
+      responses:
+        200:
+          description: OK
+
 
 definitions:
   new_stack:

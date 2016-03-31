@@ -214,3 +214,29 @@ def test_array_in_path(simple_app):
 
     resp = app_client.get('/v1.0/test-array-in-path/one_item,another_item')
     assert json.loads(resp.data.decode()) == ["one_item", "another_item"]
+
+
+def test_nullable_parameter(simple_app):
+    app_client = simple_app.app.test_client()
+    resp = app_client.get('/v1.0/nullable-parameters?time_start=null')
+    assert json.loads(resp.data.decode()) == 'it was None'
+
+    resp = app_client.get('/v1.0/nullable-parameters?time_start=None')
+    assert json.loads(resp.data.decode()) == 'it was None'
+
+    time_start = 1010
+    resp = app_client.get(
+        '/v1.0/nullable-parameters?time_start={}'.format(time_start))
+    assert json.loads(resp.data.decode()) == time_start
+
+    resp = app_client.post('/v1.0/nullable-parameters', data={"post_param": 'None'})
+    assert json.loads(resp.data.decode()) == 'it was None'
+
+    resp = app_client.post('/v1.0/nullable-parameters', data={"post_param": 'null'})
+    assert json.loads(resp.data.decode()) == 'it was None'
+
+    resp = app_client.put('/v1.0/nullable-parameters', data="null")
+    assert json.loads(resp.data.decode()) == 'it was None'
+
+    resp = app_client.put('/v1.0/nullable-parameters', data="None")
+    assert json.loads(resp.data.decode()) == 'it was None'
