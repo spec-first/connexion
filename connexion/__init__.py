@@ -22,4 +22,5 @@ from .problem import problem  # NOQA
 from .decorators.produces import NoContent  # NOQA
 from .resolver import Resolution, Resolver, RestyResolver  # NOQA
 
-__version__ = '0.0.0'  # Replaced during release process.
+# This version is replaced during release process.
+__version__ = '2016.0.dev1'
