@@ -32,12 +32,16 @@ allows you to write a Swagger specification, then maps the
 endpoints to your Python functions; this makes it unique, as many tools generate the specification based on your Python
 code. You can describe your REST API in as much detail as
 you want; then Connexion guarantees that it will work as
-you specified. 
+you specified.
 
 We built Connexion this way in order to:
 
 - simplify the development process
 - confirm expectations about what your API will look like
+
+.. image:: https://https://raw.github.com/zalando/connexion/master/artwork/example.gif
+   :target: https://github.com/zalando/connexion/tree/master/examples
+   :alt: Simple example using connexion.
 
 Connexion Features:
 -------------------
@@ -61,7 +65,7 @@ With Connexion, you write the spec first. Connexion then calls your Python
 code, handling the mapping from the specification to the code. This
 incentivizes you to write the specification so that all of your
 developers can understand what your API does, even before you write a
-single line of code. 
+single line of code.
 
 If multiple teams depend on your APIs, you can use Connexion to easily send them the documentation of your API. This guarantees that your API will follow the specification that you wrote. This is a different process from that offered by frameworks such as Hug_, which generates a specification *after* you've written the code. Some disadvantages of generating specifications based on code is that they often end up lacking details or mix your documentation with the code logic of your application.
 
