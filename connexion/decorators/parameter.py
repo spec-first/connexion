@@ -130,6 +130,15 @@ def parameter_to_arg(parameters, function):
                 else:
                     kwargs[key] = get_val_from_param(value, form_param)
 
+        # Add file parameters
+        file_arguments = flask.request.files
+        for key, value in file_arguments.items():
+            if key not in arguments:
+                logger.debug("File parameter (formData) '%s' not in function arguments", key)
+            else:
+                logger.debug("File parameter (formData) '%s' in function arguments", key)
+                kwargs[key] = value
+
         return function(*args, **kwargs)
 
     return wrapper
