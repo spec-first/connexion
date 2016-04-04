@@ -1,4 +1,5 @@
 import json
+from struct import unpack
 
 from connexion.decorators.produces import JSONEncoder
 
@@ -127,3 +128,27 @@ def test_custom_encoder(simple_app):
     assert resp.status_code == 200
     response = json.loads(resp.data.decode())
     assert response['theResult'] == 'cool result'
+
+
+def test_content_type_not_json(simple_app):
+    app_client = simple_app.app.test_client()
+
+    resp = app_client.get('/v1.0/blob-response')
+    assert resp.status_code == 200
+
+    # validate binary content
+    text, number = unpack('!4sh', resp.data)
+    assert text == b'cool'
+    assert number == 8
+
+
+def test_maybe_blob_or_json(simple_app):
+    app_client = simple_app.app.test_client()
+
+    resp = app_client.get('/v1.0/binary-response')
+    assert resp.status_code == 200
+    assert resp.content_type == 'application/octet-stream'
+    # validate binary content
+    text, number = unpack('!4sh', resp.data)
+    assert text == b'cool'
+    assert number == 8

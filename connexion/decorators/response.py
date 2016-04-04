@@ -17,6 +17,7 @@ import functools
 import logging
 from ..exceptions import NonConformingResponseBody, NonConformingResponseHeaders
 from ..problem import problem
+from ..utils import produces_json
 from .validation import ResponseBodyValidator
 from .decorator import BaseDecorator
 from jsonschema import ValidationError
@@ -48,7 +49,9 @@ class ResponseValidator(BaseDecorator):
         response_definition = self.operation.resolve_reference(response_definition)
         # TODO handle default response definitions
 
-        if response_definition and response_definition.get("schema"):
+        if response_definition and "schema" in response_definition \
+           and (produces_json([self.mimetype]) or
+                self.mimetype == 'text/plain'):  # text/plain can also be validated with json schema
             schema = response_definition.get("schema")
             v = ResponseBodyValidator(schema)
             try:

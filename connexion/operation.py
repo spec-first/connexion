@@ -264,16 +264,17 @@ class Operation(SecureOperation):
         return definition
 
     def get_mimetype(self):
+        # if the endpoint as no 'produces' then the default is 'application/json'
+        default_mimetype = 'application/json'
         if produces_json(self.produces):  # endpoint will return json
             try:
                 return self.produces[0]
             except IndexError:
-                # if the endpoint as no 'produces' then the default is 'application/json'
-                return 'application/json'
+                return default_mimetype
         elif len(self.produces) == 1:
             return self.produces[0]
         else:
-            return None
+            return default_mimetype
 
     def resolve_parameters(self, parameters):
         for param in parameters:

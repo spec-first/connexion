@@ -88,7 +88,6 @@ class Produces(BaseSerializer):
                 logger.debug('Endpoint returned a Flask Response', extra={'url': url, 'mimetype': data.mimetype})
                 return data
 
-            data = str(data)
             response = flask.current_app.response_class(data, mimetype=self.mimetype)  # type: flask.Response
             response = self.process_headers(response, headers)
 
