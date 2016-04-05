@@ -11,7 +11,7 @@ def test_parameter_validator(monkeypatch):
     request.headers = {}
     request.params = {}
     app = MagicMock(name='app')
-    app.response_class = lambda a, mimetype, status: json.loads(a)['detail']
+    app.response_class = lambda a, mimetype, status: json.loads(''.join(a))['detail']
     monkeypatch.setattr('flask.request', request)
     monkeypatch.setattr('flask.current_app', app)
 

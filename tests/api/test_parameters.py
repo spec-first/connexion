@@ -56,7 +56,7 @@ def test_array_query_param(simple_app):
 def test_path_parameter_someint(simple_app):
     app_client = simple_app.app.test_client()
     resp = app_client.get('/v1.0/test-int-path/123')  # type: flask.Response
-    assert resp.data.decode() == '"int"'
+    assert resp.data.decode() == '"int"\n'
 
     # non-integer values will not match Flask route
     resp = app_client.get('/v1.0/test-int-path/foo')  # type: flask.Response
@@ -66,7 +66,7 @@ def test_path_parameter_someint(simple_app):
 def test_path_parameter_somefloat(simple_app):
     app_client = simple_app.app.test_client()
     resp = app_client.get('/v1.0/test-float-path/123.45')  # type: flask.Response
-    assert resp.data.decode() == '"float"'
+    assert resp.data.decode() == '"float"\n'
 
     # non-float values will not match Flask route
     resp = app_client.get('/v1.0/test-float-path/123,45')  # type: flask.Response
