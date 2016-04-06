@@ -1,5 +1,6 @@
 from connexion.decorators.security import get_tokeninfo_url, verify_oauth
 from connexion.problem import problem
+
 from mock import MagicMock
 
 

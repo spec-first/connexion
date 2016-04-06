@@ -21,6 +21,7 @@ from jsonschema import ValidationError
 from ..exceptions import (NonConformingResponseBody,
                           NonConformingResponseHeaders)
 from ..problem import problem
+from ..utils import produces_json
 from .decorator import BaseDecorator
 from .validation import ResponseBodyValidator
 

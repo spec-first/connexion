@@ -1,4 +1,5 @@
 from connexion.decorators.metrics import UWSGIMetricsCollector
+
 from mock import MagicMock
 
 
