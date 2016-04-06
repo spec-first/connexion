@@ -97,6 +97,8 @@ class SecureOperation(object):
 
 
 class Operation(SecureOperation):
+    DEFAULT_MIMETYPE = 'application/json'
+
     """
     A single API operation on a path.
     """
@@ -265,16 +267,15 @@ class Operation(SecureOperation):
 
     def get_mimetype(self):
         # if the endpoint as no 'produces' then the default is 'application/json'
-        default_mimetype = 'application/json'
         if produces_json(self.produces):  # endpoint will return json
             try:
                 return self.produces[0]
             except IndexError:
-                return default_mimetype
+                return Operation.DEFAULT_MIMETYPE
         elif len(self.produces) == 1:
             return self.produces[0]
         else:
-            return default_mimetype
+            return Operation.DEFAULT_MIMETYPE
 
     def resolve_parameters(self, parameters):
         for param in parameters:
