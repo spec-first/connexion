@@ -1,6 +1,6 @@
-from connexion.decorators.parameter import get_function_arguments
-
 import decorator
+
+from connexion.decorators.parameter import get_function_arguments
 
 
 @decorator.decorator
