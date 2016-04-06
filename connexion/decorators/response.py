@@ -49,9 +49,7 @@ class ResponseValidator(BaseDecorator):
         response_definition = self.operation.resolve_reference(response_definition)
         # TODO handle default response definitions
 
-        if response_definition and "schema" in response_definition \
-           and (produces_json([self.mimetype]) or
-                self.mimetype == 'text/plain'):  # text/plain can also be validated with json schema
+        if self.is_json_schema_compatible(response_definition):
             schema = response_definition.get("schema")
             v = ResponseBodyValidator(schema)
             try:
@@ -71,6 +69,23 @@ class ResponseValidator(BaseDecorator):
                     message="Keys in header don't match response specification. Difference: %s"
                     % list(set(headers.keys()).symmetric_difference(set(response_definition_header_keys))))
         return True
+
+    def is_json_schema_compatible(self, response_definition):
+        """
+        Verify if the specified operation responses are JSON schema
+        compatible.
+
+        All operations that specify a JSON schema and have content
+        type "application/json" or "text/plain" can be validated using
+        json_schema package.
+
+        :type response_definition: dict
+        :rtype bool
+        """
+        if not response_definition:
+            return False
+        return ('schema' in response_definition and
+                (produces_json([self.mimetype]) or self.mimetype == 'text/plain'))
 
     def __call__(self, function):
         """
