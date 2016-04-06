@@ -5,11 +5,8 @@ python:
   - "3.4"
   - "3.5"
 install:
-  - pip install -e .
-  - pip install coveralls
-  - pip install flake8
+  - pip install tox tox-travis coveralls
 script:
-  - python setup.py test
-  - python setup.py flake8
+  - tox
 after_success:
   - coveralls
