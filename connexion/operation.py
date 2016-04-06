@@ -266,8 +266,13 @@ class Operation(SecureOperation):
         return definition
 
     def get_mimetype(self):
-        # if the endpoint as no 'produces' then the default is 'application/json'
-        if produces_json(self.produces):  # endpoint will return json
+        """
+        If the endpoint has no 'produces' then the default is
+        'application/json'.
+
+        :rtype str
+        """
+        if produces_json(self.produces):
             try:
                 return self.produces[0]
             except IndexError:
