@@ -13,6 +13,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 import logging
 import re
+
 import connexion.utils as utils
 
 logger = logging.getLogger('connexion.resolver')

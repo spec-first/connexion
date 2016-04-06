@@ -1,6 +1,7 @@
-from mock import MagicMock
 from connexion.decorators.security import get_tokeninfo_url, verify_oauth
 from connexion.problem import problem
+
+from mock import MagicMock
 
 
 def test_get_tokeninfo_url(monkeypatch):

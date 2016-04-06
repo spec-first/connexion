@@ -1,9 +1,10 @@
-import pathlib
 import json
 import logging
-import pytest
+import pathlib
 
 from connexion.app import App
+
+import pytest
 
 logging.basicConfig(level=logging.DEBUG)
 

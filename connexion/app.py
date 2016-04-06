@@ -13,12 +13,14 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 import logging
 import pathlib
+
 import flask
 import werkzeug.exceptions
-from .problem import problem
-from .api import Api
-from connexion.resolver import Resolver
 from connexion.decorators.produces import JSONEncoder as ConnexionJSONEncoder
+from connexion.resolver import Resolver
+
+from .api import Api
+from .problem import problem
 
 logger = logging.getLogger('connexion.app')
 

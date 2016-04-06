@@ -1,8 +1,9 @@
 import json
-# we are using "mock" module here for Py 2.7 support
-from mock import MagicMock
 
 from connexion.decorators.validation import ParameterValidator
+
+# we are using "mock" module here for Py 2.7 support
+from mock import MagicMock
 
 
 def test_parameter_validator(monkeypatch):

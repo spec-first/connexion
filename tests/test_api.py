@@ -1,7 +1,8 @@
 import pathlib
 
-import pytest
 from connexion.api import Api
+
+import pytest
 
 TEST_FOLDER = pathlib.Path(__file__).parent
 

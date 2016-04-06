@@ -12,17 +12,19 @@ Unless required by applicable law or agreed to in writing, software distributed 
 """
 
 import copy
-import flask
 import functools
 import itertools
 import logging
-import six
 import sys
-from jsonschema import draft4_format_checker, validate, Draft4Validator, ValidationError
+
+import flask
+import six
+from jsonschema import (Draft4Validator, ValidationError,
+                        draft4_format_checker, validate)
 from werkzeug import FileStorage
 
 from ..problem import problem
-from ..utils import boolean, is_nullable, is_null
+from ..utils import boolean, is_null, is_nullable
 
 logger = logging.getLogger('connexion.decorators.validation')
 

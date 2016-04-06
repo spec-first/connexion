@@ -13,11 +13,13 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 # Authentication and authorization related decorators
 
-from flask import request
 import functools
 import logging
 import os
+
 import requests
+from flask import request
+
 from ..problem import problem
 
 logger = logging.getLogger('connexion.api.security')

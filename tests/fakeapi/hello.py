@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-from connexion import problem, request
-from connexion import NoContent
+from connexion import NoContent, problem, request
 from flask import redirect
 
 

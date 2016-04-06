@@ -1,9 +1,9 @@
 import math
 
-import pytest
-
 import connexion.app
 import connexion.utils as utils
+
+import pytest
 
 
 def test_flaskify_path():

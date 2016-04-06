@@ -11,7 +11,9 @@ Unless required by applicable law or agreed to in writing, software distributed 
  language governing permissions and limitations under the License.
 """
 import logging
+
 import flask
+
 from ..utils import is_flask_response
 
 logger = logging.getLogger('connexion.decorators.decorator')

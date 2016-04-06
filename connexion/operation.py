@@ -11,21 +11,23 @@ Unless required by applicable law or agreed to in writing, software distributed 
  language governing permissions and limitations under the License.
 """
 
-from copy import deepcopy
 import functools
 import logging
+from copy import deepcopy
 
 from jsonschema import ValidationError
 
 from .decorators import validation
 from .decorators.metrics import UWSGIMetricsCollector
 from .decorators.parameter import parameter_to_arg
-from .decorators.produces import BaseSerializer, Produces, Jsonifier
+from .decorators.produces import BaseSerializer, Jsonifier, Produces
 from .decorators.response import ResponseValidator
-from .decorators.security import security_passthrough, verify_oauth, get_tokeninfo_url
-from .decorators.validation import RequestBodyValidator, ParameterValidator, TypeValidationError
+from .decorators.security import (get_tokeninfo_url, security_passthrough,
+                                  verify_oauth)
+from .decorators.validation import (ParameterValidator, RequestBodyValidator,
+                                    TypeValidationError)
 from .exceptions import InvalidSpecification
-from .utils import flaskify_endpoint, produces_json, is_nullable
+from .utils import flaskify_endpoint, is_nullable, produces_json
 
 logger = logging.getLogger('connexion.operation')
 
