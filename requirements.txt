@@ -1,7 +1,7 @@
-jsonschema
-flask
-PyYAML
-requests
-six
-strict-rfc3339
-swagger_spec_validator
+jsonschema>=2.5.1
+flask>=0.10.1
+PyYAML>=3.11
+requests>=2.9.1
+six>=1.7
+strict-rfc3339>=0.6
+swagger_spec_validator>=2.0.2
