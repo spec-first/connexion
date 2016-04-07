@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-from decimal import Decimal
-
 from connexion import problem, request
 from connexion import NoContent
 from flask import redirect
@@ -323,3 +321,11 @@ def test_nullable_param_put(contents):
 
 def test_custom_json_response():
     return {'theResult': DummyClass()}, 200
+
+
+def get_blob_data():
+    return b'cool\x00\x08'
+
+
+def get_data_as_binary():
+    return get_blob_data(), 200, {'Content-Type': 'application/octet-stream'}

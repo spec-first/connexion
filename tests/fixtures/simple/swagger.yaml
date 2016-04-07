@@ -591,6 +591,30 @@ paths:
                 type: string
                 description: the number we wanna test
 
+  /blob-response:
+    get:
+      operationId: fakeapi.hello.get_blob_data
+      produces:
+        - "application/octet-stream"
+      responses:
+        200:
+          description: Some blob response
+          schema:
+            type: string
+            format: binary
+
+  /binary-response:
+    get:
+      operationId: fakeapi.hello.get_data_as_binary
+      produces:
+        - "application/octet-stream"
+      responses:
+        200:
+          description: Everything is ok
+          schema:
+            type: string
+
+
 definitions:
   new_stack:
     type: object
