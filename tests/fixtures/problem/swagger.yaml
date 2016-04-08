@@ -71,3 +71,13 @@ paths:
           description: goodbye response
           schema:
             type: string
+
+  /json_response_with_undefined_value_to_serialize:
+    get:
+      description: Will fail
+      operationId: fakeapi.hello.get_invalid_response
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Never happens

@@ -56,3 +56,7 @@ def test_errors(problem_app):
     assert error_problem2['detail'] == 'Something went wrong somewhere'
     assert error_problem2['status'] == 418
     assert error_problem2['instance'] == 'instance1'
+
+    problematic_json = app_client.get(
+        '/v1.0/json_response_with_undefined_value_to_serialize')  # type: flask.Response
+    assert problematic_json.status_code == 500

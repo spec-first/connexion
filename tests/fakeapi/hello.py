@@ -328,3 +328,7 @@ def get_blob_data():
 
 def get_data_as_binary():
     return get_blob_data(), 200, {'Content-Type': 'application/octet-stream'}
+
+
+def get_invalid_response():
+    return {"simple": object()}
