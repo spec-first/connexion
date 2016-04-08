@@ -232,9 +232,7 @@ class Operation(SecureOperation):
                     visited.add(v)
                     stack.append(self._retrieve_reference(v))
                 elif isinstance(v, (list, tuple)):
-                    for item in v:
-                        if hasattr(item, "items"):
-                            stack.append(item)
+                    continue
                 elif hasattr(v, "items"):
                     stack.append(v)
 
