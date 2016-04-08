@@ -1,7 +1,6 @@
 import connexion.app
-from connexion.resolver import Resolver
-from connexion.resolver import RestyResolver
 from connexion.operation import Operation
+from connexion.resolver import Resolver, RestyResolver
 
 PARAMETER_DEFINITIONS = {'myparam': {'in': 'path', 'type': 'integer'}}
 

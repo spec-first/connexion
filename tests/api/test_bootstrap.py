@@ -1,7 +1,7 @@
-import pytest
-from connexion.exceptions import InvalidSpecification
 from connexion.app import App
+from connexion.exceptions import InvalidSpecification
 
+import pytest
 from conftest import TEST_FOLDER, build_app_from_fixture
 
 

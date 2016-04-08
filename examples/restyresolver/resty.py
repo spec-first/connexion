@@ -1,6 +1,7 @@
 #!/usr/bin/env python
-import connexion
 import logging
+
+import connexion
 from connexion.resolver import RestyResolver
 
 logging.basicConfig(level=logging.INFO)

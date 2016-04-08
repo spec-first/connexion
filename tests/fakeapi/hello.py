@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-from connexion import problem, request
-from connexion import NoContent
+from connexion import NoContent, problem, request
 from flask import redirect
 
 
@@ -329,3 +328,12 @@ def get_blob_data():
 
 def get_data_as_binary():
     return get_blob_data(), 200, {'Content-Type': 'application/octet-stream'}
+
+
+def get_invalid_response():
+    return {"simple": object()}
+
+
+def get_custom_problem_response():
+    return problem(402, "You need to pay", "Missing amount",
+                   ext={'amount': 23.0})

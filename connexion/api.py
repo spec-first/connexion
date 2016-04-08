@@ -11,20 +11,21 @@ Unless required by applicable law or agreed to in writing, software distributed 
  language governing permissions and limitations under the License.
 """
 
-import flask
-import jinja2
 import json
 import logging
 import pathlib
-import six
 import sys
+
+import flask
+import jinja2
+import six
 import werkzeug.exceptions
 import yaml
 from swagger_spec_validator.validator20 import validate_spec
-from .operation import Operation
-from . import utils
-from . import resolver
+
+from . import resolver, utils
 from .handlers import AuthErrorHandler
+from .operation import Operation
 
 MODULE_PATH = pathlib.Path(__file__).absolute().parent
 SWAGGER_UI_PATH = MODULE_PATH / 'vendor' / 'swagger-ui'

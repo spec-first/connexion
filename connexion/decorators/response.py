@@ -12,16 +12,18 @@ Unless required by applicable law or agreed to in writing, software distributed 
 """
 
 # Decorators to change the return type of endpoints
-from flask import json
 import functools
 import logging
-from ..exceptions import NonConformingResponseBody, NonConformingResponseHeaders
-from ..problem import problem
-from ..utils import produces_json
-from .validation import ResponseBodyValidator
-from .decorator import BaseDecorator
+
+from flask import json
 from jsonschema import ValidationError
 
+from ..exceptions import (NonConformingResponseBody,
+                          NonConformingResponseHeaders)
+from ..problem import problem
+from ..utils import produces_json
+from .decorator import BaseDecorator
+from .validation import ResponseBodyValidator
 
 logger = logging.getLogger('connexion.decorators.response')
 

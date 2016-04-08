@@ -13,12 +13,14 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 # Decorators to change the return type of endpoints
 import datetime
-import flask
-from flask import json
 import functools
 import logging
-from .decorator import BaseDecorator
+
+import flask
+from flask import json
+
 from ..utils import is_flask_response
+from .decorator import BaseDecorator
 
 logger = logging.getLogger('connexion.decorators.produces')
 
