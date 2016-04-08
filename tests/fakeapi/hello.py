@@ -332,3 +332,8 @@ def get_data_as_binary():
 
 def get_invalid_response():
     return {"simple": object()}
+
+
+def get_custom_problem_response():
+    return problem(402, "You need to pay", "Missing amount",
+                   ext={'amount': 23.0})

@@ -81,3 +81,13 @@ paths:
       responses:
         200:
           description: Never happens
+
+  /customized_problem_response:
+    get:
+      description: Custom problem response
+      operationId: fakeapi.hello.get_custom_problem_response
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Custom problem response

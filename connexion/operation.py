@@ -343,7 +343,7 @@ class Operation(SecureOperation):
         logger.debug('... Adding security decorator (%r)', security_decorator, extra=vars(self))
         function = security_decorator(function)
 
-        if UWSGIMetricsCollector.is_available():
+        if UWSGIMetricsCollector.is_available():  # pragma: no cover
             decorator = UWSGIMetricsCollector(self.path, self.method)
             function = decorator(function)
 
