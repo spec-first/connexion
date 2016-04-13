@@ -39,18 +39,29 @@ def test_security_over_inexistent_endpoints(oauth_requests, secure_api_spec_dir)
 def test_security(oauth_requests, secure_endpoint_app):
     app_client = secure_endpoint_app.app.test_client()
 
+    # no authorization header provided case
     get_bye_no_auth = app_client.get('/v1.0/byesecure/jsantos')  # type: flask.Response
     assert get_bye_no_auth.status_code == 401
     assert get_bye_no_auth.content_type == 'application/problem+json'
     get_bye_no_auth_reponse = json.loads(get_bye_no_auth.data.decode())  # type: dict
     assert get_bye_no_auth_reponse['title'] == 'Unauthorized'
-    assert get_bye_no_auth_reponse['detail'] == "No authorization token provided"
+    assert get_bye_no_auth_reponse['detail'] == ''
 
+    # invalid authorizaiton header format case
+    headers = {"Authorization": "Givemeinfo"}
+    get_invalid_auth = app_client.get('/v1.0/byesecure/jsantos', headers=headers)  # type: flask.Response
+    assert get_invalid_auth.status_code == 401
+    get_invalid_auth_reponse = json.loads(get_invalid_auth.data.decode())  # type: dict
+    assert get_invalid_auth_reponse['title'] == 'Unauthorized'
+    assert get_invalid_auth_reponse['detail'] == ''
+
+    # valid access case
     headers = {"Authorization": "Bearer 100"}
     get_bye_good_auth = app_client.get('/v1.0/byesecure/jsantos', headers=headers)  # type: flask.Response
     assert get_bye_good_auth.status_code == 200
     assert get_bye_good_auth.data == b'Goodbye jsantos (Secure: test-user)'
 
+    # not allowed case
     headers = {"Authorization": "Bearer 200"}
     get_bye_wrong_scope = app_client.get('/v1.0/byesecure/jsantos', headers=headers)  # type: flask.Response
     assert get_bye_wrong_scope.status_code == 403
@@ -59,13 +70,14 @@ def test_security(oauth_requests, secure_endpoint_app):
     assert get_bye_wrong_scope_reponse['title'] == 'Forbidden'
     assert get_bye_wrong_scope_reponse['detail'] == "Provided token doesn't have the required scope"
 
+    # provided token is not valid case
     headers = {"Authorization": "Bearer 300"}
     get_bye_bad_token = app_client.get('/v1.0/byesecure/jsantos', headers=headers)  # type: flask.Response
     assert get_bye_bad_token.status_code == 401
     assert get_bye_bad_token.content_type == 'application/problem+json'
     get_bye_bad_token_reponse = json.loads(get_bye_bad_token.data.decode())  # type: dict
     assert get_bye_bad_token_reponse['title'] == 'Unauthorized'
-    assert get_bye_bad_token_reponse['detail'] == "Provided oauth token is not valid"
+    assert get_bye_bad_token_reponse['detail'] == ''
 
     response = app_client.get('/v1.0/more-than-one-security-definition')  # type: flask.Response
     assert response.status_code == 200
