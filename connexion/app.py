@@ -273,7 +273,7 @@ class App(object):
             raise Exception('Server %s not recognized', self.server)
             
     def __call__(self, environ, start_response):
-         """
+        """
         Makes the class callable to be WSGI-compliant. As Flask is used to handle requests,
         this is a passthrough-call to the Flask callable class.
         
