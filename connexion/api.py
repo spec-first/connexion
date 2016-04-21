@@ -15,6 +15,7 @@ import json
 import logging
 import pathlib
 import sys
+import copy
 
 import flask
 import jinja2
@@ -87,7 +88,9 @@ class Api(object):
 
         logger.debug('Read specification', extra=self.specification)
 
-        validate_spec(compatibility_layer(self.specification))
+        # Avoid validator having ability to modify specification
+        spec = copy.deepcopy(self.specification)
+        validate_spec(compatibility_layer(spec))
 
         # https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#fixed-fields
         # If base_url is not on provided then we try to read it from the swagger.yaml or use / by default
