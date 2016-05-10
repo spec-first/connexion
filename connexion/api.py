@@ -17,9 +17,10 @@ import logging
 import pathlib
 import sys
 
+import six
+
 import flask
 import jinja2
-import six
 import werkzeug.exceptions
 import yaml
 from swagger_spec_validator.validator20 import validate_spec
@@ -40,12 +41,16 @@ def compatibility_layer(spec):
     # Make all response codes be string
     for path_name, methods_available in spec.get('paths', {}).items():
         for method_name, method_def in methods_available.items():
-            if method_name == 'parameters':
+            if (method_name == 'parameters'
+                or not isinstance(method_def, dict)):
                 continue
+
             response_definitions = {}
-            for response_code, response_def in method_def.get('responses', {}).items():
+            for response_code, response_def in method_def.get(
+                    'responses', {}).items():
                 response_definitions[str(response_code)] = response_def
-                method_def['responses'] = response_definitions
+
+            method_def['responses'] = response_definitions
     return spec
 
 

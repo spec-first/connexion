@@ -1,0 +1,12 @@
+swagger: "2.0"
+
+info:
+  title: "Bar"
+  version: "1.0"
+
+basePath: /v1.0
+
+paths:
+  /foobar:
+    post:
+      invalidValue
