@@ -41,8 +41,8 @@ def compatibility_layer(spec):
     # Make all response codes be string
     for path_name, methods_available in spec.get('paths', {}).items():
         for method_name, method_def in methods_available.items():
-            if (method_name == 'parameters'
-                or not isinstance(method_def, dict)):
+            if (method_name == 'parameters' or not isinstance(
+                    method_def, dict)):
                 continue
 
             response_definitions = {}
