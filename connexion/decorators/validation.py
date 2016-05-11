@@ -126,7 +126,8 @@ class RequestBodyValidator(object):
         try:
             validate(data, self.schema, format_checker=draft4_format_checker)
         except ValidationError as exception:
-            logger.error("%s validation error: %s" % (flask.request.url, exception))
+            logger.error("{url} validation error: {error}".format(url=flask.request.url,
+                                                                  error=exception))
             return problem(400, 'Bad Request', str(exception))
 
         return None
@@ -149,7 +150,8 @@ class ResponseBodyValidator(object):
         try:
             validate(data, self.schema, format_checker=draft4_format_checker)
         except ValidationError as exception:
-            logger.error("%s validation error: %s" % (flask.request.url, exception))
+            logger.error("{url} validation error: {error}".format(url=flask.request.url,
+                                                                  error=exception))
             six.reraise(*sys.exc_info())
 
         return None
