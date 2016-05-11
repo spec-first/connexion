@@ -66,10 +66,12 @@ class ResponseValidator(BaseDecorator):
 
         if response_definition and response_definition.get("headers"):
             response_definition_header_keys = response_definition.get("headers").keys()
-            if not all(item in headers.keys() for item in response_definition_header_keys):
-                raise NonConformingResponseHeaders(
-                    message="Keys in header don't match response specification. Difference: %s"
-                    % list(set(headers.keys()).symmetric_difference(set(response_definition_header_keys))))
+            missing_keys = response_definition_header_keys - headers.keys()
+            if missing_keys:
+                pretty_list = ', '.join(missing_keys)
+                msg = ("Keys in header don't match response specification. "
+                       "Difference: {0}").format(pretty_list)
+                raise NonConformingResponseHeaders(message=msg)
         return True
 
     def is_json_schema_compatible(self, response_definition):
