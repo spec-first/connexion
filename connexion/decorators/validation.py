@@ -169,10 +169,12 @@ class ResponseBodyValidator(object):
 
 
 class ParameterValidator(object):
-    def __init__(self, parameters):
+    def __init__(self, parameters, strict_validation=False):
         self.parameters = collections.defaultdict(list)
         for p in parameters:
             self.parameters[p['in']].append(p)
+
+        self.strict_validation = strict_validation
 
     @staticmethod
     def validate_parameter(parameter_type, value, param):
@@ -249,13 +251,14 @@ class ParameterValidator(object):
         def wrapper(*args, **kwargs):
             logger.debug("%s validating parameters...", flask.request.url)
 
-            error = self.validate_query_parameter_list()
-            if error:
-                return problem(400, 'Bad Request', error)
+            if self.strict_validation:
+                error = self.validate_query_parameter_list()
+                if error:
+                    return problem(400, 'Bad Request', error)
 
-            error = self.validate_formdata_parameter_list()
-            if error:
-                return problem(400, 'Bad Request', error)
+                error = self.validate_formdata_parameter_list()
+                if error:
+                    return problem(400, 'Bad Request', error)
 
             for param in self.parameters.get('query', []):
                 error = self.validate_query_parameter(param)

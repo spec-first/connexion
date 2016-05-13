@@ -62,7 +62,7 @@ class Api(object):
 
     def __init__(self, swagger_yaml_path, base_url=None, arguments=None,
                  swagger_json=None, swagger_ui=None, swagger_path=None, swagger_url=None,
-                 validate_responses=False, resolver=resolver.Resolver(),
+                 validate_responses=False, strict_validation=False, resolver=resolver.Resolver(),
                  auth_all_paths=False, debug=False):
         """
         :type swagger_yaml_path: pathlib.Path
@@ -72,6 +72,8 @@ class Api(object):
         :type swagger_ui: bool
         :type swagger_path: string | None
         :type swagger_url: string | None
+        :type validate_responses: bool
+        :type strict_validation: bool
         :type auth_all_paths: bool
         :type debug: bool
         :param resolver: Callable that maps operationID to a function
@@ -132,6 +134,9 @@ class Api(object):
         logger.debug('Validate Responses: %s', str(validate_responses))
         self.validate_responses = validate_responses
 
+        logger.debug('Strict Request Validation: %s', str(validate_responses))
+        self.strict_validation = strict_validation
+
         # Create blueprint and endpoints
         self.blueprint = self.create_blueprint()
 
@@ -173,6 +178,7 @@ class Api(object):
                               parameter_definitions=self.parameter_definitions,
                               response_definitions=self.response_definitions,
                               validate_responses=self.validate_responses,
+                              strict_validation=self.strict_validation,
                               resolver=self.resolver)
         operation_id = operation.operation_id
         logger.debug('... Adding %s -> %s', method.upper(), operation_id,

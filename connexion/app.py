@@ -96,7 +96,7 @@ class App(object):
 
     def add_api(self, swagger_file, base_path=None, arguments=None, auth_all_paths=None, swagger_json=None,
                 swagger_ui=None, swagger_path=None, swagger_url=None, validate_responses=False,
-                resolver=Resolver()):
+                strict_validation=False, resolver=Resolver()):
         """
         Adds an API to the application based on a swagger file
 
@@ -118,6 +118,8 @@ class App(object):
         :type swagger_url: string | None
         :param validate_responses: True enables validation. Validation errors generate HTTP 500 responses.
         :type validate_responses: bool
+        :param strict_validation: True enables validation on invalid request parameters
+        :type strict_validation: bool
         :param resolver: Operation resolver.
         :type resolver: Resolver | types.FunctionType
         :rtype: Api
@@ -142,6 +144,7 @@ class App(object):
                   swagger_url=swagger_url,
                   resolver=resolver,
                   validate_responses=validate_responses,
+                  strict_validation=strict_validation,
                   auth_all_paths=auth_all_paths,
                   debug=self.debug)
         self.app.register_blueprint(api.blueprint)
