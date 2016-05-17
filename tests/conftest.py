@@ -108,3 +108,8 @@ def secure_endpoint_app():
 @pytest.fixture(scope="session")
 def secure_api_app():
     return build_app_from_fixture('secure_api')
+
+
+@pytest.fixture(scope="session")
+def unordered_definition_app():
+    return build_app_from_fixture('unordered_definition')

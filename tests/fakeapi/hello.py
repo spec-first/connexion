@@ -337,3 +337,7 @@ def get_invalid_response():
 def get_custom_problem_response():
     return problem(402, "You need to pay", "Missing amount",
                    ext={'amount': 23.0})
+
+
+def unordered_params_response(first, path_param, second):
+    return dict(first=int(first), path_param=str(path_param), second=int(second))

@@ -11,9 +11,9 @@ Unless required by applicable law or agreed to in writing, software distributed 
  language governing permissions and limitations under the License.
 """
 
+import collections
 import copy
 import functools
-import itertools
 import logging
 import sys
 
@@ -157,7 +157,9 @@ class ResponseBodyValidator(object):
 
 class ParameterValidator(object):
     def __init__(self, parameters):
-        self.parameters = {k: list(g) for k, g in itertools.groupby(parameters, key=lambda p: p['in'])}
+        self.parameters = collections.defaultdict(list)
+        for p in parameters:
+            self.parameters[p['in']].append(p)
 
     @staticmethod
     def validate_parameter(parameter_type, value, param):
