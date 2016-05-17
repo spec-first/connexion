@@ -74,7 +74,7 @@ def validate_type(param, value, parameter_type, parameter_name=None):
                 converted = make_type(part, param["items"]["type"])
             except (ValueError, TypeError):
                 converted = part
-        converted_parts.append(converted)
+            converted_parts.append(converted)
         return converted_parts
     else:
         try:

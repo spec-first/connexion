@@ -22,7 +22,8 @@ def test_parameter_validator(monkeypatch):
     params = [{'name': 'p1', 'in': 'path', 'type': 'integer', 'required': True},
               {'name': 'h1', 'in': 'header', 'type': 'string', 'enum': ['a', 'b']},
               {'name': 'q1', 'in': 'query', 'type': 'integer', 'maximum': 3},
-              {'name': 'a1', 'in': 'query', 'type': 'array', 'items': {'type': 'integer', 'minimum': 0}}]
+              {'name': 'a1', 'in': 'query', 'type': 'array', 'minItems': 2, 'maxItems': 3,
+               'items': {'type': 'integer', 'minimum': 0}}]
     validator = ParameterValidator(params)
     handler = validator(orig_handler)
 
@@ -43,6 +44,10 @@ def test_parameter_validator(monkeypatch):
     assert handler(p1=1).startswith("'a' is not of type 'integer'")
     request.args = {'a1': "1,-1"}
     assert handler(p1=1).startswith("-1 is less than the minimum of 0")
+    request.args = {'a1': "1"}
+    assert handler(p1=1).startswith("[1] is too short")
+    request.args = {'a1': "1,2,3,4"}
+    assert handler(p1=1).startswith("[1, 2, 3, 4] is too long")
     del request.args['a1']
 
     request.headers = {'h1': 'a'}
