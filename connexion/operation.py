@@ -21,11 +21,10 @@ from .decorators import validation
 from .decorators.metrics import UWSGIMetricsCollector
 from .decorators.parameter import parameter_to_arg
 from .decorators.produces import BaseSerializer, Jsonifier, Produces
-from .decorators.response import ResponseValidator
 from .decorators.security import (get_tokeninfo_url, security_passthrough,
                                   verify_oauth)
-from .decorators.validation import (ParameterValidator, RequestBodyValidator,
-                                    TypeValidationError)
+from .decorators.validation import TypeValidationError
+
 from .exceptions import InvalidSpecification
 from .utils import flaskify_endpoint, is_nullable, produces_json
 
@@ -105,7 +104,7 @@ class Operation(SecureOperation):
     A single API operation on a path.
     """
 
-    def __init__(self, method, path, operation, resolver, app_produces,
+    def __init__(self, method, path, operation, resolver, app_produces, validator_map,
                  path_parameters=None, app_security=None, security_definitions=None,
                  definitions=None, parameter_definitions=None, response_definitions=None,
                  validate_responses=False):
@@ -128,6 +127,8 @@ class Operation(SecureOperation):
         :param resolver: Callable that maps operationID to a function
         :param app_produces: list of content types the application can return by default
         :type app_produces: list
+        :param validator_map: map of validators
+        :type validator_map: dict
         :param path_parameters: Parameters defined in the path level
         :type path_parameters: list
         :param app_security: list of security rules the application uses by default
@@ -148,6 +149,7 @@ class Operation(SecureOperation):
 
         self.method = method
         self.path = path
+        self.validator_map = validator_map
         self.security_definitions = security_definitions or {}
         self.definitions = definitions or {}
         self.parameter_definitions = parameter_definitions or {}
@@ -383,6 +385,8 @@ class Operation(SecureOperation):
         """
         :rtype: types.FunctionType
         """
+        ParameterValidator = self.validator_map['parameter']
+        RequestBodyValidator = self.validator_map['body']
         if self.parameters:
             yield ParameterValidator(self.parameters)
         if self.body_schema:
@@ -395,4 +399,5 @@ class Operation(SecureOperation):
         Get a decorator for validating the generated Response.
         :rtype: types.FunctionType
         """
+        ResponseValidator = self.validator_map['response']
         return ResponseValidator(self, self.get_mimetype())

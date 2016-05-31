@@ -20,16 +20,24 @@ from connexion.decorators.produces import JSONEncoder as ConnexionJSONEncoder
 from connexion.resolver import Resolver
 
 from .api import Api
+from .decorators.response import ResponseValidator
+from .decorators.validation import ParameterValidator, RequestBodyValidator
 from .problem import problem
 
 logger = logging.getLogger('connexion.app')
+
+VALIDATOR_MAP = {
+    'parameter': ParameterValidator,
+    'body': RequestBodyValidator,
+    'response': ResponseValidator,
+}
 
 
 class App(object):
     def __init__(self, import_name, port=None, specification_dir='',
                  server=None, arguments=None, auth_all_paths=False,
                  debug=False, swagger_json=True, swagger_ui=True, swagger_path=None,
-                 swagger_url=None):
+                 swagger_url=None, validator_map={}):
         """
         :param import_name: the name of the application package
         :type import_name: str
@@ -53,6 +61,8 @@ class App(object):
         :type swagger_path: string | None
         :param swagger_url: URL to access swagger-ui documentation
         :type swagger_url: string | None
+        :param validator_map: map of validators
+        :type validator_map: dict
         """
         self.app = flask.Flask(import_name)
 
@@ -84,6 +94,8 @@ class App(object):
         self.swagger_path = swagger_path
         self.swagger_url = swagger_url
         self.auth_all_paths = auth_all_paths
+        self.validator_map = dict(VALIDATOR_MAP)
+        self.validator_map.update(validator_map)
 
     @staticmethod
     def common_error_handler(exception):
@@ -143,7 +155,8 @@ class App(object):
                   resolver=resolver,
                   validate_responses=validate_responses,
                   auth_all_paths=auth_all_paths,
-                  debug=self.debug)
+                  debug=self.debug,
+                  validator_map=self.validator_map)
         self.app.register_blueprint(api.blueprint)
         return api
 

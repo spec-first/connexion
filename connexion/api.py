@@ -58,12 +58,14 @@ class Api(object):
     Single API that corresponds to a flask blueprint
     """
 
-    def __init__(self, swagger_yaml_path, base_url=None, arguments=None,
+    def __init__(self, swagger_yaml_path, validator_map, base_url=None, arguments=None,
                  swagger_json=None, swagger_ui=None, swagger_path=None, swagger_url=None,
                  validate_responses=False, resolver=resolver.Resolver(),
                  auth_all_paths=False, debug=False):
         """
         :type swagger_yaml_path: pathlib.Path
+        :param validator_map: map of validators
+        :type validator_map: dict
         :type base_url: str | None
         :type arguments: dict | None
         :type swagger_json: bool
@@ -75,6 +77,7 @@ class Api(object):
         :param resolver: Callable that maps operationID to a function
         """
         self.debug = debug
+        self.validator_map = validator_map
         self.swagger_yaml_path = pathlib.Path(swagger_yaml_path)
         logger.debug('Loading specification: %s', swagger_yaml_path,
                      extra={'swagger_yaml': swagger_yaml_path,
@@ -138,6 +141,7 @@ class Api(object):
         if auth_all_paths:
             self.add_auth_on_not_found()
 
+
     def add_operation(self, method, path, swagger_operation, path_parameters):
         """
         Adds one operation to the api.
@@ -166,7 +170,8 @@ class Api(object):
                               parameter_definitions=self.parameter_definitions,
                               response_definitions=self.response_definitions,
                               validate_responses=self.validate_responses,
-                              resolver=self.resolver)
+                              resolver=self.resolver,
+                              validator_map=self.validator_map)
         operation_id = operation.operation_id
         logger.debug('... Adding %s -> %s', method.upper(), operation_id,
                      extra=vars(operation))
