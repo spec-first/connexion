@@ -335,7 +335,7 @@ def get_invalid_response():
 
 
 def get_custom_problem_response():
-    return problem(402, "You need to pay", "Missing amount",
+    return problem(403, "You need to pay", "Missing amount",
                    ext={'amount': 23.0})
 
 

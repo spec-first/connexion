@@ -62,7 +62,7 @@ def test_errors(problem_app):
     assert problematic_json.status_code == 500
 
     custom_problem = app_client.get('/v1.0/customized_problem_response')
-    assert custom_problem.status_code == 402
+    assert custom_problem.status_code == 403
     problem_body = json.loads(custom_problem.data.decode('utf-8'))
     assert 'amount' in problem_body
     assert problem_body['amount'] == 23.
