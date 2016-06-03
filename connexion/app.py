@@ -71,7 +71,7 @@ class App(object):
         logger.debug('Specification directory: %s', self.specification_dir)
 
         logger.debug('Setting error handlers')
-        for error_code in range(400, 600):  # All http status from 400 to 599 are errors
+        for error_code in werkzeug.exceptions.default_exceptions:
             self.add_error_handler(error_code, self.common_error_handler)
 
         self.port = port
@@ -153,7 +153,7 @@ class App(object):
         :type error_code: int
         :type function: types.FunctionType
         """
-        self.app.error_handler_spec[None][error_code] = function
+        self.app.register_error_handler(error_code, function)
 
     def add_url_rule(self, rule, endpoint=None, view_func=None, **options):
         """
