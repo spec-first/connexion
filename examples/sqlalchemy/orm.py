@@ -23,7 +23,8 @@ class Pet(Base):
             self.created = created
         
     def dump(self):
-        return dict([(k,v) for k,v in self.__dict__.items() if k[0] != '_'])
+        return dict([(k,v) for k,v in vars(self).items() 
+                if not k.startswith('_')])
 
 
 def init_db(uri):
