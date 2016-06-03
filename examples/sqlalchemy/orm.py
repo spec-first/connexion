@@ -1,7 +1,6 @@
-from sqlalchemy import create_engine, Column, DateTime, String
-from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy import Column, DateTime, String, create_engine
 from sqlalchemy.ext.declarative import declarative_base
-
+from sqlalchemy.orm import scoped_session, sessionmaker
 
 Base = declarative_base()
 

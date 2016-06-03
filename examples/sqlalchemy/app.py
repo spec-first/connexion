@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
-import connexion
 import datetime
 import logging
 
+import connexion
 from connexion import NoContent
 
 import orm
-
 
 db_session = None
 
