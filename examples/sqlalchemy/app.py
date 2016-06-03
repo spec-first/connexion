@@ -9,11 +9,13 @@ import orm
 
 db_session = None
 
+
 def get_pets(limit, animal_type=None):
     q = db_session.query(orm.Pet)
     if animal_type:
         q = q.filter(orm.Pet.animal_type == animal_type)
-    return [ p.dump() for p in q][:limit]
+    return [p.dump() for p in q][:limit]
+
 
 def get_pet(pet_id):
     pet = db_session.query(orm.Pet).filter(orm.Pet.id == pet_id).one_or_none()
@@ -50,6 +52,7 @@ app = connexion.App(__name__)
 app.add_api('swagger.yaml')
 
 application = app.app
+
 
 @application.teardown_appcontext
 def shutdown_session(exception=None):
