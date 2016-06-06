@@ -24,8 +24,8 @@ from .decorators.produces import BaseSerializer, Jsonifier, Produces
 from .decorators.response import ResponseValidator
 from .decorators.security import (get_tokeninfo_url, security_passthrough,
                                   verify_oauth)
-from .decorators.validation import TypeValidationError, ParameterValidator, RequestBodyValidator
-
+from .decorators.validation import (ParameterValidator, RequestBodyValidator,
+                                    TypeValidationError)
 from .exceptions import InvalidSpecification
 from .utils import flaskify_endpoint, is_nullable, produces_json
 

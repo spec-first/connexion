@@ -16,6 +16,7 @@ import pathlib
 
 import flask
 import werkzeug.exceptions
+
 from connexion.decorators.produces import JSONEncoder as ConnexionJSONEncoder
 from connexion.resolver import Resolver
 
