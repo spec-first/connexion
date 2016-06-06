@@ -21,14 +21,22 @@ from .decorators import validation
 from .decorators.metrics import UWSGIMetricsCollector
 from .decorators.parameter import parameter_to_arg
 from .decorators.produces import BaseSerializer, Jsonifier, Produces
+from .decorators.response import ResponseValidator
 from .decorators.security import (get_tokeninfo_url, security_passthrough,
                                   verify_oauth)
-from .decorators.validation import TypeValidationError
+from .decorators.validation import TypeValidationError, ParameterValidator, RequestBodyValidator
 
 from .exceptions import InvalidSpecification
 from .utils import flaskify_endpoint, is_nullable, produces_json
 
 logger = logging.getLogger('connexion.operation')
+
+
+VALIDATOR_MAP = {
+    'parameter': ParameterValidator,
+    'body': RequestBodyValidator,
+    'response': ResponseValidator,
+}
 
 
 class SecureOperation(object):
@@ -104,10 +112,10 @@ class Operation(SecureOperation):
     A single API operation on a path.
     """
 
-    def __init__(self, method, path, operation, resolver, app_produces, validator_map,
+    def __init__(self, method, path, operation, resolver, app_produces,
                  path_parameters=None, app_security=None, security_definitions=None,
                  definitions=None, parameter_definitions=None, response_definitions=None,
-                 validate_responses=False):
+                 validate_responses=False, validator_map={}):
         """
         This class uses the OperationID identify the module and function that will handle the operation
 
@@ -149,7 +157,8 @@ class Operation(SecureOperation):
 
         self.method = method
         self.path = path
-        self.validator_map = validator_map
+        self.validator_map = dict(VALIDATOR_MAP)
+        self.validator_map.update(validator_map)
         self.security_definitions = security_definitions or {}
         self.definitions = definitions or {}
         self.parameter_definitions = parameter_definitions or {}

@@ -58,10 +58,10 @@ class Api(object):
     Single API that corresponds to a flask blueprint
     """
 
-    def __init__(self, swagger_yaml_path, validator_map, base_url=None, arguments=None,
+    def __init__(self, swagger_yaml_path, base_url=None, arguments=None,
                  swagger_json=None, swagger_ui=None, swagger_path=None, swagger_url=None,
                  validate_responses=False, resolver=resolver.Resolver(),
-                 auth_all_paths=False, debug=False):
+                 auth_all_paths=False, debug=False, validator_map={}):
         """
         :type swagger_yaml_path: pathlib.Path
         :param validator_map: map of validators

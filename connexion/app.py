@@ -20,17 +20,11 @@ from connexion.decorators.produces import JSONEncoder as ConnexionJSONEncoder
 from connexion.resolver import Resolver
 
 from .api import Api
-from .decorators.response import ResponseValidator
-from .decorators.validation import ParameterValidator, RequestBodyValidator
 from .problem import problem
 
 logger = logging.getLogger('connexion.app')
 
-VALIDATOR_MAP = {
-    'parameter': ParameterValidator,
-    'body': RequestBodyValidator,
-    'response': ResponseValidator,
-}
+
 
 
 class App(object):
@@ -94,8 +88,7 @@ class App(object):
         self.swagger_path = swagger_path
         self.swagger_url = swagger_url
         self.auth_all_paths = auth_all_paths
-        self.validator_map = dict(VALIDATOR_MAP)
-        self.validator_map.update(validator_map)
+        self.validator_map = validator_map
 
     @staticmethod
     def common_error_handler(exception):
