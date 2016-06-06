@@ -141,7 +141,6 @@ class Api(object):
         if auth_all_paths:
             self.add_auth_on_not_found()
 
-
     def add_operation(self, method, path, swagger_operation, path_parameters):
         """
         Adds one operation to the api.
