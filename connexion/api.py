@@ -12,7 +12,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 """
 
 import copy
-import json
 import logging
 import pathlib
 import sys

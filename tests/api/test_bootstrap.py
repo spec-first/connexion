@@ -75,7 +75,8 @@ def test_no_swagger_json_api(simple_api_spec_dir):
 def test_swagger_json_content_type(simple_app):
     app_client = simple_app.app.test_client()
 
-    response = app_client.get('/v1.0/swagger.json', data={})  # type: flask.Response
+    response = app_client.get('/v1.0/swagger.json',
+                              data={})  # type: flask.Response
     assert response.status_code == 200
     assert response.content_type == 'application/json'
 
