@@ -87,7 +87,11 @@ In the Swagger definition if the `array` type is used you can define the
 `collectionFormat` that it should be recognized. Connexion currently
 supports collection formats "pipes" and "csv". The default format is "csv".
 
+.. note:: For more details about `collectionFormat`'s please check the
+          official `Swagger/OpenAPI specification`_.
+
 .. _jsonschema: https://pypi.python.org/pypi/jsonschema
+.. _`Swagger/OpenAPI specification`: https://github.com/OAI/OpenAPI-Specification/blob/OpenAPI.next/versions/2.0.md#fixed-fields-7
 
 Nullable parameters
 ^^^^^^^^^^^^^^^^^^^
