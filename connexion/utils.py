@@ -99,14 +99,23 @@ def get_function_from_name(function_name):
     """
     module_name, attr_path = function_name.rsplit('.', 1)
     module = None
+    last_import_error = None
 
     while not module:
+
         try:
             module = importlib.import_module(module_name)
-        except ImportError:
+        except ImportError as import_error:
+            last_import_error = import_error
             module_name, attr_path1 = module_name.rsplit('.', 1)
             attr_path = '{0}.{1}'.format(attr_path1, attr_path)
-    function = deep_getattr(module, attr_path)
+    try:
+        function = deep_getattr(module, attr_path)
+    except AttributeError:
+        if last_import_error:
+            raise last_import_error
+        else:
+            raise
     return function
 
 

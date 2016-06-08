@@ -1,9 +1,8 @@
 import pathlib
 
+import pytest
 from connexion.api import Api
 from swagger_spec_validator.common import SwaggerValidationError
-
-import pytest
 
 TEST_FOLDER = pathlib.Path(__file__).parent
 
@@ -28,7 +27,7 @@ def test_template():
 
 
 def test_invalid_operation_does_stop_application_to_setup():
-    with pytest.raises(AttributeError):
+    with pytest.raises(ImportError):
         Api(TEST_FOLDER / "fakeapi/op_error_api.yaml", "/api/v1.0",
             {'title': 'OK'})
 
