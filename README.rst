@@ -1,6 +1,10 @@
 Connexion
 =========
 
+.. image:: https://badges.gitter.im/zalando/connexion.svg
+   :alt: Join the chat at https://gitter.im/zalando/connexion
+   :target: https://gitter.im/zalando/connexion?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+
 .. image:: https://travis-ci.org/zalando/connexion.svg?branch=master
    :target: https://travis-ci.org/zalando/connexion
    :alt: Travis CI build status
