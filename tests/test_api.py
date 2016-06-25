@@ -1,9 +1,12 @@
-import pathlib
+# coding: utf-8
 
-from connexion.api import Api
-from swagger_spec_validator.common import SwaggerValidationError
+import pathlib
+import tempfile
+from mock import patch
 
 import pytest
+from connexion.api import Api
+from swagger_spec_validator.common import SwaggerValidationError
 
 TEST_FOLDER = pathlib.Path(__file__).parent
 
@@ -40,10 +43,13 @@ def test_invalid_operation_does_not_stop_application_in_debug_mode():
 
 
 def test_invalid_schema_file_structure():
-    try:
-        api = Api(TEST_FOLDER / "fixtures/invalid_schema/swagger.yaml", "/api/v1.0",
-                  {'title': 'OK'}, debug=True)
-    except SwaggerValidationError:
-        pass
-    else:
-        pytest.fail("Validation of swagger schema should had failed for this invalid spec.")
+    with pytest.raises(SwaggerValidationError):
+        Api(TEST_FOLDER / "fixtures/invalid_schema/swagger.yaml", "/api/v1.0",
+            {'title': 'OK'}, debug=True)
+
+
+def test_invalid_encoding():
+    with tempfile.NamedTemporaryFile(mode='wb') as f:
+        f.write(u"swagger: '2.0'\ninfo:\n  title: Foo 整\n  version: v1\npaths: {}".encode('gbk'))
+        f.flush()
+        Api(pathlib.Path(f.name), "/api/v1.0")
