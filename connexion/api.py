@@ -36,6 +36,9 @@ logger = logging.getLogger('connexion.api')
 
 def compatibility_layer(spec):
     """Make specs compatible with older versions of Connexion."""
+    if not isinstance(spec, dict):
+        return spec
+
     # Make all response codes be string
     for path_name, methods_available in spec.get('paths', {}).items():
         for method_name, method_def in methods_available.items():
@@ -92,7 +95,7 @@ class Api(object):
                 swagger_template = contents.decode('utf-8', 'replace')
 
             swagger_string = jinja2.Template(swagger_template).render(**arguments)
-            self.specification = yaml.load(swagger_string)  # type: dict
+            self.specification = yaml.safe_load(swagger_string)  # type: dict
 
         logger.debug('Read specification', extra={'spec': self.specification})
 

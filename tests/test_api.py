@@ -5,6 +5,7 @@ import tempfile
 
 from connexion.api import Api
 from swagger_spec_validator.common import SwaggerValidationError
+from yaml import YAMLError
 
 import pytest
 
@@ -53,3 +54,14 @@ def test_invalid_encoding():
         f.write(u"swagger: '2.0'\ninfo:\n  title: Foo 整\n  version: v1\npaths: {}".encode('gbk'))
         f.flush()
         Api(pathlib.Path(f.name), "/api/v1.0")
+
+
+def test_use_of_safe_load_for_yaml_swagger_specs():
+    with pytest.raises(YAMLError):
+        with tempfile.NamedTemporaryFile() as f:
+            f.write('!!python/object:object {}\n'.encode())
+            f.flush()
+            try:
+                Api(pathlib.Path(f.name), "/api/v1.0")
+            except SwaggerValidationError:
+                pytest.fail("Could load invalid YAML file, use yaml.safe_load!")
