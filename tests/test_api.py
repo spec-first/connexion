@@ -1,7 +1,11 @@
+# coding: utf-8
+
 import pathlib
+import tempfile
 
 from connexion.api import Api
 from swagger_spec_validator.common import SwaggerValidationError
+from yaml import YAMLError
 
 import pytest
 
@@ -40,10 +44,32 @@ def test_invalid_operation_does_not_stop_application_in_debug_mode():
 
 
 def test_invalid_schema_file_structure():
-    try:
-        api = Api(TEST_FOLDER / "fixtures/invalid_schema/swagger.yaml", "/api/v1.0",
-                  {'title': 'OK'}, debug=True)
-    except SwaggerValidationError:
-        pass
-    else:
-        pytest.fail("Validation of swagger schema should had failed for this invalid spec.")
+    with pytest.raises(SwaggerValidationError):
+        Api(TEST_FOLDER / "fixtures/invalid_schema/swagger.yaml", "/api/v1.0",
+            {'title': 'OK'}, debug=True)
+
+
+def test_invalid_encoding():
+    with tempfile.NamedTemporaryFile(mode='wb') as f:
+        f.write(u"swagger: '2.0'\ninfo:\n  title: Foo 整\n  version: v1\npaths: {}".encode('gbk'))
+        f.flush()
+        Api(pathlib.Path(f.name), "/api/v1.0")
+
+
+def test_use_of_safe_load_for_yaml_swagger_specs():
+    with pytest.raises(YAMLError):
+        with tempfile.NamedTemporaryFile() as f:
+            f.write('!!python/object:object {}\n'.encode())
+            f.flush()
+            try:
+                Api(pathlib.Path(f.name), "/api/v1.0")
+            except SwaggerValidationError:
+                pytest.fail("Could load invalid YAML file, use yaml.safe_load!")
+
+
+def test_validation_error_on_completely_invalid_swagger_spec():
+    with pytest.raises(SwaggerValidationError):
+        with tempfile.NamedTemporaryFile() as f:
+            f.write('[1]\n'.encode())
+            f.flush()
+            Api(pathlib.Path(f.name), "/api/v1.0")

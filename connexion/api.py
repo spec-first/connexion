@@ -36,6 +36,9 @@ logger = logging.getLogger('connexion.api')
 
 def compatibility_layer(spec):
     """Make specs compatible with older versions of Connexion."""
+    if not isinstance(spec, dict):
+        return spec
+
     # Make all response codes be string
     for path_name, methods_available in spec.get('paths', {}).items():
         for method_name, method_def in methods_available.items():
@@ -84,12 +87,17 @@ class Api(object):
                             'swagger_url': swagger_url,
                             'auth_all_paths': auth_all_paths})
         arguments = arguments or {}
-        with swagger_yaml_path.open() as swagger_yaml:
-            swagger_template = swagger_yaml.read()
-            swagger_string = jinja2.Template(swagger_template).render(**arguments)
-            self.specification = yaml.load(swagger_string)  # type: dict
+        with swagger_yaml_path.open(mode='rb') as swagger_yaml:
+            contents = swagger_yaml.read()
+            try:
+                swagger_template = contents.decode()
+            except UnicodeDecodeError:
+                swagger_template = contents.decode('utf-8', 'replace')
 
-        logger.debug('Read specification', extra=self.specification)
+            swagger_string = jinja2.Template(swagger_template).render(**arguments)
+            self.specification = yaml.safe_load(swagger_string)  # type: dict
+
+        logger.debug('Read specification', extra={'spec': self.specification})
 
         self.specification = compatibility_layer(self.specification)
         # Avoid validator having ability to modify specification
