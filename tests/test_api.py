@@ -65,3 +65,11 @@ def test_use_of_safe_load_for_yaml_swagger_specs():
                 Api(pathlib.Path(f.name), "/api/v1.0")
             except SwaggerValidationError:
                 pytest.fail("Could load invalid YAML file, use yaml.safe_load!")
+
+
+def test_validation_error_on_completely_invalid_swagger_spec():
+    with pytest.raises(SwaggerValidationError):
+        with tempfile.NamedTemporaryFile() as f:
+            f.write('[1]\n'.encode())
+            f.flush()
+            Api(pathlib.Path(f.name), "/api/v1.0")
