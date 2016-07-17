@@ -1,9 +1,8 @@
 import pathlib
 
+import pytest
 from connexion.api import Api
 from swagger_spec_validator.common import SwaggerValidationError
-
-import pytest
 
 TEST_FOLDER = pathlib.Path(__file__).parent
 
