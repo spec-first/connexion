@@ -127,8 +127,8 @@ class RequestBodyValidator(object):
             validate(data, self.schema, format_checker=draft4_format_checker)
         except ValidationError as exception:
             logger.error("{url} validation error: {error}".format(url=flask.request.url,
-                                                                  error=exception))
-            return problem(400, 'Bad Request', str(exception))
+                                                                  error=exception.message))
+            return problem(400, 'Bad Request', str(exception.message))
 
         return None
 
