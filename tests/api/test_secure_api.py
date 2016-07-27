@@ -72,3 +72,28 @@ def test_security(oauth_requests, secure_endpoint_app):
 
     response = app_client.get('/v1.0/user-handled-security')  # type: flask.Response
     assert response.status_code == 200
+
+
+def test_checking_that_client_token_has_all_necessary_scopes(
+        oauth_requests, secure_endpoint_app):
+    app_client = secure_endpoint_app.app.test_client()
+
+    # has only one of the required scopes
+    headers = {"Authorization": "Bearer has_myscope"}
+    response = app_client.get('/v1.0/more-than-one-scope', headers=headers)  # type: flask.Response
+    assert response.status_code == 403
+
+    # has none of the necessary scopes
+    headers = {"Authorization": "Bearer has_wrongscope"}
+    response = app_client.get('/v1.0/more-than-one-scope', headers=headers)  # type: flask.Response
+    assert response.status_code == 403
+
+    # is not auth
+    headers = {"Authorization": "Bearer is_not_invalid"}
+    response = app_client.get('/v1.0/more-than-one-scope', headers=headers)  # type: flask.Response
+    assert response.status_code == 401
+
+    # has all necessary scopes
+    headers = {"Authorization": "Bearer has_myscope_otherscope"}
+    response = app_client.get('/v1.0/more-than-one-scope', headers=headers)  # type: flask.Response
+    assert response.status_code == 200

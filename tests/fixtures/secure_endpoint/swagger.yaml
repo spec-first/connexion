@@ -14,6 +14,7 @@ securityDefinitions:
         x-tokenInfoUrl: https://ouath.example/token_info
         scopes:
             myscope: can do stuff
+            otherscope: another scope
 
     api_key:
       type: apiKey
@@ -55,6 +56,23 @@ paths:
       responses:
         200:
           description: OK
+
+  /more-than-one-scope:
+    get:
+      summary: Test more than one scope
+      description: |
+        Test that connexion handles scopes properly by verifying that user has
+        all scopes necessary to call the endpoint.
+      operationId: fakeapi.hello.more_than_one_scope_defined
+      security:
+        - oauth:
+          - myscope
+          - otherscope
+      produces:
+        - text/plain
+      responses:
+        200:
+          description: some response
 
   /user-handled-security:
     get:
