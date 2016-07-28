@@ -41,11 +41,13 @@ def oauth_requests(monkeypatch):
         params = params or {}
         if url == "https://ouath.example/token_info":
             token = params['access_token']
-            if token == "100":
+            if token in ["100", "has_myscope"]:
                 return FakeResponse(200, '{"uid": "test-user", "scope": ["myscope"]}')
-            if token == "200":
+            if token in ["200", "has_wrongscope"]:
                 return FakeResponse(200, '{"uid": "test-user", "scope": ["wrongscope"]}')
-            if token == "300":
+            if token == "has_myscope_otherscope":
+                return FakeResponse(200, '{"uid": "test-user", "scope": ["myscope", "otherscope"]}')
+            if token in ["300", "is_not_invalid"]:
                 return FakeResponse(404, '')
         return url
 

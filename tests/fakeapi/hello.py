@@ -341,3 +341,7 @@ def get_custom_problem_response():
 
 def unordered_params_response(first, path_param, second):
     return dict(first=int(first), path_param=str(path_param), second=int(second))
+
+
+def more_than_one_scope_defined():
+    return "OK"
