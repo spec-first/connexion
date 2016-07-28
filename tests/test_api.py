@@ -3,11 +3,10 @@
 import pathlib
 import tempfile
 
+import pytest
 from connexion.api import Api
 from swagger_spec_validator.common import SwaggerValidationError
 from yaml import YAMLError
-
-import pytest
 
 TEST_FOLDER = pathlib.Path(__file__).parent
 

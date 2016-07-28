@@ -2,7 +2,6 @@ import math
 
 import connexion.app
 import connexion.utils as utils
-
 import pytest
 from mock import MagicMock
 

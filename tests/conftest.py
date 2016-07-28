@@ -2,9 +2,8 @@ import json
 import logging
 import pathlib
 
-from connexion.app import App
-
 import pytest
+from connexion.app import App
 
 logging.basicConfig(level=logging.DEBUG)
 
