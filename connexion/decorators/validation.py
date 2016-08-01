@@ -85,6 +85,17 @@ def validate_type(param, value, parameter_type, parameter_name=None):
             return value
 
 
+def validate_parameter_list(parameter_type, request_params, spec_params):
+    request_params = set(request_params)
+    spec_params = set(spec_params)
+
+    extra_params = request_params.difference(spec_params)
+
+    if extra_params:
+        return "Extra {parameter_type} parameter(s) {extra_params} not in spec".format(
+            parameter_type=parameter_type, extra_params=', '.join(extra_params))
+
+
 class RequestBodyValidator(object):
     def __init__(self, schema, is_null_value_valid=False):
         """
@@ -158,10 +169,16 @@ class ResponseBodyValidator(object):
 
 
 class ParameterValidator(object):
-    def __init__(self, parameters):
+    def __init__(self, parameters, strict_validation=False):
+        """
+        :param parameters: List of request parameter dictionaries
+        :param strict_validation: Flag indicating if parametrs not in spec are allowed
+        """
         self.parameters = collections.defaultdict(list)
         for p in parameters:
             self.parameters[p['in']].append(p)
+
+        self.strict_validation = strict_validation
 
     @staticmethod
     def validate_parameter(parameter_type, value, param):
@@ -191,6 +208,16 @@ class ParameterValidator(object):
 
         elif param.get('required'):
             return "Missing {parameter_type} parameter '{param[name]}'".format(**locals())
+
+    def validate_query_parameter_list(self):
+        request_params = flask.request.args.keys()
+        spec_params = [x['name'] for x in self.parameters.get('query', [])]
+        return validate_parameter_list('query', request_params, spec_params)
+
+    def validate_formdata_parameter_list(self):
+        request_params = flask.request.form.keys()
+        spec_params = [x['name'] for x in self.parameters.get('formData', [])]
+        return validate_parameter_list('formData', request_params, spec_params)
 
     def validate_query_parameter(self, param):
         """
@@ -227,6 +254,15 @@ class ParameterValidator(object):
         @functools.wraps(function)
         def wrapper(*args, **kwargs):
             logger.debug("%s validating parameters...", flask.request.url)
+
+            if self.strict_validation:
+                error = self.validate_query_parameter_list()
+                if error:
+                    return problem(400, 'Bad Request', error)
+
+                error = self.validate_formdata_parameter_list()
+                if error:
+                    return problem(400, 'Bad Request', error)
 
             for param in self.parameters.get('query', []):
                 error = self.validate_query_parameter(param)

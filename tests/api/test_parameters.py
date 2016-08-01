@@ -53,6 +53,24 @@ def test_array_query_param(simple_app):
     assert array_response == ["1;2;3"]
 
 
+def test_extra_query_param(simple_app):
+    app_client = simple_app.app.test_client()
+    headers = {'Content-type': 'application/json'}
+    url = '/v1.0/test_parameter_validation?extra_parameter=true'
+    resp = app_client.get(url, headers=headers)
+    assert resp.status_code == 200
+
+
+def test_strict_extra_query_param(strict_app):
+    app_client = strict_app.app.test_client()
+    headers = {'Content-type': 'application/json'}
+    url = '/v1.0/test_parameter_validation?extra_parameter=true'
+    resp = app_client.get(url, headers=headers)
+    assert resp.status_code == 400
+    response = json.loads(resp.data.decode())
+    assert response['detail'] == "Extra query parameter(s) extra_parameter not in spec"
+
+
 def test_path_parameter_someint(simple_app):
     app_client = simple_app.app.test_client()
     resp = app_client.get('/v1.0/test-int-path/123')  # type: flask.Response
@@ -116,6 +134,24 @@ def test_formdata_missing_param(simple_app):
     resp = app_client.post('/v1.0/test-formData-missing-param',
                            data={'missing_formData': 'test'})
     assert resp.status_code == 200
+
+
+def test_formdata_extra_param(simple_app):
+    app_client = simple_app.app.test_client()
+    resp = app_client.post('/v1.0/test-formData-param',
+                           data={'formData': 'test',
+                                 'extra_formData': 'test'})
+    assert resp.status_code == 200
+
+
+def test_strict_formdata_extra_param(strict_app):
+    app_client = strict_app.app.test_client()
+    resp = app_client.post('/v1.0/test-formData-param',
+                           data={'formData': 'test',
+                                 'extra_formData': 'test'})
+    assert resp.status_code == 400
+    response = json.loads(resp.data.decode())
+    assert response['detail'] == "Extra formData parameter(s) extra_formData not in spec"
 
 
 def test_formdata_file_upload(simple_app):
