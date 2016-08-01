@@ -170,6 +170,10 @@ class ResponseBodyValidator(object):
 
 class ParameterValidator(object):
     def __init__(self, parameters, strict_validation=False):
+        """
+        :param parameters: List of request parameter dictionaries
+        :param strict_validation: Flag indicating if parametrs not in spec are allowed
+        """
         self.parameters = collections.defaultdict(list)
         for p in parameters:
             self.parameters[p['in']].append(p)
