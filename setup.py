@@ -20,7 +20,7 @@ def read_version(package):
 
 version = read_version('connexion')
 
-py_major_version, py_minor_version, _ = (int(v.rstrip('+')) for v in platform.python_version_tuple())
+py_major_version, py_minor_version, _ = platform.python_version_tuple()
 
 
 def get_install_requirements(path):
