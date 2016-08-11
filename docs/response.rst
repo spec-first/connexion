@@ -69,8 +69,8 @@ during development.
 Error Handling
 --------------
 By default connexion error messages are JSON serialized according to
-`Problem Details for HTTP APIs <http_problem_>`_.
+`Problem Details for HTTP APIs`_
 
 Application can return errors using ``connexion.problem``.
 
-.. _http_problem: https://tools.ietf.org/html/draft-ietf-appsawg-http-problem-00
+.. _Problem Details for HTTP APIs: https://tools.ietf.org/html/draft-ietf-appsawg-http-problem-00
