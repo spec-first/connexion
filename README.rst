@@ -393,7 +393,7 @@ Flask with uWSGI`_ (this is common):
 
 .. code-block:: python
 
-    app = connexion.App(specification_dir='swagger/')
+    app = connexion.App(__name__, specification_dir='swagger/')
     application = app.app # expose global WSGI application object
 
 Set up and run the installation code:
