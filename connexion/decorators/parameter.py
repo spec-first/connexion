@@ -1,10 +1,8 @@
 import copy
 import functools
-import inspect
 import logging
 
 import flask
-import six
 import werkzeug.exceptions as exceptions
 
 from ..utils import boolean, is_null, is_nullable
@@ -18,19 +16,6 @@ TYPE_MAP = {'integer': int,
             'boolean': boolean,
             'array': list,
             'object': dict}  # map of swagger types to python types
-
-
-def get_function_arguments(function):  # pragma: no cover
-    """
-    Returns the list of arguments of a function
-
-    :type function: Callable
-    :rtype: list[str]
-    """
-    if six.PY3:
-        return list(inspect.signature(function).parameters)
-    else:
-        return inspect.getargspec(function).args
 
 
 def make_type(value, type):
@@ -71,7 +56,6 @@ def parameter_to_arg(parameters, function):
                   for parameter in parameters if parameter['in'] == 'formData'}
     path_types = {parameter['name']: parameter
                   for parameter in parameters if parameter['in'] == 'path'}
-    arguments = get_function_arguments(function)
     default_query_params = {param['name']: param['default']
                             for param in parameters if param['in'] == 'query' and 'default' in param}
     default_form_params = {param['name']: param['default']
@@ -79,8 +63,6 @@ def parameter_to_arg(parameters, function):
 
     @functools.wraps(function)
     def wrapper(*args, **kwargs):
-        logger.debug('Function Arguments: %s', arguments)
-
         try:
             request_body = flask.request.json
         except exceptions.BadRequest:
@@ -96,51 +78,40 @@ def parameter_to_arg(parameters, function):
                                                  path_param_definitions)
 
         # Add body parameters
-        if body_name not in arguments:
-            logger.debug("Body parameter '%s' not in function arguments", body_name)
-        else:
-            logger.debug("Body parameter '%s' in function arguments", body_name)
+        if body_name:
+            logger.debug("Passing body parameter as '%s'", body_name)
             kwargs[body_name] = request_body
 
         # Add query parameters
         query_arguments = copy.deepcopy(default_query_params)
         query_arguments.update(flask.request.args.items())
         for key, value in query_arguments.items():
-            if key not in arguments:
-                logger.debug("Query Parameter '%s' not in function arguments", key)
+            logger.debug("Passing query parameter '%s'", key)
+            try:
+                query_param = query_types[key]
+            except KeyError:  # pragma: no cover
+                logger.error("Function argument '{}' not defined in specification".format(key))
             else:
-                logger.debug("Query Parameter '%s' in function arguments", key)
-                try:
-                    query_param = query_types[key]
-                except KeyError:  # pragma: no cover
-                    logger.error("Function argument '{}' not defined in specification".format(key))
-                else:
-                    logger.debug('%s is a %s', key, query_param)
-                    kwargs[key] = get_val_from_param(value, query_param)
+                logger.debug('%s is a %s', key, query_param)
+                kwargs[key] = get_val_from_param(value, query_param)
 
         # Add formData parameters
         form_arguments = copy.deepcopy(default_form_params)
         form_arguments.update(flask.request.form.items())
         for key, value in form_arguments.items():
-            if key not in arguments:
-                logger.debug("FormData parameter '%s' not in function arguments", key)
+            logger.debug("Passing formData parameter '%s'", key)
+            try:
+                form_param = form_types[key]
+            except KeyError:  # pragma: no cover
+                logger.error("Function argument '{}' not defined in specification".format(key))
             else:
-                logger.debug("FormData parameter '%s' in function arguments", key)
-                try:
-                    form_param = form_types[key]
-                except KeyError:  # pragma: no cover
-                    logger.error("Function argument '{}' not defined in specification".format(key))
-                else:
-                    kwargs[key] = get_val_from_param(value, form_param)
+                kwargs[key] = get_val_from_param(value, form_param)
 
         # Add file parameters
         file_arguments = flask.request.files
         for key, value in file_arguments.items():
-            if key not in arguments:
-                logger.debug("File parameter (formData) '%s' not in function arguments", key)
-            else:
-                logger.debug("File parameter (formData) '%s' in function arguments", key)
-                kwargs[key] = value
+            logger.debug("Passing file parameter (formData) '%s'", key)
+            kwargs[key] = value
 
         return function(*args, **kwargs)
 
