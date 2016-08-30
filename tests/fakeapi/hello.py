@@ -157,8 +157,8 @@ def schema_response_array(valid):
         ]
 
 
-def schema_query(*args, image_version=None, **kwargs):
-    return {'image_version': image_version}
+def schema_query(*args, **kwargs):
+    return {'image_version': kwargs.get('image_version')}
 
 
 def schema_list():
