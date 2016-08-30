@@ -157,19 +157,19 @@ def schema_response_array(valid):
         ]
 
 
-def schema_query(image_version=None):
-    return {'image_version': image_version}
+def schema_query(*args, **kwargs):
+    return {'image_version': kwargs.get('image_version')}
 
 
 def schema_list():
     return ''
 
 
-def schema_map():
+def schema_map(*args, **kwargs):
     return ''
 
 
-def schema_recursive():
+def schema_recursive(*args, **kwargs):
     return ''
 
 
@@ -177,11 +177,11 @@ def schema_format():
     return ''
 
 
-def test_parameter_validation():
+def test_parameter_validation(*args, **kargs):
     return ''
 
 
-def test_required_query_param():
+def test_required_query_param(*args, **kargs):
     return ''
 
 
@@ -237,7 +237,7 @@ def test_formdata_param(formData):
     return formData
 
 
-def test_formdata_missing_param():
+def test_formdata_missing_param(*args, **kwargs):
     return ''
 
 
@@ -247,7 +247,7 @@ def test_formdata_file_upload(formData):
     return {filename: contents}
 
 
-def test_formdata_file_upload_missing_param():
+def test_formdata_file_upload_missing_param(*args, **kwargs):
     return ''
 
 
