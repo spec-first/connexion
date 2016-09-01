@@ -20,13 +20,13 @@ def read_version(package):
 
 version = read_version('connexion')
 
-py_major_version, py_minor_version, _ = platform.python_version_tuple()
+py_major_minor_version = tuple(int(v.rstrip('+')) for v in platform.python_version_tuple()[:2])
 
 
 def get_install_requirements(path):
     content = open(os.path.join(__location__, path)).read()
     requires = [req for req in content.split('\\n') if req != '']
-    if py_major_version == 2 or (py_major_version == 3 and py_minor_version < 4):
+    if py_major_minor_version < (3, 4):
         requires.append('pathlib')
     return requires
 
