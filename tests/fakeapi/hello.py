@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import json
+
 from connexion import NoContent, problem, request
 from flask import redirect
 
@@ -345,3 +347,7 @@ def unordered_params_response(first, path_param, second):
 
 def more_than_one_scope_defined():
     return "OK"
+
+
+def test_args_kwargs(*args, **kwargs):
+    return kwargs

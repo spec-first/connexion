@@ -276,3 +276,16 @@ def test_nullable_parameter(simple_app):
 
     resp = app_client.put('/v1.0/nullable-parameters', data="None")
     assert json.loads(resp.data.decode()) == 'it was None'
+
+
+def test_args_kwargs(simple_app):
+    app_client = simple_app.app.test_client()
+    resp = app_client.get('/v1.0/query-params-as-kwargs')
+    assert resp.status_code == 200
+    assert json.loads(resp.data.decode()) == {}
+
+    resp = app_client.get('/v1.0/query-params-as-kwargs?foo=a&bar=b')
+    assert resp.status_code == 200
+    assert json.loads(resp.data.decode()) == {'foo': 'a'}
+
+
