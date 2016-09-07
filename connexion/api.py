@@ -26,7 +26,7 @@ from swagger_spec_validator.validator20 import validate_spec
 from . import resolver, utils
 from .handlers import AuthErrorHandler
 from .operation import Operation
-from .exceptions import ConnexionException, ResolverError
+from .exceptions import ResolverError
 
 MODULE_PATH = pathlib.Path(__file__).absolute().parent
 SWAGGER_UI_PATH = MODULE_PATH / 'vendor' / 'swagger-ui'
@@ -80,9 +80,9 @@ class Api(object):
         :type auth_all_paths: bool
         :type debug: bool
         :param resolver: Callable that maps operationID to a function
-        :param resolver_error_handler: If given, it must be an operation spec
-            to be used for all endpoints that raise a ResolverError.
-        :type resolver_error_handler: dict | None
+        :param resolver_error_handler: If given, a callable that generates an
+            Operation used for handling ResolveErrors
+        :type resolver_error_handler: callable | None
         """
         self.debug = debug
         self.resolver_error_handler = resolver_error_handler
@@ -157,8 +157,7 @@ class Api(object):
         if auth_all_paths:
             self.add_auth_on_not_found()
 
-    def add_operation(self, method, path, swagger_operation, path_parameters,
-                      randomize_endpoint=None):
+    def add_operation(self, method, path, swagger_operation, path_parameters):
         """
         Adds one operation to the api.
 
@@ -187,8 +186,28 @@ class Api(object):
                               response_definitions=self.response_definitions,
                               validate_responses=self.validate_responses,
                               strict_validation=self.strict_validation,
-                              resolver=self.resolver,
-                              randomize_endpoint=randomize_endpoint)
+                              resolver=self.resolver)
+        self._add_operation_internal(method, path, operation)
+
+    def _add_resolver_error_handler(self, method, path):
+        """
+        Adds a handler for ResolverError for the given method and path.
+        """
+        operation = self.resolver_error_handler(method=method,
+                                                path=path,
+                                                app_produces=self.produces,
+                                                app_security=self.security,
+                                                security_definitions=self.security_definitions,
+                                                definitions=self.definitions,
+                                                parameter_definitions=self.parameter_definitions,
+                                                response_definitions=self.response_definitions,
+                                                validate_responses=self.validate_responses,
+                                                strict_validation=self.strict_validation,
+                                                resolver=self.resolver,
+                                                randomize_endpoint=RESOLVER_ERROR_ENDPOINT_RANDOM_DIGITS)
+        self._add_operation_internal(method, path, operation)
+
+    def _add_operation_internal(self, method, path, operation):
         operation_id = operation.operation_id
         logger.debug('... Adding %s -> %s', method.upper(), operation_id,
                      extra=vars(operation))
@@ -221,8 +240,7 @@ class Api(object):
                     # as an operation (but randomize the flask endpoint name).
                     # Otherwise treat it as any other error.
                     if self.resolver_error_handler is not None:
-                        self.add_operation(method, path, self.resolver_error_handler, [],
-                                           randomize_endpoint=RESOLVER_ERROR_ENDPOINT_RANDOM_DIGITS)
+                        self._add_resolver_error_handler(method, path)
                     else:
                         self._handle_add_operation_error(path, method, sys.exc_info())
                 except Exception:
