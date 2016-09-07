@@ -28,14 +28,25 @@ PATH_PARAMETER_CONVERTERS = {
 }
 
 
-def flaskify_endpoint(identifier):
+def flaskify_endpoint(identifier, randomize=None):
     """
     Converts the provided identifier in a valid flask endpoint name
 
     :type identifier: str
+    :param randomize: If specified, add this many random characters (upper case
+        and digits) to the endpoint name, separated by a pipe character.
+    :type randomize: int | None
     :rtype: str
     """
-    return identifier.replace('.', '_')
+    result = identifier.replace('.', '_')
+    if randomize is None:
+      return result
+
+    import random
+    import string
+    def generator(size=randomize, chars=string.ascii_uppercase + string.digits):
+      return ''.join(random.SystemRandom().choice(chars) for _ in range(size))
+    return  result + '|' + generator()
 
 
 def convert_path_parameter(match, types):
@@ -47,7 +58,7 @@ def convert_path_parameter(match, types):
                                 name.replace('-', '_'))
 
 
-def flaskify_path(swagger_path, types=None):
+def flaskify_path(swagger_path, types=None, method=None):
     """
     Convert swagger path templates to flask path templates
 

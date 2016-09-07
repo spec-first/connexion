@@ -20,6 +20,12 @@ def test_flaskify_endpoint():
     assert utils.flaskify_endpoint("module.function") == "module_function"
     assert utils.flaskify_endpoint("function") == "function"
 
+    name = 'module.function'
+    randlen = 6
+    res = utils.flaskify_endpoint(name, randlen)
+    assert res.startswith('module_function')
+    assert len(res) == len(name) + 1 + randlen
+
 
 def test_get_function_from_name():
     function = utils.get_function_from_name('math.ceil')
