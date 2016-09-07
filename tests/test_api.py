@@ -43,6 +43,12 @@ def test_invalid_operation_does_not_stop_application_in_debug_mode():
     assert api.specification['info']['title'] == 'OK'
 
 
+def test_invalid_operation_leads_to_server_error():
+    api = Api(TEST_FOLDER / "fakeapi/missing_op_id.yaml", "/api/v1.0",
+              {'title': 'OK'}, debug=True)
+    assert api.specification['info']['title'] == 'OK'
+
+
 def test_invalid_schema_file_structure():
     with pytest.raises(SwaggerValidationError):
         Api(TEST_FOLDER / "fixtures/invalid_schema/swagger.yaml", "/api/v1.0",
