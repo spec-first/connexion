@@ -82,7 +82,11 @@ def default_param_error_spec_dir():
 
 
 def build_app_from_fixture(api_spec_folder, **kwargs):
-    app = App(__name__, 5001, FIXTURES_FOLDER / api_spec_folder, debug=True)
+    debug = True
+    if 'debug' in kwargs:
+        debug = kwargs['debug']
+        del(kwargs['debug'])
+    app = App(__name__, 5001, FIXTURES_FOLDER / api_spec_folder, debug=debug)
     app.add_api('swagger.yaml', **kwargs)
     return app
 
