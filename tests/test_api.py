@@ -36,6 +36,9 @@ def test_invalid_operation_does_stop_application_to_setup():
     with pytest.raises(ResolverError):
         Api(TEST_FOLDER / "fakeapi/op_error_api.yaml", "/api/v1.0",
             {'title': 'OK'})
+    with pytest.raises(ResolverError):
+        Api(TEST_FOLDER / "fakeapi/missing_op_id.yaml", "/api/v1.0",
+            {'title': 'OK'})
 
 
 def test_invalid_operation_does_not_stop_application_in_debug_mode():
@@ -43,8 +46,6 @@ def test_invalid_operation_does_not_stop_application_in_debug_mode():
               {'title': 'OK'}, debug=True)
     assert api.specification['info']['title'] == 'OK'
 
-
-def test_invalid_operation_leads_to_server_error():
     api = Api(TEST_FOLDER / "fakeapi/missing_op_id.yaml", "/api/v1.0",
               {'title': 'OK'}, debug=True)
     assert api.specification['info']['title'] == 'OK'
