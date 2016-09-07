@@ -4,7 +4,7 @@ import pathlib
 import tempfile
 
 from connexion.api import Api
-from connexion.resolver import ResolverError
+from connexion.exceptions import ResolverError
 from swagger_spec_validator.common import SwaggerValidationError
 from yaml import YAMLError
 
