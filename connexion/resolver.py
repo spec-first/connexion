@@ -19,6 +19,10 @@ import connexion.utils as utils
 logger = logging.getLogger('connexion.resolver')
 
 
+class ResolverError(LookupError):
+    pass
+
+
 class Resolution(object):
     def __init__(self, function, operation_id):
         """
@@ -69,7 +73,10 @@ class Resolver(object):
 
         :type operation_id: str
         """
-        return self.function_resolver(operation_id)
+        try:
+            return self.function_resolver(operation_id)
+        except (AttributeError, ValueError):
+            raise ResolverError('Cannot resolve operationId "%s"!' % (operation_id,))
 
 
 class RestyResolver(Resolver):
