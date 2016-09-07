@@ -58,7 +58,7 @@ def convert_path_parameter(match, types):
                                 name.replace('-', '_'))
 
 
-def flaskify_path(swagger_path, types=None, method=None):
+def flaskify_path(swagger_path, types=None):
     """
     Convert swagger path templates to flask path templates
 
