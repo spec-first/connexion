@@ -50,8 +50,9 @@ class ResolverErrorHandler(Operation):
     Handler for responding to ResolverError.
     """
 
-    def __init__(self, status_code, *args, **kwargs):
+    def __init__(self, status_code, exception, *args, **kwargs):
         self.status_code = status_code
+        self.exception = exception
         Operation.__init__(self, *args, **kwargs)
 
     @property
@@ -59,4 +60,4 @@ class ResolverErrorHandler(Operation):
         return self.handle
 
     def handle(self, *args, **kwargs):
-        return problem(title='Not implemented', detail='foo', status=self.status_code)
+        return problem(title='Not Implemented', detail=self.exception.reason, status=self.status_code)

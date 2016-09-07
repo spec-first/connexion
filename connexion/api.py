@@ -189,11 +189,12 @@ class Api(object):
                               resolver=self.resolver)
         self._add_operation_internal(method, path, operation)
 
-    def _add_resolver_error_handler(self, method, path):
+    def _add_resolver_error_handler(self, method, path, err):
         """
         Adds a handler for ResolverError for the given method and path.
         """
-        operation = self.resolver_error_handler(method=method,
+        operation = self.resolver_error_handler(err,
+                                                method=method,
                                                 path=path,
                                                 app_produces=self.produces,
                                                 app_security=self.security,
@@ -235,12 +236,12 @@ class Api(object):
                     continue
                 try:
                     self.add_operation(method, path, endpoint, path_parameters)
-                except ResolverError:
+                except ResolverError as err:
                     # If we have an error handler for resolver errors, add it
                     # as an operation (but randomize the flask endpoint name).
                     # Otherwise treat it as any other error.
                     if self.resolver_error_handler is not None:
-                        self._add_resolver_error_handler(method, path)
+                        self._add_resolver_error_handler(method, path, err)
                     else:
                         self._handle_add_operation_error(path, method, sys.exc_info())
                 except Exception:
