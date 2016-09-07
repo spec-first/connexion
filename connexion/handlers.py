@@ -1,6 +1,7 @@
 
 import logging
 
+from .operation import Operation
 from .operation import SecureOperation
 from .problem import problem
 
@@ -42,3 +43,20 @@ class AuthErrorHandler(SecureOperation):
         Actual handler for the execution after authentication.
         """
         return problem(title=self.exception.name, detail=self.exception.description, status=self.exception.code)
+
+
+class ResolverErrorHandler(Operation):
+    """
+    Handler for responding to ResolverError.
+    """
+
+    def __init__(self, status_code, *args, **kwargs):
+        self.status_code = status_code
+        Operation.__init__(self, *args, **kwargs)
+
+    @property
+    def function(self):
+        return self.handle
+
+    def handle(self, *args, **kwargs):
+        return problem(title='Not implemented', detail='foo', status=self.status_code)
