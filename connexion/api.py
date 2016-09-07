@@ -26,6 +26,7 @@ from swagger_spec_validator.validator20 import validate_spec
 from . import resolver, utils
 from .handlers import AuthErrorHandler
 from .operation import Operation
+from .exceptions import ResolverError
 
 MODULE_PATH = pathlib.Path(__file__).absolute().parent
 SWAGGER_UI_PATH = MODULE_PATH / 'vendor' / 'swagger-ui'
@@ -207,17 +208,25 @@ class Api(object):
                     continue
                 try:
                     self.add_operation(method, path, endpoint, path_parameters)
-                except Exception:  # pylint: disable= W0703
-                    url = '{base_url}{path}'.format(base_url=self.base_url,
-                                                    path=path)
-                    error_msg = 'Failed to add operation for {method} {url}'.format(
-                        method=method.upper(),
-                        url=url)
-                    if self.debug:
-                        logger.exception(error_msg)
-                    else:
-                        logger.error(error_msg)
-                        six.reraise(*sys.exc_info())
+                except ResolverError as err:
+                    exc_info = err.exc_info
+                    if exc_info is None:
+                        exc_info = sys.exc_info()
+                    self._handle_add_operation_error(path, method, exc_info)
+                except Exception:
+                    # All other relevant exceptions should be handled as well.
+                    self._handle_add_operation_error(path, method, sys.exc_info())
+
+    def _handle_add_operation_error(self, path, method, exc_info):
+        url = '{base_url}{path}'.format(base_url=self.base_url, path=path)
+        error_msg = 'Failed to add operation for {method} {url}'.format(
+            method=method.upper(),
+            url=url)
+        if self.debug:
+            logger.exception(error_msg)
+        else:
+            logger.error(error_msg)
+            six.reraise(*exc_info)
 
     def add_auth_on_not_found(self):
         """
