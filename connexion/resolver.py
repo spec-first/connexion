@@ -75,7 +75,7 @@ class Resolver(object):
         """
         try:
             return self.function_resolver(operation_id)
-        except (AttributeError, ValueError):
+        except (ImportError, AttributeError, ValueError):
             raise ResolverError('Cannot resolve operationId "%s"!' % (operation_id,))
 
 
