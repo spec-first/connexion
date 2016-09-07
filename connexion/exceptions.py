@@ -17,12 +17,16 @@ class ConnexionException(Exception):
 
 
 class ResolverError(LookupError):
-    def __init__(self, reason='Unknown reason'):
+    def __init__(self, reason='Unknown reason', exc_info=None):
         """
         :param reason: Reason why the resolver failed.
         :type reason: str
+        :param exc_info: If specified, gives details of the original exception
+            as returned by sys.exc_info()
+        :type exc_info: tuple | None
         """
         self.reason = reason
+        self.exc_info = exc_info
 
     def __str__(self):  # pragma: no cover
         return '<ResolverError: {}>'.format(self.reason)

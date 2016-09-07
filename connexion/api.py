@@ -243,7 +243,10 @@ class Api(object):
                     if self.resolver_error_handler is not None:
                         self._add_resolver_error_handler(method, path, err)
                     else:
-                        self._handle_add_operation_error(path, method, sys.exc_info())
+                        exc_info = err.exc_info
+                        if exc_info is None:
+                            exc_info = sys.exc_info()
+                        self._handle_add_operation_error(path, method, exc_info)
                 except Exception:
                     # All other relevant exceptions should be handled as well.
                     self._handle_add_operation_error(path, method, sys.exc_info())

@@ -70,10 +70,14 @@ class Resolver(object):
 
         :type operation_id: str
         """
+        msg = 'Cannot resolve operationId "%s"!' % (operation_id,)
         try:
             return self.function_resolver(operation_id)
-        except (ImportError, AttributeError, ValueError):
-            raise ResolverError('Cannot resolve operationId "%s"!' % (operation_id,))
+        except ImportError:
+            import sys
+            raise ResolverError(msg, sys.exc_info())
+        except (AttributeError, ValueError):
+            raise ResolverError(msg)
 
 
 class RestyResolver(Resolver):
