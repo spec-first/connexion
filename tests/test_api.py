@@ -4,6 +4,7 @@ import pathlib
 import tempfile
 
 from connexion.api import Api
+from connexion.resolver import ResolverError
 from swagger_spec_validator.common import SwaggerValidationError
 from yaml import YAMLError
 
@@ -32,7 +33,7 @@ def test_template():
 
 
 def test_invalid_operation_does_stop_application_to_setup():
-    with pytest.raises(ImportError):
+    with pytest.raises(ResolverError):
         Api(TEST_FOLDER / "fakeapi/op_error_api.yaml", "/api/v1.0",
             {'title': 'OK'})
 
