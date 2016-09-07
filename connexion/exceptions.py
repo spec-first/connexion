@@ -17,7 +17,18 @@ class ConnexionException(Exception):
 
 
 class ResolverError(LookupError):
-    pass
+    def __init__(self, reason='Unknown reason'):
+        """
+        :param reason: Reason why the resolver failed.
+        :type reason: str
+        """
+        self.reason = reason
+
+    def __str__(self):  # pragma: no cover
+        return '<ResolverError: {}>'.format(self.reason)
+
+    def __repr__(self):  # pragma: no cover
+        return '<ResolverError: {}>'.format(self.reason)
 
 
 class InvalidSpecification(ConnexionException):
