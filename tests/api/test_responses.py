@@ -152,3 +152,17 @@ def test_maybe_blob_or_json(simple_app):
     text, number = unpack('!4sh', resp.data)
     assert text == b'cool'
     assert number == 8
+
+
+def test_bad_operations(bad_operations_app):
+    # Bad operationIds in bad_operations_app should result in 501
+    app_client = bad_operations_app.app.test_client()
+
+    resp = app_client.get('/v1.0/welcome')
+    assert resp.status_code == 501
+
+    resp = app_client.put('/v1.0/welcome')
+    assert resp.status_code == 501
+
+    resp = app_client.post('/v1.0/welcome')
+    assert resp.status_code == 501

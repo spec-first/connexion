@@ -124,3 +124,7 @@ def secure_api_app():
 @pytest.fixture(scope="session")
 def unordered_definition_app():
     return build_app_from_fixture('unordered_definition')
+
+@pytest.fixture(scope="session")
+def bad_operations_app():
+    return build_app_from_fixture('bad_operations', resolver_error=501)
