@@ -40,13 +40,14 @@ def flaskify_endpoint(identifier, randomize=None):
     """
     result = identifier.replace('.', '_')
     if randomize is None:
-      return result
+        return result
 
     import random
     import string
+
     def generator(size=randomize, chars=string.ascii_uppercase + string.digits):
-      return ''.join(random.SystemRandom().choice(chars) for _ in range(size))
-    return  result + '|' + generator()
+        return ''.join(random.SystemRandom().choice(chars) for _ in range(size))
+    return result + '|' + generator()
 
 
 def convert_path_parameter(match, types):
