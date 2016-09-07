@@ -5,6 +5,7 @@ import tempfile
 
 from connexion.api import Api
 from connexion.exceptions import ResolverError
+from connexion.exceptions import InvalidSpecification
 from swagger_spec_validator.common import SwaggerValidationError
 from yaml import YAMLError
 
@@ -48,6 +49,20 @@ def test_invalid_operation_does_not_stop_application_in_debug_mode():
 
     api = Api(TEST_FOLDER / "fakeapi/missing_op_id.yaml", "/api/v1.0",
               {'title': 'OK'}, debug=True)
+    assert api.specification['info']['title'] == 'OK'
+
+
+def test_other_errors_stop_application_to_setup():
+    # The previous tests were just about operationId not being resolvable.
+    # Other errors should still result exceptions!
+    #with pytest.raises(ResolverError):
+    with pytest.raises(InvalidSpecification):
+        Api(TEST_FOLDER / "fakeapi/bad_specs.yaml", "/api/v1.0",
+            {'title': 'OK'})
+
+    # Debug mode should ignore the error
+    api = Api(TEST_FOLDER / "fakeapi/bad_specs.yaml", "/api/v1.0",
+        {'title': 'OK'}, debug=True)
     assert api.specification['info']['title'] == 'OK'
 
 

@@ -26,10 +26,13 @@ from swagger_spec_validator.validator20 import validate_spec
 from . import resolver, utils
 from .handlers import AuthErrorHandler
 from .operation import Operation
+from .exceptions import ConnexionException, ResolverError
 
 MODULE_PATH = pathlib.Path(__file__).absolute().parent
 SWAGGER_UI_PATH = MODULE_PATH / 'vendor' / 'swagger-ui'
 SWAGGER_UI_URL = 'ui'
+
+RESOLVER_ERROR_ENDPOINT_RANDOM_DIGITS = 6
 
 logger = logging.getLogger('connexion.api')
 
@@ -63,7 +66,7 @@ class Api(object):
     def __init__(self, swagger_yaml_path, base_url=None, arguments=None,
                  swagger_json=None, swagger_ui=None, swagger_path=None, swagger_url=None,
                  validate_responses=False, strict_validation=False, resolver=resolver.Resolver(),
-                 auth_all_paths=False, debug=False):
+                 auth_all_paths=False, debug=False, resolver_error_handler=None):
         """
         :type swagger_yaml_path: pathlib.Path
         :type base_url: str | None
@@ -77,8 +80,12 @@ class Api(object):
         :type auth_all_paths: bool
         :type debug: bool
         :param resolver: Callable that maps operationID to a function
+        :param resolver_error_handler: If given, it must be an operation spec
+            to be used for all endpoints that raise a ResolverError.
+        :type resolver_error_handler: dict | None
         """
         self.debug = debug
+        self.resolver_error_handler = resolver_error_handler
         self.swagger_yaml_path = pathlib.Path(swagger_yaml_path)
         logger.debug('Loading specification: %s', swagger_yaml_path,
                      extra={'swagger_yaml': swagger_yaml_path,
@@ -150,7 +157,8 @@ class Api(object):
         if auth_all_paths:
             self.add_auth_on_not_found()
 
-    def add_operation(self, method, path, swagger_operation, path_parameters):
+    def add_operation(self, method, path, swagger_operation, path_parameters,
+                      randomize_endpoint=None):
         """
         Adds one operation to the api.
 
@@ -179,7 +187,8 @@ class Api(object):
                               response_definitions=self.response_definitions,
                               validate_responses=self.validate_responses,
                               strict_validation=self.strict_validation,
-                              resolver=self.resolver)
+                              resolver=self.resolver,
+                              randomize_endpoint=randomize_endpoint)
         operation_id = operation.operation_id
         logger.debug('... Adding %s -> %s', method.upper(), operation_id,
                      extra=vars(operation))
@@ -207,17 +216,29 @@ class Api(object):
                     continue
                 try:
                     self.add_operation(method, path, endpoint, path_parameters)
-                except Exception:  # pylint: disable= W0703
-                    url = '{base_url}{path}'.format(base_url=self.base_url,
-                                                    path=path)
-                    error_msg = 'Failed to add operation for {method} {url}'.format(
-                        method=method.upper(),
-                        url=url)
-                    if self.debug:
-                        logger.exception(error_msg)
+                except ResolverError:
+                    # If we have an error handler for resolver errors, add it
+                    # as an operation (but randomize the flask endpoint name).
+                    # Otherwise treat it as any other error.
+                    if self.resolver_error_handler is not None:
+                        self.add_operation(method, path, self.resolver_error_handler, [],
+                                           randomize_endpoint=RESOLVER_ERROR_ENDPOINT_RANDOM_DIGITS)
                     else:
-                        logger.error(error_msg)
-                        six.reraise(*sys.exc_info())
+                        self._handle_add_operation_error(path, method, sys.exc_info())
+                except Exception:
+                    # All other relevant exceptions should be handled as well.
+                    self._handle_add_operation_error(path, method, sys.exc_info())
+
+    def _handle_add_operation_error(self, path, method, exc_info):
+        url = '{base_url}{path}'.format(base_url=self.base_url, path=path)
+        error_msg = 'Failed to add operation for {method} {url}'.format(
+            method=method.upper(),
+            url=url)
+        if self.debug:
+            logger.exception(error_msg)
+        else:
+            logger.error(error_msg)
+            six.reraise(*exc_info)
 
     def add_auth_on_not_found(self):
         """
