@@ -16,6 +16,10 @@ class ConnexionException(Exception):
     pass
 
 
+class ResolverError(LookupError):
+    pass
+
+
 class InvalidSpecification(ConnexionException):
     def __init__(self, reason='Unknown Reason'):
         """

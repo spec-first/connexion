@@ -15,12 +15,9 @@ import logging
 import re
 
 import connexion.utils as utils
+from connexion.exceptions import ResolverError
 
 logger = logging.getLogger('connexion.resolver')
-
-
-class ResolverError(LookupError):
-    pass
 
 
 class Resolution(object):
