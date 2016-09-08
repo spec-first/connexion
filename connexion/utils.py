@@ -13,10 +13,13 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 import functools
 import importlib
+import random
 import re
+import string
 
 import flask
 import werkzeug.wrappers
+
 
 PATH_PARAMETER = re.compile(r'\{([^}]*)\}')
 
@@ -41,9 +44,6 @@ def flaskify_endpoint(identifier, randomize=None):
     result = identifier.replace('.', '_')
     if randomize is None:
         return result
-
-    import random
-    import string
 
     def generator(size=randomize, chars=string.ascii_uppercase + string.digits):
         return ''.join(random.SystemRandom().choice(chars) for _ in range(size))
