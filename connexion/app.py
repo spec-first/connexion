@@ -29,7 +29,7 @@ class App(object):
     def __init__(self, import_name, port=None, specification_dir='',
                  server=None, arguments=None, auth_all_paths=False,
                  debug=False, swagger_json=True, swagger_ui=True, swagger_path=None,
-                 swagger_url=None, validator_map={}):
+                 swagger_url=None, validator_map=None):
         """
         :param import_name: the name of the application package
         :type import_name: str

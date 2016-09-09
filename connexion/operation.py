@@ -115,7 +115,7 @@ class Operation(SecureOperation):
     def __init__(self, method, path, operation, resolver, app_produces,
                  path_parameters=None, app_security=None, security_definitions=None,
                  definitions=None, parameter_definitions=None, response_definitions=None,
-                 validate_responses=False, validator_map={}, strict_validation=False):
+                 validate_responses=False, validator_map=None, strict_validation=False):
         """
         This class uses the OperationID identify the module and function that will handle the operation
 
@@ -162,7 +162,7 @@ class Operation(SecureOperation):
         self.method = method
         self.path = path
         self.validator_map = dict(VALIDATOR_MAP)
-        self.validator_map.update(validator_map)
+        self.validator_map.update(validator_map or {})
         self.security_definitions = security_definitions or {}
         self.definitions = definitions or {}
         self.parameter_definitions = parameter_definitions or {}
