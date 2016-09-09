@@ -45,9 +45,9 @@ def flaskify_endpoint(identifier, randomize=None):
     if randomize is None:
         return result
 
-    def generator(size=randomize, chars=string.ascii_uppercase + string.digits):
-        return ''.join(random.SystemRandom().choice(chars) for _ in range(size))
-    return result + '|' + generator()
+    chars = string.ascii_uppercase + string.digits
+    return result + '|' + ''.join(
+        random.SystemRandom().choice(chars) for _ in range(randomize))
 
 
 def convert_path_parameter(match, types):
