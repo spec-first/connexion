@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import json
+
 from connexion import NoContent, problem, request
 from flask import redirect
 
@@ -335,9 +337,17 @@ def get_invalid_response():
 
 
 def get_custom_problem_response():
-    return problem(402, "You need to pay", "Missing amount",
+    return problem(403, "You need to pay", "Missing amount",
                    ext={'amount': 23.0})
 
 
 def unordered_params_response(first, path_param, second):
     return dict(first=int(first), path_param=str(path_param), second=int(second))
+
+
+def more_than_one_scope_defined():
+    return "OK"
+
+
+def test_args_kwargs(*args, **kwargs):
+    return kwargs

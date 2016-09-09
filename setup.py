@@ -20,13 +20,13 @@ def read_version(package):
 
 version = read_version('connexion')
 
-py_major_version, py_minor_version, _ = (int(v.rstrip('+')) for v in platform.python_version_tuple())
+py_major_minor_version = tuple(int(v.rstrip('+')) for v in platform.python_version_tuple()[:2])
 
 
 def get_install_requirements(path):
     content = open(os.path.join(__location__, path)).read()
     requires = [req for req in content.split('\\n') if req != '']
-    if py_major_version == 2 or (py_major_version == 3 and py_minor_version < 4):
+    if py_major_minor_version < (3, 4):
         requires.append('pathlib')
     return requires
 
@@ -45,6 +45,7 @@ class PyTest(TestCommand):
         TestCommand.finalize_options(self)
         if self.cov_html:
             self.pytest_args.extend(['--cov-report', 'html'])
+        self.pytest_args.extend(['tests'])
 
     def run_tests(self):
         import pytest
@@ -53,12 +54,19 @@ class PyTest(TestCommand):
         sys.exit(errno)
 
 
+def readme():
+    try:
+        return open('README.rst', encoding='utf-8').read()
+    except TypeError:
+        return open('README.rst').read()
+
+
 setup(
     name='connexion',
     packages=find_packages(),
     version=version,
     description='Connexion - API first applications with OpenAPI/Swagger and Flask',
-    long_description=open('README.rst').read(),
+    long_description=readme(),
     author='Zalando SE',
     url='https://github.com/zalando/connexion',
     keywords='openapi oai swagger rest api oauth flask microservice framework',

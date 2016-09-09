@@ -87,7 +87,24 @@ In the Swagger definition if the `array` type is used you can define the
 `collectionFormat` that it should be recognized. Connexion currently
 supports collection formats "pipes" and "csv". The default format is "csv".
 
+.. note:: For more details about `collectionFormat`'s please check the
+          official `Swagger/OpenAPI specification`_.
+
 .. _jsonschema: https://pypi.python.org/pypi/jsonschema
+.. _`Swagger/OpenAPI specification`: https://github.com/OAI/OpenAPI-Specification/blob/OpenAPI.next/versions/2.0.md#fixed-fields-7
+
+Parameter validation
+^^^^^^^^^^^^^^^^^^^^
+
+Connexion can apply strict parameter validation for query and form data
+parameters.  When this is enabled, requests that include parameters not defined
+in the swagger spec return a 400 error.  You can enable it when adding the API
+to your application:
+
+.. code-block:: python
+
+    app.add_api('my_apy.yaml', strict_validation=True)
+
 
 Nullable parameters
 ^^^^^^^^^^^^^^^^^^^

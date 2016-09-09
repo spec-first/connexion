@@ -614,6 +614,22 @@ paths:
           schema:
             type: string
 
+  /query-params-as-kwargs:
+    get:
+      operationId: fakeapi.hello.test_args_kwargs
+      produces:
+        - application/json
+      parameters:
+        - name: foo
+          description: Just a testing parameter.
+          in: query
+          type: string
+      responses:
+        200:
+          description: Return kwargs
+          schema:
+            type: object
+
 
 definitions:
   new_stack:

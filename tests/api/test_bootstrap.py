@@ -72,6 +72,15 @@ def test_no_swagger_json_api(simple_api_spec_dir):
     assert swagger_json.status_code == 404
 
 
+def test_swagger_json_content_type(simple_app):
+    app_client = simple_app.app.test_client()
+
+    response = app_client.get('/v1.0/swagger.json',
+                              data={})  # type: flask.Response
+    assert response.status_code == 200
+    assert response.content_type == 'application/json'
+
+
 def test_single_route(simple_app):
     def route1():
         return 'single 1'
@@ -118,4 +127,4 @@ def test_add_api_with_function_resolver_function_is_wrapped(simple_api_spec_dir)
 def test_default_query_param_does_not_match_defined_type(
         default_param_error_spec_dir):
     with pytest.raises(InvalidSpecification):
-        build_app_from_fixture(default_param_error_spec_dir)
+        build_app_from_fixture(default_param_error_spec_dir, validate_responses=True, debug=False)

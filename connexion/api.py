@@ -12,7 +12,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 """
 
 import copy
-import json
 import logging
 import pathlib
 import sys
@@ -37,6 +36,9 @@ logger = logging.getLogger('connexion.api')
 
 def compatibility_layer(spec):
     """Make specs compatible with older versions of Connexion."""
+    if not isinstance(spec, dict):
+        return spec
+
     # Make all response codes be string
     for path_name, methods_available in spec.get('paths', {}).items():
         for method_name, method_def in methods_available.items():
@@ -60,20 +62,22 @@ class Api(object):
 
     def __init__(self, swagger_yaml_path, base_url=None, arguments=None,
                  swagger_json=None, swagger_ui=None, swagger_path=None, swagger_url=None,
-                 validate_responses=False, resolver=resolver.Resolver(),
+                 validate_responses=False, strict_validation=False, resolver=resolver.Resolver(),
                  auth_all_paths=False, debug=False, validator_map={}):
         """
         :type swagger_yaml_path: pathlib.Path
-        :param validator_map: map of validators
-        :type validator_map: dict
         :type base_url: str | None
         :type arguments: dict | None
         :type swagger_json: bool
         :type swagger_ui: bool
         :type swagger_path: string | None
         :type swagger_url: string | None
+        :type validate_responses: bool
+        :type strict_validation: bool
         :type auth_all_paths: bool
         :type debug: bool
+        :param validator_map: Custom validators for the types "parameter", "body" and "response".
+        :type validator_map: dict
         :param resolver: Callable that maps operationID to a function
         """
         self.debug = debug
@@ -88,12 +92,17 @@ class Api(object):
                             'swagger_url': swagger_url,
                             'auth_all_paths': auth_all_paths})
         arguments = arguments or {}
-        with swagger_yaml_path.open() as swagger_yaml:
-            swagger_template = swagger_yaml.read()
-            swagger_string = jinja2.Template(swagger_template).render(**arguments)
-            self.specification = yaml.load(swagger_string)  # type: dict
+        with swagger_yaml_path.open(mode='rb') as swagger_yaml:
+            contents = swagger_yaml.read()
+            try:
+                swagger_template = contents.decode()
+            except UnicodeDecodeError:
+                swagger_template = contents.decode('utf-8', 'replace')
 
-        logger.debug('Read specification', extra=self.specification)
+            swagger_string = jinja2.Template(swagger_template).render(**arguments)
+            self.specification = yaml.safe_load(swagger_string)  # type: dict
+
+        logger.debug('Read specification', extra={'spec': self.specification})
 
         self.specification = compatibility_layer(self.specification)
         # Avoid validator having ability to modify specification
@@ -127,6 +136,9 @@ class Api(object):
 
         logger.debug('Validate Responses: %s', str(validate_responses))
         self.validate_responses = validate_responses
+
+        logger.debug('Strict Request Validation: %s', str(validate_responses))
+        self.strict_validation = strict_validation
 
         # Create blueprint and endpoints
         self.blueprint = self.create_blueprint()
@@ -169,8 +181,9 @@ class Api(object):
                               parameter_definitions=self.parameter_definitions,
                               response_definitions=self.response_definitions,
                               validate_responses=self.validate_responses,
-                              resolver=self.resolver,
-                              validator_map=self.validator_map)
+                              validator_map=self.validator_map,
+                              strict_validation=self.strict_validation,
+                              resolver=self.resolver)
         operation_id = operation.operation_id
         logger.debug('... Adding %s -> %s', method.upper(), operation_id,
                      extra=vars(operation))
@@ -226,7 +239,9 @@ class Api(object):
         """
         logger.debug('Adding swagger.json: %s/swagger.json', self.base_url)
         endpoint_name = "{name}_swagger_json".format(name=self.blueprint.name)
-        self.blueprint.add_url_rule('/swagger.json', endpoint_name, lambda: json.dumps(self.specification))
+        self.blueprint.add_url_rule('/swagger.json',
+                                    endpoint_name,
+                                    lambda: flask.jsonify(self.specification))
 
     def add_swagger_ui(self):
         """

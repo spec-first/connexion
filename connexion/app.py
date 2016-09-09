@@ -73,7 +73,7 @@ class App(object):
         logger.debug('Specification directory: %s', self.specification_dir)
 
         logger.debug('Setting error handlers')
-        for error_code in range(400, 600):  # All http status from 400 to 599 are errors
+        for error_code in werkzeug.exceptions.default_exceptions:
             self.add_error_handler(error_code, self.common_error_handler)
 
         self.port = port
@@ -99,7 +99,7 @@ class App(object):
 
     def add_api(self, swagger_file, base_path=None, arguments=None, auth_all_paths=None, swagger_json=None,
                 swagger_ui=None, swagger_path=None, swagger_url=None, validate_responses=False,
-                resolver=Resolver()):
+                strict_validation=False, resolver=Resolver()):
         """
         Adds an API to the application based on a swagger file
 
@@ -121,6 +121,8 @@ class App(object):
         :type swagger_url: string | None
         :param validate_responses: True enables validation. Validation errors generate HTTP 500 responses.
         :type validate_responses: bool
+        :param strict_validation: True enables validation on invalid request parameters
+        :type strict_validation: bool
         :param resolver: Operation resolver.
         :type resolver: Resolver | types.FunctionType
         :rtype: Api
@@ -145,6 +147,7 @@ class App(object):
                   swagger_url=swagger_url,
                   resolver=resolver,
                   validate_responses=validate_responses,
+                  strict_validation=strict_validation,
                   auth_all_paths=auth_all_paths,
                   debug=self.debug,
                   validator_map=self.validator_map)
@@ -157,7 +160,7 @@ class App(object):
         :type error_code: int
         :type function: types.FunctionType
         """
-        self.app.error_handler_spec[None][error_code] = function
+        self.app.register_error_handler(error_code, function)
 
     def add_url_rule(self, rule, endpoint=None, view_func=None, **options):
         """

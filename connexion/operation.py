@@ -115,7 +115,7 @@ class Operation(SecureOperation):
     def __init__(self, method, path, operation, resolver, app_produces,
                  path_parameters=None, app_security=None, security_definitions=None,
                  definitions=None, parameter_definitions=None, response_definitions=None,
-                 validate_responses=False, validator_map={}):
+                 validate_responses=False, validator_map={}, strict_validation=False):
         """
         This class uses the OperationID identify the module and function that will handle the operation
 
@@ -151,8 +151,12 @@ class Operation(SecureOperation):
         :type parameter_definitions: dict
         :param response_definitions: Global response definitions
         :type response_definitions: dict
+        :param validator_map: Custom validators for the types "parameter", "body" and "response".
+        :type validator_map: dict
         :param validate_responses: True enables validation. Validation errors generate HTTP 500 responses.
         :type validate_responses: bool
+        :param strict_validation: True enables validation on invalid request parameters
+        :type strict_validation: bool
         """
 
         self.method = method
@@ -169,6 +173,7 @@ class Operation(SecureOperation):
             'responses': self.response_definitions
         }
         self.validate_responses = validate_responses
+        self.strict_validation = strict_validation
         self.operation = operation
 
         # todo support definition references
@@ -397,7 +402,7 @@ class Operation(SecureOperation):
         ParameterValidator = self.validator_map['parameter']
         RequestBodyValidator = self.validator_map['body']
         if self.parameters:
-            yield ParameterValidator(self.parameters)
+            yield ParameterValidator(self.parameters, strict_validation=self.strict_validation)
         if self.body_schema:
             yield RequestBodyValidator(self.body_schema,
                                        is_nullable(self.body_definition))

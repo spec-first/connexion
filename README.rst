@@ -1,6 +1,10 @@
 Connexion
 =========
 
+.. image:: https://badges.gitter.im/zalando/connexion.svg
+   :alt: Join the chat at https://gitter.im/zalando/connexion
+   :target: https://gitter.im/zalando/connexion?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+
 .. image:: https://travis-ci.org/zalando/connexion.svg?branch=master
    :target: https://travis-ci.org/zalando/connexion
    :alt: Travis CI build status
@@ -32,7 +36,7 @@ allows you to write a Swagger specification, then maps the
 endpoints to your Python functions; this makes it unique, as many tools generate the specification based on your Python
 code. You can describe your REST API in as much detail as
 you want; then Connexion guarantees that it will work as
-you specified. 
+you specified.
 
 We built Connexion this way in order to:
 
@@ -61,7 +65,7 @@ With Connexion, you write the spec first. Connexion then calls your Python
 code, handling the mapping from the specification to the code. This
 incentivizes you to write the specification so that all of your
 developers can understand what your API does, even before you write a
-single line of code. 
+single line of code.
 
 If multiple teams depend on your APIs, you can use Connexion to easily send them the documentation of your API. This guarantees that your API will follow the specification that you wrote. This is a different process from that offered by frameworks such as Hug_, which generates a specification *after* you've written the code. Some disadvantages of generating specifications based on code is that they often end up lacking details or mix your documentation with the code logic of your application.
 
@@ -268,6 +272,18 @@ If you use the `array` type In the Swagger definition, you can define the
 `collectionFormat` so that it won't be recognized. Connexion currently
 supports collection formats "pipes" and "csv". The default format is "csv".
 
+Parameter validation
+^^^^^^^^^^^^^^^^^^^^
+
+Connexion can apply strict parameter validation for query and form data
+parameters.  When this is enabled, requests that include parameters not defined
+in the swagger spec return a 400 error.  You can enable it when adding the API
+to your application:
+
+.. code-block:: python
+
+    app.add_api('my_apy.yaml', strict_validation=True)
+
 API Versioning and basePath
 ---------------------------
 
@@ -377,7 +393,7 @@ Flask with uWSGI`_ (this is common):
 
 .. code-block:: python
 
-    app = connexion.App(specification_dir='swagger/')
+    app = connexion.App(__name__, specification_dir='swagger/')
     application = app.app # expose global WSGI application object
 
 Set up and run the installation code:

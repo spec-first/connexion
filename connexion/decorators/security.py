@@ -16,6 +16,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 import functools
 import logging
 import os
+import textwrap
 
 import requests
 from flask import request
@@ -83,10 +84,12 @@ def verify_oauth(token_info_url, allowed_scopes, function):
                 return problem(401, 'Unauthorized', "Provided oauth token is not valid")
             token_info = token_request.json()  # type: dict
             user_scopes = set(token_info['scope'])
-            scopes_intersection = user_scopes & allowed_scopes
-            logger.debug("... Scope intersection: %s", scopes_intersection)
-            if not scopes_intersection:
-                logger.info("... User scopes (%s) don't include one of the allowed scopes (%s). Aborting with 401.",
+            logger.debug("... Scopes required: %s", allowed_scopes)
+            logger.debug("... User scopes: %s", user_scopes)
+            if not allowed_scopes <= user_scopes:
+                logger.info(textwrap.dedent("""
+                            ... User scopes (%s) do not match the scopes necessary to call endpoint (%s).
+                             Aborting with 401.""").replace('\n', ''),
                             user_scopes, allowed_scopes)
                 return problem(403, 'Forbidden', "Provided token doesn't have the required scope")
             logger.info("... Token authenticated.")
