@@ -1,11 +1,12 @@
 import pathlib
 import types
 
-import pytest
 from connexion.decorators.security import security_passthrough, verify_oauth
 from connexion.exceptions import InvalidSpecification
 from connexion.operation import Operation
 from connexion.resolver import Resolver
+
+import pytest
 
 TEST_FOLDER = pathlib.Path(__file__).parent
 
