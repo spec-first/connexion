@@ -63,7 +63,7 @@ class Api(object):
     def __init__(self, swagger_yaml_path, base_url=None, arguments=None,
                  swagger_json=None, swagger_ui=None, swagger_path=None, swagger_url=None,
                  validate_responses=False, strict_validation=False, resolver=resolver.Resolver(),
-                 auth_all_paths=False, debug=False, validator_map={}):
+                 auth_all_paths=False, debug=False, validator_map=None):
         """
         :type swagger_yaml_path: pathlib.Path
         :type base_url: str | None
