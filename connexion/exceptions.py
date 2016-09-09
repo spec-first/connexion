@@ -12,7 +12,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 """
 
 
-class ConnexionException(BaseException):
+class ConnexionException(Exception):
     pass
 
 

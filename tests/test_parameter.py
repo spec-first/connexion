@@ -1,4 +1,4 @@
-from connexion.decorators.parameter import get_function_arguments
+from connexion.decorators.parameter import inspect_function_arguments
 
 import decorator
 
@@ -17,16 +17,24 @@ def kwargs_function(*args, **kwargs):
     pass
 
 
+def mix_function(some, *args, **kwargs):
+    pass
+
+
 def test_get_proper_argument_list():
     """Test get the proper argument list of the decorated function."""
 
-    assert len(get_function_arguments(stub_function)[0]) == 2
-    assert get_function_arguments(stub_function) == (['foo', 'bar'], False)
+    assert len(inspect_function_arguments(stub_function)[0]) == 2
+    assert inspect_function_arguments(stub_function) == (['foo', 'bar'], False)
 
     decorated_stub_function = the_decorator(stub_function)
-    assert len(get_function_arguments(decorated_stub_function)[0]) == 2
-    assert get_function_arguments(decorated_stub_function) == (['foo', 'bar'], False)
+    assert len(inspect_function_arguments(decorated_stub_function)[0]) == 2
+    assert inspect_function_arguments(decorated_stub_function) == (['foo', 'bar'], False)
 
 
 def test_get_kwargs():
-    assert get_function_arguments(kwargs_function) == ([], True)
+    assert inspect_function_arguments(kwargs_function) == ([], True)
+
+
+def test_mixed_function():
+    assert inspect_function_arguments(mix_function) == (['some'], True)

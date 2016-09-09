@@ -20,17 +20,20 @@ TYPE_MAP = {'integer': int,
             'object': dict}  # map of swagger types to python types
 
 
-def get_function_arguments(function):  # pragma: no cover
+def inspect_function_arguments(function):  # pragma: no cover
     """
-    Returns the list of arguments of a function
+    Returns the list of variables names of a function and if it
+    accepts keyword arguments.
 
     :type function: Callable
     :rtype: tuple[list[str], bool]
     """
     if six.PY3:
         parameters = inspect.signature(function).parameters
-        return (list([name for name, p in parameters.items() if p.kind not in (p.VAR_POSITIONAL, p.VAR_KEYWORD)]),
-                any(p.kind == p.VAR_KEYWORD for p in parameters.values()))
+        bound_arguments = [name for name, p in parameters.items()
+                           if p.kind not in (p.VAR_POSITIONAL, p.VAR_KEYWORD)]
+        has_kwargs = any(p.kind == p.VAR_KEYWORD for p in parameters.values())
+        return list(bound_arguments), has_kwargs
     else:
         argspec = inspect.getargspec(function)
         return argspec.args, bool(argspec.keywords)
@@ -74,7 +77,7 @@ def parameter_to_arg(parameters, function):
                   for parameter in parameters if parameter['in'] == 'formData'}
     path_types = {parameter['name']: parameter
                   for parameter in parameters if parameter['in'] == 'path'}
-    arguments, has_kwargs = get_function_arguments(function)
+    arguments, has_kwargs = inspect_function_arguments(function)
     default_query_params = {param['name']: param['default']
                             for param in parameters if param['in'] == 'query' and 'default' in param}
     default_form_params = {param['name']: param['default']
