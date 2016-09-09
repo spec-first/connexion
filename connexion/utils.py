@@ -46,7 +46,8 @@ def flaskify_endpoint(identifier, randomize=None):
         return result
 
     chars = string.ascii_uppercase + string.digits
-    return "{result}|{random_string}".format(result=result,
+    return "{result}|{random_string}".format(
+        result=result,
         random_string=''.join(random.SystemRandom().choice(chars) for _ in range(randomize)))
 
 
