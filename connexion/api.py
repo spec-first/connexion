@@ -17,13 +17,11 @@ import pathlib
 import sys
 
 import flask
-import jinja2
 import six
 import werkzeug.exceptions
-import yaml
 from swagger_spec_validator.validator20 import validate_spec
 
-from . import resolver, utils
+from . import resolver, swagger, utils
 from .handlers import AuthErrorHandler
 from .operation import Operation
 
@@ -89,15 +87,7 @@ class Api(object):
                             'swagger_url': swagger_url,
                             'auth_all_paths': auth_all_paths})
         arguments = arguments or {}
-        with swagger_yaml_path.open(mode='rb') as swagger_yaml:
-            contents = swagger_yaml.read()
-            try:
-                swagger_template = contents.decode()
-            except UnicodeDecodeError:
-                swagger_template = contents.decode('utf-8', 'replace')
-
-            swagger_string = jinja2.Template(swagger_template).render(**arguments)
-            self.specification = yaml.safe_load(swagger_string)  # type: dict
+        self.specification = swagger.load(swagger_yaml_path, arguments)
 
         logger.debug('Read specification', extra={'spec': self.specification})
 
