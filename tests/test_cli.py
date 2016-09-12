@@ -1,11 +1,11 @@
 import logging
 
 from click.testing import CliRunner
+from connexion import App
+from connexion.cli import main
 
 import pytest
 from conftest import FIXTURES_FOLDER
-from connexion import App
-from connexion.cli import main
 from mock import MagicMock
 
 

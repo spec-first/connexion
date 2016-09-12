@@ -24,9 +24,9 @@ import yaml
 from swagger_spec_validator.validator20 import validate_spec
 
 from . import utils
-from .resolver import Resolver
 from .handlers import AuthErrorHandler
 from .operation import Operation
+from .resolver import Resolver
 
 MODULE_PATH = pathlib.Path(__file__).absolute().parent
 SWAGGER_UI_PATH = MODULE_PATH / 'vendor' / 'swagger-ui'

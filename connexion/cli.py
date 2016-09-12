@@ -8,7 +8,6 @@ from connexion.resolver import StubResolver
 
 from clickclick import AliasedGroup, fatal_error
 
-
 main = AliasedGroup(context_settings=dict(help_option_names=[
     '-h', '--help']))
 
