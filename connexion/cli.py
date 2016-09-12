@@ -3,10 +3,9 @@ import sys
 from os import path
 
 import click
+from clickclick import AliasedGroup, fatal_error
 from connexion import App, problem
 from connexion.resolver import StubResolver
-
-from clickclick import AliasedGroup, fatal_error
 
 main = AliasedGroup(context_settings=dict(help_option_names=[
     '-h', '--help']))
