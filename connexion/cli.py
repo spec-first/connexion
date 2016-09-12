@@ -13,26 +13,17 @@ main = AliasedGroup(context_settings=dict(help_option_names=[
     '-h', '--help']))
 
 
-def _operation_not_implemented():
-    return problem(
-        title='Not Implemented Yet',
-        detail='The requested functionality is not implemented yet.',
-        status=400)
-
-
 def validate_wsgi_server_requirements(ctx, param, value):
     if value == 'gevent':
         try:
-            import gevent.wsgi  # NOQA
+            import gevent  # NOQA
         except:
             fatal_error('gevent library is not installed')
     elif value == 'tornado':
         try:
-            import tornado.wsgi  # NOQA
-            import tornado.httpserver  # NOQA
-            import tornado.ioloop  # NOQA
+            import tornado  # NOQA
         except:
-            fatal_error('tornado library not installed')
+            fatal_error('tornado library is not installed')
 
 
 @main.command()
@@ -91,7 +82,10 @@ def run(spec_file,
 
     resolver = None
     if stub:
-        resolver = StubResolver(_operation_not_implemented)
+        resolver = StubResolver(lambda: problem(
+            title='Not Implemented Yet',
+            detail='The requested functionality is not implemented yet.',
+            status=400))
 
     app = App(__name__)
     app.add_api(path.abspath(spec_file), resolver=resolver)

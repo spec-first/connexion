@@ -146,5 +146,5 @@ class StubResolver(Resolver):
         """
         try:
             super(StubResolver, self).resolve_function_from_operation_id(operation_id)
-        except ImportError:
+        except (ImportError, AttributeError):
             return self.stub_function
