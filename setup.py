@@ -88,5 +88,6 @@ setup(
         'Topic :: Software Development :: Libraries :: Application Frameworks'
     ],
     include_package_data=True,  # needed to include swagger-ui (see MANIFEST.in)
-
+    entry_points={'console_scripts': ['connexion = connexion.cli:main',
+                                      'cnx = connexion.cli:main']}
 )
