@@ -1,8 +1,7 @@
 
 import logging
 
-from .operation import Operation
-from .operation import SecureOperation
+from .operation import Operation, SecureOperation
 from .problem import problem
 
 logger = logging.getLogger('connexion.handlers')

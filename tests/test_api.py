@@ -3,13 +3,12 @@
 import pathlib
 import tempfile
 
-from connexion.api import Api
-from connexion.exceptions import ResolverError
-from connexion.exceptions import InvalidSpecification
+import pytest
 from swagger_spec_validator.common import SwaggerValidationError
 from yaml import YAMLError
 
-import pytest
+from connexion.api import Api
+from connexion.exceptions import InvalidSpecification, ResolverError
 
 TEST_FOLDER = pathlib.Path(__file__).parent
 
