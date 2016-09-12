@@ -23,7 +23,8 @@ import werkzeug.exceptions
 import yaml
 from swagger_spec_validator.validator20 import validate_spec
 
-from . import resolver, utils
+from . import utils
+from .resolver import Resolver
 from .handlers import AuthErrorHandler
 from .operation import Operation
 
@@ -62,7 +63,7 @@ class Api(object):
 
     def __init__(self, swagger_yaml_path, base_url=None, arguments=None,
                  swagger_json=None, swagger_ui=None, swagger_path=None, swagger_url=None,
-                 validate_responses=False, strict_validation=False, resolver=resolver.Resolver(),
+                 validate_responses=False, strict_validation=False, resolver=None,
                  auth_all_paths=False, debug=False):
         """
         :type swagger_yaml_path: pathlib.Path
@@ -129,7 +130,7 @@ class Api(object):
         self.swagger_path = swagger_path or SWAGGER_UI_PATH
         self.swagger_url = swagger_url or SWAGGER_UI_URL
 
-        self.resolver = resolver
+        self.resolver = resolver or Resolver()
 
         logger.debug('Validate Responses: %s', str(validate_responses))
         self.validate_responses = validate_responses

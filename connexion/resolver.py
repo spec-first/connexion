@@ -133,3 +133,18 @@ class RestyResolver(Resolver):
             return self.collection_endpoint_name if is_collection_endpoint else method.lower()
 
         return get_controller_name() + '.' + get_function_name()
+
+
+class StubResolver(Resolver):
+    def __init__(self, stub_function, **kwargs):
+        self.stub_function = stub_function
+        super(StubResolver, self).__init__(**kwargs)
+
+    def resolve_function_from_operation_id(self, operation_id):
+        """
+        In case a function for the operation is not found a stub function is returned.
+        """
+        try:
+            super(StubResolver, self).resolve_function_from_operation_id(operation_id)
+        except ImportError:
+            return self.stub_function

@@ -1,11 +1,11 @@
 import logging
 
 from click.testing import CliRunner
-from connexion import App, __version__
-from connexion.cli import main
 
 import pytest
 from conftest import FIXTURES_FOLDER
+from connexion import App
+from connexion.cli import main
 from mock import MagicMock
 
 
@@ -27,14 +27,10 @@ def test_run_missing_spec():
 def test_run_simple_spec(mock_app_run):
     spec_file = str(FIXTURES_FOLDER / 'simple/swagger.yaml')
     default_port = 5000
-    default_server = 'gevent'
     runner = CliRunner()
-    result = runner.invoke(main,
-                           ['run', spec_file],
-                           catch_exceptions=False)
+    runner.invoke(main, ['run', spec_file], catch_exceptions=False)
 
-    mock_app_run.run.assert_called_with(port=default_port, server=default_server)
-    assert 'Running at' in result.output
+    mock_app_run.run.assert_called_with(port=default_port, server=None)
 
 
 def test_run_in_debug_mode(mock_app_run, monkeypatch):
@@ -45,8 +41,6 @@ def test_run_in_debug_mode(mock_app_run, monkeypatch):
                         logging_config)
 
     runner = CliRunner()
-    result = runner.invoke(main,
-                           ['run', spec_file, '-d'],
-                           catch_exceptions=False)
+    runner.invoke(main, ['run', spec_file, '-d'], catch_exceptions=False)
 
     logging_config.assert_called_with(level=logging.DEBUG)
