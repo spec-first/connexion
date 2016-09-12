@@ -21,6 +21,7 @@ from jsonschema import ValidationError
 from ..exceptions import (NonConformingResponseBody,
                           NonConformingResponseHeaders)
 from ..problem import problem
+from ..utils import is_flask_response
 from ..utils import produces_json
 from .decorator import BaseDecorator
 from .validation import ResponseBodyValidator
@@ -57,8 +58,11 @@ class ResponseValidator(BaseDecorator):
             try:
                 # For cases of custom encoders, we need to encode and decode to
                 # transform to the actual types that are going to be returned.
-                data = json.dumps(data)
-                data = json.loads(data)
+                if not is_flask_response(data):
+                    data = json.dumps(data)
+                    data = json.loads(data)
+                else:
+                    data = json.loads(data.get_data())
 
                 v.validate_schema(data)
             except ValidationError as e:

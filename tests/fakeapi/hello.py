@@ -3,7 +3,7 @@
 import json
 
 from connexion import NoContent, problem, request
-from flask import redirect
+from flask import redirect, make_response
 
 
 class DummyClass(object):
@@ -351,3 +351,9 @@ def more_than_one_scope_defined():
 
 def test_args_kwargs(*args, **kwargs):
     return kwargs
+
+def get_flask_response():
+    response = make_response(json.dumps({'message':'Hello'}), 200)
+    response.mimetype = 'application/json'
+
+    return response

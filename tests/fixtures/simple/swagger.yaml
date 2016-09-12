@@ -630,6 +630,22 @@ paths:
           schema:
             type: object
 
+  /flask-response:
+    get:
+      operationId: fakeapi.hello.get_flask_response
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                description: Test message
+            required:
+            - message
 
 definitions:
   new_stack:

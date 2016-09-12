@@ -152,3 +152,14 @@ def test_maybe_blob_or_json(simple_app):
     text, number = unpack('!4sh', resp.data)
     assert text == b'cool'
     assert number == 8
+
+def test_flask_response(simple_app):
+    app_client = simple_app.app.test_client()
+
+    resp = app_client.get('/v1.0/flask-response')
+    assert resp.status_code == 200
+    assert resp.content_type == 'application/json'
+
+    response = json.loads(resp.data.decode())
+    assert response['message'] == 'Hello'
+
