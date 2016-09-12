@@ -34,22 +34,28 @@ def validate_wsgi_server_requirements(ctx, param, value):
               type=click.Choice(['flask', 'gevent', 'tornado']),
               callback=validate_wsgi_server_requirements,
               help='Which WSGI server container to use.')
-@click.option('--stub', '-s',
+@click.option('--stub',
               help='Returns status code 400, and `Not Implemented Yet` payload, for '
               'the endpoints which handlers are not found.',
               is_flag=True, default=False)
 @click.option('--hide-spec',
               help='Hides the API spec in JSON format which is by default available at `/swagger.json`.',
-              is_flag=True, default=True)
+              is_flag=True, default=False)
 @click.option('--hide-console-ui',
               help='Hides the the API console UI which is by default available at `/ui`.',
-              is_flag=True, default=True)
+              is_flag=True, default=False)
 @click.option('--console-ui-url', metavar='URL',
               help='Personalize what URL path the API console UI will be mounted.')
 @click.option('--console-ui-from', metavar='PATH',
               help='Path to a customized API console UI dashboard.')
 @click.option('--auth-all-paths',
               help='Enable authentication to paths not defined in the spec.',
+              is_flag=True, default=False)
+@click.option('--validate-responses',
+              help='Enable validation of response values from operation handlers.',
+              is_flag=True, default=False)
+@click.option('--strict-validation',
+              help='Enable strict validation of request payloads.',
               is_flag=True, default=False)
 @click.option('--debug', '-d', help='Show debugging information.',
               is_flag=True, default=False)
@@ -63,6 +69,8 @@ def run(spec_file,
         console_ui_url,
         console_ui_from,
         auth_all_paths,
+        validate_responses,
+        strict_validation,
         debug):
     """
     Runs a server compliant with a OpenAPI/Swagger 2.0 Specification file.
@@ -89,4 +97,14 @@ def run(spec_file,
 
     app = App(__name__)
     app.add_api(path.abspath(spec_file), resolver=resolver)
-    app.run(port=port, server=wsgi_server)
+    app.run(
+        port=port,
+        server=wsgi_server,
+        swagger_json=hide_spec or None,
+        swagger_ui=hide_console_ui or None,
+        swagger_path=console_ui_from or None,
+        swagger_url=console_ui_url or None,
+        strict_validation=strict_validation,
+        validate_responses=validate_responses,
+        auth_all_paths=auth_all_paths,
+        debug=debug)

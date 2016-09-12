@@ -34,7 +34,17 @@ def test_run_simple_spec(mock_app_run, spec_file):
     runner = CliRunner()
     runner.invoke(main, ['run', spec_file], catch_exceptions=False)
 
-    mock_app_run.run.assert_called_with(port=default_port, server=None)
+    mock_app_run.run.assert_called_with(
+        port=default_port,
+        server=None,
+        strict_validation=False,
+        swagger_json=None,
+        swagger_path=None,
+        swagger_ui=None,
+        swagger_url=None,
+        auth_all_paths=False,
+        validate_responses=False,
+        debug=False)
 
 
 def test_run_in_debug_mode(mock_app_run, spec_file, monkeypatch):
@@ -61,8 +71,8 @@ def test_run_unimplemented_operations_and_stub(mock_app_run):
     spec_file = str(FIXTURES_FOLDER / 'module_does_not_exist/swagger.yaml')
     with pytest.raises(ImportError):
         runner.invoke(main, ['run', spec_file], catch_exceptions=False)
-    # yet can be run with -s (stub) option
-    result = runner.invoke(main, ['run', spec_file, '-s'], catch_exceptions=False)
+    # yet can be run with --stub option
+    result = runner.invoke(main, ['run', spec_file, '--stub'], catch_exceptions=False)
     assert result.exit_code == 0
 
 
