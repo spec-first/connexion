@@ -41,7 +41,7 @@ def test_invalid_operation_does_stop_application_to_setup():
         Api(TEST_FOLDER / "fixtures/missing_op_id/swagger.yaml", "/api/v1.0",
             {'title': 'OK'})
 
-    with pytest.raises(ResolverError):
+    with pytest.raises(ImportError):
         Api(TEST_FOLDER / "fixtures/module_not_implemented/swagger.yaml", "/api/v1.0",
             {'title': 'OK'})
 
