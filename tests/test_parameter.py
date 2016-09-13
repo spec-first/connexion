@@ -1,6 +1,5 @@
-from connexion.decorators.parameter import inspect_function_arguments
-
 import decorator
+from connexion.decorators.parameter import inspect_function_arguments
 
 
 @decorator.decorator

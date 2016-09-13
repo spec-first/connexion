@@ -3,9 +3,8 @@ import datetime
 import logging
 
 import connexion
-from connexion import NoContent
-
 import orm
+from connexion import NoContent
 
 db_session = None
 

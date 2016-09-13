@@ -3,8 +3,9 @@
 Basic example of a resource server
 '''
 
-import connexion
 import flask
+
+import connexion
 
 
 def get_secret() -> str:

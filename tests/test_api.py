@@ -4,11 +4,11 @@ import pathlib
 import tempfile
 
 import pytest
-from connexion.api import Api
-from connexion.exceptions import InvalidSpecification, ResolverError
 from swagger_spec_validator.common import SwaggerValidationError
 from yaml import YAMLError
 
+from connexion.api import Api
+from connexion.exceptions import InvalidSpecification, ResolverError
 
 TEST_FOLDER = pathlib.Path(__file__).parent
 
