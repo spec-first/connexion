@@ -1,8 +1,8 @@
-import pytest
-
-from conftest import TEST_FOLDER, build_app_from_fixture
 from connexion.app import App
 from connexion.exceptions import InvalidSpecification
+
+import pytest
+from conftest import TEST_FOLDER, build_app_from_fixture
 
 
 def test_app_with_relative_path(simple_api_spec_dir):

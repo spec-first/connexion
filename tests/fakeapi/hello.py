@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 
-from flask import redirect
-
 from connexion import NoContent, problem, request
+from flask import redirect
 
 
 class DummyClass(object):

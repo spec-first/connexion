@@ -9,9 +9,8 @@ Warning: It is recommended to use 'decorator' package to create decorators for
          details please check: https://github.com/zalando/connexion/issues/142
 '''
 
-import flask
-
 import connexion
+import flask
 
 try:
     from decorator import decorator
