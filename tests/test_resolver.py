@@ -1,6 +1,6 @@
 import connexion.app
-from connexion.operation import Operation
 from connexion.exceptions import ResolverError
+from connexion.operation import Operation
 from connexion.resolver import Resolver, RestyResolver
 
 import pytest
