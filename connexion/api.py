@@ -202,7 +202,6 @@ class Api(object):
             # http://swagger.io/specification/#pathItemObject
             path_parameters = methods.get('parameters', [])
 
-            # TODO Error handling
             for method, endpoint in methods.items():
                 if method == 'parameters':
                     continue
