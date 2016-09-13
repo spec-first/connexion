@@ -4,6 +4,7 @@ import pathlib
 import tempfile
 
 from connexion.api import Api
+from connexion.exceptions import ResolverError
 from swagger_spec_validator.common import SwaggerValidationError
 from yaml import YAMLError
 
@@ -33,12 +34,36 @@ def test_template():
 
 def test_invalid_operation_does_stop_application_to_setup():
     with pytest.raises(ImportError):
-        Api(TEST_FOLDER / "fakeapi/op_error_api.yaml", "/api/v1.0",
+        Api(TEST_FOLDER / "fixtures/op_error_api/swagger.yaml", "/api/v1.0",
+            {'title': 'OK'})
+
+    with pytest.raises(ResolverError):
+        Api(TEST_FOLDER / "fixtures/missing_op_id/swagger.yaml", "/api/v1.0",
+            {'title': 'OK'})
+
+    with pytest.raises(ImportError):
+        Api(TEST_FOLDER / "fixtures/module_not_implemented/swagger.yaml", "/api/v1.0",
+            {'title': 'OK'})
+
+    with pytest.raises(ValueError):
+        Api(TEST_FOLDER / "fixtures/user_module_loading_error/swagger.yaml", "/api/v1.0",
             {'title': 'OK'})
 
 
 def test_invalid_operation_does_not_stop_application_in_debug_mode():
-    api = Api(TEST_FOLDER / "fakeapi/op_error_api.yaml", "/api/v1.0",
+    api = Api(TEST_FOLDER / "fixtures/op_error_api/swagger.yaml", "/api/v1.0",
+              {'title': 'OK'}, debug=True)
+    assert api.specification['info']['title'] == 'OK'
+
+    api = Api(TEST_FOLDER / "fixtures/missing_op_id/swagger.yaml", "/api/v1.0",
+              {'title': 'OK'}, debug=True)
+    assert api.specification['info']['title'] == 'OK'
+
+    api = Api(TEST_FOLDER / "fixtures/user_module_loading_error/swagger.yaml", "/api/v1.0",
+              {'title': 'OK'}, debug=True)
+    assert api.specification['info']['title'] == 'OK'
+
+    api = Api(TEST_FOLDER / "fixtures/module_not_implemented/swagger.yaml", "/api/v1.0",
               {'title': 'OK'}, debug=True)
     assert api.specification['info']['title'] == 'OK'
 

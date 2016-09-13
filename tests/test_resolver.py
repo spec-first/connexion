@@ -1,6 +1,9 @@
 import connexion.app
+from connexion.exceptions import ResolverError
 from connexion.operation import Operation
 from connexion.resolver import Resolver, RestyResolver
+
+import pytest
 
 PARAMETER_DEFINITIONS = {'myparam': {'in': 'path', 'type': 'integer'}}
 
@@ -13,6 +16,24 @@ def test_standard_get_function():
 def test_resty_get_function():
     function = RestyResolver('connexion').resolve_function_from_operation_id('connexion.app.App.common_error_handler')
     assert function == connexion.app.App.common_error_handler
+
+
+def test_missing_operation_id():
+    # Missing operationIDs should result in a well-defined error that can
+    # be handled upstream.
+    with pytest.raises(ResolverError):
+        Resolver().resolve_function_from_operation_id(None)
+    with pytest.raises(ResolverError):
+        RestyResolver('connexion').resolve_function_from_operation_id(None)
+
+
+def test_bad_operation_id():
+    # Unresolvable operationIDs should result in a well-defined error that can
+    # be handled upstream.
+    with pytest.raises(ResolverError):
+        Resolver().resolve_function_from_operation_id('ohai.I.do.not.exist')
+    with pytest.raises(ResolverError):
+        RestyResolver('connexion').resolve_function_from_operation_id('ohai.I.do.not.exist')
 
 
 def test_standard_resolve_x_router_controller():
