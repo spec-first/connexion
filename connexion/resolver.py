@@ -76,7 +76,7 @@ class Resolver(object):
         except ImportError:
             import sys
             raise ResolverError(msg, sys.exc_info())
-        except (AttributeError, ValueError):
+        except AttributeError:
             raise ResolverError(msg)
 
 
