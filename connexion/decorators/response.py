@@ -57,8 +57,11 @@ class ResponseValidator(BaseDecorator):
             try:
                 # For cases of custom encoders, we need to encode and decode to
                 # transform to the actual types that are going to be returned.
-                data = json.dumps(data)
-                data = json.loads(data)
+                if not is_flask_response(data):
+                    data = json.dumps(data)
+                    data = json.loads(data)
+                else:
+                    data = json.loads(data.get_data())
 
                 v.validate_schema(data)
             except ValidationError as e:
