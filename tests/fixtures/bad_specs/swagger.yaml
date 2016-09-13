@@ -1,0 +1,23 @@
+swagger: "2.0"
+
+info:
+  title: "{{title}}"
+  version: "1.0"
+
+basePath: /v1.0
+
+paths:
+  /welcome:
+    get:
+      operationId: fakeapi.foo_bar.search
+      parameters:
+        # The default below validates, but is obviously the wrong type
+        - name: foo
+          in: query
+          type: integer
+          default: somestring
+      responses:
+        200:
+          description: search
+          schema:
+            type: object

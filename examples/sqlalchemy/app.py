@@ -4,7 +4,6 @@ import logging
 
 import connexion
 from connexion import NoContent
-
 import orm
 
 db_session = None
