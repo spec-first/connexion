@@ -8,8 +8,8 @@ basePath: /v1.0
 
 paths:
   /welcome:
-    put:
-      # operationId: XXX completely missing
+    get:
+      operationId: no.module.or.function
       responses:
         200:
           description: greeting response
