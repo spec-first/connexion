@@ -3,4 +3,4 @@
 #  - `test_operation.py:test_invalid_operation_does_stop_application_to_setup`
 #  - `test_api.py:test_invalid_operation_does_stop_application_to_setup`
 #  - `test_api.py:test_invalid_operation_does_not_stop_application_in_debug_mode`
-from foo.bar import foobar  # noqa
+raise ValueError('Forced exception!')
