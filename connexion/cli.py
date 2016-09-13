@@ -3,9 +3,8 @@ import sys
 from os import path
 
 import click
-from connexion import App
-
 from clickclick import AliasedGroup, fatal_error
+from connexion import App
 
 main = AliasedGroup(context_settings=dict(help_option_names=[
     '-h', '--help']))
