@@ -5,7 +5,6 @@ from os import path
 import click
 from clickclick import AliasedGroup, fatal_error
 from connexion import App, problem
-from connexion.resolver import StubResolver
 
 main = AliasedGroup(context_settings=dict(help_option_names=[
     '-h', '--help']))
@@ -33,7 +32,7 @@ def validate_wsgi_server_requirements(ctx, param, value):
               callback=validate_wsgi_server_requirements,
               help='Which WSGI server container to use.')
 @click.option('--stub',
-              help='Returns status code 400, and `Not Implemented Yet` payload, for '
+              help='Returns status code 501, and `Not Implemented Yet` payload, for '
               'the endpoints which handlers are not found.',
               is_flag=True, default=False)
 @click.option('--hide-spec',
@@ -86,15 +85,12 @@ def run(spec_file,
 
     sys.path.insert(1, path.abspath(base_path or '.'))
 
-    resolver = None
+    resolver_error = None
     if stub:
-        resolver = StubResolver(lambda: problem(
-            title='Not Implemented Yet',
-            detail='The requested functionality is not implemented yet.',
-            status=400))
+        resolver_error = 501
 
     app = App(__name__)
-    app.add_api(path.abspath(spec_file), resolver=resolver)
+    app.add_api(path.abspath(spec_file), resolver_error=resolver_error)
     app.run(
         port=port,
         server=wsgi_server,

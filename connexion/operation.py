@@ -108,7 +108,7 @@ class Operation(SecureOperation):
     def __init__(self, method, path, operation, resolver, app_produces,
                  path_parameters=None, app_security=None, security_definitions=None,
                  definitions=None, parameter_definitions=None, response_definitions=None,
-                 validate_responses=False, strict_validation=False):
+                 validate_responses=False, strict_validation=False, randomize_endpoint=None):
         """
         This class uses the OperationID identify the module and function that will handle the operation
 
@@ -162,6 +162,7 @@ class Operation(SecureOperation):
         self.validate_responses = validate_responses
         self.strict_validation = strict_validation
         self.operation = operation
+        self.randomize_endpoint = randomize_endpoint
 
         # todo support definition references
         # todo support references to application level parameters
@@ -174,7 +175,7 @@ class Operation(SecureOperation):
 
         resolution = resolver.resolve(self)
         self.operation_id = resolution.operation_id
-        self.endpoint_name = flaskify_endpoint(self.operation_id)
+        self.endpoint_name = flaskify_endpoint(self.operation_id, self.randomize_endpoint)
         self.__undecorated_function = resolution.function
 
         self.validate_defaults()

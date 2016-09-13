@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-import json
-
 from connexion import NoContent, problem, request
 from flask import redirect
 

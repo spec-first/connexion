@@ -1,20 +1,8 @@
-"""
-Copyright 2015 Zalando SE
-
-Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
-License. You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an
-"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
- language governing permissions and limitations under the License.
-"""
-
 import logging
 import re
 
 import connexion.utils as utils
+from connexion.exceptions import ResolverError
 
 logger = logging.getLogger('connexion.resolver')
 
@@ -61,7 +49,7 @@ class Resolver(object):
         x_router_controller = spec.get('x-swagger-router-controller')
         if x_router_controller is None:
             return operation_id
-        return x_router_controller + '.' + operation_id
+        return '{}.{}'.format(x_router_controller, operation_id)
 
     def resolve_function_from_operation_id(self, operation_id):
         """
@@ -69,7 +57,14 @@ class Resolver(object):
 
         :type operation_id: str
         """
-        return self.function_resolver(operation_id)
+        msg = 'Cannot resolve operationId "{}"!'.format(operation_id)
+        try:
+            return self.function_resolver(operation_id)
+        except ImportError:
+            import sys
+            raise ResolverError(msg, sys.exc_info())
+        except AttributeError:
+            raise ResolverError(msg)
 
 
 class RestyResolver(Resolver):
@@ -132,19 +127,4 @@ class RestyResolver(Resolver):
 
             return self.collection_endpoint_name if is_collection_endpoint else method.lower()
 
-        return get_controller_name() + '.' + get_function_name()
-
-
-class StubResolver(Resolver):
-    def __init__(self, stub_function, **kwargs):
-        self.stub_function = stub_function
-        super(StubResolver, self).__init__(**kwargs)
-
-    def resolve_function_from_operation_id(self, operation_id):
-        """
-        In case a function for the operation is not found a stub function is returned.
-        """
-        try:
-            super(StubResolver, self).resolve_function_from_operation_id(operation_id)
-        except (ImportError, AttributeError):
-            return self.stub_function
+        return '{}.{}'.format(get_controller_name(), get_function_name())

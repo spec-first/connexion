@@ -1,16 +1,3 @@
-"""
-Copyright 2015 Zalando SE
-
-Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
-License. You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an
-"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
- language governing permissions and limitations under the License.
-"""
-
 import logging
 import pathlib
 
@@ -96,7 +83,7 @@ class App(object):
 
     def add_api(self, swagger_file, base_path=None, arguments=None, auth_all_paths=None, swagger_json=None,
                 swagger_ui=None, swagger_path=None, swagger_url=None, validate_responses=False,
-                strict_validation=False, resolver=Resolver()):
+                strict_validation=False, resolver=Resolver(), resolver_error=None):
         """
         Adds an API to the application based on a swagger file
 
@@ -122,8 +109,17 @@ class App(object):
         :type strict_validation: bool
         :param resolver: Operation resolver.
         :type resolver: Resolver | types.FunctionType
+        :param resolver_error: If specified, turns ResolverError into error
+            responses with the given status code.
+        :type resolver_error: int | None
         :rtype: Api
         """
+        # Turn the resolver_error code into a handler object
+        self.resolver_error = resolver_error
+        resolver_error_handler = None
+        if resolver_error is not None:
+            resolver_error_handler = self._resolver_error_handler
+
         resolver = Resolver(resolver) if hasattr(resolver, '__call__') else resolver
 
         swagger_json = swagger_json if swagger_json is not None else self.swagger_json
@@ -143,12 +139,20 @@ class App(object):
                   swagger_path=swagger_path,
                   swagger_url=swagger_url,
                   resolver=resolver,
+                  resolver_error_handler=resolver_error_handler,
                   validate_responses=validate_responses,
                   strict_validation=strict_validation,
                   auth_all_paths=auth_all_paths,
                   debug=self.debug)
         self.app.register_blueprint(api.blueprint)
         return api
+
+    def _resolver_error_handler(self, *args, **kwargs):
+        from connexion.handlers import ResolverErrorHandler
+        kwargs['operation'] = {
+            'operationId': 'connexion.handlers.ResolverErrorHandler',
+        }
+        return ResolverErrorHandler(self.resolver_error, *args, **kwargs)
 
     def add_error_handler(self, error_code, function):
         """
