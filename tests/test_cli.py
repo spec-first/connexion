@@ -2,8 +2,8 @@ import logging
 
 from click.testing import CliRunner
 from connexion import App
-from connexion.exceptions import ResolverError
 from connexion.cli import main
+from connexion.exceptions import ResolverError
 
 import pytest
 from conftest import FIXTURES_FOLDER
