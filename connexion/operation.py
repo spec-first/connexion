@@ -32,6 +32,13 @@ from .utils import flaskify_endpoint, is_nullable, produces_json
 logger = logging.getLogger('connexion.operation')
 
 
+VALIDATOR_MAP = {
+    'parameter': ParameterValidator,
+    'body': RequestBodyValidator,
+    'response': ResponseValidator,
+}
+
+
 class SecureOperation(object):
     def __init__(self, security, security_definitions):
         """
@@ -108,7 +115,7 @@ class Operation(SecureOperation):
     def __init__(self, method, path, operation, resolver, app_produces,
                  path_parameters=None, app_security=None, security_definitions=None,
                  definitions=None, parameter_definitions=None, response_definitions=None,
-                 validate_responses=False, strict_validation=False):
+                 validate_responses=False, validator_map=None, strict_validation=False):
         """
         This class uses the OperationID identify the module and function that will handle the operation
 
@@ -128,6 +135,8 @@ class Operation(SecureOperation):
         :param resolver: Callable that maps operationID to a function
         :param app_produces: list of content types the application can return by default
         :type app_produces: list
+        :param validator_map: map of validators
+        :type validator_map: dict
         :param path_parameters: Parameters defined in the path level
         :type path_parameters: list
         :param app_security: list of security rules the application uses by default
@@ -142,6 +151,8 @@ class Operation(SecureOperation):
         :type parameter_definitions: dict
         :param response_definitions: Global response definitions
         :type response_definitions: dict
+        :param validator_map: Custom validators for the types "parameter", "body" and "response".
+        :type validator_map: dict
         :param validate_responses: True enables validation. Validation errors generate HTTP 500 responses.
         :type validate_responses: bool
         :param strict_validation: True enables validation on invalid request parameters
@@ -150,6 +161,8 @@ class Operation(SecureOperation):
 
         self.method = method
         self.path = path
+        self.validator_map = dict(VALIDATOR_MAP)
+        self.validator_map.update(validator_map or {})
         self.security_definitions = security_definitions or {}
         self.definitions = definitions or {}
         self.parameter_definitions = parameter_definitions or {}
@@ -386,6 +399,8 @@ class Operation(SecureOperation):
         """
         :rtype: types.FunctionType
         """
+        ParameterValidator = self.validator_map['parameter']
+        RequestBodyValidator = self.validator_map['body']
         if self.parameters:
             yield ParameterValidator(self.parameters, strict_validation=self.strict_validation)
         if self.body_schema:
@@ -398,4 +413,5 @@ class Operation(SecureOperation):
         Get a decorator for validating the generated Response.
         :rtype: types.FunctionType
         """
+        ResponseValidator = self.validator_map['response']
         return ResponseValidator(self, self.get_mimetype())

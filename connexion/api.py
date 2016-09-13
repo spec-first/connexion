@@ -64,7 +64,7 @@ class Api(object):
     def __init__(self, swagger_yaml_path, base_url=None, arguments=None,
                  swagger_json=None, swagger_ui=None, swagger_path=None, swagger_url=None,
                  validate_responses=False, strict_validation=False, resolver=resolver.Resolver(),
-                 auth_all_paths=False, debug=False):
+                 auth_all_paths=False, debug=False, validator_map=None):
         """
         :type swagger_yaml_path: pathlib.Path
         :type base_url: str | None
@@ -77,9 +77,12 @@ class Api(object):
         :type strict_validation: bool
         :type auth_all_paths: bool
         :type debug: bool
+        :param validator_map: Custom validators for the types "parameter", "body" and "response".
+        :type validator_map: dict
         :param resolver: Callable that maps operationID to a function
         """
         self.debug = debug
+        self.validator_map = validator_map
         self.swagger_yaml_path = pathlib.Path(swagger_yaml_path)
         logger.debug('Loading specification: %s', swagger_yaml_path,
                      extra={'swagger_yaml': swagger_yaml_path,
@@ -179,6 +182,7 @@ class Api(object):
                               parameter_definitions=self.parameter_definitions,
                               response_definitions=self.response_definitions,
                               validate_responses=self.validate_responses,
+                              validator_map=self.validator_map,
                               strict_validation=self.strict_validation,
                               resolver=self.resolver)
         operation_id = operation.operation_id
