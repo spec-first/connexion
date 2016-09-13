@@ -287,5 +287,3 @@ def test_args_kwargs(simple_app):
     resp = app_client.get('/v1.0/query-params-as-kwargs?foo=a&bar=b')
     assert resp.status_code == 200
     assert json.loads(resp.data.decode()) == {'foo': 'a'}
-
-
