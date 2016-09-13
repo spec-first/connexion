@@ -80,11 +80,11 @@ def test_other_errors_stop_application_to_setup():
     # The previous tests were just about operationId not being resolvable.
     # Other errors should still result exceptions!
     with pytest.raises(InvalidSpecification):
-        Api(TEST_FOLDER / "fakeapi/bad_specs.yaml", "/api/v1.0",
+        Api(TEST_FOLDER / "fixtures/bad_specs/swagger.yaml", "/api/v1.0",
             {'title': 'OK'})
 
     # Debug mode should ignore the error
-    api = Api(TEST_FOLDER / "fakeapi/bad_specs.yaml", "/api/v1.0",
+    api = Api(TEST_FOLDER / "fixtures/bad_specs/swagger.yaml", "/api/v1.0",
               {'title': 'OK'}, debug=True)
     assert api.specification['info']['title'] == 'OK'
 
