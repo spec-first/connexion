@@ -49,8 +49,8 @@ def test_invalid_operation_does_stop_application_to_setup():
         Api(TEST_FOLDER / "fixtures/user_module_loading_error/swagger.yaml", "/api/v1.0",
             {'title': 'OK'})
 
-    with pytest.raises(ImportError):
-        Api(TEST_FOLDER / "fakeapi/missing_op_id.yaml", "/api/v1.0",
+    with pytest.raises(ResolverError):
+        Api(TEST_FOLDER / "fixtures/missing_op_id/swagger.yaml", "/api/v1.0",
             {'title': 'OK'})
 
 
@@ -71,7 +71,7 @@ def test_invalid_operation_does_not_stop_application_in_debug_mode():
               {'title': 'OK'}, debug=True)
     assert api.specification['info']['title'] == 'OK'
 
-    api = Api(TEST_FOLDER / "fakeapi/missing_op_id.yaml", "/api/v1.0",
+    api = Api(TEST_FOLDER / "fixtures/missing_op_id/swagger.yaml", "/api/v1.0",
               {'title': 'OK'}, debug=True)
     assert api.specification['info']['title'] == 'OK'
 
