@@ -6,6 +6,8 @@ import click
 from clickclick import AliasedGroup, fatal_error
 from connexion import App
 
+logger = logging.getLogger('connexion.cli')
+
 main = AliasedGroup(context_settings=dict(help_option_names=[
     '-h', '--help']))
 
@@ -25,7 +27,7 @@ def validate_wsgi_server_requirements(ctx, param, value):
 
 @main.command()
 @click.argument('spec_file')
-@click.argument('base_path', required=False)
+@click.argument('base_module_path', required=False)
 @click.option('--port', '-p', default=5000, type=int, help='Port to listen.')
 @click.option('--wsgi-server', '-w', default='flask',
               type=click.Choice(['flask', 'gevent', 'tornado']),
@@ -57,7 +59,7 @@ def validate_wsgi_server_requirements(ctx, param, value):
 @click.option('--debug', '-d', help='Show debugging information.',
               is_flag=True, default=False)
 def run(spec_file,
-        base_path,
+        base_module_path,
         port,
         wsgi_server,
         stub,
@@ -76,7 +78,7 @@ def run(spec_file,
 
     - SPEC_FILE: specification file that describes the server endpoints.
 
-    - BASE_PATH (optional): filesystem path where the API endpoints handlers are going to be imported from.
+    - BASE_MODULE_PATH (optional): filesystem path where the API endpoints handlers are going to be imported from.
     """
     logging_level = logging.ERROR
     if debug:
@@ -84,8 +86,9 @@ def run(spec_file,
     logging.basicConfig(level=logging_level)
 
     spec_file_full_path = path.abspath(spec_file)
-    base_path = base_path or path.dirname(spec_file_full_path)
-    sys.path.insert(1, path.abspath(base_path))
+    py_module_path = base_module_path or path.dirname(spec_file_full_path)
+    sys.path.insert(1, path.abspath(py_module_path))
+    logger.debug('Added {} to system path.'.format(py_module_path))
 
     resolver_error = None
     if stub:
