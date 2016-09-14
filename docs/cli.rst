@@ -1,4 +1,4 @@
-Commnad-Line Interface
+Command-Line Interface
 ======================
 For convenience Connexion provides a command-line interface
 (CLI). This interface aims to be a starting point in developing or
