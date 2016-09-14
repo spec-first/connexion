@@ -97,12 +97,14 @@ def validate_parameter_list(parameter_type, request_params, spec_params):
 
 
 class RequestBodyValidator(object):
-    def __init__(self, schema, is_null_value_valid=False):
+    def __init__(self, schema, consumes, is_null_value_valid=False):
         """
         :param schema: The schema of the request body
+        :param consumes: The list of content types the operation consumes
         :param is_nullable: Flag to indicate if null is accepted as valid value.
         """
         self.schema = schema
+        self.consumes = consumes
         self.has_default = schema.get('default', False)
         self.is_null_value_valid = is_null_value_valid
 
@@ -114,6 +116,9 @@ class RequestBodyValidator(object):
 
         @functools.wraps(function)
         def wrapper(*args, **kwargs):
+            if 'application/json' not in self.consumes:
+                return function(*args, **kwargs)
+
             data = flask.request.json
 
             logger.debug("%s validating schema...", flask.request.url)

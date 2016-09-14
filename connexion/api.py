@@ -125,6 +125,10 @@ class Api(object):
         # API calls.
         self.produces = self.specification.get('produces', list())  # type: List[str]
 
+        # A list of MIME types the APIs can consume. This is global to all APIs but can be overridden on specific
+        # API calls.
+        self.consumes = self.specification.get('consumes', list())  # type: List[str]
+
         self.security = self.specification.get('security')
         self.security_definitions = self.specification.get('securityDefinitions', dict())
         logger.debug('Security Definitions: %s', self.security_definitions)
@@ -179,6 +183,7 @@ class Api(object):
                               path_parameters=path_parameters,
                               operation=swagger_operation,
                               app_produces=self.produces,
+                              app_consumes=self.consumes,
                               app_security=self.security,
                               security_definitions=self.security_definitions,
                               definitions=self.definitions,

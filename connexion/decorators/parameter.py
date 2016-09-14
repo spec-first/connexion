@@ -58,13 +58,15 @@ def get_val_from_param(value, query_param):
         return make_type(value, query_param["type"])
 
 
-def parameter_to_arg(parameters, function):
+def parameter_to_arg(parameters, consumes, function):
     """
     Pass query and body parameters as keyword arguments to handler function.
 
     See (https://github.com/zalando/connexion/issues/59)
     :param parameters: All the parameters of the handler functions
     :type parameters: dict|None
+    :param consumes: The list of content types the operation consumes
+    :type consumes: list
     :param function: The handler function for the REST endpoint.
     :type function: function|None
     """
@@ -87,10 +89,13 @@ def parameter_to_arg(parameters, function):
     def wrapper(*args, **kwargs):
         logger.debug('Function Arguments: %s', arguments)
 
-        try:
-            request_body = flask.request.json
-        except exceptions.BadRequest:
-            request_body = None
+        if 'application/json' in consumes:
+            try:
+                request_body = flask.request.json
+            except exceptions.BadRequest:
+                request_body = None
+        else:
+            request_body = flask.request.data
 
         if default_body and not request_body:
             request_body = default_body
