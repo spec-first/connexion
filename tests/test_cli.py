@@ -38,13 +38,6 @@ def test_run_simple_spec(mock_app_run, spec_file):
     mock_app_run.run.assert_called_with(
         port=default_port,
         server=None,
-        strict_validation=False,
-        swagger_json=None,
-        swagger_path=None,
-        swagger_ui=None,
-        swagger_url=None,
-        auth_all_paths=False,
-        validate_responses=False,
         debug=False)
 
 

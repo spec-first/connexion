@@ -83,22 +83,27 @@ def run(spec_file,
         logging_level = logging.DEBUG
     logging.basicConfig(level=logging_level)
 
-    sys.path.insert(1, path.abspath(base_path or '.'))
+    spec_file_full_path = path.abspath(spec_file)
+    base_path = base_path or path.dirname(spec_file_full_path)
+    sys.path.insert(1, path.abspath(base_path))
 
     resolver_error = None
     if stub:
         resolver_error = 501
 
-    app = App(__name__)
-    app.add_api(path.abspath(spec_file), resolver_error=resolver_error)
-    app.run(
-        port=port,
-        server=wsgi_server,
-        swagger_json=hide_spec or None,
-        swagger_ui=hide_console_ui or None,
-        swagger_path=console_ui_from or None,
-        swagger_url=console_ui_url or None,
-        strict_validation=strict_validation,
-        validate_responses=validate_responses,
-        auth_all_paths=auth_all_paths,
-        debug=debug)
+    app = App(__name__,
+              swagger_json=hide_spec is False,
+              swagger_ui=hide_console_ui is False,
+              swagger_path=console_ui_from or None,
+              swagger_url=console_ui_url or None,
+              auth_all_paths=auth_all_paths,
+              debug=debug)
+
+    app.add_api(spec_file_full_path,
+                resolver_error=resolver_error,
+                validate_responses=validate_responses,
+                strict_validation=strict_validation)
+
+    app.run(port=port,
+            server=wsgi_server,
+            debug=debug)
