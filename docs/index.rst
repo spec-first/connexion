@@ -25,6 +25,7 @@ Contents:
    :maxdepth: 2
 
    quickstart
+   cli
    routing
    request
    response
