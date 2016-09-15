@@ -5,3 +5,4 @@ requests>=2.9.1
 six>=1.7
 strict-rfc3339>=0.6
 swagger_spec_validator>=2.0.2
+clickclick>=1.2

@@ -20,7 +20,6 @@ import string
 import flask
 import werkzeug.wrappers
 
-
 PATH_PARAMETER = re.compile(r'\{([^}]*)\}')
 
 # map Swagger type to flask path converter

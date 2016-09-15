@@ -8,7 +8,6 @@ from connexion.resolver import Resolver
 
 import pytest
 
-
 TEST_FOLDER = pathlib.Path(__file__).parent
 
 DEFINITIONS = {'new_stack': {'required': ['image_version', 'keep_stacks', 'new_traffic', 'senza_yaml'],
