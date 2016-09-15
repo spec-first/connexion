@@ -110,3 +110,7 @@ def run(spec_file,
     app.run(port=port,
             server=wsgi_server,
             debug=debug)
+
+
+if __name__ == '__main__':
+    main()
