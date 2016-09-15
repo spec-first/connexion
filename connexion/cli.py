@@ -112,5 +112,5 @@ def run(spec_file,
             debug=debug)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # noqa
     main()

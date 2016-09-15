@@ -1,3 +1,3 @@
 from connexion.cli import main
 
-main()
+main()  # noqa
