@@ -128,6 +128,21 @@ def test_run_in_debug_mode(mock_app_run, expected_arguments, spec_file,
     mock_app_run.assert_called_with('connexion.cli', **expected_arguments)
 
 
+def test_run_in_very_verbose_mode(mock_app_run, expected_arguments, spec_file,
+                           monkeypatch):
+    logging_config = MagicMock(name='connexion.cli.logging.basicConfig')
+    monkeypatch.setattr('connexion.cli.logging.basicConfig',
+                        logging_config)
+
+    runner = CliRunner()
+    runner.invoke(main, ['run', spec_file, '-vv'], catch_exceptions=False)
+
+    logging_config.assert_called_with(level=logging.DEBUG)
+
+    expected_arguments['debug'] = True
+    mock_app_run.assert_called_with('connexion.cli', **expected_arguments)
+
+
 def test_run_in_verbose_mode(mock_app_run, expected_arguments, spec_file,
                            monkeypatch):
     logging_config = MagicMock(name='connexion.cli.logging.basicConfig')

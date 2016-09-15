@@ -92,6 +92,7 @@ def run(spec_file,
 
     if debug or very_verbose:
         logging_level = logging.DEBUG
+        debug = True
 
     logging.basicConfig(level=logging_level)
 
