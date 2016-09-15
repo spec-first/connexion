@@ -95,8 +95,8 @@ def run(spec_file,
         resolver_error = 501
 
     app = App(__name__,
-              swagger_json=hide_spec is False,
-              swagger_ui=hide_console_ui is False,
+              swagger_json=not hide_spec,
+              swagger_ui=not hide_console_ui,
               swagger_path=console_ui_from or None,
               swagger_url=console_ui_url or None,
               auth_all_paths=auth_all_paths,

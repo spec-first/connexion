@@ -16,8 +16,21 @@ def mock_app_run(monkeypatch):
     test_server.run = MagicMock(return_value=True)
     test_app = MagicMock(return_value=test_server)
     monkeypatch.setattr('connexion.cli.App', test_app)
-    return test_server
+    return test_app
 
+@pytest.fixture()
+def expected_arguments():
+    """
+    Default values arguments used to call `connexion.App` by cli.
+    """
+    return {
+        "swagger_json": True,
+        "swagger_ui": True,
+        "swagger_path": None,
+        "swagger_url": None,
+        "auth_all_paths": False,
+        "debug": False
+    }
 
 @pytest.fixture()
 def spec_file():
@@ -35,13 +48,73 @@ def test_run_simple_spec(mock_app_run, spec_file):
     runner = CliRunner()
     runner.invoke(main, ['run', spec_file], catch_exceptions=False)
 
-    mock_app_run.run.assert_called_with(
+    app_instance = mock_app_run()
+    app_instance.run.assert_called_with(
         port=default_port,
         server=None,
         debug=False)
 
 
-def test_run_in_debug_mode(mock_app_run, spec_file, monkeypatch):
+def test_run_no_options_all_default(mock_app_run, expected_arguments, spec_file):
+    runner = CliRunner()
+    runner.invoke(main, ['run', spec_file], catch_exceptions=False)
+    mock_app_run.assert_called_with('connexion.cli', **expected_arguments)
+
+
+def test_run_using_option_hide_spec(mock_app_run, expected_arguments,
+                                           spec_file):
+    runner = CliRunner()
+    runner.invoke(main, ['run', spec_file, '--hide-spec'],
+                  catch_exceptions=False)
+
+    expected_arguments['swagger_json'] = False
+    mock_app_run.assert_called_with('connexion.cli', **expected_arguments)
+
+
+def test_run_using_option_hide_console_ui(mock_app_run, expected_arguments,
+                                                 spec_file):
+    runner = CliRunner()
+    runner.invoke(main, ['run', spec_file, '--hide-console-ui'],
+                  catch_exceptions=False)
+
+    expected_arguments['swagger_ui'] = False
+    mock_app_run.assert_called_with('connexion.cli', **expected_arguments)
+
+
+def test_run_using_option_console_ui_from(mock_app_run, expected_arguments,
+                                           spec_file):
+    user_path = '/some/path/here'
+    runner = CliRunner()
+    runner.invoke(main, ['run', spec_file, '--console-ui-from', user_path],
+                  catch_exceptions=False)
+
+    expected_arguments['swagger_path'] = user_path
+    mock_app_run.assert_called_with('connexion.cli', **expected_arguments)
+
+
+def test_run_using_option_console_ui_url(mock_app_run, expected_arguments,
+                                           spec_file):
+    user_url = '/console_ui_test'
+    runner = CliRunner()
+    runner.invoke(main, ['run', spec_file, '--console-ui-url', user_url],
+                  catch_exceptions=False)
+
+    expected_arguments['swagger_url'] = user_url
+    mock_app_run.assert_called_with('connexion.cli', **expected_arguments)
+
+
+def test_run_using_option_auth_all_paths(mock_app_run, expected_arguments,
+                                                 spec_file):
+    runner = CliRunner()
+    runner.invoke(main, ['run', spec_file, '--auth-all-paths'],
+                  catch_exceptions=False)
+
+    expected_arguments['auth_all_paths'] = True
+    mock_app_run.assert_called_with('connexion.cli', **expected_arguments)
+
+
+def test_run_in_debug_mode(mock_app_run, expected_arguments, spec_file,
+                           monkeypatch):
     logging_config = MagicMock(name='connexion.cli.logging.basicConfig')
     monkeypatch.setattr('connexion.cli.logging.basicConfig',
                         logging_config)
@@ -50,6 +123,9 @@ def test_run_in_debug_mode(mock_app_run, spec_file, monkeypatch):
     runner.invoke(main, ['run', spec_file, '-d'], catch_exceptions=False)
 
     logging_config.assert_called_with(level=logging.DEBUG)
+
+    expected_arguments['debug'] = True
+    mock_app_run.assert_called_with('connexion.cli', **expected_arguments)
 
 
 def test_run_unimplemented_operations_and_stub(mock_app_run):
