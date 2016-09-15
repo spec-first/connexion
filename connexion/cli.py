@@ -80,7 +80,7 @@ def run(spec_file,
 
     - BASE_MODULE_PATH (optional): filesystem path where the API endpoints handlers are going to be imported from.
     """
-    logging_level = logging.ERROR
+    logging_level = logging.INFO
     if debug:
         logging_level = logging.DEBUG
     logging.basicConfig(level=logging_level)
