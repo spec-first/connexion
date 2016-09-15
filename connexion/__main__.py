@@ -1,3 +1,1 @@
-from connexion.cli import main
-
-main()  # noqa
+from connexion.cli import main; main()  # pragma: no cover
