@@ -58,10 +58,7 @@ def validate_wsgi_server_requirements(ctx, param, value):
               is_flag=True, default=False)
 @click.option('--debug', '-d', help='Show debugging information.',
               is_flag=True, default=False)
-@click.option('--verbose', '-v', help='Show logging information.',
-              is_flag=True, default=False)
-@click.option('--very-verbose', '-vv', help='Show debugging information, same as `--debug`.',
-              is_flag=True, default=False)
+@click.option('--verbose', '-v', help='Show verbose information.', count=True)
 def run(spec_file,
         base_module_path,
         port,
@@ -75,8 +72,7 @@ def run(spec_file,
         validate_responses,
         strict_validation,
         debug,
-        verbose,
-        very_verbose):
+        verbose):
     """
     Runs a server compliant with a OpenAPI/Swagger 2.0 Specification file.
 
@@ -87,10 +83,10 @@ def run(spec_file,
     - BASE_MODULE_PATH (optional): filesystem path where the API endpoints handlers are going to be imported from.
     """
     logging_level = logging.WARN
-    if verbose:
+    if verbose > 0:
         logging_level = logging.INFO
 
-    if debug or very_verbose:
+    if debug or verbose > 1:
         logging_level = logging.DEBUG
         debug = True
 
