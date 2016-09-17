@@ -1,7 +1,7 @@
 import logging
 
+import connexion
 from click.testing import CliRunner
-from connexion import App
 from connexion.cli import main
 from connexion.exceptions import ResolverError
 
@@ -12,11 +12,12 @@ from mock import MagicMock
 
 @pytest.fixture()
 def mock_app_run(monkeypatch):
-    test_server = MagicMock(wraps=App(__name__))
+    test_server = MagicMock(wraps=connexion.App(__name__))
     test_server.run = MagicMock(return_value=True)
     test_app = MagicMock(return_value=test_server)
-    monkeypatch.setattr('connexion.cli.App', test_app)
+    monkeypatch.setattr('connexion.cli.connexion.App', test_app)
     return test_app
+
 
 @pytest.fixture()
 def expected_arguments():
@@ -32,9 +33,16 @@ def expected_arguments():
         "debug": False
     }
 
+
 @pytest.fixture()
 def spec_file():
     return str(FIXTURES_FOLDER / 'simple/swagger.yaml')
+
+
+def test_print_version():
+    runner = CliRunner()
+    result = runner.invoke(main, ['--version'], catch_exceptions=False)
+    assert "Connexion {}".format(connexion.__version__) in result.output
 
 
 def test_run_missing_spec():
