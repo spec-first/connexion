@@ -3,13 +3,11 @@ import sys
 from os import path
 
 import click
+import connexion
 from clickclick import AliasedGroup, fatal_error
-from connexion import App
 
 logger = logging.getLogger('connexion.cli')
-
-main = AliasedGroup(context_settings=dict(help_option_names=[
-    '-h', '--help']))
+CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 
 def validate_wsgi_server_requirements(ctx, param, value):
@@ -23,6 +21,20 @@ def validate_wsgi_server_requirements(ctx, param, value):
             import tornado  # NOQA
         except:
             fatal_error('tornado library is not installed')
+
+
+def print_version(ctx, param, value):
+    if not value or ctx.resilient_parsing:
+        return
+    click.echo('Connexion {}'.format(connexion.__version__))
+    ctx.exit()
+
+
+@click.group(cls=AliasedGroup, context_settings=CONTEXT_SETTINGS)
+@click.option('-V', '--version', is_flag=True, callback=print_version, expose_value=False, is_eager=True,
+              help='Print the current version number and exit.')
+def main():
+    pass
 
 
 @main.command()
@@ -101,13 +113,13 @@ def run(spec_file,
     if stub:
         resolver_error = 501
 
-    app = App(__name__,
-              swagger_json=not hide_spec,
-              swagger_ui=not hide_console_ui,
-              swagger_path=console_ui_from or None,
-              swagger_url=console_ui_url or None,
-              auth_all_paths=auth_all_paths,
-              debug=debug)
+    app = connexion.App(__name__,
+                        swagger_json=not hide_spec,
+                        swagger_ui=not hide_console_ui,
+                        swagger_path=console_ui_from or None,
+                        swagger_url=console_ui_url or None,
+                        auth_all_paths=auth_all_paths,
+                        debug=debug)
 
     app.add_api(spec_file_full_path,
                 resolver_error=resolver_error,
