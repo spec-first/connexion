@@ -165,8 +165,7 @@ class App(object):
         kwargs['operation'] = {
             'operationId': 'connexion.handlers.ResolverErrorHandler',
         }
-        kwargs['app_produces'] = ['application/json']
-        kwargs['app_consumes'] = ['application/json']
+        kwargs.setdefault('app_consumes', ['application/json'])
         return ResolverErrorHandler(self.resolver_error, *args, **kwargs)
 
     def add_error_handler(self, error_code, function):
