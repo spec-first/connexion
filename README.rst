@@ -74,6 +74,7 @@ Other Sources/Mentions
 
 - Zalando Tech blog post `API First`_
 - Connexion listed on Swagger_'s website
+- Blog post: `Crafting effective Microservices in Python`_
 
 How to Use
 ==========
@@ -462,3 +463,4 @@ Unless required by applicable law or agreed to in writing, software distributed 
 .. _Connexion Pet Store Example Application: https://github.com/hjacobs/connexion-example
 .. _described by Flask: http://flask.pocoo.org/snippets/111/
 .. _Connexion's Documentation Page: http://connexion.readthedocs.org/en/latest/
+.. _Crafting effective Microservices in Python: http://caricio.com/2016/09/16/crafting-effective-microservices-in-python/
