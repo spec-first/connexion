@@ -242,6 +242,7 @@ def test_operation():
                           path_parameters=[],
                           operation=OPERATION1,
                           app_produces=['application/json'],
+                          app_consumes=['application/json'],
                           app_security=[],
                           security_definitions=SECURITY_DEFINITIONS,
                           definitions=DEFINITIONS,
@@ -255,6 +256,7 @@ def test_operation():
 
     assert operation.method == 'GET'
     assert operation.produces == ['application/json']
+    assert operation.consumes == ['application/json']
     assert operation.security == [{'oauth': ['uid']}]
 
     expected_body_schema = {
@@ -270,6 +272,7 @@ def test_operation_array():
                           path_parameters=[],
                           operation=OPERATION9,
                           app_produces=['application/json'],
+                          app_consumes=['application/json'],
                           app_security=[],
                           security_definitions=SECURITY_DEFINITIONS,
                           definitions=DEFINITIONS,
@@ -283,6 +286,7 @@ def test_operation_array():
 
     assert operation.method == 'GET'
     assert operation.produces == ['application/json']
+    assert operation.consumes == ['application/json']
     assert operation.security == [{'oauth': ['uid']}]
     expected_body_schema = {
         'type': 'array',
@@ -298,6 +302,7 @@ def test_operation_composed_definition():
                           path_parameters=[],
                           operation=OPERATION10,
                           app_produces=['application/json'],
+                          app_consumes=['application/json'],
                           app_security=[],
                           security_definitions=SECURITY_DEFINITIONS,
                           definitions=DEFINITIONS,
@@ -311,6 +316,7 @@ def test_operation_composed_definition():
 
     assert operation.method == 'GET'
     assert operation.produces == ['application/json']
+    assert operation.consumes == ['application/json']
     assert operation.security == [{'oauth': ['uid']}]
     expected_body_schema = {
         '$ref': '#/definitions/composed',
@@ -326,6 +332,7 @@ def test_non_existent_reference():
                               path_parameters=[],
                               operation=OPERATION1,
                               app_produces=['application/json'],
+                              app_consumes=['application/json'],
                               app_security=[],
                               security_definitions={},
                               definitions={},
@@ -345,6 +352,7 @@ def test_multi_body():
                               path_parameters=[],
                               operation=OPERATION2,
                               app_produces=['application/json'],
+                              app_consumes=['application/json'],
                               app_security=[],
                               security_definitions={},
                               definitions=DEFINITIONS,
@@ -364,6 +372,7 @@ def test_invalid_reference():
                               path_parameters=[],
                               operation=OPERATION3,
                               app_produces=['application/json'],
+                              app_consumes=['application/json'],
                               app_security=[],
                               security_definitions={},
                               definitions=DEFINITIONS,
@@ -382,6 +391,7 @@ def test_no_token_info():
                           path_parameters=[],
                           operation=OPERATION1,
                           app_produces=['application/json'],
+                          app_consumes=['application/json'],
                           app_security=SECURITY_DEFINITIONS_WO_INFO,
                           security_definitions=SECURITY_DEFINITIONS_WO_INFO,
                           definitions=DEFINITIONS,
@@ -392,6 +402,7 @@ def test_no_token_info():
 
     assert operation.method == 'GET'
     assert operation.produces == ['application/json']
+    assert operation.consumes == ['application/json']
     assert operation.security == [{'oauth': ['uid']}]
 
     expected_body_schema = {
@@ -407,6 +418,7 @@ def test_parameter_reference():
                           path_parameters=[],
                           operation=OPERATION4,
                           app_produces=['application/json'],
+                          app_consumes=['application/json'],
                           app_security=[],
                           security_definitions={},
                           definitions={},
@@ -419,9 +431,9 @@ def test_resolve_invalid_reference():
     with pytest.raises(InvalidSpecification) as exc_info:
         Operation(method='GET', path='endpoint', path_parameters=[],
                   operation=OPERATION5, app_produces=['application/json'],
-                  app_security=[], security_definitions={}, definitions={},
-                  parameter_definitions=PARAMETER_DEFINITIONS,
-                  resolver=Resolver())
+                  app_consumes=['application/json'], app_security=[],
+                  security_definitions={}, definitions={},
+                  parameter_definitions=PARAMETER_DEFINITIONS, resolver=Resolver())
 
     exception = exc_info.value  # type: InvalidSpecification
     assert exception.reason == "GET endpoint '$ref' needs to start with '#/'"
@@ -431,8 +443,8 @@ def test_default():
     op = OPERATION6.copy()
     op['parameters'][1]['default'] = 1
     Operation(method='GET', path='endpoint', path_parameters=[], operation=op,
-              app_produces=['application/json'], app_security=[],
-              security_definitions={}, definitions=DEFINITIONS,
+              app_produces=['application/json'], app_consumes=['application/json'],
+              app_security=[], security_definitions={}, definitions=DEFINITIONS,
               parameter_definitions=PARAMETER_DEFINITIONS,
               resolver=Resolver())
     op = OPERATION8.copy()
@@ -440,5 +452,5 @@ def test_default():
         'keep_stacks': 1, 'image_version': 'one', 'senza_yaml': 'senza.yaml', 'new_traffic': 100
     }
     Operation(method='POST', path='endpoint', path_parameters=[], operation=op, app_produces=['application/json'],
-              app_security=[], security_definitions={}, definitions=DEFINITIONS, parameter_definitions={},
-              resolver=Resolver())
+              app_consumes=['application/json'], app_security=[], security_definitions={},
+              definitions=DEFINITIONS, parameter_definitions={}, resolver=Resolver())
