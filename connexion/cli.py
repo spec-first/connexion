@@ -71,6 +71,8 @@ def main():
 @click.option('--debug', '-d', help='Show debugging information.',
               is_flag=True, default=False)
 @click.option('--verbose', '-v', help='Show verbose information.', count=True)
+@click.option('--base-path', metavar='PATH',
+              help='Override the basePath in the API spec.')
 def run(spec_file,
         base_module_path,
         port,
@@ -84,7 +86,8 @@ def run(spec_file,
         validate_responses,
         strict_validation,
         debug,
-        verbose):
+        verbose,
+        base_path):
     """
     Runs a server compliant with a OpenAPI/Swagger 2.0 Specification file.
 
@@ -122,6 +125,7 @@ def run(spec_file,
                         debug=debug)
 
     app.add_api(spec_file_full_path,
+                base_path=base_path,
                 resolver_error=resolver_error,
                 validate_responses=validate_responses,
                 strict_validation=strict_validation)

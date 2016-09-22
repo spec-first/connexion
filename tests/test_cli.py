@@ -166,6 +166,18 @@ def test_run_in_verbose_mode(mock_app_run, expected_arguments, spec_file,
     mock_app_run.assert_called_with('connexion.cli', **expected_arguments)
 
 
+def test_run_using_option_base_path(mock_app_run, expected_arguments,
+                                    spec_file):
+    runner = CliRunner()
+    runner.invoke(main, ['run', spec_file, '--base-path', '/foo'],
+                  catch_exceptions=False)
+
+    expected_arguments = dict(base_path='/foo',
+                              resolver_error=None,
+                              validate_responses=False,
+                              strict_validation=False)
+    mock_app_run().add_api.assert_called_with(spec_file, **expected_arguments)
+
 
 def test_run_unimplemented_operations_and_stub(mock_app_run):
     runner = CliRunner()
