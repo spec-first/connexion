@@ -13,10 +13,10 @@ logger = logging.getLogger('connexion.app')
 
 
 class App(object):
-    def __init__(self, import_name, host=None, port=None, specification_dir='',
+    def __init__(self, import_name, port=None, specification_dir='',
                  server=None, arguments=None, auth_all_paths=False,
                  debug=False, swagger_json=True, swagger_ui=True, swagger_path=None,
-                 swagger_url=None):
+                 swagger_url=None, host=None,):
         """
         :param import_name: the name of the application package
         :type import_name: str
@@ -229,7 +229,7 @@ class App(object):
         logger.debug('Adding %s with decorator', rule, extra=options)
         return self.app.route(rule, **options)
 
-    def run(self, host=None, port=None, server=None, debug=None, **options):  # pragma: no cover
+    def run(self, port=None, server=None, debug=None, host=None, **options):  # pragma: no cover
         """
         Runs the application on a local development server.
         :param host: the host interface to bind on.
@@ -251,10 +251,7 @@ class App(object):
         elif self.port is None:
             self.port = 5000
         
-        if host is not None:
-            self.host = host
-        elif self.host is None:
-            self.host = '0.0.0.0'
+        self.host = host or self.host or '0.0.0.0'
 
         if server is not None:
             self.server = server
