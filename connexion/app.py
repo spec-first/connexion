@@ -250,7 +250,7 @@ class App(object):
             self.port = port
         elif self.port is None:
             self.port = 5000
-        
+
         self.host = host or self.host or '0.0.0.0'
 
         if server is not None:
