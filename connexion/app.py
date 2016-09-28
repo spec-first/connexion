@@ -250,7 +250,7 @@ class App(object):
         if host is not None:
             self.host = host
         elif self.host is None:
-            self.host = '0.0.0.0'
+            self.host = '::'
 
         if port is not None:
             self.port = port
