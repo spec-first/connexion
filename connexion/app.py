@@ -13,13 +13,15 @@ logger = logging.getLogger('connexion.app')
 
 
 class App(object):
-    def __init__(self, import_name, port=None, specification_dir='',
+    def __init__(self, import_name, host=None, port=None, specification_dir='',
                  server=None, arguments=None, auth_all_paths=False,
                  debug=False, swagger_json=True, swagger_ui=True, swagger_path=None,
                  swagger_url=None):
         """
         :param import_name: the name of the application package
         :type import_name: str
+        :param host: host to listen to
+        :type host: str
         :param port: port to listen to
         :type port: int
         :param specification_dir: directory where to look for specifications
@@ -61,6 +63,7 @@ class App(object):
         for error_code in werkzeug.exceptions.default_exceptions:
             self.add_error_handler(error_code, self.common_error_handler)
 
+        self.host = host
         self.port = port
         self.server = server or 'flask'
         self.debug = debug
@@ -226,10 +229,12 @@ class App(object):
         logger.debug('Adding %s with decorator', rule, extra=options)
         return self.app.route(rule, **options)
 
-    def run(self, port=None, server=None, debug=None, **options):  # pragma: no cover
+    def run(self, host=None, port=None, server=None, debug=None, **options):  # pragma: no cover
         """
         Runs the application on a local development server.
 
+        :param host: host to listen to
+        :type host: str
         :param port: port to listen to
         :type port: int
         :param server: which wsgi server to use
@@ -242,6 +247,11 @@ class App(object):
         # this functions is not covered in unit tests because we would effectively testing the mocks
 
         # overwrite constructor parameter
+        if host is not None:
+            self.host = host
+        elif self.host is None:
+            self.host = '0.0.0.0'
+
         if port is not None:
             self.port = port
         elif self.port is None:
@@ -255,7 +265,7 @@ class App(object):
 
         logger.debug('Starting %s HTTP server..', self.server, extra=vars(self))
         if self.server == 'flask':
-            self.app.run('0.0.0.0', port=self.port, debug=self.debug, **options)
+            self.app.run(host=self.host, port=self.port, debug=self.debug, **options)
         elif self.server == 'tornado':
             try:
                 import tornado.wsgi
