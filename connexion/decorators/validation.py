@@ -24,7 +24,7 @@ from jsonschema import (Draft4Validator, ValidationError,
 from werkzeug import FileStorage
 
 from ..problem import problem
-from ..utils import boolean, is_null, is_nullable, all_json
+from ..utils import all_json, boolean, is_null, is_nullable
 
 logger = logging.getLogger('connexion.decorators.validation')
 
