@@ -272,7 +272,7 @@ class App(object):
             wsgi_container = tornado.wsgi.WSGIContainer(self.app)
             http_server = tornado.httpserver.HTTPServer(wsgi_container, **options)
             http_server.listen(self.port, address=host)
-            logger.info('Listening on port %s.. on interface %s..', self.port, host)
+            logger.info('Listening on %s:%s..', host, self.port)
             tornado.ioloop.IOLoop.instance().start()
         elif self.server == 'gevent':
             try:
@@ -280,7 +280,7 @@ class App(object):
             except:
                 raise Exception('gevent library not installed')
             http_server = gevent.wsgi.WSGIServer((self.host, self.port), self.app, **options)
-            logger.info('Listening on port %s..', self.port)
+            logger.info('Listening on %s:%s..', host, self.port)
             http_server.serve_forever()
         else:
             raise Exception('Server %s not recognized', self.server)
