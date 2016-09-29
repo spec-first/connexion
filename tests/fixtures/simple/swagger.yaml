@@ -630,6 +630,26 @@ paths:
           schema:
             type: object
 
+  /text-request:
+    post:
+      operationId: fakeapi.hello.get_data_as_text
+      consumes:
+        - "text/plain"
+      produces:
+        - "text/plain"
+      parameters:
+        - name: post_param
+          description: Just a testing parameter.
+          in: body
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Everything is ok
+          schema:
+            type: string
+
 
 definitions:
   new_stack:
