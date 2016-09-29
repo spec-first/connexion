@@ -16,10 +16,12 @@ class App(object):
     def __init__(self, import_name, port=None, specification_dir='',
                  server=None, arguments=None, auth_all_paths=False,
                  debug=False, swagger_json=True, swagger_ui=True, swagger_path=None,
-                 swagger_url=None):
+                 swagger_url=None, host=None,):
         """
         :param import_name: the name of the application package
         :type import_name: str
+        :param host: the host interface to bind on.
+        :type host: str
         :param port: port to listen to
         :type port: int
         :param specification_dir: directory where to look for specifications
@@ -62,6 +64,7 @@ class App(object):
             self.add_error_handler(error_code, self.common_error_handler)
 
         self.port = port
+        self.host = host
         self.server = server or 'flask'
         self.debug = debug
         self.import_name = import_name
@@ -152,6 +155,7 @@ class App(object):
         kwargs['operation'] = {
             'operationId': 'connexion.handlers.ResolverErrorHandler',
         }
+        kwargs.setdefault('app_consumes', ['application/json'])
         return ResolverErrorHandler(self.resolver_error, *args, **kwargs)
 
     def add_error_handler(self, error_code, function):
@@ -226,10 +230,11 @@ class App(object):
         logger.debug('Adding %s with decorator', rule, extra=options)
         return self.app.route(rule, **options)
 
-    def run(self, port=None, server=None, debug=None, **options):  # pragma: no cover
+    def run(self, port=None, server=None, debug=None, host=None, **options):  # pragma: no cover
         """
         Runs the application on a local development server.
-
+        :param host: the host interface to bind on.
+        :type host: str
         :param port: port to listen to
         :type port: int
         :param server: which wsgi server to use
@@ -247,6 +252,8 @@ class App(object):
         elif self.port is None:
             self.port = 5000
 
+        self.host = host or self.host or '0.0.0.0'
+
         if server is not None:
             self.server = server
 
@@ -255,7 +262,7 @@ class App(object):
 
         logger.debug('Starting %s HTTP server..', self.server, extra=vars(self))
         if self.server == 'flask':
-            self.app.run('0.0.0.0', port=self.port, debug=self.debug, **options)
+            self.app.run(host, port=self.port, debug=self.debug, **options)
         elif self.server == 'tornado':
             try:
                 import tornado.wsgi
@@ -265,16 +272,16 @@ class App(object):
                 raise Exception('tornado library not installed')
             wsgi_container = tornado.wsgi.WSGIContainer(self.app)
             http_server = tornado.httpserver.HTTPServer(wsgi_container, **options)
-            http_server.listen(self.port)
-            logger.info('Listening on port %s..', self.port)
+            http_server.listen(self.port, address=host)
+            logger.info('Listening on %s:%s..', host, self.port)
             tornado.ioloop.IOLoop.instance().start()
         elif self.server == 'gevent':
             try:
                 import gevent.wsgi
             except:
                 raise Exception('gevent library not installed')
-            http_server = gevent.wsgi.WSGIServer(('', self.port), self.app, **options)
-            logger.info('Listening on port %s..', self.port)
+            http_server = gevent.wsgi.WSGIServer((self.host, self.port), self.app, **options)
+            logger.info('Listening on %s:%s..', host, self.port)
             http_server.serve_forever()
         else:
             raise Exception('Server %s not recognized', self.server)

@@ -166,3 +166,10 @@ def test_bad_operations(bad_operations_app):
 
     resp = app_client.post('/v1.0/welcome')
     assert resp.status_code == 501
+
+
+def test_text_request(simple_app):
+    app_client = simple_app.app.test_client()
+
+    resp = app_client.post('/v1.0/text-request', data='text')
+    assert resp.status_code == 200
