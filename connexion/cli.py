@@ -6,6 +6,9 @@ import click
 import connexion
 from clickclick import AliasedGroup, fatal_error
 
+from connexion.resolver import Resolver
+from connexion.mock import MockResolver
+
 logger = logging.getLogger('connexion.cli')
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
@@ -49,6 +52,8 @@ def main():
               help='Returns status code 501, and `Not Implemented Yet` payload, for '
               'the endpoints which handlers are not found.',
               is_flag=True, default=False)
+@click.option('--mock', metavar='MOCKMODE',
+              help='Returns example data for all endpoints or for which handlers are not found.')
 @click.option('--hide-spec',
               help='Hides the API spec in JSON format which is by default available at `/swagger.json`.',
               is_flag=True, default=False)
@@ -78,6 +83,7 @@ def run(spec_file,
         port,
         wsgi_server,
         stub,
+        mock,
         hide_spec,
         hide_console_ui,
         console_ui_url,
@@ -116,6 +122,11 @@ def run(spec_file,
     if stub:
         resolver_error = 501
 
+    if mock:
+        resolver = MockResolver(mock_all=mock == 'all')
+    else:
+        resolver = Resolver()
+
     app = connexion.App(__name__,
                         swagger_json=not hide_spec,
                         swagger_ui=not hide_console_ui,
@@ -124,11 +135,15 @@ def run(spec_file,
                         auth_all_paths=auth_all_paths,
                         debug=debug)
 
-    app.add_api(spec_file_full_path,
+    api = app.add_api(spec_file_full_path,
                 base_path=base_path,
+                resolver=resolver,
                 resolver_error=resolver_error,
                 validate_responses=validate_responses,
                 strict_validation=strict_validation)
+
+    if mock:
+        resolver.api = api
 
     app.run(port=port,
             server=wsgi_server,

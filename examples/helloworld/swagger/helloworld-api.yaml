@@ -19,6 +19,8 @@ paths:
           description: greeting response
           schema:
             type: string
+          examples:
+            "text/plain": "Hello John"
       parameters:
         - name: name
           in: path
