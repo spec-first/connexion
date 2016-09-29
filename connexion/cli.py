@@ -5,9 +5,8 @@ from os import path
 import click
 import connexion
 from clickclick import AliasedGroup, fatal_error
-
-from connexion.resolver import Resolver
 from connexion.mock import MockResolver
+from connexion.resolver import Resolver
 
 logger = logging.getLogger('connexion.cli')
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
@@ -122,10 +121,10 @@ def run(spec_file,
     if stub:
         resolver_error = 501
 
+    api_extra_args = {}
     if mock:
         resolver = MockResolver(mock_all=mock == 'all')
-    else:
-        resolver = Resolver()
+        api_extra_args['resolver'] = resolver
 
     app = connexion.App(__name__,
                         swagger_json=not hide_spec,
@@ -137,10 +136,10 @@ def run(spec_file,
 
     api = app.add_api(spec_file_full_path,
                 base_path=base_path,
-                resolver=resolver,
                 resolver_error=resolver_error,
                 validate_responses=validate_responses,
-                strict_validation=strict_validation)
+                strict_validation=strict_validation,
+                **api_extra_args)
 
     if mock:
         resolver.api = api
