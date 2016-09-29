@@ -37,6 +37,10 @@ class MockResolver(Resolver):
         # simply use the first/lowest status code, this is probably 200 or 201
         status_code = sorted(response_definitions.keys())[0]
         response_definition = response_definitions.get(status_code, {})
+        try:
+            status_code = int(status_code)
+        except ValueError:
+            status_code = 200
         response_definition = operation.resolve_reference(response_definition)
         examples = response_definition.get('examples')
         if examples:
