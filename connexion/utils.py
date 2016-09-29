@@ -143,29 +143,29 @@ def is_json_mimetype(mimetype):
     return maintype == 'application' and (subtype == 'json' or subtype.endswith('+json'))
 
 
-def produces_json(produces):
+def all_json(mimetypes):
     """
-    Returns True if all mimetypes in produces are serialized with json
+    Returns True if all mimetypes are serialized with json
 
-    :type produces: list
+    :type mimetypes: list
     :rtype: bool
 
-    >>> produces_json(['application/json'])
+    >>> all_json(['application/json'])
     True
-    >>> produces_json(['application/x.custom+json'])
+    >>> all_json(['application/x.custom+json'])
     True
-    >>> produces_json([])
+    >>> all_json([])
     True
-    >>> produces_json(['application/xml'])
+    >>> all_json(['application/xml'])
     False
-    >>> produces_json(['text/json'])
+    >>> all_json(['text/json'])
     False
-    >>> produces_json(['application/json', 'other/type'])
+    >>> all_json(['application/json', 'other/type'])
     False
-    >>> produces_json(['application/json', 'application/x.custom+json'])
+    >>> all_json(['application/json', 'application/x.custom+json'])
     True
     """
-    return all(is_json_mimetype(mimetype) for mimetype in produces)
+    return all(is_json_mimetype(mimetype) for mimetype in mimetypes)
 
 
 def boolean(s):

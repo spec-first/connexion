@@ -27,7 +27,7 @@ from .decorators.security import (get_tokeninfo_url, security_passthrough,
 from .decorators.validation import (ParameterValidator, RequestBodyValidator,
                                     TypeValidationError)
 from .exceptions import InvalidSpecification
-from .utils import flaskify_endpoint, is_nullable, produces_json
+from .utils import all_json, flaskify_endpoint, is_nullable
 
 logger = logging.getLogger('connexion.operation')
 
@@ -105,7 +105,7 @@ class Operation(SecureOperation):
     A single API operation on a path.
     """
 
-    def __init__(self, method, path, operation, resolver, app_produces,
+    def __init__(self, method, path, operation, resolver, app_produces, app_consumes,
                  path_parameters=None, app_security=None, security_definitions=None,
                  definitions=None, parameter_definitions=None, response_definitions=None,
                  validate_responses=False, strict_validation=False, randomize_endpoint=None):
@@ -128,6 +128,8 @@ class Operation(SecureOperation):
         :param resolver: Callable that maps operationID to a function
         :param app_produces: list of content types the application can return by default
         :type app_produces: list
+        :param app_consumes: list of content types the application consumes by default
+        :type app_consumes: list
         :param path_parameters: Parameters defined in the path level
         :type path_parameters: list
         :param app_security: list of security rules the application uses by default
@@ -172,6 +174,7 @@ class Operation(SecureOperation):
 
         self.security = operation.get('security', app_security)
         self.produces = operation.get('produces', app_produces)
+        self.consumes = operation.get('consumes', app_consumes)
 
         resolution = resolver.resolve(self)
         self.operation_id = resolution.operation_id
@@ -276,7 +279,7 @@ class Operation(SecureOperation):
 
         :rtype str
         """
-        if produces_json(self.produces):
+        if all_json(self.produces):
             try:
                 return self.produces[0]
             except IndexError:
@@ -325,7 +328,7 @@ class Operation(SecureOperation):
         :rtype: types.FunctionType
         """
 
-        function = parameter_to_arg(self.parameters, self.__undecorated_function)
+        function = parameter_to_arg(self.parameters, self.consumes, self.__undecorated_function)
 
         if self.validate_responses:
             logger.debug('... Response validation enabled.')
@@ -371,7 +374,7 @@ class Operation(SecureOperation):
         logger.debug('... Produces: %s', self.produces, extra=vars(self))
 
         mimetype = self.get_mimetype()
-        if produces_json(self.produces):  # endpoint will return json
+        if all_json(self.produces):  # endpoint will return json
             logger.debug('... Produces json', extra=vars(self))
             jsonify = Jsonifier(mimetype)
             return jsonify
@@ -390,7 +393,7 @@ class Operation(SecureOperation):
         if self.parameters:
             yield ParameterValidator(self.parameters, strict_validation=self.strict_validation)
         if self.body_schema:
-            yield RequestBodyValidator(self.body_schema,
+            yield RequestBodyValidator(self.body_schema, self.consumes,
                                        is_nullable(self.body_definition))
 
     @property
