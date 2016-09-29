@@ -331,7 +331,7 @@ def get_data_as_binary():
 
 
 def get_data_as_text(post_param):
-    return post_param, 200, {'Content-Type': 'text/plain; charset=utf-8'}
+    return ''
 
 
 def get_invalid_response():

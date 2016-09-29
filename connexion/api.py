@@ -123,7 +123,7 @@ class Api(object):
 
         # A list of MIME types the APIs can produce. This is global to all APIs but can be overridden on specific
         # API calls.
-        self.produces = self.specification.get('produces', ['application/json'])  # type: List[str]
+        self.produces = self.specification.get('produces', list())  # type: List[str]
 
         # A list of MIME types the APIs can consume. This is global to all APIs but can be overridden on specific
         # API calls.
