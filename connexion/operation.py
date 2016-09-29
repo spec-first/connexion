@@ -27,7 +27,7 @@ from .decorators.security import (get_tokeninfo_url, security_passthrough,
 from .decorators.validation import (ParameterValidator, RequestBodyValidator,
                                     TypeValidationError)
 from .exceptions import InvalidSpecification
-from .utils import flaskify_endpoint, is_nullable, produces_json
+from .utils import flaskify_endpoint, is_nullable, all_json
 
 logger = logging.getLogger('connexion.operation')
 
@@ -279,7 +279,7 @@ class Operation(SecureOperation):
 
         :rtype str
         """
-        if produces_json(self.produces):
+        if all_json(self.produces):
             try:
                 return self.produces[0]
             except IndexError:
@@ -374,7 +374,7 @@ class Operation(SecureOperation):
         logger.debug('... Produces: %s', self.produces, extra=vars(self))
 
         mimetype = self.get_mimetype()
-        if produces_json(self.produces):  # endpoint will return json
+        if all_json(self.produces):  # endpoint will return json
             logger.debug('... Produces json', extra=vars(self))
             jsonify = Jsonifier(mimetype)
             return jsonify

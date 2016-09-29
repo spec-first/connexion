@@ -7,7 +7,7 @@ import flask
 import six
 import werkzeug.exceptions as exceptions
 
-from ..utils import boolean, is_null, is_nullable
+from ..utils import boolean, is_null, is_nullable, all_json
 
 logger = logging.getLogger(__name__)
 
@@ -89,7 +89,7 @@ def parameter_to_arg(parameters, consumes, function):
     def wrapper(*args, **kwargs):
         logger.debug('Function Arguments: %s', arguments)
 
-        if 'application/json' in consumes:
+        if all_json(consumes):
             try:
                 request_body = flask.request.json
             except exceptions.BadRequest:

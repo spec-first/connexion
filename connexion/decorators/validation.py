@@ -24,7 +24,7 @@ from jsonschema import (Draft4Validator, ValidationError,
 from werkzeug import FileStorage
 
 from ..problem import problem
-from ..utils import boolean, is_null, is_nullable
+from ..utils import boolean, is_null, is_nullable, all_json
 
 logger = logging.getLogger('connexion.decorators.validation')
 
@@ -116,15 +116,13 @@ class RequestBodyValidator(object):
 
         @functools.wraps(function)
         def wrapper(*args, **kwargs):
-            if 'application/json' not in self.consumes:
-                return function(*args, **kwargs)
+            if all_json(self.consumes):
+                data = flask.request.json
 
-            data = flask.request.json
-
-            logger.debug("%s validating schema...", flask.request.url)
-            error = self.validate_schema(data)
-            if error and not self.has_default:
-                return error
+                logger.debug("%s validating schema...", flask.request.url)
+                error = self.validate_schema(data)
+                if error and not self.has_default:
+                    return error
 
             response = function(*args, **kwargs)
             return response

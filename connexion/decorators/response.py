@@ -21,7 +21,7 @@ from jsonschema import ValidationError
 from ..exceptions import (NonConformingResponseBody,
                           NonConformingResponseHeaders)
 from ..problem import problem
-from ..utils import produces_json
+from ..utils import all_json
 from .decorator import BaseDecorator
 from .validation import ResponseBodyValidator
 
@@ -91,7 +91,7 @@ class ResponseValidator(BaseDecorator):
         if not response_definition:
             return False
         return ('schema' in response_definition and
-                (produces_json([self.mimetype]) or self.mimetype == 'text/plain'))
+                (all_json([self.mimetype]) or self.mimetype == 'text/plain'))
 
     def __call__(self, function):
         """
