@@ -7,8 +7,6 @@ from connexion.resolver import Resolver, Resolution, ResolverError
 class MockResolver(Resolver):
 
     def __init__(self, mock_all):
-        # needs to be set after creating the Api instance
-        self.api = None
         self.mock_all = mock_all
         self._operation_id_counter = 1
 

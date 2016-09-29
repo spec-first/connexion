@@ -6,7 +6,6 @@ import click
 import connexion
 from clickclick import AliasedGroup, fatal_error
 from connexion.mock import MockResolver
-from connexion.resolver import Resolver
 
 logger = logging.getLogger('connexion.cli')
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
@@ -134,15 +133,12 @@ def run(spec_file,
                         auth_all_paths=auth_all_paths,
                         debug=debug)
 
-    api = app.add_api(spec_file_full_path,
+    app.add_api(spec_file_full_path,
                 base_path=base_path,
                 resolver_error=resolver_error,
                 validate_responses=validate_responses,
                 strict_validation=strict_validation,
                 **api_extra_args)
-
-    if mock:
-        resolver.api = api
 
     app.run(port=port,
             server=wsgi_server,
