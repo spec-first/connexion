@@ -1,7 +1,7 @@
 
 from functools import partial
 
-from connexion.resolver import Resolver, Resolution, ResolverError
+from connexion.resolver import Resolution, Resolver, ResolverError
 
 
 class MockResolver(Resolver):
