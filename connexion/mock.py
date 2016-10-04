@@ -8,7 +8,7 @@ def partial(func, **frozen):
     def wrapper(*args, **kwargs):
         for k, v in frozen.items():
             kwargs[k] = v
-        func(*args, **kwargs)
+        return func(*args, **kwargs)
     return wrapper
 
 

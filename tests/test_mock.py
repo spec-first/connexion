@@ -1,6 +1,14 @@
 
-from connexion.mock import MockResolver
+from connexion.mock import MockResolver, partial
 from connexion.operation import Operation
+
+
+def test_partial():
+    def func(a, b):
+        return a + b
+
+    add_three = partial(func, a=3)
+    assert add_three(b=1) == 4
 
 
 def test_mock_resolver():
