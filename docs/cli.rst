@@ -48,3 +48,14 @@ list run:
 .. code-block:: bash
 
      $ connexion run --help
+
+Running a mock server
+---------------------
+
+You can run a simple server which returns example responses on every request.
+The example responses must be defined in the ``examples`` response property of the OpenAPI specification.
+Your API specification file is not required to have any ``operationId``.
+
+.. code-block:: bash
+
+    $ connexion run your_api.yaml --mock=all -v
