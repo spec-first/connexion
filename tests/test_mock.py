@@ -1,6 +1,6 @@
 
-from connexion.operation import Operation
 from connexion.mock import MockResolver
+from connexion.operation import Operation
 
 
 def test_mock_resolver():
