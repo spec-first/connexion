@@ -46,6 +46,13 @@ def compatibility_layer(spec):
     return spec
 
 
+def canonical_base_url(base_path):
+    """
+    Make given "basePath" a canonical base URL which can be prepended to paths starting with "/".
+    """
+    return base_path.rstrip('/')
+
+
 class Api(object):
     """
     Single API that corresponds to a flask blueprint
@@ -104,9 +111,9 @@ class Api(object):
         # https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#fixed-fields
         # If base_url is not on provided then we try to read it from the swagger.yaml or use / by default
         if base_url is None:
-            self.base_url = self.specification.get('basePath', '')  # type: dict
+            self.base_url = canonical_base_url(self.specification.get('basePath', ''))
         else:
-            self.base_url = base_url
+            self.base_url = canonical_base_url(base_url)
             self.specification['basePath'] = base_url
 
         # A list of MIME types the APIs can produce. This is global to all APIs but can be overridden on specific

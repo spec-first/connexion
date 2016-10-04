@@ -3,7 +3,7 @@
 import pathlib
 import tempfile
 
-from connexion.api import Api
+from connexion.api import Api, canonical_base_url
 from connexion.exceptions import InvalidSpecification, ResolverError
 from swagger_spec_validator.common import SwaggerValidationError
 from yaml import YAMLError
@@ -11,6 +11,13 @@ from yaml import YAMLError
 import pytest
 
 TEST_FOLDER = pathlib.Path(__file__).parent
+
+
+def test_canonical_base_url():
+    assert canonical_base_url('') == ''
+    assert canonical_base_url('/') == ''
+    assert canonical_base_url('/api') == '/api'
+    assert canonical_base_url('/api/') == '/api'
 
 
 def test_api():
@@ -22,6 +29,12 @@ def test_api():
     api2 = Api(TEST_FOLDER / "fixtures/simple/swagger.yaml")
     assert api2.blueprint.name == '/v1_0'
     assert api2.blueprint.url_prefix == '/v1.0'
+
+
+def test_api_basepath_slash():
+    api = Api(TEST_FOLDER / "fixtures/simple/basepath-slash.yaml", None, {})
+    assert api.blueprint.name == ''
+    assert api.blueprint.url_prefix == ''
 
 
 def test_template():
