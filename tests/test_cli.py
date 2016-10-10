@@ -59,6 +59,20 @@ def test_run_simple_spec(mock_app_run, spec_file):
     app_instance = mock_app_run()
     app_instance.run.assert_called_with(
         port=default_port,
+        host=None,
+        server=None,
+        debug=False)
+
+
+def test_run_spec_with_host(mock_app_run, spec_file):
+    default_port = 5000
+    runner = CliRunner()
+    runner.invoke(main, ['run', spec_file, '--host', 'custom.host'], catch_exceptions=False)
+
+    app_instance = mock_app_run()
+    app_instance.run.assert_called_with(
+        port=default_port,
+        host='custom.host',
         server=None,
         debug=False)
 
