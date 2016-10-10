@@ -42,7 +42,7 @@ def main():
 @click.argument('spec_file')
 @click.argument('base_module_path', required=False)
 @click.option('--port', '-p', default=5000, type=int, help='Port to listen.')
-@click.option('--host', '-H', default=None, type=str, help='Host to listen.')
+@click.option('--host', '-H', type=str, help='Host interface to bind on.')
 @click.option('--wsgi-server', '-w', default='flask',
               type=click.Choice(['flask', 'gevent', 'tornado']),
               callback=validate_wsgi_server_requirements,
