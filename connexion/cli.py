@@ -80,7 +80,7 @@ def main():
 def run(spec_file,
         base_module_path,
         port,
-	host,
+	    host,
         wsgi_server,
         stub,
         mock,
