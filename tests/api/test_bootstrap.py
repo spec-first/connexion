@@ -2,6 +2,8 @@ from connexion.app import App
 from connexion.exceptions import InvalidSpecification
 
 import pytest
+import jinja2
+import yaml
 from conftest import TEST_FOLDER, build_app_from_fixture
 
 
@@ -50,6 +52,28 @@ def test_no_swagger_json_app(simple_api_spec_dir):
     app_client = app.app.test_client()
     swagger_json = app_client.get('/v1.0/swagger.json')  # type: flask.Response
     assert swagger_json.status_code == 404
+
+
+def test_dic_as_yaml_path(simple_api_spec_dir):
+
+    swagger_yaml_path = simple_api_spec_dir / 'swagger.yaml'
+
+    with swagger_yaml_path.open(mode='rb') as swagger_yaml:
+        contents = swagger_yaml.read()
+        try:
+            swagger_template = contents.decode()
+        except UnicodeDecodeError:
+            swagger_template = contents.decode('utf-8', 'replace')
+
+        swagger_string = jinja2.Template(swagger_template).render({})
+        specification = yaml.safe_load(swagger_string)  # type: dict
+
+    app = App(__name__, 5001, simple_api_spec_dir, debug=True)
+    app.add_api(specification)
+
+    app_client = app.app.test_client()
+    swagger_json = app_client.get('/v1.0/swagger.json')  # type: flask.Response
+    assert swagger_json.status_code == 200
 
 
 def test_swagger_json_api(simple_api_spec_dir):

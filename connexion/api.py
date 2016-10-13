@@ -81,7 +81,6 @@ class Api(object):
         """
         self.debug = debug
         self.resolver_error_handler = resolver_error_handler
-        self.swagger_yaml_path = pathlib.Path(swagger_yaml_path)
         logger.debug('Loading specification: %s', swagger_yaml_path,
                      extra={'swagger_yaml': swagger_yaml_path,
                             'base_url': base_url,
@@ -90,20 +89,16 @@ class Api(object):
                             'swagger_path': swagger_path,
                             'swagger_url': swagger_url,
                             'auth_all_paths': auth_all_paths})
-        arguments = arguments or {}
-        with swagger_yaml_path.open(mode='rb') as swagger_yaml:
-            contents = swagger_yaml.read()
-            try:
-                swagger_template = contents.decode()
-            except UnicodeDecodeError:
-                swagger_template = contents.decode('utf-8', 'replace')
 
-            swagger_string = jinja2.Template(swagger_template).render(**arguments)
-            self.specification = yaml.safe_load(swagger_string)  # type: dict
-
-        logger.debug('Read specification', extra={'spec': self.specification})
+        if isinstance(swagger_yaml_path, dict):
+            self.specification = swagger_yaml_path
+        else:
+            self.swagger_yaml_path = pathlib.Path(swagger_yaml_path)
+            self.load_spec_from_file(arguments, swagger_yaml_path)
 
         self.specification = compatibility_layer(self.specification)
+        logger.debug('Read specification', extra={'spec': self.specification})
+
         # Avoid validator having ability to modify specification
         spec = copy.deepcopy(self.specification)
         validate_spec(spec)
@@ -313,3 +308,16 @@ class Api(object):
         :type filename: str
         """
         return flask.send_from_directory(str(self.swagger_path), filename)
+
+    def load_spec_from_file(self, arguments, swagger_yaml_path):
+        arguments = arguments or {}
+
+        with swagger_yaml_path.open(mode='rb') as swagger_yaml:
+            contents = swagger_yaml.read()
+            try:
+                swagger_template = contents.decode()
+            except UnicodeDecodeError:
+                swagger_template = contents.decode('utf-8', 'replace')
+
+            swagger_string = jinja2.Template(swagger_template).render(**arguments)
+            self.specification = yaml.safe_load(swagger_string)  # type: dict
