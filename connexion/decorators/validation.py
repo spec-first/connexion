@@ -201,7 +201,7 @@ class ParameterValidator(object):
                     param_type=param.get('type'),
                     param=param
                 )
-                logger.info(debug_msg.format_map(fmt_params))
+                logger.info(debug_msg.format(**fmt_params))
                 return str(exception)
 
         elif param.get('required'):
