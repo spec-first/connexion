@@ -10,3 +10,4 @@ htmlcov/
 .cache/
 *.swp
 .tox/
+.idea/

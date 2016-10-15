@@ -1,16 +1,3 @@
-"""
-Copyright 2015 Zalando SE
-
-Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
-License. You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an
-"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
- language governing permissions and limitations under the License.
-"""
-
 import collections
 import copy
 import functools
@@ -35,6 +22,11 @@ TYPE_MAP = {
 }
 
 
+def make_type(value, type_literal):
+    type_func = TYPE_MAP.get(type_literal)
+    return type_func(value)
+
+
 class TypeValidationError(Exception):
     def __init__(self, schema_type, parameter_type, parameter_name):
         """
@@ -52,11 +44,6 @@ class TypeValidationError(Exception):
     def __str__(self):
         msg = "Wrong type, expected '{schema_type}' for {parameter_type} parameter '{parameter_name}'"
         return msg.format(**vars(self))
-
-
-def make_type(value, type):
-    type_func = TYPE_MAP.get(type)  # convert value to right type
-    return type_func(value)
 
 
 def validate_type(param, value, parameter_type, parameter_name=None):
@@ -101,7 +88,7 @@ class RequestBodyValidator(object):
         """
         :param schema: The schema of the request body
         :param consumes: The list of content types the operation consumes
-        :param is_nullable: Flag to indicate if null is accepted as valid value.
+        :param is_null_value_valid: Flag to indicate if null is accepted as valid value.
         """
         self.schema = schema
         self.consumes = consumes
@@ -131,7 +118,7 @@ class RequestBodyValidator(object):
 
     def validate_schema(self, data):
         """
-        :type schema: dict
+        :type data: dict
         :rtype: flask.Response | None
         """
         if self.is_null_value_valid and is_null(data):
@@ -158,7 +145,7 @@ class ResponseBodyValidator(object):
 
     def validate_schema(self, data):
         """
-        :type schema: dict
+        :type data: dict
         :rtype: flask.Response | None
         """
         try:
@@ -175,7 +162,7 @@ class ParameterValidator(object):
     def __init__(self, parameters, strict_validation=False):
         """
         :param parameters: List of request parameter dictionaries
-        :param strict_validation: Flag indicating if parametrs not in spec are allowed
+        :param strict_validation: Flag indicating if parameters not in spec are allowed
         """
         self.parameters = collections.defaultdict(list)
         for p in parameters:
@@ -206,7 +193,15 @@ class ParameterValidator(object):
                 else:
                     validate(converted_value, param, format_checker=draft4_format_checker)
             except ValidationError as exception:
-                print(converted_value, type(converted_value), param.get('type'), param, '<--------------------------')
+                debug_msg = 'Error while converting value {converted_value} from param ' \
+                            '{type_converted_value} of type real type {param_type} to the declared type {param}'
+                fmt_params = dict(
+                    converted_value=str(converted_value),
+                    type_converted_value=type(converted_value),
+                    param_type=param.get('type'),
+                    param=param
+                )
+                logger.info(debug_msg.format(**fmt_params))
                 return str(exception)
 
         elif param.get('required'):
