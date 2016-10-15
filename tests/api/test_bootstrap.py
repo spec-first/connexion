@@ -121,7 +121,7 @@ def test_resolve_classmethod(simple_app):
 def test_add_api_with_function_resolver_function_is_wrapped(simple_api_spec_dir):
     app = App(__name__, specification_dir=simple_api_spec_dir)
     api = app.add_api('swagger.yaml', resolver=lambda oid: (lambda foo: 'bar'))
-    assert api.resolver.resolve_function_from_operation_id('faux')('bah') == 'bar'
+    assert api.resolver.resolve_function_from_operation_id('faux')('hoge') == 'bar'
 
 
 def test_default_query_param_does_not_match_defined_type(
