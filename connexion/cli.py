@@ -3,6 +3,7 @@ import sys
 from os import path
 
 import click
+
 import connexion
 from clickclick import AliasedGroup, fatal_error
 from connexion.mock import MockResolver
