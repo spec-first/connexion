@@ -1,12 +1,12 @@
 import logging
 
-import connexion
 from click.testing import CliRunner
-from connexion.cli import main
-from connexion.exceptions import ResolverError
 
+import connexion
 import pytest
 from conftest import FIXTURES_FOLDER
+from connexion.cli import main
+from connexion.exceptions import ResolverError
 from mock import MagicMock
 
 
