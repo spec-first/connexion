@@ -58,12 +58,12 @@ class Api(object):
     Single API that corresponds to a flask blueprint
     """
 
-    def __init__(self, swagger_yaml_path, base_url=None, arguments=None,
+    def __init__(self, specification, base_url=None, arguments=None,
                  swagger_json=None, swagger_ui=None, swagger_path=None, swagger_url=None,
                  validate_responses=False, strict_validation=False, resolver=None,
                  auth_all_paths=False, debug=False, resolver_error_handler=None):
         """
-        :type swagger_yaml_path: pathlib.Path
+        :type specification: pathlib.Path | dict
         :type base_url: str | None
         :type arguments: dict | None
         :type swagger_json: bool
@@ -81,8 +81,8 @@ class Api(object):
         """
         self.debug = debug
         self.resolver_error_handler = resolver_error_handler
-        logger.debug('Loading specification: %s', swagger_yaml_path,
-                     extra={'swagger_yaml': swagger_yaml_path,
+        logger.debug('Loading specification: %s', specification,
+                     extra={'swagger_yaml': specification,
                             'base_url': base_url,
                             'arguments': arguments,
                             'swagger_ui': swagger_ui,
@@ -90,11 +90,11 @@ class Api(object):
                             'swagger_url': swagger_url,
                             'auth_all_paths': auth_all_paths})
 
-        if isinstance(swagger_yaml_path, dict):
-            self.specification = swagger_yaml_path
+        if isinstance(specification, dict):
+            self.specification = specification
         else:
-            self.swagger_yaml_path = pathlib.Path(swagger_yaml_path)
-            self.load_spec_from_file(arguments, swagger_yaml_path)
+            self.specification = pathlib.Path(specification)
+            self.load_spec_from_file(arguments, specification)
 
         self.specification = compatibility_layer(self.specification)
         logger.debug('Read specification', extra={'spec': self.specification})
@@ -309,10 +309,10 @@ class Api(object):
         """
         return flask.send_from_directory(str(self.swagger_path), filename)
 
-    def load_spec_from_file(self, arguments, swagger_yaml_path):
+    def load_spec_from_file(self, arguments, specification):
         arguments = arguments or {}
 
-        with swagger_yaml_path.open(mode='rb') as swagger_yaml:
+        with specification.open(mode='rb') as swagger_yaml:
             contents = swagger_yaml.read()
             try:
                 swagger_template = contents.decode()

@@ -54,7 +54,7 @@ def test_no_swagger_json_app(simple_api_spec_dir):
     assert swagger_json.status_code == 404
 
 
-def test_dic_as_yaml_path(simple_api_spec_dir):
+def test_dict_as_yaml_path(simple_api_spec_dir):
 
     swagger_yaml_path = simple_api_spec_dir / 'swagger.yaml'
 
