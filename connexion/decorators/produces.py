@@ -106,13 +106,15 @@ class Jsonifier(BaseSerializer):
             if is_flask_response(data):
                 logger.debug('Endpoint returned a Flask Response', extra={'url': url, 'mimetype': data.mimetype})
                 return data
-            elif data is NoContent:
-                return '', status_code, headers
+
+            if data is NoContent:
+                data = ''
             elif status_code == 204:
                 logger.debug('Endpoint returned an empty response (204)', extra={'url': url, 'mimetype': self.mimetype})
-                return '', 204, headers
+                data = ''
+            else:
+                data = [json.dumps(data, indent=2), '\n']
 
-            data = [json.dumps(data, indent=2), '\n']
             response = flask.current_app.response_class(data, mimetype=self.mimetype)  # type: flask.Response
             response = self.process_headers(response, headers)
 

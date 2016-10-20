@@ -35,6 +35,7 @@ def test_no_content_response_have_headers(simple_app):
     resp = app_client.get('/v1.0/test-204-with-headers')
     assert resp.status_code == 204
     assert 'X-Something' in resp.headers
+    assert resp.headers['Content-Type'] == 'application/json'
 
 
 def test_no_content_object_and_have_headers(simple_app):
@@ -42,3 +43,4 @@ def test_no_content_object_and_have_headers(simple_app):
     resp = app_client.get('/v1.0/test-204-with-headers-nocontent-obj')
     assert resp.status_code == 204
     assert 'X-Something' in resp.headers
+    assert resp.headers['Content-Type'] == 'application/json'
