@@ -1,0 +1,1 @@
+{% include "fixtures/simple/basepath-slash.yaml" %}

@@ -72,8 +72,8 @@ https://gist.github.com/rafaelcaricio/6e67286a522f747405a7299e6843cd93
 Splitting up your swagger.yaml
 ------------------------------
 
-Connexion does not yet support the `$ref` syntax from Swagger which allows you
-to split up one big zswagger.yaml` into multiple smaller ones. There is a
+Connexion [does not support](https://github.com/zalando/connexion/issues/254) the `$ref` syntax from Swagger which allows you
+to split up one big swagger.yaml` into multiple smaller ones. There is a
 workaround which can be done using Jinja templating though.
 
 
@@ -94,10 +94,10 @@ workaround which can be done using Jinja templating though.
         type: string
         format: money
 
+
 This appraoch won't work if you are including block which should be indented.
 In those cases you have to include the file using a macro, which will let you
 indent it in the main Swagger file.
-
 
 
 .. code-block:: yaml
@@ -116,5 +116,7 @@ indent it in the main Swagger file.
       title:
         {{ include_("title.yaml")|indent(4, true) }}
 
-If you want to add support for Swagger `$ref` syntax then check out
-https://github.com/zalando/connexion/issues/254.
+The Jinja template search path defaults to the directoy which includes the
+swagger.yaml file. You can specify a different search path with the
+`jinja_template_root` parameter.
+

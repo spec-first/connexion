@@ -88,7 +88,7 @@ class App(object):
 
     def add_api(self, swagger_file, base_path=None, arguments=None, auth_all_paths=None, swagger_json=None,
                 swagger_ui=None, swagger_path=None, swagger_url=None, validate_responses=False,
-                strict_validation=False, resolver=Resolver(), resolver_error=None):
+                strict_validation=False, resolver=Resolver(), resolver_error=None, jinja_template_root=None):
         """
         Adds an API to the application based on a swagger file
 
@@ -117,6 +117,10 @@ class App(object):
         :param resolver_error: If specified, turns ResolverError into error
             responses with the given status code.
         :type resolver_error: int | None
+        :parem jinja_template_root: The location to search for Jinja include
+            templates. If not specified then the parent folder of the swagger
+            yaml path is used.
+        :type jinja_template_root: pathlib.Path | None
         :rtype: Api
         """
         # Turn the resolver_error code into a handler object
@@ -148,7 +152,9 @@ class App(object):
                   validate_responses=validate_responses,
                   strict_validation=strict_validation,
                   auth_all_paths=auth_all_paths,
-                  debug=self.debug)
+                  debug=self.debug,
+                  jinja_template_root=jinja_template_root
+                  )
         self.app.register_blueprint(api.blueprint)
         return api
 
