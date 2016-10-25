@@ -83,6 +83,7 @@ class Api(object):
         self.debug = debug
         self.resolver_error_handler = resolver_error_handler
         self.swagger_yaml_path = pathlib.Path(swagger_yaml_path)
+        self.jinja_environment = self.create_jinja_environment()
         logger.debug('Loading specification: %s', swagger_yaml_path,
                      extra={'swagger_yaml': swagger_yaml_path,
                             'base_url': base_url,
@@ -99,7 +100,7 @@ class Api(object):
             except UnicodeDecodeError:
                 swagger_template = contents.decode('utf-8', 'replace')
 
-            swagger_string = jinja2.Template(swagger_template).render(**arguments)
+            swagger_string = self.jinja_environment.from_string(swagger_template).render(**arguments)
             self.specification = yaml.safe_load(swagger_string)  # type: dict
 
         logger.debug('Read specification', extra={'spec': self.specification})
@@ -314,3 +315,9 @@ class Api(object):
         :type filename: str
         """
         return flask.send_from_directory(str(self.swagger_path), filename)
+
+    def create_jinja_environment(self):
+        path_string = str(self.swagger_yaml_path.parent.absolute())
+        return jinja2.Environment(
+            loader=jinja2.FileSystemLoader(path_string)
+        )

@@ -45,6 +45,12 @@ def test_template():
     assert api2.specification['info']['title'] == 'other test'
 
 
+def test_include():
+    api = Api(TEST_FOLDER / "fixtures/simple/include.yaml", None, {})
+    assert api.blueprint.name == ''
+    assert api.blueprint.url_prefix == ''
+
+
 def test_invalid_operation_does_stop_application_to_setup():
     with pytest.raises(ImportError):
         Api(TEST_FOLDER / "fixtures/op_error_api/swagger.yaml", "/api/v1.0",
@@ -132,3 +138,4 @@ def test_validation_error_on_completely_invalid_swagger_spec():
             f.write('[1]\n'.encode())
             f.flush()
             Api(pathlib.Path(f.name), "/api/v1.0")
+

@@ -67,3 +67,54 @@ Connexion application. Keep in mind that the format checkers should be
 defined and registered before you run your application server. A full
 example can be found at
 https://gist.github.com/rafaelcaricio/6e67286a522f747405a7299e6843cd93
+
+
+Splitting up your swagger.yaml
+------------------------------
+
+Connexion does not yet support the `$ref` syntax from Swagger which allows you
+to split up one big zswagger.yaml` into multiple smaller ones. There is a
+workaround which can be done using Jinja templating though.
+
+
+.. code-block:: yaml
+
+    # swagger.yaml
+    type: object
+    {% include "properties.yaml" %}
+
+
+.. code-block:: yaml
+
+    # properties.yaml
+    properties:
+      title:
+        type: string
+      price_label:
+        type: string
+        format: money
+
+This appraoch won't work if you are including block which should be indented.
+In those cases you have to include the file using a macro, which will let you
+indent it in the main Swagger file.
+
+
+
+.. code-block:: yaml
+
+    # swagger.yaml
+    # This doesn't work
+    type: object
+    properties:
+      title:
+        {% include "title.yaml" %}
+
+    # This will work
+    {% macro include_(x) %}{% include x %}{% endmacro %}
+    type: object
+    properties:
+      title:
+        {{ include_("title.yaml")|indent(4, true) }}
+
+If you want to add support for Swagger `$ref` syntax then check out
+https://github.com/zalando/connexion/issues/254.
