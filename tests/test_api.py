@@ -57,6 +57,12 @@ def test_include_from_path():
     assert api.blueprint.url_prefix == ''
 
 
+def test_include_from_multiple_paths():
+    api = Api(TEST_FOLDER / "fixtures/simple/include_from_path.yaml", None, {}, jinja_template_root=[TEST_FOLDER])
+    assert api.blueprint.name == ''
+    assert api.blueprint.url_prefix == ''
+
+
 def test_invalid_operation_does_stop_application_to_setup():
     with pytest.raises(ImportError):
         Api(TEST_FOLDER / "fixtures/op_error_api/swagger.yaml", "/api/v1.0",

@@ -80,7 +80,7 @@ class Api(object):
         :param resolver_error_handler: If given, a callable that generates an
             Operation used for handling ResolveErrors
         :type resolver_error_handler: callable | None
-        :type jinja_template_root: pathlib.Path | None
+        :type jinja_template_root: pathlib.Path | list of pathlib.Path | None
         """
         self.debug = debug
         self.resolver_error_handler = resolver_error_handler
@@ -321,6 +321,13 @@ class Api(object):
         return flask.send_from_directory(str(self.swagger_path), filename)
 
     def create_jinja_environment(self, template_root):
+        if isinstance(template_root, pathlib.Path):
+            template_root = [template_root]
+
+        # Ensure all paths are strings as jinja2.FileSystemLoader cannot
+        # understand `Path`s
+        template_root = [str(path.resolve()) for path in template_root]
+
         return jinja2.Environment(
-            loader=jinja2.FileSystemLoader(str(template_root.absolute()))
+            loader=jinja2.FileSystemLoader(template_root)
         )
