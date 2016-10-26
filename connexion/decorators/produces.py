@@ -29,6 +29,9 @@ class JSONEncoder(json.JSONEncoder):
 
         if isinstance(o, datetime.date):
             return o.isoformat()
+        
+        if isinstance(o, datetime.timedelta):
+            return (datetime.datetime.min + o).time().isoformat()
 
         return json.JSONEncoder.default(self, o)
 
