@@ -111,7 +111,7 @@ path of your application (e.g ``swagger/``). Then run:
 See the `Connexion Pet Store Example Application`_ for a sample
 specification.
 
-Now you're able run and use Connexion!
+Now you're able to run and use Connexion!
 
 
 OAuth 2 Authentication and Authorization
@@ -214,7 +214,7 @@ Automatic Parameter Handling
 
 Connexion automatically maps the parameters defined in your endpoint specification to arguments of your Python views as named parameters, and, whenever possible, with value casting. Simply define the endpoint's parameters with the same names as your views arguments.
 
-As an example, say you have a endpoint specified as:
+As an example, say you have an endpoint specified as:
 
 .. code-block:: yaml
 
