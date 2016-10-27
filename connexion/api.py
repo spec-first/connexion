@@ -62,7 +62,8 @@ class Api(object):
     def __init__(self, swagger_yaml_path, base_url=None, arguments=None,
                  swagger_json=None, swagger_ui=None, swagger_path=None, swagger_url=None,
                  validate_responses=False, strict_validation=False, resolver=None,
-                 auth_all_paths=False, debug=False, resolver_error_handler=None):
+                 auth_all_paths=False, debug=False, resolver_error_handler=None,
+                 jinja_template_root=None):
         """
         :type swagger_yaml_path: pathlib.Path
         :type base_url: str | None
@@ -79,10 +80,14 @@ class Api(object):
         :param resolver_error_handler: If given, a callable that generates an
             Operation used for handling ResolveErrors
         :type resolver_error_handler: callable | None
+        :type jinja_template_root: pathlib.Path | list of pathlib.Path | None
         """
         self.debug = debug
         self.resolver_error_handler = resolver_error_handler
         self.swagger_yaml_path = pathlib.Path(swagger_yaml_path)
+        self.jinja_environment = self.create_jinja_environment(
+            jinja_template_root or swagger_yaml_path.parent
+        )
         logger.debug('Loading specification: %s', swagger_yaml_path,
                      extra={'swagger_yaml': swagger_yaml_path,
                             'base_url': base_url,
@@ -99,7 +104,7 @@ class Api(object):
             except UnicodeDecodeError:
                 swagger_template = contents.decode('utf-8', 'replace')
 
-            swagger_string = jinja2.Template(swagger_template).render(**arguments)
+            swagger_string = self.jinja_environment.from_string(swagger_template).render(**arguments)
             self.specification = yaml.safe_load(swagger_string)  # type: dict
 
         logger.debug('Read specification', extra={'spec': self.specification})
@@ -314,3 +319,15 @@ class Api(object):
         :type filename: str
         """
         return flask.send_from_directory(str(self.swagger_path), filename)
+
+    def create_jinja_environment(self, template_root):
+        if isinstance(template_root, pathlib.Path):
+            template_root = [template_root]
+
+        # Ensure all paths are strings as jinja2.FileSystemLoader cannot
+        # understand `Path`s
+        template_root = [str(path.resolve()) for path in template_root]
+
+        return jinja2.Environment(
+            loader=jinja2.FileSystemLoader(template_root)
+        )
