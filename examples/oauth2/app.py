@@ -5,7 +5,9 @@ Basic example of a resource server
 
 import connexion
 import flask
-
+'''
+Can it work in Windows 8 or linux systems
+'''
 
 def get_secret() -> str:
     # the token's uid will be set in request.user
