@@ -23,7 +23,7 @@ specification to arguments of your Python views as named parameters
 and with value casting whenever possible. All you need to do is define
 the endpoint's parameters with matching names with your views arguments.
 
-As example you have a endpoint specified as:
+As example you have an endpoint specified as:
 
 .. code-block:: yaml
 
@@ -112,7 +112,7 @@ Nullable parameters
 Sometimes your API should explicitly accept `nullable parameters`_. However
 OpenAPI specification currently does `not support`_ officially a way to serve
 this use case, Connexion adds the `x-nullable` vendor extension to parameter
-definitions. It's usage would be:
+definitions. Its usage would be:
 
 .. code-block:: yaml
 
@@ -127,11 +127,11 @@ definitions. It's usage would be:
 It is supported by Connexion in all parameter types: `body`, `query`,
 `formData`, and `path`. Nullable values are the strings `null` and `None`.
 
-.. warning:: Be careful on nullable paramenters for sensitive data where the
+.. warning:: Be careful on nullable parameters for sensitive data where the
              strings "null" or "None" can be `valid values`_.
 
 .. note:: This extension will be removed as soon as OpenAPI/Swagger
-          Specification provide a official way of supporting nullable
+          Specification provide an official way of supporting nullable
           values.
 
 .. _`nullable parameters`: https://github.com/zalando/connexion/issues/182
@@ -141,7 +141,7 @@ It is supported by Connexion in all parameter types: `body`, `query`,
 Header Parameters
 -----------------
 
-Currently header parameters are not passed to the handler functions as parameters. But they can be accessed through the underlying
+Currently, header parameters are not passed to the handler functions as parameters. But they can be accessed through the underlying
 ``connexion.request.headers`` object which aliases the ``flask.request.headers`` object.
 
 .. code-block:: python

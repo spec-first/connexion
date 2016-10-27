@@ -72,7 +72,7 @@ You can also disable it at the API level:
 
 Server Backend
 --------------
-By default connexion uses the default flask server but you can also use Tornado_ or gevent_ as the http server, to do so set server
+By default connexion uses the default flask server but you can also use Tornado_ or gevent_ as the HTTP server, to do so set server
 to ``tornado`` or ``gevent``:
 
 .. code-block:: python

@@ -47,7 +47,7 @@ The format checker function is expected to return `True` when the
 value matches the expected format and return `False` when it
 doesn't. Also is important to verify if the type of the value you are
 trying to validate is compatible with the format. In our example we
-check if the `val` is of type "string" before performing any futher
+check if the `val` is of type "string" before performing any further
 checking.
 
 The final step to make it work is registering our `is_money` function

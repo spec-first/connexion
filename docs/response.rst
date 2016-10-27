@@ -9,7 +9,7 @@ Otherwise, and by default and if the specification defines that an endpoint
 produces only JSON, connexion will automatically serialize the return value
 for you and set the right content type in the HTTP header.
 
-If the endpoint produces a single non JSON mimetype then Connexion will
+If the endpoint produces a single non-JSON mimetype then Connexion will
 automatically set the right content type in the HTTP header.
 
 Customizing JSON encoder
@@ -17,7 +17,7 @@ Customizing JSON encoder
 
 Connexion allows you to customize the `JSONEncoder` class in the Flask app
 instance `json_encoder` (`connexion.App:app`). If you wanna reuse the
-Connexion's date-time sezialization, inherit your custom encoder from
+Connexion's date-time serialization, inherit your custom encoder from
 `connexion.decorators.produces.JSONEncoder`.
 
 Returning status codes
@@ -26,7 +26,7 @@ There are two ways of returning a specific status code.
 
 One way is to return a `Response` object that will be used unchanged.
 
-The other is returning it as second return value in the response. For example
+The other is returning it as a second return value in the response. For example
 
 .. code-block:: python
 
