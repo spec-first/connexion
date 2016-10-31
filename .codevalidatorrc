@@ -1,0 +1,52 @@
+{
+    "exclude_dirs": [".svn", ".git", "xplan", "live-image", "calendar_connector", "archetype"],
+    "rules": {
+        "*.c": ["utf8", "nobom", "notabs", "nocr", "notrailingws"],
+        "*.coffee": ["utf8", "nobom", "notabs", "nocr", "notrailingws", "coffeelint"],
+        "*.conf": ["utf8", "nobom", "notabs", "nocr", "notrailingws"],
+        "*.cpp": ["utf8", "nobom", "notabs", "nocr", "notrailingws"],
+        "*.css": ["utf8", "nobom", "notabs", "nocr"],
+        "*.groovy": ["utf8", "nobom", "notabs", "nocr", "notrailingws"],
+        "*.h": ["utf8", "nobom", "notabs", "nocr", "notrailingws"],
+        "*.html": ["utf8", "nobom", "notabs", "nocr", "notrailingws"],
+        "*.htm": ["utf8", "nobom", "notabs", "nocr", "notrailingws"],
+        "*.java": ["utf8", "nobom", "notabs", "nocr", "notrailingws", "jalopy"],
+        "*.json": ["utf8", "nobom", "notabs", "nocr", "notrailingws", "json"],
+        "*.jsp": ["utf8", "nobom", "notabs", "nocr", "notrailingws"],
+        "*.js": ["utf8", "nobom", "notabs", "nocr", "notrailingws"],
+        "*.less": ["utf8", "nobom", "notabs", "nocr", "notrailingws"],
+        "*.md": ["utf8", "nobom", "notabs", "nocr", "notrailingws"],
+        "*.php": ["utf8", "nobom", "notabs", "nocr", "notrailingws"],
+        "*.phtml": ["utf8", "nobom", "notabs", "nocr", "notrailingws"],
+        "*pom.xml": ["xml", "pomdesc"],
+        "*.pp": ["utf8", "nobom", "notabs", "nocr", "notrailingws", "puppet"],
+        "*.properties": ["utf8", "nobom", "notabs", "nocr", "notrailingws"],
+        "*.py": ["utf8", "nobom", "notabs", "nocr", "notrailingws", "pep8"],
+        "*.rst": ["utf8", "nobom", "notabs", "nocr", "notrailingws"],
+        "* *": ["invalidpath"],
+        "*.sh": ["utf8", "nobom", "notabs", "nocr", "notrailingws"],
+        "*.sql_diff": ["utf8", "nobom", "notabs", "nocr", "notrailingws"],
+        "*.sql": ["utf8", "nobom", "notabs", "nocr", "notrailingws"],
+        "*.styl": ["utf8", "nobom", "notabs", "nocr", "notrailingws"],
+        "*.txt": ["utf8", "nobom", "notabs", "nocr", "notrailingws"],
+        "*.vm": ["utf8", "nobom", "notabs", "nocr", "notrailingws"],
+        "*.wsdl": ["utf8", "nobom", "notabs", "nocr", "notrailingws"],
+        "*.xml": ["utf8", "nobom", "notabs", "nocr", "notrailingws"],
+        "*.yml": ["utf8", "nobom", "notabs", "nocr", "notrailingws", "yaml"],
+        "*.yaml": ["utf8", "nobom", "notabs", "nocr", "notrailingws", "yaml"]
+    },
+    "options": {
+        "phpcs": {
+            "standard": "PSR",
+            "encoding": "UTF-8"
+        },
+        "jalopy": {
+            "classpath": "/opt/jalopy/lib/jalopy-1.9.4.jar:/opt/jalopy/lib/jh.jar"
+        },
+        "pep8": {
+            "max_line_length": 120
+        }
+    },
+    "dir_rules": {"db_diffs": ["sql_diff_dir", "sql_diff_sql"], "database": ["database_dir"]}
+}
+

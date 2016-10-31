@@ -1,0 +1,17 @@
+swagger: "2.0"
+
+info:
+  title: "{{title}}"
+  version: "1.0"
+
+basePath: /v1.1
+
+paths:
+  /welcome:
+    get:
+      operationId: fakeapi.module_with_exception.something
+      responses:
+        200:
+          description: greeting response
+          schema:
+            type: object

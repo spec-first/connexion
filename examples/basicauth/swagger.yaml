@@ -1,0 +1,21 @@
+swagger: "2.0"
+
+info:
+  title: Basic Auth Example
+  version: "1.0"
+
+paths:
+  /secret:
+    get:
+      summary: Return secret string
+      operationId: app.get_secret
+      responses:
+        200:
+          description: secret response
+          schema:
+            type: string
+      security:
+        - basic: []
+securityDefinitions:
+  basic:
+    type: basic

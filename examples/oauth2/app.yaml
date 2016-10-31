@@ -1,0 +1,30 @@
+swagger: "2.0"
+
+info:
+  title: OAuth Example
+  version: "1.0"
+
+paths:
+  /secret:
+    get:
+      summary: Return secret string
+      operationId: app.get_secret
+      responses:
+        200:
+          description: secret response
+          schema:
+            type: string
+      security:
+        # enable authentication and require the "uid" scope for this endpoint
+        - oauth2: ['uid']
+
+securityDefinitions:
+  oauth2:
+    type: oauth2
+    flow: implicit
+    authorizationUrl: https://example.com/oauth2/dialog
+    # the token info URL is hardcoded for our mock_tokeninfo.py script
+    # you can also pass it as an environment variable TOKENINFO_URL
+    x-tokenInfoUrl: http://localhost:7979/tokeninfo
+    scopes:
+      uid: Unique identifier of the user accessing the service.

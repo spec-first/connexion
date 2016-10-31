@@ -1,0 +1,13 @@
+build
+dist
+connexion.egg-info
+__pycache__
+.coverage
+*.egg
+htmlcov/
+*.pyc
+.eggs
+.cache/
+*.swp
+.tox/
+.idea/

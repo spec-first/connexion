@@ -1,0 +1,311 @@
+swagger: "2.0"
+
+info:
+  title: "{{title}}"
+  version: "1.0"
+
+basePath: /v1.0
+
+responses:
+  GeneralList:
+    description: A nice string array
+    schema:
+      type: array
+      items:
+        type: string
+
+paths:
+  /test_schema:
+    post:
+      summary: Returns the image_version
+      description: Returns the image_version
+      operationId: fakeapi.hello.schema
+      parameters:
+        - name: new_stack
+          required: true
+          in: body
+          schema:
+            $ref: '#/definitions/new_stack'
+      produces:
+        - application/json
+      responses:
+        200:
+          description: goodbye response
+          schema:
+            $ref: '#/definitions/new_stack'
+
+  /test_schema/response/object/{valid}:
+    get:
+      summary: Returns an image_version as an object
+      description: Returns image_version
+      operationId: fakeapi.hello.schema_response_object
+      produces:
+        - application/json
+      parameters:
+        - name: valid
+          in: path
+          description: Whether to return a valid or invalid schema in the response body
+          required: true
+          type: string
+      responses:
+        200:
+          description: Requested new_stack data model
+          schema:
+            $ref: '#/definitions/new_stack'
+
+  /test_schema/response/string/{valid}:
+    get:
+      summary: Returns an image_version as a string
+      description: Returns image_version
+      operationId: fakeapi.hello.schema_response_string
+      produces:
+        - text/plain
+      parameters:
+        - name: valid
+          in: path
+          description: Whether to return a valid or invalid schema in the response body
+          required: true
+          type: string
+      responses:
+        200:
+          description: Requested new_stack data model
+          schema:
+            type: string
+
+  /test_schema/response/integer/{valid}:
+    get:
+      summary: Returns an image_version as an integer
+      description: Returns image_version
+      operationId: fakeapi.hello.schema_response_integer
+      produces:
+        - text/plain
+      parameters:
+        - name: valid
+          in: path
+          description: Whether to return a valid or invalid schema in the response body
+          required: true
+          type: string
+      responses:
+        200:
+          description: Requested new_stack data model
+          schema:
+            type: integer
+
+  /test_schema/response/number/{valid}:
+    get:
+      summary: Returns an image_version as a number(float)
+      description: Returns image_version
+      operationId: fakeapi.hello.schema_response_number
+      produces:
+        - text/plain
+      parameters:
+        - name: valid
+          in: path
+          description: Whether to return a valid or invalid schema in the response body
+          required: true
+          type: string
+      responses:
+        200:
+          description: Requested new_stack data model
+          schema:
+            type: number
+
+  /test_schema/response/boolean/{valid}:
+    get:
+      summary: Returns an image_version as a boolean
+      description: Returns image_version
+      operationId: fakeapi.hello.schema_response_boolean
+      produces:
+        - text/plain
+      parameters:
+        - name: valid
+          in: path
+          description: Whether to return a valid or invalid schema in the response body
+          required: true
+          type: string
+      responses:
+        200:
+          description: Requested new_stack data model
+          schema:
+            type: boolean
+
+  /test_schema/response/array/{valid}:
+    get:
+      summary: Returns an image_version as a boolean
+      description: Returns image_version
+      operationId: fakeapi.hello.schema_response_array
+      produces:
+        - application/json
+      parameters:
+        - name: valid
+          in: path
+          description: Whether to return a valid or invalid schema in the response body
+          required: true
+          type: string
+      responses:
+        200:
+          description: Requested new_stack data model
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/new_stack'
+
+  /test_schema_in_query:
+    post:
+      summary: Returns the image_version
+      description: Returns the image_version
+      operationId: fakeapi.hello.schema_query
+      parameters:
+        - name: image_version
+          required: true
+          in: query
+          type: string
+        - name: not_required
+          required: false
+          in: query
+          type: string
+      produces:
+        - application/json
+      responses:
+        200:
+          description: goodbye response
+          schema:
+            $ref: '#/definitions/new_stack'
+
+  /test_schema_list:
+    post:
+      summary: Returns empty response
+      description: Returns empty response
+      operationId: fakeapi.hello.schema_list
+      parameters:
+        - name: new_stack
+          required: true
+          in: body
+          schema:
+            type: array
+            items:
+              type: string
+      produces:
+        - application/json
+      responses:
+        200:
+          description: goodbye response
+          schema:
+            type: string
+
+  /test_schema_map:
+    post:
+      summary: Returns empty response
+      description: Returns empty response
+      operationId: fakeapi.hello.schema_map
+      parameters:
+        - name: new_stack
+          required: true
+          in: body
+          schema:
+            type: object
+            additionalProperties:
+              $ref: '#/definitions/new_stack'
+      produces:
+        - application/json
+      responses:
+        200:
+          description: goodbye response
+          schema:
+            type: string
+
+  /test_schema_recursive:
+    post:
+      summary: Returns empty response
+      description: Returns empty response
+      operationId: fakeapi.hello.schema_recursive
+      parameters:
+        - name: new_stack
+          required: true
+          in: body
+          schema:
+            $ref: '#/definitions/simple_tree'
+      produces:
+        - application/json
+      responses:
+        200:
+          description: goodbye response
+          schema:
+            type: string
+
+  /test_schema_format:
+    post:
+      summary: Returns empty response
+      description: Returns empty response
+      operationId: fakeapi.hello.schema_format
+      parameters:
+        - name: timestamp
+          required: true
+          in: body
+          schema:
+            type: string
+            format: date-time
+      produces:
+        - application/json
+      responses:
+        200:
+          description: goodbye response
+          schema:
+            type: string
+
+  /schema_int:
+    get:
+      description: test schema int
+      operationId: fakeapi.hello.test_schema_int
+      parameters:
+        - name: test_int
+          in: body
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: OK
+
+  /schema_array:
+    get:
+      description: test schema array
+      operationId: fakeapi.hello.test_schema_array
+      parameters:
+        - name: test_array
+          in: body
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        200:
+          description: OK
+
+  /define_global_response:
+    get:
+      description: Should allow global response definitions
+      operationId: fakeapi.hello.test_global_response_definition
+      responses:
+        200:
+          $ref: '#/responses/GeneralList'
+
+definitions:
+  new_stack:
+    type: object
+    properties:
+      image_version:
+        type: string
+        description: Docker image version to deploy
+    required:
+      - image_version
+  simple_tree:
+    type: object
+    properties:
+      children:
+        type: array
+        items:
+          $ref: "#/definitions/simple_tree"
+        description: Docker image version to deploy
+    additionalProperties: false

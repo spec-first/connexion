@@ -1,0 +1,69 @@
+Connexion Cookbook
+==================
+
+This section aims to be a cookbook of possible solutions for specific
+use cases of Connexion.
+
+Custom type format
+------------------
+
+It is possible to define custom type formats that are going to be used
+by the Connexion payload validation on request parameters and response
+payloads of your API.
+
+Let's say your API deals with Products and you want to define a field
+`price_label` that have a "money" format value. You can create a format
+checker function and register that to be used to validate values of
+"money" format.
+
+Example of a possible schema of Product having an attribute with
+"money" format that would be defined in your OpenAPI specification:
+
+.. code-block:: yaml
+
+    type: object
+    properties:
+      title:
+        type: string
+      price_label:
+        type: string
+        format: money
+
+
+Then we create a format checker function for that type of value:
+
+.. code-block:: python
+
+    import re
+
+    MONEY_RE = re.compile('^\$\s*\d+(\.\d\d)?')
+
+    def is_money(val):
+        if not isinstance(val, str):
+            return True
+        return MONEY_RE.match(val)
+
+The format checker function is expected to return `True` when the
+value matches the expected format and return `False` when it
+doesn't. Also is important to verify if the type of the value you are
+trying to validate is compatible with the format. In our example we
+check if the `val` is of type "string" before performing any further
+checking.
+
+The final step to make it work is registering our `is_money` function
+to the format "money" in json_schema library. For that, we can use the
+draft4 format checker decorator.
+
+.. code-block:: python
+
+    from jsonschema import draft4_format_checker
+
+    @draft4_format_checker.checks('money')
+    def is_money(val):
+        ...
+
+This is all you need to have validation for that format in your
+Connexion application. Keep in mind that the format checkers should be
+defined and registered before you run your application server. A full
+example can be found at
+https://gist.github.com/rafaelcaricio/6e67286a522f747405a7299e6843cd93
