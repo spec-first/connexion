@@ -1,8 +1,9 @@
 import json
 
 import requests
-from connexion.resolver import Resolution, Resolver
 from flask import Response, request
+
+from connexion.resolver import Resolution, Resolver
 
 from .utils import partial
 

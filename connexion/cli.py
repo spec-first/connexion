@@ -3,9 +3,9 @@ import sys
 from os import path
 
 import click
-import connexion
 from clickclick import AliasedGroup, fatal_error
 
+import connexion
 from connexion.mock import MockResolver
 from connexion.proxy import ProxyResolver
 
