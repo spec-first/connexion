@@ -59,3 +59,13 @@ Your API specification file is not required to have any ``operationId``.
 .. code-block:: bash
 
     $ connexion run your_api.yaml --mock=all -v
+
+Running a proxy server
+---------------------
+
+You can run a simple server which returns data proxied from another server.
+Your API specification file is not required to have any ``operationId``.
+
+.. code-block:: bash
+
+    $ connexion run your_api.yaml --proxy https://example.com/ -v
