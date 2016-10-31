@@ -2,7 +2,13 @@ from connexion.resolver import Resolution, Resolver
 from flask import Response, request
 import requests
 import json
-from urlparse import urljoin
+
+# urljoin for 2 and 3
+try:
+    from urllib.parse import urljoin
+except ImportError:
+    from urlparse import urljoin
+
 from .utils import partial
 
 CHUNK_SIZE = 1024
