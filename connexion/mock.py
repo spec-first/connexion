@@ -1,4 +1,5 @@
 from connexion.resolver import Resolution, Resolver, ResolverError
+
 from .utils import partial
 
 

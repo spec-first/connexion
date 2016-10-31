@@ -1,7 +1,10 @@
+import json
+
+import requests
 from connexion.resolver import Resolution, Resolver
 from flask import Response, request
-import requests
-import json
+
+from .utils import partial
 
 # urljoin for 2 and 3
 try:
@@ -9,7 +12,6 @@ try:
 except ImportError:
     from urlparse import urljoin
 
-from .utils import partial
 
 CHUNK_SIZE = 1024
 
