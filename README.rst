@@ -58,7 +58,7 @@ Connexion Features:
   automatically serialize the return value for you and set the right
   content type in the HTTP header.
 
-Why Connexion
+Why Connexion??
 -------------
 
 With Connexion, you write the spec first. Connexion then calls your Python
@@ -76,7 +76,7 @@ Other Sources/Mentions
 - Connexion listed on Swagger_'s website
 - Blog post: `Crafting effective Microservices in Python`_
 
-How to Use
+How to Use??
 ==========
 
 Prerequisites
@@ -84,7 +84,7 @@ Prerequisites
 
 Python 2.7 or Python 3.4+
 
-Installing It
+Installing It...
 -------------
 
 In your command line, type this:
@@ -94,7 +94,7 @@ In your command line, type this:
     $ pip install connexion
 
 
-Running It
+Running It...
 ----------
 
 Place your API YAML inside a folder in the root
