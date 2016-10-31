@@ -2,6 +2,7 @@ import copy
 import functools
 import inspect
 import logging
+import re
 
 import flask
 import six
@@ -58,6 +59,10 @@ def get_val_from_param(value, query_param):
         return make_type(value, query_param["type"])
 
 
+def sanitize_param(name):
+    return name and re.sub('^[^a-zA-Z_]+', '', re.sub('[^0-9a-zA-Z_]', '', name))
+
+
 def parameter_to_arg(parameters, consumes, function):
     """
     Pass query and body parameters as keyword arguments to handler function.
@@ -71,18 +76,18 @@ def parameter_to_arg(parameters, consumes, function):
     :type function: function|None
     """
     body_parameters = [parameter for parameter in parameters if parameter['in'] == 'body'] or [{}]
-    body_name = body_parameters[0].get('name')
+    body_name = sanitize_param(body_parameters[0].get('name'))
     default_body = body_parameters[0].get('schema', {}).get('default')
-    query_types = {parameter['name']: parameter
+    query_types = {sanitize_param(parameter['name']): parameter
                    for parameter in parameters if parameter['in'] == 'query'}  # type: dict[str, str]
-    form_types = {parameter['name']: parameter
+    form_types = {sanitize_param(parameter['name']): parameter
                   for parameter in parameters if parameter['in'] == 'formData'}
     path_types = {parameter['name']: parameter
                   for parameter in parameters if parameter['in'] == 'path'}
     arguments, has_kwargs = inspect_function_arguments(function)
-    default_query_params = {param['name']: param['default']
+    default_query_params = {sanitize_param(param['name']): param['default']
                             for param in parameters if param['in'] == 'query' and 'default' in param}
-    default_form_params = {param['name']: param['default']
+    default_form_params = {sanitize_param(param['name']): param['default']
                            for param in parameters if param['in'] == 'formData' and 'default' in param}
 
     @functools.wraps(function)
@@ -115,7 +120,7 @@ def parameter_to_arg(parameters, consumes, function):
 
         # Add query parameters
         query_arguments = copy.deepcopy(default_query_params)
-        query_arguments.update(flask.request.args.items())
+        query_arguments.update({sanitize_param(k): v for k, v in flask.request.args.items()})
         for key, value in query_arguments.items():
             if not has_kwargs and key not in arguments:
                 logger.debug("Query Parameter '%s' not in function arguments", key)
@@ -131,7 +136,7 @@ def parameter_to_arg(parameters, consumes, function):
 
         # Add formData parameters
         form_arguments = copy.deepcopy(default_form_params)
-        form_arguments.update(flask.request.form.items())
+        form_arguments.update({sanitize_param(k): v for k, v in flask.request.form.items()})
         for key, value in form_arguments.items():
             if not has_kwargs and key not in arguments:
                 logger.debug("FormData parameter '%s' not in function arguments", key)

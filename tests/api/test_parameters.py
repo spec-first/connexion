@@ -1,7 +1,6 @@
 import json
 from io import BytesIO
 
-
 def test_parameter_validation(simple_app):
     app_client = simple_app.app.test_client()
 
@@ -287,3 +286,26 @@ def test_args_kwargs(simple_app):
     resp = app_client.get('/v1.0/query-params-as-kwargs?foo=a&bar=b')
     assert resp.status_code == 200
     assert json.loads(resp.data.decode()) == {'foo': 'a'}
+
+
+def test_param_sanitization(simple_app):
+    app_client = simple_app.app.test_client()
+    resp = app_client.post('/v1.0/param-sanitization')
+    assert resp.status_code == 200
+    assert json.loads(resp.data.decode()) == {}
+
+    resp = app_client.post('/v1.0/param-sanitization?$query=queryString',
+            data={'$form': 'formString'})
+    assert resp.status_code == 200
+    assert json.loads(resp.data.decode()) == {
+            'query': 'queryString',
+            'form': 'formString',
+            }
+
+    body = { 'body1': 'bodyString', 'body2': 'otherString' }
+    resp = app_client.post(
+        '/v1.0/body-sanitization',
+        data=json.dumps(body),
+        headers={'Content-Type': 'application/json'})
+    assert resp.status_code == 200
+    assert json.loads(resp.data.decode()) == body
