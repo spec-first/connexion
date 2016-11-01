@@ -646,6 +646,50 @@ paths:
         200:
           description: OK
 
+  /param-sanitization:
+    post:
+      operationId: fakeapi.hello.test_param_sanitization
+      consumes:
+      - multipart/form-data
+      produces:
+        - application/json
+      parameters:
+        - name: $query
+          description: Just a testing parameter with an invalid Python name
+          in: query
+          type: string
+        - name: $form
+          description: Just a testing parameter in the form data
+          in: formData
+          type: string
+      responses:
+        200:
+          description: Return parameters
+          schema:
+            type: object
+
+  /body-sanitization:
+    post:
+      operationId: fakeapi.hello.test_body_sanitization
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: $body
+          description: Just a testing parameter in the body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              body1:
+                type: string
+              body2:
+                type: string
+      responses:
+        200:
+          description: OK
 
 definitions:
   new_stack:
