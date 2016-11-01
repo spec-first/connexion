@@ -130,7 +130,6 @@ class App(object):
         swagger_path = swagger_path if swagger_path is not None else self.swagger_path
         swagger_url = swagger_url if swagger_url is not None else self.swagger_url
         auth_all_paths = auth_all_paths if auth_all_paths is not None else self.auth_all_paths
-        logger.debug('Adding API: %s', specification)
         # TODO test if base_url starts with an / (if not none)
         arguments = arguments or dict()
         arguments = dict(self.arguments, **arguments)  # copy global arguments and update with api specfic

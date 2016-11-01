@@ -93,8 +93,8 @@ class Api(object):
         if isinstance(specification, dict):
             self.specification = specification
         else:
-            self.specification = pathlib.Path(specification)
-            self.load_spec_from_file(arguments, specification)
+            specification_path = pathlib.Path(specification)
+            self.specification = self.load_spec_from_file(arguments, specification_path)
 
         self.specification = compatibility_layer(self.specification)
         logger.debug('Read specification', extra={'spec': self.specification})
@@ -320,4 +320,4 @@ class Api(object):
                 swagger_template = contents.decode('utf-8', 'replace')
 
             swagger_string = jinja2.Template(swagger_template).render(**arguments)
-            self.specification = yaml.safe_load(swagger_string)  # type: dict
+            return yaml.safe_load(swagger_string)  # type: dict
