@@ -87,7 +87,7 @@ Python 2.7 or Python 3.4+
 Installing It
 -------------
 
-In your command line, type this:
+In your command line, type:
 
 .. code-block:: bash
 
