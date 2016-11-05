@@ -86,14 +86,14 @@ class App(object):
             exception = werkzeug.exceptions.InternalServerError()
         return problem(title=exception.name, detail=exception.description, status=exception.code)
 
-    def add_api(self, swagger_file, base_path=None, arguments=None, auth_all_paths=None, swagger_json=None,
+    def add_api(self, specification, base_path=None, arguments=None, auth_all_paths=None, swagger_json=None,
                 swagger_ui=None, swagger_path=None, swagger_url=None, validate_responses=False,
                 strict_validation=False, resolver=Resolver(), resolver_error=None):
         """
-        Adds an API to the application based on a swagger file
+        Adds an API to the application based on a swagger file or API dict
 
-        :param swagger_file: swagger file with the specification
-        :type swagger_file: pathlib.Path
+        :param specification: swagger file with the specification | specification dict
+        :type specification: pathlib.Path or dict
         :param base_path: base path where to add this api
         :type base_path: str | None
         :param arguments: api version specific arguments to replace on the specification
@@ -132,12 +132,16 @@ class App(object):
         swagger_path = swagger_path if swagger_path is not None else self.swagger_path
         swagger_url = swagger_url if swagger_url is not None else self.swagger_url
         auth_all_paths = auth_all_paths if auth_all_paths is not None else self.auth_all_paths
-        logger.debug('Adding API: %s', swagger_file)
         # TODO test if base_url starts with an / (if not none)
         arguments = arguments or dict()
         arguments = dict(self.arguments, **arguments)  # copy global arguments and update with api specfic
-        yaml_path = self.specification_dir / swagger_file
-        api = Api(swagger_yaml_path=yaml_path,
+
+        if isinstance(specification, dict):
+            specification = specification
+        else:
+            specification = self.specification_dir / specification
+
+        api = Api(specification=specification,
                   base_url=base_path, arguments=arguments,
                   swagger_json=swagger_json,
                   swagger_ui=swagger_ui,
