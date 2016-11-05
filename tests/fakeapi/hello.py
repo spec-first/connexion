@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
-from connexion import NoContent, problem, request
 from flask import redirect
+
+from connexion import NoContent, problem, request
 
 
 class DummyClass(object):
@@ -353,3 +354,14 @@ def more_than_one_scope_defined():
 
 def test_args_kwargs(*args, **kwargs):
     return kwargs
+
+def test_param_sanitization(query=None, form=None):
+    result = {}
+    if query:
+      result['query'] = query
+    if form:
+      result['form'] = form
+    return result
+
+def test_body_sanitization(body=None):
+    return body

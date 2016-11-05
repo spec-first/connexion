@@ -73,6 +73,23 @@ encountered in the specification. It will also respect
 ``connexion.resolver.Resolver`` to implement your own ``operationId``
 (and function) resolution algorithm.
 
+Parameter Name Sanitation
+-------------------------
+
+The names of query and form parameters, as well as the name of the body
+parameter are sanitized by removing characters that are not allowed in Python
+symbols. I.e. all characters that are not letters, digits or the underscore are
+removed, and finally characters are removed from the front until a letter or an
+under-score is encountered. As an example:
+
+.. code-block:: python
+
+    >>> re.sub('^[^a-zA-Z_]+', '', re.sub('[^0-9a-zA-Z_]', '', '$top'))
+    'top'
+
+Without this sanitation it would e.g. be impossible to implement an
+[OData](http://www.odata.org) API.
+
 API Versioning and basePath
 ---------------------------
 

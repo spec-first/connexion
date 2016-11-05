@@ -1,4 +1,3 @@
-
 import logging
 
 from .operation import Operation, SecureOperation

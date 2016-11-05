@@ -3,6 +3,7 @@ import pathlib
 
 import flask
 import werkzeug.exceptions
+
 from connexion.decorators.produces import JSONEncoder as ConnexionJSONEncoder
 from connexion.resolver import Resolver
 
@@ -74,6 +75,7 @@ class App(object):
         self.swagger_path = swagger_path
         self.swagger_url = swagger_url
         self.auth_all_paths = auth_all_paths
+        self.resolver_error = None
 
     @staticmethod
     def common_error_handler(exception):
@@ -120,7 +122,7 @@ class App(object):
         # Turn the resolver_error code into a handler object
         self.resolver_error = resolver_error
         resolver_error_handler = None
-        if resolver_error is not None:
+        if self.resolver_error is not None:
             resolver_error_handler = self._resolver_error_handler
 
         resolver = Resolver(resolver) if hasattr(resolver, '__call__') else resolver

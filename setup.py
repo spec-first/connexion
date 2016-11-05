@@ -6,7 +6,7 @@ import os
 import platform
 import sys
 
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 from setuptools.command.test import test as TestCommand
 
 __location__ = os.path.join(os.getcwd(), os.path.dirname(inspect.getfile(inspect.currentframe())))
@@ -23,12 +23,26 @@ version = read_version('connexion')
 py_major_minor_version = tuple(int(v.rstrip('+')) for v in platform.python_version_tuple()[:2])
 
 
-def get_install_requirements(path):
-    content = open(os.path.join(__location__, path)).read()
-    requires = [req for req in content.split('\\n') if req != '']
-    if py_major_minor_version < (3, 4):
-        requires.append('pathlib')
-    return requires
+install_requires = [
+    'clickclick>=1.2',
+    'flask>=0.10.1',
+    'jsonschema>=2.5.1',
+    'PyYAML>=3.11',
+    'requests>=2.9.1',
+    'six>=1.9',
+    'strict-rfc3339>=0.6',
+    'swagger-spec-validator>=2.0.2',
+]
+
+if py_major_minor_version < (3, 4):
+    install_requires.append('pathlib>=1.0.1')
+
+tests_require = [
+    'decorator',
+    'mock',
+    'pytest',
+    'pytest-cov'
+]
 
 
 class PyTest(TestCommand):
@@ -72,8 +86,9 @@ setup(
     keywords='openapi oai swagger rest api oauth flask microservice framework',
     license='Apache License Version 2.0',
     setup_requires=['flake8'],
-    install_requires=get_install_requirements('requirements.txt'),
-    tests_require=['pytest-cov', 'pytest', 'mock', 'decorator'],
+    install_requires=install_requires,
+    tests_require=tests_require,
+    extras_require={'tests': tests_require},
     cmdclass={'test': PyTest},
     test_suite='tests',
     classifiers=[

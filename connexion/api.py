@@ -7,6 +7,7 @@ import flask
 import jinja2
 import six
 import werkzeug.exceptions
+
 import yaml
 from swagger_spec_validator.validator20 import validate_spec
 
