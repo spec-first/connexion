@@ -1,10 +1,9 @@
-from connexion.app import App
-from connexion.exceptions import InvalidSpecification
-
-import pytest
 import jinja2
+import pytest
 import yaml
 from conftest import TEST_FOLDER, build_app_from_fixture
+from connexion.app import App
+from connexion.exceptions import InvalidSpecification
 
 
 def test_app_with_relative_path(simple_api_spec_dir):
