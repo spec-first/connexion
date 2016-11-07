@@ -268,7 +268,7 @@ class App(object):
 
         logger.debug('Starting %s HTTP server..', self.server, extra=vars(self))
         if self.server == 'flask':
-            self.app.run(host, port=self.port, debug=self.debug, **options)
+            self.app.run(self.host, port=self.port, debug=self.debug, **options)
         elif self.server == 'tornado':
             try:
                 import tornado.wsgi
@@ -278,8 +278,8 @@ class App(object):
                 raise Exception('tornado library not installed')
             wsgi_container = tornado.wsgi.WSGIContainer(self.app)
             http_server = tornado.httpserver.HTTPServer(wsgi_container, **options)
-            http_server.listen(self.port, address=host)
-            logger.info('Listening on %s:%s..', host, self.port)
+            http_server.listen(self.port, address=self.host)
+            logger.info('Listening on %s:%s..', self.host, self.port)
             tornado.ioloop.IOLoop.instance().start()
         elif self.server == 'gevent':
             try:
@@ -287,7 +287,7 @@ class App(object):
             except:
                 raise Exception('gevent library not installed')
             http_server = gevent.wsgi.WSGIServer((self.host, self.port), self.app, **options)
-            logger.info('Listening on %s:%s..', host, self.port)
+            logger.info('Listening on %s:%s..', self.host, self.port)
             http_server.serve_forever()
         else:
             raise Exception('Server %s not recognized', self.server)
