@@ -18,6 +18,7 @@ def read_version(package):
             if line.startswith('__version__ = '):
                 return line.split()[-1].strip().strip("'")
 
+
 version = read_version('connexion')
 
 py_major_minor_version = tuple(int(v.rstrip('+')) for v in platform.python_version_tuple()[:2])
