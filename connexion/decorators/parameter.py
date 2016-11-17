@@ -7,15 +7,30 @@ import re
 import flask
 import six
 import werkzeug.exceptions as exceptions
+import codecs
+import platform
 
 from ..utils import all_json, boolean, is_null, is_nullable
 
 logger = logging.getLogger(__name__)
 
+def str_helper(in_str):
+    """
+    Work around python 2's (lack of) unicode handling.
+    Decode string from utf-8 into python 2 native string on python 2, return 
+    string unchanged on python 3.
+
+    :type function: Callable
+    :rtype: str
+    """
+    if platform.python_version_tuple()[0] == '2':
+        return codecs.decode(in_str, 'utf-8')
+    return in_str
+
 # https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#data-types
 TYPE_MAP = {'integer': int,
             'number': float,
-            'string': str,
+            'string': str_helper, 
             'boolean': boolean,
             'array': list,
             'object': dict}  # map of swagger types to python types
@@ -77,6 +92,7 @@ def parameter_to_arg(parameters, consumes, function):
     """
     body_parameters = [parameter for parameter in parameters if parameter['in'] == 'body'] or [{}]
     body_name = sanitize_param(body_parameters[0].get('name'))
+    body_type = body_parameters[0].get("type") or "string"
     default_body = body_parameters[0].get('schema', {}).get('default')
     query_types = {sanitize_param(parameter['name']): parameter
                    for parameter in parameters if parameter['in'] == 'query'}  # type: dict[str, str]
@@ -100,10 +116,10 @@ def parameter_to_arg(parameters, consumes, function):
             except exceptions.BadRequest:
                 request_body = None
         else:
-            request_body = flask.request.data
+            request_body = make_type(flask.request.data, body_type)
 
         if default_body and not request_body:
-            request_body = default_body
+            request_body = make_type(default_body, body_type)
 
         # Parse path parameters
         for key, path_param_definitions in path_types.items():
