@@ -135,13 +135,11 @@ class RequestBodyValidator(object):
 
 
 class ResponseBodyValidator(object):
-    def __init__(self, schema, has_default=False):
+    def __init__(self, schema):
         """
         :param schema: The schema of the response body
-        :param has_default: Flag to indicate if default value is present.
         """
         self.schema = schema
-        self.has_default = schema.get('default', has_default)
 
     def validate_schema(self, data):
         """
