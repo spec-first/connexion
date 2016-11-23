@@ -6,8 +6,7 @@ import sys
 
 import flask
 import six
-from jsonschema import (Draft4Validator, ValidationError,
-                        draft4_format_checker, validate)
+from jsonschema import Draft4Validator, ValidationError, draft4_format_checker
 from werkzeug import FileStorage
 
 from ..problem import problem
@@ -90,10 +89,11 @@ class RequestBodyValidator(object):
         :param consumes: The list of content types the operation consumes
         :param is_null_value_valid: Flag to indicate if null is accepted as valid value.
         """
-        self.schema = schema
         self.consumes = consumes
         self.has_default = schema.get('default', False)
         self.is_null_value_valid = is_null_value_valid
+        self.validator = Draft4Validator(
+            schema, format_checker=draft4_format_checker)
 
     def __call__(self, function):
         """
@@ -125,7 +125,7 @@ class RequestBodyValidator(object):
             return None
 
         try:
-            validate(data, self.schema, format_checker=draft4_format_checker)
+            self.validator.validate(data)
         except ValidationError as exception:
             logger.error("{url} validation error: {error}".format(url=flask.request.url,
                                                                   error=exception.message))
@@ -139,7 +139,8 @@ class ResponseBodyValidator(object):
         """
         :param schema: The schema of the response body
         """
-        self.schema = schema
+        self.validator = Draft4Validator(
+            schema, format_checker=draft4_format_checker)
 
     def validate_schema(self, data):
         """
@@ -147,7 +148,7 @@ class ResponseBodyValidator(object):
         :rtype: flask.Response | None
         """
         try:
-            validate(data, self.schema, format_checker=draft4_format_checker)
+            self.validator.validate(data)
         except ValidationError as exception:
             logger.error("{url} validation error: {error}".format(url=flask.request.url,
                                                                   error=exception))
@@ -189,7 +190,8 @@ class ParameterValidator(object):
                         format_checker=draft4_format_checker,
                         types={'file': FileStorage}).validate(converted_value)
                 else:
-                    validate(converted_value, param, format_checker=draft4_format_checker)
+                    Draft4Validator(
+                        param, format_checker=draft4_format_checker).validate(converted_value)
             except ValidationError as exception:
                 debug_msg = 'Error while converting value {converted_value} from param ' \
                             '{type_converted_value} of type real type {param_type} to the declared type {param}'
