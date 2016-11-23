@@ -83,17 +83,20 @@ def validate_parameter_list(parameter_type, request_params, spec_params):
 
 
 class RequestBodyValidator(object):
-    def __init__(self, schema, consumes, is_null_value_valid=False):
+    def __init__(self, schema, consumes, is_null_value_valid=False, validator=None):
         """
         :param schema: The schema of the request body
         :param consumes: The list of content types the operation consumes
         :param is_null_value_valid: Flag to indicate if null is accepted as valid value.
+        :param validator: Validator class that should be used to validate passed data
+                          against API schema. Default is jsonschema.Draft4Validator.
+        :type validator: jsonschema.IValidator
         """
         self.consumes = consumes
         self.has_default = schema.get('default', False)
         self.is_null_value_valid = is_null_value_valid
-        self.validator = Draft4Validator(
-            schema, format_checker=draft4_format_checker)
+        ValidatorClass = validator or Draft4Validator
+        self.validator = ValidatorClass(schema, format_checker=draft4_format_checker)
 
     def __call__(self, function):
         """
@@ -135,12 +138,15 @@ class RequestBodyValidator(object):
 
 
 class ResponseBodyValidator(object):
-    def __init__(self, schema):
+    def __init__(self, schema, validator=None):
         """
         :param schema: The schema of the response body
+        :param validator: Validator class that should be used to validate passed data
+                          against API schema. Default is jsonschema.Draft4Validator.
+        :type validator: jsonschema.IValidator
         """
-        self.validator = Draft4Validator(
-            schema, format_checker=draft4_format_checker)
+        ValidatorClass = validator or Draft4Validator
+        self.validator = ValidatorClass(schema, format_checker=draft4_format_checker)
 
     def validate_schema(self, data):
         """
