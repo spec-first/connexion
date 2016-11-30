@@ -63,7 +63,7 @@ def verify_oauth(token_info_url, allowed_scopes, function):
                 _, token = authorization.split()  # type: str, str
             except ValueError:
                 return problem(401, 'Unauthorized', 'Invalid authorization header')
-            logger.debug("... Getting token '%s' from %s", token, token_info_url)
+            logger.debug("... Getting token from %s", token_info_url)
             token_request = session.get(token_info_url, params={'access_token': token}, timeout=5)
             logger.debug("... Token info (%d): %s", token_request.status_code, token_request.text)
             if not token_request.ok:
