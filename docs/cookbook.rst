@@ -67,3 +67,27 @@ Connexion application. Keep in mind that the format checkers should be
 defined and registered before you run your application server. A full
 example can be found at
 https://gist.github.com/rafaelcaricio/6e67286a522f747405a7299e6843cd93
+
+
+CORS Support
+------------
+
+CORS_ (Cross-origin resource sharing) is not built into Connexion, but you can use the `flask-cors`_ library
+to set CORS headers:
+
+.. code-block:: python
+
+    import connexion
+    from flask.ext.cors import CORS
+
+    app = connexion.App(__name__)
+    app.add_api('swagger.yaml')
+
+    # add CORS support
+    CORS(app.app)
+
+    app.run(port=8080)
+
+
+.. _CORS: https://en.wikipedia.org/wiki/Cross-origin_resource_sharing
+.. _flask-cors: https://flask-cors.readthedocs.io/
