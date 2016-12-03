@@ -17,7 +17,7 @@ class App(object):
     def __init__(self, import_name, port=None, specification_dir='',
                  server=None, arguments=None, auth_all_paths=False,
                  debug=False, swagger_json=True, swagger_ui=True, swagger_path=None,
-                 swagger_url=None, host=None,):
+                 swagger_url=None, host=None, validator_map=None):
         """
         :param import_name: the name of the application package
         :type import_name: str
@@ -43,6 +43,8 @@ class App(object):
         :type swagger_path: string | None
         :param swagger_url: URL to access swagger-ui documentation
         :type swagger_url: string | None
+        :param validator_map: map of validators
+        :type validator_map: dict
         """
         self.app = flask.Flask(import_name)
 
@@ -76,6 +78,7 @@ class App(object):
         self.swagger_url = swagger_url
         self.auth_all_paths = auth_all_paths
         self.resolver_error = None
+        self.validator_map = validator_map
 
     @staticmethod
     def common_error_handler(exception):
@@ -152,7 +155,8 @@ class App(object):
                   validate_responses=validate_responses,
                   strict_validation=strict_validation,
                   auth_all_paths=auth_all_paths,
-                  debug=self.debug)
+                  debug=self.debug,
+                  validator_map=self.validator_map)
         self.app.register_blueprint(api.blueprint)
         return api
 
