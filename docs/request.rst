@@ -148,3 +148,22 @@ Currently, header parameters are not passed to the handler functions as paramete
 
     def index():
         page_number = connexion.request.headers['Page-Number']
+
+
+Custom Validators
+-----------------
+
+By default, body and parameters contents are validated against OpenAPI schema
+via ``connexion.decorators.validation.RequestBodyValidator``
+or ``connexion.decorators.validation.ParameterValidator``, if you want to
+change the validation, you can override the defaults with:
+
+.. code-block:: python
+
+    validator_map = {
+        'body': CustomRequestBodyValidator,
+        'parameter': CustomParameterValidator
+    }
+    app = connexion.App(__name__, ..., validator_map=validator_map)
+
+See custom validator example in ``examples/enforcedefaults``.

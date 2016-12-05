@@ -6,8 +6,7 @@ import sys
 
 import flask
 import six
-from jsonschema import (Draft4Validator, ValidationError,
-                        draft4_format_checker, validate)
+from jsonschema import Draft4Validator, ValidationError, draft4_format_checker
 from werkzeug import FileStorage
 
 from ..problem import problem
@@ -84,16 +83,20 @@ def validate_parameter_list(parameter_type, request_params, spec_params):
 
 
 class RequestBodyValidator(object):
-    def __init__(self, schema, consumes, is_null_value_valid=False):
+    def __init__(self, schema, consumes, is_null_value_valid=False, validator=None):
         """
         :param schema: The schema of the request body
         :param consumes: The list of content types the operation consumes
         :param is_null_value_valid: Flag to indicate if null is accepted as valid value.
+        :param validator: Validator class that should be used to validate passed data
+                          against API schema. Default is jsonschema.Draft4Validator.
+        :type validator: jsonschema.IValidator
         """
-        self.schema = schema
         self.consumes = consumes
         self.has_default = schema.get('default', False)
         self.is_null_value_valid = is_null_value_valid
+        ValidatorClass = validator or Draft4Validator
+        self.validator = ValidatorClass(schema, format_checker=draft4_format_checker)
 
     def __call__(self, function):
         """
@@ -125,7 +128,7 @@ class RequestBodyValidator(object):
             return None
 
         try:
-            validate(data, self.schema, format_checker=draft4_format_checker)
+            self.validator.validate(data)
         except ValidationError as exception:
             logger.error("{url} validation error: {error}".format(url=flask.request.url,
                                                                   error=exception.message))
@@ -135,13 +138,15 @@ class RequestBodyValidator(object):
 
 
 class ResponseBodyValidator(object):
-    def __init__(self, schema, has_default=False):
+    def __init__(self, schema, validator=None):
         """
         :param schema: The schema of the response body
-        :param has_default: Flag to indicate if default value is present.
+        :param validator: Validator class that should be used to validate passed data
+                          against API schema. Default is jsonschema.Draft4Validator.
+        :type validator: jsonschema.IValidator
         """
-        self.schema = schema
-        self.has_default = schema.get('default', has_default)
+        ValidatorClass = validator or Draft4Validator
+        self.validator = ValidatorClass(schema, format_checker=draft4_format_checker)
 
     def validate_schema(self, data):
         """
@@ -149,7 +154,7 @@ class ResponseBodyValidator(object):
         :rtype: flask.Response | None
         """
         try:
-            validate(data, self.schema, format_checker=draft4_format_checker)
+            self.validator.validate(data)
         except ValidationError as exception:
             logger.error("{url} validation error: {error}".format(url=flask.request.url,
                                                                   error=exception))
@@ -191,7 +196,8 @@ class ParameterValidator(object):
                         format_checker=draft4_format_checker,
                         types={'file': FileStorage}).validate(converted_value)
                 else:
-                    validate(converted_value, param, format_checker=draft4_format_checker)
+                    Draft4Validator(
+                        param, format_checker=draft4_format_checker).validate(converted_value)
             except ValidationError as exception:
                 debug_msg = 'Error while converting value {converted_value} from param ' \
                             '{type_converted_value} of type real type {param_type} to the declared type {param}'

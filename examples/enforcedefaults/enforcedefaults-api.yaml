@@ -1,0 +1,42 @@
+swagger: '2.0'
+info:
+  version: '1'
+  title: Custom Validator Example
+basePath: '/v1'
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /echo:
+    post:
+      description: Echo passed data
+      operationId: enforcedefaults.echo
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/Data'
+      responses:
+        '200':
+          description: Data with defaults filled in by validator
+          schema:
+            $ref: '#/definitions/Data'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+definitions:
+  Data:
+    type: object
+    properties:
+      outer-object:
+        type: object
+        default: {}
+        properties:
+          inner-object:
+            type: string
+            default: foo
+  Error:
+    type: string

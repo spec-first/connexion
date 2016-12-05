@@ -66,6 +66,22 @@ do so by opting in when adding the API:
 This will validate all the responses using `jsonschema` and is specially useful
 during development.
 
+
+Custom Validator
+-----------------
+
+By default, response body contents are validated against OpenAPI schema
+via ``connexion.decorators.response.ResponseValidator``, if you want to change
+the validation, you can override the default class with:
+
+.. code-block:: python
+
+    validator_map = {
+        'response': CustomResponseValidator
+    }
+    app = connexion.App(__name__, ..., validator_map=validator_map)
+
+
 Error Handling
 --------------
 By default connexion error messages are JSON serialized according to
