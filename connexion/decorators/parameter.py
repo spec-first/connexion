@@ -7,12 +7,15 @@ import re
 import flask
 import six
 import werkzeug.exceptions as exceptions
-import codecs
 import platform
-
 from ..utils import all_json, boolean, is_null, is_nullable
 
+if platform.python_version_tuple()[0] == '2':
+    import codecs
+
+
 logger = logging.getLogger(__name__)
+
 
 def str_helper(in_str):
     """
@@ -20,7 +23,7 @@ def str_helper(in_str):
     Decode string from utf-8 into python 2 native string on python 2, return 
     string unchanged on python 3.
 
-    :type function: Callable
+    :param in_str: Input string to try and decode
     :rtype: str
     """
     if platform.python_version_tuple()[0] == '2':
