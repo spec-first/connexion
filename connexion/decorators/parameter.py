@@ -24,7 +24,13 @@ def str_helper(in_str):
     :rtype: str
     """
     if platform.python_version_tuple()[0] == '2':
-        return codecs.decode(in_str, 'utf-8')
+        out = None
+        try:
+            out = codecs.decode(in_str, 'utf-8')
+        except:
+            logger.warn("Unable to decode input string, returning as is...")
+            out = in_str
+        return out
     return in_str
 
 # https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#data-types
