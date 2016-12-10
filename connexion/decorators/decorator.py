@@ -142,7 +142,7 @@ class ResponseContainer(object):
         self.is_handler_response_object = bool(response)
 
         if self._response:
-            self.data = self._response.data
+            self.data = self._response.get_data()
             self.status_code = self._response.status_code
             self.headers = self._response.headers
 
@@ -153,10 +153,6 @@ class ResponseContainer(object):
 
         :rtype: flask.Response
         """
-        if self._response:
-            # returns flask.Response as is
-            return self._response
-
         self._response = flask.current_app.response_class(
             self.data, mimetype=self.mimetype)  # type: flask.Response
         self._response.status_code = self.status_code
