@@ -5,6 +5,8 @@ from copy import deepcopy
 from jsonschema import ValidationError
 
 from .decorators import validation
+from .decorators.decorator import (BeginOfRequestLifecycleDecorator,
+                                   EndOfRequestLifecycleDecorator)
 from .decorators.metrics import UWSGIMetricsCollector
 from .decorators.parameter import parameter_to_arg
 from .decorators.produces import BaseSerializer, Jsonifier, Produces
@@ -18,6 +20,8 @@ from .utils import all_json, flaskify_endpoint, is_nullable
 
 logger = logging.getLogger('connexion.operation')
 
+DEFAULT_MIMETYPE = 'application/json'
+
 
 VALIDATOR_MAP = {
     'parameter': ParameterValidator,
@@ -27,6 +31,7 @@ VALIDATOR_MAP = {
 
 
 class SecureOperation(object):
+
     def __init__(self, security, security_definitions):
         """
         :param security: list of security rules the application uses by default
@@ -91,9 +96,34 @@ class SecureOperation(object):
         # if we don't know how to handle the security or it's not defined we will usa a passthrough decorator
         return security_passthrough
 
+    def get_mimetype(self):
+        return DEFAULT_MIMETYPE
+
+    @property
+    def _request_begin_lifecycle_decorator(self):
+        """
+        Transforms the result of the operation handler in a internal
+        representation (connexion.decorators.ResponseContainer) to be
+        used by internal Connexion decorators.
+
+        :rtype: types.FunctionType
+        """
+        return BeginOfRequestLifecycleDecorator(self.get_mimetype())
+
+    @property
+    def _request_end_lifecycle_decorator(self):
+        """
+        Guarantees that instead of the internal representation of the
+        operation handler response
+        (connexion.decorators.ResponseContainer) a flask.Response
+        object is returned.
+
+        :rtype: types.FunctionType
+        """
+        return EndOfRequestLifecycleDecorator()
+
 
 class Operation(SecureOperation):
-    DEFAULT_MIMETYPE = 'application/json'
 
     """
     A single API operation on a path.
@@ -284,11 +314,11 @@ class Operation(SecureOperation):
             try:
                 return self.produces[0]
             except IndexError:
-                return Operation.DEFAULT_MIMETYPE
+                return DEFAULT_MIMETYPE
         elif len(self.produces) == 1:
             return self.produces[0]
         else:
-            return Operation.DEFAULT_MIMETYPE
+            return DEFAULT_MIMETYPE
 
     def resolve_parameters(self, parameters):
         for param in parameters:
@@ -329,7 +359,9 @@ class Operation(SecureOperation):
         :rtype: types.FunctionType
         """
 
-        function = parameter_to_arg(self.parameters, self.consumes, self.__undecorated_function)
+        function = parameter_to_arg(
+            self.parameters, self.consumes, self.__undecorated_function)
+        function = self._request_begin_lifecycle_decorator(function)
 
         if self.validate_responses:
             logger.debug('... Response validation enabled.')
@@ -338,7 +370,7 @@ class Operation(SecureOperation):
             function = response_decorator(function)
 
         produces_decorator = self.__content_type_decorator
-        logger.debug('... Adding produces decorator (%r)', produces_decorator, extra=vars(self))
+        logger.debug('... Adding produces decorator (%r)', produces_decorator)
         function = produces_decorator(function)
 
         for validation_decorator in self.__validation_decorators:
@@ -346,13 +378,14 @@ class Operation(SecureOperation):
 
         # NOTE: the security decorator should be applied last to check auth before anything else :-)
         security_decorator = self.security_decorator
-        logger.debug('... Adding security decorator (%r)', security_decorator, extra=vars(self))
+        logger.debug('... Adding security decorator (%r)', security_decorator)
         function = security_decorator(function)
 
         if UWSGIMetricsCollector.is_available():  # pragma: no cover
             decorator = UWSGIMetricsCollector(self.path, self.method)
             function = decorator(function)
 
+        function = self._request_end_lifecycle_decorator(function)
         return function
 
     @property

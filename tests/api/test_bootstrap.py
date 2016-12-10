@@ -1,6 +1,6 @@
 import jinja2
-import yaml
 import pytest
+import yaml
 from conftest import TEST_FOLDER, build_app_from_fixture
 from connexion.app import App
 from connexion.exceptions import InvalidSpecification

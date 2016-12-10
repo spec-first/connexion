@@ -87,7 +87,8 @@ class App(object):
         """
         if not isinstance(exception, werkzeug.exceptions.HTTPException):
             exception = werkzeug.exceptions.InternalServerError()
-        return problem(title=exception.name, detail=exception.description, status=exception.code)
+        response_container = problem(title=exception.name, detail=exception.description, status=exception.code)
+        return response_container.flask_response_object()
 
     def add_api(self, specification, base_path=None, arguments=None, auth_all_paths=None, swagger_json=None,
                 swagger_ui=None, swagger_path=None, swagger_url=None, validate_responses=False,

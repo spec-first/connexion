@@ -288,7 +288,6 @@ class ParameterValidator(object):
                 if error:
                     return problem(400, 'Bad Request', error)
 
-            response = function(*args, **kwargs)
-            return response
+            return function(*args, **kwargs)
 
         return wrapper

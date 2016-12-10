@@ -96,6 +96,11 @@ def simple_app():
 
 
 @pytest.fixture(scope="session")
+def invalid_resp_allowed_app():
+    return build_app_from_fixture('simple', validate_responses=False)
+
+
+@pytest.fixture(scope="session")
 def strict_app():
     return build_app_from_fixture('simple', validate_responses=True, strict_validation=True)
 

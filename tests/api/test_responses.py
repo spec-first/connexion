@@ -173,3 +173,9 @@ def test_text_request(simple_app):
 
     resp = app_client.post('/v1.0/text-request', data='text')
     assert resp.status_code == 200
+
+
+def test_operation_handler_returns_flask_object(invalid_resp_allowed_app):
+    app_client = invalid_resp_allowed_app.app.test_client()
+    resp = app_client.get('/v1.0/get_non_conforming_response')
+    assert resp.status_code == 200

@@ -1,6 +1,6 @@
-import json
+from flask import json
 
-import flask
+from .decorators.decorator import ResponseContainer
 
 
 def problem(status, title, detail, type='about:blank', instance=None, headers=None, ext=None):
@@ -35,10 +35,9 @@ def problem(status, title, detail, type='about:blank', instance=None, headers=No
     if ext:
         problem_response.update(ext)
 
-    body = [json.dumps(problem_response, indent=2), '\n']
-    response = flask.current_app.response_class(body, mimetype='application/problem+json',
-                                                status=status)  # type: flask.Response
-    if headers:
-        response.headers.extend(headers)
-
-    return response
+    return ResponseContainer(
+        mimetype='application/problem+json',
+        data="{}\n".format(json.dumps(problem_response, indent=2)),
+        status_code=status,
+        headers=headers
+    )

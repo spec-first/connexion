@@ -691,6 +691,21 @@ paths:
         200:
           description: OK
 
+  /get_non_conforming_response:
+    get:
+      operationId: fakeapi.hello.get_empty_dict
+      responses:
+        200:
+          description: OK
+          schema:
+            type: object
+            required:
+              - some
+            properties:
+              some:
+                type: string
+
+
 definitions:
   new_stack:
     type: object
