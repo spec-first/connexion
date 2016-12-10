@@ -1,3 +1,5 @@
+from werkzeug.exceptions import Forbidden, Unauthorized
+
 class ConnexionException(Exception):
     pass
 
@@ -60,3 +62,17 @@ class NonConformingResponseBody(NonConformingResponse):
 class NonConformingResponseHeaders(NonConformingResponse):
     def __init__(self, message, reason="Response headers do not conform to specification"):
         super(NonConformingResponseHeaders, self).__init__(reason=reason, message=message)
+
+
+class OAuthProblem(Unauthorized):
+    pass
+
+
+class OAuthResponseProblem(Unauthorized):
+    def __init__(self, description=None, response=None, token_response=None):
+        self.token_response = token_response
+        Unauthorized.__init__(self, description, response)
+
+
+class OAuthScopeProblem(Forbidden):
+    pass

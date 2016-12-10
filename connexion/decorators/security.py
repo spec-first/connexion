@@ -6,7 +6,8 @@ import textwrap
 
 import requests
 from flask import request
-from werkzeug.exceptions import Forbidden, Unauthorized
+
+from ..exceptions import OAuthProblem, OAuthResponseProblem, OAuthScopeProblem
 
 logger = logging.getLogger('connexion.api.security')
 
@@ -15,20 +16,6 @@ adapter = requests.adapters.HTTPAdapter(pool_connections=100, pool_maxsize=100)
 session = requests.Session()
 session.mount('http://', adapter)
 session.mount('https://', adapter)
-
-
-class OAuthProblem(Unauthorized):
-    pass
-
-
-class OAuthResponseProblem(Unauthorized):
-    def __init__(self, description=None, response=None, token_response=None):
-        self.token_response = token_response
-        Unauthorized.__init__(self, description, response)
-
-
-class OAuthScopeProblem(Forbidden):
-    pass
 
 
 def get_tokeninfo_url(security_definition):
