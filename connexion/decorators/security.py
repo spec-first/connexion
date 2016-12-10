@@ -17,6 +17,16 @@ session.mount('http://', adapter)
 session.mount('https://', adapter)
 
 
+class OAuthProblem(Unauthorized):
+    pass
+
+
+class OAuthResponseProblem(Unauthorized):
+    def __init__(self, description=None, response=None, token_response=None):
+        self.token_response = token_response
+        Unauthorized.__init__(self, description, response)
+
+
 def get_tokeninfo_url(security_definition):
     '''
     :type security_definition: dict
@@ -56,17 +66,17 @@ def verify_oauth(token_info_url, allowed_scopes, function):
         authorization = request.headers.get('Authorization')  # type: str
         if not authorization:
             logger.info("... No auth provided. Aborting with 401.")
-            raise Unauthorized('No authorization token provided')
+            raise OAuthProblem('No authorization token provided')
         else:
             try:
                 _, token = authorization.split()  # type: str, str
             except ValueError:
-                raise Unauthorized('Invalid authorization header')
+                raise OAuthProblem('Invalid authorization header')
             logger.debug("... Getting token from %s", token_info_url)
             token_request = session.get(token_info_url, params={'access_token': token}, timeout=5)
             logger.debug("... Token info (%d): %s", token_request.status_code, token_request.text)
             if not token_request.ok:
-                raise Unauthorized('Provided oauth token is not valid')
+                raise OAuthResponseProblem('Provided oauth token is not valid', None, token_request)
             token_info = token_request.json()  # type: dict
             user_scopes = set(token_info['scope'])
             logger.debug("... Scopes required: %s", allowed_scopes)
