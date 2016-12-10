@@ -27,6 +27,10 @@ class OAuthResponseProblem(Unauthorized):
         Unauthorized.__init__(self, description, response)
 
 
+class OAuthScopeProblem(Forbidden):
+    pass
+
+
 def get_tokeninfo_url(security_definition):
     '''
     :type security_definition: dict
@@ -86,7 +90,7 @@ def verify_oauth(token_info_url, allowed_scopes, function):
                             ... User scopes (%s) do not match the scopes necessary to call endpoint (%s).
                              Aborting with 403.""").replace('\n', ''),
                             user_scopes, allowed_scopes)
-                raise Forbidden('Provided token doesn\'t have the required scope')
+                raise OAuthScopeProblem('Provided token doesn\'t have the required scope')
             logger.info("... Token authenticated.")
             request.user = token_info.get('uid')
             request.token_info = token_info
