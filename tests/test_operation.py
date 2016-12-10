@@ -226,7 +226,7 @@ OPERATION10 = {'description': 'Adds a new stack to be created by lizzy and retur
 
 SECURITY_DEFINITIONS = {'oauth': {'type': 'oauth2',
                                   'flow': 'password',
-                                  'x-tokenInfoUrl': 'https://ouath.example/token_info',
+                                  'x-tokenInfoUrl': 'https://oauth.example/token_info',
                                   'scopes': {'myscope': 'can do stuff'}}}
 
 SECURITY_DEFINITIONS_WO_INFO = {'oauth': {'type': 'oauth2',
@@ -250,7 +250,7 @@ def test_operation():
     # security decorator should be a partial with verify_oauth as the function and token url and scopes as arguments.
     # See https://docs.python.org/2/library/functools.html#partial-objects
     assert operation.security_decorator.func is verify_oauth
-    assert operation.security_decorator.args == ('https://ouath.example/token_info', set(['uid']))
+    assert operation.security_decorator.args == ('https://oauth.example/token_info', set(['uid']))
 
     assert operation.method == 'GET'
     assert operation.produces == ['application/json']
@@ -280,7 +280,7 @@ def test_operation_array():
     # security decorator should be a partial with verify_oauth as the function and token url and scopes as arguments.
     # See https://docs.python.org/2/library/functools.html#partial-objects
     assert operation.security_decorator.func is verify_oauth
-    assert operation.security_decorator.args == ('https://ouath.example/token_info', set(['uid']))
+    assert operation.security_decorator.args == ('https://oauth.example/token_info', set(['uid']))
 
     assert operation.method == 'GET'
     assert operation.produces == ['application/json']
@@ -310,7 +310,7 @@ def test_operation_composed_definition():
     # security decorator should be a partial with verify_oauth as the function and token url and scopes as arguments.
     # See https://docs.python.org/2/library/functools.html#partial-objects
     assert operation.security_decorator.func is verify_oauth
-    assert operation.security_decorator.args == ('https://ouath.example/token_info', set(['uid']))
+    assert operation.security_decorator.args == ('https://oauth.example/token_info', set(['uid']))
 
     assert operation.method == 'GET'
     assert operation.produces == ['application/json']

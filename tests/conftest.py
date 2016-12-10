@@ -38,7 +38,7 @@ def oauth_requests(monkeypatch):
         :type params: dict| None
         """
         params = params or {}
-        if url == "https://ouath.example/token_info":
+        if url == "https://oauth.example/token_info":
             token = params['access_token']
             if token in ["100", "has_myscope"]:
                 return FakeResponse(200, '{"uid": "test-user", "scope": ["myscope"]}')
