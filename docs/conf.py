@@ -248,7 +248,9 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     ('index', 'Connexion', u'Connexion Documentation',
-     u'Zalando SE', 'Connexion', 'One line description of project.',
+     u'Zalando SE', 'Connexion',
+     'Swagger/OpenAPI First framework for Python on top of Flask'
+     ' with automatic endpoint validation and OAuth2 support',
      'Miscellaneous'),
 ]
 

@@ -82,3 +82,9 @@ The following configuration values are used internally by Connexion:
 ``CONSOLE_UI_PATH``                       Path to mount the OpenAPI console.
                                           Defaults to: "/ui"
 ========================================= =========================================
+
+You can generate a base configuration file using the Connexion CLI:
+
+.. code-block:: bash
+
+    $ connexion default-config > myapp.conf
