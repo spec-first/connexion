@@ -1,5 +1,6 @@
-import json
+from werkzeug.exceptions import Unauthorized
 
+import pytest
 from connexion.decorators.security import get_tokeninfo_url, verify_oauth
 from mock import MagicMock
 
@@ -32,9 +33,5 @@ def test_verify_oauth_invalid_auth_header(monkeypatch):
     monkeypatch.setattr('connexion.decorators.security.request', request)
     monkeypatch.setattr('flask.current_app', app)
 
-    resp = wrapped_func()
-
-    assert resp.status_code == 401
-    payload = json.loads(resp.get_data())
-    assert payload['title'] == 'Unauthorized'
-    assert payload['detail'] == 'Invalid authorization header'
+    with pytest.raises(Unauthorized):
+        wrapped_func()

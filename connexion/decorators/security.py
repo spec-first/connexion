@@ -6,8 +6,7 @@ import textwrap
 
 import requests
 from flask import request
-
-from ..problem import problem
+from werkzeug.exceptions import Forbidden, Unauthorized
 
 logger = logging.getLogger('connexion.api.security')
 
@@ -57,17 +56,17 @@ def verify_oauth(token_info_url, allowed_scopes, function):
         authorization = request.headers.get('Authorization')  # type: str
         if not authorization:
             logger.info("... No auth provided. Aborting with 401.")
-            return problem(401, 'Unauthorized', "No authorization token provided")
+            raise Unauthorized('No authorization token provided')
         else:
             try:
                 _, token = authorization.split()  # type: str, str
             except ValueError:
-                return problem(401, 'Unauthorized', 'Invalid authorization header')
+                raise Unauthorized('Invalid authorization header')
             logger.debug("... Getting token from %s", token_info_url)
             token_request = session.get(token_info_url, params={'access_token': token}, timeout=5)
             logger.debug("... Token info (%d): %s", token_request.status_code, token_request.text)
             if not token_request.ok:
-                return problem(401, 'Unauthorized', "Provided oauth token is not valid")
+                raise Unauthorized('Provided oauth token is not valid')
             token_info = token_request.json()  # type: dict
             user_scopes = set(token_info['scope'])
             logger.debug("... Scopes required: %s", allowed_scopes)
@@ -75,9 +74,9 @@ def verify_oauth(token_info_url, allowed_scopes, function):
             if not allowed_scopes <= user_scopes:
                 logger.info(textwrap.dedent("""
                             ... User scopes (%s) do not match the scopes necessary to call endpoint (%s).
-                             Aborting with 401.""").replace('\n', ''),
+                             Aborting with 403.""").replace('\n', ''),
                             user_scopes, allowed_scopes)
-                return problem(403, 'Forbidden', "Provided token doesn't have the required scope")
+                raise Forbidden('Provided token doesn\'t have the required scope')
             logger.info("... Token authenticated.")
             request.user = token_info.get('uid')
             request.token_info = token_info
