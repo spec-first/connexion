@@ -22,7 +22,12 @@ Config.define('PORT', 5000,
               'The port to listen to when server is running.',
               SERVER_CONFIG_SECTION)
 
-Config.define('DEBUG', False,
+Config.define('WSGI_SERVER_CONTAINER', 'flask',
+              'Which WSGI server container to use. '
+              'Options are: "flask", "gevent", and "tornado".',
+              SERVER_CONFIG_SECTION)
+
+Config.define('CONNEXION_DEBUG', False,
               'Whether to execute the application in debug mode.',
               SERVER_CONFIG_SECTION)
 
@@ -47,6 +52,21 @@ Config.define('MAKE_SPEC_AVAILABLE', True,
               'Whether to make available the OpenAPI sepecification under '
               'CONSOLE_UI_PATH/swagger.json path.',
               API_CONFIG_SECTION)
+
+Config.define('JSON_ENCODER', 'connexion.decorators.produces.JSONEncoder',
+              'Defines which encoder to use when serializing objects to JSON.',
+              API_CONFIG_SECTION)
+
+Config.define('STUB_NOT_IMPLEMENTED_ENDPOINTS', False,
+              'Returns status code 501, and "Not Implemented Yet" payload, for '
+              'the endpoints which handlers are not found.',
+              API_CONFIG_SECTION)
+
+Config.define('MOCK_API', None,
+              'Returns example data for all endpoints or for which handlers'
+              ' are not found. Options are: None, "all" or "notimplemented".',
+              API_CONFIG_SECTION)
+
 
 CONSOLE_UI_SECTION = 'API Console UI configurations'
 
@@ -77,9 +97,14 @@ def _print_doc_table():
     for group in config.class_groups:
         keys = config.class_group_items[group]
         for key in keys:
-            desc = '{} Defaults to: "{}"'.format(
-                config.class_descriptions[key], config.class_defaults[key])
+            default_value = config.class_defaults[key]
+            if isinstance(default_value, str):
+                default_value = '"{}"'.format(default_value)
+
+            desc = '{} Defaults to: {}'.format(
+                config.class_descriptions[key], default_value)
             desc = fill(desc, width=column_width).replace('\n', newline_spacing)
+
             print('``{}``{}{}'.format(key, ' ' * (column_width - len(key) - 3), desc))
     print(header)
 
