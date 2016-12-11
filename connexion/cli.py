@@ -6,6 +6,7 @@ import click
 from clickclick import AliasedGroup, fatal_error
 
 import connexion
+from connexion.config import Config
 from connexion.mock import MockResolver
 
 logger = logging.getLogger('connexion.cli')
@@ -71,7 +72,7 @@ def main():
               help='Enable validation of response values from operation handlers.',
               is_flag=True, default=False)
 @click.option('--strict-validation',
-              help='Enable strict validation of request payloads.',
+              help='Enable strict validation of endpoint parameters.',
               is_flag=True, default=False)
 @click.option('--debug', '-d', help='Show debugging information.',
               is_flag=True, default=False)
@@ -147,6 +148,14 @@ def run(spec_file,
             host=host,
             server=wsgi_server,
             debug=debug)
+
+
+@main.command()
+def default_config():
+    """
+    Prints the default configuration file for Connexion based applications.
+    """
+    click.echo(Config.get_config_text())
 
 
 if __name__ == '__main__':  # pragma: no cover
