@@ -26,17 +26,17 @@ dictionary and can be modifified just like any dictionary::
     app = connexion.App(__name__)
     app.config['SPECIFICATION_FILE'] = './swagger.yaml'
 
+
 The configurations are also possible to come from environment
 variables. The lookup order of configurations is:
 
- - Set directly in the ``connexion.App#config`` configuration
-   attribute;
- - Set while calling ``connexion.App`` or ``connexion.App.add_api``
-   directly;
- - Included in a configuration file passed to ``connexion.App`` or
-   ``connexion.App.add_api``;
- - An environment variable with same name of the configuration
-   setting;
+- Set directly in the ``connexion.App#config`` configuration
+  attribute;
+- Set while calling ``connexion.App`` or ``connexion.App.add_api``
+  directly;
+- Included in a configuration file passed to ``connexion.App`` or
+  ``connexion.App.add_api``;
+- An environment variable with same name of the configuration setting;
 
 
 Builtin Configuration Values
