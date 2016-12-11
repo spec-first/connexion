@@ -43,6 +43,7 @@ def main():
 @main.command()
 @click.argument('spec_file')
 @click.argument('base_module_path', required=False)
+@click.option('--config', '-c', metavar='PATH', help='Use configuration file to run.')
 @click.option('--port', '-p', default=5000, type=int, help='Port to listen.')
 @click.option('--host', '-H', type=str, help='Host interface to bind on.')
 @click.option('--wsgi-server', '-w', default='flask',
@@ -81,6 +82,7 @@ def main():
               help='Override the basePath in the API spec.')
 def run(spec_file,
         base_module_path,
+        config,
         port,
         host,
         wsgi_server,

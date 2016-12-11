@@ -4,7 +4,7 @@ from derpconf.config import Config
 BASE_API_SECTION = 'Basic API configurations'
 
 Config.define('SPECIFICATION_FILE', None,
-              'OpenAPI specification file path',
+              'OpenAPI specification file path.',
               BASE_API_SECTION)
 
 Config.define('SPECIFICATION_DIR', '',
@@ -61,3 +61,20 @@ Config.define('CONSOLE_UI_AVAILABLE', True,
 Config.define('CONSOLE_UI_PATH', '/ui',
               'Path to mount the OpenAPI console.',
               CONSOLE_UI_SECTION)
+
+
+if __name__ == '__main__':
+    from textwrap import fill
+    config = Config()
+    column_width = 41
+    header = '=' * column_width
+    header = '{} {}'.format(header, header)
+    newline_spacing = '\n' + (' ' * (column_width + 1))
+    print(header)
+    for group in config.class_groups:
+        keys = config.class_group_items[group]
+        for key in keys:
+            print('``{}``{}{}'.format(key, ' ' * (column_width - len(key) - 3),
+                                      fill(config.class_descriptions[key],
+                                           width=column_width).replace('\n', newline_spacing)))
+    print(header)
