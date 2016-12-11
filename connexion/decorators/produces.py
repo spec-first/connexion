@@ -71,6 +71,13 @@ class Produces(BaseSerializer):
 
 
 class Jsonifier(BaseSerializer):
+    @staticmethod
+    def dumps(data):
+        """ Central point where JSON serialization happens inside
+        Connexion.
+        """
+        return "{}\n".format(json.dumps(data, indent=2))
+
     def __call__(self, function):
         """
         :type function: types.FunctionType
@@ -102,11 +109,11 @@ class Jsonifier(BaseSerializer):
                 return response
 
             elif response.mimetype == 'application/problem+json' and isinstance(response.data, str):
-                # connexion.problem() is already a serialized JSON
+                # connexion.problem() already adds data as a serialized JSON
                 return response
 
-            # format JSON output
-            response.set_data("{}\n".format(json.dumps(response.data, indent=2)))
+            json_content = Jsonifier.dumps(response.get_data())
+            response.set_data(json_content)
             return response
 
         return wrapper

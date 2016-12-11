@@ -1,6 +1,5 @@
-from flask import json
-
 from .decorators.decorator import ResponseContainer
+from .decorators.produces import Jsonfier
 
 
 def problem(status, title, detail, type='about:blank', instance=None, headers=None, ext=None):
@@ -35,9 +34,14 @@ def problem(status, title, detail, type='about:blank', instance=None, headers=No
     if ext:
         problem_response.update(ext)
 
+    # We serialize here because even if the default content type is
+    # not set to JSON, which means that the
+    # `decorators.produces.Jsonfier` will not be added to the request
+    # life-cycle (so we cannot rely on that serialization), we will
+    # return a problem payload in JSON format.
     return ResponseContainer(
         mimetype='application/problem+json',
-        data="{}\n".format(json.dumps(problem_response, indent=2)),
+        data=Jsonfier.dumps(problem_response),
         status_code=status,
         headers=headers
     )
