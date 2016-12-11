@@ -19,7 +19,7 @@ Configuration Basics
 ====================
 
 We provide the `connexion.App.config` which is a subclass of a
-dictionary and can be modifified just like any dictionary::
+dictionary and can be modifified just like any dictionary:
 
 .. code-block:: python
 
