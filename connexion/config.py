@@ -74,7 +74,7 @@ if __name__ == '__main__':
     for group in config.class_groups:
         keys = config.class_group_items[group]
         for key in keys:
-            desc = '{} Defaults to: {}'.format(
+            desc = '{} Defaults to: "{}"'.format(
                 config.class_descriptions[key], config.class_defaults[key])
             print('``{}``{}{}'.format(key, ' ' * (column_width - len(key) - 3),
                                       fill(desc, width=column_width).replace('\n', newline_spacing)))

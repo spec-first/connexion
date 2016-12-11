@@ -48,36 +48,37 @@ The following configuration values are used internally by Connexion:
 
 ========================================= =========================================
 ``SPECIFICATION_FILE``                    OpenAPI specification file path. Defaults
-                                          to: None
+                                          to: "None"
 ``SPECIFICATION_DIR``                     Directory to use as bases to look for
                                           OpenAPI specification files. Defaults to:
+                                          ""
 ``HOST``                                  The host interface to bind on when server
-                                          is running. Defaults to: 0.0.0.0
+                                          is running. Defaults to: "0.0.0.0"
 ``PORT``                                  The port to listen to when server is
-                                          running. Defaults to: 5000
+                                          running. Defaults to: "5000"
 ``DEBUG``                                 Whether to execute the application in
-                                          debug mode. Defaults to: False
+                                          debug mode. Defaults to: "False"
 ``AUTHENTICATE_NOT_FOUND_URLS``           Whether to authenticate paths not defined
                                           in the API specification. Defaults to:
-                                          False
+                                          "False"
 ``VALIDATE_RESPONSES``                    Whether to validate the operation handler
                                           responses against the API specification
-                                          or not. Defaults to: False
+                                          or not. Defaults to: "False"
 ``STRICT_PARAMETERS_VALIDATION``          Whether to allow or not additional
                                           parameters in querystring and formData
                                           than the defineds in the API
-                                          specification. Defaults to: False
+                                          specification. Defaults to: "False"
 ``MAKE_SPEC_AVAILABLE``                   Whether to make available the OpenAPI
                                           sepecification under
                                           CONSOLE_UI_PATH/swagger.json path.
-                                          Defaults to: True
+                                          Defaults to: "True"
 ``CONSOLE_UI_AVAILABLE``                  Whether to make the OpenAPI console
                                           available under CONSOLE_UI_PATH config
                                           path. Notice that this overrides the
                                           MAKE_SPEC_AVAILABLE configuration since
                                           the specification is required to be
                                           available to show the console UI.
-                                          Defaults to: True
+                                          Defaults to: "True"
 ``CONSOLE_UI_PATH``                       Path to mount the OpenAPI console.
-                                          Defaults to: /ui
+                                          Defaults to: "/ui"
 ========================================= =========================================
