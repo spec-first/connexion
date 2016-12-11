@@ -1,5 +1,5 @@
 from .decorators.decorator import ResponseContainer
-from .decorators.produces import Jsonfier
+from .decorators.produces import Jsonifier
 
 
 def problem(status, title, detail, type='about:blank', instance=None, headers=None, ext=None):
@@ -41,7 +41,7 @@ def problem(status, title, detail, type='about:blank', instance=None, headers=No
     # return a problem payload in JSON format.
     return ResponseContainer(
         mimetype='application/problem+json',
-        data=Jsonfier.dumps(problem_response),
+        data=Jsonifier.dumps(problem_response),
         status_code=status,
         headers=headers
     )
