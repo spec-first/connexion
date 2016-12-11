@@ -63,7 +63,10 @@ Config.define('CONSOLE_UI_PATH', '/ui',
               CONSOLE_UI_SECTION)
 
 
-if __name__ == '__main__':
+def _print_doc_table():
+    """ Prints the table to be used in the `docs/configuration.rst`
+    documentation file.
+    """
     from textwrap import fill
     config = Config()
     column_width = 41
@@ -79,3 +82,6 @@ if __name__ == '__main__':
             desc = fill(desc, width=column_width).replace('\n', newline_spacing)
             print('``{}``{}{}'.format(key, ' ' * (column_width - len(key) - 3), desc))
     print(header)
+
+if __name__ == '__main__':
+    _print_doc_table()
