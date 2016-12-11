@@ -150,7 +150,7 @@ def run(spec_file,
             debug=debug)
 
 
-@main.command()
+@main.command('default-config')
 def default_config():
     """
     Prints the default configuration file for Connexion based applications.
