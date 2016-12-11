@@ -44,7 +44,6 @@ Builtin Configuration Values
 
 The following configuration values are used internally by Connexion::
 
-.. tabularcolumns:: |p{6.5cm}|p{8.5cm}|
 
 ========================================= =========================================
 ``SPECIFICATION_FILE``                    OpenAPI specification file path.
