@@ -34,9 +34,10 @@ variables. The lookup order of configurations is:
   attribute;
 - Set while calling ``connexion.App`` or ``connexion.App.add_api``
   directly;
+- An environment variable with same name of the configuration prefixed
+  by ``CONNEXION_``;
 - Included in a configuration file passed to ``connexion.App`` or
   ``connexion.App.add_api``;
-- An environment variable with same name of the configuration setting;
 
 
 Builtin Configuration Values
