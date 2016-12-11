@@ -122,8 +122,16 @@ class EndOfRequestLifecycleDecorator(BaseDecorator):
 
 
 class ResponseContainer(object):
-    """Internal response object to be passed among Connexion
+    """ Internal response object to be passed among Connexion
     decorators that want to manipulate response data.
+
+    Partially matches the flask.Response interface for easy access and
+    manipulation.
+
+    The methods ResponseContainer#get_data and ResponseContainer#set_data
+    are added here following the recommendation found in:
+
+    http://flask.pocoo.org/docs/0.11/api/#flask.Response.data
     """
 
     def __init__(self, mimetype, data=None, status_code=200, headers=None, response=None):
@@ -146,6 +154,18 @@ class ResponseContainer(object):
             self.status_code = self._response.status_code
             self.headers = self._response.headers
 
+    def get_data(self):
+        """ Get the current data to be used when creating the
+        flask.Response instance.
+        """
+        return self.data
+
+    def set_data(self, data):
+        """ Gets the data that is going to be used to create the
+        flask.Response instance.
+        """
+        self.data = data
+
     def flask_response_object(self):
         """
         Builds an Flask response using the contained data,
@@ -159,8 +179,3 @@ class ResponseContainer(object):
         self._response.headers.extend(self.headers)
 
         return self._response
-
-    def __eq__(self, other):
-        if isinstance(other, ResponseContainer):
-            return all(getattr(self, attr) == getattr(other, attr)
-                       for attr in self.__dict__.keys())

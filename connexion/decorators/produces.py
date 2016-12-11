@@ -92,13 +92,13 @@ class Jsonifier(BaseSerializer):
                 return response
 
             elif response.data is NoContent:
-                response.data = ''
+                response.set_data('')
                 return response
 
             elif response.status_code == 204:
                 logger.debug('Endpoint returned an empty response (204)',
                              extra={'url': url, 'mimetype': self.mimetype})
-                response.data = ''
+                response.set_data('')
                 return response
 
             elif response.mimetype == 'application/problem+json' and isinstance(response.data, str):
@@ -106,7 +106,7 @@ class Jsonifier(BaseSerializer):
                 return response
 
             # format JSON output
-            response.data = "{}\n".format(json.dumps(response.data, indent=2))
+            response.set_data("{}\n".format(json.dumps(response.data, indent=2)))
             return response
 
         return wrapper

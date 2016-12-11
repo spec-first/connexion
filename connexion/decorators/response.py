@@ -89,7 +89,7 @@ class ResponseValidator(BaseDecorator):
         def wrapper(*args, **kwargs):
             response = function(*args, **kwargs)
             try:
-                self.validate_response(response.data, response.status_code, response.headers)
+                self.validate_response(response.get_data(), response.status_code, response.headers)
             except NonConformingResponseBody as e:
                 return problem(500, e.reason, e.message)
             except NonConformingResponseHeaders as e:
