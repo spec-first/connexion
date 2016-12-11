@@ -1,5 +1,6 @@
 from werkzeug.exceptions import Forbidden, Unauthorized
 
+
 class ConnexionException(Exception):
     pass
 

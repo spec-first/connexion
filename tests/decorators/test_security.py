@@ -1,6 +1,6 @@
 import pytest
-from connexion.exceptions import OAuthProblem
 from connexion.decorators.security import get_tokeninfo_url, verify_oauth
+from connexion.exceptions import OAuthProblem
 from mock import MagicMock
 
 
