@@ -59,7 +59,7 @@ The following configuration values are used internally by Connexion:
 ``WSGI_SERVER_CONTAINER``                 Which WSGI server container to use.
                                           Options are: "flask", "gevent", and
                                           "tornado". Defaults to: "flask"
-``CONNEXION_DEBUG``                       Whether to execute the application in
+``DEBUG``                                 Whether to execute the application in
                                           debug mode. Defaults to: False
 ``AUTHENTICATE_NOT_FOUND_URLS``           Whether to authenticate paths not defined
                                           in the API specification. Defaults to:
@@ -98,6 +98,26 @@ The following configuration values are used internally by Connexion:
                                           Defaults to: "/ui"
 ========================================= =========================================
 
+
+Using Environment Variables for Configurations
+----------------------------------------------
+
+Connexion automatically look for configurations in the environment
+variables of the running system. For that you have to set the
+environment variable in the format ``CONNEXION_{{CONFIG_NAME}}``. For
+example, to set the port that Connexion should use to run the
+application you should set the environment variable
+``CONNEXION_PORT`` to 8080.
+
+.. code-block:: bash
+
+    $ export CONNEXION_PORT=8080
+    $ connexion run swagger.yaml -v
+    INFO:werkzeug: * Running on http://0.0.0.0:8080/ (Press CTRL+C to quit)
+
+
+Using File for Configurations
+-----------------------------
 
 You can generate a base configuration file using the Connexion CLI:
 

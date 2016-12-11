@@ -27,7 +27,7 @@ Config.define('WSGI_SERVER_CONTAINER', 'flask',
               'Options are: "flask", "gevent", and "tornado".',
               SERVER_CONFIG_SECTION)
 
-Config.define('CONNEXION_DEBUG', False,
+Config.define('DEBUG', False,
               'Whether to execute the application in debug mode.',
               SERVER_CONFIG_SECTION)
 
