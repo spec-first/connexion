@@ -76,6 +76,6 @@ if __name__ == '__main__':
         for key in keys:
             desc = '{} Defaults to: "{}"'.format(
                 config.class_descriptions[key], config.class_defaults[key])
-            print('``{}``{}{}'.format(key, ' ' * (column_width - len(key) - 3),
-                                      fill(desc, width=column_width).replace('\n', newline_spacing)))
+            desc = fill(desc, width=column_width).replace('\n', newline_spacing)
+            print('``{}``{}{}'.format(key, ' ' * (column_width - len(key) - 3), desc))
     print(header)
