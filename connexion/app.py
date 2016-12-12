@@ -5,6 +5,7 @@ import flask
 import werkzeug.exceptions
 
 from connexion.decorators.produces import JSONEncoder as ConnexionJSONEncoder
+from connexion.exceptions import ProblemException
 from connexion.resolver import Resolver
 
 from .api import Api
@@ -85,8 +86,13 @@ class App(object):
         """
         :type exception: Exception
         """
+        # If we have an instance of problem exception we can use the title to render a more complete title.
+        if isinstance(exception, ProblemException) and isinstance(exception, werkzeug.exceptions.HTTPException):
+            return problem(title=exception.title, detail=exception.description, status=exception.code)
+
         if not isinstance(exception, werkzeug.exceptions.HTTPException):
             exception = werkzeug.exceptions.InternalServerError()
+
         return problem(title=exception.name, detail=exception.description, status=exception.code)
 
     def add_api(self, specification, base_path=None, arguments=None, auth_all_paths=None, swagger_json=None,

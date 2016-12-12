@@ -1,8 +1,20 @@
-from werkzeug.exceptions import Forbidden, Unauthorized
+from werkzeug.exceptions import HTTPException, Forbidden, Unauthorized
 
 
 class ConnexionException(Exception):
     pass
+
+
+class ProblemException(ConnexionException, HTTPException):
+    def __init__(self, title, description=None, response=None):
+        """
+        :param title: Title of the problem.
+        :type title: str
+        """
+        self.title = title
+
+        ConnexionException.__init__(self)
+        HTTPException.__init__(self, description, response)
 
 
 class ResolverError(LookupError):
@@ -65,15 +77,17 @@ class NonConformingResponseHeaders(NonConformingResponse):
         super(NonConformingResponseHeaders, self).__init__(reason=reason, message=message)
 
 
-class OAuthProblem(Unauthorized):
-    pass
+class OAuthProblem(ProblemException, Unauthorized):
+    def __init__(self, title='Unauthorized', **kwargs):
+        super(OAuthProblem, self).__init__(title=title, **kwargs)
 
 
-class OAuthResponseProblem(Unauthorized):
-    def __init__(self, description=None, response=None, token_response=None):
+class OAuthResponseProblem(ProblemException, Unauthorized):
+    def __init__(self, title='Unauthorized', token_response=None, **kwargs):
         self.token_response = token_response
-        Unauthorized.__init__(self, description, response)
+        super(OAuthResponseProblem, self).__init__(title=title, **kwargs)
 
 
-class OAuthScopeProblem(Forbidden):
-    pass
+class OAuthScopeProblem(ProblemException, Forbidden):
+    def __init__(self, title='Forbidden', **kwargs):
+        super(OAuthScopeProblem, self).__init__(title, **kwargs)
