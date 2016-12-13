@@ -14,10 +14,7 @@ class ProblemException(ConnexionException, HTTPException):
         ConnexionException.__init__(self)
         HTTPException.__init__(self, description, response)
 
-        self.title = title
-
-        if not title:
-            self.title = self.name
+        self.title = title or self.name
 
 
 class ResolverError(LookupError):
