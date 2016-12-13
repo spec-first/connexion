@@ -87,7 +87,7 @@ class App(object):
         :type exception: Exception
         """
         # If we have an instance of problem exception we can use the title to render a more complete title.
-        if isinstance(exception, ProblemException) and isinstance(exception, werkzeug.exceptions.HTTPException):
+        if isinstance(exception, ProblemException):
             return problem(title=exception.title, detail=exception.description, status=exception.code)
 
         if not isinstance(exception, werkzeug.exceptions.HTTPException):
