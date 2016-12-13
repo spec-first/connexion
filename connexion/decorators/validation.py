@@ -9,6 +9,7 @@ import six
 from jsonschema import Draft4Validator, ValidationError, draft4_format_checker
 from werkzeug import FileStorage
 
+from ..exceptions import ExtraParameterProblem
 from ..problem import problem
 from ..utils import all_json, boolean, is_null, is_nullable
 
@@ -71,15 +72,11 @@ def validate_type(param, value, parameter_type, parameter_name=None):
             return value
 
 
-def validate_parameter_list(parameter_type, request_params, spec_params):
+def validate_parameter_list(request_params, spec_params):
     request_params = set(request_params)
     spec_params = set(spec_params)
 
-    extra_params = request_params.difference(spec_params)
-
-    if extra_params:
-        return "Extra {parameter_type} parameter(s) {extra_params} not in spec".format(
-            parameter_type=parameter_type, extra_params=', '.join(extra_params))
+    return request_params.difference(spec_params)
 
 
 class RequestBodyValidator(object):
@@ -216,12 +213,12 @@ class ParameterValidator(object):
     def validate_query_parameter_list(self):
         request_params = flask.request.args.keys()
         spec_params = [x['name'] for x in self.parameters.get('query', [])]
-        return validate_parameter_list('query', request_params, spec_params)
+        return validate_parameter_list(request_params, spec_params)
 
     def validate_formdata_parameter_list(self):
         request_params = flask.request.form.keys()
         spec_params = [x['name'] for x in self.parameters.get('formData', [])]
-        return validate_parameter_list('formData', request_params, spec_params)
+        return validate_parameter_list(request_params, spec_params)
 
     def validate_query_parameter(self, param):
         """
@@ -260,13 +257,11 @@ class ParameterValidator(object):
             logger.debug("%s validating parameters...", flask.request.url)
 
             if self.strict_validation:
-                error = self.validate_query_parameter_list()
-                if error:
-                    return problem(400, 'Bad Request', error)
+                query_errors = self.validate_query_parameter_list()
+                formdata_errors = self.validate_formdata_parameter_list()
 
-                error = self.validate_formdata_parameter_list()
-                if error:
-                    return problem(400, 'Bad Request', error)
+                if formdata_errors or query_errors:
+                    raise ExtraParameterProblem(formdata_errors, query_errors)
 
             for param in self.parameters.get('query', []):
                 error = self.validate_query_parameter(param)
@@ -288,7 +283,6 @@ class ParameterValidator(object):
                 if error:
                     return problem(400, 'Bad Request', error)
 
-            response = function(*args, **kwargs)
-            return response
+            return function(*args, **kwargs)
 
         return wrapper

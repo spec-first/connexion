@@ -1,4 +1,4 @@
-from werkzeug.exceptions import Forbidden, HTTPException, Unauthorized
+from werkzeug.exceptions import BadRequest, Forbidden, HTTPException, Unauthorized
 
 
 class ConnexionException(Exception):
@@ -95,3 +95,20 @@ class OAuthScopeProblem(ProblemException, Forbidden):
         self.missing_scopes = required_scopes - token_scopes
 
         super(OAuthScopeProblem, self).__init__(title=title, **kwargs)
+
+
+class ExtraParameterProblem(ProblemException, BadRequest):
+    def __init__(self, formdata_parameters, query_parameters, title=None, description=None, **kwargs):
+        self.extra_formdata = formdata_parameters
+        self.extra_query = query_parameters
+
+        # This keep backwards compatibility with the old returns
+        if description is None:
+            if self.extra_query:
+                description = "Extra {parameter_type} parameter(s) {extra_params} not in spec"\
+                    .format(parameter_type='query', extra_params=', '.join(self.extra_query))
+            elif self.extra_formdata:
+                description = "Extra {parameter_type} parameter(s) {extra_params} not in spec"\
+                    .format(parameter_type='formData', extra_params=', '.join(self.extra_formdata))
+
+        super(ExtraParameterProblem, self).__init__(title=title, description=description, **kwargs)
