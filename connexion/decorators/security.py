@@ -80,7 +80,11 @@ def verify_oauth(token_info_url, allowed_scopes, function):
                             ... User scopes (%s) do not match the scopes necessary to call endpoint (%s).
                              Aborting with 403.""").replace('\n', ''),
                             user_scopes, allowed_scopes)
-                raise OAuthScopeProblem(description='Provided token doesn\'t have the required scope')
+                raise OAuthScopeProblem(
+                    description='Provided token doesn\'t have the required scope',
+                    required_scopes=allowed_scopes,
+                    token_scopes=user_scopes
+                )
             logger.info("... Token authenticated.")
             request.user = token_info.get('uid')
             request.token_info = token_info
