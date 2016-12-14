@@ -6,7 +6,8 @@ import textwrap
 
 import requests
 from flask import request
-from werkzeug.exceptions import Forbidden, Unauthorized
+
+from ..exceptions import OAuthProblem, OAuthResponseProblem, OAuthScopeProblem
 
 logger = logging.getLogger('connexion.api.security')
 
@@ -56,17 +57,20 @@ def verify_oauth(token_info_url, allowed_scopes, function):
         authorization = request.headers.get('Authorization')  # type: str
         if not authorization:
             logger.info("... No auth provided. Aborting with 401.")
-            raise Unauthorized('No authorization token provided')
+            raise OAuthProblem(description='No authorization token provided')
         else:
             try:
                 _, token = authorization.split()  # type: str, str
             except ValueError:
-                raise Unauthorized('Invalid authorization header')
+                raise OAuthProblem(description='Invalid authorization header')
             logger.debug("... Getting token from %s", token_info_url)
             token_request = session.get(token_info_url, params={'access_token': token}, timeout=5)
             logger.debug("... Token info (%d): %s", token_request.status_code, token_request.text)
             if not token_request.ok:
-                raise Unauthorized('Provided oauth token is not valid')
+                raise OAuthResponseProblem(
+                    description='Provided oauth token is not valid',
+                    token_response=token_request
+                )
             token_info = token_request.json()  # type: dict
             user_scopes = set(token_info['scope'])
             logger.debug("... Scopes required: %s", allowed_scopes)
@@ -76,7 +80,11 @@ def verify_oauth(token_info_url, allowed_scopes, function):
                             ... User scopes (%s) do not match the scopes necessary to call endpoint (%s).
                              Aborting with 403.""").replace('\n', ''),
                             user_scopes, allowed_scopes)
-                raise Forbidden('Provided token doesn\'t have the required scope')
+                raise OAuthScopeProblem(
+                    description='Provided token doesn\'t have the required scope',
+                    required_scopes=allowed_scopes,
+                    token_scopes=user_scopes
+                )
             logger.info("... Token authenticated.")
             request.user = token_info.get('uid')
             request.token_info = token_info

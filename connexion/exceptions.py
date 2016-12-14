@@ -1,5 +1,20 @@
+from werkzeug.exceptions import Forbidden, HTTPException, Unauthorized
+
+
 class ConnexionException(Exception):
     pass
+
+
+class ProblemException(ConnexionException, HTTPException):
+    def __init__(self, title=None, description=None, response=None):
+        """
+        :param title: Title of the problem.
+        :type title: str
+        """
+        ConnexionException.__init__(self)
+        HTTPException.__init__(self, description, response)
+
+        self.title = title or self.name
 
 
 class ResolverError(LookupError):
@@ -60,3 +75,23 @@ class NonConformingResponseBody(NonConformingResponse):
 class NonConformingResponseHeaders(NonConformingResponse):
     def __init__(self, message, reason="Response headers do not conform to specification"):
         super(NonConformingResponseHeaders, self).__init__(reason=reason, message=message)
+
+
+class OAuthProblem(ProblemException, Unauthorized):
+    def __init__(self, title=None, **kwargs):
+        super(OAuthProblem, self).__init__(title=title, **kwargs)
+
+
+class OAuthResponseProblem(ProblemException, Unauthorized):
+    def __init__(self, token_response, title=None, **kwargs):
+        self.token_response = token_response
+        super(OAuthResponseProblem, self).__init__(title=title, **kwargs)
+
+
+class OAuthScopeProblem(ProblemException, Forbidden):
+    def __init__(self, token_scopes, required_scopes, title=None, **kwargs):
+        self.required_scopes = required_scopes
+        self.token_scopes = token_scopes
+        self.missing_scopes = required_scopes - token_scopes
+
+        super(OAuthScopeProblem, self).__init__(title=title, **kwargs)
