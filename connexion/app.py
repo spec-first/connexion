@@ -5,7 +5,6 @@ import flask
 import werkzeug.exceptions
 
 from connexion.decorators.produces import JSONEncoder as ConnexionJSONEncoder
-from connexion.exceptions import ProblemException
 from connexion.resolver import Resolver
 
 from .api import Api
