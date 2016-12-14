@@ -1,4 +1,5 @@
-from werkzeug.exceptions import BadRequest, Forbidden, HTTPException, Unauthorized
+from werkzeug.exceptions import BadRequest, Forbidden, HTTPException,
+                                Unauthorized
 
 
 class ConnexionException(Exception):
