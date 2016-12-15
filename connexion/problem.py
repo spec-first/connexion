@@ -29,13 +29,13 @@ def problem(status, title, detail, type='about:blank', instance=None, headers=No
     :return: Json serialized error response
     :rtype: flask.Response
     """
-    problem_response = {'type': type, 'title': title, 'detail': detail, 'status': status, }
+    problem_response = {'type': type, 'title': title, 'detail': detail, 'status': status}
     if instance:
         problem_response['instance'] = instance
     if ext:
         problem_response.update(ext)
 
-    body = [json.dumps(problem_response, indent=2), '\n']
+    body = json.dumps(problem_response)
     response = flask.current_app.response_class(body, mimetype='application/problem+json',
                                                 status=status)  # type: flask.Response
     if headers:
