@@ -3,7 +3,7 @@ Exception Handling
 Rendering Exceptions through the Flask Handler
 ----------------------------------------------
 Flask by default contains an exception handler, which connexion's app can proxy
-to with the `add_error_handler` method. You can hook either on status code's
+to with the ``add_error_handler`` method. You can hook either on status code's
 or on a specific exception type.
 
 Connexion is moving from returning flask responses on errors to throwing exceptions
@@ -20,11 +20,11 @@ Application can return errors using ``connexion.problem`` or exceptions that inh
 ``werkzeug.exceptions.Forbidden``). An example of this is the ``connexion.exceptions.OAuthProblem``
 exception
 
-```
-class OAuthProblem(ProblemException, Unauthorized):
-    def __init__(self, title=None, **kwargs):
-        super(OAuthProblem, self).__init__(title=title, **kwargs)
-```
+.. code-block:: python
+
+    class OAuthProblem(ProblemException, Unauthorized):
+        def __init__(self, title=None, **kwargs):
+            super(OAuthProblem, self).__init__(title=title, **kwargs)
 
 .. _Problem Details for HTTP APIs: https://tools.ietf.org/html/draft-ietf-appsawg-http-problem-00
 
@@ -35,6 +35,7 @@ exception and render it in some sort of custom format. For example
 
 
 .. code-block:: python
+
     import connexion
     from connexion.exceptions import OAuthResponseProblem
 
@@ -56,14 +57,14 @@ This exception is thrown when there is some sort of validation issue with the Au
 OAuthResponseProblem
 ^^^^^^^^^^^^^^^^^^^^
 This exception is thrown when there is a validation issue from your OAuth 2 Server. It contains a
-`token_response` property which contains the full http response from the OAuth 2 Server
+``token_response`` property which contains the full http response from the OAuth 2 Server
 
 OAuthScopeProblem
 ^^^^^^^^^^^^^^^^^
 This scope indicates the OAuth 2 Server did not generate a token with all the scopes required. This
 contains 3 properties
-- `required_scopes` - The scopes that were required for this endpoint
-- `token_scopes` - The scopes that were granted for this endpoint
-- `missing_scopes` - The scopes that were not given by the OAuth 2 server that are required to access this endpoint
+- ``required_scopes`` - The scopes that were required for this endpoint
+- ``token_scopes`` - The scopes that were granted for this endpoint
+- ``missing_scopes`` - The scopes that were not given by the OAuth 2 server that are required to access this endpoint
 
 
