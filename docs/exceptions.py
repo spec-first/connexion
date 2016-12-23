@@ -1,6 +1,5 @@
 Exception Handling
 ==================
-
 Rendering Exceptions through the Flask Handler
 ----------------------------------------------
 Flask by default contains an exception handler, which connexion's app can proxy
@@ -30,20 +29,20 @@ class OAuthProblem(ProblemException, Unauthorized):
 .. _Problem Details for HTTP APIs: https://tools.ietf.org/html/draft-ietf-appsawg-http-problem-00
 
 Examples of Custom Rendering Exceptions
-----------------------------------------
+---------------------------------------
 To custom render an exception when you boot your connexion application you can hook into a custom
 exception and render it in some sort of custom format. For example
 
-```
-import connexion
-from connexion.exceptions import OAuthResponseProblem
 
-def render_unauthorized(exception):
-    return Response(response=json.dumps({'error': 'There is an in the oAuth token supplied'}), status=401, mimetype="application/json")
+.. code-block:: python
+    import connexion
+    from connexion.exceptions import OAuthResponseProblem
 
-app = connexion.App(__name__, specification_dir='./../swagger/', debug=False, swagger_ui=False)
-app = app.add_error_handler(OAuthResponseProblem, render_unauthorized)
-```
+    def render_unauthorized(exception):
+        return Response(response=json.dumps({'error': 'There is an in the oAuth token supplied'}), status=401, mimetype="application/json")
+
+    app = connexion.App(__name__, specification_dir='./../swagger/', debug=False, swagger_ui=False)
+    app = app.add_error_handler(OAuthResponseProblem, render_unauthorized)
 
 Custom Exceptions
 -----------------
