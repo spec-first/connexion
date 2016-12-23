@@ -3,7 +3,7 @@ Exception Handling
 Rendering Exceptions through the Flask Handler
 ----------------------------------------------
 Flask by default contains an exception handler, which connexion's app can proxy
-to with the ``add_error_handler`` method. You can hook either on status code's
+to with the ``add_error_handler`` method. You can hook either on status codes
 or on a specific exception type.
 
 Connexion is moving from returning flask responses on errors to throwing exceptions
@@ -40,7 +40,7 @@ exception and render it in some sort of custom format. For example
     from connexion.exceptions import OAuthResponseProblem
 
     def render_unauthorized(exception):
-        return Response(response=json.dumps({'error': 'There is an in the oAuth token supplied'}), status=401, mimetype="application/json")
+        return Response(response=json.dumps({'error': 'There is an error in the oAuth token supplied'}), status=401, mimetype="application/json")
 
     app = connexion.App(__name__, specification_dir='./../swagger/', debug=False, swagger_ui=False)
     app = app.add_error_handler(OAuthResponseProblem, render_unauthorized)
