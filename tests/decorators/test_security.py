@@ -1,7 +1,6 @@
-from werkzeug.exceptions import Unauthorized
-
 import pytest
 from connexion.decorators.security import get_tokeninfo_url, verify_oauth
+from connexion.exceptions import OAuthProblem
 from mock import MagicMock
 
 
@@ -33,5 +32,5 @@ def test_verify_oauth_invalid_auth_header(monkeypatch):
     monkeypatch.setattr('connexion.decorators.security.request', request)
     monkeypatch.setattr('flask.current_app', app)
 
-    with pytest.raises(Unauthorized):
+    with pytest.raises(OAuthProblem):
         wrapped_func()
