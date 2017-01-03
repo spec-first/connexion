@@ -61,7 +61,7 @@ the endpoints in your specification:
        get:
           # Implied operationId: api.foo.get
        put:
-          # Implied operationId: api.foo.post
+          # Implied operationId: api.foo.put
        copy:
           # Implied operationId: api.foo.copy
        delete:
