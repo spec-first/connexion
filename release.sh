@@ -14,12 +14,12 @@ version=$1
 
 sed -i "s/__version__ = .*/__version__ = '${version}'/" */__init__.py
 
-tox
+tox --skip-missing-interpreters
 
 python3 setup.py sdist bdist_wheel upload
 
-git tag ${version}
-git push --tags
-
 # revert version
 git co -- */__init__.py
+
+git tag ${version}
+git push --tags
