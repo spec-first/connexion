@@ -36,7 +36,7 @@ def problem(status, title, detail, type='about:blank', instance=None, headers=No
 
     # We serialize here because even if the default content type is
     # not set to JSON, which means that the
-    # `decorators.produces.Jsonfier` will not be added to the request
+    # `decorators.produces.Jsonifier` will not be added to the request
     # life-cycle (so we cannot rely on that serialization), we will
     # return a problem payload in JSON format.
     return ResponseContainer(
