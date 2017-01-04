@@ -1,3 +1,4 @@
+import connexion
 from connexion.decorators.metrics import UWSGIMetricsCollector
 from mock import MagicMock
 
@@ -6,7 +7,7 @@ def test_timer(monkeypatch):
     wrapper = UWSGIMetricsCollector('/foo/bar/<param>', 'get')
 
     def operation():
-        return None, 418, None
+        return connexion.problem(418, '', '')
 
     op = wrapper(operation)
     metrics = MagicMock()

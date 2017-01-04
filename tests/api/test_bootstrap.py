@@ -1,5 +1,6 @@
 import jinja2
 import yaml
+
 import pytest
 from conftest import TEST_FOLDER, build_app_from_fixture
 from connexion.app import App

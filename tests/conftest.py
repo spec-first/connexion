@@ -38,7 +38,7 @@ def oauth_requests(monkeypatch):
         :type params: dict| None
         """
         params = params or {}
-        if url == "https://ouath.example/token_info":
+        if url == "https://oauth.example/token_info":
             token = params['access_token']
             if token in ["100", "has_myscope"]:
                 return FakeResponse(200, '{"uid": "test-user", "scope": ["myscope"]}')
@@ -93,6 +93,11 @@ def build_app_from_fixture(api_spec_folder, **kwargs):
 @pytest.fixture(scope="session")
 def simple_app():
     return build_app_from_fixture('simple', validate_responses=True)
+
+
+@pytest.fixture(scope="session")
+def invalid_resp_allowed_app():
+    return build_app_from_fixture('simple', validate_responses=False)
 
 
 @pytest.fixture(scope="session")

@@ -2,8 +2,6 @@ import functools
 import os
 import time
 
-from connexion.decorators.produces import BaseSerializer
-
 try:
     import uwsgi_metrics
     HAS_UWSGI_METRICS = True  # pragma: no cover
@@ -36,7 +34,7 @@ class UWSGIMetricsCollector(object):
             start_time_s = time.time()
             try:
                 response = function(*args, **kwargs)
-                _, status_code, _ = BaseSerializer.get_full_response(response)
+                status_code = response.status_code
             finally:
                 end_time_s = time.time()
                 delta_s = end_time_s - start_time_s

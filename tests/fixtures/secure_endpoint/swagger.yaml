@@ -10,8 +10,8 @@ securityDefinitions:
     oauth:
         type: oauth2
         flow: password
-        tokenUrl: https://ouath.example/token
-        x-tokenInfoUrl: https://ouath.example/token_info
+        tokenUrl: https://oauth.example/token
+        x-tokenInfoUrl: https://oauth.example/token_info
         scopes:
             myscope: can do stuff
             otherscope: another scope

@@ -34,13 +34,22 @@ class AuthErrorHandler(SecureOperation):
         """
         security_decorator = self.security_decorator
         logger.debug('... Adding security decorator (%r)', security_decorator, extra=vars(self))
-        return security_decorator(self.handle)
+        function = self.handle
+        function = self._request_begin_lifecycle_decorator(function)
+        function = security_decorator(function)
+        function = self._request_end_lifecycle_decorator(function)
+        return function
 
     def handle(self, *args, **kwargs):
         """
         Actual handler for the execution after authentication.
         """
-        return problem(title=self.exception.name, detail=self.exception.description, status=self.exception.code)
+        response_container = problem(
+            title=self.exception.name,
+            detail=self.exception.description,
+            status=self.exception.code
+        )
+        return response_container
 
 
 class ResolverErrorHandler(Operation):
@@ -58,4 +67,9 @@ class ResolverErrorHandler(Operation):
         return self.handle
 
     def handle(self, *args, **kwargs):
-        return problem(title='Not Implemented', detail=self.exception.reason, status=self.status_code)
+        response_container = problem(
+            title='Not Implemented',
+            detail=self.exception.reason,
+            status=self.status_code
+        )
+        return response_container.flask_response_object()
