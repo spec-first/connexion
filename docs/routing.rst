@@ -90,6 +90,30 @@ under-score is encountered. As an example:
 Without this sanitation it would e.g. be impossible to implement an
 [OData](http://www.odata.org) API.
 
+Parameter Variable Converters
+-----------------------------
+
+Connexion supports Flask's ``int``, ``float``, and ``path`` route parameter
+`variable converters
+<http://flask.pocoo.org/docs/0.12/quickstart/#variable-rules>`_.
+Specify a route parameter's type as ``integer`` or ``number`` or its type as
+``string`` and its format as ``path`` to use these converters. For example:
+
+.. code-block:: yaml
+
+  paths:
+    /greeting/{name}:
+      # ...
+      parameters:
+        - name: name
+          in: path
+          required: true
+          type: string
+          format: path
+
+will create an equivalent Flask route ``/greeting/<path:name>``, allowing
+requests to include forward slashes in the ``name`` url variable.
+
 API Versioning and basePath
 ---------------------------
 

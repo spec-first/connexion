@@ -13,7 +13,8 @@ PATH_PARAMETER = re.compile(r'\{([^}]*)\}')
 # see http://flask.pocoo.org/docs/0.10/api/#url-route-registrations
 PATH_PARAMETER_CONVERTERS = {
     'integer': 'int',
-    'number': 'float'
+    'number': 'float',
+    'path': 'path'
 }
 
 

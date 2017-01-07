@@ -452,3 +452,15 @@ def test_default():
     Operation(method='POST', path='endpoint', path_parameters=[], operation=op, app_produces=['application/json'],
               app_consumes=['application/json'], app_security=[], security_definitions={},
               definitions=DEFINITIONS, parameter_definitions={}, resolver=Resolver())
+
+
+def test_get_path_parameter_types():
+    op = OPERATION1.copy()
+    op['parameters'] = [{'in': 'path', 'type': 'int', 'name': 'int_path'},
+                        {'in': 'path', 'type': 'string', 'name': 'string_path'},
+                        {'in': 'path', 'type': 'string', 'format': 'path', 'name': 'path_path'}]
+
+    operation = Operation(method='GET', path='endpoint', path_parameters=[], operation=op,
+                          app_produces=['application/json'], app_consumes=['application/json'], resolver=Resolver())
+
+    assert {'int_path': 'int', 'string_path': 'string', 'path_path': 'path'} == operation.get_path_parameter_types()
