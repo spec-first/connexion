@@ -326,7 +326,8 @@ class Operation(SecureOperation):
             yield param
 
     def get_path_parameter_types(self):
-        return {p['name']: p.get('type') for p in self.parameters if p['in'] == 'path'}
+        return {p['name']: 'path' if p.get('type') == 'string' and p.get('format') == 'path' else p.get('type')
+                for p in self.parameters if p['in'] == 'path'}
 
     @property
     def body_schema(self):
