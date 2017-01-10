@@ -174,8 +174,8 @@ class ResponseContainer(object):
         :rtype: flask.Response
         """
         self._response = flask.current_app.response_class(
-            self.data, mimetype=self.mimetype)  # type: flask.Response
+            self.data, mimetype=self.mimetype, content_type=self.headers.get('content-type'),
+            headers=self.headers)  # type: flask.Response
         self._response.status_code = self.status_code
-        self._response.headers.extend(self.headers)
 
         return self._response

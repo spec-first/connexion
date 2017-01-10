@@ -12,7 +12,7 @@ def test_parameter_validator(monkeypatch):
     request.params = {}
     app = MagicMock(name='app')
 
-    def _response_class(data, mimetype):
+    def _response_class(data, mimetype, content_type, headers):
         response = MagicMock(name='response')
         response.detail = json.loads(''.join(data))['detail']
         response.headers = MagicMock()
