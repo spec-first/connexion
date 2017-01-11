@@ -2,7 +2,7 @@
 
 from flask import redirect
 
-from connexion import NoContent, problem, request
+from connexion import NoContent, ProblemException, problem, request
 
 
 class DummyClass(object):
@@ -13,7 +13,7 @@ class DummyClass(object):
     def test_method(self):
         return self.__class__.__name__
 
-class_instance = DummyClass()
+class_instance = DummyClass()  # noqa
 
 
 def get():
@@ -346,6 +346,14 @@ def get_empty_dict():
 def get_custom_problem_response():
     return problem(403, "You need to pay", "Missing amount",
                    ext={'amount': 23.0})
+
+
+def throw_problem_exception():
+    raise ProblemException(
+        title="As Exception",
+        detail="Something wrong or not!",
+        ext={'age': 30}
+    )
 
 
 def unordered_params_response(first, path_param, second):
