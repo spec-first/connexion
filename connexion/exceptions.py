@@ -1,21 +1,31 @@
-from werkzeug.exceptions import (BadRequest, Forbidden, HTTPException,
-                                 Unauthorized)
+from werkzeug.exceptions import Forbidden, Unauthorized
+
+from .problem import problem
 
 
 class ConnexionException(Exception):
     pass
 
 
-class ProblemException(ConnexionException, HTTPException):
-    def __init__(self, title=None, description=None, response=None):
+class ProblemException(ConnexionException):
+    def __init__(self, status=400, title=None, detail=None, type=None,
+                 instance=None, headers=None, ext=None):
         """
-        :param title: Title of the problem.
-        :type title: str
+        This exception is holds arguments that are going to be passed to the
+        `connexion.problem` function to generate a propert response.
         """
-        ConnexionException.__init__(self)
-        HTTPException.__init__(self, description, response)
+        self.status = status
+        self.title = title
+        self.detail = detail
+        self.type = type
+        self.instance = instance
+        self.headers = headers
+        self.ext = ext
 
-        self.title = title or self.name
+    def to_problem(self):
+        return problem(status=self.status, title=self.title, detail=self.detail,
+                       type=self.type, instance=self.instance, headers=self.headers,
+                       ext=self.ext)
 
 
 class ResolverError(LookupError):
@@ -78,38 +88,37 @@ class NonConformingResponseHeaders(NonConformingResponse):
         super(NonConformingResponseHeaders, self).__init__(reason=reason, message=message)
 
 
-class OAuthProblem(ProblemException, Unauthorized):
-    def __init__(self, title=None, **kwargs):
-        super(OAuthProblem, self).__init__(title=title, **kwargs)
+class OAuthProblem(Unauthorized):
+    pass
 
 
-class OAuthResponseProblem(ProblemException, Unauthorized):
-    def __init__(self, token_response, title=None, **kwargs):
+class OAuthResponseProblem(Unauthorized):
+    def __init__(self, token_response, **kwargs):
         self.token_response = token_response
-        super(OAuthResponseProblem, self).__init__(title=title, **kwargs)
+        super(OAuthResponseProblem, self).__init__(**kwargs)
 
 
-class OAuthScopeProblem(ProblemException, Forbidden):
-    def __init__(self, token_scopes, required_scopes, title=None, **kwargs):
+class OAuthScopeProblem(Forbidden):
+    def __init__(self, token_scopes, required_scopes, **kwargs):
         self.required_scopes = required_scopes
         self.token_scopes = token_scopes
         self.missing_scopes = required_scopes - token_scopes
 
-        super(OAuthScopeProblem, self).__init__(title=title, **kwargs)
+        super(OAuthScopeProblem, self).__init__(**kwargs)
 
 
-class ExtraParameterProblem(ProblemException, BadRequest):
-    def __init__(self, formdata_parameters, query_parameters, title=None, description=None, **kwargs):
+class ExtraParameterProblem(ProblemException):
+    def __init__(self, formdata_parameters, query_parameters, title=None, detail=None, **kwargs):
         self.extra_formdata = formdata_parameters
         self.extra_query = query_parameters
 
         # This keep backwards compatibility with the old returns
-        if description is None:
+        if detail is None:
             if self.extra_query:
-                description = "Extra {parameter_type} parameter(s) {extra_params} not in spec"\
+                detail = "Extra {parameter_type} parameter(s) {extra_params} not in spec"\
                     .format(parameter_type='query', extra_params=', '.join(self.extra_query))
             elif self.extra_formdata:
-                description = "Extra {parameter_type} parameter(s) {extra_params} not in spec"\
+                detail = "Extra {parameter_type} parameter(s) {extra_params} not in spec"\
                     .format(parameter_type='formData', extra_params=', '.join(self.extra_formdata))
 
-        super(ExtraParameterProblem, self).__init__(title=title, description=description, **kwargs)
+        super(ExtraParameterProblem, self).__init__(title=title, detail=detail, **kwargs)

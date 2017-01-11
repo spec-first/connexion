@@ -4,11 +4,11 @@ import pathlib
 import flask
 import werkzeug.exceptions
 
-from connexion.decorators.produces import JSONEncoder as ConnexionJSONEncoder
-from connexion.resolver import Resolver
-
 from .api import Api
+from .decorators.produces import JSONEncoder as ConnexionJSONEncoder
+from .exceptions import ProblemException
 from .problem import problem
+from .resolver import Resolver
 
 logger = logging.getLogger('connexion.app')
 
@@ -85,11 +85,15 @@ class App(object):
         """
         :type exception: Exception
         """
-        if not isinstance(exception, werkzeug.exceptions.HTTPException):
-            exception = werkzeug.exceptions.InternalServerError()
+        if isinstance(exception, ProblemException):
+            response_container = exception.to_problem()
+        else:
+            if not isinstance(exception, werkzeug.exceptions.HTTPException):
+                exception = werkzeug.exceptions.InternalServerError()
 
-        problem_title = getattr(exception, 'title', exception.name)
-        response_container = problem(title=problem_title, detail=exception.description, status=exception.code)
+            response_container = problem(title=exception.name, detail=exception.description,
+                                         status=exception.code)
+
         return response_container.flask_response_object()
 
     def add_api(self, specification, base_path=None, arguments=None, auth_all_paths=None, swagger_json=None,

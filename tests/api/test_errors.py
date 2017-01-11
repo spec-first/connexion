@@ -66,3 +66,9 @@ def test_errors(problem_app):
     problem_body = json.loads(custom_problem.data.decode('utf-8'))
     assert 'amount' in problem_body
     assert problem_body['amount'] == 23.
+
+    problem_as_exception = app_client.get('/v1.0/problem_exception_with_extra_args')
+    assert problem_as_exception.status_code == 400
+    problem_as_exception_body = json.loads(problem_as_exception.data.decode('utf-8'))
+    assert 'age' in problem_as_exception_body
+    assert problem_as_exception_body['age'] == 30

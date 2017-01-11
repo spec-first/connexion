@@ -91,3 +91,13 @@ paths:
       responses:
         200:
           description: Custom problem response
+
+  /problem_exception_with_extra_args:
+    get:
+      description: Using problem as exception
+      operationId: fakeapi.hello.throw_problem_exception
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Problem exception
