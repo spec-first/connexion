@@ -102,21 +102,21 @@ class RequestBodyValidator(object):
         """
 
         @functools.wraps(function)
-        def wrapper(*args, **kwargs):
+        def wrapper(request, *args, **kwargs):
             if all_json(self.consumes):
-                data = flask.request.json
+                data = request.json
 
-                logger.debug("%s validating schema...", flask.request.url)
-                error = self.validate_schema(data)
+                logger.debug("%s validating schema...", request.url)
+                error = self.validate_schema(data, request.url)
                 if error and not self.has_default:
                     return error
 
-            response = function(*args, **kwargs)
+            response = function(request, *args, **kwargs)
             return response
 
         return wrapper
 
-    def validate_schema(self, data):
+    def validate_schema(self, data, url):
         """
         :type data: dict
         :rtype: flask.Response | None
@@ -127,7 +127,7 @@ class RequestBodyValidator(object):
         try:
             self.validator.validate(data)
         except ValidationError as exception:
-            logger.error("{url} validation error: {error}".format(url=flask.request.url,
+            logger.error("{url} validation error: {error}".format(url=url,
                                                                   error=exception.message))
             return problem(400, 'Bad Request', str(exception.message))
 
@@ -145,7 +145,7 @@ class ResponseBodyValidator(object):
         ValidatorClass = validator or Draft4Validator
         self.validator = ValidatorClass(schema, format_checker=draft4_format_checker)
 
-    def validate_schema(self, data):
+    def validate_schema(self, data, url):
         """
         :type data: dict
         :rtype: flask.Response | None
@@ -153,7 +153,7 @@ class ResponseBodyValidator(object):
         try:
             self.validator.validate(data)
         except ValidationError as exception:
-            logger.error("{url} validation error: {error}".format(url=flask.request.url,
+            logger.error("{url} validation error: {error}".format(url=url,
                                                                   error=exception))
             six.reraise(*sys.exc_info())
 
@@ -253,8 +253,8 @@ class ParameterValidator(object):
         """
 
         @functools.wraps(function)
-        def wrapper(*args, **kwargs):
-            logger.debug("%s validating parameters...", flask.request.url)
+        def wrapper(request, *args, **kwargs):
+            logger.debug("%s validating parameters...", request.url)
 
             if self.strict_validation:
                 query_errors = self.validate_query_parameter_list()
@@ -283,6 +283,6 @@ class ParameterValidator(object):
                 if error:
                     return problem(400, 'Bad Request', error)
 
-            return function(*args, **kwargs)
+            return function(request, *args, **kwargs)
 
         return wrapper

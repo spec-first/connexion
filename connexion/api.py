@@ -110,6 +110,7 @@ class Api(object):
         else:
             self.base_url = canonical_base_url(base_url)
             self.specification['basePath'] = base_url
+        self.framework.set_base_url(self.base_url)
 
         # A list of MIME types the APIs can produce. This is global to all APIs but can be overridden on specific
         # API calls.
@@ -138,11 +139,8 @@ class Api(object):
         logger.debug('Strict Request Validation: %s', str(validate_responses))
         self.strict_validation = strict_validation
 
-        # Create blueprint and endpoints
-        self.blueprint = self.create_blueprint()
-
         if swagger_json:
-            self.framework.register_swagger_json()
+            self.framework.register_swagger_json(self.specification)
         if swagger_ui:
             self.framework.register_swagger_ui()
 
@@ -168,7 +166,8 @@ class Api(object):
         :type path: str
         :type swagger_operation: dict
         """
-        operation = Operation(method=method,
+        operation = Operation(framework=self.framework,
+                              method=method,
                               path=path,
                               path_parameters=path_parameters,
                               operation=swagger_operation,

@@ -3,7 +3,6 @@ import datetime
 import functools
 import logging
 
-import flask
 from flask import json
 
 from .decorator import BaseDecorator
@@ -54,9 +53,9 @@ class Produces(BaseSerializer):
         """
 
         @functools.wraps(function)
-        def wrapper(*args, **kwargs):
-            url = flask.request.url
-            response = function(*args, **kwargs)
+        def wrapper(request, *args, **kwargs):
+            url = request.url
+            response = function(request, *args, **kwargs)
             logger.debug('Returning %s', url,
                          extra={'url': url, 'mimetype': self.mimetype})
             return response
@@ -85,13 +84,13 @@ class Jsonifier(BaseSerializer):
         """
 
         @functools.wraps(function)
-        def wrapper(*args, **kwargs):
-            url = flask.request.url
+        def wrapper(request, *args, **kwargs):
+            url = request.url
 
             logger.debug('Jsonifing %s', url,
                          extra={'url': url, 'mimetype': self.mimetype})
 
-            response = function(*args, **kwargs)
+            response = function(request, *args, **kwargs)
 
             if response.is_handler_response_object:
                 logger.debug('Endpoint returned a Flask Response',

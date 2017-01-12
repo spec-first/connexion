@@ -167,7 +167,7 @@ class App(object):
                   auth_all_paths=auth_all_paths,
                   debug=self.debug,
                   validator_map=self.validator_map)
-        self.app.register_blueprint(api.blueprint)
+        framework.register_app(self.app)
         return api
 
     def _resolver_error_handler(self, *args, **kwargs):

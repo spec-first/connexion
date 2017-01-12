@@ -1,5 +1,6 @@
 import logging
 
+import connexion.api
 import connexion.utils as utils
 import flask
 import werkzeug.exceptions
@@ -10,7 +11,19 @@ logger = logging.getLogger('connexion.frameworks.flask')
 
 class FlaskFramework:
     def __init__(self):
-        self.blueprint = self._create_blueprint()
+        self.swagger_path = connexion.api.SWAGGER_UI_PATH
+        self.swagger_url = connexion.api.SWAGGER_UI_URL
+
+    def get_request(self, *args, **kwargs):
+        return flask.request
+
+    def register_app(self, app):
+        self.app = app
+        self.app.register_blueprint(self.blueprint)
+
+    def set_base_url(self, base_url):
+        self.base_url = base_url
+        self.blueprint = self._create_blueprint(base_url)
 
     def register_operation(self, method, path, operation):
         operation_id = operation.operation_id
@@ -20,7 +33,7 @@ class FlaskFramework:
         flask_path = utils.flaskify_path(path, operation.get_path_parameter_types())
         self.blueprint.add_url_rule(flask_path, operation.endpoint_name, operation.function, methods=[method])
 
-    def register_swagger_json(self):
+    def register_swagger_json(self, specification):
         """
         Adds swagger json to {base_url}/swagger.json
         """
@@ -28,7 +41,7 @@ class FlaskFramework:
         endpoint_name = "{name}_swagger_json".format(name=self.blueprint.name)
         self.blueprint.add_url_rule('/swagger.json',
                                     endpoint_name,
-                                    lambda: flask.jsonify(self.specification))
+                                    lambda: flask.jsonify(specification))
 
     def register_swagger_ui(self):
         """
@@ -37,10 +50,10 @@ class FlaskFramework:
         logger.debug('Adding swagger-ui: %s/%s/', self.base_url, self.swagger_url)
         static_endpoint_name = "{name}_swagger_ui_static".format(name=self.blueprint.name)
         self.blueprint.add_url_rule('/{swagger_url}/<path:filename>'.format(swagger_url=self.swagger_url),
-                                    static_endpoint_name, self.swagger_ui_static)
+                                    static_endpoint_name, self._swagger_ui_static)
         index_endpoint_name = "{name}_swagger_ui_index".format(name=self.blueprint.name)
         self.blueprint.add_url_rule('/{swagger_url}/'.format(swagger_url=self.swagger_url),
-                                    index_endpoint_name, self.swagger_ui_index)
+                                    index_endpoint_name, self._swagger_ui_index)
 
     def register_auth_on_not_found(self):
         """
@@ -52,12 +65,11 @@ class FlaskFramework:
         endpoint_name = "{name}_not_found".format(name=self.blueprint.name)
         self.blueprint.add_url_rule('/<path:invalid_path>', endpoint_name, not_found_error.function)
 
-    def _create_blueprint(self, base_url=None):
+    def _create_blueprint(self, base_url):
         """
         :type base_url: str | None
         :rtype: flask.Blueprint
         """
-        base_url = base_url or self.base_url
         logger.debug('Creating API blueprint: %s', base_url)
         endpoint = utils.flaskify_endpoint(base_url)
         blueprint = flask.Blueprint(endpoint, __name__, url_prefix=base_url,
