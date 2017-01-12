@@ -66,6 +66,8 @@ class App(object):
         for error_code in werkzeug.exceptions.default_exceptions:
             self.add_error_handler(error_code, self.common_error_handler)
 
+        self.add_error_handler(ProblemException, self.common_error_handler)
+
         self.port = port
         self.host = host
         self.server = server or 'flask'

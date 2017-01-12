@@ -2,7 +2,7 @@ from .decorators.decorator import ResponseContainer
 from .decorators.produces import Jsonifier
 
 
-def problem(status, title, detail, type='about:blank', instance=None, headers=None, ext=None):
+def problem(status, title, detail, type=None, instance=None, headers=None, ext=None):
     """
     Returns a `Problem Details <https://tools.ietf.org/html/draft-ietf-appsawg-http-problem-00>`_ error response.
 
@@ -28,6 +28,9 @@ def problem(status, title, detail, type='about:blank', instance=None, headers=No
     :return: Json serialized error response
     :rtype: flask.Response
     """
+    if not type:
+        type = 'about:blank'
+
     problem_response = {'type': type, 'title': title, 'detail': detail, 'status': status, }
     if instance:
         problem_response['instance'] = instance
