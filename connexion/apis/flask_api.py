@@ -68,4 +68,6 @@ class FlaskApi(AbstractApi):
                      extra=vars(operation))
 
         flask_path = flask_utils.flaskify_path(path, operation.get_path_parameter_types())
-        self.blueprint.add_url_rule(flask_path, operation.endpoint_name, operation.function, methods=[method])
+        endpoint_name = flask_utils.flaskify_endpoint(operation.operation_id,
+                                                      operation.randomize_endpoint)
+        self.blueprint.add_url_rule(flask_path, endpoint_name, operation.function, methods=[method])

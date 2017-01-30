@@ -17,7 +17,6 @@ from .decorators.validation import (ParameterValidator, RequestBodyValidator,
                                     TypeValidationError)
 from .exceptions import InvalidSpecification
 from .utils import all_json, is_nullable
-from .flask_utils import flaskify_endpoint
 
 logger = logging.getLogger('connexion.operation')
 
@@ -116,7 +115,7 @@ class SecureOperation(object):
         """
         Guarantees that instead of the internal representation of the
         operation handler response
-        (connexion.decorators.ResponseContainer) a flask.Response
+        (connexion.decorators.ResponseContainer)
         object is returned.
 
         :rtype: types.FunctionType
@@ -214,7 +213,6 @@ class Operation(SecureOperation):
 
         resolution = resolver.resolve(self)
         self.operation_id = resolution.operation_id
-        self.endpoint_name = flaskify_endpoint(self.operation_id, self.randomize_endpoint)
         self.__undecorated_function = resolution.function
 
         self.validate_defaults()
