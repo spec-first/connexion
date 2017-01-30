@@ -1,6 +1,6 @@
 import logging
 
-import connexion.utils as utils
+import connexion.flask_utils as flask_utils
 import flask
 import werkzeug.exceptions
 from connexion.handlers import AuthErrorHandler
@@ -17,7 +17,7 @@ class FlaskApi(AbstractApi):
 
     def _set_blueprint(self):
         logger.debug('Creating API blueprint: %s', self.base_url)
-        endpoint = utils.flaskify_endpoint(self.base_url)
+        endpoint = flask_utils.flaskify_endpoint(self.base_url)
         self.blueprint = flask.Blueprint(endpoint, __name__, url_prefix=self.base_url,
                                          template_folder=str(self.swagger_path))
 
@@ -67,5 +67,5 @@ class FlaskApi(AbstractApi):
         logger.debug('... Adding %s -> %s', method.upper(), operation_id,
                      extra=vars(operation))
 
-        flask_path = utils.flaskify_path(path, operation.get_path_parameter_types())
+        flask_path = flask_utils.flaskify_path(path, operation.get_path_parameter_types())
         self.blueprint.add_url_rule(flask_path, operation.endpoint_name, operation.function, methods=[method])

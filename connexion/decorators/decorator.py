@@ -3,7 +3,7 @@ import logging
 
 import flask
 
-from ..utils import is_flask_response
+from ..flask_utils import is_flask_response
 
 logger = logging.getLogger('connexion.decorators.decorator')
 

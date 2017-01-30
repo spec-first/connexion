@@ -16,7 +16,8 @@ from .decorators.security import (get_tokeninfo_url, security_passthrough,
 from .decorators.validation import (ParameterValidator, RequestBodyValidator,
                                     TypeValidationError)
 from .exceptions import InvalidSpecification
-from .utils import all_json, flaskify_endpoint, is_nullable
+from .utils import all_json, is_nullable
+from .flask_utils import flaskify_endpoint
 
 logger = logging.getLogger('connexion.operation')
 

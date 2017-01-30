@@ -2,29 +2,9 @@ import math
 
 import connexion.apps
 import connexion.utils as utils
+import connexion.flask_utils as flask_utils
 import pytest
 from mock import MagicMock
-
-
-def test_flaskify_path():
-    assert utils.flaskify_path("{test-path}") == "<test_path>"
-    assert utils.flaskify_path("api/{test-path}") == "api/<test_path>"
-    assert utils.flaskify_path("my-api/{test-path}") == "my-api/<test_path>"
-    assert utils.flaskify_path("foo_bar/{a-b}/{c_d}") == "foo_bar/<a_b>/<c_d>"
-    assert utils.flaskify_path("foo/{a}/{b}", {'a': 'integer'}) == "foo/<int:a>/<b>"
-    assert utils.flaskify_path("foo/{a}/{b}", {'a': 'number'}) == "foo/<float:a>/<b>"
-    assert utils.flaskify_path("foo/{a}/{b}", {'a': 'path'}) == "foo/<path:a>/<b>"
-
-
-def test_flaskify_endpoint():
-    assert utils.flaskify_endpoint("module.function") == "module_function"
-    assert utils.flaskify_endpoint("function") == "function"
-
-    name = 'module.function'
-    randlen = 6
-    res = utils.flaskify_endpoint(name, randlen)
-    assert res.startswith('module_function')
-    assert len(res) == len(name) + 1 + randlen
 
 
 def test_get_function_from_name():
