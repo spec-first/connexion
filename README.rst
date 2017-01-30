@@ -104,8 +104,8 @@ path of your application (e.g ``swagger/``). Then run:
 
     import connexion
 
-    app = connexion.App(__name__, specification_dir='swagger/')
-    app.add_api('my_api.yaml')
+    app = connexion.FlaskApp(__name__, specification_dir='swagger/')
+    app.add_api('my_api.yaml', connexion.apis.FlaskApi)
     app.run(port=8080)
 
 See the `Connexion Pet Store Example Application`_ for a sample
@@ -132,9 +132,9 @@ Connexion uses Jinja2_ to allow specification parameterization through the `argu
 
 .. code-block:: python
 
-    app = connexion.App(__name__, specification_dir='swagger/',
+    app = connexion.FlaskApp(__name__, specification_dir='swagger/',
                         arguments={'global': 'global_value'})
-    app.add_api('my_api.yaml', arguments={'api_local': 'local_value'})
+    app.add_api('my_api.yaml', connexion.apis.FlaskApi, arguments={'api_local': 'local_value'})
     app.run(port=8080)
 
 When a value is provided both globally and on the API, the API value will take precedence.
@@ -180,8 +180,8 @@ the endpoints in your specification:
 
     from connexion.resolver import RestyResolver
 
-    app = connexion.App(__name__)
-    app.add_api('swagger.yaml', resolver=RestyResolver('api'))
+    app = connexion.FlaskApp(__name__)
+    app.add_api('swagger.yaml', connexion.apis.FlaskApi, resolver=RestyResolver('api'))
 
 .. code-block:: yaml
 
@@ -283,7 +283,7 @@ to your application:
 
 .. code-block:: python
 
-    app.add_api('my_apy.yaml', strict_validation=True)
+    app.add_api('my_apy.yaml', connexion.apis.FlaskApi, strict_validation=True)
 
 API Versioning and basePath
 ---------------------------
@@ -306,7 +306,7 @@ can provide it when adding the API to your application:
 
 .. code-block:: python
 
-    app.add_api('my_api.yaml', base_path='/1.0')
+    app.add_api('my_api.yaml', connexion.apis.FlaskApi, base_path='/1.0')
 
 Swagger JSON
 ------------
@@ -317,16 +317,16 @@ You can disable the Swagger JSON at the application level:
 
 .. code-block:: python
 
-    app = connexion.App(__name__, specification_dir='swagger/',
+    app = connexion.FlaskApp(__name__, specification_dir='swagger/',
                         swagger_json=False)
-    app.add_api('my_api.yaml')
+    app.add_api('my_api.yaml', connexion.apis.FlaskApi)
 
 You can also disable it at the API level:
 
 .. code-block:: python
 
-    app = connexion.App(__name__, specification_dir='swagger/')
-    app.add_api('my_api.yaml', swagger_json=False)
+    app = connexion.FlaskApp(__name__, specification_dir='swagger/')
+    app.add_api('my_api.yaml', connexion.apis.FlaskApi, swagger_json=False)
 
 HTTPS Support
 -------------
@@ -363,17 +363,17 @@ You can disable the Swagger UI at the application level:
 
 .. code-block:: python
 
-    app = connexion.App(__name__, specification_dir='swagger/',
+    app = connexion.FlaskApp(__name__, specification_dir='swagger/',
                         swagger_ui=False)
-    app.add_api('my_api.yaml')
+    app.add_api('my_api.yaml', connexion.apis.FlaskApi)
 
 
 You can also disable it at the API level:
 
 .. code-block:: python
 
-    app = connexion.App(__name__, specification_dir='swagger/')
-    app.add_api('my_api.yaml', swagger_ui=False)
+    app = connexion.FlaskApp(__name__, specification_dir='swagger/')
+    app.add_api('my_api.yaml', connexion.apis.FlaskApi, swagger_ui=False)
 
 Server Backend
 --------------
@@ -386,7 +386,7 @@ this, set your server to ``tornado``:
 
     import connexion
 
-    app = connexion.App(__name__, specification_dir='swagger/')
+    app = connexion.FlaskApp(__name__, specification_dir='swagger/')
     app.run(server='tornado', port=8080)
 
 You can use the Flask WSGI app with any WSGI container, e.g. `using
@@ -394,7 +394,7 @@ Flask with uWSGI`_ (this is common):
 
 .. code-block:: python
 
-    app = connexion.App(__name__, specification_dir='swagger/')
+    app = connexion.FlaskApp(__name__, specification_dir='swagger/')
     application = app.app # expose global WSGI application object
 
 Set up and run the installation code:

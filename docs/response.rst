@@ -59,8 +59,8 @@ do so by opting in when adding the API:
 
     import connexion
 
-    app = connexion.App(__name__, specification_dir='swagger/')
-    app.add_api('my_api.yaml', validate_responses=True)
+    app = connexion.FlaskApp(__name__, specification_dir='swagger/')
+    app.add_api('my_api.yaml', connexion.apis.FlaskApi, validate_responses=True)
     app.run(port=8080)
 
 This will validate all the responses using `jsonschema` and is specially useful
@@ -79,7 +79,7 @@ the validation, you can override the default class with:
     validator_map = {
         'response': CustomResponseValidator
     }
-    app = connexion.App(__name__, ..., validator_map=validator_map)
+    app = connexion.FlaskApp(__name__, ..., validator_map=validator_map)
 
 
 Error Handling

@@ -12,6 +12,6 @@ def get_secret() -> str:
     return 'You are: {uid}'.format(uid=flask.request.user)
 
 if __name__ == '__main__':
-    app = connexion.App(__name__)
-    app.add_api('app.yaml')
+    app = connexion.FlaskApp(__name__)
+    app.add_api('app.yaml', connexion.apis.FlaskApi)
     app.run(port=8080)

@@ -1,19 +1,15 @@
 import logging
 import pathlib
+import six
+import abc
 
-import flask
-import werkzeug.exceptions
-
-from .api import Api
-from .decorators.produces import JSONEncoder as ConnexionJSONEncoder
-from .exceptions import ProblemException
-from .problem import problem
-from .resolver import Resolver
+from ..resolver import Resolver
 
 logger = logging.getLogger('connexion.app')
 
 
-class App(object):
+@six.add_metaclass(abc.ABCMeta)
+class AbstractApp(object):
     def __init__(self, import_name, port=None, specification_dir='',
                  server=None, arguments=None, auth_all_paths=False,
                  debug=False, swagger_json=True, swagger_ui=True, swagger_path=None,
@@ -46,31 +42,8 @@ class App(object):
         :param validator_map: map of validators
         :type validator_map: dict
         """
-        self.app = flask.Flask(import_name)
-
-        self.app.json_encoder = ConnexionJSONEncoder
-
-        # we get our application root path from flask to avoid duplicating logic
-        self.root_path = pathlib.Path(self.app.root_path)
-        logger.debug('Root Path: %s', self.root_path)
-
-        specification_dir = pathlib.Path(specification_dir)  # Ensure specification dir is a Path
-        if specification_dir.is_absolute():
-            self.specification_dir = specification_dir
-        else:
-            self.specification_dir = self.root_path / specification_dir
-
-        logger.debug('Specification directory: %s', self.specification_dir)
-
-        logger.debug('Setting error handlers')
-        for error_code in werkzeug.exceptions.default_exceptions:
-            self.add_error_handler(error_code, self.common_error_handler)
-
-        self.add_error_handler(ProblemException, self.common_error_handler)
-
         self.port = port
         self.host = host
-        self.server = server or 'flask'
         self.debug = debug
         self.import_name = import_name
         self.arguments = arguments or {}
@@ -82,25 +55,41 @@ class App(object):
         self.resolver_error = None
         self.validator_map = validator_map
 
-    @staticmethod
-    def common_error_handler(exception):
-        """
-        :type exception: Exception
-        """
-        if isinstance(exception, ProblemException):
-            response_container = exception.to_problem()
+        self.app = self.create_app()
+        self.server = server
+
+        # we get our application root path to avoid duplicating logic
+        self.root_path = self.get_root_path()
+        logger.debug('Root Path: %s', self.root_path)
+
+        specification_dir = pathlib.Path(specification_dir)  # Ensure specification dir is a Path
+        if specification_dir.is_absolute():
+            self.specification_dir = specification_dir
         else:
-            if not isinstance(exception, werkzeug.exceptions.HTTPException):
-                exception = werkzeug.exceptions.InternalServerError()
+            self.specification_dir = self.root_path / specification_dir
 
-            response_container = problem(title=exception.name, detail=exception.description,
-                                         status=exception.code)
+        logger.debug('Specification directory: %s', self.specification_dir)
 
-        return response_container.flask_response_object()
+        logger.debug('Setting error handlers')
+        self.set_errors_handlers()
 
-    def add_api(self, specification, base_path=None, arguments=None, auth_all_paths=None, swagger_json=None,
-                swagger_ui=None, swagger_path=None, swagger_url=None, validate_responses=False,
-                strict_validation=False, resolver=Resolver(), resolver_error=None, pythonic_params=False):
+    @abc.abstractmethod
+    def create_app(self):
+        """"""
+
+    @abc.abstractmethod
+    def get_root_path(self):
+        """"""
+
+    @abc.abstractmethod
+    def set_errors_handlers(self):
+        """"""
+
+    def add_api(self, specification, api_cls, base_path=None, arguments=None,
+                auth_all_paths=None, swagger_json=None, swagger_ui=None,
+                swagger_path=None, swagger_url=None, validate_responses=False,
+                strict_validation=False, resolver=Resolver(), resolver_error=None,
+                pythonic_params=False):
         """
         Adds an API to the application based on a swagger file or API dict
 
@@ -131,7 +120,7 @@ class App(object):
         :type resolver_error: int | None
         :param pythonic_params: When True CamelCase parameters are converted to snake_case
         :type pythonic_params: bool
-        :rtype: Api
+        :rtype: AbstractApi
         """
         # Turn the resolver_error code into a handler object
         self.resolver_error = resolver_error
@@ -155,7 +144,7 @@ class App(object):
         else:
             specification = self.specification_dir / specification
 
-        api = Api(specification=specification,
+        api = api_cls(specification=specification,
                   base_url=base_path, arguments=arguments,
                   swagger_json=swagger_json,
                   swagger_ui=swagger_ui,
@@ -169,7 +158,6 @@ class App(object):
                   debug=self.debug,
                   validator_map=self.validator_map,
                   pythonic_params=pythonic_params)
-        self.app.register_blueprint(api.blueprint)
         return api
 
     def _resolver_error_handler(self, *args, **kwargs):
@@ -179,14 +167,6 @@ class App(object):
         }
         kwargs.setdefault('app_consumes', ['application/json'])
         return ResolverErrorHandler(self.resolver_error, *args, **kwargs)
-
-    def add_error_handler(self, error_code, function):
-        """
-
-        :type error_code: int
-        :type function: types.FunctionType
-        """
-        self.app.register_error_handler(error_code, function)
 
     def add_url_rule(self, rule, endpoint=None, view_func=None, **options):
         """
@@ -252,61 +232,9 @@ class App(object):
         logger.debug('Adding %s with decorator', rule, extra=options)
         return self.app.route(rule, **options)
 
+    @abc.abstractmethod
     def run(self, port=None, server=None, debug=None, host=None, **options):  # pragma: no cover
-        """
-        Runs the application on a local development server.
-        :param host: the host interface to bind on.
-        :type host: str
-        :param port: port to listen to
-        :type port: int
-        :param server: which wsgi server to use
-        :type server: str | None
-        :param debug: include debugging information
-        :type debug: bool
-        :param options: options to be forwarded to the underlying server
-        :type options: dict
-        """
-        # this functions is not covered in unit tests because we would effectively testing the mocks
-
-        # overwrite constructor parameter
-        if port is not None:
-            self.port = port
-        elif self.port is None:
-            self.port = 5000
-
-        self.host = host or self.host or '0.0.0.0'
-
-        if server is not None:
-            self.server = server
-
-        if debug is not None:
-            self.debug = debug
-
-        logger.debug('Starting %s HTTP server..', self.server, extra=vars(self))
-        if self.server == 'flask':
-            self.app.run(self.host, port=self.port, debug=self.debug, **options)
-        elif self.server == 'tornado':
-            try:
-                import tornado.wsgi
-                import tornado.httpserver
-                import tornado.ioloop
-            except:
-                raise Exception('tornado library not installed')
-            wsgi_container = tornado.wsgi.WSGIContainer(self.app)
-            http_server = tornado.httpserver.HTTPServer(wsgi_container, **options)
-            http_server.listen(self.port, address=self.host)
-            logger.info('Listening on %s:%s..', self.host, self.port)
-            tornado.ioloop.IOLoop.instance().start()
-        elif self.server == 'gevent':
-            try:
-                import gevent.wsgi
-            except:
-                raise Exception('gevent library not installed')
-            http_server = gevent.wsgi.WSGIServer((self.host, self.port), self.app, **options)
-            logger.info('Listening on %s:%s..', self.host, self.port)
-            http_server.serve_forever()
-        else:
-            raise Exception('Server %s not recognized', self.server)
+        """"""
 
     def __call__(self, environ, start_response):  # pragma: no cover
         """

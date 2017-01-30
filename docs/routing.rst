@@ -42,8 +42,8 @@ the endpoints in your specification:
 
     from connexion.resolver import RestyResolver
 
-    app = connexion.App(__name__)
-    app.add_api('swagger.yaml', resolver=RestyResolver('api'))
+    app = connexion.FlaskApp(__name__)
+    app.add_api('swagger.yaml', connexion.apis.FlaskApi, resolver=RestyResolver('api'))
 
 .. code-block:: yaml
 
@@ -135,7 +135,7 @@ can just provide it when adding the API to your application:
 
 .. code-block:: python
 
-    app.add_api('my_api.yaml', base_path='/1.0')
+    app.add_api('my_api.yaml', connexion.apis.FlaskApi, base_path='/1.0')
 
 Swagger JSON
 ------------
@@ -146,13 +146,13 @@ You can disable the Swagger JSON at the application level:
 
 .. code-block:: python
 
-    app = connexion.App(__name__, specification_dir='swagger/',
+    app = connexion.FlaskApp(__name__, specification_dir='swagger/',
                         swagger_json=False)
-    app.add_api('my_api.yaml')
+    app.add_api('my_api.yaml', connexion.apis.FlaskApi)
 
 You can also disable it at the API level:
 
 .. code-block:: python
 
-    app = connexion.App(__name__, specification_dir='swagger/')
-    app.add_api('my_api.yaml', swagger_json=False)
+    app = connexion.FlaskApp(__name__, specification_dir='swagger/')
+    app.add_api('my_api.yaml', connexion.apis.FlaskApi, swagger_json=False)

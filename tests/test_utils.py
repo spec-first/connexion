@@ -1,6 +1,6 @@
 import math
 
-import connexion.app
+import connexion.apps
 import connexion.utils as utils
 import pytest
 from mock import MagicMock
@@ -47,8 +47,8 @@ def test_get_function_from_name_attr_error(monkeypatch):
 
 
 def test_get_function_from_name_for_class_method():
-    function = utils.get_function_from_name('connexion.app.App.common_error_handler')
-    assert function == connexion.app.App.common_error_handler
+    function = utils.get_function_from_name('connexion.apps.FlaskApp.common_error_handler')
+    assert function == connexion.apps.FlaskApp.common_error_handler
 
 
 def test_boolean():

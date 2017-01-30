@@ -128,7 +128,7 @@ def run(spec_file,
         resolver = MockResolver(mock_all=mock == 'all')
         api_extra_args['resolver'] = resolver
 
-    app = connexion.App(__name__,
+    app = connexion.FlaskApp(__name__,
                         swagger_json=not hide_spec,
                         swagger_ui=not hide_console_ui,
                         swagger_path=console_ui_from or None,
@@ -137,6 +137,7 @@ def run(spec_file,
                         debug=debug)
 
     app.add_api(spec_file_full_path,
+                connexion.apis.FlaskApi,
                 base_path=base_path,
                 resolver_error=resolver_error,
                 validate_responses=validate_responses,

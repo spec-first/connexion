@@ -3,7 +3,8 @@ import logging
 import pathlib
 
 import pytest
-from connexion.app import App
+from connexion.apps import FlaskApp
+from connexion.apis import FlaskApi
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -55,8 +56,8 @@ def oauth_requests(monkeypatch):
 
 @pytest.fixture
 def app():
-    app = App(__name__, 5001, SPEC_FOLDER, debug=True)
-    app.add_api('api.yaml', validate_responses=True)
+    app = FlaskApp(__name__, 5001, SPEC_FOLDER, debug=True)
+    app.add_api('api.yaml', FlaskApi, validate_responses=True)
     return app
 
 
@@ -85,8 +86,8 @@ def build_app_from_fixture(api_spec_folder, **kwargs):
     if 'debug' in kwargs:
         debug = kwargs['debug']
         del(kwargs['debug'])
-    app = App(__name__, 5001, FIXTURES_FOLDER / api_spec_folder, debug=debug)
-    app.add_api('swagger.yaml', **kwargs)
+    app = FlaskApp(__name__, 5001, FIXTURES_FOLDER / api_spec_folder, debug=debug)
+    app.add_api('swagger.yaml', FlaskApi, **kwargs)
     return app
 
 

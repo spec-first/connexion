@@ -12,10 +12,10 @@ from mock import MagicMock
 
 @pytest.fixture()
 def mock_app_run(monkeypatch):
-    test_server = MagicMock(wraps=connexion.App(__name__))
+    test_server = MagicMock(wraps=connexion.FlaskApp(__name__))
     test_server.run = MagicMock(return_value=True)
     test_app = MagicMock(return_value=test_server)
-    monkeypatch.setattr('connexion.cli.connexion.App', test_app)
+    monkeypatch.setattr('connexion.cli.connexion.FlaskApp', test_app)
     return test_app
 
 
@@ -190,7 +190,8 @@ def test_run_using_option_base_path(mock_app_run, expected_arguments,
                               resolver_error=None,
                               validate_responses=False,
                               strict_validation=False)
-    mock_app_run().add_api.assert_called_with(spec_file, **expected_arguments)
+    mock_app_run().add_api.assert_called_with(spec_file, connexion.apis.FlaskApi,
+                                              **expected_arguments)
 
 
 def test_run_unimplemented_operations_and_stub(mock_app_run):

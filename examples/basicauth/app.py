@@ -46,6 +46,6 @@ def get_secret() -> str:
     return 'This is a very secret string requiring authentication!'
 
 if __name__ == '__main__':
-    app = connexion.App(__name__)
-    app.add_api('swagger.yaml')
+    app = connexion.FlaskApp(__name__)
+    app.add_api('swagger.yaml', connexion.apis.FlaskApi)
     app.run(port=8080)
