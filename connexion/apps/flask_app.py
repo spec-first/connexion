@@ -12,6 +12,7 @@ from ..resolver import Resolver
 from ..apis.flask_api import FlaskApi
 from .abstract import AbstractApp
 from flask import json
+from decimal import Decimal
 
 logger = logging.getLogger('connexion.app')
 
@@ -151,5 +152,8 @@ class FlaskJSONEncoder(json.JSONEncoder):
 
         if isinstance(o, datetime.date):
             return o.isoformat()
+
+        if isinstance(o, Decimal):
+            return float(o)
 
         return json.JSONEncoder.default(self, o)
