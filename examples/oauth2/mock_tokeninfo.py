@@ -18,5 +18,5 @@ def get_tokeninfo(access_token: str) -> dict:
 
 if __name__ == '__main__':
     app = connexion.FlaskApp(__name__)
-    app.add_api('mock_tokeninfo.yaml', connexion.apis.FlaskApi)
+    app.add_api('mock_tokeninfo.yaml')
     app.run(port=7979)

@@ -137,7 +137,6 @@ def run(spec_file,
                         debug=debug)
 
     app.add_api(spec_file_full_path,
-                connexion.apis.FlaskApi,
                 base_path=base_path,
                 resolver_error=resolver_error,
                 validate_responses=validate_responses,

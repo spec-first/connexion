@@ -1,18 +1,22 @@
 import connexion
 from connexion.decorators.metrics import UWSGIMetricsCollector
+from connexion.apis import FlaskApi
 from mock import MagicMock
+import json
+import flask
 
 
 def test_timer(monkeypatch):
     wrapper = UWSGIMetricsCollector('/foo/bar/<param>', 'get')
 
-    def operation():
+    def operation(req):
         return connexion.problem(418, '', '')
 
     op = wrapper(operation)
     metrics = MagicMock()
     monkeypatch.setattr('flask.request', MagicMock())
+    monkeypatch.setattr('flask.current_app', MagicMock(response_class=flask.Response))
     monkeypatch.setattr('connexion.decorators.metrics.uwsgi_metrics', metrics)
-    op()
+    op(MagicMock())
     assert metrics.timer.call_args[0][:2] == ('connexion.response',
                                               '418.GET.foo.bar.{param}')

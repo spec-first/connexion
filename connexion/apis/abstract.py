@@ -52,7 +52,7 @@ class AbstractApi(object):
     Single Abstract API
     """
 
-    def __init__(self, specification, base_url=None, arguments=None,
+    def __init__(self, specification, jsonifier, base_url=None, arguments=None,
                  swagger_json=None, swagger_ui=None, swagger_path=None, swagger_url=None,
                  validate_responses=False, strict_validation=False, resolver=None,
                  auth_all_paths=False, debug=False, resolver_error_handler=None,
@@ -138,6 +138,8 @@ class AbstractApi(object):
         logger.debug('Pythonic params: %s', str(pythonic_params))
         self.pythonic_params = pythonic_params
 
+        self.jsonifier = jsonifier
+
         if swagger_json:
             self.add_swagger_json()
         if swagger_ui:
@@ -184,7 +186,8 @@ class AbstractApi(object):
         :type path: str
         :type swagger_operation: dict
         """
-        operation = Operation(method=method,
+        operation = Operation(self,
+                              method=method,
                               path=path,
                               path_parameters=path_parameters,
                               operation=swagger_operation,
@@ -281,3 +284,13 @@ class AbstractApi(object):
 
             swagger_string = jinja2.Template(swagger_template).render(**arguments)
             return yaml.safe_load(swagger_string)  # type: dict
+
+    @classmethod
+    @abc.abstractmethod
+    def get_request(self):
+        """"""
+
+    @classmethod
+    @abc.abstractmethod
+    def get_response(self):
+        """"""

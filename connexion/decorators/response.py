@@ -2,7 +2,6 @@
 import functools
 import logging
 
-from flask import json
 from jsonschema import ValidationError
 
 from ..exceptions import (NonConformingResponseBody,
@@ -24,7 +23,7 @@ class ResponseValidator(BaseDecorator):
         self.operation = operation
         self.mimetype = mimetype
 
-    def validate_response(self, data, status_code, headers):
+    def validate_response(self, data, status_code, headers, url):
         """
         Validates the Response object based on what has been declared in the specification.
         Ensures the response body matches the declated schema.
@@ -44,10 +43,10 @@ class ResponseValidator(BaseDecorator):
             try:
                 # For cases of custom encoders, we need to encode and decode to
                 # transform to the actual types that are going to be returned.
-                data = json.dumps(data)
-                data = json.loads(data)
+                data = data.replace(b'\\"', b'"')
+                data = self.operation.api.jsonifier.loads(data)
 
-                v.validate_schema(data)
+                v.validate_schema(data, url)
             except ValidationError as e:
                 raise NonConformingResponseBody(message=str(e))
 
@@ -86,14 +85,21 @@ class ResponseValidator(BaseDecorator):
         :rtype: types.FunctionType
         """
         @functools.wraps(function)
-        def wrapper(*args, **kwargs):
-            response = function(*args, **kwargs)
+        def wrapper(request):
+            response = function(request)
             try:
-                self.validate_response(response.get_data(), response.status_code, response.headers)
+                self.validate_response(
+                    response.get_data(), response.status_code,
+                    response.headers, request.url)
+
             except NonConformingResponseBody as e:
-                return problem(500, e.reason, e.message)
+                response = problem(500, e.reason, e.message)
+                return self.operation.api.get_response(response)
+
             except NonConformingResponseHeaders as e:
-                return problem(500, e.reason, e.message)
+                response = problem(500, e.reason, e.message)
+                return self.operation.api.get_response(response)
+
             return response
 
         return wrapper

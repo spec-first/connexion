@@ -8,5 +8,5 @@ def post_greeting(name: str) -> str:
 
 if __name__ == '__main__':
     app = connexion.FlaskApp(__name__, 9090, specification_dir='swagger/')
-    app.add_api('helloworld-api.yaml', connexion.apis.FlaskApi, arguments={'title': 'Hello World Example'})
+    app.add_api('helloworld-api.yaml', arguments={'title': 'Hello World Example'})
     app.run()

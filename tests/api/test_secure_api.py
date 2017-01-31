@@ -7,7 +7,7 @@ from connexion.apis import FlaskApi
 def test_security_over_inexistent_endpoints(oauth_requests, secure_api_spec_dir):
     app1 = FlaskApp(__name__, 5001, secure_api_spec_dir, swagger_ui=False,
                debug=True, auth_all_paths=True)
-    app1.add_api('swagger.yaml', FlaskApi)
+    app1.add_api('swagger.yaml')
     assert app1.port == 5001
 
     app_client = app1.app.test_client()

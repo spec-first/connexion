@@ -13,5 +13,5 @@ def get_secret() -> str:
 
 if __name__ == '__main__':
     app = connexion.FlaskApp(__name__)
-    app.add_api('app.yaml', connexion.apis.FlaskApi)
+    app.add_api('app.yaml')
     app.run(port=8080)

@@ -47,5 +47,5 @@ def get_secret() -> str:
 
 if __name__ == '__main__':
     app = connexion.FlaskApp(__name__)
-    app.add_api('swagger.yaml', connexion.apis.FlaskApi)
+    app.add_api('swagger.yaml')
     app.run(port=8080)

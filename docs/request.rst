@@ -103,7 +103,7 @@ to your application:
 
 .. code-block:: python
 
-    app.add_api('my_apy.yaml', connexion.apis.FlaskApi, strict_validation=True)
+    app.add_api('my_apy.yaml', strict_validation=True)
 
 
 Nullable parameters

@@ -11,7 +11,7 @@ class AuthErrorHandler(SecureOperation):
     Wraps an error with authentication.
     """
 
-    def __init__(self, exception, security, security_definitions):
+    def __init__(self, api, exception, security, security_definitions):
         """
         This class uses the exception instance to produce the proper response problem in case the
         request is authenticated.
@@ -25,7 +25,7 @@ class AuthErrorHandler(SecureOperation):
         :type security_definitions: dict
         """
         self.exception = exception
-        SecureOperation.__init__(self, security, security_definitions)
+        SecureOperation.__init__(self, api, security, security_definitions)
 
     @property
     def function(self):
@@ -44,12 +44,13 @@ class AuthErrorHandler(SecureOperation):
         """
         Actual handler for the execution after authentication.
         """
-        response_container = problem(
+        request = self.api.get_request(**kwargs)
+        response = problem(
             title=self.exception.name,
             detail=self.exception.description,
             status=self.exception.code
         )
-        return response_container
+        return self.api.get_response(response)
 
 
 class ResolverErrorHandler(Operation):
@@ -57,19 +58,20 @@ class ResolverErrorHandler(Operation):
     Handler for responding to ResolverError.
     """
 
-    def __init__(self, status_code, exception, *args, **kwargs):
+    def __init__(self, api, status_code, exception, *args, **kwargs):
         self.status_code = status_code
         self.exception = exception
-        Operation.__init__(self, *args, **kwargs)
+        Operation.__init__(self, api, *args, **kwargs)
 
     @property
     def function(self):
         return self.handle
 
     def handle(self, *args, **kwargs):
-        response_container = problem(
+        request = self.api.get_request(**kwargs)
+        response = problem(
             title='Not Implemented',
             detail=self.exception.reason,
             status=self.status_code
         )
-        return response_container.flask_response_object()
+        return self.api.get_response(response)

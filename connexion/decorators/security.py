@@ -5,7 +5,6 @@ import os
 import textwrap
 
 import requests
-from flask import request
 
 from ..exceptions import OAuthProblem, OAuthResponseProblem, OAuthScopeProblem
 
@@ -52,7 +51,7 @@ def verify_oauth(token_info_url, allowed_scopes, function):
     """
 
     @functools.wraps(function)
-    def wrapper(*args, **kwargs):
+    def wrapper(request):
         logger.debug("%s Oauth verification...", request.url)
         authorization = request.headers.get('Authorization')  # type: str
         if not authorization:
@@ -86,8 +85,8 @@ def verify_oauth(token_info_url, allowed_scopes, function):
                     token_scopes=user_scopes
                 )
             logger.info("... Token authenticated.")
-            request.user = token_info.get('uid')
-            request.token_info = token_info
-        return function(*args, **kwargs)
+            request.context['user'] = token_info.get('uid')
+            request.context['token_info'] = token_info
+        return function(request)
 
     return wrapper

@@ -60,9 +60,9 @@ class Produces(BaseSerializer):
         """
 
         @functools.wraps(function)
-        def wrapper(*args, **kwargs):
-            url = flask.request.url
-            response = function(*args, **kwargs)
+        def wrapper(request):
+            url = request.url
+            response = function(request)
             logger.debug('Returning %s', url,
                          extra={'url': url, 'mimetype': self.mimetype})
             return response
@@ -74,63 +74,3 @@ class Produces(BaseSerializer):
         :rtype: str
         """
         return '<Produces: {}>'.format(self.mimetype)
-
-
-class Jsonifier(BaseSerializer):
-    @staticmethod
-    def dumps(data):
-        """ Central point where JSON serialization happens inside
-        Connexion.
-        """
-        if six.PY2:
-            json_content = json.dumps(data, indent=2, encoding="utf-8")
-        else:
-            json_content = json.dumps(data, indent=2)
-
-        return "{}\n".format(json_content)
-
-    def __call__(self, function):
-        """
-        :type function: types.FunctionType
-        :rtype: types.FunctionType
-        """
-
-        @functools.wraps(function)
-        def wrapper(*args, **kwargs):
-            url = flask.request.url
-
-            logger.debug('Jsonifing %s', url,
-                         extra={'url': url, 'mimetype': self.mimetype})
-
-            response = function(*args, **kwargs)
-
-            if response.is_handler_response_object:
-                logger.debug('Endpoint returned a Flask Response',
-                             extra={'url': url, 'mimetype': self.mimetype})
-                return response
-
-            elif response.data is NoContent:
-                response.set_data('')
-                return response
-
-            elif response.status_code == 204:
-                logger.debug('Endpoint returned an empty response (204)',
-                             extra={'url': url, 'mimetype': self.mimetype})
-                response.set_data('')
-                return response
-
-            elif response.mimetype == 'application/problem+json' and isinstance(response.data, str):
-                # connexion.problem() already adds data as a serialized JSON
-                return response
-
-            json_content = Jsonifier.dumps(response.get_data())
-            response.set_data(json_content)
-            return response
-
-        return wrapper
-
-    def __repr__(self):
-        """
-        :rtype: str
-        """
-        return '<Jsonifier: {}>'.format(self.mimetype)

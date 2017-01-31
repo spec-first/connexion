@@ -81,7 +81,7 @@ to set CORS headers:
     from flask.ext.cors import CORS
 
     app = connexion.FlaskApp(__name__)
-    app.add_api('swagger.yaml', connexion.apis.FlaskApi)
+    app.add_api('swagger.yaml')
 
     # add CORS support
     CORS(app.app)

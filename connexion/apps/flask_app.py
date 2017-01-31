@@ -1,14 +1,17 @@
 import logging
 import pathlib
+import datetime
 
 import flask
 import werkzeug.exceptions
+import six
 
-from ..decorators.produces import JSONEncoder as ConnexionJSONEncoder
 from ..exceptions import ProblemException
 from ..problem import problem
 from ..resolver import Resolver
+from ..apis.flask_api import FlaskApi
 from .abstract import AbstractApp
+from flask import json
 
 logger = logging.getLogger('connexion.app')
 
@@ -23,10 +26,12 @@ class FlaskApp(AbstractApp):
                      server=server, arguments=arguments, auth_all_paths=auth_all_paths,
                      debug=debug, swagger_json=swagger_json, swagger_ui=swagger_ui,
                      swagger_path=swagger_path, swagger_url=swagger_url,
-                     host=host, validator_map=validator_map)
+                     host=host, validator_map=validator_map, api_cls=FlaskApi)
 
     def create_app(self):
-        return flask.Flask(self.import_name)
+        app = flask.Flask(self.import_name)
+        app.json_encoder = FlaskJSONEncoder
+        return app
 
     def get_root_path(self):
         return pathlib.Path(self.app.root_path)
@@ -43,21 +48,24 @@ class FlaskApp(AbstractApp):
         :type exception: Exception
         """
         if isinstance(exception, ProblemException):
-            response_container = exception.to_problem()
+            response = exception.to_problem()
         else:
             if not isinstance(exception, werkzeug.exceptions.HTTPException):
                 exception = werkzeug.exceptions.InternalServerError()
 
-            response_container = problem(title=exception.name, detail=exception.description,
-                                         status=exception.code)
+            response = problem(title=exception.name, detail=exception.description,
+                               status=exception.code)
+            kwargs = {attr_name: getattr(response, attr_name) for attr_name in response._fields}
+            response = type(response)(**kwargs)
 
-        return response_container.flask_response_object()
+        response = FlaskApi.get_response(response)
+        return response
 
-    def add_api(self, specification, framework_cls, base_path=None, arguments=None,
+    def add_api(self, specification, base_path=None, arguments=None,
                 auth_all_paths=None, swagger_json=None, swagger_ui=None,
                 swagger_path=None, swagger_url=None, validate_responses=False,
                 strict_validation=False, resolver=Resolver(), resolver_error=None):
-        api = super(FlaskApp, self).add_api(specification, framework_cls, base_path=base_path,
+        api = super(FlaskApp, self).add_api(specification, base_path=base_path,
                     arguments=arguments, auth_all_paths=auth_all_paths, swagger_json=swagger_json,
                     swagger_ui=swagger_ui, swagger_path=swagger_path, swagger_url=swagger_url,
                     validate_responses=validate_responses, strict_validation=strict_validation,
@@ -128,3 +136,20 @@ class FlaskApp(AbstractApp):
             http_server.serve_forever()
         else:
             raise Exception('Server %s not recognized', self.server)
+
+
+class FlaskJSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, datetime.datetime):
+            if o.tzinfo:
+                # eg: '2015-09-25T23:14:42.588601+00:00'
+                return o.isoformat('T')
+            else:
+                # No timezone present - assume UTC.
+                # eg: '2015-09-25T23:14:42.588601Z'
+                return o.isoformat('T') + 'Z'
+
+        if isinstance(o, datetime.date):
+            return o.isoformat()
+
+        return json.JSONEncoder.default(self, o)

@@ -190,8 +190,7 @@ def test_run_using_option_base_path(mock_app_run, expected_arguments,
                               resolver_error=None,
                               validate_responses=False,
                               strict_validation=False)
-    mock_app_run().add_api.assert_called_with(spec_file, connexion.apis.FlaskApi,
-                                              **expected_arguments)
+    mock_app_run().add_api.assert_called_with(spec_file, **expected_arguments)
 
 
 def test_run_unimplemented_operations_and_stub(mock_app_run):

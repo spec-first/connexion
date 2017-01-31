@@ -57,7 +57,7 @@ def oauth_requests(monkeypatch):
 @pytest.fixture
 def app():
     app = FlaskApp(__name__, 5001, SPEC_FOLDER, debug=True)
-    app.add_api('api.yaml', FlaskApi, validate_responses=True)
+    app.add_api('api.yaml', validate_responses=True)
     return app
 
 
@@ -87,7 +87,7 @@ def build_app_from_fixture(api_spec_folder, **kwargs):
         debug = kwargs['debug']
         del(kwargs['debug'])
     app = FlaskApp(__name__, 5001, FIXTURES_FOLDER / api_spec_folder, debug=debug)
-    app.add_api('swagger.yaml', FlaskApi, **kwargs)
+    app.add_api('swagger.yaml', **kwargs)
     return app
 
 

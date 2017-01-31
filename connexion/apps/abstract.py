@@ -10,7 +10,7 @@ logger = logging.getLogger('connexion.app')
 
 @six.add_metaclass(abc.ABCMeta)
 class AbstractApp(object):
-    def __init__(self, import_name, port=None, specification_dir='',
+    def __init__(self, import_name, api_cls, port=None, specification_dir='',
                  server=None, arguments=None, auth_all_paths=False,
                  debug=False, swagger_json=True, swagger_ui=True, swagger_path=None,
                  swagger_url=None, host=None, validator_map=None):
@@ -54,6 +54,7 @@ class AbstractApp(object):
         self.auth_all_paths = auth_all_paths
         self.resolver_error = None
         self.validator_map = validator_map
+        self.api_cls = api_cls
 
         self.app = self.create_app()
         self.server = server
@@ -85,7 +86,7 @@ class AbstractApp(object):
     def set_errors_handlers(self):
         """"""
 
-    def add_api(self, specification, api_cls, base_path=None, arguments=None,
+    def add_api(self, specification, base_path=None, arguments=None,
                 auth_all_paths=None, swagger_json=None, swagger_ui=None,
                 swagger_path=None, swagger_url=None, validate_responses=False,
                 strict_validation=False, resolver=Resolver(), resolver_error=None,
@@ -144,7 +145,7 @@ class AbstractApp(object):
         else:
             specification = self.specification_dir / specification
 
-        api = api_cls(specification=specification,
+        api = self.api_cls(specification=specification,
                   base_url=base_path, arguments=arguments,
                   swagger_json=swagger_json,
                   swagger_ui=swagger_ui,
@@ -166,7 +167,7 @@ class AbstractApp(object):
             'operationId': 'connexion.handlers.ResolverErrorHandler',
         }
         kwargs.setdefault('app_consumes', ['application/json'])
-        return ResolverErrorHandler(self.resolver_error, *args, **kwargs)
+        return ResolverErrorHandler(self.api_cls, self.resolver_error, *args, **kwargs)
 
     def add_url_rule(self, rule, endpoint=None, view_func=None, **options):
         """

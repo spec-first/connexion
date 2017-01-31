@@ -27,7 +27,7 @@ Put your API YAML inside a folder in the root path of your application (e.g ``sw
     import connexion
 
     app = connexion.FlaskApp(__name__, specification_dir='swagger/')
-    app.add_api('my_api.yaml', connexion.apis.FlaskApi)
+    app.add_api('my_api.yaml')
     app.run(port=8080)
 
 
@@ -43,7 +43,7 @@ for each specific API in the `connexion.App#add_api` method:
 
     app = connexion.FlaskApp(__name__, specification_dir='swagger/',
                         arguments={'global': 'global_value'})
-    app.add_api('my_api.yaml', connexion.apis.FlaskApi, arguments={'api_local': 'local_value'})
+    app.add_api('my_api.yaml', arguments={'api_local': 'local_value'})
     app.run(port=8080)
 
 When a value is provided both globally and on the API, the API value
@@ -60,7 +60,7 @@ You can disable the Swagger UI at the application level:
 
     app = connexion.FlaskApp(__name__, specification_dir='swagger/',
                         swagger_ui=False)
-    app.add_api('my_api.yaml', connexion.apis.FlaskApi)
+    app.add_api('my_api.yaml')
 
 
 You can also disable it at the API level:
@@ -68,7 +68,7 @@ You can also disable it at the API level:
 .. code-block:: python
 
     app = connexion.FlaskApp(__name__, specification_dir='swagger/')
-    app.add_api('my_api.yaml', connexion.apis.FlaskApi, swagger_ui=False)
+    app.add_api('my_api.yaml', swagger_ui=False)
 
 Server Backend
 --------------

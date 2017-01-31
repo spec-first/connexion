@@ -36,7 +36,8 @@ def test_bad_operation_id():
 
 
 def test_standard_resolve_x_router_controller():
-    operation = Operation(method='GET',
+    operation = Operation(api=None,
+                          method='GET',
                           path='endpoint',
                           path_parameters=[],
                           operation={
@@ -54,7 +55,8 @@ def test_standard_resolve_x_router_controller():
 
 
 def test_resty_resolve_operation_id():
-    operation = Operation(method='GET',
+    operation = Operation(api=None,
+                          method='GET',
                           path='endpoint',
                           path_parameters=[],
                           operation={
@@ -71,7 +73,8 @@ def test_resty_resolve_operation_id():
 
 
 def test_resty_resolve_x_router_controller_with_operation_id():
-    operation = Operation(method='GET',
+    operation = Operation(api=None,
+                          method='GET',
                           path='endpoint',
                           path_parameters=[],
                           operation={
@@ -89,7 +92,8 @@ def test_resty_resolve_x_router_controller_with_operation_id():
 
 
 def test_resty_resolve_x_router_controller_without_operation_id():
-    operation = Operation(method='GET',
+    operation = Operation(api=None,
+                          method='GET',
                           path='/hello/{id}',
                           path_parameters=[],
                           operation={'x-swagger-router-controller': 'fakeapi.hello'},
@@ -104,7 +108,8 @@ def test_resty_resolve_x_router_controller_without_operation_id():
 
 
 def test_resty_resolve_with_default_module_name():
-    operation = Operation(method='GET',
+    operation = Operation(api=None,
+                          method='GET',
                           path='/hello/{id}',
                           path_parameters=[],
                           operation={},
@@ -119,7 +124,8 @@ def test_resty_resolve_with_default_module_name():
 
 
 def test_resty_resolve_with_default_module_name_lowercase_verb():
-    operation = Operation(method='get',
+    operation = Operation(api=None,
+                          method='get',
                           path='/hello/{id}',
                           path_parameters=[],
                           operation={},
@@ -134,7 +140,8 @@ def test_resty_resolve_with_default_module_name_lowercase_verb():
 
 
 def test_resty_resolve_with_default_module_name_will_translate_dashes_in_resource_name():
-    operation = Operation(method='GET',
+    operation = Operation(api=None,
+                          method='GET',
                           path='/foo-bar',
                           path_parameters=[],
                           operation={},
@@ -149,7 +156,8 @@ def test_resty_resolve_with_default_module_name_will_translate_dashes_in_resourc
 
 
 def test_resty_resolve_with_default_module_name_can_resolve_api_root():
-    operation = Operation(method='GET',
+    operation = Operation(api=None,
+                          method='GET',
                           path='/',
                           path_parameters=[],
                           operation={},
@@ -164,7 +172,8 @@ def test_resty_resolve_with_default_module_name_can_resolve_api_root():
 
 
 def test_resty_resolve_with_default_module_name_will_resolve_resource_root_get_as_search():
-    operation = Operation(method='GET',
+    operation = Operation(api=None,
+                          method='GET',
                           path='/hello',
                           path_parameters=[],
                           operation={},
@@ -179,7 +188,8 @@ def test_resty_resolve_with_default_module_name_will_resolve_resource_root_get_a
 
 
 def test_resty_resolve_with_default_module_name_and_x_router_controller_will_resolve_resource_root_get_as_search():
-    operation = Operation(method='GET',
+    operation = Operation(api=None,
+                          method='GET',
                           path='/hello',
                           path_parameters=[],
                           operation={
@@ -196,7 +206,8 @@ def test_resty_resolve_with_default_module_name_and_x_router_controller_will_res
 
 
 def test_resty_resolve_with_default_module_name_will_resolve_resource_root_as_configured():
-    operation = Operation(method='GET',
+    operation = Operation(api=None,
+                          method='GET',
                           path='/hello',
                           path_parameters=[],
                           operation={},
@@ -211,7 +222,8 @@ def test_resty_resolve_with_default_module_name_will_resolve_resource_root_as_co
 
 
 def test_resty_resolve_with_default_module_name_will_resolve_resource_root_post_as_post():
-    operation = Operation(method='POST',
+    operation = Operation(api=None,
+                          method='POST',
                           path='/hello',
                           path_parameters=[],
                           operation={},
