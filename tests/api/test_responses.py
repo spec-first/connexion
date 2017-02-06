@@ -179,3 +179,23 @@ def test_operation_handler_returns_flask_object(invalid_resp_allowed_app):
     app_client = invalid_resp_allowed_app.app.test_client()
     resp = app_client.get('/v1.0/get_non_conforming_response')
     assert resp.status_code == 200
+
+
+def test_post_wrong_content_type(simple_app):
+    app_client = simple_app.app.test_client()
+    resp = app_client.post('/v1.0/post_wrong_content_type',
+                           content_type="application/weird+json",
+                           data=json.dumps({"some": "data"})
+                           )
+    assert resp.status_code == 200
+
+    resp = app_client.post('/v1.0/post_wrong_content_type',
+                           content_type="application/xml",
+                           data=json.dumps({"some": "data"})
+                           )
+    assert resp.status_code == 415
+
+    resp = app_client.post('/v1.0/post_wrong_content_type',
+                           data=json.dumps({"some": "data"})
+                           )
+    assert resp.status_code == 415
