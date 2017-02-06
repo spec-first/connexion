@@ -147,8 +147,6 @@ paths:
       responses:
         200:
           description: OK
-        215:
-          description: fucked
 
   /test-default-integer-body:
     post:
