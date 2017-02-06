@@ -104,7 +104,10 @@ class RequestBodyValidator(object):
         @functools.wraps(function)
         def wrapper(*args, **kwargs):
             if all_json(self.consumes):
-                data = flask.request.json
+                try:
+                    data = flask.request.get_json()
+                except AttributeError:
+                    data = flask.request.json
 
                 logger.debug("%s validating schema...", flask.request.url)
                 error = self.validate_schema(data)
