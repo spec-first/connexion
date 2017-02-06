@@ -104,10 +104,7 @@ class RequestBodyValidator(object):
         @functools.wraps(function)
         def wrapper(*args, **kwargs):
             if all_json(self.consumes):
-                try:
-                    data = flask.request.get_json()
-                except AttributeError:
-                    data = flask.request.json
+                data = flask.request.get_json()
 
                 # flask does not process json if the Content-Type header is not equal to "application/json"
                 if data is None and len(flask.request.data) > 0 and not self.is_null_value_valid:
