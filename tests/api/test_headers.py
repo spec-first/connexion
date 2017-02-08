@@ -23,7 +23,7 @@ def test_header_not_returned(simple_app):
     response = app_client.post('/v1.0/goodday/noheader', data={})  # type: flask.Response
     assert response.status_code == 500  # view_func has not returned what was promised in spec
     assert response.content_type == 'application/problem+json'
-    data = json.loads(response.data.decode('utf-8'))
+    data = json.loads(response.data.decode('utf-8', 'replace'))
     assert data['type'] == 'about:blank'
     assert data['title'] == 'Response headers do not conform to specification'
     assert data['detail'] == "Keys in header don't match response specification. Difference: Location"
