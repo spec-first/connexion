@@ -3,17 +3,12 @@ import logging
 import pathlib
 import sys
 
-import flask
 import jinja2
 import six
-import werkzeug.exceptions
-
 import yaml
 from swagger_spec_validator.validator20 import validate_spec
 
-from . import utils
 from .exceptions import ResolverError
-from .handlers import AuthErrorHandler
 from .operation import Operation
 from .resolver import Resolver
 
@@ -56,10 +51,10 @@ def canonical_base_url(base_path):
 
 class Api(object):
     """
-    Single API that corresponds to a flask blueprint
+    Single API that corresponds to a framework blueprint
     """
 
-    def __init__(self, specification, base_url=None, arguments=None,
+    def __init__(self, specification, framework, base_url=None, arguments=None,
                  swagger_json=None, swagger_ui=None, swagger_path=None, swagger_url=None,
                  validate_responses=False, strict_validation=False, resolver=None,
                  auth_all_paths=False, debug=False, resolver_error_handler=None, validator_map=None):
@@ -82,6 +77,7 @@ class Api(object):
             Operation used for handling ResolveErrors
         :type resolver_error_handler: callable | None
         """
+        self.framework = framework
         self.debug = debug
         self.validator_map = validator_map
         self.resolver_error_handler = resolver_error_handler
@@ -114,6 +110,7 @@ class Api(object):
         else:
             self.base_url = canonical_base_url(base_url)
             self.specification['basePath'] = base_url
+        self.framework.set_base_url(self.base_url)
 
         # A list of MIME types the APIs can produce. This is global to all APIs but can be overridden on specific
         # API calls.
@@ -142,18 +139,15 @@ class Api(object):
         logger.debug('Strict Request Validation: %s', str(validate_responses))
         self.strict_validation = strict_validation
 
-        # Create blueprint and endpoints
-        self.blueprint = self.create_blueprint()
-
         if swagger_json:
-            self.add_swagger_json()
+            self.framework.register_swagger_json(self.specification)
         if swagger_ui:
-            self.add_swagger_ui()
+            self.framework.register_swagger_ui()
 
         self.add_paths()
 
         if auth_all_paths:
-            self.add_auth_on_not_found()
+            self.framework.register_auth_on_not_found()
 
     def add_operation(self, method, path, swagger_operation, path_parameters):
         """
@@ -172,7 +166,8 @@ class Api(object):
         :type path: str
         :type swagger_operation: dict
         """
-        operation = Operation(method=method,
+        operation = Operation(framework=self.framework,
+                              method=method,
                               path=path,
                               path_parameters=path_parameters,
                               operation=swagger_operation,
@@ -187,7 +182,7 @@ class Api(object):
                               validator_map=self.validator_map,
                               strict_validation=self.strict_validation,
                               resolver=self.resolver)
-        self._add_operation_internal(method, path, operation)
+        self.framework.register_operation(method, path, operation)
 
     def _add_resolver_error_handler(self, method, path, err):
         """
@@ -207,14 +202,6 @@ class Api(object):
                                                 resolver=self.resolver,
                                                 randomize_endpoint=RESOLVER_ERROR_ENDPOINT_RANDOM_DIGITS)
         self._add_operation_internal(method, path, operation)
-
-    def _add_operation_internal(self, method, path, operation):
-        operation_id = operation.operation_id
-        logger.debug('... Adding %s -> %s', method.upper(), operation_id,
-                     extra=vars(operation))
-
-        flask_path = utils.flaskify_path(path, operation.get_path_parameter_types())
-        self.blueprint.add_url_rule(flask_path, operation.endpoint_name, operation.function, methods=[method])
 
     def add_paths(self, paths=None):
         """
@@ -237,7 +224,7 @@ class Api(object):
                     self.add_operation(method, path, endpoint, path_parameters)
                 except ResolverError as err:
                     # If we have an error handler for resolver errors, add it
-                    # as an operation (but randomize the flask endpoint name).
+                    # as an operation (but randomize the endpoint name).
                     # Otherwise treat it as any other error.
                     if self.resolver_error_handler is not None:
                         self._add_resolver_error_handler(method, path, err)
@@ -260,59 +247,6 @@ class Api(object):
         else:
             logger.error(error_msg)
             six.reraise(*exc_info)
-
-    def add_auth_on_not_found(self):
-        """
-        Adds a 404 error handler to authenticate and only expose the 404 status if the security validation pass.
-        """
-        logger.debug('Adding path not found authentication')
-        not_found_error = AuthErrorHandler(werkzeug.exceptions.NotFound(), security=self.security,
-                                           security_definitions=self.security_definitions)
-        endpoint_name = "{name}_not_found".format(name=self.blueprint.name)
-        self.blueprint.add_url_rule('/<path:invalid_path>', endpoint_name, not_found_error.function)
-
-    def add_swagger_json(self):
-        """
-        Adds swagger json to {base_url}/swagger.json
-        """
-        logger.debug('Adding swagger.json: %s/swagger.json', self.base_url)
-        endpoint_name = "{name}_swagger_json".format(name=self.blueprint.name)
-        self.blueprint.add_url_rule('/swagger.json',
-                                    endpoint_name,
-                                    lambda: flask.jsonify(self.specification))
-
-    def add_swagger_ui(self):
-        """
-        Adds swagger ui to {base_url}/ui/
-        """
-        logger.debug('Adding swagger-ui: %s/%s/', self.base_url, self.swagger_url)
-        static_endpoint_name = "{name}_swagger_ui_static".format(name=self.blueprint.name)
-        self.blueprint.add_url_rule('/{swagger_url}/<path:filename>'.format(swagger_url=self.swagger_url),
-                                    static_endpoint_name, self.swagger_ui_static)
-        index_endpoint_name = "{name}_swagger_ui_index".format(name=self.blueprint.name)
-        self.blueprint.add_url_rule('/{swagger_url}/'.format(swagger_url=self.swagger_url),
-                                    index_endpoint_name, self.swagger_ui_index)
-
-    def create_blueprint(self, base_url=None):
-        """
-        :type base_url: str | None
-        :rtype: flask.Blueprint
-        """
-        base_url = base_url or self.base_url
-        logger.debug('Creating API blueprint: %s', base_url)
-        endpoint = utils.flaskify_endpoint(base_url)
-        blueprint = flask.Blueprint(endpoint, __name__, url_prefix=base_url,
-                                    template_folder=str(self.swagger_path))
-        return blueprint
-
-    def swagger_ui_index(self):
-        return flask.render_template('index.html', api_url=self.base_url)
-
-    def swagger_ui_static(self, filename):
-        """
-        :type filename: str
-        """
-        return flask.send_from_directory(str(self.swagger_path), filename)
 
     def load_spec_from_file(self, arguments, specification):
         arguments = arguments or {}

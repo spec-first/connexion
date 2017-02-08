@@ -9,6 +9,7 @@ from .decorators.produces import JSONEncoder as ConnexionJSONEncoder
 from .exceptions import ProblemException
 from .problem import problem
 from .resolver import Resolver
+from .frameworks.flask import FlaskFramework
 
 logger = logging.getLogger('connexion.app')
 
@@ -153,7 +154,9 @@ class App(object):
         else:
             specification = self.specification_dir / specification
 
+        framework = FlaskFramework()
         api = Api(specification=specification,
+                  framework=framework,
                   base_url=base_path, arguments=arguments,
                   swagger_json=swagger_json,
                   swagger_ui=swagger_ui,
@@ -166,7 +169,7 @@ class App(object):
                   auth_all_paths=auth_all_paths,
                   debug=self.debug,
                   validator_map=self.validator_map)
-        self.app.register_blueprint(api.blueprint)
+        framework.register_app(self.app)
         return api
 
     def _resolver_error_handler(self, *args, **kwargs):

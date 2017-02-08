@@ -24,7 +24,7 @@ class ResponseValidator(BaseDecorator):
         self.operation = operation
         self.mimetype = mimetype
 
-    def validate_response(self, data, status_code, headers):
+    def validate_response(self, data, status_code, headers, url):
         """
         Validates the Response object based on what has been declared in the specification.
         Ensures the response body matches the declated schema.
@@ -47,7 +47,7 @@ class ResponseValidator(BaseDecorator):
                 data = json.dumps(data)
                 data = json.loads(data)
 
-                v.validate_schema(data)
+                v.validate_schema(data, url)
             except ValidationError as e:
                 raise NonConformingResponseBody(message=str(e))
 
@@ -86,10 +86,10 @@ class ResponseValidator(BaseDecorator):
         :rtype: types.FunctionType
         """
         @functools.wraps(function)
-        def wrapper(*args, **kwargs):
-            response = function(*args, **kwargs)
+        def wrapper(request, *args, **kwargs):
+            response = function(request, *args, **kwargs)
             try:
-                self.validate_response(response.get_data(), response.status_code, response.headers)
+                self.validate_response(response.get_data(), response.status_code, response.headers, request.url)
             except NonConformingResponseBody as e:
                 return problem(500, e.reason, e.message)
             except NonConformingResponseHeaders as e:

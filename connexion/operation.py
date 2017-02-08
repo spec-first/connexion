@@ -32,7 +32,7 @@ VALIDATOR_MAP = {
 
 class SecureOperation(object):
 
-    def __init__(self, security, security_definitions):
+    def __init__(self, framework, security, security_definitions):
         """
         :param security: list of security rules the application uses by default
         :type security: list
@@ -40,6 +40,7 @@ class SecureOperation(object):
             <https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-definitions-object>`_
         :type security_definitions: dict
         """
+        self.framework = framework
         self.security = security
         self.security_definitions = security_definitions
 
@@ -120,7 +121,7 @@ class SecureOperation(object):
 
         :rtype: types.FunctionType
         """
-        return EndOfRequestLifecycleDecorator()
+        return EndOfRequestLifecycleDecorator(self.framework)
 
 
 class Operation(SecureOperation):
@@ -129,7 +130,7 @@ class Operation(SecureOperation):
     A single API operation on a path.
     """
 
-    def __init__(self, method, path, operation, resolver, app_produces, app_consumes,
+    def __init__(self, framework, method, path, operation, resolver, app_produces, app_consumes,
                  path_parameters=None, app_security=None, security_definitions=None,
                  definitions=None, parameter_definitions=None, response_definitions=None,
                  validate_responses=False, strict_validation=False, randomize_endpoint=None,
@@ -179,6 +180,7 @@ class Operation(SecureOperation):
         :type strict_validation: bool
         """
 
+        self.framework = framework
         self.method = method
         self.path = path
         self.validator_map = dict(VALIDATOR_MAP)

@@ -94,7 +94,7 @@ class BeginOfRequestLifecycleDecorator(BaseDecorator):
         :rtype: types.FunctionType
         """
         @functools.wraps(function)
-        def wrapper(*args, **kwargs):
+        def wrapper(request, *args, **kwargs):
             operation_handler_result = function(*args, **kwargs)
             return self.get_response_container(operation_handler_result)
 
@@ -107,6 +107,8 @@ class EndOfRequestLifecycleDecorator(BaseDecorator):
     Filter the ResponseContainer instance to return the corresponding
     flask.Response object.
     """
+    def __init__(self, framework):
+        self.framework = framework
 
     def __call__(self, function):
         """
@@ -115,7 +117,8 @@ class EndOfRequestLifecycleDecorator(BaseDecorator):
         """
         @functools.wraps(function)
         def wrapper(*args, **kwargs):
-            response_container = function(*args, **kwargs)
+            request = self.framework.get_request(*args, **kwargs)
+            response_container = function(request, *args, **kwargs)
             return response_container.flask_response_object()
 
         return wrapper
