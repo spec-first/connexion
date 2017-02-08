@@ -42,7 +42,7 @@ def test_security(oauth_requests, secure_endpoint_app):
     get_bye_no_auth = app_client.get('/v1.0/byesecure/jsantos')  # type: flask.Response
     assert get_bye_no_auth.status_code == 401
     assert get_bye_no_auth.content_type == 'application/problem+json'
-    get_bye_no_auth_reponse = json.loads(get_bye_no_auth.data.decode())  # type: dict
+    get_bye_no_auth_reponse = json.loads(get_bye_no_auth.data.decode('utf-8'))  # type: dict
     assert get_bye_no_auth_reponse['title'] == 'Unauthorized'
     assert get_bye_no_auth_reponse['detail'] == "No authorization token provided"
 
@@ -55,7 +55,7 @@ def test_security(oauth_requests, secure_endpoint_app):
     get_bye_wrong_scope = app_client.get('/v1.0/byesecure/jsantos', headers=headers)  # type: flask.Response
     assert get_bye_wrong_scope.status_code == 403
     assert get_bye_wrong_scope.content_type == 'application/problem+json'
-    get_bye_wrong_scope_reponse = json.loads(get_bye_wrong_scope.data.decode())  # type: dict
+    get_bye_wrong_scope_reponse = json.loads(get_bye_wrong_scope.data.decode('utf-8'))  # type: dict
     assert get_bye_wrong_scope_reponse['title'] == 'Forbidden'
     assert get_bye_wrong_scope_reponse['detail'] == "Provided token doesn't have the required scope"
 
@@ -63,7 +63,7 @@ def test_security(oauth_requests, secure_endpoint_app):
     get_bye_bad_token = app_client.get('/v1.0/byesecure/jsantos', headers=headers)  # type: flask.Response
     assert get_bye_bad_token.status_code == 401
     assert get_bye_bad_token.content_type == 'application/problem+json'
-    get_bye_bad_token_reponse = json.loads(get_bye_bad_token.data.decode())  # type: dict
+    get_bye_bad_token_reponse = json.loads(get_bye_bad_token.data.decode('utf-8'))  # type: dict
     assert get_bye_bad_token_reponse['title'] == 'Unauthorized'
     assert get_bye_bad_token_reponse['detail'] == "Provided oauth token is not valid"
 

@@ -103,12 +103,12 @@ def test_default_object_body(simple_app):
     app_client = simple_app.app.test_client()
     resp = app_client.post('/v1.0/test-default-object-body')
     assert resp.status_code == 200
-    response = json.loads(resp.data.decode())
+    response = json.loads(resp.data.decode('utf-8'))
     assert response['stack'] == {'image_version': 'default_image'}
 
     resp = app_client.post('/v1.0/test-default-integer-body')
     assert resp.status_code == 200
-    response = json.loads(resp.data.decode())
+    response = json.loads(resp.data.decode('utf-8'))
     assert response == 1
 
 
@@ -126,7 +126,7 @@ def test_custom_encoder(simple_app):
 
     resp = app_client.get('/v1.0/custom-json-response')
     assert resp.status_code == 200
-    response = json.loads(resp.data.decode())
+    response = json.loads(resp.data.decode('utf-8'))
     assert response['theResult'] == 'cool result'
 
 

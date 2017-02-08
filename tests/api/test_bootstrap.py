@@ -133,13 +133,13 @@ def test_single_route(simple_app):
 def test_resolve_method(simple_app):
     app_client = simple_app.app.test_client()
     resp = app_client.get('/v1.0/resolver-test/method')  # type: flask.Response
-    assert resp.data.decode() == '"DummyClass"\n'
+    assert resp.data.decode('utf-8') == '"DummyClass"\n'
 
 
 def test_resolve_classmethod(simple_app):
     app_client = simple_app.app.test_client()
     resp = app_client.get('/v1.0/resolver-test/classmethod')  # type: flask.Response
-    assert resp.data.decode() == '"DummyClass"\n'
+    assert resp.data.decode('utf-8') == '"DummyClass"\n'
 
 
 def test_add_api_with_function_resolver_function_is_wrapped(simple_api_spec_dir):
