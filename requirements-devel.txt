@@ -1,10 +1,11 @@
 -e git+https://github.com/Julian/jsonschema.git#egg=jsonschema
 -e git+https://github.com/pallets/flask.git#egg=flask
 -e git+https://github.com/kennethreitz/requests#egg=requests
--e hg+https://bitbucket.org/gutworth/six#egg=six
 -e git+https://github.com/danielrichman/strict-rfc3339.git#egg=strict-rfc3339
 -e git+https://github.com/Yelp/swagger_spec_validator.git#egg=swagger-spec-validator
 -e git+https://github.com/zalando/python-clickclick.git#egg=clickclick
 -e hg+https://bitbucket.org/pitrou/pathlib#egg=pathlib
 # PyYAML is not that easy to build manually, it may fail.
 #-e svn+http://svn.pyyaml.org/pyyaml/trunk#egg=PyYAML
+# six is causing errors during the tests
+#-e git+https://github.com/benjaminp/six.git#egg=six
