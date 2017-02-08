@@ -96,7 +96,7 @@ def parameter_to_arg(parameters, consumes, function):
 
         if all_json(consumes):
             try:
-                request_body = flask.request.json
+                request_body = flask.request.get_json()
             except exceptions.BadRequest:
                 request_body = None
         else:
