@@ -104,7 +104,15 @@ class RequestBodyValidator(object):
         @functools.wraps(function)
         def wrapper(*args, **kwargs):
             if all_json(self.consumes):
-                data = flask.request.json
+                data = flask.request.get_json()
+
+                # flask does not process json if the Content-Type header is not equal to "application/json"
+                if data is None and len(flask.request.data) > 0 and not self.is_null_value_valid:
+                    return problem(415,
+                                   "Unsupported Media Type",
+                                   "Invalid Content-type ({content_type}), expected JSON data".format(
+                                       content_type=flask.request.headers["Content-Type"]
+                                   ))
 
                 logger.debug("%s validating schema...", flask.request.url)
                 error = self.validate_schema(data)

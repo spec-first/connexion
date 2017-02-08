@@ -706,6 +706,28 @@ paths:
             properties:
               some:
                 type: string
+  /post_wrong_content_type:
+    post:
+      operationId: fakeapi.hello.post_wrong_content_type
+      consumes:
+      - application/json
+      parameters:
+        - name: $body
+          description: Just a testing parameter in the body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              body1:
+                type: string
+              body2:
+                type: string
+      responses:
+        200:
+          description: OK
+        215:
+          description: NOT-OK
 
 
 definitions:
