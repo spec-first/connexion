@@ -2,6 +2,7 @@
 import datetime
 import functools
 import logging
+import six
 
 import flask
 from flask import json
@@ -76,7 +77,12 @@ class Jsonifier(BaseSerializer):
         """ Central point where JSON serialization happens inside
         Connexion.
         """
-        return "{}\n".format(json.dumps(data, indent=2, encoding="utf-8"))
+        if six.PY2 == True:
+            encoding = "utf-8"
+        else:
+            encoding = None
+
+        return "{}\n".format(json.dumps(data, indent=2, encoding=encoding))
 
     def __call__(self, function):
         """
