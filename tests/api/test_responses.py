@@ -1,6 +1,5 @@
 import json
 from struct import unpack
-
 from connexion.decorators.produces import JSONEncoder
 
 
@@ -193,3 +192,10 @@ def test_post_wrong_content_type(simple_app):
                            data=json.dumps({"some": "data"})
                            )
     assert resp.status_code == 415
+
+
+def test_get_unicode_response(simple_app):
+    app_client = simple_app.app.test_client()
+    resp = app_client.get('/v1.0/get_unicode_response')
+    actualJson = {u'currency': u'\xa3', u'key': u'leena'}
+    assert json.loads(resp.data.decode('utf-8','replace')) == actualJson

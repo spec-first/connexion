@@ -382,3 +382,7 @@ def test_body_sanitization(body=None):
 
 def post_wrong_content_type():
     return "NOT OK"
+
+def get_unicode_data():
+    jsonResponse = {u'currency': u'\xa3', u'key': u'leena'}
+    return jsonResponse

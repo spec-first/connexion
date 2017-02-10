@@ -78,11 +78,11 @@ class Jsonifier(BaseSerializer):
         Connexion.
         """
         if six.PY2 == True:
-            encoding = "utf-8"
+            json_content = json.dumps(data, indent=2, encoding="utf-8")
         else:
-            encoding = None
+            json_content = json.dumps(data, indent=2)
 
-        return "{}\n".format(json.dumps(data, indent=2, encoding=encoding))
+        return "{}\n".format(json_content)
 
     def __call__(self, function):
         """
