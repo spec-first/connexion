@@ -2,9 +2,9 @@
 import datetime
 import functools
 import logging
-import six
 
 import flask
+import six
 from flask import json
 
 from .decorator import BaseDecorator
