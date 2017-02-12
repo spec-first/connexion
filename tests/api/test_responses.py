@@ -1,6 +1,5 @@
 import json
 from struct import unpack
-
 from connexion.decorators.produces import JSONEncoder
 
 
@@ -45,13 +44,13 @@ def test_jsonifier(simple_app):
     post_greeting = app_client.post('/v1.0/greeting/jsantos', data={})  # type: flask.Response
     assert post_greeting.status_code == 200
     assert post_greeting.content_type == 'application/json'
-    greeting_reponse = json.loads(post_greeting.data.decode('utf-8'))
+    greeting_reponse = json.loads(post_greeting.data.decode('utf-8', 'replace'))
     assert greeting_reponse['greeting'] == 'Hello jsantos'
 
     get_list_greeting = app_client.get('/v1.0/list/jsantos', data={})  # type: flask.Response
     assert get_list_greeting.status_code == 200
     assert get_list_greeting.content_type == 'application/json'
-    greeting_reponse = json.loads(get_list_greeting.data.decode('utf-8'))
+    greeting_reponse = json.loads(get_list_greeting.data.decode('utf-8', 'replace'))
     assert len(greeting_reponse) == 2
     assert greeting_reponse[0] == 'hello'
     assert greeting_reponse[1] == 'jsantos'
@@ -59,7 +58,7 @@ def test_jsonifier(simple_app):
     get_greetings = app_client.get('/v1.0/greetings/jsantos', data={})  # type: flask.Response
     assert get_greetings.status_code == 200
     assert get_greetings.content_type == 'application/x.connexion+json'
-    greetings_reponse = json.loads(get_greetings.data.decode('utf-8'))
+    greetings_reponse = json.loads(get_greetings.data.decode('utf-8', 'replace'))
     assert len(greetings_reponse) == 1
     assert greetings_reponse['greetings'] == 'Hello jsantos'
 
@@ -103,12 +102,12 @@ def test_default_object_body(simple_app):
     app_client = simple_app.app.test_client()
     resp = app_client.post('/v1.0/test-default-object-body')
     assert resp.status_code == 200
-    response = json.loads(resp.data.decode())
+    response = json.loads(resp.data.decode('utf-8', 'replace'))
     assert response['stack'] == {'image_version': 'default_image'}
 
     resp = app_client.post('/v1.0/test-default-integer-body')
     assert resp.status_code == 200
-    response = json.loads(resp.data.decode())
+    response = json.loads(resp.data.decode('utf-8', 'replace'))
     assert response == 1
 
 
@@ -126,7 +125,7 @@ def test_custom_encoder(simple_app):
 
     resp = app_client.get('/v1.0/custom-json-response')
     assert resp.status_code == 200
-    response = json.loads(resp.data.decode())
+    response = json.loads(resp.data.decode('utf-8', 'replace'))
     assert response['theResult'] == 'cool result'
 
 
@@ -193,3 +192,10 @@ def test_post_wrong_content_type(simple_app):
                            data=json.dumps({"some": "data"})
                            )
     assert resp.status_code == 415
+
+
+def test_get_unicode_response(simple_app):
+    app_client = simple_app.app.test_client()
+    resp = app_client.get('/v1.0/get_unicode_response')
+    actualJson = {u'currency': u'\xa3', u'key': u'leena'}
+    assert json.loads(resp.data.decode('utf-8','replace')) == actualJson

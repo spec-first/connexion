@@ -244,7 +244,7 @@ def test_formdata_missing_param():
 
 def test_formdata_file_upload(formData):
     filename = formData.filename
-    contents = formData.read().decode('utf-8')
+    contents = formData.read().decode('utf-8', 'replace')
     return {filename: contents}
 
 
@@ -382,3 +382,7 @@ def test_body_sanitization(body=None):
 
 def post_wrong_content_type():
     return "NOT OK"
+
+def get_unicode_data():
+    jsonResponse = {u'currency': u'\xa3', u'key': u'leena'}
+    return jsonResponse

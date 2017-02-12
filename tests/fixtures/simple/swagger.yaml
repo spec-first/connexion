@@ -729,6 +729,16 @@ paths:
         215:
           description: NOT-OK
 
+  /get_unicode_response:
+    get:
+      operationId: fakeapi.hello.get_unicode_data
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: Some unicode response
+          schema:
+            type: object
 
 definitions:
   new_stack:
