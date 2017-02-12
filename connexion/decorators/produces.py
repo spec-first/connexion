@@ -77,7 +77,7 @@ class Jsonifier(BaseSerializer):
         """ Central point where JSON serialization happens inside
         Connexion.
         """
-        if six.PY2 == True:
+        if six.PY2:
             json_content = json.dumps(data, indent=2, encoding="utf-8")
         else:
             json_content = json.dumps(data, indent=2)
