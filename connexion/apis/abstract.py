@@ -166,7 +166,7 @@ class AbstractApi(object):
         """"""
 
     @abc.abstractmethod
-    def add_auth_on_not_found(self):
+    def add_auth_on_not_found(self, security, security_definitions):
         """"""
 
     def add_operation(self, method, path, swagger_operation, path_parameters):
