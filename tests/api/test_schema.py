@@ -198,7 +198,7 @@ def test_schema_format(schema_app):
     assert wrong_type.content_type == 'application/problem+json'
     wrong_type_response = json.loads(wrong_type.data.decode('utf-8', 'replace'))  # type: dict
     assert wrong_type_response['title'] == 'Bad Request'
-    assert "'xy' is not a 'date-time'" in wrong_type_response['detail']
+    assert "'xy' is not a 'email'" in wrong_type_response['detail']
 
 
 def test_schema_array(schema_app):
