@@ -22,7 +22,7 @@ fi
 tox --skip-missing-interpreters
 
 python3 setup.py sdist bdist_wheel
-#twine upload dist/*
+twine upload dist/*
 
 # revert version
 git checkout -- */__init__.py
