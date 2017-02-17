@@ -41,11 +41,7 @@ class ResponseValidator(BaseDecorator):
             schema = response_definition.get("schema")
             v = ResponseBodyValidator(schema)
             try:
-                # For cases of custom encoders, we need to encode and decode to
-                # transform to the actual types that are going to be returned.
-                data = data.replace(b'\\"', b'"')
-                data = self.operation.api.jsonifier.loads(data)
-
+                data = self.operation.json_loads(data)
                 v.validate_schema(data, url)
             except ValidationError as e:
                 raise NonConformingResponseBody(message=str(e))
@@ -92,11 +88,7 @@ class ResponseValidator(BaseDecorator):
                     response.get_data(), response.status_code,
                     response.headers, request.url)
 
-            except NonConformingResponseBody as e:
-                response = problem(500, e.reason, e.message)
-                return self.operation.api.get_response(response)
-
-            except NonConformingResponseHeaders as e:
+            except (NonConformingResponseBody, NonConformingResponseHeaders) as e:
                 response = problem(500, e.reason, e.message)
                 return self.operation.api.get_response(response)
 

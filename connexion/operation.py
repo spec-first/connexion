@@ -449,3 +449,11 @@ class Operation(SecureOperation):
         """
         ResponseValidator = self.validator_map['response']
         return ResponseValidator(self, self.get_mimetype())
+
+    def json_loads(self, data):
+        """
+        A Wrapper for calling the jsonifier.
+        :param data: The json to loads
+        :type data: bytes
+        """
+        return self.api.jsonifier.loads(data)

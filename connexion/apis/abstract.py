@@ -47,9 +47,9 @@ def compatibility_layer(spec):
 
 
 @six.add_metaclass(abc.ABCMeta)
-class AbstractApi(object):
+class AbstractAPI(object):
     """
-    Single Abstract API
+    Defines an abstract interface for a Swagger API
     """
 
     def __init__(self, specification, jsonifier, base_url=None, arguments=None,
@@ -159,15 +159,21 @@ class AbstractApi(object):
 
     @abc.abstractmethod
     def add_swagger_json(self):
-        """"""
+        """
+        Adds swagger json to {base_url}/swagger.json
+        """
 
     @abc.abstractmethod
     def add_swagger_ui(self):
-        """"""
+        """
+        Adds swagger ui to {base_url}/ui/
+        """
 
     @abc.abstractmethod
     def add_auth_on_not_found(self, security, security_definitions):
-        """"""
+        """
+        Adds a 404 error handler to authenticate and only expose the 404 status if the security validation pass.
+        """
 
     def add_operation(self, method, path, swagger_operation, path_parameters):
         """
@@ -206,8 +212,11 @@ class AbstractApi(object):
         self._add_operation_internal(method, path, operation)
 
     @abc.abstractmethod
-    def _add_operation_internal(self):
-        """"""
+    def _add_operation_internal(self, method, path, operation):
+        """
+        Adds the operation according to the user framework in use.
+        It will be used to register the operation on the user framework router.
+        """
 
     def _add_resolver_error_handler(self, method, path, err):
         """
@@ -287,10 +296,20 @@ class AbstractApi(object):
 
     @classmethod
     @abc.abstractmethod
-    def get_request(self):
-        """"""
+    def get_request(self, *args, **kwargs):
+        """
+        This method converts the user framework request to a ConnexionRequest.
+        """
 
     @classmethod
     @abc.abstractmethod
-    def get_response(self):
-        """"""
+    def get_response(self, response, mimetype=None, request=None):
+        """
+        This method converts the ConnexionResponse to a user framework response.
+        :param response: A response to cast.
+        :param mimetype: The response mimetype.
+        :param request: The request associated with this response (the user framework request).
+
+        :type response: ConnexionResponse
+        :type mimetype: str
+        """

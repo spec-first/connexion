@@ -5,5 +5,5 @@ def canonical_base_url(base_path):
     """
     return base_path.rstrip('/')
 
-from .abstract import AbstractApi
+from .abstract import AbstractAPI
 from .flask_api import FlaskApi

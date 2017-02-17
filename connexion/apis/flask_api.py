@@ -1,16 +1,16 @@
 import logging
 import functools
 
-import connexion.flask_utils as flask_utils
 import flask
 import werkzeug.exceptions
 import six
 from connexion.handlers import AuthErrorHandler
-from connexion.apis.abstract import AbstractApi
+from connexion.apis.abstract import AbstractAPI
 from connexion.response import ConnexionResponse
 from connexion.request import ConnexionRequest
 from connexion.decorators.produces import BaseSerializer, NoContent
 from connexion.utils import is_json_mimetype
+from connexion import flask_utils
 
 logger = logging.getLogger('connexion.apis.flask_api')
 
@@ -44,7 +44,7 @@ class Jsonifier(BaseSerializer):
         return '<Jsonifier: {}>'.format(self.mimetype)
 
 
-class FlaskApi(AbstractApi):
+class FlaskApi(AbstractAPI):
     jsonifier = Jsonifier
 
     def __init__(self, specification, base_url=None, arguments=None,

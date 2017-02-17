@@ -1,6 +1,6 @@
 import werkzeug.exceptions as exceptions  # NOQA
 from .apps import AbstractApp, FlaskApp  # NOQA
-from .apis import AbstractApi, FlaskApi  # NOQA
+from .apis import AbstractAPI, FlaskApi  # NOQA
 from .exceptions import ProblemException  # NOQA
 from .problem import problem  # NOQA
 from .decorators.produces import NoContent  # NOQA

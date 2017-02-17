@@ -17,10 +17,10 @@ def test_json_encoder():
     s = json.dumps(datetime.datetime.utcnow(), cls=FlaskJSONEncoder)
     assert s.endswith('Z"')
 
-    s = json.dumps(Decimal(1.01), cls=JSONEncoder)
+    s = json.dumps(Decimal(1.01), cls=FlaskJSONEncoder)
     assert s == '1.01'
 
-    s = json.dumps(math.expm1(1e-10), cls=JSONEncoder)
+    s = json.dumps(math.expm1(1e-10), cls=FlaskJSONEncoder)
     assert s == '1.00000000005e-10'
 
 

@@ -76,15 +76,21 @@ class AbstractApp(object):
 
     @abc.abstractmethod
     def create_app(self):
-        """"""
+        """
+        Creates the user framework application
+        """
 
     @abc.abstractmethod
     def get_root_path(self):
-        """"""
+        """
+        Gets the root path of the user framework application
+        """
 
     @abc.abstractmethod
     def set_errors_handlers(self):
-        """"""
+        """
+        Sets all errors handlers of the user framework application
+        """
 
     def add_api(self, specification, base_path=None, arguments=None,
                 auth_all_paths=None, swagger_json=None, swagger_ui=None,
@@ -121,7 +127,7 @@ class AbstractApp(object):
         :type resolver_error: int | None
         :param pythonic_params: When True CamelCase parameters are converted to snake_case
         :type pythonic_params: bool
-        :rtype: AbstractApi
+        :rtype: AbstractAPI
         """
         # Turn the resolver_error code into a handler object
         self.resolver_error = resolver_error
@@ -235,7 +241,19 @@ class AbstractApp(object):
 
     @abc.abstractmethod
     def run(self, port=None, server=None, debug=None, host=None, **options):  # pragma: no cover
-        """"""
+        """
+        Runs the application on a local development server.
+        :param host: the host interface to bind on.
+        :type host: str
+        :param port: port to listen to
+        :type port: int
+        :param server: which wsgi server to use
+        :type server: str | None
+        :param debug: include debugging information
+        :type debug: bool
+        :param options: options to be forwarded to the underlying server
+        :type options: dict
+        """
 
     def __call__(self, environ, start_response):  # pragma: no cover
         """
