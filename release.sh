@@ -5,21 +5,27 @@ if [ $# -ne 1 ]; then
     exit 1
 fi
 
-set -xe
+set -o errexit
+set -o xtrace
 
 python3 --version
 git --version
 
 version=$1
 
-sed -i "s/__version__ = .*/__version__ = '${version}'/" */__init__.py
+if [[ "$OSTYPE" == "darwin"* ]]; then
+	sed -i "" "s/__version__ = .*/__version__ = '${version}'/" */__init__.py
+else
+	sed -i "s/__version__ = .*/__version__ = '${version}'/" */__init__.py
+fi
 
 tox --skip-missing-interpreters
 
-python3 setup.py sdist bdist_wheel upload
+python3 setup.py sdist bdist_wheel
+twine upload dist/*
 
 # revert version
-git co -- */__init__.py
+git checkout -- */__init__.py
 
-git tag ${version}
+git tag -s ${version} -m "${version}"
 git push --tags
