@@ -61,8 +61,7 @@ class Resolver(object):
         try:
             return self.function_resolver(operation_id)
         except ImportError as e:
-            if str(e):
-                msg = "{} Import error was '{}'".format(msg, str(e))
+            msg = "{} Import error was '{}'".format(msg, str(e))
             import sys
             raise ResolverError(msg, sys.exc_info())
         except AttributeError:
