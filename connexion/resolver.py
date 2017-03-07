@@ -60,7 +60,8 @@ class Resolver(object):
         msg = 'Cannot resolve operationId "{}"!'.format(operation_id)
         try:
             return self.function_resolver(operation_id)
-        except ImportError:
+        except ImportError as e:
+            msg = "{} Import error was '{}'".format(msg, str(e))
             import sys
             raise ResolverError(msg, sys.exc_info())
         except AttributeError:
