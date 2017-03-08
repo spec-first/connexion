@@ -3,6 +3,8 @@ import datetime
 import functools
 import logging
 
+from decimal import Decimal
+
 import flask
 import six
 from flask import json
@@ -29,6 +31,9 @@ class JSONEncoder(json.JSONEncoder):
 
         if isinstance(o, datetime.date):
             return o.isoformat()
+
+        if isinstance(o, Decimal):
+            return float(o)
 
         return json.JSONEncoder.default(self, o)
 
