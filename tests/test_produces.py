@@ -1,5 +1,8 @@
 import datetime
 import json
+import math
+
+from decimal import Decimal
 
 from connexion.decorators.produces import JSONEncoder
 
@@ -13,6 +16,12 @@ def test_json_encoder():
 
     s = json.dumps(datetime.datetime.utcnow(), cls=JSONEncoder)
     assert s.endswith('Z"')
+
+    s = json.dumps(Decimal(1.01), cls=JSONEncoder)
+    assert s == '1.01'
+
+    s = json.dumps(math.expm1(1e-10), cls=JSONEncoder)
+    assert s == '1.00000000005e-10'
 
 
 def test_json_encoder_datetime_with_timezone():
