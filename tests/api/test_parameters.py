@@ -309,3 +309,24 @@ def test_param_sanitization(simple_app):
         headers={'Content-Type': 'application/json'})
     assert resp.status_code == 200
     assert json.loads(resp.data.decode('utf-8', 'replace')) == body
+
+
+def test_parameters_snake_case(snake_case_app):
+    app_client = snake_case_app.app.test_client()
+    headers = {'Content-type': 'application/json'}
+    resp = app_client.post('/v1.0/test-post-path-snake/123', headers=headers, data=json.dumps({"a": "test"}))
+    assert resp.status_code == 200
+    resp = app_client.post('/v1.0/test-post-path-shadow/123', headers=headers, data=json.dumps({"a": "test"}))
+    assert resp.status_code == 200
+    resp = app_client.post('/v1.0/test-post-query-snake?someId=123', headers=headers, data=json.dumps({"a": "test"}))
+    assert resp.status_code == 200
+    resp = app_client.post('/v1.0/test-post-query-shadow?id=123', headers=headers, data=json.dumps({"a": "test"}))
+    assert resp.status_code == 200
+    resp = app_client.get('/v1.0/test-get-path-snake/123')
+    assert resp.status_code == 200
+    resp = app_client.get('/v1.0/test-get-path-shadow/123')
+    assert resp.status_code == 200
+    resp = app_client.get('/v1.0/test-get-query-snake?someId=123')
+    assert resp.status_code == 200
+    resp = app_client.get('/v1.0/test-get-query-shadow?list=123')
+    assert resp.status_code == 200

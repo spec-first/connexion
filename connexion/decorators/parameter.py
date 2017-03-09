@@ -3,6 +3,11 @@ import functools
 import inspect
 import logging
 import re
+import inflection
+try:
+    import builtins
+except ImportError:
+    import __builtin__ as builtins
 
 import flask
 import six
@@ -59,11 +64,20 @@ def get_val_from_param(value, query_param):
         return make_type(value, query_param["type"])
 
 
-def sanitize_param(name):
-    return name and re.sub('^[^a-zA-Z_]+', '', re.sub('[^0-9a-zA-Z_]', '', name))
+def snake_and_shadow(name):
+    """
+    Converts the given name into Pythonic form. Firstly it converts CamelCase names to snake_case. Secondly it looks to
+    see if the name matches a known built-in and if it does it appends an underscore to the name.
+    :param name: The parameter name
+    :type name: str
+    :return:
+    """
+    snake = inflection.underscore(name)
+    if snake in builtins.__dict__.keys():
+        return "{0}_".format(snake)
+    return snake
 
-
-def parameter_to_arg(parameters, consumes, function):
+def parameter_to_arg(parameters, consumes, function, pythonic_params=False):
     """
     Pass query and body parameters as keyword arguments to handler function.
 
@@ -73,8 +87,16 @@ def parameter_to_arg(parameters, consumes, function):
     :param consumes: The list of content types the operation consumes
     :type consumes: list
     :param function: The handler function for the REST endpoint.
+    :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended to
+    any shadowed built-ins
+    :type pythonic_params: bool
     :type function: function|None
     """
+    def sanitize_param(name):
+        if name and pythonic_params:
+            name = snake_and_shadow(name)
+        return name and re.sub('^[^a-zA-Z_]+', '', re.sub('[^0-9a-zA-Z_]', '', name))
+
     body_parameters = [parameter for parameter in parameters if parameter['in'] == 'body'] or [{}]
     body_name = sanitize_param(body_parameters[0].get('name'))
     default_body = body_parameters[0].get('schema', {}).get('default')
@@ -158,6 +180,10 @@ def parameter_to_arg(parameters, consumes, function):
                 logger.debug("File parameter (formData) '%s' in function arguments", key)
                 kwargs[key] = value
 
+
+        # optionally convert parameter variable names to un-shadowed, snake_case form
+        if pythonic_params:
+            kwargs = {snake_and_shadow(k): v for k, v in kwargs.items()}
         return function(*args, **kwargs)
 
     return wrapper

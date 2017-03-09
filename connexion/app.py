@@ -100,7 +100,7 @@ class App(object):
 
     def add_api(self, specification, base_path=None, arguments=None, auth_all_paths=None, swagger_json=None,
                 swagger_ui=None, swagger_path=None, swagger_url=None, validate_responses=False,
-                strict_validation=False, resolver=Resolver(), resolver_error=None):
+                strict_validation=False, resolver=Resolver(), resolver_error=None, pythonic_params=False):
         """
         Adds an API to the application based on a swagger file or API dict
 
@@ -129,6 +129,8 @@ class App(object):
         :param resolver_error: If specified, turns ResolverError into error
             responses with the given status code.
         :type resolver_error: int | None
+        :param pythonic_params: When True CamelCase parameters are converted to snake_case
+        :type pythonic_params: bool
         :rtype: Api
         """
         # Turn the resolver_error code into a handler object
@@ -165,7 +167,8 @@ class App(object):
                   strict_validation=strict_validation,
                   auth_all_paths=auth_all_paths,
                   debug=self.debug,
-                  validator_map=self.validator_map)
+                  validator_map=self.validator_map,
+                  pythonic_params=pythonic_params)
         self.app.register_blueprint(api.blueprint)
         return api
 

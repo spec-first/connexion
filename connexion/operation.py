@@ -133,7 +133,7 @@ class Operation(SecureOperation):
                  path_parameters=None, app_security=None, security_definitions=None,
                  definitions=None, parameter_definitions=None, response_definitions=None,
                  validate_responses=False, strict_validation=False, randomize_endpoint=None,
-                 validator_map=None):
+                 validator_map=None, pythonic_params=False):
         """
         This class uses the OperationID identify the module and function that will handle the operation
 
@@ -177,6 +177,9 @@ class Operation(SecureOperation):
         :type validate_responses: bool
         :param strict_validation: True enables validation on invalid request parameters
         :type strict_validation: bool
+        :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended
+        to any shadowed built-ins
+        :type pythonic_params: bool
         """
 
         self.method = method
@@ -196,6 +199,7 @@ class Operation(SecureOperation):
         self.strict_validation = strict_validation
         self.operation = operation
         self.randomize_endpoint = randomize_endpoint
+        self.pythonic_params = pythonic_params
 
         # todo support definition references
         # todo support references to application level parameters
@@ -361,7 +365,7 @@ class Operation(SecureOperation):
         """
 
         function = parameter_to_arg(
-            self.parameters, self.consumes, self.__undecorated_function)
+            self.parameters, self.consumes, self.__undecorated_function, self.pythonic_params)
         function = self._request_begin_lifecycle_decorator(function)
 
         if self.validate_responses:

@@ -96,6 +96,11 @@ def simple_app():
 
 
 @pytest.fixture(scope="session")
+def snake_case_app():
+    return build_app_from_fixture('snake_case', validate_responses=True, pythonic_params=True)
+
+
+@pytest.fixture(scope="session")
 def invalid_resp_allowed_app():
     return build_app_from_fixture('simple', validate_responses=False)
 
