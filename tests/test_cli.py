@@ -84,7 +84,7 @@ def test_run_no_options_all_default(mock_app_run, expected_arguments, spec_file)
 
 
 def test_run_using_option_hide_spec(mock_app_run, expected_arguments,
-                                           spec_file):
+                                    spec_file):
     runner = CliRunner()
     runner.invoke(main, ['run', spec_file, '--hide-spec'],
                   catch_exceptions=False)
@@ -94,7 +94,7 @@ def test_run_using_option_hide_spec(mock_app_run, expected_arguments,
 
 
 def test_run_using_option_hide_console_ui(mock_app_run, expected_arguments,
-                                                 spec_file):
+                                          spec_file):
     runner = CliRunner()
     runner.invoke(main, ['run', spec_file, '--hide-console-ui'],
                   catch_exceptions=False)
@@ -104,7 +104,7 @@ def test_run_using_option_hide_console_ui(mock_app_run, expected_arguments,
 
 
 def test_run_using_option_console_ui_from(mock_app_run, expected_arguments,
-                                           spec_file):
+                                          spec_file):
     user_path = '/some/path/here'
     runner = CliRunner()
     runner.invoke(main, ['run', spec_file, '--console-ui-from', user_path],
@@ -115,7 +115,7 @@ def test_run_using_option_console_ui_from(mock_app_run, expected_arguments,
 
 
 def test_run_using_option_console_ui_url(mock_app_run, expected_arguments,
-                                           spec_file):
+                                         spec_file):
     user_url = '/console_ui_test'
     runner = CliRunner()
     runner.invoke(main, ['run', spec_file, '--console-ui-url', user_url],
@@ -126,7 +126,7 @@ def test_run_using_option_console_ui_url(mock_app_run, expected_arguments,
 
 
 def test_run_using_option_auth_all_paths(mock_app_run, expected_arguments,
-                                                 spec_file):
+                                         spec_file):
     runner = CliRunner()
     runner.invoke(main, ['run', spec_file, '--auth-all-paths'],
                   catch_exceptions=False)
@@ -151,7 +151,7 @@ def test_run_in_debug_mode(mock_app_run, expected_arguments, spec_file,
 
 
 def test_run_in_very_verbose_mode(mock_app_run, expected_arguments, spec_file,
-                           monkeypatch):
+                                  monkeypatch):
     logging_config = MagicMock(name='connexion.cli.logging.basicConfig')
     monkeypatch.setattr('connexion.cli.logging.basicConfig',
                         logging_config)
@@ -166,7 +166,7 @@ def test_run_in_very_verbose_mode(mock_app_run, expected_arguments, spec_file,
 
 
 def test_run_in_verbose_mode(mock_app_run, expected_arguments, spec_file,
-                           monkeypatch):
+                             monkeypatch):
     logging_config = MagicMock(name='connexion.cli.logging.basicConfig')
     monkeypatch.setattr('connexion.cli.logging.basicConfig',
                         logging_config)

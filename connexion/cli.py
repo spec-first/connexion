@@ -6,6 +6,7 @@ import click
 from clickclick import AliasedGroup, fatal_error
 
 import connexion
+from connexion.config import Config
 from connexion.mock import MockResolver
 
 logger = logging.getLogger('connexion.cli')
@@ -42,6 +43,7 @@ def main():
 @main.command()
 @click.argument('spec_file')
 @click.argument('base_module_path', required=False)
+@click.option('--config', '-c', metavar='PATH', help='Use configuration file to run.')
 @click.option('--port', '-p', default=5000, type=int, help='Port to listen.')
 @click.option('--host', '-H', type=str, help='Host interface to bind on.')
 @click.option('--wsgi-server', '-w', default='flask',
@@ -71,7 +73,7 @@ def main():
               help='Enable validation of response values from operation handlers.',
               is_flag=True, default=False)
 @click.option('--strict-validation',
-              help='Enable strict validation of request payloads.',
+              help='Enable strict validation of endpoint parameters.',
               is_flag=True, default=False)
 @click.option('--debug', '-d', help='Show debugging information.',
               is_flag=True, default=False)
@@ -80,6 +82,7 @@ def main():
               help='Override the basePath in the API spec.')
 def run(spec_file,
         base_module_path,
+        config,
         port,
         host,
         wsgi_server,
@@ -147,6 +150,14 @@ def run(spec_file,
             host=host,
             server=wsgi_server,
             debug=debug)
+
+
+@main.command('default-config')
+def default_config():
+    """
+    Prints the default configuration file for Connexion based applications.
+    """
+    click.echo(Config.get_config_text())
 
 
 if __name__ == '__main__':  # pragma: no cover
