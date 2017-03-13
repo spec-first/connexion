@@ -3,17 +3,20 @@ import functools
 import inspect
 import logging
 import re
+
+import flask
 import inflection
+import six
+import werkzeug.exceptions as exceptions
+
+from ..utils import all_json, boolean, is_null, is_nullable
+
 try:
     import builtins
 except ImportError:
     import __builtin__ as builtins
 
-import flask
-import six
-import werkzeug.exceptions as exceptions
 
-from ..utils import all_json, boolean, is_null, is_nullable
 
 logger = logging.getLogger(__name__)
 
