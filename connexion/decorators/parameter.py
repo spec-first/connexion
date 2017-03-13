@@ -74,7 +74,7 @@ def snake_and_shadow(name):
     """
     snake = inflection.underscore(name)
     if snake in builtins.__dict__.keys():
-        return "{0}_".format(snake)
+        return "{}_".format(snake)
     return snake
 
 def parameter_to_arg(parameters, consumes, function, pythonic_params=False):
