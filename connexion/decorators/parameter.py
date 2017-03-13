@@ -77,6 +77,7 @@ def snake_and_shadow(name):
         return "{}_".format(snake)
     return snake
 
+
 def parameter_to_arg(parameters, consumes, function, pythonic_params=False):
     """
     Pass query and body parameters as keyword arguments to handler function.
@@ -179,7 +180,6 @@ def parameter_to_arg(parameters, consumes, function, pythonic_params=False):
             else:
                 logger.debug("File parameter (formData) '%s' in function arguments", key)
                 kwargs[key] = value
-
 
         # optionally convert parameter variable names to un-shadowed, snake_case form
         if pythonic_params:
