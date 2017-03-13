@@ -24,8 +24,8 @@ def post_path_snake(some_id, some_other_id):
     return data
 
 
-def post_path_shadow(id_, reduce_):
-    data = {'id': id_, 'reduce': reduce_}
+def post_path_shadow(id_, round_):
+    data = {'id': id_, 'reduce': round_}
     return data
 
 
@@ -34,6 +34,6 @@ def post_query_snake(some_id, some_other_id):
     return data
 
 
-def post_query_shadow(id_, format_):
-    data = {'id': id_, 'format': format_}
+def post_query_shadow(id_, next_):
+    data = {'id': id_, 'next': next_}
     return data

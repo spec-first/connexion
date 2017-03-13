@@ -114,9 +114,9 @@ paths:
           description: id parameter
           required: true
           type: integer
-        - name: reduce
+        - name: round
           in: body
-          description: reduce parameter
+          description: round parameter
           required: true
           schema:
             type: object
@@ -158,9 +158,9 @@ paths:
           description: id parameter
           required: true
           type: integer
-        - name: format
+        - name: next
           in: body
-          description: format parameter
+          description: next parameter
           required: true
           schema:
             type: object
