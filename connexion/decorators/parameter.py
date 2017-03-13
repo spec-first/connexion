@@ -17,7 +17,6 @@ except ImportError:
     import __builtin__ as builtins
 
 
-
 logger = logging.getLogger(__name__)
 
 # https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#data-types
