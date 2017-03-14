@@ -43,7 +43,8 @@ tests_require = [
     'decorator',
     'mock',
     'pytest',
-    'pytest-cov'
+    'pytest-cov',
+    'testfixtures'
 ]
 
 

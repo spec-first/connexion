@@ -32,16 +32,20 @@ VALIDATOR_MAP = {
 
 class SecureOperation(object):
 
-    def __init__(self, security, security_definitions):
+    def __init__(self, security, security_definitions, trusted_ips=None):
         """
         :param security: list of security rules the application uses by default
         :type security: list
         :param security_definitions: `Security Definitions Object
             <https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-definitions-object>`_
         :type security_definitions: dict
+        :param trusted_ips: A list of trusted IPs. If request.remote_addr is in this list (i.e. it's a proxy we control)
+        then we'll also trust the X-Forwarded-For HTTP header.
+        :type trusted_ips: list
         """
         self.security = security
         self.security_definitions = security_definitions
+        self.trusted_ips = trusted_ips or []
 
     @property
     def security_decorator(self):
@@ -84,7 +88,7 @@ class SecureOperation(object):
                 token_info_url = get_tokeninfo_url(security_definition)
                 if token_info_url:
                     scopes = set(scopes)  # convert scopes to set because this is needed for verify_oauth
-                    return functools.partial(verify_oauth, token_info_url, scopes)
+                    return functools.partial(verify_oauth, token_info_url, scopes, self.trusted_ips)
                 else:
                     logger.warning("... OAuth2 token info URL missing. **IGNORING SECURITY REQUIREMENTS**",
                                    extra=vars(self))
@@ -133,7 +137,7 @@ class Operation(SecureOperation):
                  path_parameters=None, app_security=None, security_definitions=None,
                  definitions=None, parameter_definitions=None, response_definitions=None,
                  validate_responses=False, strict_validation=False, randomize_endpoint=None,
-                 validator_map=None, pythonic_params=False):
+                 validator_map=None, pythonic_params=False, trusted_ips=None):
         """
         This class uses the OperationID identify the module and function that will handle the operation
 
@@ -180,6 +184,9 @@ class Operation(SecureOperation):
         :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended
         to any shadowed built-ins
         :type pythonic_params: bool
+        :param trusted_ips: A list of trusted IPs. If request.remote_addr is in this list (i.e. it's a proxy we control)
+        then we'll also trust the X-Forwarded-For HTTP header.
+        :type trusted_ips: list
         """
 
         self.method = method
@@ -187,6 +194,7 @@ class Operation(SecureOperation):
         self.validator_map = dict(VALIDATOR_MAP)
         self.validator_map.update(validator_map or {})
         self.security_definitions = security_definitions or {}
+        self.trusted_ips = trusted_ips or []
         self.definitions = definitions or {}
         self.parameter_definitions = parameter_definitions or {}
         self.response_definitions = response_definitions or {}
