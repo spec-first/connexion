@@ -26,7 +26,6 @@ py_major_minor_version = tuple(int(v.rstrip('+')) for v in platform.python_versi
 
 install_requires = [
     'clickclick>=1.2',
-    'flask>=0.10.1',
     'jsonschema>=2.5.1',
     'PyYAML>=3.11',
     'requests>=2.9.1',
@@ -35,6 +34,8 @@ install_requires = [
     'inflection>=0.3.1'
 ]
 
+flask_require = 'flask>=0.10.1'
+
 if py_major_minor_version < (3, 4):
     install_requires.append('pathlib>=1.0.1')
 
@@ -42,7 +43,8 @@ tests_require = [
     'decorator',
     'mock',
     'pytest',
-    'pytest-cov'
+    'pytest-cov',
+    flask_require
 ]
 
 
@@ -89,7 +91,7 @@ setup(
     setup_requires=['flake8'],
     install_requires=install_requires,
     tests_require=tests_require,
-    extras_require={'tests': tests_require},
+    extras_require={'tests': tests_require, 'flask': flask_require},
     cmdclass={'test': PyTest},
     test_suite='tests',
     classifiers=[
