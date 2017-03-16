@@ -1,18 +1,18 @@
+import datetime
 import logging
 import pathlib
-import datetime
+from decimal import Decimal
 
 import flask
 import werkzeug.exceptions
-import six
+from flask import json
 
+from ..apis.flask_api import FlaskApi
 from ..exceptions import ProblemException
 from ..problem import problem
 from ..resolver import Resolver
-from ..apis.flask_api import FlaskApi
 from .abstract import AbstractApp
-from flask import json
-from decimal import Decimal
+
 
 logger = logging.getLogger('connexion.app')
 
@@ -23,11 +23,13 @@ class FlaskApp(AbstractApp):
                  debug=False, swagger_json=True, swagger_ui=True, swagger_path=None,
                  swagger_url=None, host=None, validator_map=None):
         server = server or 'flask'
-        super(FlaskApp, self).__init__(import_name, port=port, specification_dir=specification_dir,
-                     server=server, arguments=arguments, auth_all_paths=auth_all_paths,
-                     debug=debug, swagger_json=swagger_json, swagger_ui=swagger_ui,
-                     swagger_path=swagger_path, swagger_url=swagger_url,
-                     host=host, validator_map=validator_map, api_cls=FlaskApi)
+        super(FlaskApp, self).__init__(
+            import_name, port=port, specification_dir=specification_dir,
+            server=server, arguments=arguments, auth_all_paths=auth_all_paths,
+            debug=debug, swagger_json=swagger_json, swagger_ui=swagger_ui,
+            swagger_path=swagger_path, swagger_url=swagger_url,
+            host=host, validator_map=validator_map, api_cls=FlaskApi
+        )
 
     def create_app(self):
         app = flask.Flask(self.import_name)
@@ -66,11 +68,13 @@ class FlaskApp(AbstractApp):
                 auth_all_paths=None, swagger_json=None, swagger_ui=None,
                 swagger_path=None, swagger_url=None, validate_responses=False,
                 strict_validation=False, resolver=Resolver(), resolver_error=None):
-        api = super(FlaskApp, self).add_api(specification, base_path=base_path,
-                    arguments=arguments, auth_all_paths=auth_all_paths, swagger_json=swagger_json,
-                    swagger_ui=swagger_ui, swagger_path=swagger_path, swagger_url=swagger_url,
-                    validate_responses=validate_responses, strict_validation=strict_validation,
-                    resolver=resolver, resolver_error=resolver_error)
+        api = super(FlaskApp, self).add_api(
+            specification, base_path=base_path,
+            arguments=arguments, auth_all_paths=auth_all_paths, swagger_json=swagger_json,
+            swagger_ui=swagger_ui, swagger_path=swagger_path, swagger_url=swagger_url,
+            validate_responses=validate_responses, strict_validation=strict_validation,
+            resolver=resolver, resolver_error=resolver_error
+        )
         self.app.register_blueprint(api.blueprint)
         return api
 

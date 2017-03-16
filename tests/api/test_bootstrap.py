@@ -3,8 +3,8 @@ import yaml
 
 import pytest
 from conftest import TEST_FOLDER, build_app_from_fixture
-from connexion.apps import FlaskApp
 from connexion.apis import FlaskApi
+from connexion.apps import FlaskApp
 from connexion.exceptions import InvalidSpecification
 
 

@@ -3,7 +3,7 @@ from collections import namedtuple
 
 _ConnexionRequest = namedtuple('SwaggerRequest', [
     'url', 'method', 'path_params', 'query', 'headers',
-     'form', 'body', 'json', 'files', 'context'
+    'form', 'body', 'json', 'files', 'context'
 ])
 
 

@@ -1,5 +1,4 @@
 # Decorators to change the return type of endpoints
-import datetime
 import functools
 import logging
 

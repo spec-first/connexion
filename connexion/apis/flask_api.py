@@ -1,16 +1,15 @@
 import logging
-import functools
 
 import flask
-import werkzeug.exceptions
 import six
-from connexion.handlers import AuthErrorHandler
-from connexion.apis.abstract import AbstractAPI
-from connexion.response import ConnexionResponse
-from connexion.request import ConnexionRequest
-from connexion.decorators.produces import BaseSerializer, NoContent
-from connexion.utils import is_json_mimetype
+import werkzeug.exceptions
 from connexion import flask_utils
+from connexion.apis.abstract import AbstractAPI
+from connexion.decorators.produces import BaseSerializer, NoContent
+from connexion.handlers import AuthErrorHandler
+from connexion.request import ConnexionRequest
+from connexion.response import ConnexionResponse
+from connexion.utils import is_json_mimetype
 
 logger = logging.getLogger('connexion.apis.flask_api')
 
@@ -178,7 +177,7 @@ class FlaskApi(AbstractAPI):
             'content_type': content_type,
             'headers': headers
         }
-        kwargs = {k:v for k, v in six.iteritems(kwargs) if v is not None}
+        kwargs = {k: v for k, v in six.iteritems(kwargs) if v is not None}
         flask_response = flask.current_app.response_class(**kwargs)  # type: flask.Response
 
         if status_code is not None:

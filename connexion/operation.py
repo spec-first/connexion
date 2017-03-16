@@ -5,7 +5,8 @@ from copy import deepcopy
 from jsonschema import ValidationError
 
 from .decorators import validation
-from .decorators.decorator import BeginOfRequestLifecycleDecorator, EndOfRequestLifecycleDecorator
+from .decorators.decorator import (BeginOfRequestLifecycleDecorator,
+                                   EndOfRequestLifecycleDecorator)
 from .decorators.metrics import UWSGIMetricsCollector
 from .decorators.parameter import parameter_to_arg
 from .decorators.produces import BaseSerializer, Produces

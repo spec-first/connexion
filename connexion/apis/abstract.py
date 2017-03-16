@@ -1,3 +1,4 @@
+import abc
 import copy
 import logging
 import pathlib
@@ -5,13 +6,10 @@ import sys
 
 import jinja2
 import six
-import abc
 
 import yaml
 from swagger_spec_validator.validator20 import validate_spec
 
-from . import canonical_base_url
-from .. import utils
 from ..exceptions import ResolverError
 from ..operation import Operation
 from ..resolver import Resolver
@@ -23,6 +21,13 @@ SWAGGER_UI_URL = 'ui'
 RESOLVER_ERROR_ENDPOINT_RANDOM_DIGITS = 6
 
 logger = logging.getLogger('connexion.apis')
+
+
+def canonical_base_url(base_path):
+    """
+    Make given "basePath" a canonical base URL which can be prepended to paths starting with "/".
+    """
+    return base_path.rstrip('/')
 
 
 def compatibility_layer(spec):

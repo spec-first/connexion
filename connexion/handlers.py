@@ -44,7 +44,6 @@ class AuthErrorHandler(SecureOperation):
         """
         Actual handler for the execution after authentication.
         """
-        request = self.api.get_request(**kwargs)
         response = problem(
             title=self.exception.name,
             detail=self.exception.description,
@@ -68,7 +67,6 @@ class ResolverErrorHandler(Operation):
         return self.handle
 
     def handle(self, *args, **kwargs):
-        request = self.api.get_request(**kwargs)
         response = problem(
             title='Not Implemented',
             detail=self.exception.reason,

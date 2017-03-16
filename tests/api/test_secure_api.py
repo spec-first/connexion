@@ -1,7 +1,7 @@
 import json
 
-from connexion.apps import FlaskApp
 from connexion.apis import FlaskApi
+from connexion.apps import FlaskApp
 
 
 def test_security_over_inexistent_endpoints(oauth_requests, secure_api_spec_dir):

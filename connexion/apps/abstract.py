@@ -1,7 +1,7 @@
+import abc
 import logging
 import pathlib
 import six
-import abc
 
 from ..resolver import Resolver
 
@@ -152,19 +152,19 @@ class AbstractApp(object):
             specification = self.specification_dir / specification
 
         api = self.api_cls(specification=specification,
-                  base_url=base_path, arguments=arguments,
-                  swagger_json=swagger_json,
-                  swagger_ui=swagger_ui,
-                  swagger_path=swagger_path,
-                  swagger_url=swagger_url,
-                  resolver=resolver,
-                  resolver_error_handler=resolver_error_handler,
-                  validate_responses=validate_responses,
-                  strict_validation=strict_validation,
-                  auth_all_paths=auth_all_paths,
-                  debug=self.debug,
-                  validator_map=self.validator_map,
-                  pythonic_params=pythonic_params)
+                           base_url=base_path, arguments=arguments,
+                           swagger_json=swagger_json,
+                           swagger_ui=swagger_ui,
+                           swagger_path=swagger_path,
+                           swagger_url=swagger_url,
+                           resolver=resolver,
+                           resolver_error_handler=resolver_error_handler,
+                           validate_responses=validate_responses,
+                           strict_validation=strict_validation,
+                           auth_all_paths=auth_all_paths,
+                           debug=self.debug,
+                           validator_map=self.validator_map,
+                           pythonic_params=pythonic_params)
         return api
 
     def _resolver_error_handler(self, *args, **kwargs):

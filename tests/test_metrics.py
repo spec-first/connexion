@@ -1,9 +1,11 @@
-import connexion
-from connexion.decorators.metrics import UWSGIMetricsCollector
-from connexion.apis import FlaskApi
-from mock import MagicMock
 import json
+
 import flask
+
+import connexion
+from connexion.apis import FlaskApi
+from connexion.decorators.metrics import UWSGIMetricsCollector
+from mock import MagicMock
 
 
 def test_timer(monkeypatch):

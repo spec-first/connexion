@@ -129,12 +129,12 @@ def run(spec_file,
         api_extra_args['resolver'] = resolver
 
     app = connexion.FlaskApp(__name__,
-                        swagger_json=not hide_spec,
-                        swagger_ui=not hide_console_ui,
-                        swagger_path=console_ui_from or None,
-                        swagger_url=console_ui_url or None,
-                        auth_all_paths=auth_all_paths,
-                        debug=debug)
+                             swagger_json=not hide_spec,
+                             swagger_ui=not hide_console_ui,
+                             swagger_path=console_ui_from or None,
+                             swagger_url=console_ui_url or None,
+                             auth_all_paths=auth_all_paths,
+                             debug=debug)
 
     app.add_api(spec_file_full_path,
                 base_path=base_path,

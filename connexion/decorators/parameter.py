@@ -5,7 +5,6 @@ import inspect
 import logging
 import re
 import six
-import werkzeug.exceptions as exceptions
 
 from ..utils import all_json, boolean, is_null, is_nullable
 
