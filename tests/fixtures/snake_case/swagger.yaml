@@ -1,0 +1,166 @@
+swagger: "2.0"
+info:
+  title: "{{title}}"
+  version: "1.0"
+basePath: /v1.0
+paths:
+  /test-get-path-snake/{SomeId}:
+    get:
+      summary: Test converting to snake_case in path
+      description: Test converting to snake_case in path
+      operationId: fakeapi.snake_case.get_path_snake
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Success response
+          schema:
+            type: object
+      parameters:
+        - name: SomeId
+          in: path
+          description: SomeId parameter
+          required: true
+          type: integer
+  /test-get-path-shadow/{id}:
+    get:
+      summary: Test converting to un-shadowed parameter in path
+      description: Test converting to un-shadowed parameter in path
+      operationId: fakeapi.snake_case.get_path_shadow
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Success response
+          schema:
+            type: object
+      parameters:
+        - name: id
+          in: path
+          description: id parameter
+          required: true
+          type: integer
+  /test-get-query-snake:
+    get:
+      summary: Test converting to snake_case parameter in query
+      description: Test converting to snake_case parameter in query
+      operationId: fakeapi.snake_case.get_query_snake
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Success response
+          schema:
+            type: object
+      parameters:
+        - name: someId
+          in: query
+          description: id parameter
+          required: true
+          type: integer
+  /test-get-query-shadow:
+    get:
+      summary: Test converting to un-shadowed parameter in query
+      description: est converting to un-shadowed parameter in query
+      operationId: fakeapi.snake_case.get_query_shadow
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Success response
+          schema:
+            type: object
+      parameters:
+        - name: list
+          in: query
+          description: id parameter
+          required: true
+          type: integer
+  /test-post-path-snake/{SomeId}:
+    post:
+      summary: Test converting to snake_case in path
+      description: Test converting to snake_case in path
+      operationId: fakeapi.snake_case.post_path_snake
+      responses:
+        '200':
+          description: greeting response
+          schema:
+            type: object
+      parameters:
+        - name: SomeId
+          in: path
+          description: SomeId parameter
+          required: true
+          type: integer
+        - name: SomeOtherId
+          in: body
+          description: SomeOtherId parameter
+          required: true
+          schema:
+            type: object
+  /test-post-path-shadow/{id}:
+    post:
+      summary: Test converting to un-shadowed in path
+      description: Test converting to un-shadowed in path
+      operationId: fakeapi.snake_case.post_path_shadow
+      responses:
+        '200':
+          description: greeting response
+          schema:
+            type: object
+      parameters:
+        - name: id
+          in: path
+          description: id parameter
+          required: true
+          type: integer
+        - name: round
+          in: body
+          description: round parameter
+          required: true
+          schema:
+            type: object
+  /test-post-query-snake:
+    post:
+      summary: Test converting to snake_case in query
+      description: Test converting to snake_case in query
+      operationId: fakeapi.snake_case.post_query_snake
+      responses:
+        '200':
+          description: greeting response
+          schema:
+            type: object
+      parameters:
+        - name: someId
+          in: query
+          description: someId parameter
+          required: true
+          type: integer
+        - name: SomeOtherId
+          in: body
+          description: someOtherId parameter
+          required: true
+          schema:
+            type: object
+  /test-post-query-shadow:
+    post:
+      summary: Test converting to un-shadowed in query
+      description: Test converting to un-shadowed in query
+      operationId: fakeapi.snake_case.post_query_shadow
+      responses:
+        '200':
+          description: greeting response
+          schema:
+            type: object
+      parameters:
+        - name: id
+          in: query
+          description: id parameter
+          required: true
+          type: integer
+        - name: next
+          in: body
+          description: next parameter
+          required: true
+          schema:
+            type: object

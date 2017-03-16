@@ -33,6 +33,7 @@ install_requires = [
     'six>=1.9',
     'strict-rfc3339>=0.6',
     'swagger-spec-validator>=2.0.2',
+    'inflection>=0.3.1'
 ]
 
 if py_major_minor_version < (3, 4):

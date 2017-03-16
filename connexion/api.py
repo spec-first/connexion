@@ -62,7 +62,8 @@ class Api(object):
     def __init__(self, specification, base_url=None, arguments=None,
                  swagger_json=None, swagger_ui=None, swagger_path=None, swagger_url=None,
                  validate_responses=False, strict_validation=False, resolver=None,
-                 auth_all_paths=False, debug=False, resolver_error_handler=None, validator_map=None):
+                 auth_all_paths=False, debug=False, resolver_error_handler=None,
+                 validator_map=None, pythonic_params=False):
         """
         :type specification: pathlib.Path | dict
         :type base_url: str | None
@@ -81,6 +82,9 @@ class Api(object):
         :param resolver_error_handler: If given, a callable that generates an
             Operation used for handling ResolveErrors
         :type resolver_error_handler: callable | None
+        :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended
+        to any shadowed built-ins
+        :type pythonic_params: bool
         """
         self.debug = debug
         self.validator_map = validator_map
@@ -142,6 +146,9 @@ class Api(object):
         logger.debug('Strict Request Validation: %s', str(validate_responses))
         self.strict_validation = strict_validation
 
+        logger.debug('Pythonic params: %s', str(pythonic_params))
+        self.pythonic_params = pythonic_params
+
         # Create blueprint and endpoints
         self.blueprint = self.create_blueprint()
 
@@ -186,7 +193,8 @@ class Api(object):
                               validate_responses=self.validate_responses,
                               validator_map=self.validator_map,
                               strict_validation=self.strict_validation,
-                              resolver=self.resolver)
+                              resolver=self.resolver,
+                              pythonic_params=self.pythonic_params)
         self._add_operation_internal(method, path, operation)
 
     def _add_resolver_error_handler(self, method, path, err):
