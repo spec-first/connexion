@@ -4,12 +4,12 @@ import logging
 import pathlib
 import sys
 
-import jinja2
 import six
 
 import yaml
 from swagger_spec_validator.validator20 import validate_spec
 
+import jinja2
 from ..exceptions import ResolverError
 from ..operation import Operation
 from ..resolver import Resolver

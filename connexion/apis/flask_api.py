@@ -1,7 +1,8 @@
 import logging
 
-import flask
 import six
+
+import flask
 import werkzeug.exceptions
 from connexion import flask_utils
 from connexion.apis.abstract import AbstractAPI

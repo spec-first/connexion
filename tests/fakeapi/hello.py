@@ -2,10 +2,9 @@
 
 import json
 
-from flask import redirect, request
-
 from connexion import NoContent, ProblemException, problem
 from connexion.apis import FlaskApi
+from flask import redirect, request
 
 
 class DummyClass(object):
