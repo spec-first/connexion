@@ -67,13 +67,14 @@ class FlaskApp(AbstractApp):
     def add_api(self, specification, base_path=None, arguments=None,
                 auth_all_paths=None, swagger_json=None, swagger_ui=None,
                 swagger_path=None, swagger_url=None, validate_responses=False,
-                strict_validation=False, resolver=Resolver(), resolver_error=None):
+                strict_validation=False, resolver=Resolver(), resolver_error=None,
+                pythonic_params=False):
         api = super(FlaskApp, self).add_api(
             specification, base_path=base_path,
             arguments=arguments, auth_all_paths=auth_all_paths, swagger_json=swagger_json,
             swagger_ui=swagger_ui, swagger_path=swagger_path, swagger_url=swagger_url,
             validate_responses=validate_responses, strict_validation=strict_validation,
-            resolver=resolver, resolver_error=resolver_error
+            resolver=resolver, resolver_error=resolver_error, pythonic_params=pythonic_params
         )
         self.app.register_blueprint(api.blueprint)
         return api

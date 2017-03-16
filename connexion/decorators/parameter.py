@@ -1,9 +1,10 @@
 import copy
 import functools
-import inflection
 import inspect
 import logging
 import re
+
+import inflection
 import six
 
 from ..utils import all_json, boolean, is_null, is_nullable

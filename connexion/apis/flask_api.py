@@ -50,14 +50,16 @@ class FlaskApi(AbstractAPI):
                  swagger_json=None, swagger_ui=None, swagger_path=None, swagger_url=None,
                  validate_responses=False, strict_validation=False, resolver=None,
                  auth_all_paths=False, debug=False, resolver_error_handler=None,
-                 validator_map=None):
+                 validator_map=None, pythonic_params=False):
         super(FlaskApi, self).__init__(
-                specification, FlaskApi.jsonifier, base_url=base_url, arguments=arguments,
-                swagger_json=swagger_json, swagger_ui=swagger_ui,
-                swagger_path=swagger_path, swagger_url=swagger_url,
-                validate_responses=validate_responses, strict_validation=strict_validation,
-                resolver=resolver, auth_all_paths=auth_all_paths, debug=debug,
-                resolver_error_handler=resolver_error_handler, validator_map=validator_map)
+            specification, FlaskApi.jsonifier, base_url=base_url, arguments=arguments,
+            swagger_json=swagger_json, swagger_ui=swagger_ui,
+            swagger_path=swagger_path, swagger_url=swagger_url,
+            validate_responses=validate_responses, strict_validation=strict_validation,
+            resolver=resolver, auth_all_paths=auth_all_paths, debug=debug,
+            resolver_error_handler=resolver_error_handler, validator_map=validator_map,
+            pythonic_params=pythonic_params
+        )
 
     def _set_base_url(self, base_url):
         super(FlaskApi, self)._set_base_url(base_url)
