@@ -31,7 +31,6 @@ install_requires = [
     'PyYAML>=3.11',
     'requests>=2.9.1',
     'six>=1.9',
-    'strict-rfc3339>=0.6',
     'swagger-spec-validator>=2.0.2',
     'inflection>=0.3.1'
 ]
