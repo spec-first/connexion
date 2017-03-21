@@ -11,7 +11,7 @@ class AuthErrorHandler(SecureOperation):
     Wraps an error with authentication.
     """
 
-    def __init__(self, exception, security, security_definitions):
+    def __init__(self, exception, security, security_definitions, trusted_ips=None):
         """
         This class uses the exception instance to produce the proper response problem in case the
         request is authenticated.
@@ -23,9 +23,13 @@ class AuthErrorHandler(SecureOperation):
         :param security_definitions: `Security Definitions Object
             <https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-definitions-object>`_
         :type security_definitions: dict
+        :param trusted_ips: A list of trusted IPs. If request.remote_addr is in this list (i.e. it's a proxy we control)
+        then we'll also trust the X-Forwarded-For HTTP header.
+        :type trusted_ips: list
         """
         self.exception = exception
-        SecureOperation.__init__(self, security, security_definitions)
+        trusted_ips = trusted_ips or []
+        SecureOperation.__init__(self, security, security_definitions, trusted_ips)
 
     @property
     def function(self):

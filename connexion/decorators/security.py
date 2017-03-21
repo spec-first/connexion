@@ -31,15 +31,27 @@ def get_tokeninfo_url(security_definition):
     return token_info_url
 
 
+def get_client_ip(request, trusted_ips):
+    if request.headers.get("X-Forwarded-For") and request.remote_addr in trusted_ips:
+        return request.headers.get("X-Forwarded-For")
+    return request.remote_addr
+
+
+def nice_scopes(scopes):
+    if not scopes:
+        return "None"
+    return ','.join(scopes)
+
+
 def security_passthrough(function):
     """
     :type function: types.FunctionType
-    :rtype: types.FunctionType
+    :rtype: types.FunctionTyperequest.headers
     """
     return function
 
 
-def verify_oauth(token_info_url, allowed_scopes, function):
+def verify_oauth(token_info_url, allowed_scopes, trusted_ips, function):
     """
     Decorator to verify oauth
 
@@ -49,7 +61,11 @@ def verify_oauth(token_info_url, allowed_scopes, function):
     :type allowed_scopes: set
     :type function: types.FunctionType
     :rtype: types.FunctionType
+    :param trusted_ips: A list of trusted IPs. If request.remote_addr is in this list (i.e. it's a proxy we control)
+    then we'll also trust the X-Forwarded-For HTTP header.
+    :type trusted_ips: list
     """
+    trusted_ips = trusted_ips or []
 
     @functools.wraps(function)
     def wrapper(*args, **kwargs):
@@ -65,7 +81,11 @@ def verify_oauth(token_info_url, allowed_scopes, function):
                 raise OAuthProblem(description='Invalid authorization header')
             logger.debug("... Getting token from %s", token_info_url)
             token_request = session.get(token_info_url, params={'access_token': token}, timeout=5)
-            logger.debug("... Token info (%d): %s", token_request.status_code, token_request.text)
+            client_ip = get_client_ip(request, trusted_ips)
+            logger.debug("... Token info (%d): %s for client IP '%s'",
+                         token_request.status_code,
+                         token_request.text,
+                         client_ip)
             if not token_request.ok:
                 raise OAuthResponseProblem(
                     description='Provided oauth token is not valid',
@@ -73,13 +93,13 @@ def verify_oauth(token_info_url, allowed_scopes, function):
                 )
             token_info = token_request.json()  # type: dict
             user_scopes = set(token_info['scope'])
-            logger.debug("... Scopes required: %s", allowed_scopes)
-            logger.debug("... User scopes: %s", user_scopes)
+            logger.debug("... Scopes required: %s", nice_scopes(allowed_scopes))
+            logger.debug("... User scopes: %s", nice_scopes(user_scopes))
             if not allowed_scopes <= user_scopes:
                 logger.info(textwrap.dedent("""
                             ... User scopes (%s) do not match the scopes necessary to call endpoint (%s).
-                             Aborting with 403.""").replace('\n', ''),
-                            user_scopes, allowed_scopes)
+                             Aborting with 403 for client IP '%s'""").replace('\n', ''),
+                            nice_scopes(user_scopes), nice_scopes(allowed_scopes), client_ip)
                 raise OAuthScopeProblem(
                     description='Provided token doesn\'t have the required scope',
                     required_scopes=allowed_scopes,

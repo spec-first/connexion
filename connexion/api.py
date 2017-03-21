@@ -63,7 +63,7 @@ class Api(object):
                  swagger_json=None, swagger_ui=None, swagger_path=None, swagger_url=None,
                  validate_responses=False, strict_validation=False, resolver=None,
                  auth_all_paths=False, debug=False, resolver_error_handler=None,
-                 validator_map=None, pythonic_params=False):
+                 validator_map=None, pythonic_params=False, trusted_ips=None):
         """
         :type specification: pathlib.Path | dict
         :type base_url: str | None
@@ -85,6 +85,9 @@ class Api(object):
         :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended
         to any shadowed built-ins
         :type pythonic_params: bool
+        :param trusted_ips: A list of trusted IPs. If request.remote_addr is in this list (i.e. it's a proxy we control)
+        then we'll also trust the X-Forwarded-For HTTP header.
+        :type trusted_ips: list
         """
         self.debug = debug
         self.validator_map = validator_map
@@ -149,6 +152,9 @@ class Api(object):
         logger.debug('Pythonic params: %s', str(pythonic_params))
         self.pythonic_params = pythonic_params
 
+        logger.debug('Trusted IPs: %s', str(trusted_ips))
+        self.trusted_ips = trusted_ips or []
+
         # Create blueprint and endpoints
         self.blueprint = self.create_blueprint()
 
@@ -194,7 +200,8 @@ class Api(object):
                               validator_map=self.validator_map,
                               strict_validation=self.strict_validation,
                               resolver=self.resolver,
-                              pythonic_params=self.pythonic_params)
+                              pythonic_params=self.pythonic_params,
+                              trusted_ips=self.trusted_ips)
         self._add_operation_internal(method, path, operation)
 
     def _add_resolver_error_handler(self, method, path, err):
@@ -274,8 +281,10 @@ class Api(object):
         Adds a 404 error handler to authenticate and only expose the 404 status if the security validation pass.
         """
         logger.debug('Adding path not found authentication')
-        not_found_error = AuthErrorHandler(werkzeug.exceptions.NotFound(), security=self.security,
-                                           security_definitions=self.security_definitions)
+        not_found_error = AuthErrorHandler(werkzeug.exceptions.NotFound(),
+                                           security=self.security,
+                                           security_definitions=self.security_definitions,
+                                           trusted_ips=self.trusted_ips)
         endpoint_name = "{name}_not_found".format(name=self.blueprint.name)
         self.blueprint.add_url_rule('/<path:invalid_path>', endpoint_name, not_found_error.function)
 

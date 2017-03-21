@@ -245,12 +245,15 @@ def test_operation():
                           security_definitions=SECURITY_DEFINITIONS,
                           definitions=DEFINITIONS,
                           parameter_definitions=PARAMETER_DEFINITIONS,
-                          resolver=Resolver())
+                          resolver=Resolver(),
+                          trusted_ips=["192.168.1.10", "127.0.0.1"])
     assert isinstance(operation.function, types.FunctionType)
     # security decorator should be a partial with verify_oauth as the function and token url and scopes as arguments.
     # See https://docs.python.org/2/library/functools.html#partial-objects
     assert operation.security_decorator.func is verify_oauth
-    assert operation.security_decorator.args == ('https://oauth.example/token_info', set(['uid']))
+    assert operation.security_decorator.args == ('https://oauth.example/token_info',
+                                                 set(['uid']),
+                                                 ["192.168.1.10", "127.0.0.1"])
 
     assert operation.method == 'GET'
     assert operation.produces == ['application/json']
@@ -280,7 +283,7 @@ def test_operation_array():
     # security decorator should be a partial with verify_oauth as the function and token url and scopes as arguments.
     # See https://docs.python.org/2/library/functools.html#partial-objects
     assert operation.security_decorator.func is verify_oauth
-    assert operation.security_decorator.args == ('https://oauth.example/token_info', set(['uid']))
+    assert operation.security_decorator.args == ('https://oauth.example/token_info', set(['uid']), [])
 
     assert operation.method == 'GET'
     assert operation.produces == ['application/json']
@@ -310,7 +313,7 @@ def test_operation_composed_definition():
     # security decorator should be a partial with verify_oauth as the function and token url and scopes as arguments.
     # See https://docs.python.org/2/library/functools.html#partial-objects
     assert operation.security_decorator.func is verify_oauth
-    assert operation.security_decorator.args == ('https://oauth.example/token_info', set(['uid']))
+    assert operation.security_decorator.args == ('https://oauth.example/token_info', set(['uid']), [])
 
     assert operation.method == 'GET'
     assert operation.produces == ['application/json']
