@@ -18,6 +18,17 @@ PATH_PARAMETER_CONVERTERS = {
 }
 
 
+def partial(func, **frozen):
+    """
+    Replacement for functools.partial as functools.partial does not work with inspect.py on Python 2.7
+    """
+    def wrapper(*args, **kwargs):
+        for k, v in frozen.items():
+            kwargs[k] = v
+        return func(*args, **kwargs)
+    return wrapper
+
+
 def flaskify_endpoint(identifier, randomize=None):
     """
     Converts the provided identifier in a valid flask endpoint name
