@@ -2,6 +2,7 @@ import functools
 import logging
 
 import flask
+from flask import json
 
 from ..utils import is_flask_response
 
@@ -57,8 +58,8 @@ class BeginOfRequestLifecycleDecorator(BaseDecorator):
 
         response_container = None
         if is_flask_response(operation_handler_result):
-            response_container = ResponseContainer(
-                self.mimetype, response=operation_handler_result)
+            response_container = ResponseContainer.from_response(
+                response=operation_handler_result)
 
         elif isinstance(operation_handler_result, ResponseContainer):
             response_container = operation_handler_result
@@ -66,14 +67,22 @@ class BeginOfRequestLifecycleDecorator(BaseDecorator):
         elif isinstance(operation_handler_result, tuple) and len(
                 operation_handler_result) == 3:
             data, status_code, headers = operation_handler_result
-            response_container = ResponseContainer(
-                self.mimetype, data=data, status_code=status_code, headers=headers)
+            if is_flask_response(data):
+                response_container = ResponseContainer.from_response(
+                    response=data, status_code=status_code, headers=headers)
+            else:
+                response_container = ResponseContainer(
+                    self.mimetype, data=data, status_code=status_code, headers=headers)
 
         elif isinstance(operation_handler_result, tuple) and len(
                 operation_handler_result) == 2:
             data, status_code = operation_handler_result
-            response_container = ResponseContainer(
-                self.mimetype, data=data, status_code=status_code)
+            if is_flask_response(data):
+                response_container = ResponseContainer.from_response(
+                    response=data, status_code=status_code)
+            else:
+                response_container = ResponseContainer(
+                    self.mimetype, data=data, status_code=status_code)
         else:
             response_container = ResponseContainer(
                 self.mimetype, data=operation_handler_result)
@@ -134,25 +143,44 @@ class ResponseContainer(object):
     http://flask.pocoo.org/docs/0.11/api/#flask.Response.data
     """
 
-    def __init__(self, mimetype, data=None, status_code=200, headers=None, response=None):
+    def __init__(self, mimetype, data=None, status_code=200, headers=None):
         """
         :type data: dict | None
         :type status_code: int | None
         :type headers: dict | None
-        :type response: flask.Response | None
         """
         self.mimetype = mimetype
         self.data = data
         self.status_code = status_code
         self.headers = headers or {}
+        self.is_handler_response_object = False
+        self._response = None
 
-        self._response = response
-        self.is_handler_response_object = bool(response)
+    @classmethod
+    def from_response(cls, response, status_code=None, headers=None):
+        # Use the builtin method to combine headers, then save the result
+        # (response headers + custom headers) into the Response and
+        # ResponseContainer objects
+        if headers:
+            response.headers.extend(headers)  # Use built in headers extender
+        headers = response.headers
 
-        if self._response:
-            self.data = self._response.get_data()
-            self.status_code = self._response.status_code
-            self.headers = self._response.headers
+        # In order, use the status code specified here if it exists, or the
+        # status code already in the response if it exists, or default to
+        # 200 if neither of those exist
+        status_code = status_code or response.status_code or 200
+        response.status_code = status_code
+
+        # Create our response containers object
+        data = json.loads(response.get_data())
+        mimetype = response.mimetype
+        response_container = cls(mimetype, data, status_code, headers)
+
+        # Set the unmodified response in the response container, so that it
+        # can be returned directly when the time comes, instead of rebuild it
+        response_container._response = response
+        response_container.is_handler_response_object = True
+        return response_container
 
     def get_data(self):
         """ Get the current data to be used when creating the
@@ -173,9 +201,10 @@ class ResponseContainer(object):
 
         :rtype: flask.Response
         """
-        self._response = flask.current_app.response_class(
-            self.data, mimetype=self.mimetype, content_type=self.headers.get('content-type'),
-            headers=self.headers)  # type: flask.Response
-        self._response.status_code = self.status_code
+        if not self.is_handler_response_object:
+            self._response = flask.current_app.response_class(
+                self.data, mimetype=self.mimetype, content_type=self.headers.get('content-type'),
+                headers=self.headers)  # type: flask.Response
+            self._response.status_code = self.status_code
 
         return self._response
