@@ -64,7 +64,7 @@ Why Connexion
 
 With Connexion, you write the spec first. Connexion then calls your Python
 code, handling the mapping from the specification to the code. This
-incentives you to write the specification so that all of your
+incentivizes you to write the specification so that all of your
 developers can understand what your API does, even before you write a
 single line of code.
 
