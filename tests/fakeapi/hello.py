@@ -4,7 +4,7 @@ import json
 
 from connexion import NoContent, ProblemException, problem
 from connexion.apis import FlaskApi
-from flask import redirect, request, jsonify
+from flask import jsonify, redirect, request
 
 
 class DummyClass(object):
