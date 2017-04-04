@@ -91,8 +91,8 @@ class RequestBodyValidator(object):
         self.consumes = consumes
         self.has_default = schema.get('default', False)
         self.is_null_value_valid = is_null_value_valid
-        ValidatorClass = validator or Draft4Validator
-        self.validator = ValidatorClass(schema, format_checker=draft4_format_checker)
+        validatorClass = validator or Draft4Validator
+        self.validator = validatorClass(schema, format_checker=draft4_format_checker)
         self.api = api
 
     def __call__(self, function):
