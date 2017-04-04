@@ -46,7 +46,7 @@ def test_returning_flask_response_tuple(simple_app):
     assert result.status_code == 201
     assert result.content_type == 'application/json'
     result_data = json.loads(result.data.decode('utf-8', 'replace'))
-    assert result_data == {'foo', 'bar'}
+    assert result_data == {'foo': 'bar'}
 
 
 def test_jsonifier(simple_app):
