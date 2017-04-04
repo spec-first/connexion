@@ -1,8 +1,7 @@
 import math
 
 import connexion.apps
-import connexion.flask_utils as flask_utils
-import connexion.utils as utils
+from connexion import utils
 import pytest
 
 from mock import MagicMock
@@ -28,8 +27,8 @@ def test_get_function_from_name_attr_error(monkeypatch):
 
 
 def test_get_function_from_name_for_class_method():
-    function = utils.get_function_from_name('connexion.apps.FlaskApp.common_error_handler')
-    assert function == connexion.apps.FlaskApp.common_error_handler
+    function = utils.get_function_from_name('connexion.FlaskApp.common_error_handler')
+    assert function == connexion.FlaskApp.common_error_handler
 
 
 def test_boolean():

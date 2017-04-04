@@ -3,8 +3,7 @@ import yaml
 import jinja2
 import pytest
 from conftest import TEST_FOLDER, build_app_from_fixture
-from connexion.apis import FlaskApi
-from connexion.apps import FlaskApp
+from connexion import FlaskApp
 from connexion.exceptions import InvalidSpecification
 
 
@@ -22,7 +21,6 @@ def test_app_with_relative_path(simple_api_spec_dir):
 
 def test_no_swagger_ui(simple_api_spec_dir):
     app = FlaskApp(__name__, 5001, simple_api_spec_dir, swagger_ui=False, debug=True)
-    # app = FlaskApp(__name__, 5001, simple_api_spec_dir, debug=True)
     app.add_api('swagger.yaml')
 
     app_client = app.app.test_client()

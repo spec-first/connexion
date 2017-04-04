@@ -3,8 +3,8 @@ import logging
 import pathlib
 
 import pytest
-from connexion.apis import FlaskApi
-from connexion.apps import FlaskApp
+from connexion import FlaskApi
+from connexion import FlaskApp
 
 logging.basicConfig(level=logging.DEBUG)
 

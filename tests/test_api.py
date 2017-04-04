@@ -7,9 +7,8 @@ from swagger_spec_validator.common import SwaggerValidationError
 from yaml import YAMLError
 
 import pytest
-from connexion.apis import FlaskApi
 from connexion.apis.abstract import canonical_base_url
-from connexion.apis.flask_api import FlaskApi
+from connexion import FlaskApi
 from connexion.exceptions import InvalidSpecification, ResolverError
 
 TEST_FOLDER = pathlib.Path(__file__).parent
