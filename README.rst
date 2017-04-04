@@ -92,7 +92,7 @@ In your command line, type:
 
 .. code-block:: bash
 
-    $ pip install connexion[flask]
+    $ pip install connexion
 
 Running It
 ----------
