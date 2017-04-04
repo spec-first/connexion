@@ -1,6 +1,7 @@
 import json
 
 import flask
+
 from connexion.apis.flask_api import FlaskApi
 from connexion.decorators.validation import ParameterValidator
 # we are using "mock" module here for Py 2.7 support

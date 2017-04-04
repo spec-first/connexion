@@ -10,7 +10,6 @@ Warning: It is recommended to use 'decorator' package to create decorators for
 '''
 
 import connexion
-
 import flask
 
 try:

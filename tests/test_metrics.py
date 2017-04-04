@@ -1,7 +1,8 @@
 import json
 
-import connexion
 import flask
+
+import connexion
 from connexion.decorators.metrics import UWSGIMetricsCollector
 from mock import MagicMock
 

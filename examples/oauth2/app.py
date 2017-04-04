@@ -4,7 +4,6 @@ Basic example of a resource server
 '''
 
 import connexion
-
 import flask
 
 

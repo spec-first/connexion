@@ -1,6 +1,6 @@
+import jinja2
 import yaml
 
-import jinja2
 import pytest
 from conftest import TEST_FOLDER, build_app_from_fixture
 from connexion import FlaskApp
