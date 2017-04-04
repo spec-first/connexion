@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
-from connexion import NoContent, ProblemException, problem
 from flask import jsonify, redirect
+
+from connexion import NoContent, ProblemException, problem
 
 
 class DummyClass(object):
