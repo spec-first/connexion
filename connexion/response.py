@@ -1,6 +1,5 @@
 from collections import namedtuple
 
-
 _ConnexionResponse = namedtuple('SwaggerRequest', [
     'mimetype', 'content_type', 'status_code', 'body', 'headers'
 ])

@@ -89,7 +89,7 @@ setup(
     keywords='openapi oai swagger rest api oauth flask microservice framework',
     license='Apache License Version 2.0',
     setup_requires=['flake8'],
-    install_requires=install_requires,
+    install_requires=install_requires + [flask_require],
     tests_require=tests_require,
     extras_require={'tests': tests_require, 'flask': flask_require},
     cmdclass={'test': PyTest},

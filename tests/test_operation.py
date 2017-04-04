@@ -3,7 +3,6 @@ import types
 
 import mock
 import pytest
-
 from connexion.apis.flask_api import Jsonifier
 from connexion.decorators.security import security_passthrough, verify_oauth
 from connexion.exceptions import InvalidSpecification

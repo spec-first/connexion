@@ -1,10 +1,10 @@
 import logging
 
-import six
-
 import flask
+import six
 import werkzeug.exceptions
-from connexion import flask_utils
+
+from connexion.apis import flask_utils
 from connexion.apis.abstract import AbstractAPI
 from connexion.decorators.produces import BaseSerializer, NoContent
 from connexion.handlers import AuthErrorHandler

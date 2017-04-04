@@ -8,13 +8,13 @@ PARAMETER_DEFINITIONS = {'myparam': {'in': 'path', 'type': 'integer'}}
 
 
 def test_standard_get_function():
-    function = Resolver().resolve_function_from_operation_id('connexion.apps.FlaskApp.common_error_handler')
-    assert function == connexion.apps.FlaskApp.common_error_handler
+    function = Resolver().resolve_function_from_operation_id('connexion.FlaskApp.common_error_handler')
+    assert function == connexion.FlaskApp.common_error_handler
 
 
 def test_resty_get_function():
-    function = RestyResolver('connexion').resolve_function_from_operation_id('connexion.apps.FlaskApp.common_error_handler')
-    assert function == connexion.apps.FlaskApp.common_error_handler
+    function = RestyResolver('connexion').resolve_function_from_operation_id('connexion.FlaskApp.common_error_handler')
+    assert function == connexion.FlaskApp.common_error_handler
 
 
 def test_missing_operation_id():

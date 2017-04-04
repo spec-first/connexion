@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 
-import json
+from flask import jsonify, redirect
 
 from connexion import NoContent, ProblemException, problem
-from connexion.apis import FlaskApi
-from flask import jsonify, redirect, request
 
 
 class DummyClass(object):

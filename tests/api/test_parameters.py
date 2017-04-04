@@ -1,6 +1,7 @@
 import json
 from io import BytesIO
 
+
 def test_parameter_validation(simple_app):
     app_client = simple_app.app.test_client()
 

@@ -1,4 +1,1 @@
-from .abstract import AbstractAPI
-from .flask_api import FlaskApi
-
-__all__ = ['AbstractAPI', 'FlaskApi']
+from .abstract import AbstractAPI  # NOQA
