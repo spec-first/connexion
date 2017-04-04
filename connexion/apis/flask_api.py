@@ -172,6 +172,23 @@ class FlaskApi(AbstractAPI):
 
         return flask_response
 
+    @staticmethod
+    def _update_flask_response(response, status_code=None, headers=None):
+        """
+        Takes an object that is already a flask Response, and updates it
+        with the given status code and headers.
+
+        This allows one to use the common flask paradigm
+        ```return jsonify(foo='bar'), 201```
+        or
+        ```return jsonify(foo='bar'), 201, {'new_header': 'header_value'}```
+        """
+        if headers:
+            response.headers.extend(headers)
+        status_code = status_code or response.status_code or 200
+        response.status_code = status_code
+        return response
+
     @classmethod
     def _build_flask_response(cls, mimetype=None, content_type=None,
                               headers=None, status_code=None, data=None):
@@ -210,13 +227,22 @@ class FlaskApi(AbstractAPI):
 
         elif isinstance(response, tuple) and len(response) == 3:
             data, status_code, headers = response
-            return cls._build_flask_response(mimetype, None,
-                                             headers, status_code, data)
+            if flask_utils.is_flask_response(data):
+                return cls._update_flask_response(response=data,
+                                                  status_code=status_code,
+                                                  headers=headers)
+            else:
+                return cls._build_flask_response(mimetype, None,
+                                                 headers, status_code, data)
 
         elif isinstance(response, tuple) and len(response) == 2:
             data, status_code = response
-            return cls._build_flask_response(mimetype, None, None,
-                                             status_code, data)
+            if flask_utils.is_flask_response(data):
+                return cls._update_flask_response(response=data,
+                                                  status_code=status_code)
+            else:
+                return cls._build_flask_response(mimetype, None, None,
+                                                 status_code, data)
 
         else:
             return cls._build_flask_response(mimetype=mimetype, data=response)
