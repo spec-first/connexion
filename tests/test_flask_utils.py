@@ -1,10 +1,4 @@
-import math
-
-import connexion.apps
-import connexion.flask_utils as flask_utils
-import connexion.utils as utils
-import pytest
-from mock import MagicMock
+import connexion.apis.flask_utils as flask_utils
 
 
 def test_flaskify_path():
