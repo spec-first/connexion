@@ -12,10 +12,10 @@ from mock import MagicMock
 
 @pytest.fixture()
 def mock_app_run(monkeypatch):
-    test_server = MagicMock(wraps=connexion.App(__name__))
+    test_server = MagicMock(wraps=connexion.FlaskApp(__name__))
     test_server.run = MagicMock(return_value=True)
     test_app = MagicMock(return_value=test_server)
-    monkeypatch.setattr('connexion.cli.connexion.App', test_app)
+    monkeypatch.setattr('connexion.cli.connexion.FlaskApp', test_app)
     return test_app
 
 

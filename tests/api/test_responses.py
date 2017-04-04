@@ -1,6 +1,7 @@
 import json
 from struct import unpack
-from connexion.decorators.produces import JSONEncoder
+
+from connexion.apps.flask_app import FlaskJSONEncoder
 
 
 def test_app(simple_app):
@@ -113,11 +114,11 @@ def test_default_object_body(simple_app):
 
 def test_custom_encoder(simple_app):
 
-    class CustomEncoder(JSONEncoder):
+    class CustomEncoder(FlaskJSONEncoder):
         def default(self, o):
             if o.__class__.__name__ == 'DummyClass':
                 return "cool result"
-            return JSONEncoder.default(self, o)
+            return FlaskJSONEncoder.default(self, o)
 
     flask_app = simple_app.app
     flask_app.json_encoder = CustomEncoder

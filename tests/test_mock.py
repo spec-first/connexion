@@ -24,7 +24,8 @@ def test_mock_resolver():
         }
     }
 
-    operation = Operation(method='GET',
+    operation = Operation(api=None,
+                          method='GET',
                           path='endpoint',
                           path_parameters=[],
                           operation={
@@ -51,7 +52,8 @@ def test_mock_resolver_no_examples():
         '418': {}
     }
 
-    operation = Operation(method='GET',
+    operation = Operation(api=None,
+                          method='GET',
                           path='endpoint',
                           path_parameters=[],
                           operation={
@@ -74,7 +76,8 @@ def test_mock_resolver_no_examples():
 def test_mock_resolver_notimplemented():
     resolver = MockResolver(mock_all=False)
 
-    operation = Operation(method='GET',
+    operation = Operation(api=None,
+                          method='GET',
                           path='endpoint',
                           path_parameters=[],
                           operation={

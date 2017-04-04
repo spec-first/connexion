@@ -9,14 +9,14 @@ from .decorators.decorator import (BeginOfRequestLifecycleDecorator,
                                    EndOfRequestLifecycleDecorator)
 from .decorators.metrics import UWSGIMetricsCollector
 from .decorators.parameter import parameter_to_arg
-from .decorators.produces import BaseSerializer, Jsonifier, Produces
+from .decorators.produces import BaseSerializer, Produces
 from .decorators.response import ResponseValidator
 from .decorators.security import (get_tokeninfo_url, security_passthrough,
                                   verify_oauth)
 from .decorators.validation import (ParameterValidator, RequestBodyValidator,
                                     TypeValidationError)
 from .exceptions import InvalidSpecification
-from .utils import all_json, flaskify_endpoint, is_nullable
+from .utils import all_json, is_nullable
 
 logger = logging.getLogger('connexion.operation')
 
@@ -32,7 +32,7 @@ VALIDATOR_MAP = {
 
 class SecureOperation(object):
 
-    def __init__(self, security, security_definitions):
+    def __init__(self, api, security, security_definitions):
         """
         :param security: list of security rules the application uses by default
         :type security: list
@@ -40,6 +40,7 @@ class SecureOperation(object):
             <https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-definitions-object>`_
         :type security_definitions: dict
         """
+        self.api = api
         self.security = security
         self.security_definitions = security_definitions
 
@@ -103,24 +104,23 @@ class SecureOperation(object):
     def _request_begin_lifecycle_decorator(self):
         """
         Transforms the result of the operation handler in a internal
-        representation (connexion.decorators.ResponseContainer) to be
+        representation (connexion.decorators.ConnexionRequest) to be
         used by internal Connexion decorators.
 
         :rtype: types.FunctionType
         """
-        return BeginOfRequestLifecycleDecorator(self.get_mimetype())
+        return BeginOfRequestLifecycleDecorator(self.api, self.get_mimetype())
 
     @property
     def _request_end_lifecycle_decorator(self):
         """
         Guarantees that instead of the internal representation of the
         operation handler response
-        (connexion.decorators.ResponseContainer) a flask.Response
+        (connexion.decorators.ConnexionRequest) a flask.Response
         object is returned.
-
         :rtype: types.FunctionType
         """
-        return EndOfRequestLifecycleDecorator()
+        return EndOfRequestLifecycleDecorator(self.api, self.get_mimetype())
 
 
 class Operation(SecureOperation):
@@ -129,7 +129,7 @@ class Operation(SecureOperation):
     A single API operation on a path.
     """
 
-    def __init__(self, method, path, operation, resolver, app_produces, app_consumes,
+    def __init__(self, api, method, path, operation, resolver, app_produces, app_consumes,
                  path_parameters=None, app_security=None, security_definitions=None,
                  definitions=None, parameter_definitions=None, response_definitions=None,
                  validate_responses=False, strict_validation=False, randomize_endpoint=None,
@@ -182,6 +182,7 @@ class Operation(SecureOperation):
         :type pythonic_params: bool
         """
 
+        self.api = api
         self.method = method
         self.path = path
         self.validator_map = dict(VALIDATOR_MAP)
@@ -213,7 +214,6 @@ class Operation(SecureOperation):
 
         resolution = resolver.resolve(self)
         self.operation_id = resolution.operation_id
-        self.endpoint_name = flaskify_endpoint(self.operation_id, self.randomize_endpoint)
         self.__undecorated_function = resolution.function
 
         self.validate_defaults()
@@ -391,6 +391,7 @@ class Operation(SecureOperation):
             function = decorator(function)
 
         function = self._request_end_lifecycle_decorator(function)
+
         return function
 
     @property
@@ -415,12 +416,14 @@ class Operation(SecureOperation):
         mimetype = self.get_mimetype()
         if all_json(self.produces):  # endpoint will return json
             logger.debug('... Produces json', extra=vars(self))
-            jsonify = Jsonifier(mimetype)
+            jsonify = self.api.jsonifier(mimetype)
             return jsonify
+
         elif len(self.produces) == 1:
             logger.debug('... Produces %s', mimetype, extra=vars(self))
             decorator = Produces(mimetype)
             return decorator
+
         else:
             return BaseSerializer()
 
@@ -432,9 +435,11 @@ class Operation(SecureOperation):
         ParameterValidator = self.validator_map['parameter']
         RequestBodyValidator = self.validator_map['body']
         if self.parameters:
-            yield ParameterValidator(self.parameters, strict_validation=self.strict_validation)
+            yield ParameterValidator(self.parameters,
+                                     self.api,
+                                     strict_validation=self.strict_validation)
         if self.body_schema:
-            yield RequestBodyValidator(self.body_schema, self.consumes,
+            yield RequestBodyValidator(self.body_schema, self.consumes, self.api,
                                        is_nullable(self.body_definition))
 
     @property
@@ -445,3 +450,11 @@ class Operation(SecureOperation):
         """
         ResponseValidator = self.validator_map['response']
         return ResponseValidator(self, self.get_mimetype())
+
+    def json_loads(self, data):
+        """
+        A Wrapper for calling the jsonifier.
+        :param data: The json to loads
+        :type data: bytes
+        """
+        return self.api.jsonifier.loads(data)

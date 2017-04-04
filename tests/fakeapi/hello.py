@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
-from flask import redirect
+import json
 
-from connexion import NoContent, ProblemException, problem, request
+from connexion import NoContent, ProblemException, problem
+from connexion.apis import FlaskApi
+from flask import redirect, request
 
 
 class DummyClass(object):
@@ -32,7 +34,7 @@ def post():
     return ''
 
 
-def post_greeting(name):
+def post_greeting(name, **kwargs):
     data = {'greeting': 'Hello {name}'.format(name=name)}
     return data
 
@@ -59,11 +61,11 @@ def get_list(name):
 
 
 def get_bye(name):
-    return 'Goodbye {name}'.format(name=name), 200
+    return 'Goodbye {name}'.format(name=name)
 
 
-def get_bye_secure(name):
-    return 'Goodbye {name} (Secure: {user})'.format(name=name, user=request.user)
+def get_bye_secure(name, user, token_info):
+    return 'Goodbye {name} (Secure: {user})'.format(name=name, user=user)
 
 
 def with_problem():
@@ -360,7 +362,7 @@ def unordered_params_response(first, path_param, second):
     return dict(first=int(first), path_param=str(path_param), second=int(second))
 
 
-def more_than_one_scope_defined():
+def more_than_one_scope_defined(**kwargs):
     return "OK"
 
 

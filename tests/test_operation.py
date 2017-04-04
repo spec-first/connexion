@@ -1,7 +1,10 @@
 import pathlib
 import types
 
+import mock
 import pytest
+
+from connexion.apis.flask_api import Jsonifier
 from connexion.decorators.security import security_passthrough, verify_oauth
 from connexion.exceptions import InvalidSpecification
 from connexion.operation import Operation
@@ -234,8 +237,14 @@ SECURITY_DEFINITIONS_WO_INFO = {'oauth': {'type': 'oauth2',
                                           'scopes': {'myscope': 'can do stuff'}}}
 
 
-def test_operation():
-    operation = Operation(method='GET',
+@pytest.fixture
+def api():
+  return mock.MagicMock(jsonifier=Jsonifier)
+
+
+def test_operation(api):
+    operation = Operation(api=api,
+                          method='GET',
                           path='endpoint',
                           path_parameters=[],
                           operation=OPERATION1,
@@ -264,8 +273,9 @@ def test_operation():
     assert operation.body_schema == expected_body_schema
 
 
-def test_operation_array():
-    operation = Operation(method='GET',
+def test_operation_array(api):
+    operation = Operation(api=api,
+                          method='GET',
                           path='endpoint',
                           path_parameters=[],
                           operation=OPERATION9,
@@ -294,8 +304,9 @@ def test_operation_array():
     assert operation.body_schema == expected_body_schema
 
 
-def test_operation_composed_definition():
-    operation = Operation(method='GET',
+def test_operation_composed_definition(api):
+    operation = Operation(api=api,
+                          method='GET',
                           path='endpoint',
                           path_parameters=[],
                           operation=OPERATION10,
@@ -323,9 +334,10 @@ def test_operation_composed_definition():
     assert operation.body_schema == expected_body_schema
 
 
-def test_non_existent_reference():
+def test_non_existent_reference(api):
     with pytest.raises(InvalidSpecification) as exc_info:  # type: py.code.ExceptionInfo
-        operation = Operation(method='GET',
+        operation = Operation(api=api,
+                              method='GET',
                               path='endpoint',
                               path_parameters=[],
                               operation=OPERATION1,
@@ -343,9 +355,10 @@ def test_non_existent_reference():
     assert repr(exception) == "<InvalidSpecification: GET endpoint Definition 'new_stack' not found>"
 
 
-def test_multi_body():
+def test_multi_body(api):
     with pytest.raises(InvalidSpecification) as exc_info:  # type: py.code.ExceptionInfo
-        operation = Operation(method='GET',
+        operation = Operation(api=api,
+                              method='GET',
                               path='endpoint',
                               path_parameters=[],
                               operation=OPERATION2,
@@ -363,9 +376,10 @@ def test_multi_body():
     assert repr(exception) == "<InvalidSpecification: GET endpoint There can be one 'body' parameter at most>"
 
 
-def test_invalid_reference():
+def test_invalid_reference(api):
     with pytest.raises(InvalidSpecification) as exc_info:  # type: py.code.ExceptionInfo
-        operation = Operation(method='GET',
+        operation = Operation(api=api,
+                              method='GET',
                               path='endpoint',
                               path_parameters=[],
                               operation=OPERATION3,
@@ -383,8 +397,9 @@ def test_invalid_reference():
     assert repr(exception).startswith("<InvalidSpecification: GET endpoint $ref")
 
 
-def test_no_token_info():
-    operation = Operation(method='GET',
+def test_no_token_info(api):
+    operation = Operation(api=api,
+                          method='GET',
                           path='endpoint',
                           path_parameters=[],
                           operation=OPERATION1,
@@ -410,8 +425,9 @@ def test_no_token_info():
     assert operation.body_schema == expected_body_schema
 
 
-def test_parameter_reference():
-    operation = Operation(method='GET',
+def test_parameter_reference(api):
+    operation = Operation(api=api,
+                          method='GET',
                           path='endpoint',
                           path_parameters=[],
                           operation=OPERATION4,
@@ -425,9 +441,9 @@ def test_parameter_reference():
     assert operation.parameters == [{'in': 'path', 'type': 'integer'}]
 
 
-def test_resolve_invalid_reference():
+def test_resolve_invalid_reference(api):
     with pytest.raises(InvalidSpecification) as exc_info:
-        Operation(method='GET', path='endpoint', path_parameters=[],
+        Operation(api=api, method='GET', path='endpoint', path_parameters=[],
                   operation=OPERATION5, app_produces=['application/json'],
                   app_consumes=['application/json'], app_security=[],
                   security_definitions={}, definitions={},
@@ -437,10 +453,10 @@ def test_resolve_invalid_reference():
     assert exception.reason == "GET endpoint '$ref' needs to start with '#/'"
 
 
-def test_default():
+def test_default(api):
     op = OPERATION6.copy()
     op['parameters'][1]['default'] = 1
-    Operation(method='GET', path='endpoint', path_parameters=[], operation=op,
+    Operation(api=api, method='GET', path='endpoint', path_parameters=[], operation=op,
               app_produces=['application/json'], app_consumes=['application/json'],
               app_security=[], security_definitions={}, definitions=DEFINITIONS,
               parameter_definitions=PARAMETER_DEFINITIONS,
@@ -449,18 +465,18 @@ def test_default():
     op['parameters'][0]['default'] = {
         'keep_stacks': 1, 'image_version': 'one', 'senza_yaml': 'senza.yaml', 'new_traffic': 100
     }
-    Operation(method='POST', path='endpoint', path_parameters=[], operation=op, app_produces=['application/json'],
-              app_consumes=['application/json'], app_security=[], security_definitions={},
-              definitions=DEFINITIONS, parameter_definitions={}, resolver=Resolver())
+    Operation(api=api, method='POST', path='endpoint', path_parameters=[], operation=op,
+              app_produces=['application/json'], app_consumes=['application/json'], app_security=[],
+              security_definitions={}, definitions=DEFINITIONS, parameter_definitions={}, resolver=Resolver())
 
 
-def test_get_path_parameter_types():
+def test_get_path_parameter_types(api):
     op = OPERATION1.copy()
     op['parameters'] = [{'in': 'path', 'type': 'int', 'name': 'int_path'},
                         {'in': 'path', 'type': 'string', 'name': 'string_path'},
                         {'in': 'path', 'type': 'string', 'format': 'path', 'name': 'path_path'}]
 
-    operation = Operation(method='GET', path='endpoint', path_parameters=[], operation=op,
+    operation = Operation(api=api, method='GET', path='endpoint', path_parameters=[], operation=op,
                           app_produces=['application/json'], app_consumes=['application/json'], resolver=Resolver())
 
     assert {'int_path': 'int', 'string_path': 'string', 'path_path': 'path'} == operation.get_path_parameter_types()

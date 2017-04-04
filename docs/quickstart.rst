@@ -26,7 +26,7 @@ Put your API YAML inside a folder in the root path of your application (e.g ``sw
 
     import connexion
 
-    app = connexion.App(__name__, specification_dir='swagger/')
+    app = connexion.FlaskApp(__name__, specification_dir='swagger/')
     app.add_api('my_api.yaml')
     app.run(port=8080)
 
@@ -41,7 +41,7 @@ for each specific API in the `connexion.App#add_api` method:
 
 .. code-block:: python
 
-    app = connexion.App(__name__, specification_dir='swagger/',
+    app = connexion.FlaskApp(__name__, specification_dir='swagger/',
                         arguments={'global': 'global_value'})
     app.add_api('my_api.yaml', arguments={'api_local': 'local_value'})
     app.run(port=8080)
@@ -58,7 +58,7 @@ You can disable the Swagger UI at the application level:
 
 .. code-block:: python
 
-    app = connexion.App(__name__, specification_dir='swagger/',
+    app = connexion.FlaskApp(__name__, specification_dir='swagger/',
                         swagger_ui=False)
     app.add_api('my_api.yaml')
 
@@ -67,7 +67,7 @@ You can also disable it at the API level:
 
 .. code-block:: python
 
-    app = connexion.App(__name__, specification_dir='swagger/')
+    app = connexion.FlaskApp(__name__, specification_dir='swagger/')
     app.add_api('my_api.yaml', swagger_ui=False)
 
 Server Backend
@@ -79,7 +79,7 @@ to ``tornado`` or ``gevent``:
 
     import connexion
 
-    app = connexion.App(__name__, port = 8080, specification_dir='swagger/', server='tornado')
+    app = connexion.FlaskApp(__name__, port = 8080, specification_dir='swagger/', server='tornado')
 
 
 .. _Jinja2: http://jinja.pocoo.org/

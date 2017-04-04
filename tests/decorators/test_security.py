@@ -29,8 +29,7 @@ def test_verify_oauth_invalid_auth_header(monkeypatch):
 
     request = MagicMock()
     app = MagicMock()
-    monkeypatch.setattr('connexion.decorators.security.request', request)
     monkeypatch.setattr('flask.current_app', app)
 
-    with pytest.raises(OAuthProblem):
-        wrapped_func()
+    with pytest.raises(OAuthProblem) as exc_info:
+        wrapped_func(MagicMock())

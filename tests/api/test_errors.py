@@ -1,4 +1,9 @@
 import json
+import flask
+
+
+def fix_data(data):
+    return data.replace(b'\\"', b'"')
 
 
 def test_errors(problem_app):
@@ -7,7 +12,7 @@ def test_errors(problem_app):
     greeting404 = app_client.get('/v1.0/greeting')  # type: flask.Response
     assert greeting404.content_type == 'application/problem+json'
     assert greeting404.status_code == 404
-    error404 = json.loads(greeting404.data.decode('utf-8', 'replace'))
+    error404 = flask.json.loads(fix_data(greeting404.data))
     assert error404['type'] == 'about:blank'
     assert error404['title'] == 'Not Found'
     assert error404['detail'] == 'The requested URL was not found on the server.  ' \

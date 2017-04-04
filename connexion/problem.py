@@ -1,5 +1,4 @@
-from .decorators.decorator import ResponseContainer
-from .decorators.produces import Jsonifier
+from .response import ConnexionResponse
 
 
 def problem(status, title, detail, type=None, instance=None, headers=None, ext=None):
@@ -31,7 +30,7 @@ def problem(status, title, detail, type=None, instance=None, headers=None, ext=N
     if not type:
         type = 'about:blank'
 
-    problem_response = {'type': type, 'title': title, 'detail': detail, 'status': status, }
+    problem_response = {'type': type, 'title': title, 'detail': detail, 'status': status}
     if instance:
         problem_response['instance'] = instance
     if ext:
@@ -42,9 +41,7 @@ def problem(status, title, detail, type=None, instance=None, headers=None, ext=N
     # `decorators.produces.Jsonifier` will not be added to the request
     # life-cycle (so we cannot rely on that serialization), we will
     # return a problem payload in JSON format.
-    return ResponseContainer(
-        mimetype='application/problem+json',
-        data=Jsonifier.dumps(problem_response),
-        status_code=status,
-        headers=headers
-    )
+    mimetype = content_type = 'application/problem+json'
+    return ConnexionResponse(status, mimetype, content_type,
+                             body=problem_response,
+                             headers=headers)
