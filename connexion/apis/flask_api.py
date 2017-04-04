@@ -208,6 +208,9 @@ class FlaskApi(AbstractAPI):
         if flask_utils.is_flask_response(response):
             return response
 
+        elif isinstance(response, tuple) and flask_utils.is_flask_response(response[0]):
+            return flask.current_app.make_response(response)
+
         elif isinstance(response, tuple) and len(response) == 3:
             data, status_code, headers = response
             return cls._build_flask_response(mimetype, None,
