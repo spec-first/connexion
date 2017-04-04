@@ -1,7 +1,6 @@
 import datetime
 import json
 import math
-
 from decimal import Decimal
 
 from connexion.apps.flask_app import FlaskJSONEncoder

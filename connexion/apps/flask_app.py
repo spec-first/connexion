@@ -13,7 +13,6 @@ from ..problem import problem
 from ..resolver import Resolver
 from .abstract import AbstractApp
 
-
 logger = logging.getLogger('connexion.app')
 
 

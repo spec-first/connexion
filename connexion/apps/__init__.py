@@ -1,2 +1,1 @@
-from .abstract import AbstractApp
-
+from .abstract import AbstractApp  # NOQA

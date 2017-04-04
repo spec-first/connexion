@@ -1,9 +1,8 @@
 import math
 
 import connexion.apps
-from connexion import utils
 import pytest
-
+from connexion import utils
 from mock import MagicMock
 
 

@@ -1,6 +1,7 @@
 import abc
 import logging
 import pathlib
+
 import six
 
 from ..resolver import Resolver
