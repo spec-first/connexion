@@ -4,7 +4,7 @@ import json
 
 from connexion import NoContent, ProblemException, problem
 from connexion.apis import FlaskApi
-from flask import redirect, request
+from flask import redirect, request, jsonify
 
 
 class DummyClass(object):
@@ -62,6 +62,10 @@ def get_list(name):
 
 def get_bye(name):
     return 'Goodbye {name}'.format(name=name)
+
+
+def get_flask_response_tuple():
+    return jsonify({'foo': 'bar'}), 201
 
 
 def get_bye_secure(name, user, token_info):

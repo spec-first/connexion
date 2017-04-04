@@ -39,6 +39,16 @@ def test_produce_decorator(simple_app):
     assert get_bye.content_type == 'text/plain; charset=utf-8'
 
 
+def test_returning_flask_response_tuple(simple_app):
+    app_client = simple_app.app.test_client()
+
+    result = app_client.get('/v1.0/flask_response_tuple')  # type: flask.Response
+    assert result.status_code == 201
+    assert result.content_type == 'application/json'
+    result_data = json.loads(result.data.decode('utf-8', 'replace'))
+    assert result_data == {'foo', 'bar'}
+
+
 def test_jsonifier(simple_app):
     app_client = simple_app.app.test_client()
 
