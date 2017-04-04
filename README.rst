@@ -33,7 +33,8 @@ Connexion is a framework on top of Flask_ that automagically handles
 HTTP requests based on `OpenAPI 2.0 Specification`_ (formerly known as
 Swagger Spec) of your API described in `YAML format`_. Connexion
 allows you to write a Swagger specification, then maps the
-endpoints to your Python functions; this makes it unique, as many tools generate the specification based on your Python
+endpoints to your Python functions; this makes it unique, as many
+tools generate the specification based on your Python
 code. You can describe your REST API in as much detail as
 you want; then Connexion guarantees that it will work as
 you specified.
@@ -63,7 +64,7 @@ Why Connexion
 
 With Connexion, you write the spec first. Connexion then calls your Python
 code, handling the mapping from the specification to the code. This
-incentivizes you to write the specification so that all of your
+incentives you to write the specification so that all of your
 developers can understand what your API does, even before you write a
 single line of code.
 
@@ -91,8 +92,7 @@ In your command line, type:
 
 .. code-block:: bash
 
-    $ pip install connexion
-
+    $ pip install connexion[flask]
 
 Running It
 ----------
