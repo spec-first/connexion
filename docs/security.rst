@@ -12,7 +12,7 @@ receive the OAuth token in the ``Authorization`` header field in the
 format described in `RFC 6750 <rfc6750_>`_ section 2.1. This aspect
 represents a significant difference from the usual OAuth flow.
 
-The ``uid`` property (username) of the Token Info response will be stored in ``flask.request.user`` for convenient access.
+The ``uid`` property (username) of the Token Info response will be passed in the ``user`` argument to the handler function.
 
 You can find a `minimal OAuth example application`_ in Connexion's "examples" folder.
 
