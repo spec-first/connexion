@@ -225,8 +225,8 @@ class FlaskApi(AbstractAPI):
             return cls._build_flask_response(mimetype=mimetype, data=response)
 
     @classmethod
-    def get_request(cls, **params):
-        # type: (**Any) -> ConnexionRequest
+    def get_request(cls, *args, **params):
+        # type: (*Any, **Any) -> ConnexionRequest
         """Gets ConnexionRequest instance for the operation handler
         result. Status Code and Headers for response.  If only body
         data is returned by the endpoint function, then the status
@@ -273,7 +273,9 @@ class FlaskRequestContextProxy(object):
         self.values[key] = value
 
     def __getitem__(self, item):
+        # type: (AnyStr) -> Any
         return self.values[item]
 
     def items(self):
+        # type: () -> list
         return self.values.items()
