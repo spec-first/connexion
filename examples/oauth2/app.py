@@ -4,12 +4,11 @@ Basic example of a resource server
 '''
 
 import connexion
-import flask
 
 
-def get_secret() -> str:
-    # the token's uid will be set in request.user
-    return 'You are: {uid}'.format(uid=flask.request.user)
+def get_secret(user) -> str:
+    return 'You are: {uid}'.format(uid=user)
+
 
 if __name__ == '__main__':
     app = connexion.FlaskApp(__name__)
