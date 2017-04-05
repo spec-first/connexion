@@ -24,8 +24,8 @@ def problem(status, title, detail, type=None, instance=None, headers=None, ext=N
     :type headers: dict | None
     :param ext: Extension members to include in the body
     :type ext: dict | None
-    :return: Json serialized error response
-    :rtype: flask.Response
+    :return: error response
+    :rtype: ConnexionResponse
     """
     if not type:
         type = 'about:blank'
@@ -36,11 +36,6 @@ def problem(status, title, detail, type=None, instance=None, headers=None, ext=N
     if ext:
         problem_response.update(ext)
 
-    # We serialize here because even if the default content type is
-    # not set to JSON, which means that the
-    # `decorators.produces.Jsonifier` will not be added to the request
-    # life-cycle (so we cannot rely on that serialization), we will
-    # return a problem payload in JSON format.
     mimetype = content_type = 'application/problem+json'
     return ConnexionResponse(status, mimetype, content_type,
                              body=problem_response,

@@ -106,8 +106,8 @@ class RequestBodyValidator(object):
             if all_json(self.consumes):
                 data = request.json
 
-                # flask does not process json if the Content-Type header is not equal to "application/json"
                 if data is None and len(request.body) > 0 and not self.is_null_value_valid:
+                    # the body has contents that were not parsed as JSON
                     return problem(415,
                                    "Unsupported Media Type",
                                    "Invalid Content-type ({content_type}), expected JSON data".format(
@@ -125,10 +125,7 @@ class RequestBodyValidator(object):
         return wrapper
 
     def validate_schema(self, data, url):
-        """
-        :type data: dict
-        :rtype: flask.Response | None
-        """
+        # type: (dict, AnyStr) -> Union[ConnexionResponse, None]
         if self.is_null_value_valid and is_null(data):
             return None
 
@@ -154,10 +151,7 @@ class ResponseBodyValidator(object):
         self.validator = ValidatorClass(schema, format_checker=draft4_format_checker)
 
     def validate_schema(self, data, url):
-        """
-        :type data: dict
-        :rtype: flask.Response | None
-        """
+        # type: (dict, AnyStr) -> Union[ConnexionResponse, None]
         try:
             self.validator.validate(data)
         except ValidationError as exception:

@@ -104,7 +104,7 @@ class SecureOperation(object):
     def _request_begin_lifecycle_decorator(self):
         """
         Transforms the result of the operation handler in a internal
-        representation (connexion.decorators.ConnexionRequest) to be
+        representation (connexion.request.ConnexionRequest) to be
         used by internal Connexion decorators.
 
         :rtype: types.FunctionType
@@ -116,7 +116,7 @@ class SecureOperation(object):
         """
         Guarantees that instead of the internal representation of the
         operation handler response
-        (connexion.decorators.ConnexionRequest) a flask.Response
+        (connexion.request.ConnexionRequest) a framework specific
         object is returned.
         :rtype: types.FunctionType
         """

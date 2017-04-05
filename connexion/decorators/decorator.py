@@ -48,7 +48,7 @@ class BeginOfRequestLifecycleDecorator(BaseDecorator):
 class EndOfRequestLifecycleDecorator(BaseDecorator):
     """Manages the lifecycle of the request internally in Connexion.
     Filter the ConnexionRequest instance to return the corresponding
-    flask.Response object.
+    framework specific object.
     """
 
     def __init__(self, api, mimetype):
