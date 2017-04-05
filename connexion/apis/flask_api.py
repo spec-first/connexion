@@ -272,10 +272,6 @@ class FlaskRequestContextProxy(object):
         setattr(flask.request, key, value)
         self.values[key] = value
 
-    def __getitem__(self, item):
-        # type: (AnyStr) -> Any
-        return self.values[item]
-
     def items(self):
         # type: () -> list
         return self.values.items()
