@@ -184,7 +184,7 @@ class FlaskApi(AbstractAPI):
         flask_response = flask.current_app.response_class(**kwargs)  # type: flask.Response
 
         if status_code is not None:
-            flask_response.status = str(status_code)
+            flask_response.status_code = status_code
 
         if data is not None and data is not NoContent:
             data = cls._jsonify_data(data, mimetype)
