@@ -184,7 +184,12 @@ def parameter_to_arg(parameters, consumes, function, pythonic_params=False):
         if pythonic_params:
             kwargs = {snake_and_shadow(k): v for k, v in kwargs.items()}
 
-        kwargs.update(request.context)
+        # add context info (e.g. from security decorator)
+        for key, value in request.context.items():
+            if not has_kwargs and key not in arguments:
+                logger.debug("Context parameter '%s' not in function arguments", key)
+            else:
+                kwargs[key] = value
         return function(**kwargs)
 
     return wrapper

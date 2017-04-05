@@ -69,6 +69,9 @@ def get_flask_response_tuple():
 def get_bye_secure(name, user, token_info):
     return 'Goodbye {name} (Secure: {user})'.format(name=name, user=user)
 
+def get_bye_secure_ignoring_context(name):
+    return 'Goodbye {name} (Secure!)'.format(name=name)
+
 
 def with_problem():
     return problem(type='http://www.example.com/error',
