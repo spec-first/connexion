@@ -78,6 +78,10 @@ def test_security(oauth_requests, secure_endpoint_app):
     assert get_bye_good_auth.status_code == 200
     assert get_bye_good_auth.data == b'Goodbye hjacobs (Secure!)'
 
+    headers = {"Authorization": "Bearer 100"}
+    get_bye_from_flask = app_client.get('/v1.0/byesecure-from-flask', headers=headers)  # type: flask.Response
+    assert get_bye_from_flask.data == b'Goodbye test-user (Secure!)'
+
 
 def test_checking_that_client_token_has_all_necessary_scopes(
         oauth_requests, secure_endpoint_app):

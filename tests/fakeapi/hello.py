@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import flask
 from flask import jsonify, redirect
 
 from connexion import NoContent, ProblemException, problem
@@ -68,6 +69,11 @@ def get_flask_response_tuple():
 
 def get_bye_secure(name, user, token_info):
     return 'Goodbye {name} (Secure: {user})'.format(name=name, user=user)
+
+
+def get_bye_secure_from_flask():
+    return 'Goodbye {user} (Secure!)'.format(user=flask.request.user)
+
 
 def get_bye_secure_ignoring_context(name):
     return 'Goodbye {name} (Secure!)'.format(name=name)

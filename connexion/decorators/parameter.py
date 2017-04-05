@@ -8,6 +8,7 @@ import inflection
 import six
 
 from ..utils import all_json, boolean, is_null, is_nullable
+from ..request import ConnexionRequest
 
 try:
     import builtins
@@ -115,6 +116,7 @@ def parameter_to_arg(parameters, consumes, function, pythonic_params=False):
 
     @functools.wraps(function)
     def wrapper(request):
+        # type: (ConnexionRequest) -> Any
         logger.debug('Function Arguments: %s', arguments)
         kwargs = {}
 
@@ -186,10 +188,10 @@ def parameter_to_arg(parameters, consumes, function, pythonic_params=False):
 
         # add context info (e.g. from security decorator)
         for key, value in request.context.items():
-            if not has_kwargs and key not in arguments:
-                logger.debug("Context parameter '%s' not in function arguments", key)
-            else:
+            if has_kwargs or key in arguments:
                 kwargs[key] = value
+            else:
+                logger.debug("Context parameter '%s' not in function arguments", key)
         return function(**kwargs)
 
     return wrapper
