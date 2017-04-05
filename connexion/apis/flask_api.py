@@ -225,7 +225,8 @@ class FlaskApi(AbstractAPI):
             return cls._build_flask_response(mimetype=mimetype, data=response)
 
     @classmethod
-    def get_request(cls, **params):
+    def get_request(cls, *args, **params):
+        # type: (*Any, **Any) -> ConnexionRequest
         """Gets ConnexionRequest instance for the operation handler
         result. Status Code and Headers for response.  If only body
         data is returned by the endpoint function, then the status
@@ -234,19 +235,20 @@ class FlaskApi(AbstractAPI):
         If the returned object is a flask.Response then it will just
         pass the information needed to recreate it.
 
-        :type operation_handler_result: flask.Response | (flask.Response, int) | (flask.Response, int, dict)
         :rtype: ConnexionRequest
         """
-        request = flask.request
+        flask_request = flask.request
         request = ConnexionRequest(
-            request.url, request.method,
-            headers=request.headers,
-            form=request.form,
-            query=request.args,
-            body=request.get_data(),
-            json=request.get_json(silent=True),
-            files=request.files,
-            path_params=params
+            flask_request.url,
+            flask_request.method,
+            headers=flask_request.headers,
+            form=flask_request.form,
+            query=flask_request.args,
+            body=flask_request.get_data(),
+            json=flask_request.get_json(silent=True),
+            files=flask_request.files,
+            path_params=params,
+            context=FlaskRequestContextProxy()
         )
         logger.debug('Getting data and status code',
                      extra={
@@ -255,3 +257,21 @@ class FlaskApi(AbstractAPI):
                          'url': request.url
                      })
         return request
+
+
+class FlaskRequestContextProxy(object):
+    """"Proxy assignments from `ConnexionRequest.context`
+    to `flask.request` instance.
+    """
+    def __init__(self):
+        self.values = {}
+
+    def __setitem__(self, key, value):
+        # type: (str, Any) -> None
+        logger.debug('Setting "%s" attribute in flask.request', key)
+        setattr(flask.request, key, value)
+        self.values[key] = value
+
+    def items(self):
+        # type: () -> list
+        return self.values.items()

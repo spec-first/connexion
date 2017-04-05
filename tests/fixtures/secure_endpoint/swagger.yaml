@@ -44,6 +44,22 @@ paths:
           required: true
           type: string
 
+  /byesecure-from-flask:
+    get:
+      summary: Generate goodbye
+      description: ""
+      operationId: fakeapi.hello.get_bye_secure_from_flask
+      security:
+        - oauth:
+          - myscope
+      produces:
+        - text/plain
+      responses:
+        200:
+          description: goodbye response
+          schema:
+            type: string
+
   /byesecure-ignoring-context/{name}:
     get:
       summary: Generate goodbye
