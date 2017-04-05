@@ -6,6 +6,7 @@ import sys
 
 import six
 from jsonschema import Draft4Validator, ValidationError, draft4_format_checker
+
 from werkzeug import FileStorage
 
 from ..exceptions import ExtraParameterProblem
