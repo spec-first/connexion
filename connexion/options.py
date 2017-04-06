@@ -1,13 +1,34 @@
 import pathlib
+from typing import Optional
 
 MODULE_PATH = pathlib.Path(__file__).absolute().parent
 INTERNAL_CONSOLE_UI_PATH = MODULE_PATH / 'vendor' / 'swagger-ui'
 
 
 class ConnexionOptions(object):
-    def __init__(self, **options):
+    def __init__(self, options=None):
         self._options = {}
-        self._options.update(options)
+        if options:
+            self._options.update(options)
+
+    def extend(self, new_values=None):
+        # type: (Optional[dict]) -> ConnexionOptions
+        """
+        Return a new instance of `ConnexionOptions` using as default the currently
+        defined options.
+        """
+        if new_values is None:
+            new_values = {}
+
+        options = dict(self._options)
+        for key, value in new_values.items():
+            if value is not None:
+                options[key] = value
+
+        return ConnexionOptions(options)
+
+    def as_dict(self):
+        return self._options
 
     @property
     def openapi_spec_available(self):
@@ -42,7 +63,7 @@ class ConnexionOptions(object):
 
         Default: /ui
         """
-        return self._options('swagger_url', '/ui')
+        return self._options.get('swagger_url', '/ui')
 
     @property
     def openapi_console_ui_from_dir(self):

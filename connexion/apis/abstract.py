@@ -3,6 +3,7 @@ import copy
 import logging
 import pathlib
 import sys
+from typing import List
 
 import jinja2
 import six
@@ -12,6 +13,7 @@ from swagger_spec_validator.validator20 import validate_spec
 from ..exceptions import ResolverError
 from ..operation import Operation
 from ..resolver import Resolver
+from ..options import ConnexionOptions
 
 MODULE_PATH = pathlib.Path(__file__).absolute().parent.parent
 SWAGGER_UI_PATH = MODULE_PATH / 'vendor' / 'swagger-ui'
@@ -28,19 +30,14 @@ class AbstractAPI(object):
     Defines an abstract interface for a Swagger API
     """
 
-    def __init__(self, specification, jsonifier, base_url=None, arguments=None,
-                 swagger_json=None, swagger_ui=None, swagger_path=None, swagger_url=None,
+    def __init__(self, specification, base_url=None, arguments=None,
                  validate_responses=False, strict_validation=False, resolver=None,
                  auth_all_paths=False, debug=False, resolver_error_handler=None,
-                 validator_map=None, pythonic_params=False):
+                 validator_map=None, pythonic_params=False, options=None, **old_style_options):
         """
         :type specification: pathlib.Path | dict
         :type base_url: str | None
         :type arguments: dict | None
-        :type swagger_json: bool
-        :type swagger_ui: bool
-        :type swagger_path: string | None
-        :type swagger_url: string | None
         :type validate_responses: bool
         :type strict_validation: bool
         :type auth_all_paths: bool
@@ -54,17 +51,26 @@ class AbstractAPI(object):
         :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended
         to any shadowed built-ins
         :type pythonic_params: bool
+        :param options: New style options dictionary.
+        :type options: dict | None
+        :param old_style_options: Old style options support for backward compatibility. Preference is
+                                  what is defined in `options` parameter.
         """
         self.debug = debug
         self.validator_map = validator_map
         self.resolver_error_handler = resolver_error_handler
+
+        self.options = ConnexionOptions(old_style_options)
+        # options is added last to preserve the highest priority
+        self.options = self.options.extend(options)
+
         logger.debug('Loading specification: %s', specification,
                      extra={'swagger_yaml': specification,
                             'base_url': base_url,
                             'arguments': arguments,
-                            'swagger_ui': swagger_ui,
-                            'swagger_path': swagger_path,
-                            'swagger_url': swagger_url,
+                            'swagger_ui': self.options.openapi_console_ui_available,
+                            'swagger_path': self.options.openapi_console_ui_from_dir,
+                            'swagger_url': self.options.openapi_console_ui_path,
                             'auth_all_paths': auth_all_paths})
 
         if isinstance(specification, dict):
@@ -79,9 +85,6 @@ class AbstractAPI(object):
         # Avoid validator having ability to modify specification
         spec = copy.deepcopy(self.specification)
         validate_spec(spec)
-
-        self.swagger_path = swagger_path or SWAGGER_UI_PATH
-        self.swagger_url = swagger_url or SWAGGER_UI_URL
 
         # https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#fixed-fields
         # If base_url is not on provided then we try to read it from the swagger.yaml or use / by default
@@ -114,11 +117,10 @@ class AbstractAPI(object):
         logger.debug('Pythonic params: %s', str(pythonic_params))
         self.pythonic_params = pythonic_params
 
-        self.jsonifier = jsonifier
-
-        if swagger_json:
+        if self.options.openapi_spec_available:
             self.add_swagger_json()
-        if swagger_ui:
+
+        if self.options.openapi_console_ui_available:
             self.add_swagger_ui()
 
         self.add_paths()
@@ -288,6 +290,16 @@ class AbstractAPI(object):
 
         :type response: ConnexionResponse
         :type mimetype: str
+        """
+
+    @classmethod
+    @abc.abstractmethod
+    def json_loads(self, data):
+        """
+        API specific JSON loader.
+
+        :param data:
+        :return:
         """
 
 

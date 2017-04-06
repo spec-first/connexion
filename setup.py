@@ -31,7 +31,8 @@ install_requires = [
     'requests>=2.9.1',
     'six>=1.9',
     'swagger-spec-validator>=2.0.2',
-    'inflection>=0.3.1'
+    'inflection>=0.3.1',
+    'typing>=3.6.1'
 ]
 
 flask_require = 'flask>=0.10.1'

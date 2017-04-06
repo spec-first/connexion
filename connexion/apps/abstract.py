@@ -5,16 +5,16 @@ import pathlib
 import six
 
 from ..resolver import Resolver
+from ..options import ConnexionOptions
 
 logger = logging.getLogger('connexion.app')
 
 
 @six.add_metaclass(abc.ABCMeta)
 class AbstractApp(object):
-    def __init__(self, import_name, api_cls, port=None, specification_dir='',
+    def __init__(self, import_name, api_cls, host=None, port=None, specification_dir='',
                  server=None, arguments=None, auth_all_paths=False,
-                 debug=False, swagger_json=True, swagger_ui=True, swagger_path=None,
-                 swagger_url=None, host=None, validator_map=None):
+                 debug=False, validator_map=None, options=None, **old_style_options):
         """
         :param import_name: the name of the application package
         :type import_name: str
@@ -32,14 +32,6 @@ class AbstractApp(object):
         :type auth_all_paths: bool
         :param debug: include debugging information
         :type debug: bool
-        :param swagger_json: whether to include swagger json or not
-        :type swagger_json: bool
-        :param swagger_ui: whether to include swagger ui or not
-        :type swagger_ui: bool
-        :param swagger_path: path to swagger-ui directory
-        :type swagger_path: string | None
-        :param swagger_url: URL to access swagger-ui documentation
-        :type swagger_url: string | None
         :param validator_map: map of validators
         :type validator_map: dict
         """
@@ -48,14 +40,16 @@ class AbstractApp(object):
         self.debug = debug
         self.import_name = import_name
         self.arguments = arguments or {}
-        self.swagger_json = swagger_json
-        self.swagger_ui = swagger_ui
-        self.swagger_path = swagger_path
-        self.swagger_url = swagger_url
-        self.auth_all_paths = auth_all_paths
-        self.resolver_error = None
-        self.validator_map = validator_map
         self.api_cls = api_cls
+        self.resolver_error = None
+
+        # Options
+        self.auth_all_paths = auth_all_paths
+        self.validator_map = validator_map
+
+        self.options = ConnexionOptions(old_style_options)
+        # options is added last to preserve the highest priority
+        self.options = self.options.extend(options)
 
         self.app = self.create_app()
         self.server = server
@@ -94,10 +88,9 @@ class AbstractApp(object):
         """
 
     def add_api(self, specification, base_path=None, arguments=None,
-                auth_all_paths=None, swagger_json=None, swagger_ui=None,
-                swagger_path=None, swagger_url=None, validate_responses=False,
+                auth_all_paths=None, validate_responses=False,
                 strict_validation=False, resolver=Resolver(), resolver_error=None,
-                pythonic_params=False):
+                pythonic_params=False, options=None, **old_style_options):
         """
         Adds an API to the application based on a swagger file or API dict
 
@@ -109,14 +102,6 @@ class AbstractApp(object):
         :type arguments: dict | None
         :param auth_all_paths: whether to authenticate not defined paths
         :type auth_all_paths: bool
-        :param swagger_json: whether to include swagger json or not
-        :type swagger_json: bool
-        :param swagger_ui: whether to include swagger ui or not
-        :type swagger_ui: bool
-        :param swagger_path: path to swagger-ui directory
-        :type swagger_path: string | None
-        :param swagger_url: URL to access swagger-ui documentation
-        :type swagger_url: string | None
         :param validate_responses: True enables validation. Validation errors generate HTTP 500 responses.
         :type validate_responses: bool
         :param strict_validation: True enables validation on invalid request parameters
@@ -128,6 +113,11 @@ class AbstractApp(object):
         :type resolver_error: int | None
         :param pythonic_params: When True CamelCase parameters are converted to snake_case
         :type pythonic_params: bool
+        :param options: New style options dictionary.
+        :type options: dict | None
+        :param old_style_options: Old style options support for backward compatibility. Preference is
+                                  what is defined in `options` parameter.
+        :type old_style_options: dict
         :rtype: AbstractAPI
         """
         # Turn the resolver_error code into a handler object
@@ -138,10 +128,6 @@ class AbstractApp(object):
 
         resolver = Resolver(resolver) if hasattr(resolver, '__call__') else resolver
 
-        swagger_json = swagger_json if swagger_json is not None else self.swagger_json
-        swagger_ui = swagger_ui if swagger_ui is not None else self.swagger_ui
-        swagger_path = swagger_path if swagger_path is not None else self.swagger_path
-        swagger_url = swagger_url if swagger_url is not None else self.swagger_url
         auth_all_paths = auth_all_paths if auth_all_paths is not None else self.auth_all_paths
         # TODO test if base_url starts with an / (if not none)
         arguments = arguments or dict()
@@ -152,12 +138,16 @@ class AbstractApp(object):
         else:
             specification = self.specification_dir / specification
 
+        # Old style options have higher priority compared to the already
+        # defined options in the App class
+        api_options = self.options.extend(old_style_options)
+
+        # locally defined options are added last to preserve highest priority
+        api_options = api_options.extend(options)
+
         api = self.api_cls(specification=specification,
-                           base_url=base_path, arguments=arguments,
-                           swagger_json=swagger_json,
-                           swagger_ui=swagger_ui,
-                           swagger_path=swagger_path,
-                           swagger_url=swagger_url,
+                           base_url=base_path,
+                           arguments=arguments,
                            resolver=resolver,
                            resolver_error_handler=resolver_error_handler,
                            validate_responses=validate_responses,
@@ -165,7 +155,8 @@ class AbstractApp(object):
                            auth_all_paths=auth_all_paths,
                            debug=self.debug,
                            validator_map=self.validator_map,
-                           pythonic_params=pythonic_params)
+                           pythonic_params=pythonic_params,
+                           options=api_options.as_dict())
         return api
 
     def _resolver_error_handler(self, *args, **kwargs):

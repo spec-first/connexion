@@ -416,8 +416,8 @@ class Operation(SecureOperation):
         mimetype = self.get_mimetype()
         if all_json(self.produces):  # endpoint will return json
             logger.debug('... Produces json', extra=vars(self))
-            jsonify = self.api.jsonifier(mimetype)
-            return jsonify
+            # TODO: Refactor this.
+            return lambda f: f
 
         elif len(self.produces) == 1:
             logger.debug('... Produces %s', mimetype, extra=vars(self))
@@ -453,8 +453,9 @@ class Operation(SecureOperation):
 
     def json_loads(self, data):
         """
-        A Wrapper for calling the jsonifier.
-        :param data: The json to loads
+        A wrapper for calling the API specific JSON loader.
+
+        :param data: The JSON data in textual form.
         :type data: bytes
         """
-        return self.api.jsonifier.loads(data)
+        return self.api.json_loads(data)
