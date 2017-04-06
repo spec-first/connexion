@@ -15,35 +15,6 @@ from connexion.utils import is_json_mimetype
 logger = logging.getLogger('connexion.apis.flask_api')
 
 
-class Jsonifier(BaseSerializer):
-    @staticmethod
-    def dumps(data):
-        """ Central point where JSON serialization happens inside
-        Connexion.
-        """
-        return "{}\n".format(flask.json.dumps(data, indent=2))
-
-    @staticmethod
-    def loads(data):
-        """ Central point where JSON serialization happens inside
-        Connexion.
-        """
-        if isinstance(data, six.binary_type):
-            data = data.decode()
-
-        try:
-            return flask.json.loads(data)
-        except Exception as error:
-            if isinstance(data, six.string_types):
-                return data
-
-    def __repr__(self):
-        """
-        :rtype: str
-        """
-        return '<Jsonifier: {}>'.format(self.mimetype)
-
-
 class FlaskApi(AbstractAPI):
     jsonifier = Jsonifier
 
@@ -275,3 +246,33 @@ class FlaskRequestContextProxy(object):
     def items(self):
         # type: () -> list
         return self.values.items()
+
+
+class Jsonifier(BaseSerializer):
+    @staticmethod
+    def dumps(data):
+        """ Central point where JSON serialization happens inside
+        Connexion.
+        """
+        return "{}\n".format(flask.json.dumps(data, indent=2))
+
+    @staticmethod
+    def loads(data):
+        """ Central point where JSON serialization happens inside
+        Connexion.
+        """
+        if isinstance(data, six.binary_type):
+            data = data.decode()
+
+        try:
+            return flask.json.loads(data)
+        except Exception as error:
+            if isinstance(data, six.string_types):
+                return data
+
+    def __repr__(self):
+        """
+        :rtype: str
+        """
+        return '<Jsonifier: {}>'.format(self.mimetype)
+
