@@ -7,7 +7,7 @@ import re
 import inflection
 import six
 
-from ..request import ConnexionRequest  # NOQA
+from ..lifecycle import ConnexionRequest  # NOQA
 from ..utils import all_json, boolean, is_null, is_nullable
 
 try:

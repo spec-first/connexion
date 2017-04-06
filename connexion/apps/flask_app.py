@@ -57,11 +57,8 @@ class FlaskApp(AbstractApp):
 
             response = problem(title=exception.name, detail=exception.description,
                                status=exception.code)
-            kwargs = {attr_name: getattr(response, attr_name) for attr_name in response._fields}
-            response = type(response)(**kwargs)
 
-        response = FlaskApi.get_response(response)
-        return response
+        return FlaskApi.get_response(response)
 
     def add_api(self, specification, base_path=None, arguments=None,
                 auth_all_paths=None, swagger_json=None, swagger_ui=None,

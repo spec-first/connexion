@@ -1,4 +1,4 @@
-from .response import ConnexionResponse
+from .lifecycle import ConnexionResponse
 
 
 def problem(status, title, detail, type=None, instance=None, headers=None, ext=None):
