@@ -9,6 +9,7 @@ from .resolver import Resolution, Resolver, RestyResolver  # NOQA
 try:
     from .apis.flask_api import FlaskApi
     from .apps.flask_app import FlaskApp
+    from flask import request  # NOQA
 except ImportError as e:  # pragma: no cover
     import sys
     import six
@@ -17,8 +18,10 @@ except ImportError as e:  # pragma: no cover
     def _required_lib(exec_info, *args, **kwargs):
         six.reraise(*exec_info)
 
-    FlaskApi = functools.partial(_required_lib, sys.exc_info())
-    FlaskApp = functools.partial(_required_lib, sys.exc_info())
+    _flask_not_installed_error = functools.partial(_required_lib, sys.exc_info())
+
+    FlaskApi = _flask_not_installed_error
+    FlaskApp = _flask_not_installed_error
 
 App = FlaskApp
 Api = FlaskApi
