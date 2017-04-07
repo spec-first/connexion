@@ -4,8 +4,8 @@ import pathlib
 
 import six
 
-from ..resolver import Resolver
 from ..options import ConnexionOptions
+from ..resolver import Resolver
 
 logger = logging.getLogger('connexion.app')
 

@@ -3,7 +3,7 @@ import copy
 import logging
 import pathlib
 import sys
-from typing import List, AnyStr
+from typing import AnyStr, List
 
 import jinja2
 import six
@@ -12,8 +12,8 @@ from swagger_spec_validator.validator20 import validate_spec
 
 from ..exceptions import ResolverError
 from ..operation import Operation
-from ..resolver import Resolver
 from ..options import ConnexionOptions
+from ..resolver import Resolver
 
 MODULE_PATH = pathlib.Path(__file__).absolute().parent.parent
 SWAGGER_UI_PATH = MODULE_PATH / 'vendor' / 'swagger-ui'
@@ -330,4 +330,3 @@ def compatibility_layer(spec):
 
             method_def['responses'] = response_definitions
     return spec
-
