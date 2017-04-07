@@ -1,5 +1,5 @@
 import pathlib
-from typing import Optional
+from typing import Optional  # NOQA
 
 MODULE_PATH = pathlib.Path(__file__).absolute().parent
 INTERNAL_CONSOLE_UI_PATH = MODULE_PATH / 'vendor' / 'swagger-ui'

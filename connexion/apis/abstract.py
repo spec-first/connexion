@@ -3,7 +3,7 @@ import copy
 import logging
 import pathlib
 import sys
-from typing import AnyStr, List
+from typing import AnyStr, List  # NOQA
 
 import jinja2
 import six
