@@ -9,10 +9,7 @@ class ConnexionOptions(object):
     def __init__(self, options=None):
         self._options = {}
         if options:
-            values = dict([(key, value)
-                           for key, value in options.items()
-                           if value is not None])
-            self._options.update(values)
+            self._options.update(filter_values(options))
 
     def extend(self, new_values=None):
         # type: (Optional[dict]) -> ConnexionOptions
@@ -24,10 +21,7 @@ class ConnexionOptions(object):
             new_values = {}
 
         options = dict(self._options)
-        for key, value in new_values.items():
-            if value is not None:
-                options[key] = value
-
+        options.update(filter_values(new_values))
         return ConnexionOptions(options)
 
     def as_dict(self):
@@ -78,3 +72,16 @@ class ConnexionOptions(object):
         Default: Connexion's vendored version of the OpenAPI Console UI.
         """
         return self._options.get('swagger_path', INTERNAL_CONSOLE_UI_PATH)
+
+
+def filter_values(dictionary):
+    # type: (dict) -> dict
+    """
+    Remove `None` value entries in the dictionary.
+
+    :param dictionary:
+    :return:
+    """
+    return dict([(key, value)
+                 for key, value in dictionary.items()
+                 if value is not None])
