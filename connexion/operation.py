@@ -401,7 +401,7 @@ class Operation(SecureOperation):
 
         If the operation mimetype format is json then the function return value is jsonified
 
-        From Swagger Specfication:
+        From Swagger Specification:
 
         **Produces**
 

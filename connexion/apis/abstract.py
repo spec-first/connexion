@@ -3,7 +3,7 @@ import copy
 import logging
 import pathlib
 import sys
-from typing import List
+from typing import List, AnyStr
 
 import jinja2
 import six
@@ -30,13 +30,13 @@ class AbstractAPI(object):
     Defines an abstract interface for a Swagger API
     """
 
-    def __init__(self, specification, base_url=None, arguments=None,
+    def __init__(self, specification, base_path=None, arguments=None,
                  validate_responses=False, strict_validation=False, resolver=None,
                  auth_all_paths=False, debug=False, resolver_error_handler=None,
                  validator_map=None, pythonic_params=False, options=None, **old_style_options):
         """
         :type specification: pathlib.Path | dict
-        :type base_url: str | None
+        :type base_path: str | None
         :type arguments: dict | None
         :type validate_responses: bool
         :type strict_validation: bool
@@ -66,7 +66,7 @@ class AbstractAPI(object):
 
         logger.debug('Loading specification: %s', specification,
                      extra={'swagger_yaml': specification,
-                            'base_url': base_url,
+                            'base_path': base_path,
                             'arguments': arguments,
                             'swagger_ui': self.options.openapi_console_ui_available,
                             'swagger_path': self.options.openapi_console_ui_from_dir,
@@ -87,8 +87,8 @@ class AbstractAPI(object):
         validate_spec(spec)
 
         # https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#fixed-fields
-        # If base_url is not on provided then we try to read it from the swagger.yaml or use / by default
-        self._set_base_url(base_url)
+        # If base_path is not on provided then we try to read it from the swagger.yaml or use / by default
+        self._set_base_path(base_path)
 
         # A list of MIME types the APIs can produce. This is global to all APIs but can be overridden on specific
         # API calls.
@@ -128,23 +128,24 @@ class AbstractAPI(object):
         if auth_all_paths:
             self.add_auth_on_not_found(self.security, self.security_definitions)
 
-    def _set_base_url(self, base_url):
-        if base_url is None:
-            self.base_url = canonical_base_url(self.specification.get('basePath', ''))
+    def _set_base_path(self, base_path):
+        # type: (AnyStr) -> None
+        if base_path is None:
+            self.base_path = canonical_base_path(self.specification.get('basePath', ''))
         else:
-            self.base_url = canonical_base_url(base_url)
-            self.specification['basePath'] = base_url
+            self.base_path = canonical_base_path(base_path)
+            self.specification['basePath'] = base_path
 
     @abc.abstractmethod
     def add_swagger_json(self):
         """
-        Adds swagger json to {base_url}/swagger.json
+        Adds swagger json to {base_path}/swagger.json
         """
 
     @abc.abstractmethod
     def add_swagger_ui(self):
         """
-        Adds swagger ui to {base_url}/ui/
+        Adds swagger ui to {base_path}/ui/
         """
 
     @abc.abstractmethod
@@ -223,7 +224,7 @@ class AbstractAPI(object):
         """
         paths = paths or self.specification.get('paths', dict())
         for path, methods in paths.items():
-            logger.debug('Adding %s%s...', self.base_url, path)
+            logger.debug('Adding %s%s...', self.base_path, path)
 
             # search for parameters definitions in the path level
             # http://swagger.io/specification/#pathItemObject
@@ -249,7 +250,7 @@ class AbstractAPI(object):
                     self._handle_add_operation_error(path, method, sys.exc_info())
 
     def _handle_add_operation_error(self, path, method, exc_info):
-        url = '{base_url}{path}'.format(base_url=self.base_url, path=path)
+        url = '{base_path}{path}'.format(base_path=self.base_path, path=path)
         error_msg = 'Failed to add operation for {method} {url}'.format(
             method=method.upper(),
             url=url)
@@ -303,7 +304,7 @@ class AbstractAPI(object):
         """
 
 
-def canonical_base_url(base_path):
+def canonical_base_path(base_path):
     """
     Make given "basePath" a canonical base URL which can be prepended to paths starting with "/".
     """

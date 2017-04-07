@@ -12,9 +12,9 @@ logger = logging.getLogger('connexion.app')
 
 @six.add_metaclass(abc.ABCMeta)
 class AbstractApp(object):
-    def __init__(self, import_name, api_cls, host=None, port=None, specification_dir='',
-                 server=None, arguments=None, auth_all_paths=False,
-                 debug=False, validator_map=None, options=None, **old_style_options):
+    def __init__(self, import_name, api_cls, port=None, specification_dir='',
+                 host=None, server=None, arguments=None, auth_all_paths=False, debug=False,
+                 validator_map=None, options=None, **old_style_options):
         """
         :param import_name: the name of the application package
         :type import_name: str
@@ -49,7 +49,7 @@ class AbstractApp(object):
 
         self.options = ConnexionOptions(old_style_options)
         # options is added last to preserve the highest priority
-        self.options = self.options.extend(options)
+        self.options = self.options.extend(options)  # type: ConnexionOptions
 
         self.app = self.create_app()
         self.server = server
@@ -129,7 +129,7 @@ class AbstractApp(object):
         resolver = Resolver(resolver) if hasattr(resolver, '__call__') else resolver
 
         auth_all_paths = auth_all_paths if auth_all_paths is not None else self.auth_all_paths
-        # TODO test if base_url starts with an / (if not none)
+        # TODO test if base_path starts with an / (if not none)
         arguments = arguments or dict()
         arguments = dict(self.arguments, **arguments)  # copy global arguments and update with api specfic
 
@@ -145,8 +145,8 @@ class AbstractApp(object):
         # locally defined options are added last to preserve highest priority
         api_options = api_options.extend(options)
 
-        api = self.api_cls(specification=specification,
-                           base_url=base_path,
+        api = self.api_cls(specification,
+                           base_path=base_path,
                            arguments=arguments,
                            resolver=resolver,
                            resolver_error_handler=resolver_error_handler,

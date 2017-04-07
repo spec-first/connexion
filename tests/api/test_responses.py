@@ -8,18 +8,21 @@ def test_app(simple_app):
     assert simple_app.port == 5001
 
     app_client = simple_app.app.test_client()
+
+    # by default the Swagger UI is enabled
     swagger_ui = app_client.get('/v1.0/ui/')  # type: flask.Response
     assert swagger_ui.status_code == 200
     assert b"Swagger UI" in swagger_ui.data
 
+    # test return Swagger UI static files
     swagger_icon = app_client.get('/v1.0/ui/images/favicon.ico')  # type: flask.Response
     assert swagger_icon.status_code == 200
 
     post_greeting = app_client.post('/v1.0/greeting/jsantos', data={})  # type: flask.Response
     assert post_greeting.status_code == 200
     assert post_greeting.content_type == 'application/json'
-    greeting_reponse = json.loads(post_greeting.data.decode('utf-8'))
-    assert greeting_reponse['greeting'] == 'Hello jsantos'
+    greeting_response = json.loads(post_greeting.data.decode('utf-8'))
+    assert greeting_response['greeting'] == 'Hello jsantos'
 
     get_bye = app_client.get('/v1.0/bye/jsantos')  # type: flask.Response
     assert get_bye.status_code == 200
@@ -28,8 +31,8 @@ def test_app(simple_app):
     post_greeting = app_client.post('/v1.0/greeting/jsantos', data={})  # type: flask.Response
     assert post_greeting.status_code == 200
     assert post_greeting.content_type == 'application/json'
-    greeting_reponse = json.loads(post_greeting.data.decode('utf-8'))
-    assert greeting_reponse['greeting'] == 'Hello jsantos'
+    greeting_response = json.loads(post_greeting.data.decode('utf-8'))
+    assert greeting_response['greeting'] == 'Hello jsantos'
 
 
 def test_produce_decorator(simple_app):

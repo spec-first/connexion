@@ -6,7 +6,7 @@ import werkzeug.exceptions
 
 from connexion.apis import flask_utils
 from connexion.apis.abstract import AbstractAPI
-from connexion.decorators.produces import BaseSerializer, NoContent
+from connexion.decorators.produces import NoContent
 from connexion.handlers import AuthErrorHandler
 from connexion.request import ConnexionRequest
 from connexion.response import ConnexionResponse
@@ -16,15 +16,15 @@ logger = logging.getLogger('connexion.apis.flask_api')
 
 
 class FlaskApi(AbstractAPI):
-    def _set_base_url(self, base_url):
-        super(FlaskApi, self)._set_base_url(base_url)
+    def _set_base_path(self, base_path):
+        super(FlaskApi, self)._set_base_path(base_path)
         self._set_blueprint()
 
     def _set_blueprint(self):
-        logger.debug('Creating API blueprint: %s', self.base_url)
-        endpoint = flask_utils.flaskify_endpoint(self.base_url)
-        self.blueprint = flask.Blueprint(endpoint, __name__, url_prefix=self.base_url,
-                                         template_folder=self.options.openapi_console_ui_from_dir)
+        logger.debug('Creating API blueprint: %s', self.base_path)
+        endpoint = flask_utils.flaskify_endpoint(self.base_path)
+        self.blueprint = flask.Blueprint(endpoint, __name__, url_prefix=self.base_path,
+                                         template_folder=str(self.options.openapi_console_ui_from_dir))
 
     def json_loads(self, data):
         """
@@ -34,9 +34,9 @@ class FlaskApi(AbstractAPI):
 
     def add_swagger_json(self):
         """
-        Adds swagger json to {base_url}/swagger.json
+        Adds swagger json to {base_path}/swagger.json
         """
-        logger.debug('Adding swagger.json: %s/swagger.json', self.base_url)
+        logger.debug('Adding swagger.json: %s/swagger.json', self.base_path)
         endpoint_name = "{name}_swagger_json".format(name=self.blueprint.name)
         self.blueprint.add_url_rule('/swagger.json',
                                     endpoint_name,
@@ -44,20 +44,25 @@ class FlaskApi(AbstractAPI):
 
     def add_swagger_ui(self):
         """
-        Adds swagger ui to {base_url}/ui/
+        Adds swagger ui to {base_path}/ui/
         """
         logger.debug('Adding swagger-ui: %s/%s/',
-                     self.base_url,
+                     self.base_path,
                      self.options.openapi_console_ui_path)
 
         static_endpoint_name = "{name}_swagger_ui_static".format(name=self.blueprint.name)
-        self.blueprint.add_url_rule('/{swagger_url}/<path:filename>'.format(
-            swagger_url=self.options.openapi_console_ui_path),
-            static_endpoint_name,
-            self._handlers.console_ui_static_files)
+        static_files_url = '/{swagger_url}/<path:filename>'.format(
+            swagger_url=self.options.openapi_console_ui_path.strip('/'))
+
+        self.blueprint.add_url_rule(static_files_url,
+                                    static_endpoint_name,
+                                    self._handlers.console_ui_static_files)
 
         index_endpoint_name = "{name}_swagger_ui_index".format(name=self.blueprint.name)
-        self.blueprint.add_url_rule('/{swagger_url}/'.format(swagger_url=self.options.openapi_console_ui_path),
+        console_ui_url = '/{swagger_url}/'.format(
+            swagger_url=self.options.openapi_console_ui_path.strip('/'))
+
+        self.blueprint.add_url_rule(console_ui_url,
                                     index_endpoint_name,
                                     self._handlers.console_ui_home)
 
@@ -86,7 +91,7 @@ class FlaskApi(AbstractAPI):
     def _handlers(self):
         # type: () -> InternalHandlers
         if not hasattr(self, '_internal_handlers'):
-            self._internal_handlers = InternalHandlers(self.base_url, self.options)
+            self._internal_handlers = InternalHandlers(self.base_path, self.options)
         return self._internal_handlers
 
     @classmethod
@@ -156,7 +161,7 @@ class FlaskApi(AbstractAPI):
             flask_response.set_data(data)
 
         elif data is NoContent:
-                flask_response.set_data('')
+            flask_response.set_data('')
 
         return flask_response
 
@@ -228,6 +233,7 @@ class FlaskRequestContextProxy(object):
     """"Proxy assignments from `ConnexionRequest.context`
     to `flask.request` instance.
     """
+
     def __init__(self):
         self.values = {}
 
@@ -270,8 +276,8 @@ class InternalHandlers(object):
     Flask handlers for internally registered endpoints.
     """
 
-    def __init__(self, base_url, options):
-        self.base_url = base_url
+    def __init__(self, base_path, options):
+        self.base_path = base_path
         self.options = options
 
     def console_ui_home(self):
@@ -280,7 +286,7 @@ class InternalHandlers(object):
 
         :return:
         """
-        return flask.render_template('index.html', api_url=self.base_url)
+        return flask.render_template('index.html', api_url=self.base_path)
 
     def console_ui_static_files(self, filename):
         """
@@ -289,5 +295,6 @@ class InternalHandlers(object):
         :param filename: Requested file contents.
         :return:
         """
-        return flask.send_from_directory(self.options.openapi_console_ui_from_dir, filename)
-
+        # convert PosixPath to str
+        static_dir = str(self.options.openapi_console_ui_from_dir)
+        return flask.send_from_directory(static_dir, filename)

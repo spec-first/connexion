@@ -4,8 +4,8 @@ from connexion import FlaskApp
 
 
 def test_security_over_inexistent_endpoints(oauth_requests, secure_api_spec_dir):
-    app1 = FlaskApp(__name__, 5001, secure_api_spec_dir, swagger_ui=False,
-               debug=True, auth_all_paths=True)
+    app1 = FlaskApp(__name__, port=5001, specification_dir=secure_api_spec_dir,
+                    swagger_ui=False, debug=True, auth_all_paths=True)
     app1.add_api('swagger.yaml')
     assert app1.port == 5001
 
@@ -74,7 +74,8 @@ def test_security(oauth_requests, secure_endpoint_app):
     assert response.status_code == 200
 
     headers = {"Authorization": "Bearer 100"}
-    get_bye_good_auth = app_client.get('/v1.0/byesecure-ignoring-context/hjacobs', headers=headers)  # type: flask.Response
+    get_bye_good_auth = app_client.get('/v1.0/byesecure-ignoring-context/hjacobs',
+                                       headers=headers)  # type: flask.Response
     assert get_bye_good_auth.status_code == 200
     assert get_bye_good_auth.data == b'Goodbye hjacobs (Secure!)'
 

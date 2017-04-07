@@ -9,7 +9,10 @@ class ConnexionOptions(object):
     def __init__(self, options=None):
         self._options = {}
         if options:
-            self._options.update(options)
+            values = dict([(key, value)
+                           for key, value in options.items()
+                           if value is not None])
+            self._options.update(values)
 
     def extend(self, new_values=None):
         # type: (Optional[dict]) -> ConnexionOptions
