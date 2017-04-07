@@ -104,7 +104,7 @@ class SecureOperation(object):
     def _request_begin_lifecycle_decorator(self):
         """
         Transforms the result of the operation handler in a internal
-        representation (connexion.request.ConnexionRequest) to be
+        representation (connexion.lifecycle.ConnexionRequest) to be
         used by internal Connexion decorators.
 
         :rtype: types.FunctionType
@@ -116,7 +116,7 @@ class SecureOperation(object):
         """
         Guarantees that instead of the internal representation of the
         operation handler response
-        (connexion.request.ConnexionRequest) a framework specific
+        (connexion.lifecycle.ConnexionRequest) a framework specific
         object is returned.
         :rtype: types.FunctionType
         """

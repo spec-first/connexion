@@ -8,8 +8,7 @@ from connexion.apis import flask_utils
 from connexion.apis.abstract import AbstractAPI
 from connexion.decorators.produces import BaseSerializer, NoContent
 from connexion.handlers import AuthErrorHandler
-from connexion.request import ConnexionRequest
-from connexion.response import ConnexionResponse
+from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.utils import is_json_mimetype
 
 logger = logging.getLogger('connexion.apis.flask_api')

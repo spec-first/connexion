@@ -3,6 +3,7 @@
 import flask
 from flask import jsonify, redirect
 
+import connexion
 from connexion import NoContent, ProblemException, problem
 
 
@@ -73,6 +74,10 @@ def get_bye_secure(name, user, token_info):
 
 def get_bye_secure_from_flask():
     return 'Goodbye {user} (Secure!)'.format(user=flask.request.user)
+
+
+def get_bye_secure_from_connexion():
+    return 'Goodbye {user} (Secure!)'.format(user=connexion.request.user)
 
 
 def get_bye_secure_ignoring_context(name):
