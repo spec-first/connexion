@@ -18,7 +18,7 @@ Customizing JSON encoder
 Connexion allows you to customize the `JSONEncoder` class in the Flask app
 instance `json_encoder` (`connexion.App:app`). If you wanna reuse the
 Connexion's date-time serialization, inherit your custom encoder from
-`connexion.decorators.produces.JSONEncoder`.
+`connexion.apps.flask_app.FlaskJSONEncoder`.
 
 Returning status codes
 ----------------------
