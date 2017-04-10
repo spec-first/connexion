@@ -10,6 +10,7 @@ import pytest
 from connexion import FlaskApi
 from connexion.apis.abstract import canonical_base_path
 from connexion.exceptions import InvalidSpecification, ResolverError
+from mock import MagicMock
 
 TEST_FOLDER = pathlib.Path(__file__).parent
 
@@ -133,3 +134,16 @@ def test_validation_error_on_completely_invalid_swagger_spec():
             f.write('[1]\n'.encode())
             f.flush()
             FlaskApi(pathlib.Path(f.name), base_path="/api/v1.0")
+
+
+@pytest.fixture
+def mock_api_logger(monkeypatch):
+    mocked_logger = MagicMock(name='mocked_logger')
+    monkeypatch.setattr('connexion.apis.abstract.logger', mocked_logger)
+    return mocked_logger
+
+
+def test_warn_users_about_base_url_parameter_name_change(mock_api_logger):
+    FlaskApi(TEST_FOLDER / "fixtures/simple/swagger.yaml", base_url="/api/v1")
+    mock_api_logger.warning.assert_called_with(
+        'Parameter base_url should be no longer used. Use base_path instead.')

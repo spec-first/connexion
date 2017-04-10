@@ -21,7 +21,7 @@ SWAGGER_UI_URL = 'ui'
 
 RESOLVER_ERROR_ENDPOINT_RANDOM_DIGITS = 6
 
-logger = logging.getLogger('connexion.apis')
+logger = logging.getLogger('connexion.apis.abstract')
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -63,6 +63,11 @@ class AbstractAPI(object):
         self.options = ConnexionOptions(old_style_options)
         # options is added last to preserve the highest priority
         self.options = self.options.extend(options)
+
+        # TODO: Remove this in later versions (Current version is 1.1.9)
+        if base_path is None and 'base_url' in old_style_options:
+            base_path = old_style_options['base_url']
+            logger.warning("Parameter base_url should be no longer used. Use base_path instead.")
 
         logger.debug('Loading specification: %s', specification,
                      extra={'swagger_yaml': specification,

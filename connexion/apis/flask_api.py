@@ -46,13 +46,14 @@ class FlaskApi(AbstractAPI):
         """
         Adds swagger ui to {base_path}/ui/
         """
+        console_ui_path = self.options.openapi_console_ui_path.strip('/')
         logger.debug('Adding swagger-ui: %s/%s/',
                      self.base_path,
-                     self.options.openapi_console_ui_path)
+                     console_ui_path)
 
         static_endpoint_name = "{name}_swagger_ui_static".format(name=self.blueprint.name)
-        static_files_url = '/{swagger_url}/<path:filename>'.format(
-            swagger_url=self.options.openapi_console_ui_path.strip('/'))
+        static_files_url = '/{console_ui_path}/<path:filename>'.format(
+            console_ui_path=console_ui_path)
 
         self.blueprint.add_url_rule(static_files_url,
                                     static_endpoint_name,
