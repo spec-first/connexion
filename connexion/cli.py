@@ -6,6 +6,7 @@ import click
 from clickclick import AliasedGroup, fatal_error
 
 import connexion
+import connexion.apps.falcon_app
 from connexion.mock import MockResolver
 
 logger = logging.getLogger('connexion.cli')
@@ -128,7 +129,7 @@ def run(spec_file,
         resolver = MockResolver(mock_all=mock == 'all')
         api_extra_args['resolver'] = resolver
 
-    app = connexion.FlaskApp(__name__,
+    app = connexion.apps.falcon_app.FalconApp(__name__,
                              swagger_json=not hide_spec,
                              swagger_ui=not hide_console_ui,
                              swagger_path=console_ui_from or None,
