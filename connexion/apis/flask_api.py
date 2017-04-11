@@ -6,7 +6,7 @@ import werkzeug.exceptions
 
 from connexion.apis import flask_utils
 from connexion.apis.abstract import AbstractAPI
-from connexion.decorators.produces import BaseSerializer, NoContent
+from connexion.decorators.produces import NoContent
 from connexion.handlers import AuthErrorHandler
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.utils import is_json_mimetype
@@ -14,68 +14,28 @@ from connexion.utils import is_json_mimetype
 logger = logging.getLogger('connexion.apis.flask_api')
 
 
-class Jsonifier(BaseSerializer):
-    @staticmethod
-    def dumps(data):
-        """ Central point where JSON serialization happens inside
-        Connexion.
-        """
-        return "{}\n".format(flask.json.dumps(data, indent=2))
-
-    @staticmethod
-    def loads(data):
-        """ Central point where JSON serialization happens inside
-        Connexion.
-        """
-        if isinstance(data, six.binary_type):
-            data = data.decode()
-
-        try:
-            return flask.json.loads(data)
-        except Exception as error:
-            if isinstance(data, six.string_types):
-                return data
-
-    def __repr__(self):
-        """
-        :rtype: str
-        """
-        return '<Jsonifier: {}>'.format(self.mimetype)
-
-
 class FlaskApi(AbstractAPI):
-    jsonifier = Jsonifier
-
-    def __init__(self, specification, base_url=None, arguments=None,
-                 swagger_json=None, swagger_ui=None, swagger_path=None, swagger_url=None,
-                 validate_responses=False, strict_validation=False, resolver=None,
-                 auth_all_paths=False, debug=False, resolver_error_handler=None,
-                 validator_map=None, pythonic_params=False):
-        super(FlaskApi, self).__init__(
-            specification, FlaskApi.jsonifier, base_url=base_url, arguments=arguments,
-            swagger_json=swagger_json, swagger_ui=swagger_ui,
-            swagger_path=swagger_path, swagger_url=swagger_url,
-            validate_responses=validate_responses, strict_validation=strict_validation,
-            resolver=resolver, auth_all_paths=auth_all_paths, debug=debug,
-            resolver_error_handler=resolver_error_handler, validator_map=validator_map,
-            pythonic_params=pythonic_params
-        )
-
-    def _set_base_url(self, base_url):
-        super(FlaskApi, self)._set_base_url(base_url)
+    def _set_base_path(self, base_path):
+        super(FlaskApi, self)._set_base_path(base_path)
         self._set_blueprint()
 
     def _set_blueprint(self):
-        logger.debug('Creating API blueprint: %s', self.base_url)
-        endpoint = flask_utils.flaskify_endpoint(self.base_url)
-        self.blueprint = flask.Blueprint(endpoint, __name__, url_prefix=self.base_url,
-                                         template_folder=str(self.swagger_path))
+        logger.debug('Creating API blueprint: %s', self.base_path)
+        endpoint = flask_utils.flaskify_endpoint(self.base_path)
+        self.blueprint = flask.Blueprint(endpoint, __name__, url_prefix=self.base_path,
+                                         template_folder=str(self.options.openapi_console_ui_from_dir))
+
+    def json_loads(self, data):
+        """
+        Use Flask specific JSON loader
+        """
+        return Jsonifier.loads(data)
 
     def add_swagger_json(self):
         """
-        Adds swagger json to {base_url}/swagger.json
+        Adds swagger json to {base_path}/swagger.json
         """
-        logger.debug('Adding swagger.json: %s/swagger.json', self.base_url)
+        logger.debug('Adding swagger.json: %s/swagger.json', self.base_path)
         endpoint_name = "{name}_swagger_json".format(name=self.blueprint.name)
         self.blueprint.add_url_rule('/swagger.json',
                                     endpoint_name,
@@ -83,24 +43,28 @@ class FlaskApi(AbstractAPI):
 
     def add_swagger_ui(self):
         """
-        Adds swagger ui to {base_url}/ui/
+        Adds swagger ui to {base_path}/ui/
         """
-        logger.debug('Adding swagger-ui: %s/%s/', self.base_url, self.swagger_url)
+        console_ui_path = self.options.openapi_console_ui_path.strip('/')
+        logger.debug('Adding swagger-ui: %s/%s/',
+                     self.base_path,
+                     console_ui_path)
+
         static_endpoint_name = "{name}_swagger_ui_static".format(name=self.blueprint.name)
-        self.blueprint.add_url_rule('/{swagger_url}/<path:filename>'.format(swagger_url=self.swagger_url),
-                                    static_endpoint_name, self.swagger_ui_static)
+        static_files_url = '/{console_ui_path}/<path:filename>'.format(
+            console_ui_path=console_ui_path)
+
+        self.blueprint.add_url_rule(static_files_url,
+                                    static_endpoint_name,
+                                    self._handlers.console_ui_static_files)
+
         index_endpoint_name = "{name}_swagger_ui_index".format(name=self.blueprint.name)
-        self.blueprint.add_url_rule('/{swagger_url}/'.format(swagger_url=self.swagger_url),
-                                    index_endpoint_name, self.swagger_ui_index)
+        console_ui_url = '/{swagger_url}/'.format(
+            swagger_url=self.options.openapi_console_ui_path.strip('/'))
 
-    def swagger_ui_index(self):
-        return flask.render_template('index.html', api_url=self.base_url)
-
-    def swagger_ui_static(self, filename):
-        """
-        :type filename: str
-        """
-        return flask.send_from_directory(str(self.swagger_path), filename)
+        self.blueprint.add_url_rule(console_ui_url,
+                                    index_endpoint_name,
+                                    self._handlers.console_ui_home)
 
     def add_auth_on_not_found(self, security, security_definitions):
         """
@@ -122,6 +86,13 @@ class FlaskApi(AbstractAPI):
                                                       operation.randomize_endpoint)
         function = operation.function
         self.blueprint.add_url_rule(flask_path, endpoint_name, function, methods=[method])
+
+    @property
+    def _handlers(self):
+        # type: () -> InternalHandlers
+        if not hasattr(self, '_internal_handlers'):
+            self._internal_handlers = InternalHandlers(self.base_path, self.options)
+        return self._internal_handlers
 
     @classmethod
     def get_response(cls, response, mimetype=None, request=None):
@@ -190,7 +161,7 @@ class FlaskApi(AbstractAPI):
             flask_response.set_data(data)
 
         elif data is NoContent:
-                flask_response.set_data('')
+            flask_response.set_data('')
 
         return flask_response
 
@@ -198,7 +169,7 @@ class FlaskApi(AbstractAPI):
     def _jsonify_data(cls, data, mimetype):
         if (isinstance(mimetype, six.string_types) and is_json_mimetype(mimetype)) \
                 or not (isinstance(data, six.binary_type) or isinstance(data, six.text_type)):
-            return cls.jsonifier.dumps(data)
+            return Jsonifier.dumps(data)
 
         return data
 
@@ -262,6 +233,7 @@ class FlaskRequestContextProxy(object):
     """"Proxy assignments from `ConnexionRequest.context`
     to `flask.request` instance.
     """
+
     def __init__(self):
         self.values = {}
 
@@ -274,3 +246,55 @@ class FlaskRequestContextProxy(object):
     def items(self):
         # type: () -> list
         return self.values.items()
+
+
+class Jsonifier(object):
+    @staticmethod
+    def dumps(data):
+        """ Central point where JSON serialization happens inside
+        Connexion.
+        """
+        return "{}\n".format(flask.json.dumps(data, indent=2))
+
+    @staticmethod
+    def loads(data):
+        """ Central point where JSON serialization happens inside
+        Connexion.
+        """
+        if isinstance(data, six.binary_type):
+            data = data.decode()
+
+        try:
+            return flask.json.loads(data)
+        except Exception as error:
+            if isinstance(data, six.string_types):
+                return data
+
+
+class InternalHandlers(object):
+    """
+    Flask handlers for internally registered endpoints.
+    """
+
+    def __init__(self, base_path, options):
+        self.base_path = base_path
+        self.options = options
+
+    def console_ui_home(self):
+        """
+        Home page of the OpenAPI Console UI.
+
+        :return:
+        """
+        return flask.render_template('index.html', api_url=self.base_path)
+
+    def console_ui_static_files(self, filename):
+        """
+        Servers the static files for the OpenAPI Console UI.
+
+        :param filename: Requested file contents.
+        :return:
+        """
+        # convert PosixPath to str
+        static_dir = str(self.options.openapi_console_ui_from_dir)
+        return flask.send_from_directory(static_dir, filename)

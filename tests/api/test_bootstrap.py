@@ -3,13 +3,14 @@ import yaml
 
 import pytest
 from conftest import TEST_FOLDER, build_app_from_fixture
-from connexion import FlaskApp
+from connexion import App
 from connexion.exceptions import InvalidSpecification
 
 
 def test_app_with_relative_path(simple_api_spec_dir):
-    # Create the app with a realative path and run the test_app testcase below.
-    app = FlaskApp(__name__, 5001, '..' / simple_api_spec_dir.relative_to(TEST_FOLDER),
+    # Create the app with a relative path and run the test_app testcase below.
+    app = App(__name__, port=5001,
+              specification_dir='..' / simple_api_spec_dir.relative_to(TEST_FOLDER),
               debug=True)
     app.add_api('swagger.yaml')
 
@@ -20,14 +21,15 @@ def test_app_with_relative_path(simple_api_spec_dir):
 
 
 def test_no_swagger_ui(simple_api_spec_dir):
-    app = FlaskApp(__name__, 5001, simple_api_spec_dir, swagger_ui=False, debug=True)
+    app = App(__name__, port=5001, specification_dir=simple_api_spec_dir,
+              swagger_ui=False, debug=True)
     app.add_api('swagger.yaml')
 
     app_client = app.app.test_client()
     swagger_ui = app_client.get('/v1.0/ui/')  # type: flask.Response
     assert swagger_ui.status_code == 404
 
-    app2 = FlaskApp(__name__, 5001, simple_api_spec_dir, debug=True)
+    app2 = App(__name__, port=5001, specification_dir=simple_api_spec_dir, debug=True)
     app2.add_api('swagger.yaml', swagger_ui=False)
     app2_client = app2.app.test_client()
     swagger_ui2 = app2_client.get('/v1.0/ui/')  # type: flask.Response
@@ -36,7 +38,7 @@ def test_no_swagger_ui(simple_api_spec_dir):
 
 def test_swagger_json_app(simple_api_spec_dir):
     """ Verify the swagger.json file is returned for default setting passed to app. """
-    app = FlaskApp(__name__, 5001, simple_api_spec_dir, debug=True)
+    app = App(__name__, port=5001, specification_dir=simple_api_spec_dir, debug=True)
     app.add_api('swagger.yaml')
 
     app_client = app.app.test_client()
@@ -46,7 +48,8 @@ def test_swagger_json_app(simple_api_spec_dir):
 
 def test_no_swagger_json_app(simple_api_spec_dir):
     """ Verify the swagger.json file is not returned when set to False when creating app. """
-    app = FlaskApp(__name__, 5001, simple_api_spec_dir, swagger_json=False, debug=True)
+    app = App(__name__, port=5001, specification_dir=simple_api_spec_dir,
+              swagger_json=False, debug=True)
     app.add_api('swagger.yaml')
 
     app_client = app.app.test_client()
@@ -55,7 +58,6 @@ def test_no_swagger_json_app(simple_api_spec_dir):
 
 
 def test_dict_as_yaml_path(simple_api_spec_dir):
-
     swagger_yaml_path = simple_api_spec_dir / 'swagger.yaml'
 
     with swagger_yaml_path.open(mode='rb') as swagger_yaml:
@@ -68,7 +70,7 @@ def test_dict_as_yaml_path(simple_api_spec_dir):
         swagger_string = jinja2.Template(swagger_template).render({})
         specification = yaml.safe_load(swagger_string)  # type: dict
 
-    app = FlaskApp(__name__, 5001, simple_api_spec_dir, debug=True)
+    app = App(__name__, port=5001, specification_dir=simple_api_spec_dir, debug=True)
     app.add_api(specification)
 
     app_client = app.app.test_client()
@@ -78,7 +80,7 @@ def test_dict_as_yaml_path(simple_api_spec_dir):
 
 def test_swagger_json_api(simple_api_spec_dir):
     """ Verify the swagger.json file is returned for default setting passed to api. """
-    app = FlaskApp(__name__, 5001, simple_api_spec_dir, debug=True)
+    app = App(__name__, port=5001, specification_dir=simple_api_spec_dir, debug=True)
     app.add_api('swagger.yaml')
 
     app_client = app.app.test_client()
@@ -88,7 +90,7 @@ def test_swagger_json_api(simple_api_spec_dir):
 
 def test_no_swagger_json_api(simple_api_spec_dir):
     """ Verify the swagger.json file is not returned when set to False when adding api. """
-    app = FlaskApp(__name__, 5001, simple_api_spec_dir, debug=True)
+    app = App(__name__, port=5001, specification_dir=simple_api_spec_dir, debug=True)
     app.add_api('swagger.yaml', swagger_json=False)
 
     app_client = app.app.test_client()
@@ -143,7 +145,7 @@ def test_resolve_classmethod(simple_app):
 
 
 def test_add_api_with_function_resolver_function_is_wrapped(simple_api_spec_dir):
-    app = FlaskApp(__name__, specification_dir=simple_api_spec_dir)
+    app = App(__name__, specification_dir=simple_api_spec_dir)
     api = app.add_api('swagger.yaml', resolver=lambda oid: (lambda foo: 'bar'))
     assert api.resolver.resolve_function_from_operation_id('faux')('bah') == 'bar'
 

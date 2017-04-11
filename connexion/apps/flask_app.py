@@ -2,6 +2,7 @@ import datetime
 import logging
 import pathlib
 from decimal import Decimal
+from types import FunctionType  # NOQA
 
 import flask
 import werkzeug.exceptions
@@ -10,25 +11,14 @@ from flask import json
 from ..apis.flask_api import FlaskApi
 from ..exceptions import ProblemException
 from ..problem import problem
-from ..resolver import Resolver
 from .abstract import AbstractApp
 
 logger = logging.getLogger('connexion.app')
 
 
 class FlaskApp(AbstractApp):
-    def __init__(self, import_name, port=None, specification_dir='',
-                 server=None, arguments=None, auth_all_paths=False,
-                 debug=False, swagger_json=True, swagger_ui=True, swagger_path=None,
-                 swagger_url=None, host=None, validator_map=None):
-        server = server or 'flask'
-        super(FlaskApp, self).__init__(
-            import_name, port=port, specification_dir=specification_dir,
-            server=server, arguments=arguments, auth_all_paths=auth_all_paths,
-            debug=debug, swagger_json=swagger_json, swagger_ui=swagger_ui,
-            swagger_path=swagger_path, swagger_url=swagger_url,
-            host=host, validator_map=validator_map, api_cls=FlaskApi
-        )
+    def __init__(self, import_name, **kwargs):
+        super(FlaskApp, self).__init__(import_name, FlaskApi, server='flask', **kwargs)
 
     def create_app(self):
         app = flask.Flask(self.import_name)
@@ -60,27 +50,13 @@ class FlaskApp(AbstractApp):
 
         return FlaskApi.get_response(response)
 
-    def add_api(self, specification, base_path=None, arguments=None,
-                auth_all_paths=None, swagger_json=None, swagger_ui=None,
-                swagger_path=None, swagger_url=None, validate_responses=False,
-                strict_validation=False, resolver=Resolver(), resolver_error=None,
-                pythonic_params=False):
-        api = super(FlaskApp, self).add_api(
-            specification, base_path=base_path,
-            arguments=arguments, auth_all_paths=auth_all_paths, swagger_json=swagger_json,
-            swagger_ui=swagger_ui, swagger_path=swagger_path, swagger_url=swagger_url,
-            validate_responses=validate_responses, strict_validation=strict_validation,
-            resolver=resolver, resolver_error=resolver_error, pythonic_params=pythonic_params
-        )
+    def add_api(self, specification, **kwargs):
+        api = super(FlaskApp, self).add_api(specification, **kwargs)
         self.app.register_blueprint(api.blueprint)
         return api
 
     def add_error_handler(self, error_code, function):
-        """
-
-        :type error_code: int
-        :type function: types.FunctionType
-        """
+        # type: (int, FunctionType) -> None
         self.app.register_error_handler(error_code, function)
 
     def run(self, port=None, server=None, debug=None, host=None, **options):  # pragma: no cover
