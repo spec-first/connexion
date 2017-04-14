@@ -22,3 +22,12 @@ def test_simple(client):
     assert result.status_code == 200
     assert result.json == {'greeting': 'Hello hjacobs'}
 
+
+def test_multiple_methods(client):
+    result = client.simulate_put('/v1.0/nullable-parameters', body='{"name": "putbody"}')
+    assert result.status_code == 200
+    assert result.json == {'name': 'putbody'}
+
+    result = client.simulate_get('/v1.0/nullable-parameters', params={'time_start': 123})
+    assert result.status_code == 200
+    assert result.json == 123

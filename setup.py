@@ -36,6 +36,7 @@ install_requires = [
 ]
 
 flask_require = 'flask>=0.10.1'
+falcon_require = 'falcon>=1.1.0'
 
 if py_major_minor_version < (3, 4):
     install_requires.append('pathlib>=1.0.1')
@@ -45,7 +46,8 @@ tests_require = [
     'mock',
     'pytest',
     'pytest-cov',
-    flask_require
+    flask_require,
+    falcon_require
 ]
 
 

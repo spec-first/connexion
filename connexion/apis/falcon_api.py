@@ -1,13 +1,10 @@
 import json
 import logging
+
 import falcon.status_codes
-
 import six
-import werkzeug.exceptions
-
 from connexion.apis.abstract import AbstractAPI
 from connexion.decorators.produces import NoContent
-from connexion.handlers import AuthErrorHandler
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.utils import is_json_mimetype
 
@@ -23,10 +20,19 @@ class SwaggerJsonResource():
         resp.body = self.body
 
 
+class OperationResource():
+
+    def __init__(self):
+        self.methods = {}
+
+    def __getattr__(self, attr):
+        return self.methods.get(attr)
+
+
 class FalconApi(AbstractAPI):
     def _set_base_path(self, base_path):
         super(FalconApi, self)._set_base_path(base_path)
-        self.routes = []
+        self.routes = {}
 
     def json_loads(self, data):
         """
@@ -39,7 +45,7 @@ class FalconApi(AbstractAPI):
         Adds swagger json to {base_path}/swagger.json
         """
         logger.debug('Adding swagger.json: %s/swagger.json', self.base_path)
-        self.routes.append(('/swagger.json', SwaggerJsonResource(self.specification)))
+        self.routes['/swagger.json'] = SwaggerJsonResource(self.specification)
 
     def add_swagger_ui(self):
         """
@@ -50,29 +56,18 @@ class FalconApi(AbstractAPI):
                      self.base_path,
                      console_ui_path)
 
-        static_files_url = '/{console_ui_path}/<path:filename>'.format(
+        static_files_url = '{base_path}/{console_ui_path}/{{path}}'.format(
+            base_path=self.base_path,
             console_ui_path=console_ui_path)
 
-        #self.blueprint.add_url_rule(static_files_url,
-        #                            static_endpoint_name,
-        #                            self._handlers.console_ui_static_files)
-
-        #index_endpoint_name = "{name}_swagger_ui_index".format(name=self.blueprint.name)
-        #console_ui_url = '/{swagger_url}/'.format(
-        #    swagger_url=self.options.openapi_console_ui_path.strip('/'))
-
-        #self.blueprint.add_url_rule(console_ui_url,
-        #                            index_endpoint_name,
-        #                            self._handlers.console_ui_home)
+        self.routes[static_files_url] = None
 
     def add_auth_on_not_found(self, security, security_definitions):
         """
         Adds a 404 error handler to authenticate and only expose the 404 status if the security validation pass.
         """
         logger.debug('Adding path not found authentication')
-        not_found_error = AuthErrorHandler(self, werkzeug.exceptions.NotFound(), security=security,
-                                           security_definitions=security_definitions)
-        #self.blueprint.add_url_rule('/<path:invalid_path>', endpoint_name, not_found_error.function)
+        # TODO
 
     def _add_operation_internal(self, method, path, operation):
         operation_id = operation.operation_id
@@ -80,21 +75,17 @@ class FalconApi(AbstractAPI):
                      extra=vars(operation))
 
         function = operation.function
-        resource = type('Resource', (object,), {'on_{}'.format(method): function})
-        self.routes.append((self.base_path + path, resource()))
+        resource = self.routes.get(self.base_path + path)
+        if not resource:
+            resource = OperationResource()
+        resource.methods['on_{}'.format(method)] = function
+        self.routes[self.base_path + path] = resource
 
     def add_routes(self, falcon_api):
         # falcon_api is of type falcon.API()
         # see https://falcon.readthedocs.io/en/stable/api/api.html
-        for uri_template, resource in self.routes:
+        for uri_template, resource in self.routes.items():
             falcon_api.add_route(uri_template, resource)
-
-    @property
-    def _handlers(self):
-        # type: () -> InternalHandlers
-        if not hasattr(self, '_internal_handlers'):
-            self._internal_handlers = InternalHandlers(self.base_path, self.options)
-        return self._internal_handlers
 
     @classmethod
     def get_response(cls, response, mimetype=None, request=None):
@@ -148,7 +139,6 @@ class FalconApi(AbstractAPI):
     def _set_falcon_response(cls, response, mimetype, falcon_response):
         falcon_response.content_type = mimetype
 
-
         if isinstance(response, tuple) and len(response) == 3:
             data, status_code, headers = response
             falcon_response.status = cls._get_status(status_code)
@@ -166,9 +156,8 @@ class FalconApi(AbstractAPI):
         elif data is NoContent:
             falcon_response.body = ''
 
-
     @classmethod
-    def get_request(cls, resource, falcon_request, falcon_response, *args, **params):
+    def get_request(cls, falcon_request, falcon_response, *args, **params):
         # type: (*Any, **Any) -> ConnexionRequest
         """Gets ConnexionRequest instance for the operation handler
         result. Status Code and Headers for response.  If only body
@@ -177,15 +166,19 @@ class FalconApi(AbstractAPI):
 
         :rtype: ConnexionRequest
         """
-        print(cls, args, params)
+        body = falcon_request.bounded_stream.read()
+        try:
+            json_body = json.loads(body.decode('utf-8'))
+        except ValueError:
+            json_body = None
         request = ConnexionRequest(
             falcon_request.url,
             falcon_request.method,
             headers=falcon_request.headers,
             form={},
             query=falcon_request.params,
-            body=None,
-            json=None,
+            body=body,
+            json=json_body,
             files={},
             path_params=params,
             context=FalconRequestContextProxy(falcon_request, falcon_response)
@@ -238,35 +231,6 @@ class Jsonifier(object):
 
         try:
             return json.loads(data)
-        except Exception as error:
+        except Exception:
             if isinstance(data, six.string_types):
                 return data
-
-
-class InternalHandlers(object):
-    """
-    Flask handlers for internally registered endpoints.
-    """
-
-    def __init__(self, base_path, options):
-        self.base_path = base_path
-        self.options = options
-
-    def console_ui_home(self):
-        """
-        Home page of the OpenAPI Console UI.
-
-        :return:
-        """
-        return flask.render_template('index.html', api_url=self.base_path)
-
-    def console_ui_static_files(self, filename):
-        """
-        Servers the static files for the OpenAPI Console UI.
-
-        :param filename: Requested file contents.
-        :return:
-        """
-        # convert PosixPath to str
-        static_dir = str(self.options.openapi_console_ui_from_dir)
-        return flask.send_from_directory(static_dir, filename)

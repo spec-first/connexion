@@ -3,7 +3,6 @@ import logging
 import flask
 import six
 import werkzeug.exceptions
-
 from connexion.apis import flask_utils
 from connexion.apis.abstract import AbstractAPI
 from connexion.decorators.produces import NoContent
@@ -266,7 +265,7 @@ class Jsonifier(object):
 
         try:
             return flask.json.loads(data)
-        except Exception as error:
+        except Exception:
             if isinstance(data, six.string_types):
                 return data
 
