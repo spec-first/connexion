@@ -1,8 +1,6 @@
-import datetime
 import logging
 import falcon
 import pathlib
-from decimal import Decimal
 from types import FunctionType  # NOQA
 
 import werkzeug.exceptions
@@ -47,16 +45,16 @@ class FalconApp(AbstractApp):
             response = problem(title=exception.name, detail=exception.description,
                                status=exception.code)
 
-        return FlaskApi.get_response(response)
+        return FalconApi.get_response(response)
 
     def add_api(self, specification, **kwargs):
         api = super(FalconApp, self).add_api(specification, **kwargs)
-        #self.app.register_blueprint(api.blueprint)
+        api.add_routes(self.app)
         return api
 
     def add_error_handler(self, error_code, function):
         # type: (int, FunctionType) -> None
-        #self.app.register_error_handler(error_code, function)
+        # TODO
         pass
 
     def run(self, port=None, server=None, debug=None, host=None, **options):  # pragma: no cover
@@ -112,5 +110,3 @@ class FalconApp(AbstractApp):
             http_server.serve_forever()
         else:
             raise Exception('Server %s not recognized', self.server)
-
-

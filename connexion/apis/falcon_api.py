@@ -1,10 +1,10 @@
+import json
 import logging
+import falcon.status_codes
 
-import flask
 import six
 import werkzeug.exceptions
 
-from connexion.apis import flask_utils
 from connexion.apis.abstract import AbstractAPI
 from connexion.decorators.produces import NoContent
 from connexion.handlers import AuthErrorHandler
@@ -14,20 +14,23 @@ from connexion.utils import is_json_mimetype
 logger = logging.getLogger('connexion.apis.falcon_api')
 
 
+class SwaggerJsonResource():
+
+    def __init__(self, specification):
+        self.body = json.dumps(specification)
+
+    def on_get(self, req, resp):
+        resp.body = self.body
+
+
 class FalconApi(AbstractAPI):
     def _set_base_path(self, base_path):
         super(FalconApi, self)._set_base_path(base_path)
-        self._set_blueprint()
-
-    def _set_blueprint(self):
-        logger.debug('Creating API blueprint: %s', self.base_path)
-        endpoint = flask_utils.flaskify_endpoint(self.base_path)
-        self.blueprint = flask.Blueprint(endpoint, __name__, url_prefix=self.base_path,
-                                         template_folder=str(self.options.openapi_console_ui_from_dir))
+        self.routes = []
 
     def json_loads(self, data):
         """
-        Use Flask specific JSON loader
+        Use specific JSON loader
         """
         return Jsonifier.loads(data)
 
@@ -36,10 +39,7 @@ class FalconApi(AbstractAPI):
         Adds swagger json to {base_path}/swagger.json
         """
         logger.debug('Adding swagger.json: %s/swagger.json', self.base_path)
-        endpoint_name = "{name}_swagger_json".format(name=self.blueprint.name)
-        self.blueprint.add_url_rule('/swagger.json',
-                                    endpoint_name,
-                                    lambda: flask.jsonify(self.specification))
+        self.routes.append(('/swagger.json', SwaggerJsonResource(self.specification)))
 
     def add_swagger_ui(self):
         """
@@ -50,21 +50,20 @@ class FalconApi(AbstractAPI):
                      self.base_path,
                      console_ui_path)
 
-        static_endpoint_name = "{name}_swagger_ui_static".format(name=self.blueprint.name)
         static_files_url = '/{console_ui_path}/<path:filename>'.format(
             console_ui_path=console_ui_path)
 
-        self.blueprint.add_url_rule(static_files_url,
-                                    static_endpoint_name,
-                                    self._handlers.console_ui_static_files)
+        #self.blueprint.add_url_rule(static_files_url,
+        #                            static_endpoint_name,
+        #                            self._handlers.console_ui_static_files)
 
-        index_endpoint_name = "{name}_swagger_ui_index".format(name=self.blueprint.name)
-        console_ui_url = '/{swagger_url}/'.format(
-            swagger_url=self.options.openapi_console_ui_path.strip('/'))
+        #index_endpoint_name = "{name}_swagger_ui_index".format(name=self.blueprint.name)
+        #console_ui_url = '/{swagger_url}/'.format(
+        #    swagger_url=self.options.openapi_console_ui_path.strip('/'))
 
-        self.blueprint.add_url_rule(console_ui_url,
-                                    index_endpoint_name,
-                                    self._handlers.console_ui_home)
+        #self.blueprint.add_url_rule(console_ui_url,
+        #                            index_endpoint_name,
+        #                            self._handlers.console_ui_home)
 
     def add_auth_on_not_found(self, security, security_definitions):
         """
@@ -73,19 +72,22 @@ class FalconApi(AbstractAPI):
         logger.debug('Adding path not found authentication')
         not_found_error = AuthErrorHandler(self, werkzeug.exceptions.NotFound(), security=security,
                                            security_definitions=security_definitions)
-        endpoint_name = "{name}_not_found".format(name=self.blueprint.name)
-        self.blueprint.add_url_rule('/<path:invalid_path>', endpoint_name, not_found_error.function)
+        #self.blueprint.add_url_rule('/<path:invalid_path>', endpoint_name, not_found_error.function)
 
     def _add_operation_internal(self, method, path, operation):
         operation_id = operation.operation_id
         logger.debug('... Adding %s -> %s', method.upper(), operation_id,
                      extra=vars(operation))
 
-        flask_path = flask_utils.flaskify_path(path, operation.get_path_parameter_types())
-        endpoint_name = flask_utils.flaskify_endpoint(operation.operation_id,
-                                                      operation.randomize_endpoint)
         function = operation.function
-        self.blueprint.add_url_rule(flask_path, endpoint_name, function, methods=[method])
+        resource = type('Resource', (object,), {'on_{}'.format(method): function})
+        self.routes.append((self.base_path + path, resource()))
+
+    def add_routes(self, falcon_api):
+        # falcon_api is of type falcon.API()
+        # see https://falcon.readthedocs.io/en/stable/api/api.html
+        for uri_template, resource in self.routes:
+            falcon_api.add_route(uri_template, resource)
 
     @property
     def _handlers(self):
@@ -100,70 +102,35 @@ class FalconApi(AbstractAPI):
         result. Status Code and Headers for response.  If only body
         data is returned by the endpoint function, then the status
         code will be set to 200 and no headers will be added.
-
-        If the returned object is a flask.Response then it will just
-        pass the information needed to recreate it.
-
-        :type operation_handler_result: flask.Response | (flask.Response, int) | (flask.Response, int, dict)
-        :rtype: ConnexionRequest
         """
         logger.debug('Getting data and status code',
                      extra={
                          'data': response,
                          'data_type': type(response),
-                         'url': flask.request.url
+                         'url': 'TODO',
                      })
 
-        if isinstance(response, ConnexionResponse):
-            flask_response = cls._get_flask_response_from_connexion(response, mimetype)
-        else:
-            flask_response = cls._get_flask_response(response, mimetype)
+        falcon_response = request.context.falcon_response
 
-        logger.debug('Got data and status code (%d)',
-                     flask_response.status_code,
+        if response == falcon_response:
+            pass
+        elif isinstance(response, ConnexionResponse):
+            falcon_response.status = cls._get_status(response.status_code)
+            falcon_response.content_type = response.content_type or response.mimetype
+            falcon_response.body = response.body
+            falcon_response.set_headers(response.headers or {})
+        else:
+            cls._set_falcon_response(response, mimetype, falcon_response)
+
+        logger.debug('Got data and status code (%s)',
+                     falcon_response.status,
                      extra={
                          'data': response,
                          'datatype': type(response),
-                         'url': flask.request.url
+                         'url': 'TODO'
                      })
 
-        return flask_response
-
-    @classmethod
-    def _get_flask_response_from_connexion(cls, response, mimetype):
-        data = response.body
-        status_code = response.status_code
-        mimetype = response.mimetype or mimetype
-        content_type = response.content_type or mimetype
-        headers = response.headers
-
-        flask_response = cls._build_flask_response(mimetype, content_type,
-                                                   headers, status_code, data)
-
-        return flask_response
-
-    @classmethod
-    def _build_flask_response(cls, mimetype=None, content_type=None,
-                              headers=None, status_code=None, data=None):
-        kwargs = {
-            'mimetype': mimetype,
-            'content_type': content_type,
-            'headers': headers
-        }
-        kwargs = {k: v for k, v in six.iteritems(kwargs) if v is not None}
-        flask_response = flask.current_app.response_class(**kwargs)  # type: flask.Response
-
-        if status_code is not None:
-            flask_response.status_code = status_code
-
-        if data is not None and data is not NoContent:
-            data = cls._jsonify_data(data, mimetype)
-            flask_response.set_data(data)
-
-        elif data is NoContent:
-            flask_response.set_data('')
-
-        return flask_response
+        return falcon_response
 
     @classmethod
     def _jsonify_data(cls, data, mimetype):
@@ -173,52 +140,55 @@ class FalconApi(AbstractAPI):
 
         return data
 
+    @staticmethod
+    def _get_status(status_code):
+        return getattr(falcon.status_codes, 'HTTP_{}'.format(status_code))
+
     @classmethod
-    def _get_flask_response(cls, response, mimetype):
-        if flask_utils.is_flask_response(response):
-            return response
+    def _set_falcon_response(cls, response, mimetype, falcon_response):
+        falcon_response.content_type = mimetype
 
-        elif isinstance(response, tuple) and flask_utils.is_flask_response(response[0]):
-            return flask.current_app.make_response(response)
 
-        elif isinstance(response, tuple) and len(response) == 3:
+        if isinstance(response, tuple) and len(response) == 3:
             data, status_code, headers = response
-            return cls._build_flask_response(mimetype, None,
-                                             headers, status_code, data)
-
+            falcon_response.status = cls._get_status(status_code)
+            falcon_response.set_headers(headers or {})
         elif isinstance(response, tuple) and len(response) == 2:
             data, status_code = response
-            return cls._build_flask_response(mimetype, None, None,
-                                             status_code, data)
-
+            falcon_response.status = cls._get_status(status_code)
         else:
-            return cls._build_flask_response(mimetype=mimetype, data=response)
+            falcon_response.status = falcon.HTTP_200
+            data = response
+
+        if data is not None and data is not NoContent:
+            data = cls._jsonify_data(data, mimetype)
+            falcon_response.body = data
+        elif data is NoContent:
+            falcon_response.body = ''
+
 
     @classmethod
-    def get_request(cls, *args, **params):
+    def get_request(cls, resource, falcon_request, falcon_response, *args, **params):
         # type: (*Any, **Any) -> ConnexionRequest
         """Gets ConnexionRequest instance for the operation handler
         result. Status Code and Headers for response.  If only body
         data is returned by the endpoint function, then the status
         code will be set to 200 and no headers will be added.
 
-        If the returned object is a flask.Response then it will just
-        pass the information needed to recreate it.
-
         :rtype: ConnexionRequest
         """
-        flask_request = flask.request
+        print(cls, args, params)
         request = ConnexionRequest(
-            flask_request.url,
-            flask_request.method,
-            headers=flask_request.headers,
-            form=flask_request.form,
-            query=flask_request.args,
-            body=flask_request.get_data(),
-            json=flask_request.get_json(silent=True),
-            files=flask_request.files,
+            falcon_request.url,
+            falcon_request.method,
+            headers=falcon_request.headers,
+            form={},
+            query=falcon_request.params,
+            body=None,
+            json=None,
+            files={},
             path_params=params,
-            context=FlaskRequestContextProxy()
+            context=FalconRequestContextProxy(falcon_request, falcon_response)
         )
         logger.debug('Getting data and status code',
                      extra={
@@ -229,18 +199,20 @@ class FalconApi(AbstractAPI):
         return request
 
 
-class FlaskRequestContextProxy(object):
+class FalconRequestContextProxy(object):
     """"Proxy assignments from `ConnexionRequest.context`
-    to `flask.request` instance.
+    to `falcon.Request` instance.
     """
 
-    def __init__(self):
+    def __init__(self, falcon_request, falcon_response):
+        self.falcon_request = falcon_request
+        self.falcon_response = falcon_response
         self.values = {}
 
     def __setitem__(self, key, value):
         # type: (str, Any) -> None
-        logger.debug('Setting "%s" attribute in flask.request', key)
-        setattr(flask.request, key, value)
+        logger.debug('Setting "%s" attribute in falcon_request', key)
+        self.falcon_request.context[key] = value
         self.values[key] = value
 
     def items(self):
@@ -254,7 +226,7 @@ class Jsonifier(object):
         """ Central point where JSON serialization happens inside
         Connexion.
         """
-        return "{}\n".format(flask.json.dumps(data, indent=2))
+        return "{}\n".format(json.dumps(data, indent=2))
 
     @staticmethod
     def loads(data):
@@ -265,7 +237,7 @@ class Jsonifier(object):
             data = data.decode()
 
         try:
-            return flask.json.loads(data)
+            return json.loads(data)
         except Exception as error:
             if isinstance(data, six.string_types):
                 return data

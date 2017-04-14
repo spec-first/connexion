@@ -6,7 +6,6 @@ import click
 from clickclick import AliasedGroup, fatal_error
 
 import connexion
-import connexion.apps.falcon_app
 from connexion.mock import MockResolver
 
 logger = logging.getLogger('connexion.cli')
@@ -79,6 +78,9 @@ def main():
 @click.option('--verbose', '-v', help='Show verbose information.', count=True)
 @click.option('--base-path', metavar='PATH',
               help='Override the basePath in the API spec.')
+@click.option('--framework', default='flask',
+              type=click.Choice(['flask', 'falcon']),
+              help='Which web framework to use.')
 def run(spec_file,
         base_module_path,
         port,
@@ -95,7 +97,8 @@ def run(spec_file,
         strict_validation,
         debug,
         verbose,
-        base_path):
+        base_path,
+        framework):
     """
     Runs a server compliant with a OpenAPI/Swagger 2.0 Specification file.
 
@@ -129,13 +132,19 @@ def run(spec_file,
         resolver = MockResolver(mock_all=mock == 'all')
         api_extra_args['resolver'] = resolver
 
-    app = connexion.apps.falcon_app.FalconApp(__name__,
-                             swagger_json=not hide_spec,
-                             swagger_ui=not hide_console_ui,
-                             swagger_path=console_ui_from or None,
-                             swagger_url=console_ui_url or None,
-                             auth_all_paths=auth_all_paths,
-                             debug=debug)
+    if framework == 'falcon':
+        from connexion.apps.falcon_app import FalconApp
+        app_class = FalconApp
+    else:
+        app_class = connexion.FlaskApp
+
+    app = app_class(__name__,
+                    swagger_json=not hide_spec,
+                    swagger_ui=not hide_console_ui,
+                    swagger_path=console_ui_from or None,
+                    swagger_url=console_ui_url or None,
+                    auth_all_paths=auth_all_paths,
+                    debug=debug)
 
     app.add_api(spec_file_full_path,
                 base_path=base_path,
