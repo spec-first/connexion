@@ -45,7 +45,7 @@ class FalconApi(AbstractAPI):
         Adds swagger json to {base_path}/swagger.json
         """
         logger.debug('Adding swagger.json: %s/swagger.json', self.base_path)
-        self.routes['/swagger.json'] = SwaggerJsonResource(self.specification)
+        self.routes[self.base_path + '/swagger.json'] = SwaggerJsonResource(self.specification)
 
     def add_swagger_ui(self):
         """
