@@ -44,6 +44,10 @@ We built Connexion this way in order to:
 - simplify the development process
 - confirm expectations about what your API will look like
 
+.. image:: https://https://raw.github.com/zalando/connexion/master/artwork/example.gif
+   :target: https://github.com/zalando/connexion/tree/master/examples
+   :alt: Simple example using connexion.
+
 Connexion Features:
 -------------------
 
