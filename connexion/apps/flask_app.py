@@ -23,6 +23,8 @@ class FlaskApp(AbstractApp):
     def create_app(self):
         app = flask.Flask(self.import_name)
         app.json_encoder = FlaskJSONEncoder
+        if self.flask_secret_key is not None:
+            app.secret_key = self.flask_secret_key
         return app
 
     def get_root_path(self):
