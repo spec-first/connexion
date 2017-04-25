@@ -91,7 +91,7 @@ class FlaskApi(AbstractAPI):
     def _handlers(self):
         # type: () -> InternalHandlers
         if not hasattr(self, '_internal_handlers'):
-            self._internal_handlers = InternalHandlers(self.base_path, self.options)
+            self._internal_handlers = InternalHandlers(self.base_path, self.options, self.flask_session_key)
         return self._internal_handlers
 
     @classmethod
@@ -276,9 +276,10 @@ class InternalHandlers(object):
     Flask handlers for internally registered endpoints.
     """
 
-    def __init__(self, base_path, options):
+    def __init__(self, base_path, options, flask_session_key):
         self.base_path = base_path
         self.options = options
+        self.flask_session_key = flask_session_key
 
     def console_ui_home(self):
         """
@@ -286,7 +287,13 @@ class InternalHandlers(object):
 
         :return:
         """
-        return flask.render_template('index.html', api_url=self.base_path)
+        if self.flask_session_key is None:
+            return flask.render_template('index.html', api_url=self.base_path)
+        
+        if flask.session.get(self.flask_session_key):
+            return flask.render_template('index.html', api_url=self.base_path)
+        else:
+            return flask.redirect('/')
 
     def console_ui_static_files(self, filename):
         """

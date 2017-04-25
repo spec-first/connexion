@@ -14,7 +14,7 @@ logger = logging.getLogger('connexion.app')
 class AbstractApp(object):
     def __init__(self, import_name, api_cls, port=None, specification_dir='',
                  host=None, server=None, arguments=None, auth_all_paths=False, debug=False,
-                 validator_map=None, options=None, flask_secret_key=None, **old_style_options):
+                 validator_map=None, options=None, flask_secret_key=None, flask_session_key=None, **old_style_options):
         """
         :param import_name: the name of the application package
         :type import_name: str
@@ -45,6 +45,7 @@ class AbstractApp(object):
         self.api_cls = api_cls
         self.resolver_error = None
         self.flask_secret_key = flask_secret_key
+        self.flask_session_key = flask_session_key
 
         # Options
         self.auth_all_paths = auth_all_paths
@@ -159,7 +160,8 @@ class AbstractApp(object):
                            debug=self.debug,
                            validator_map=self.validator_map,
                            pythonic_params=pythonic_params,
-                           options=api_options.as_dict())
+                           options=api_options.as_dict(),
+                           flask_session_key=self.flask_session_key)
         return api
 
     def _resolver_error_handler(self, *args, **kwargs):
