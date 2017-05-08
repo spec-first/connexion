@@ -254,7 +254,12 @@ class Jsonifier(object):
         """ Central point where JSON serialization happens inside
         Connexion.
         """
-        return "{}\n".format(flask.json.dumps(data, indent=2))
+        if six.PY2:
+            json_content = flask.json.dumps(data, indent=2, encoding="utf-8")
+        else:
+            json_content = flask.json.dumps(data, indent=2)
+
+        return "{}\n".format(json_content)
 
     @staticmethod
     def loads(data):
