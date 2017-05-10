@@ -18,6 +18,12 @@ def test_app(simple_app):
     swagger_icon = app_client.get('/v1.0/ui/images/favicon.ico')  # type: flask.Response
     assert swagger_icon.status_code == 200
 
+    post_greeting_url = app_client.post('/v1.0/greeting/jsantos/the/third/of/his/name', data={})  # type: flask.Response
+    assert post_greeting_url.status_code == 200
+    assert post_greeting_url.content_type == 'application/json'
+    greeting_response_url = json.loads(post_greeting_url.data.decode('utf-8'))
+    assert greeting_response_url['greeting'] == 'Hello jsantos thanks for the/third/of/his/name'
+
     post_greeting = app_client.post('/v1.0/greeting/jsantos', data={})  # type: flask.Response
     assert post_greeting.status_code == 200
     assert post_greeting.content_type == 'application/json'

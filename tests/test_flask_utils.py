@@ -9,6 +9,7 @@ def test_flaskify_path():
     assert flask_utils.flaskify_path("foo/{a}/{b}", {'a': 'integer'}) == "foo/<int:a>/<b>"
     assert flask_utils.flaskify_path("foo/{a}/{b}", {'a': 'number'}) == "foo/<float:a>/<b>"
     assert flask_utils.flaskify_path("foo/{a}/{b}", {'a': 'path'}) == "foo/<path:a>/<b>"
+    assert flask_utils.flaskify_path("foo/{a}", {'a': 'path'}) == "foo/<path:a>"
 
 
 def test_flaskify_endpoint():
