@@ -38,6 +38,9 @@ def post_greeting(name, **kwargs):
     data = {'greeting': 'Hello {name}'.format(name=name)}
     return data
 
+def post_greeting_url(name, remainder, **kwargs):
+    data = {'greeting': 'Hello {name} thanks for {remainder}'.format(name=name,remainder=remainder)}
+    return data
 
 def post_goodday(name):
     data = {'greeting': 'Hello {name}'.format(name=name)}

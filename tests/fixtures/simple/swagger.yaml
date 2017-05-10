@@ -23,7 +23,28 @@ paths:
           description: Name of the person to greet.
           required: true
           type: string
-
+  /greeting/{name}/{remainder}:
+    post:
+      summary: Generate greeting and collect the remainder of the url
+      description: Generates a greeting message and includes the rest of the url.
+      operationId: fakeapi.hello.post_greeting_url
+      responses:
+        '200':
+          description: greeting response with url
+          schema:
+            type: object
+      parameters:
+        - name: name
+          in: path
+          description: Name of the person to greet.
+          required: true
+          type: string
+        - name: remainder
+          in: path
+          description: the rest of the url
+          required: true
+          type: string
+          format: path
   /greetings/{name}:
     get:
       summary: Generate greeting
