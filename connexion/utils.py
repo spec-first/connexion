@@ -1,6 +1,8 @@
 import functools
 import importlib
 
+from connexion.exceptions import ResolverError
+
 
 def deep_getattr(obj, attr):
     """
@@ -17,6 +19,8 @@ def get_function_from_name(function_name):
 
     :type function_name: str
     """
+    if (not function_name) or ('.' not in function_name):
+        raise ResolverError('operationIds must include a {module}. prefix')
     module_name, attr_path = function_name.rsplit('.', 1)
     module = None
     last_import_error = None

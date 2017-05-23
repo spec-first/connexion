@@ -57,6 +57,10 @@ def test_invalid_operation_does_stop_application_to_setup():
         FlaskApi(TEST_FOLDER / "fixtures/missing_op_id/swagger.yaml",
                  base_path="/api/v1.0", arguments={'title': 'OK'})
 
+    with pytest.raises(ResolverError):
+        FlaskApi(TEST_FOLDER / "fixtures/unprefixed_op_id/swagger.yaml",
+                 base_path="/api/v1.0", arguments={'title': 'OK'})
+
     with pytest.raises(ImportError):
         FlaskApi(TEST_FOLDER / "fixtures/module_not_implemented/swagger.yaml",
                  base_path="/api/v1.0", arguments={'title': 'OK'})
@@ -76,6 +80,10 @@ def test_invalid_operation_does_not_stop_application_in_debug_mode():
     assert api.specification['info']['title'] == 'OK'
 
     api = FlaskApi(TEST_FOLDER / "fixtures/missing_op_id/swagger.yaml",
+                   base_path="/api/v1.0", arguments={'title': 'OK'}, debug=True)
+    assert api.specification['info']['title'] == 'OK'
+
+    api = FlaskApi(TEST_FOLDER / "fixtures/unprefixed_op_id/swagger.yaml",
                    base_path="/api/v1.0", arguments={'title': 'OK'}, debug=True)
     assert api.specification['info']['title'] == 'OK'
 
