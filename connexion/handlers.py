@@ -1,11 +1,14 @@
+# importing required modules for required logging, problems and operations.
+
 import logging
 
 from .operation import Operation, SecureOperation
 from .problem import problem
 
+# define logger
 logger = logging.getLogger('connexion.handlers')
 
-
+# AuthErrorHandler class
 class AuthErrorHandler(SecureOperation):
     """
     Wraps an error with authentication.
