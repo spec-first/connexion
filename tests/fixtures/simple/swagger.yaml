@@ -516,6 +516,48 @@ paths:
           required: true
           type: string
 
+  /goodnight/{name}:
+    post:
+      summary: Generate good night
+      description: |
+        Generates a good night message.  Sets the name in the header.
+      operationId: fakeapi.hello.post_goodnight
+      produces:
+        - text/plain
+      responses:
+        201:
+          description: goodnight response
+          headers:
+            X-Name:
+              type: string
+              minLength: 4
+              maxLength: 10
+              description: The name of the person to say good night.
+          schema:
+            type: string
+      parameters:
+        - name: name
+          in: path
+          description: Name of the person to say good evening.
+          required: true
+          type: string
+
+  /alldark:
+    post:
+      summary: Generate all dark message.
+      description: Sets a string as a header, when an integer is expected.
+      operationId: fakeapi.hello.post_alldark
+      produces:
+        - text/plain
+      responses:
+        201:
+          description: alldark response
+          headers:
+            X-Result:
+              type: integer
+          schema:
+            type: string
+
   /test-204-with-headers:
     get:
       summary: Tests that response code 204 can have headers set

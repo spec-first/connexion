@@ -17,6 +17,36 @@ def test_headers_produces(simple_app):
     assert response.headers["Location"] == "http://localhost/my/uri"
 
 
+def test_headers_incorrect_length(simple_app):
+    app_client = simple_app.app.test_client()
+
+    response = app_client.post('/v1.0/goodnight/a', data={})  # type: flask.Response
+    assert response.status_code == 500
+    data = json.loads(response.data.decode('utf-8', 'replace'))
+    assert data['type'] == 'about:blank'
+    assert data['title'] == 'Response headers do not conform to specification'
+    assert data['detail'].find("'a' is too short") != -1
+    assert data['status'] == 500
+
+    response = app_client.post('/v1.0/goodnight/abcdeabcdeabcde', data={})  # type: flask.Response
+    assert response.status_code == 500
+    data = json.loads(response.data.decode('utf-8', 'replace'))
+    assert data['type'] == 'about:blank'
+    assert data['title'] == 'Response headers do not conform to specification'
+    assert data['detail'].find("'abcdeabcdeabcde' is too long") != -1
+    assert data['status'] == 500
+
+    response = app_client.post('/v1.0/goodnight/abcde', data={})  # type: flask.Response
+    assert response.status_code == 201
+
+
+def test_headers_incorrect_type(simple_app):
+    app_client = simple_app.app.test_client()
+
+    response = app_client.post('/v1.0/alldark', data={})  # type: flask.Response
+    assert response.status_code == 500
+
+
 def test_header_not_returned(simple_app):
     app_client = simple_app.app.test_client()
 

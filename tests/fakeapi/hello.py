@@ -58,6 +58,25 @@ def post_goodevening(name):
     return data, 201, headers
 
 
+def post_goodnight(name):
+    import sys
+    data = 'Good night {name}'.format(name=name)
+    headers = {}
+    sys.stderr.write("YO NAME WAS %s type %s\n" % (name, type(name)))
+    try:
+        intvalue = int(name)
+        headers["X-Name"] = intvalue
+    except ValueError:
+        headers["X-Name"] = name
+    return data, 201, headers
+
+
+def post_alldark():
+    data = 'All dark'
+    headers = {"X-Result": 12345}
+    return data, 201, headers
+
+
 def get_list(name):
     data = ['hello', name]
     return data

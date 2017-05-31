@@ -9,7 +9,7 @@ from ..exceptions import (NonConformingResponseBody,
 from ..problem import problem
 from ..utils import all_json
 from .decorator import BaseDecorator
-from .validation import ResponseBodyValidator
+from .validation import ResponseBodyValidator, ResponseHeaderValidator
 
 logger = logging.getLogger('connexion.decorators.response')
 
@@ -56,6 +56,14 @@ class ResponseValidator(BaseDecorator):
                 msg = ("Keys in header don't match response specification. "
                        "Difference: {0}").format(pretty_list)
                 raise NonConformingResponseHeaders(message=msg)
+            # validate each of the existing keys.
+            for key, schema in response_definition.get("headers").items():
+                header_validator = ResponseHeaderValidator(schema)
+                for data in headers.getlist(key):
+                    try:
+                        header_validator.validate_schema(data, url)
+                    except ValidationError as e:
+                        raise NonConformingResponseHeaders(message=str(e))
         return True
 
     def is_json_schema_compatible(self, response_definition):

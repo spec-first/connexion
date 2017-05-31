@@ -162,6 +162,27 @@ class ResponseBodyValidator(object):
         return None
 
 
+class ResponseHeaderValidator(object):
+    def __init__(self, schema, validator=None):
+        """
+        :param schema: The schema of the response header
+        :param validator: Validator class that should be used to validate passed data
+                          against API schema. Default is jsonschema.Draft4Validator.
+        :type validator: jsonschema.IValidator
+        """
+        ValidatorClass = validator or Draft4Validator
+        self.validator = ValidatorClass(schema, format_checker=draft4_format_checker)
+
+    def validate_schema(self, data, url):
+        # type: (dict, AnyStr) -> Union[ConnexionResponse, None]
+        try:
+            self.validator.validate(data)
+        except ValidationError as exception:
+            logger.error("{url} validation error: {error}".format(url=url,
+                                                                  error=exception))
+            six.reraise(*sys.exc_info())
+
+
 class ParameterValidator(object):
     def __init__(self, parameters, api, strict_validation=False):
         """

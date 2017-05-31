@@ -49,6 +49,11 @@ For example
     def my_endpoint():
         return 'Not Found', 404, {'x-error': 'not found'}
 
+Header Validation
+^^^^^^^^^^^^^^^^^
+
+By default, headers are validated against OpenAPI schema via
+``connexion.decorators.validation.ResponseHeaderValidator``
 
 Response Validation
 -------------------
