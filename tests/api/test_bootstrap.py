@@ -20,6 +20,20 @@ def test_app_with_relative_path(simple_api_spec_dir):
     assert get_bye.data == b'Goodbye jsantos'
 
 
+def test_app_with_different_server_option(simple_api_spec_dir):
+    # Create the app with a relative path and run the test_app testcase below.
+    app = App(__name__, port=5001,
+              server='gevent',
+              specification_dir='..' / simple_api_spec_dir.relative_to(TEST_FOLDER),
+              debug=True)
+    app.add_api('swagger.yaml')
+
+    app_client = app.app.test_client()
+    get_bye = app_client.get('/v1.0/bye/jsantos')  # type: flask.Response
+    assert get_bye.status_code == 200
+    assert get_bye.data == b'Goodbye jsantos'
+
+
 def test_no_swagger_ui(simple_api_spec_dir):
     app = App(__name__, port=5001, specification_dir=simple_api_spec_dir,
               swagger_ui=False, debug=True)
