@@ -39,7 +39,7 @@ flask_require = 'flask>=0.10.1'
 if py_major_minor_version < (3, 4):
     install_requires.append('pathlib>=1.0.1')
 
-if py_major_minor_version < (3, 5):
+if py_major_minor_version < (3, 6):
     install_requires.append('typing>=3.6.1')
 
 tests_require = [
