@@ -17,8 +17,8 @@ logger = logging.getLogger('connexion.app')
 
 
 class FlaskApp(AbstractApp):
-    def __init__(self, import_name, **kwargs):
-        super(FlaskApp, self).__init__(import_name, FlaskApi, server='flask', **kwargs)
+    def __init__(self, import_name, server='flask', **kwargs):
+        super(FlaskApp, self).__init__(import_name, FlaskApi, server=server, **kwargs)
 
     def create_app(self):
         app = flask.Flask(self.import_name)
