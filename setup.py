@@ -32,13 +32,15 @@ install_requires = [
     'six>=1.9',
     'swagger-spec-validator>=2.0.2',
     'inflection>=0.3.1',
-    'typing>=3.6.1'
 ]
 
 flask_require = 'flask>=0.10.1'
 
 if py_major_minor_version < (3, 4):
     install_requires.append('pathlib>=1.0.1')
+
+if py_major_minor_version < (3, 5):
+    install_requires.append('typing>=3.6.1')
 
 tests_require = [
     'decorator',
