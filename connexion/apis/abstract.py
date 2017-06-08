@@ -33,7 +33,7 @@ class AbstractAPI(object):
     def __init__(self, specification, base_path=None, arguments=None,
                  validate_responses=False, strict_validation=False, resolver=None,
                  auth_all_paths=False, debug=False, resolver_error_handler=None,
-                 validator_map=None, pythonic_params=False, options=None, **old_style_options):
+                 validator_map=None, pythonic_params=False, options=None, flask_session_key=None, **old_style_options):
         """
         :type specification: pathlib.Path | dict
         :type base_path: str | None
@@ -59,6 +59,7 @@ class AbstractAPI(object):
         self.debug = debug
         self.validator_map = validator_map
         self.resolver_error_handler = resolver_error_handler
+        self.flask_session_key = flask_session_key
 
         self.options = ConnexionOptions(old_style_options)
         # options is added last to preserve the highest priority
