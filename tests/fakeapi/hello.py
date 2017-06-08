@@ -93,7 +93,7 @@ def with_problem():
                    detail='Something went wrong somewhere',
                    status=418,
                    instance='instance1',
-                   headers={'x-Test-Header': 'In Test'})
+                   headers=[('x-Test-Header', 'In Test')])
 
 
 def with_problem_txt():

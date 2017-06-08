@@ -21,7 +21,7 @@ def problem(status, title, detail, type=None, instance=None, headers=None, ext=N
                      further information if dereferenced.
     :type instance: str
     :param headers: HTTP headers to include in the response
-    :type headers: dict | None
+    :type headers: list | None
     :param ext: Extension members to include in the body
     :type ext: dict | None
     :return: error response
