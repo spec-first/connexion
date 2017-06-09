@@ -121,7 +121,7 @@ def parameter_to_arg(parameters, consumes, function, pythonic_params=False):
         kwargs = {}
 
         if all_json(consumes):
-            request_body = request.json
+            request_body = request.get_json()
         else:
             request_body = request.body
 
