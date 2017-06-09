@@ -104,7 +104,7 @@ class RequestBodyValidator(object):
         @functools.wraps(function)
         def wrapper(request):
             if all_json(self.consumes):
-                data = request.json
+                data = request.get_json()
 
                 if data is None and len(request.body) > 0 and not self.is_null_value_valid:
                     # the body has contents that were not parsed as JSON
