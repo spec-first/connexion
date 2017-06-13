@@ -83,14 +83,19 @@ class ResponseValidator(BaseDecorator):
         @functools.wraps(function)
         def wrapper(request):
             response = function(request)
-            try:
-                self.validate_response(
-                    response.get_data(), response.status_code,
-                    response.headers, request.url)
+            
+            if not response.is_streamed:
+                try:
+                    self.validate_response(
+                        response.get_data(), response.status_code,
+                        response.headers, request.url)
 
-            except (NonConformingResponseBody, NonConformingResponseHeaders) as e:
-                response = problem(500, e.reason, e.message)
-                return self.operation.api.get_response(response)
+                except (
+                NonConformingResponseBody, NonConformingResponseHeaders) as e:
+                    response = problem(500, e.reason, e.message)
+                    return self.operation.api.get_response(response)
+            else:
+                pass
 
             return response
 
