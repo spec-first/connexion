@@ -422,14 +422,9 @@ usual/standard GitHub practices.
 TODOs
 -----
 
-If you'd like to become a more consistent contributor to Connexion,
-we'd love your help working on these:
 
-- Additional ways to handle OAuth 2 authentications
-- Overriding default validation error message
-- Documentation (Response handling, Passing arguments to functions, etc)
-
-Check our `issues waffle board`_ for more info.
+If you'd like to become a more consistent contributor to Connexion, we'd love your help working on 
+these we have a list of `issues where we are looking for contributions`_.
 
 Thanks
 ===================
@@ -464,3 +459,5 @@ Unless required by applicable law or agreed to in writing, software distributed 
 .. _described by Flask: http://flask.pocoo.org/snippets/111/
 .. _Connexion's Documentation Page: http://connexion.readthedocs.org/en/latest/
 .. _Crafting effective Microservices in Python: http://caricio.com/2016/09/16/crafting-effective-microservices-in-python/
+.. _issues where we are looking for contributions: https://github.com/zalando/connexion/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22
+
