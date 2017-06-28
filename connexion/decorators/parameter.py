@@ -8,7 +8,7 @@ import inflection
 import six
 
 from ..lifecycle import ConnexionRequest  # NOQA
-from ..utils import all_json, boolean, is_null, is_nullable
+from ..utils import all_json, boolean, is_null, is_nullable, date, date_time
 
 try:
     import builtins
@@ -24,7 +24,9 @@ TYPE_MAP = {'integer': int,
             'string': str,
             'boolean': boolean,
             'array': list,
-            'object': dict}  # map of swagger types to python types
+            'object': dict,
+            'date': date,
+            'dateTime': date_time}  # map of swagger types to python types
 
 
 def inspect_function_arguments(function):  # pragma: no cover
