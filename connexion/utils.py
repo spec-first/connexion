@@ -1,5 +1,6 @@
 import functools
 import importlib
+from datetime import datetime
 
 
 def deep_getattr(obj, attr):
@@ -96,6 +97,28 @@ def boolean(s):
         return False
     else:
         raise ValueError('Invalid boolean value')
+
+
+def date(d):
+    '''
+    Convert JSON/Swagger date value to Python datetime Object, raise ValueError otherwise
+
+    >>> date("2017-01-01")
+    datetime.datetime(2017, 1, 1, 0, 0)
+
+    '''
+    return datetime.strptime(d, "%Y-%m-%d")
+
+
+def date_time(d):
+    '''
+    Convert JSON/Swagger dateTime value to Python datetime Object, raise ValueError otherwise
+    
+    >>> date_time("2017-01-01T10:20:30")
+    datetime.datetime(2017, 1, 1, 10, 20, 30)
+
+    '''
+    return datetime.strptime(d, "%Y-%m-%dT%H:%M:%S")
 
 
 def is_nullable(param_def):
