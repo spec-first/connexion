@@ -71,7 +71,10 @@ def verify_oauth(token_info_url, allowed_scopes, function):
                     token_response=token_request
                 )
             token_info = token_request.json()  # type: dict
-            user_scopes = set(token_info['scope'])
+            if isinstance(token_info['scope'], list):
+                user_scopes = set(token_info['scope'])
+            else:
+                user_scopes = set(token_info['scope'].split())
             logger.debug("... Scopes required: %s", allowed_scopes)
             logger.debug("... User scopes: %s", user_scopes)
             if not allowed_scopes <= user_scopes:
