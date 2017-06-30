@@ -41,11 +41,12 @@ class MockResolver(Resolver):
         else:
             try:
                 func = self.resolve_function_from_operation_id(operation_id)
-                msg = '... Successfully resolved operationId "{}"! Mock is *not* used for this operation.'.format(
+                msg = "... Successfully resolved operationId '{}'! Mock is *not* used for this operation.".format(
                     operation_id)
                 logger.debug(msg)
             except ResolverError as resolution_error:
-                logger.debug('... {} Mock function used for this operation.'.format(resolution_error.reason))
+                logger.debug('... {}! Mock function is used for this operation.'.format(
+                    resolution_error.reason.capitalize()))
                 func = mock_func
         return Resolution(func, operation_id)
 
