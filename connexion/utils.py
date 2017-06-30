@@ -17,12 +17,19 @@ def get_function_from_name(function_name):
 
     :type function_name: str
     """
-    module_name, attr_path = function_name.rsplit('.', 1)
+    if function_name is None:
+        raise ValueError("Empty function name")
+
+    if '.' in function_name:
+        module_name, attr_path = function_name.rsplit('.', 1)
+    else:
+        module_name = ''
+        attr_path = function_name
+
     module = None
     last_import_error = None
 
     while not module:
-
         try:
             module = importlib.import_module(module_name)
         except ImportError as import_error:

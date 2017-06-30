@@ -12,7 +12,7 @@ from ..utils import all_json, boolean, is_null, is_nullable
 
 try:
     import builtins
-except ImportError:
+except ImportError:  # pragma: no cover
     import __builtin__ as builtins
 
 

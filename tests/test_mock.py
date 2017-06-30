@@ -1,4 +1,3 @@
-
 from connexion.mock import MockResolver, partial
 from connexion.operation import Operation
 
@@ -76,6 +75,11 @@ def test_mock_resolver_no_examples():
 def test_mock_resolver_notimplemented():
     resolver = MockResolver(mock_all=False)
 
+    responses = {
+        '418': {}
+    }
+
+    # do not mock the existent functions
     operation = Operation(api=None,
                           method='GET',
                           path='endpoint',
@@ -91,3 +95,23 @@ def test_mock_resolver_notimplemented():
                           parameter_definitions={},
                           resolver=resolver)
     assert operation.operation_id == 'fakeapi.hello.get'
+
+    # mock only the nonexistent ones
+    operation = Operation(api=None,
+                          method='GET',
+                          path='endpoint',
+                          path_parameters=[],
+                          operation={
+                              'operationId': 'fakeapi.hello.nonexistent_function',
+                              'responses': responses
+                          },
+                          app_produces=['application/json'],
+                          app_consumes=['application/json'],
+                          app_security=[],
+                          security_definitions={},
+                          definitions={},
+                          parameter_definitions={},
+                          resolver=resolver)
+
+    # check if it is using the mock function
+    assert operation._Operation__undecorated_function() == ('No example response was defined.', 418)
