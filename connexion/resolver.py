@@ -1,6 +1,6 @@
 import logging
-import sys
 import re
+import sys
 
 import connexion.utils as utils
 from connexion.exceptions import ResolverError
