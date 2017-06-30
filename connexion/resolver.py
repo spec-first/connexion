@@ -1,5 +1,6 @@
 import logging
 import re
+import sys
 
 import connexion.utils as utils
 from connexion.exceptions import ResolverError
@@ -45,7 +46,7 @@ class Resolver(object):
         :type operation: connexion.operation.Operation
         """
         spec = operation.operation
-        operation_id = spec.get('operationId')
+        operation_id = spec.get('operationId', '')
         x_router_controller = spec.get('x-swagger-router-controller')
         if x_router_controller is None:
             return operation_id
@@ -57,15 +58,13 @@ class Resolver(object):
 
         :type operation_id: str
         """
-        msg = 'Cannot resolve operationId "{}"!'.format(operation_id)
         try:
             return self.function_resolver(operation_id)
         except ImportError as e:
-            msg = "{} Import error was '{}'".format(msg, str(e))
-            import sys
+            msg = 'Cannot resolve operationId "{}"! Import error was "{}"'.format(operation_id, str(e))
             raise ResolverError(msg, sys.exc_info())
-        except AttributeError:
-            raise ResolverError(msg)
+        except (AttributeError, ValueError) as e:
+            raise ResolverError(str(e), sys.exc_info())
 
 
 class RestyResolver(Resolver):

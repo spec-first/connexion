@@ -1,4 +1,8 @@
+import logging
+
 from connexion.resolver import Resolution, Resolver, ResolverError
+
+logger = logging.getLogger(__name__)
 
 
 def partial(func, **frozen):
@@ -15,6 +19,7 @@ def partial(func, **frozen):
 class MockResolver(Resolver):
 
     def __init__(self, mock_all):
+        super(MockResolver, self).__init__()
         self.mock_all = mock_all
         self._operation_id_counter = 1
 
@@ -36,7 +41,12 @@ class MockResolver(Resolver):
         else:
             try:
                 func = self.resolve_function_from_operation_id(operation_id)
-            except ResolverError:
+                msg = "... Successfully resolved operationId '{}'! Mock is *not* used for this operation.".format(
+                    operation_id)
+                logger.debug(msg)
+            except ResolverError as resolution_error:
+                logger.debug('... {}! Mock function is used for this operation.'.format(
+                    resolution_error.reason.capitalize()))
                 func = mock_func
         return Resolution(func, operation_id)
 

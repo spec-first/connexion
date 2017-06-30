@@ -197,7 +197,7 @@ def test_run_unimplemented_operations_and_stub(mock_app_run):
     runner = CliRunner()
 
     spec_file = str(FIXTURES_FOLDER / 'missing_implementation/swagger.yaml')
-    with pytest.raises(ResolverError):
+    with pytest.raises(AttributeError):
         runner.invoke(main, ['run', spec_file], catch_exceptions=False)
     # yet can be run with --stub option
     result = runner.invoke(main, ['run', spec_file, '--stub'], catch_exceptions=False)
@@ -215,7 +215,7 @@ def test_run_unimplemented_operations_and_mock(mock_app_run):
     runner = CliRunner()
 
     spec_file = str(FIXTURES_FOLDER / 'missing_implementation/swagger.yaml')
-    with pytest.raises(ResolverError):
+    with pytest.raises(AttributeError):
         runner.invoke(main, ['run', spec_file], catch_exceptions=False)
     # yet can be run with --mock option
     result = runner.invoke(main, ['run', spec_file, '--mock=all'], catch_exceptions=False)
