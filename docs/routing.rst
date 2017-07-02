@@ -53,7 +53,7 @@ the endpoints in your specification:
           # Implied operationId: api.get
      /foo:
        get:
-          # Implied operationId: api.foo.search
+          # Implied operationId: api.foo.get
        post:
           # Implied operationId: api.foo.post
 
