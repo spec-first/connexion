@@ -11,3 +11,4 @@ htmlcov/
 *.swp
 .tox/
 .idea/
+connexion/vendor/swagger-ui/index.html.patched
