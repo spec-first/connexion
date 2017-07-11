@@ -375,6 +375,22 @@ You can also disable it at the API level:
     app = connexion.App(__name__, specification_dir='swagger/')
     app.add_api('my_api.yaml', swagger_ui=False)
 
+If necessary, you can explicitly specify the path to the directory with
+swagger-ui to not use the connexion-embedded swagger-ui distro.
+In order to do this, you should specify the following option:
+
+.. code-block:: python
+
+   options = {'swagger_path': '/path/to/swagger_ui/'}
+   app = connexion.App(__name__, specification_dir='swagger/', options=options)
+
+Make sure that `swagger_ui/index.html` loads by default local swagger json.
+You can use the `api_url` jinja variable for this purpose:
+
+.. code-block::
+    
+    const ui = SwaggerUIBundle({ url: "{{ api_url }}/swagger.json"})
+
 Server Backend
 --------------
 
@@ -423,7 +439,7 @@ TODOs
 -----
 
 
-If you'd like to become a more consistent contributor to Connexion, we'd love your help working on 
+If you'd like to become a more consistent contributor to Connexion, we'd love your help working on
 these we have a list of `issues where we are looking for contributions`_.
 
 Thanks
@@ -460,4 +476,3 @@ Unless required by applicable law or agreed to in writing, software distributed 
 .. _Connexion's Documentation Page: http://connexion.readthedocs.org/en/latest/
 .. _Crafting effective Microservices in Python: http://caricio.com/2016/09/16/crafting-effective-microservices-in-python/
 .. _issues where we are looking for contributions: https://github.com/zalando/connexion/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22
-
