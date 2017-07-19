@@ -33,7 +33,7 @@ class ResponseValidator(BaseDecorator):
         :rtype bool | None
         """
         response_definitions = self.operation.operation["responses"]
-        response_definition = response_definitions.get(str(status_code), {})
+        response_definition = response_definitions.get(str(status_code), response_definitions.get("default", {}))
         response_definition = self.operation.resolve_reference(response_definition)
         # TODO handle default response definitions
 

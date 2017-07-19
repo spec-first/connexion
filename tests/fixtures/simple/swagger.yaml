@@ -774,6 +774,26 @@ paths:
           schema:
             type: object
 
+  /get_bad_default_response/{response_code}:
+    get:
+      operationId: fakeapi.hello.get_bad_default_response
+      produces:
+        - "application/json"
+      parameters:
+        - name: response_code
+          in: path
+          type: integer
+          required: true
+      responses:
+        200:
+          description: Some object response
+          schema:
+            type: object
+        default:
+          description: Some array response
+          schema:
+            type: array
+
 definitions:
   new_stack:
     type: object
