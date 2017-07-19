@@ -220,7 +220,7 @@ templates['main'] = template({"1":function(container,depth0,helpers,partials,dat
 templates['oauth2'] = template({"1":function(container,depth0,helpers,partials,data) {
     var stack1, alias1=depth0 != null ? depth0 : {}, alias2=helpers.helperMissing;
 
-  return "            <li>\n                <input class=\"oauth-scope\" type=\"checkbox\" data-scope=\""
+  return "            <li>\n                <input class=\"oauth-scope\" checked=\"checked\" type=\"checkbox\" data-scope=\""
     + ((stack1 = (helpers.escape || (depth0 && depth0.escape) || alias2).call(alias1,(depth0 != null ? depth0.scope : depth0),{"name":"escape","hash":{},"data":data})) != null ? stack1 : "")
     + "\" oauthtype=\""
     + ((stack1 = (helpers.escape || (depth0 && depth0.escape) || alias2).call(alias1,(depth0 != null ? depth0.OAuthSchemeKey : depth0),{"name":"escape","hash":{},"data":data})) != null ? stack1 : "")
@@ -22709,7 +22709,7 @@ SwaggerUi.Models.Oauth2Model = Backbone.Model.extend({
       var valid = false;
       var scp = this.get('scopes');
       var idx =  _.findIndex(scp, function (o) {
-         return o.checked === true;
+         return o.checked !== false;
       });
 
       if(scp.length > 0 && idx >= 0) {
