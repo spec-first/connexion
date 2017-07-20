@@ -407,3 +407,6 @@ def post_wrong_content_type():
 def get_unicode_data():
     jsonResponse = {u'currency': u'\xa3', u'key': u'leena'}
     return jsonResponse
+
+def get_bad_default_response(response_code):
+    return {}, response_code

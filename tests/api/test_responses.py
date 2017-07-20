@@ -219,3 +219,12 @@ def test_get_unicode_response(simple_app):
     resp = app_client.get('/v1.0/get_unicode_response')
     actualJson = {u'currency': u'\xa3', u'key': u'leena'}
     assert json.loads(resp.data.decode('utf-8','replace')) == actualJson
+
+
+def test_get_bad_default_response(simple_app):
+    app_client = simple_app.app.test_client()
+    resp = app_client.get('/v1.0/get_bad_default_response/200')
+    assert resp.status_code == 200
+
+    resp = app_client.get('/v1.0/get_bad_default_response/202')
+    assert resp.status_code == 500
