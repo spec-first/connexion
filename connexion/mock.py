@@ -74,4 +74,4 @@ class MockResolver(Resolver):
             if schema_example:
                 return schema_example, status_code
             else:
-                return 'No example response or schema was defined.', status_code
+                return 'No example response was defined.', status_code
