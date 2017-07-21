@@ -67,10 +67,16 @@ class MockResolver(Resolver):
             # No response example, check for schema example
             response_schema = response_definition.get('schema', {})
             definitions = response_schema.get('definitions', {})
-            ref = response_schema.get('$ref', '')
-            ref = ref[ref.rfind('/')+1:] or ''
-            ref_schema = definitions.get(ref, {})
-            schema_example = ref_schema.get('example')
+            schema_example = None
+            ref = response_schema.get('$ref')
+            if ref:
+                # Referenced schema
+                ref = ref[ref.rfind('/')+1:] or ''
+                ref_schema = definitions.get(ref, {})
+                schema_example = ref_schema.get('example')
+            else:
+                # Inline schema
+                schema_example = response_schema.get('example')
             if schema_example:
                 return schema_example, status_code
             else:
