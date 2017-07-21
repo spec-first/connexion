@@ -64,4 +64,14 @@ class MockResolver(Resolver):
         if examples:
             return list(examples.values())[0], status_code
         else:
-            return 'No example response was defined.', status_code
+            # No response example, check for schema example
+            response_schema = response_definition.get('schema', {})
+            definitions = response_schema.get('definitions')
+            ref = response_schema.get('$ref')
+            ref = ref[ref.rfind('/')+1:]
+            ref_schema = definitions.get(ref, {})
+            schema_example = ref_schema.get('example')
+            if schema_example:
+                return schema_example, status_code
+            else:
+                return 'No example response or schema was defined.', status_code
