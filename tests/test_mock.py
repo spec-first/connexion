@@ -43,6 +43,81 @@ def test_mock_resolver():
     assert status_code == 200
     assert response == {'foo': 'bar'}
 
+def test_mock_resolver_ref_schema_example():
+    resolver = MockResolver(mock_all=True)
+
+    responses = {
+        'default': {
+            'schema': {
+                '$ref': '#/definitions/Schema'
+            }
+        }
+    }
+
+    operation = Operation(api=None,
+                          method='GET',
+                          path='endpoint',
+                          path_parameters=[],
+                          operation={
+                              'responses': responses
+                          },
+                          app_produces=['application/json'],
+                          app_consumes=['application/json'],
+                          app_security=[],
+                          security_definitions={},
+                          definitions={
+                              'Schema': {
+                                  'example': {
+                                      'foo': 'bar'
+                                  }
+                              }
+                          },
+                          parameter_definitions={},
+                          resolver=resolver)
+    assert operation.operation_id == 'mock-1'
+
+    response, status_code = resolver.mock_operation(operation)
+    assert status_code == 200
+    assert response == {'foo': 'bar'}
+
+def test_mock_resolver_inline_schema_example():
+    resolver = MockResolver(mock_all=True)
+
+    responses = {
+        'default': {
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'foo': {
+                        'type': 'string'
+                    }
+                },
+                'example': {
+                    'foo': 'bar'
+                }
+            }
+        }
+    }
+
+    operation = Operation(api=None,
+                          method='GET',
+                          path='endpoint',
+                          path_parameters=[],
+                          operation={
+                              'responses': responses
+                          },
+                          app_produces=['application/json'],
+                          app_consumes=['application/json'],
+                          app_security=[],
+                          security_definitions={},
+                          definitions={},
+                          parameter_definitions={},
+                          resolver=resolver)
+    assert operation.operation_id == 'mock-1'
+
+    response, status_code = resolver.mock_operation(operation)
+    assert status_code == 200
+    assert response == {'foo': 'bar'}
 
 def test_mock_resolver_no_examples():
     resolver = MockResolver(mock_all=True)
