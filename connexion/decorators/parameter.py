@@ -55,7 +55,12 @@ def get_val_from_param(value, query_param):
     if is_nullable(query_param) and is_null(value):
         return None
 
-    if query_param["type"] == "array":  # then logic is more complex
+    if isinstance(value, list):
+        if query_param["type"] != "array":
+            return get_val_from_param(value=value[0], query_param=query_param)
+        else:
+            return [make_type(part, query_param["items"]["type"]) for part in value]
+    elif query_param["type"] == "array":  # then logic is more complex
         if query_param.get("collectionFormat") and query_param.get("collectionFormat") == "pipes":
             parts = value.split("|")
         else:  # default: csv
@@ -144,7 +149,9 @@ def parameter_to_arg(parameters, consumes, function, pythonic_params=False):
 
         # Add query parameters
         query_arguments = copy.deepcopy(default_query_params)
-        query_arguments.update({sanitize_param(k): v for k, v in request.query.items()})
+        query_arguments.update(
+            {sanitize_param(k) : (v[0] if len(v) == 1 else v) for k, v in request.query.to_dict(flat=False).items()}
+        )
         for key, value in query_arguments.items():
             if not has_kwargs and key not in arguments:
                 logger.debug("Query Parameter '%s' not in function arguments", key)
