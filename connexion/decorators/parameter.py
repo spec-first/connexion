@@ -143,8 +143,20 @@ def parameter_to_arg(parameters, consumes, function, pythonic_params=False):
             kwargs[body_name] = request_body
 
         # Add query parameters
+        request_query = {}
+        for k, v in request.query.to_dict(flat=False).items():
+            k = sanitize_param(k)
+            query_param = query_types[k]
+            if query_param["type"] == "array":
+                if query_param["collectionFormat"] == "pipes":
+                    request_query[k] = "|".join(v)
+                else:
+                    request_query[k] = ",".join(v)
+            else:
+                request_query[k] = v[0]
+
         query_arguments = copy.deepcopy(default_query_params)
-        query_arguments.update({sanitize_param(k): v for k, v in request.query.items()})
+        query_arguments.update(request_query)
         for key, value in query_arguments.items():
             if not has_kwargs and key not in arguments:
                 logger.debug("Query Parameter '%s' not in function arguments", key)
