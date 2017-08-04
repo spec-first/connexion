@@ -99,6 +99,24 @@ def parameter_to_arg(parameters, consumes, function, pythonic_params=False):
             name = snake_and_shadow(name)
         return name and re.sub('^[^a-zA-Z_]+', '', re.sub('[^0-9a-zA-Z_]', '', name))
 
+    def make_request_query(request):
+        request_query = {}
+        isMultiDict = callable(getattr(request.query, "to_dict", None))
+        if isMultiDict:
+            for k, v in request.query.to_dict(flat=False).items():
+                k = sanitize_param(k)
+                query_param = query_types.get(k, None)
+                if query_param is not None and query_param["type"] == "array":
+                    if query_param.get("collectionFormat", None) == "pipes":
+                        request_query[k] = "|".join(v)
+                    else:
+                        request_query[k] = ",".join(v)
+                else:
+                    request_query[k] = v[0]
+        else:
+            request_query = {sanitize_param(k): v for k, v in request.form.items()}
+        return request_query
+
     body_parameters = [parameter for parameter in parameters if parameter['in'] == 'body'] or [{}]
     body_name = sanitize_param(body_parameters[0].get('name'))
     default_body = body_parameters[0].get('schema', {}).get('default')
@@ -143,20 +161,8 @@ def parameter_to_arg(parameters, consumes, function, pythonic_params=False):
             kwargs[body_name] = request_body
 
         # Add query parameters
-        request_query = {}
-        for k, v in request.query.to_dict(flat=False).items():
-            k = sanitize_param(k)
-            query_param = query_types[k]
-            if query_param["type"] == "array":
-                if query_param["collectionFormat"] == "pipes":
-                    request_query[k] = "|".join(v)
-                else:
-                    request_query[k] = ",".join(v)
-            else:
-                request_query[k] = v[0]
-
         query_arguments = copy.deepcopy(default_query_params)
-        query_arguments.update(request_query)
+        query_arguments.update(make_request_query(request))
         for key, value in query_arguments.items():
             if not has_kwargs and key not in arguments:
                 logger.debug("Query Parameter '%s' not in function arguments", key)
