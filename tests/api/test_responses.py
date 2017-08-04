@@ -219,7 +219,7 @@ def test_post_wrong_content_type(simple_app):
     # (https://github.com/pallets/werkzeug/issues/1159)
     # so that content-type is added to every request, we remove it here manually for our test
     # this test can be removed once the werkzeug issue is addressed
-    from werkzeug.test import EnvironBuilder
+    from werkzeug.test import Client, EnvironBuilder
     builder = EnvironBuilder(path='/v1.0/post_wrong_content_type', method='POST',
                              data=json.dumps({"some": "data"}))
     try:
@@ -227,7 +227,10 @@ def test_post_wrong_content_type(simple_app):
     finally:
         builder.close()
     environ.pop('CONTENT_TYPE')
-    resp = app_client.open(environ)
+    # we cannot just call app_client.open() since app_client is a flask.testing.FlaskClient
+    # which overrides werkzeug.test.Client.open() but does not allow passing an environment
+    # directly
+    resp = Client.open(app_client, environ)
     assert resp.status_code == 415
 
 
