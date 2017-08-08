@@ -408,5 +408,14 @@ def get_unicode_data():
     jsonResponse = {u'currency': u'\xa3', u'key': u'leena'}
     return jsonResponse
 
+def get_httpstatus_response():
+    try:
+        # Available in python 3.5+
+        from http import HTTPStatus
+    except ImportError:
+        return {}, 200
+    else:
+        return {}, HTTPStatus.OK
+
 def get_bad_default_response(response_code):
     return {}, response_code

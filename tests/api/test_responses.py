@@ -221,6 +221,12 @@ def test_get_unicode_response(simple_app):
     assert json.loads(resp.data.decode('utf-8','replace')) == actualJson
 
 
+def test_get_httpstatus_response(simple_app):
+    app_client = simple_app.app.test_client()
+    resp = app_client.get('/v1.0/get_httpstatus_response')
+    assert resp.status_code == 200
+
+
 def test_get_bad_default_response(simple_app):
     app_client = simple_app.app.test_client()
     resp = app_client.get('/v1.0/get_bad_default_response/200')

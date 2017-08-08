@@ -28,14 +28,19 @@ class ResponseValidator(BaseDecorator):
         Validates the Response object based on what has been declared in the specification.
         Ensures the response body matches the declated schema.
         :type data: dict
-        :type status_code: int
+        :type status_code: int | enum.Enum
         :type headers: dict
         :rtype bool | None
         """
+        try:
+            # If we got an enum instead of an int, extract the value.
+            status_code = status_code.value
+        except AttributeError:
+            pass
+
         response_definitions = self.operation.operation["responses"]
         response_definition = response_definitions.get(str(status_code), response_definitions.get("default", {}))
         response_definition = self.operation.resolve_reference(response_definition)
-        # TODO handle default response definitions
 
         if self.is_json_schema_compatible(response_definition):
             schema = response_definition.get("schema")
