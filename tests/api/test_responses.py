@@ -1,6 +1,8 @@
 import json
 from struct import unpack
 
+from werkzeug.test import Client, EnvironBuilder
+
 from connexion.apps.flask_app import FlaskJSONEncoder
 
 
@@ -219,7 +221,6 @@ def test_post_wrong_content_type(simple_app):
     # (https://github.com/pallets/werkzeug/issues/1159)
     # so that content-type is added to every request, we remove it here manually for our test
     # this test can be removed once the werkzeug issue is addressed
-    from werkzeug.test import Client, EnvironBuilder
     builder = EnvironBuilder(path='/v1.0/post_wrong_content_type', method='POST',
                              data=json.dumps({"some": "data"}))
     try:
