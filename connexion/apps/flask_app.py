@@ -113,7 +113,7 @@ class FlaskApp(AbstractApp):
             logger.info('Listening on %s:%s..', self.host, self.port)
             http_server.serve_forever()
         else:
-            raise Exception('Server %s not recognized', self.server)
+            raise Exception('Server {} not recognized'.format(self.server))
 
 
 class FlaskJSONEncoder(json.JSONEncoder):
