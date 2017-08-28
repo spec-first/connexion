@@ -18,10 +18,16 @@ except ImportError:  # pragma: no cover
 
 logger = logging.getLogger(__name__)
 
+# Python 2/3 compatibility:
+try:
+    py_string = unicode
+except NameError:  # pragma: no cover
+    py_string = str  # pragma: no cover
+
 # https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#data-types
 TYPE_MAP = {'integer': int,
             'number': float,
-            'string': str,
+            'string': py_string,
             'boolean': boolean,
             'array': list,
             'object': dict}  # map of swagger types to python types

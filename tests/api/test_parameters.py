@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import json
 from io import BytesIO
 
@@ -331,3 +333,11 @@ def test_parameters_snake_case(snake_case_app):
     assert resp.status_code == 200
     resp = app_client.get('/v1.0/test-get-query-shadow?list=123')
     assert resp.status_code == 200
+
+
+def test_get_unicode_request(simple_app):
+    """Regression test for Python 2 UnicodeEncodeError bug during parameter parsing."""
+    app_client = simple_app.app.test_client()
+    resp = app_client.get('/v1.0/get_unicode_request?price=%C2%A319.99')
+    assert resp.status_code == 200
+    assert json.loads(resp.data)['price'] == u'\xa319.99'
