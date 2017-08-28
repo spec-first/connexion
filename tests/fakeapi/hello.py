@@ -401,12 +401,19 @@ def test_param_sanitization(query=None, form=None):
 def test_body_sanitization(body=None):
     return body
 
+
 def post_wrong_content_type():
     return "NOT OK"
+
+
+def get_unicode_query(price=None):
+    return {'price': price}
+
 
 def get_unicode_data():
     jsonResponse = {u'currency': u'\xa3', u'key': u'leena'}
     return jsonResponse
+
 
 def get_bad_default_response(response_code):
     return {}, response_code
