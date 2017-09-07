@@ -101,8 +101,7 @@ def parameter_to_arg(parameters, consumes, function, pythonic_params=False):
 
     def make_request_query(request):
         request_query = {}
-        isMultiDict = callable(getattr(request.query, "to_dict", None))
-        if isMultiDict:
+        try:
             for k, v in request.query.to_dict(flat=False).items():
                 k = sanitize_param(k)
                 query_param = query_types.get(k, None)
@@ -113,7 +112,7 @@ def parameter_to_arg(parameters, consumes, function, pythonic_params=False):
                         request_query[k] = ",".join(v)
                 else:
                     request_query[k] = v[0]
-        else:
+        except AttributeError:
             request_query = {sanitize_param(k): v for k, v in request.form.items()}
         return request_query
 

@@ -51,14 +51,14 @@ def test_array_query_param(simple_app):
     response = app_client.get(url, headers=headers)
     array_response = json.loads(response.data.decode('utf-8', 'replace'))  # [str] unsupported collectionFormat
     assert array_response == ["1;2;3"]
-    url = '/v1.0/test_array_csv_query_param?items=A&items=B&items=C'
+    url = '/v1.0/test_array_csv_query_param?items=A&items=B&items=C&items=D,E,F'
     response = app_client.get(url, headers=headers)
     array_response = json.loads(response.data.decode('utf-8', 'replace'))  # type: [str] multi array with csv format
-    assert array_response == ['A', 'B', 'C']
-    url = '/v1.0/test_array_pipes_query_param?items=4&items=5&items=6'
+    assert array_response == ['A', 'B', 'C', 'D', 'E', 'F']
+    url = '/v1.0/test_array_pipes_query_param?items=4&items=5&items=6&items=7|8|9'
     response = app_client.get(url, headers=headers)
     array_response = json.loads(response.data.decode('utf-8', 'replace'))  # type: [int] multi array with pipes format
-    assert array_response == [4, 5, 6]
+    assert array_response == [4, 5, 6, 7, 8, 9]
 
 
 def test_extra_query_param(simple_app):
