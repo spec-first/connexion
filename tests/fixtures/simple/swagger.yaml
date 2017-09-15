@@ -786,6 +786,17 @@ paths:
           schema:
             type: object
 
+  /get_enum_response:
+    get:
+      operationId: fakeapi.hello.get_enum_response
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: Some HTTPStatus response
+          schema:
+            type: object
+
   /get_httpstatus_response:
     get:
       operationId: fakeapi.hello.get_httpstatus_response

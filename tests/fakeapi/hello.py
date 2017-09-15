@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import sys
+import unittest
 
 import flask
 from flask import jsonify, redirect
@@ -415,18 +417,24 @@ def get_unicode_data():
     return jsonResponse
 
 
-@unittest.skipIf(sys.version_info < (3, 4), "Not supported in this version")
-def get_httpstatus_response():
-    from enum import Enum
-    class HTTPStatus(Enum):
-        OK = 200
-    return {}, HTTPStatus.OK
+def get_enum_response():
+    try:
+        from enum import Enum
+        class HTTPStatus(Enum):
+            OK = 200
+    except ImportError:
+        return {}, 200
+    else:
+        return {}, HTTPStatus.OK
 
 
-@unittest.skipIf(sys.version_info < (3, 5), "Not supported in this version")
 def get_httpstatus_response():
-    from http import HTTPStatus
-    return {}, HTTPStatus.OK
+    try:
+        from http import HTTPStatus
+    except ImportError:
+        return {}, 200
+    else:
+        return {}, HTTPStatus.OK
 
 
 def get_bad_default_response(response_code):
