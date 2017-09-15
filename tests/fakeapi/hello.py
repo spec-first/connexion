@@ -415,14 +415,18 @@ def get_unicode_data():
     return jsonResponse
 
 
+@unittest.skipIf(sys.version_info < (3, 4), "Not supported in this version")
 def get_httpstatus_response():
-    try:
-        # Available in python 3.5+
-        from http import HTTPStatus
-    except ImportError:
-        return {}, 200
-    else:
-        return {}, HTTPStatus.OK
+    from enum import Enum
+    class HTTPStatus(Enum):
+        OK = 200
+    return {}, HTTPStatus.OK
+
+
+@unittest.skipIf(sys.version_info < (3, 5), "Not supported in this version")
+def get_httpstatus_response():
+    from http import HTTPStatus
+    return {}, HTTPStatus.OK
 
 
 def get_bad_default_response(response_code):
