@@ -83,10 +83,6 @@ def test_invalid_operation_does_not_stop_application_in_debug_mode():
                    base_path="/api/v1.0", arguments={'title': 'OK'}, debug=True)
     assert api.specification['info']['title'] == 'OK'
 
-    api = FlaskApi(TEST_FOLDER / "fixtures/missing_op_id/swagger.yaml",
-                   base_path="/api/v1.0", arguments={'title': 'OK'}, debug=True)
-    assert api.specification['info']['title'] == 'OK'
-
 
 def test_other_errors_stop_application_to_setup():
     # Errors should still result exceptions!

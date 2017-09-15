@@ -43,6 +43,6 @@ validator_map = {
 
 if __name__ == '__main__':
     app = connexion.FlaskApp(
-        __name__, 8080, specification_dir='.', validator_map=validator_map)
+        __name__, port=8080, specification_dir='.', validator_map=validator_map)
     app.add_api('enforcedefaults-api.yaml')
     app.run()

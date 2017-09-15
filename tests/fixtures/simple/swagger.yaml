@@ -763,6 +763,18 @@ paths:
         215:
           description: NOT-OK
 
+  /get_unicode_request:
+    get:
+      summary: Test if a unicode string in query parameter works properly in Python 2
+      operationId: fakeapi.hello.get_unicode_query
+      parameters:
+        - name: price
+          in: query
+          type: string
+      responses:
+        200:
+          description: OK
+
   /get_unicode_response:
     get:
       operationId: fakeapi.hello.get_unicode_data

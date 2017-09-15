@@ -1,6 +1,8 @@
 import json
 from struct import unpack
 
+from werkzeug.test import Client, EnvironBuilder
+
 from connexion.apps.flask_app import FlaskJSONEncoder
 
 
@@ -211,6 +213,25 @@ def test_post_wrong_content_type(simple_app):
     resp = app_client.post('/v1.0/post_wrong_content_type',
                            data=json.dumps({"some": "data"})
                            )
+    assert resp.status_code == 415
+
+    # this test checks exactly what the test directly above is supposed to check,
+    # i.e. no content-type is provided in the header
+    # unfortunately there is an issue with the werkzeug test environment
+    # (https://github.com/pallets/werkzeug/issues/1159)
+    # so that content-type is added to every request, we remove it here manually for our test
+    # this test can be removed once the werkzeug issue is addressed
+    builder = EnvironBuilder(path='/v1.0/post_wrong_content_type', method='POST',
+                             data=json.dumps({"some": "data"}))
+    try:
+        environ = builder.get_environ()
+    finally:
+        builder.close()
+    environ.pop('CONTENT_TYPE')
+    # we cannot just call app_client.open() since app_client is a flask.testing.FlaskClient
+    # which overrides werkzeug.test.Client.open() but does not allow passing an environment
+    # directly
+    resp = Client.open(app_client, environ)
     assert resp.status_code == 415
 
 

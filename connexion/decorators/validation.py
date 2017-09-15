@@ -111,7 +111,7 @@ class RequestBodyValidator(object):
                     return problem(415,
                                    "Unsupported Media Type",
                                    "Invalid Content-type ({content_type}), expected JSON data".format(
-                                       content_type=request.headers["Content-Type"]
+                                       content_type=request.headers.get("Content-Type", "")
                                    ))
 
                 logger.debug("%s validating schema...", request.url)
