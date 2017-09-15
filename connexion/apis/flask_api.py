@@ -154,6 +154,12 @@ class FlaskApi(AbstractAPI):
         flask_response = flask.current_app.response_class(**kwargs)  # type: flask.Response
 
         if status_code is not None:
+            try:
+                # If we got an enum instead of an int, extract the value.
+                status_code = status_code.value
+            except AttributeError:
+                pass
+
             flask_response.status_code = status_code
 
         if data is not None and data is not NoContent:
