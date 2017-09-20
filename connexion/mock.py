@@ -1,8 +1,126 @@
+import datetime
 import logging
 
+from connexion import NoContent
 from connexion.resolver import Resolution, Resolver, ResolverError
 
 logger = logging.getLogger(__name__)
+
+PRIMITIVES = {
+  "string": lambda schema: "string",
+  "string_email": lambda schema: "user@example.com",
+  "string_date": lambda schema: datetime.date.today().isoformat(),
+  "string_date-time": lambda schema: datetime.datetime.now().isoformat(),
+  "number": lambda schema: numeric_primitive(schema, int),
+  "number_float": lambda schema: numeric_primitive(schema, float),
+  "integer": lambda schema: numeric_primitive(schema, int),
+  "boolean": lambda schema: schema.get('default', True),
+}
+
+
+def numeric_primitive(schema, type_):
+    minimum = schema.get('minimum')
+    exclusive_minimum = schema.get('exclusiveMinimum', False)
+    maximum = schema.get('maximum')
+    exclusive_maximum = schema.get('exclusiveMaximum', False)
+    default = schema.get('default')
+
+    if default is not None:
+        return default
+
+    boundary = 0.01 if type_ is float else 1
+    minimum = minimum + boundary if exclusive_minimum else minimum
+    maximum = maximum + boundary if exclusive_maximum else maximum
+
+    if minimum is not None and maximum is not None:
+        if type_ is int:
+            return type_(minimum + maximum) // 2
+        else:
+            return type_(minimum + maximum) / 2.0
+    elif minimum is not None:
+        return type_(minimum + 1)
+    elif maximum is not None:
+        return type_(maximum - 1)
+    else:
+        return type_()
+
+
+def primitive(schema):
+    kw = dict(type=schema['type'], format=schema.get('format', ''))
+    fn = PRIMITIVES.get("{type}_{format}".format(**kw), PRIMITIVES.get("{type}".format(**kw)))
+
+    if fn is not None:
+        return fn(schema)
+
+    raise ValueError("Unknown Type: {type}".format(**schema))  # pragma: no cover
+
+
+def normalize_array(arr):
+    if isinstance(arr, (list, tuple, set)):
+        return arr
+    return [arr]
+
+
+def sample_from_schema(schema, definitions, include_read_only=True, include_write_only=True):
+    ref = schema.get('$ref')
+    if ref:
+        # Referenced schema
+        ref = ref[ref.rfind('/') + 1:] or ''
+        ref_schema = definitions.get(ref, {})
+        schema = ref_schema
+
+    s_type = schema.get('type')
+    s_properties = schema.get('properties')
+    s_additional_properties = schema.get('additionalProperties')
+    s_items = schema.get('items')
+
+    if 'example' in schema:
+        return schema['example']
+
+    if not s_type:
+        if s_properties:
+            s_type = "object"
+        elif s_items:
+            s_type = "array"
+        else:
+            raise ValueError("No type specified?")  # pragma: no cover
+
+    if s_type == "object":
+        obj = {}
+        if s_properties:
+            for name, prop in s_properties.items():
+                if prop.get('readOnly', False) and not include_read_only:
+                    continue
+                if prop.get('writeOnly', False) and not include_write_only:
+                    continue
+                obj[name] = sample_from_schema(prop, definitions,
+                                               include_read_only=include_read_only,
+                                               include_write_only=include_write_only)
+
+        if s_additional_properties is True:
+            obj['additionalProp1'] = {}
+        elif s_additional_properties:
+            additional_prop_val = sample_from_schema(s_additional_properties, definitions,
+                                                     include_read_only=include_read_only,
+                                                     include_write_only=include_write_only)
+
+            for i in range(1, 4):
+                obj["additionalProp{}".format(i)] = additional_prop_val
+        return obj
+
+    if s_type == "array":
+        return [sample_from_schema(s_items, definitions,
+                                   include_read_only=include_read_only, include_write_only=include_write_only)]
+
+    if "enum" in schema:
+        if "default" in schema:
+            return schema["default"]
+        return normalize_array(schema["enum"])[0]
+
+    if s_type == "file":
+        return
+
+    return primitive(schema)
 
 
 def partial(func, **frozen):
@@ -66,18 +184,11 @@ class MockResolver(Resolver):
         else:
             # No response example, check for schema example
             response_schema = response_definition.get('schema', {})
+            if not response_schema:
+                return NoContent, status_code
             definitions = response_schema.get('definitions', {})
-            schema_example = None
-            ref = response_schema.get('$ref')
-            if ref:
-                # Referenced schema
-                ref = ref[ref.rfind('/')+1:] or ''
-                ref_schema = definitions.get(ref, {})
-                schema_example = ref_schema.get('example')
-            else:
-                # Inline schema
-                schema_example = response_schema.get('example')
+            schema_example = sample_from_schema(response_schema, definitions)
             if schema_example:
                 return schema_example, status_code
             else:
-                return 'No example response was defined.', status_code
+                return 'Cannot generate example response.', status_code
