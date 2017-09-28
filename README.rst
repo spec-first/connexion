@@ -429,6 +429,13 @@ Documentation
 =============
 Additional information is available at `Connexion's Documentation Page`_.
 
+Changes
+=======
+
+A full changelog is maintained on the `GitHub releases page`_.
+
+.. _GitHub releases page: https://github.com/zalando/connexion/releases
+
 Contributing to Connexion/TODOs
 ===============================
 
