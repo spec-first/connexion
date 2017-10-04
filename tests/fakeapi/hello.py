@@ -1,7 +1,4 @@
 #!/usr/bin/env python3
-import sys
-import unittest
-
 import flask
 from flask import jsonify, redirect
 
