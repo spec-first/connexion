@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 import flask
 from flask import jsonify, redirect
 
@@ -413,6 +412,26 @@ def get_unicode_query(price=None):
 def get_unicode_data():
     jsonResponse = {u'currency': u'\xa3', u'key': u'leena'}
     return jsonResponse
+
+
+def get_enum_response():
+    try:
+        from enum import Enum
+        class HTTPStatus(Enum):
+            OK = 200
+    except ImportError:
+        return {}, 200
+    else:
+        return {}, HTTPStatus.OK
+
+
+def get_httpstatus_response():
+    try:
+        from http import HTTPStatus
+    except ImportError:
+        return {}, 200
+    else:
+        return {}, HTTPStatus.OK
 
 
 def get_bad_default_response(response_code):

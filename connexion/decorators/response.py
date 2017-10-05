@@ -35,7 +35,6 @@ class ResponseValidator(BaseDecorator):
         response_definitions = self.operation.operation["responses"]
         response_definition = response_definitions.get(str(status_code), response_definitions.get("default", {}))
         response_definition = self.operation.resolve_reference(response_definition)
-        # TODO handle default response definitions
 
         if self.is_json_schema_compatible(response_definition):
             schema = response_definition.get("schema")
