@@ -236,7 +236,7 @@ class AbstractAPI(object):
             path_parameters = methods.get('parameters', [])
 
             for method, endpoint in methods.items():
-                if method == 'parameters':
+                if method == 'parameters' or method.startswith('x-'):
                     continue
                 try:
                     self.add_operation(method, path, endpoint, path_parameters)
