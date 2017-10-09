@@ -38,8 +38,6 @@ def get_function_from_name(function_name):
                 module_name, attr_path1 = module_name.rsplit('.', 1)
                 attr_path = '{0}.{1}'.format(attr_path1, attr_path)
             else:
-                if function_name is None:
-                    raise ValueError("")
                 raise
     try:
         function = deep_getattr(module, attr_path)
