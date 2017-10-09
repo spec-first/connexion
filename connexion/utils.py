@@ -17,9 +17,9 @@ def get_function_from_name(function_name):
 
     :type function_name: str
     """
-    if function_name is None:
-        raise ValueError("Empty function name")
-
+    if function_name is None or function_name == "":
+        raise ValueError("Empty function name. Provide operationId, or change resolver "
+                         "https://github.com/zalando/connexion#automatic-routing")
     if '.' in function_name:
         module_name, attr_path = function_name.rsplit('.', 1)
     else:
@@ -38,6 +38,8 @@ def get_function_from_name(function_name):
                 module_name, attr_path1 = module_name.rsplit('.', 1)
                 attr_path = '{0}.{1}'.format(attr_path1, attr_path)
             else:
+                if function_name is None:
+                    raise ValueError("")
                 raise
     try:
         function = deep_getattr(module, attr_path)
