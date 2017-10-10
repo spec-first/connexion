@@ -3,6 +3,9 @@
 -e git+https://github.com/kennethreitz/requests#egg=requests
 -e git+https://github.com/Yelp/swagger_spec_validator.git#egg=swagger-spec-validator
 -e git+https://github.com/zalando/python-clickclick.git#egg=clickclick
+inflection
+mock
+pytest
 # This repo doesn't have the latest version released on PyPI
 # -e hg+https://bitbucket.org/pitrou/pathlib#egg=pathlib
 # PyYAML is not that easy to build manually, it may fail.
