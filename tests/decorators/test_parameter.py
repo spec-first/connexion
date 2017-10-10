@@ -10,6 +10,10 @@ def test_injection(monkeypatch):
     request.params = {}
 
     func = MagicMock()
-    parameter_to_arg({}, [], func)(request)
+
+    def handler(**kwargs):
+        func(**kwargs)
+
+    parameter_to_arg({}, [], handler)(request)
 
     func.assert_called_with(p1='123')
