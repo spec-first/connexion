@@ -153,10 +153,11 @@ def parameter_to_arg(parameters, consumes, function, pythonic_params=False):
 
         # Parse path parameters
         path_params = request.path_params
-        for key, path_param_definitions in path_types.items():
-            if key in path_params:
-                kwargs[key] = get_val_from_param(path_params[key],
-                                                 path_param_definitions)
+        for key, value in path_params.items():
+            if key in path_types:
+                kwargs[key] = get_val_from_param(value, path_types[key])
+            else:  # Assume path params mechanism used for injection
+                kwargs[key] = value
 
         # Add body parameters
         if not has_kwargs and body_name not in arguments:
