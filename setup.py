@@ -28,6 +28,8 @@ install_requires = [
     'six>=1.9',
     'swagger-spec-validator>=2.0.2',
     'inflection>=0.3.1',
+    'flask_injector',
+    'injector>=0.10',
     'pathlib>=1.0.1; python_version < "3.4"',
     'typing>=3.6.1; python_version < "3.6"',
 ]
