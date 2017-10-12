@@ -165,6 +165,11 @@ def parameter_to_arg(parameters, consumes, function, pythonic_params=False):
             logger.debug("Body parameter '%s' in function arguments", body_name)
             kwargs[body_name] = request_body
 
+        # Fix to add parameter via inject that were not defined explicitly
+        for key, value in path_params.items():
+            if key not in kwargs:
+                kwargs[key] = value
+
         # Add query parameters
         query_arguments = copy.deepcopy(default_query_params)
         query_arguments.update(make_request_query(request))

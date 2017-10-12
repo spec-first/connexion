@@ -3,8 +3,10 @@ import flask
 from flask import jsonify, redirect
 
 import connexion
-from connexion import NoContent, ProblemException, problem
+from connexion import NoContent, ProblemException, problem, request
 
+from .DummyInjectClass import DummyInjectClass
+from flask_injector import inject
 
 class DummyClass(object):
     @classmethod
@@ -65,6 +67,10 @@ def get_list(name):
 def get_bye(name):
     return 'Goodbye {name}'.format(name=name)
 
+@inject
+def get_inject(name, dummyObject: DummyInjectClass):
+    name = dummyObject.dummyInjectMethod('jsantos')
+    return 'Goodbye {name}'.format(name=name), 200
 
 def get_flask_response_tuple():
     return jsonify({'foo': 'bar'}), 201

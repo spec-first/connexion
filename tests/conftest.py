@@ -4,6 +4,10 @@ import pathlib
 
 import pytest
 from connexion import App
+from injector import Binder
+from flask_injector import FlaskInjector
+from connexion.resolver import RestyResolver
+from fakeapi.DummyInjectClass import DummyInjectClass
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -94,10 +98,37 @@ def build_app_from_fixture(api_spec_folder, **kwargs):
     return cnx_app
 
 
+def configure(binder: Binder) -> Binder:
+    binder.bind(
+        DummyInjectClass,
+        DummyInjectClass()
+    )
+    return binder
+
+
+# variant of the simple app that includes the flask injector
+def build_app_inject_from_fixture(api_spec_folder, **kwargs):
+    debug = True
+    if 'debug' in kwargs:
+        debug = kwargs['debug']
+        del (kwargs['debug'])
+
+    cnx_app = App(__name__,
+                  port=5001,
+                  specification_dir=FIXTURES_FOLDER / api_spec_folder,
+                  debug=debug)
+    cnx_app.add_api('swagger.yaml', **kwargs, resolver=RestyResolver('api'))
+    FlaskInjector(app=cnx_app.app, modules=[configure])
+    return cnx_app
+
+
 @pytest.fixture(scope="session")
 def simple_app():
     return build_app_from_fixture('simple', validate_responses=True)
 
+@pytest.fixture(scope="session")
+def simple_app_inject():
+    return build_app_inject_from_fixture('simple', validate_responses=True)
 
 @pytest.fixture(scope="session")
 def snake_case_app():

@@ -5,6 +5,17 @@ import json
 from io import BytesIO
 
 
+def test_app_inject(simple_app_inject):
+    assert simple_app_inject.port == 5001
+
+    app_inject_client = simple_app_inject.app.test_client()
+
+    # test if missing input value is injected
+    get_bye_inject = app_inject_client.get('/v1.0/bye_inject/jsantos')  # type: flask.Response
+    assert get_bye_inject.status_code == 200
+    assert get_bye_inject.data == b'Goodbye jsantos'
+
+
 def test_parameter_validation(simple_app):
     app_client = simple_app.app.test_client()
 
