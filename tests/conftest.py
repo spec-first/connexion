@@ -117,7 +117,7 @@ def build_app_inject_from_fixture(api_spec_folder, **kwargs):
                   port=5001,
                   specification_dir=FIXTURES_FOLDER / api_spec_folder,
                   debug=debug)
-    cnx_app.add_api('swagger.yaml', **kwargs, resolver=RestyResolver('api'))
+    cnx_app.add_api('swagger.yaml', resolver=RestyResolver('api'), **kwargs)
     FlaskInjector(app=cnx_app.app, modules=[configure])
     return cnx_app
 
