@@ -98,7 +98,7 @@ def build_app_from_fixture(api_spec_folder, **kwargs):
     return cnx_app
 
 
-def configure(binder: Binder) -> Binder:
+def configure(binder):
     binder.bind(
         DummyInjectClass,
         DummyInjectClass()
