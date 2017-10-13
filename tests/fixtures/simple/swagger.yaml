@@ -85,6 +85,27 @@ paths:
           required: true
           type: string
 
+  /bye_inject/{name}:
+    get:
+      summary: Generate goodbye
+      description: Generates a goodbye message.
+      operationId: fakeapi.hello.get_inject
+      produces:
+        - text/plain
+      responses:
+        '200':
+          description: goodbye response
+          schema:
+            type: string
+        default:
+          description: "unexpected error"
+      parameters:
+        - name: name
+          in: path
+          description: Name of the person to say bye.
+          required: true
+          type: string
+
   /flask_response_tuple:
     get:
       summary: Return flask response tuple
