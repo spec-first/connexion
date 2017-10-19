@@ -1,3 +1,4 @@
+import importlib
 import logging
 import sys
 from os import path
@@ -78,6 +79,8 @@ def main():
 @click.option('--verbose', '-v', help='Show verbose information.', count=True)
 @click.option('--base-path', metavar='PATH',
               help='Override the basePath in the API spec.')
+@click.option('--app-cls', metavar='APP_CLS',
+              help='Override the app class (the default is connexion.apis.flask_app.FlaskApp)')
 def run(spec_file,
         base_module_path,
         port,
@@ -94,7 +97,8 @@ def run(spec_file,
         strict_validation,
         debug,
         verbose,
-        base_path):
+        base_path,
+        app_cls=None):
     """
     Runs a server compliant with a OpenAPI/Swagger 2.0 Specification file.
 
@@ -128,13 +132,21 @@ def run(spec_file,
         resolver = MockResolver(mock_all=mock == 'all')
         api_extra_args['resolver'] = resolver
 
-    app = connexion.FlaskApp(__name__,
-                             swagger_json=not hide_spec,
-                             swagger_ui=not hide_console_ui,
-                             swagger_path=console_ui_from or None,
-                             swagger_url=console_ui_url or None,
-                             auth_all_paths=auth_all_paths,
-                             debug=debug)
+    if app_cls is None:
+        app_cls = connexion.FlaskApp
+    else:
+        module = app_cls.split('.')
+        app_cls = module.pop()
+        module = importlib.import_module('.'.join(module))
+        app_cls = getattr(module, app_cls)
+
+    app = app_cls(__name__,
+                  swagger_json=not hide_spec,
+                  swagger_ui=not hide_console_ui,
+                  swagger_path=console_ui_from or None,
+                  swagger_url=console_ui_url or None,
+                  auth_all_paths=auth_all_paths,
+                  debug=debug)
 
     app.add_api(spec_file_full_path,
                 base_path=base_path,

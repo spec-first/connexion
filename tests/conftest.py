@@ -66,6 +66,11 @@ def simple_api_spec_dir():
 
 
 @pytest.fixture
+def simple_aiohttp_api_spec_dir():
+    return FIXTURES_FOLDER / 'aiohttp_simple'
+
+
+@pytest.fixture
 def problem_api_spec_dir():
     return FIXTURES_FOLDER / 'problem'
 
@@ -73,6 +78,11 @@ def problem_api_spec_dir():
 @pytest.fixture
 def secure_api_spec_dir():
     return FIXTURES_FOLDER / 'secure_api'
+
+
+@pytest.fixture
+def secure_aiohttp_api_spec_dir():
+    return FIXTURES_FOLDER / 'aiohttp_secure_api'
 
 
 @pytest.fixture

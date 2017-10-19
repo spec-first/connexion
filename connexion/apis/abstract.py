@@ -297,6 +297,14 @@ class AbstractAPI(object):
 
     @classmethod
     @abc.abstractmethod
+    def get_connexion_response(cls, response):
+        """
+        This method converts the user framework response to a ConnexionResponse.
+        :param response: A response to cast.
+        """
+
+    @classmethod
+    @abc.abstractmethod
     def json_loads(self, data):
         """
         API specific JSON loader.

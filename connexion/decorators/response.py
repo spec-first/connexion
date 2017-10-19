@@ -1,6 +1,7 @@
 # Decorators to change the return type of endpoints
 import functools
 import logging
+import sys
 
 from jsonschema import ValidationError
 
@@ -79,19 +80,36 @@ class ResponseValidator(BaseDecorator):
         :type function: types.FunctionType
         :rtype: types.FunctionType
         """
-        @functools.wraps(function)
-        def wrapper(request):
-            response = function(request)
+
+        def _wrapper(request, response):
             try:
+                connexion_response = \
+                    self.operation.api.get_connexion_response(response)
                 self.validate_response(
-                    response.get_data(), response.status_code,
-                    response.headers, request.url)
+                    connexion_response.body, connexion_response.status_code,
+                    connexion_response.headers, request.url)
 
             except (NonConformingResponseBody, NonConformingResponseHeaders) as e:
                 response = problem(500, e.reason, e.message)
                 return self.operation.api.get_response(response)
 
             return response
+
+        is_coroutine = False
+
+        if sys.version_info >= (3, 4):  # pragma: 2.7 no cover
+            import asyncio
+            is_coroutine = asyncio.iscoroutinefunction(function)
+
+        if is_coroutine:  # pragma: 2.7 no cover
+            from .response_coroutine import get_wrapper
+            wrapper = get_wrapper(function, _wrapper)
+
+        else:
+            @functools.wraps(function)
+            def wrapper(request):
+                response = function(request)
+                return _wrapper(request, response)
 
         return wrapper
 

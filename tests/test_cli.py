@@ -7,6 +7,7 @@ import pytest
 from conftest import FIXTURES_FOLDER
 from connexion.cli import main
 from connexion.exceptions import ResolverError
+from mock import call as mock_call
 from mock import MagicMock
 
 
@@ -17,6 +18,13 @@ def mock_app_run(monkeypatch):
     test_app = MagicMock(return_value=test_server)
     monkeypatch.setattr('connexion.cli.connexion.FlaskApp', test_app)
     return test_app
+
+
+@pytest.fixture()
+def mock_importlib(monkeypatch):
+    importlib = MagicMock()
+    monkeypatch.setattr('connexion.cli.importlib', importlib)
+    return importlib
 
 
 @pytest.fixture()
@@ -244,3 +252,11 @@ def test_run_with_wsgi_containers(mock_app_run, spec_file):
                            ['run', spec_file, '-w', 'flask'],
                            catch_exceptions=False)
     assert result.exit_code == 0
+
+
+def test_run_using_other_app_class(mock_importlib, spec_file):
+    default_port = 5000
+    runner = CliRunner()
+    runner.invoke(main, ['run', spec_file, '--app-cls=test.test'], catch_exceptions=False)
+
+    assert mock_importlib.import_module.call_args_list == [mock_call('test')]

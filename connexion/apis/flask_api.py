@@ -199,6 +199,16 @@ class FlaskApi(AbstractAPI):
             return cls._build_flask_response(mimetype=mimetype, data=response)
 
     @classmethod
+    def get_connexion_response(cls, response):
+        return ConnexionResponse(
+            status_code=response.status_code,
+            mimetype=response.mimetype,
+            content_type=response.content_type,
+            headers=response.headers,
+            body=response.get_data(),
+        )
+
+    @classmethod
     def get_request(cls, *args, **params):
         # type: (*Any, **Any) -> ConnexionRequest
         """Gets ConnexionRequest instance for the operation handler
