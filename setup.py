@@ -67,8 +67,7 @@ class PyTest(TestCommand):
             self.pytest_args.append('--cov-config=py2-coveragerc')
             self.pytest_args.append('--ignore=tests/aiohttp')
 
-        # self.cov_html = False
-        self.cov_html = True
+        self.cov_html = False
 
     def finalize_options(self):
         TestCommand.finalize_options(self)
