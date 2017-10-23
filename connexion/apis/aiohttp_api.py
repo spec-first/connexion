@@ -16,12 +16,12 @@ from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.utils import is_json_mimetype
 
 try:
-    import ujson
+    import ujson as json
     from functools import partial
-    ujson.dumps = partial(ujson.dumps, escape_forward_slashes=True)
+    json.dumps = partial(json.dumps, escape_forward_slashes=True)
 
 except ImportError:  # pragma: no cover
-    import json as ujson
+    import json
 
 logger = logging.getLogger('connexion.apis.aiohttp_api')
 
@@ -29,12 +29,12 @@ logger = logging.getLogger('connexion.apis.aiohttp_api')
 class AioHttpApi(AbstractAPI):
 
     def __init__(self, *args, **kwargs):
-        self.aiohttp_api = AioHtppApplication(
+        self.subapp = AioHtppApplication(
             debug=kwargs.get('debug', False)
         )
         AbstractAPI.__init__(self, *args, **kwargs)
         aiohttp_jinja2.setup(
-            self.aiohttp_api,
+            self.subapp,
             loader=jinja2.FileSystemLoader(
                 str(self.options.openapi_console_ui_from_dir)
             )
@@ -56,16 +56,16 @@ class AioHttpApi(AbstractAPI):
                 except OAuthProblem as oauth_error:
                     return AioHttpResponse(
                         status=oauth_error.code,
-                        body=ujson.dumps(oauth_error.description).encode(),
+                        body=json.dumps(oauth_error.description).encode(),
                         content_type='application/problem+json'
                     )
 
             return middleware_handler
 
-        self.aiohttp_api.middlewares.append(oauth_problem_middleware)
+        self.subapp.middlewares.append(oauth_problem_middleware)
 
         if middlewares:
-            self.aiohttp_api.middlewares.extend(middlewares)
+            self.subapp.middlewares.extend(middlewares)
 
     def _normalize_string(self, string):
         return re.sub(
@@ -77,7 +77,7 @@ class AioHttpApi(AbstractAPI):
         Adds swagger json to {base_path}/swagger.json
         """
         logger.debug('Adding swagger.json: %s/swagger.json', self.base_path)
-        self.aiohttp_api.router.add_route(
+        self.subapp.router.add_route(
             'GET',
             '/swagger.json',
             self._get_swagger_json
@@ -88,7 +88,7 @@ class AioHttpApi(AbstractAPI):
         return AioHttpResponse(
             status=200,
             content_type='application/json',
-            body=ujson.dumps(self.specification)
+            body=json.dumps(self.specification)
         )
 
     def add_swagger_ui(self):
@@ -105,13 +105,13 @@ class AioHttpApi(AbstractAPI):
             console_ui_path + '/',
             console_ui_path + '/index.html',
         ):
-            self.aiohttp_api.router.add_route(
+            self.subapp.router.add_route(
                 'GET',
                 path,
                 self._get_swagger_ui_home
             )
 
-        self.aiohttp_api.router.add_static(
+        self.subapp.router.add_static(
             console_ui_path + '/',
             path=str(self.options.openapi_console_ui_from_dir),
             name='swagger_ui_static'
@@ -133,7 +133,7 @@ class AioHttpApi(AbstractAPI):
             security_definitions=security_definitions
         )
         endpoint_name = "{}_not_found".format(self._api_name)
-        self.aiohttp_api.router.add_route(
+        self.subapp.router.add_route(
             '*',
             '/{not_found_path}',
             not_found_error.function,
@@ -151,12 +151,12 @@ class AioHttpApi(AbstractAPI):
         handler = operation.function
         endpoint_name = '{}_{}'.format(self._api_name,
                                        self._normalize_string(path))
-        self.aiohttp_api.router.add_route(
+        self.subapp.router.add_route(
             method, path, handler, name=endpoint_name
         )
 
         if not path.endswith('/'):
-            self.aiohttp_api.router.add_route(
+            self.subapp.router.add_route(
                 method, path + '/', handler, name=endpoint_name + '_'
             )
 
@@ -185,10 +185,7 @@ class AioHttpApi(AbstractAPI):
         while asyncio.iscoroutine(response):
             response = yield from response
 
-        if request:
-            url = str(request.url)
-        else:
-            url = ''
+        url = str(request.url) if request else ''
 
         logger.debug('Getting data and status code',
                      extra={
@@ -236,7 +233,7 @@ class AioHttpApi(AbstractAPI):
     def _cast_body(cls, body, content_type):
         if not isinstance(body, bytes):
             if is_json_mimetype(content_type):
-                return ujson.dumps(body).encode()
+                return json.dumps(body).encode()
 
             elif isinstance(body, str):
                 return body.encode()
@@ -248,9 +245,9 @@ class AioHttpApi(AbstractAPI):
 
     def json_loads(self, data):
         """
-        Use ujson as JSON loader
+        Use json as JSON loader
         """
-        return ujson.loads(data)
+        return json.loads(data)
 
 
 class _HttpNotFoundError(HTTPNotFound):

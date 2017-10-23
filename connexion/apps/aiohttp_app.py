@@ -40,7 +40,7 @@ class AioHttpApp(AbstractApp):
 
     def add_api(self, specification, **kwargs):
         api = super(AioHttpApp, self).add_api(specification, **kwargs)
-        self.app.add_subapp(api.base_path, api.aiohttp_api)
+        self.app.add_subapp(api.base_path, api.subapp)
         return api
 
     def run(self, port=None, server=None, debug=None, host=None, **options):
