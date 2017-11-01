@@ -2,7 +2,7 @@ import functools
 import logging
 from copy import deepcopy
 
-from jsonschema import ValidationError
+from jsonschema import ValidationError, RefResolutionError
 
 from .decorators import validation
 from .decorators.decorator import (BeginOfRequestLifecycleDecorator,
@@ -287,6 +287,13 @@ class Operation(SecureOperation):
                     stack.append(v)
 
     def _retrieve_reference(self, reference):
+        # TODO can we rely completely on the ref_resolver?
+        try:
+            url, definition = self.api.ref_resolver.resolve(reference)
+        except RefResolutionError:
+            logger.debug("Failed to locate reference using resolver", exc_info=1)
+        else:
+            return definition
         if not reference.startswith('#/'):
             raise InvalidSpecification(
                 "{method} {path} '$ref' needs to start with '#/'".format(**vars(self)))

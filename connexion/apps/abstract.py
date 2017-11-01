@@ -3,6 +3,7 @@ import logging
 import pathlib
 
 import six
+import jinja2
 
 from ..options import ConnexionOptions
 from ..resolver import Resolver
@@ -60,8 +61,16 @@ class AbstractApp(object):
 
         specification_dir = pathlib.Path(specification_dir)  # Ensure specification dir is a Path
         if specification_dir.is_absolute():
+            self.env = jinja2.Environment(
+                loader=jinja2.FileSystemLoader(str(specification_dir)),
+                autoescape=False
+            )
             self.specification_dir = specification_dir
         else:
+            self.env = jinja2.Environment(
+                loader=jinja2.PackageLoader(import_name, str(specification_dir)),
+                autoescape=False
+            )
             self.specification_dir = self.root_path / specification_dir
 
         logger.debug('Specification directory: %s', self.specification_dir)
@@ -156,6 +165,7 @@ class AbstractApp(object):
                            debug=self.debug,
                            validator_map=self.validator_map,
                            pythonic_params=pythonic_params,
+                           jinja2_env=self.env,
                            options=api_options.as_dict())
         return api
 

@@ -7,14 +7,13 @@ from typing import AnyStr, List  # NOQA
 
 import jinja2
 import six
-import yaml
-from swagger_spec_validator.validator20 import validate_spec
 
 from ..exceptions import ResolverError
 from ..operation import Operation
 from ..options import ConnexionOptions
 from ..resolver import Resolver
 from ..utils import Jsonifier
+from ..specification_loader import load_spec_from_file, validate_spec, compatibility_layer
 
 MODULE_PATH = pathlib.Path(__file__).absolute().parent.parent
 SWAGGER_UI_PATH = MODULE_PATH / 'vendor' / 'swagger-ui'
@@ -41,7 +40,7 @@ class AbstractAPI(object):
     def __init__(self, specification, base_path=None, arguments=None,
                  validate_responses=False, strict_validation=False, resolver=None,
                  auth_all_paths=False, debug=False, resolver_error_handler=None,
-                 validator_map=None, pythonic_params=False, options=None, **old_style_options):
+                 validator_map=None, pythonic_params=False, jinja2_env=None, options=None, **old_style_options):
         """
         :type specification: pathlib.Path | dict
         :type base_path: str | None
@@ -59,6 +58,8 @@ class AbstractAPI(object):
         :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended
         to any shadowed built-ins
         :type pythonic_params: bool
+        :param jinja2_env: The jinja2 environment to use when rendering the specification template
+        :type jinja2_env: jinja2.Environment | None
         :param options: New style options dictionary.
         :type options: dict | None
         :param old_style_options: Old style options support for backward compatibility. Preference is
@@ -88,16 +89,18 @@ class AbstractAPI(object):
 
         if isinstance(specification, dict):
             self.specification = specification
+            specification_base_path = None
         else:
             specification_path = pathlib.Path(specification)
-            self.specification = self.load_spec_from_file(arguments, specification_path)
+            self.specification = load_spec_from_file(arguments, specification_path, jinja2_env)
+            specification_base_path = specification_path.parent
 
         self.specification = compatibility_layer(self.specification)
         logger.debug('Read specification', extra={'spec': self.specification})
 
         # Avoid validator having ability to modify specification
         spec = copy.deepcopy(self.specification)
-        validate_spec(spec)
+        self.ref_resolver = validate_spec(spec, specification_base_path, jinja2_env, arguments)
 
         # https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#fixed-fields
         # If base_path is not on provided then we try to read it from the swagger.yaml or use / by default
@@ -270,19 +273,6 @@ class AbstractAPI(object):
             logger.error(error_msg)
             six.reraise(*exc_info)
 
-    def load_spec_from_file(self, arguments, specification):
-        arguments = arguments or {}
-
-        with specification.open(mode='rb') as swagger_yaml:
-            contents = swagger_yaml.read()
-            try:
-                swagger_template = contents.decode()
-            except UnicodeDecodeError:
-                swagger_template = contents.decode('utf-8', 'replace')
-
-            swagger_string = jinja2.Template(swagger_template).render(**arguments)
-            return yaml.safe_load(swagger_string)  # type: dict
-
     @classmethod
     @abc.abstractmethod
     def get_request(self, *args, **kwargs):
@@ -325,24 +315,3 @@ def canonical_base_path(base_path):
     Make given "basePath" a canonical base URL which can be prepended to paths starting with "/".
     """
     return base_path.rstrip('/')
-
-
-def compatibility_layer(spec):
-    """Make specs compatible with older versions of Connexion."""
-    if not isinstance(spec, dict):
-        return spec
-
-    # Make all response codes be string
-    for path_name, methods_available in spec.get('paths', {}).items():
-        for method_name, method_def in methods_available.items():
-            if (method_name == 'parameters' or not isinstance(
-                    method_def, dict)):
-                continue
-
-            response_definitions = {}
-            for response_code, response_def in method_def.get(
-                    'responses', {}).items():
-                response_definitions[str(response_code)] = response_def
-
-            method_def['responses'] = response_definitions
-    return spec
