@@ -97,7 +97,7 @@ class ResponseValidator(BaseDecorator):
 
         is_coroutine = False
 
-        if sys.version_info >= (3, 4):  # pragma: 2.7 no cover
+        if sys.version_info[0] >= 3:  # pragma: 2.7 no cover
             import asyncio
             is_coroutine = asyncio.iscoroutinefunction(function)
 

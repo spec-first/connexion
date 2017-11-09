@@ -79,3 +79,28 @@ paths:
           description: json response
           schema:
             type: object
+
+  /multiple_methods:
+    get:
+      summary: Test path with multiple methods when get
+      description: Test path with multiple methods when get
+      operationId: fakeapi.aiohttp_hello.aiohttp_multiple_methods_get
+      produces:
+        - application/json
+      responses:
+        200:
+          description: json response
+          schema:
+            type: object
+
+    post:
+      summary: Test path with multiple methods when post
+      description: Test path with multiple methods when post
+      operationId: fakeapi.aiohttp_hello.aiohttp_multiple_methods_post
+      produces:
+        - application/json
+      responses:
+        200:
+          description: json response
+          schema:
+            type: object

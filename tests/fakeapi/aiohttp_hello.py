@@ -46,8 +46,24 @@ def aiohttp_validate_responses():
 
 
 @asyncio.coroutine
-def post_greeting(name, **kwargs):
+def aiohttp_post_greeting(name, **kwargs):
     data = {'greeting': 'Hello {name}'.format(name=name)}
+    return ConnexionResponse(
+        body=data
+    )
+
+
+@asyncio.coroutine
+def aiohttp_multiple_methods_get(name, **kwargs):
+    data = {'method': 'get'}
+    return ConnexionResponse(
+        body=data
+    )
+
+
+@asyncio.coroutine
+def aiohttp_multiple_methods_post(name, **kwargs):
+    data = {'method': 'post'}
     return ConnexionResponse(
         body=data
     )

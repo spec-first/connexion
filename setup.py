@@ -48,7 +48,7 @@ tests_require = [
     flask_require
 ]
 
-if sys.version_info >= (3, 4):
+if sys.version_info[0] >= 3:
     tests_require.extend(aiohttp_require)
     tests_require.append(ujson_require)
     tests_require.append('pytest-aiohttp')
@@ -63,7 +63,7 @@ class PyTest(TestCommand):
         self.cov = None
         self.pytest_args = ['--cov', 'connexion', '--cov-report', 'term-missing', '-v']
 
-        if sys.version_info < (3, 4):
+        if sys.version_info[0] < 3:
             self.pytest_args.append('--cov-config=py2-coveragerc')
             self.pytest_args.append('--ignore=tests/aiohttp')
 

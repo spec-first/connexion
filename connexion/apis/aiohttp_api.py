@@ -142,15 +142,17 @@ class AioHttpApi(AbstractAPI):
 
     def _add_operation_internal(self, method, path, operation):
         method = method.upper()
-        operation_id = \
-            operation.operation_id if operation.operation_id else path
+        operation_id = operation.operation_id or path
 
         logger.debug('... Adding %s -> %s', method, operation_id,
                      extra=vars(operation))
 
         handler = operation.function
-        endpoint_name = '{}_{}'.format(self._api_name,
-                                       self._normalize_string(path))
+        endpoint_name = '{}_{}_{}'.format(
+            self._api_name,
+            self._normalize_string(path),
+            method.lower()
+        )
         self.subapp.router.add_route(
             method, path, handler, name=endpoint_name
         )

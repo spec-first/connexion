@@ -1,7 +1,5 @@
-import importlib
 import logging
 import sys
-from itertools import chain
 from os import path
 
 import click
