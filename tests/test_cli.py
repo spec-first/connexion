@@ -12,19 +12,22 @@ from mock import MagicMock
 
 
 @pytest.fixture()
-def mock_app_run(monkeypatch):
+def mock_app_run(mock_get_function_from_name):
     test_server = MagicMock(wraps=connexion.FlaskApp(__name__))
     test_server.run = MagicMock(return_value=True)
     test_app = MagicMock(return_value=test_server)
-    monkeypatch.setattr('connexion.cli.connexion.FlaskApp', test_app)
+    mock_get_function_from_name.return_value = test_app
     return test_app
 
 
 @pytest.fixture()
-def mock_importlib(monkeypatch):
-    importlib = MagicMock()
-    monkeypatch.setattr('connexion.cli.importlib', importlib)
-    return importlib
+def mock_get_function_from_name(monkeypatch):
+    get_function_from_name = MagicMock()
+    monkeypatch.setattr(
+        'connexion.cli.connexion.utils.get_function_from_name',
+        get_function_from_name
+    )
+    return get_function_from_name
 
 
 @pytest.fixture()
@@ -68,7 +71,7 @@ def test_run_simple_spec(mock_app_run, spec_file):
     app_instance.run.assert_called_with(
         port=default_port,
         host=None,
-        server=None,
+        server='flask',
         debug=False)
 
 
@@ -81,7 +84,7 @@ def test_run_spec_with_host(mock_app_run, spec_file):
     app_instance.run.assert_called_with(
         port=default_port,
         host='custom.host',
-        server=None,
+        server='flask',
         debug=False)
 
 
@@ -254,9 +257,25 @@ def test_run_with_wsgi_containers(mock_app_run, spec_file):
     assert result.exit_code == 0
 
 
-def test_run_using_other_app_class(mock_importlib, spec_file):
-    default_port = 5000
+def test_run_with_wsgi_server_and_server_opts(mock_app_run, spec_file):
     runner = CliRunner()
-    runner.invoke(main, ['run', spec_file, '--app-cls=test.test'], catch_exceptions=False)
 
-    assert mock_importlib.import_module.call_args_list == [mock_call('test')]
+    result = runner.invoke(main,
+                           ['run', spec_file,
+                            '-w', 'flask',
+                            '-s', 'flask'],
+                           catch_exceptions=False)
+    assert "these options are mutually excludent" in result.output
+    assert result.exit_code == 2
+
+
+def test_run_with_incompatible_server_and_framework(mock_app_run, spec_file):
+    runner = CliRunner()
+
+    result = runner.invoke(main,
+                           ['run', spec_file,
+                           '-s', 'flask',
+                           '-f', 'aiohttp'],
+                           catch_exceptions=False)
+    assert "Invalid server 'flask' for app-framework 'aiohttp'" in result.output
+    assert result.exit_code == 2
