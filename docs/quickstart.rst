@@ -82,6 +82,15 @@ to ``tornado`` or ``gevent``:
     app = connexion.FlaskApp(__name__, port = 8080, specification_dir='swagger/', server='tornado')
 
 
+Connexion has the ``aiohttp`` framework as server backend too:
+
+.. code-block:: python
+
+    import connexion
+
+    app = connexion.AioHttpApp(__name__, port = 8080, specification_dir='swagger/')
+
+
 .. _Jinja2: http://jinja.pocoo.org/
 .. _swagger.spec: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md
 .. _swagger.spec.operation: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#operation-object
