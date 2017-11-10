@@ -148,6 +148,12 @@ def run(spec_file,
         )
         raise click.UsageError(message)
 
+    if app_framework == AIOHTTP_APP:
+        try:
+            import aiohttp  # NOQA
+        except Exception:
+            fatal_error('aiohttp library is not installed')
+
     logging_level = logging.WARN
     if verbose > 0:
         logging_level = logging.INFO
