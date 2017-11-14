@@ -78,10 +78,14 @@ class AbstractAPI(object):
                             'swagger_url': self.options.openapi_console_ui_path,
                             'auth_all_paths': auth_all_paths})
 
+        # File url for resolving local refs
+        specification_file_url = ''
+
         if isinstance(specification, dict):
             self.specification = specification
         else:
             specification_path = pathlib.Path(specification)
+            specification_file_url = str(specification_path.resolve().as_uri())
             self.specification = self.load_spec_from_file(arguments, specification_path)
 
         self.specification = compatibility_layer(self.specification)
@@ -89,7 +93,7 @@ class AbstractAPI(object):
 
         # Avoid validator having ability to modify specification
         spec = copy.deepcopy(self.specification)
-        validate_spec(spec)
+        validate_spec(spec, specification_file_url)
 
         # https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#fixed-fields
         # If base_path is not on provided then we try to read it from the swagger.yaml or use / by default
