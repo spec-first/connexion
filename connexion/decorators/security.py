@@ -63,7 +63,7 @@ def verify_oauth(token_info_url, allowed_scopes, function):
             except ValueError:
                 raise OAuthProblem(description='Invalid authorization header')
             logger.debug("... Getting token from %s", token_info_url)
-            token_request = session.get(token_info_url, params={'access_token': token}, timeout=5)
+            token_request = session.get(token_info_url, headers={'Authorization': 'Bearer {}'.format(token)}, timeout=5)
             logger.debug("... Token info (%d): %s", token_request.status_code, token_request.text)
             if not token_request.ok:
                 raise OAuthResponseProblem(
