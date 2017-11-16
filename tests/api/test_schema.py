@@ -1,4 +1,5 @@
 import json
+import pytest
 
 
 def test_schema(schema_app):
@@ -186,6 +187,18 @@ def test_schema_recursive(schema_app):
     right_type = app_client.post('/v1.0/test_schema_recursive', headers=headers,
                                  data=json.dumps(valid_object))  # type: flask.Response
     assert right_type.status_code == 200
+
+
+@pytest.mark.skip(reason='Skipped until relative ref resolution is fully implemented')
+def test_schema_relative_ref(schema_app):
+    app_client = schema_app.app.test_client()
+    headers = {'Content-type': 'application/json'}
+
+    good_request = app_client.get('/v1.0/test_schema_relative_ref', headers=headers,
+                                  query_string={'image_version': 'version'})
+    # Currently returns a 500 error since Operation.resolve_reference expects
+    # a ref in the same file
+    assert good_request.status_code == 200
 
 
 def test_schema_format(schema_app):

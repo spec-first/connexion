@@ -233,6 +233,24 @@ paths:
           schema:
             type: string
 
+  /test_schema_relative_ref:
+    get:
+      summary: Returns the image version
+      description: Returns the image version
+      operationId: fakeapi.hello.schema_relative_ref
+      parameters:
+        - name: image_version
+          required: true
+          in: query
+          type: string
+      produces:
+        - application/json
+      responses:
+        200:
+          description: goodbye response
+          schema:
+            $ref: 'definitions.yaml#/new_stack'
+
   /test_schema_format:
     post:
       summary: Returns empty response
