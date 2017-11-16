@@ -16,12 +16,12 @@ def validate_wsgi_server_requirements(ctx, param, value):
     if value == 'gevent':
         try:
             import gevent  # NOQA
-        except:
+        except ImportError:
             fatal_error('gevent library is not installed')
     elif value == 'tornado':
         try:
             import tornado  # NOQA
-        except:
+        except ImportError:
             fatal_error('tornado library is not installed')
 
 
