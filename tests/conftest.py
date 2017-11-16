@@ -142,3 +142,8 @@ def unordered_definition_app():
 @pytest.fixture(scope="session")
 def bad_operations_app():
     return build_app_from_fixture('bad_operations', resolver_error=501)
+
+
+@pytest.fixture(scope="session")
+def query_sanitazion():
+    return build_app_from_fixture('query_sanitazion')

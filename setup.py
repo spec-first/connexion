@@ -39,6 +39,7 @@ tests_require = [
     'mock',
     'pytest',
     'pytest-cov',
+    'testfixtures',
     flask_require
 ]
 
