@@ -249,7 +249,7 @@ paths:
         200:
           description: goodbye response
           schema:
-            $ref: 'definitions.yaml#/new_stack'
+            $ref: 'definitions.json#/new_stack'
 
   /test_schema_format:
     post:
