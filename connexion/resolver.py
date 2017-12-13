@@ -128,3 +128,31 @@ class RestyResolver(Resolver):
             return self.collection_endpoint_name if is_collection_endpoint else method.lower()
 
         return '{}.{}'.format(get_controller_name(), get_function_name())
+
+
+class ObjectResolver(Resolver):
+    def __init__(self, resolution_obj):
+        """
+        Resolves endpoint functions using names on a given object
+
+        :param resolution_obj: Function that resolves functions using an operationId
+        :type resolution_obj: types.FunctionType
+        """
+        Resolver.__init__(self)
+        self.resolution_obj = resolution_obj
+
+    def resolve_function_from_operation_id(self, operation_id):
+        """
+        Invokes the function_resolver
+
+        :type operation_id: str
+        """
+        try:
+            fn = getattr(self.resolution_obj, operation_id)
+            logger.debug("resolved %s as %s", operation_id, fn)
+            return fn
+        except ImportError as e:
+            msg = 'Cannot resolve operationId "{}"! Import error was "{}"'.format(operation_id, str(e))
+            raise ResolverError(msg, sys.exc_info())
+        except (AttributeError, ValueError) as e:
+            raise ResolverError(str(e), sys.exc_info())
