@@ -12,7 +12,8 @@ from .decorators.parameter import parameter_to_arg
 from .decorators.produces import BaseSerializer, Produces
 from .decorators.response import ResponseValidator
 from .decorators.security import (get_tokeninfo_url, security_passthrough,
-                                  verify_oauth)
+                                  verify_oauth_remote, verify_oauth_local,
+                                  get_tokeninfo_func)
 from .decorators.validation import (ParameterValidator, RequestBodyValidator,
                                     TypeValidationError)
 from .exceptions import InvalidSpecification
@@ -83,9 +84,16 @@ class SecureOperation(object):
             security_definition = self.security_definitions[scheme_name]
             if security_definition['type'] == 'oauth2':
                 token_info_url = get_tokeninfo_url(security_definition)
+                token_info_func = get_tokeninfo_func(security_definition)
+                scopes = set(scopes)  # convert scopes to set because this is needed for verify_oauth_remote
+
+                if token_info_url and token_info_func:
+                    logger.warning("... Both x-tokenInfoUrl and x-tokenInfoFunc are defined, using x-tokenInfoFunc",
+                                   extra=vars(self))
+                if token_info_func:
+                    return functools.partial(verify_oauth_local, token_info_func, scopes)
                 if token_info_url:
-                    scopes = set(scopes)  # convert scopes to set because this is needed for verify_oauth
-                    return functools.partial(verify_oauth, token_info_url, scopes)
+                    return functools.partial(verify_oauth_remote, token_info_url, scopes)
                 else:
                     logger.warning("... OAuth2 token info URL missing. **IGNORING SECURITY REQUIREMENTS**",
                                    extra=vars(self))
