@@ -1,9 +1,9 @@
-==============
-OAuth2 Example
-==============
+===============================
+OAuth2 Local Validation Example
+===============================
 
 This example demonstrates how to implement a resource server with Connexion.
-The app will lookup OAuth2 Bearer tokens with the given token info URL.
+The app will lookup OAuth2 Bearer tokens in a static map.
 
 Running:
 
