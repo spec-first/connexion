@@ -7,6 +7,7 @@ import textwrap
 import requests
 
 from connexion.utils import get_function_from_name
+
 from ..exceptions import OAuthProblem, OAuthResponseProblem, OAuthScopeProblem
 
 logger = logging.getLogger('connexion.api.security')
