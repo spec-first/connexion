@@ -6,8 +6,11 @@ OAuth 2 Authentication and Authorization
 
 Connexion supports one of the three OAuth 2 handling methods. (See
 "TODO" below.) With Connexion, the API security definition **must**
-include a 'x-tokenInfoUrl' (or set ``TOKENINFO_URL`` env var) with the
-URL to validate and get the `token information`_. Connexion expects to
+include a 'x-tokenInfoUrl' or 'x-tokenInfoFunc (or set ``TOKENINFO_URL``
+or ``TOKENINFO_FUNC`` env var respectively). 'x-tokenInfoUrl' must contain an
+URL to validate and get the `token information`_ and 'x-tokenInfoFunc must
+contain a reference to a function used to obtain the token info. When both 'x-tokenInfoUrl'
+ and 'x-tokenInfoFunc' are used, Connexion will prioritize the function method. Connexion expects to
 receive the OAuth token in the ``Authorization`` header field in the
 format described in `RFC 6750 <rfc6750_>`_ section 2.1. This aspect
 represents a significant difference from the usual OAuth flow.
