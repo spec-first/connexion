@@ -11,9 +11,9 @@ from .decorators.metrics import UWSGIMetricsCollector
 from .decorators.parameter import parameter_to_arg
 from .decorators.produces import BaseSerializer, Produces
 from .decorators.response import ResponseValidator
-from .decorators.security import (get_tokeninfo_url, security_passthrough,
-                                  verify_oauth_remote, verify_oauth_local,
-                                  get_tokeninfo_func)
+from .decorators.security import (get_tokeninfo_func, get_tokeninfo_url,
+                                  security_passthrough, verify_oauth_local,
+                                  verify_oauth_remote)
 from .decorators.validation import (ParameterValidator, RequestBodyValidator,
                                     TypeValidationError)
 from .exceptions import InvalidSpecification

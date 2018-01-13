@@ -4,9 +4,10 @@ import types
 
 import mock
 import pytest
-
 from connexion.apis.flask_api import Jsonifier
-from connexion.decorators.security import security_passthrough, verify_oauth_remote, verify_oauth_local
+from connexion.decorators.security import (security_passthrough,
+                                           verify_oauth_local,
+                                           verify_oauth_remote)
 from connexion.exceptions import InvalidSpecification
 from connexion.operation import Operation
 from connexion.resolver import Resolver

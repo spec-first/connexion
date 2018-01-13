@@ -3,8 +3,11 @@ import json
 import requests
 
 import pytest
-from connexion.decorators.security import get_tokeninfo_url, verify_oauth_remote, verify_oauth_local
-from connexion.exceptions import OAuthProblem, OAuthScopeProblem, OAuthResponseProblem
+from connexion.decorators.security import (get_tokeninfo_url,
+                                           verify_oauth_local,
+                                           verify_oauth_remote)
+from connexion.exceptions import (OAuthProblem, OAuthResponseProblem,
+                                  OAuthScopeProblem)
 from mock import MagicMock
 
 
