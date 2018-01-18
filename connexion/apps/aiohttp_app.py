@@ -6,6 +6,7 @@ import sys
 from aiohttp import web
 
 from ..apis.aiohttp_api import AioHttpApi
+from ..exceptions import ConnexionException
 from .abstract import AbstractApp
 
 logger = logging.getLogger('connexion.aiohttp_app')
@@ -13,8 +14,10 @@ logger = logging.getLogger('connexion.aiohttp_app')
 
 class AioHttpApp(AbstractApp):
 
-    def __init__(self, import_name, **kwargs):
+    def __init__(self, import_name, only_one_api=False, **kwargs):
         super(AioHttpApp, self).__init__(import_name, AioHttpApi, server='aiohttp', **kwargs)
+        self._only_one_api = only_one_api
+        self._api_added = False
 
     def create_app(self):
         return web.Application(debug=self.debug)
@@ -39,9 +42,31 @@ class AioHttpApp(AbstractApp):
         pass
 
     def add_api(self, specification, **kwargs):
-        api = super(AioHttpApp, self).add_api(specification, **kwargs)
-        self.app.add_subapp(api.base_path, api.subapp)
+        if self._only_one_api:
+            if self._api_added:
+                raise ConnexionException(
+                    "an api was already added, "
+                    "create a new app with 'only_one_api=False' "
+                    "to add more than one api"
+                )
+            else:
+                self.app = self._get_api(specification, kwargs).subapp
+                self._api_added = True
+                return self.app
+
+        api = self._get_api(specification, kwargs)
+        try:
+            self.app.add_subapp(api.base_path, api.subapp)
+        except ValueError:
+            raise ConnexionException(
+                "aiohttp doesn't allow to set empty base_path ('/'), "
+                "use non-empty instead, e.g /api"
+            )
+
         return api
+
+    def _get_api(self, specification, kwargs):
+        return super(AioHttpApp, self).add_api(specification, **kwargs)
 
     def run(self, port=None, server=None, debug=None, host=None, **options):
         if port is not None:

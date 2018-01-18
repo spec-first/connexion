@@ -2,7 +2,9 @@ import logging
 from unittest import mock
 
 import pytest
+from conftest import TEST_FOLDER
 from connexion import AioHttpApp
+from connexion.exceptions import ConnexionException
 
 
 @pytest.fixture
@@ -86,3 +88,45 @@ def test_app_get_root_path_invalid(sys_modules_mock, simple_aiohttp_api_spec_dir
                    specification_dir=simple_aiohttp_api_spec_dir)
 
     assert exc_info.value.args == ("Invalid import name 'error__'",)
+
+
+def test_app_with_empty_base_path_error(simple_aiohttp_api_spec_dir):
+    app = AioHttpApp(__name__, port=5001,
+                     specification_dir='..' /
+                     simple_aiohttp_api_spec_dir.relative_to(TEST_FOLDER),
+                     debug=True)
+    with pytest.raises(ConnexionException) as exc_info:
+        app.add_api('swagger_empty_base_path.yaml')
+
+    assert exc_info.value.args == (
+                "aiohttp doesn't allow to set empty base_path ('/'), "
+                "use non-empty instead, e.g /api",
+    )
+
+
+def test_app_with_empty_base_path_and_only_one_api(simple_aiohttp_api_spec_dir):
+    app = AioHttpApp(__name__, port=5001,
+                     specification_dir='..' /
+                     simple_aiohttp_api_spec_dir.relative_to(TEST_FOLDER),
+                     debug=True,
+                     only_one_api=True)
+    api = app.add_api('swagger_empty_base_path.yaml')
+    assert api is app.app
+
+
+def test_app_add_two_apis_error_with_only_one_api(simple_aiohttp_api_spec_dir):
+    app = AioHttpApp(__name__, port=5001,
+                     specification_dir='..' /
+                     simple_aiohttp_api_spec_dir.relative_to(TEST_FOLDER),
+                     debug=True,
+                     only_one_api=True)
+    app.add_api('swagger_empty_base_path.yaml')
+
+    with pytest.raises(ConnexionException) as exc_info:
+        app.add_api('swagger_empty_base_path.yaml')
+
+    assert exc_info.value.args == (
+                "an api was already added, "
+                "create a new app with 'only_one_api=False' "
+                "to add more than one api",
+    )
