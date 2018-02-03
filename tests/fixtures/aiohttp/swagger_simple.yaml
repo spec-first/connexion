@@ -11,7 +11,7 @@ paths:
     get:
       summary: Generate goodbye
       description: Generates a goodbye message.
-      operationId: fakeapi.aiohttp_hello.get_bye
+      operationId: fakeapi.aiohttp_handlers.get_bye
       produces:
         - text/plain
       responses:
@@ -32,7 +32,7 @@ paths:
     get:
       summary: Return a str response
       description: Test returning a str response
-      operationId: fakeapi.aiohttp_hello.aiohttp_str_response
+      operationId: fakeapi.aiohttp_handlers.aiohttp_str_response
       produces:
         - text/plain
       responses:
@@ -45,7 +45,7 @@ paths:
     get:
       summary: Return a non str and non json response
       description: Test returning a non str and non json response
-      operationId: fakeapi.aiohttp_hello.aiohttp_non_str_non_json_response
+      operationId: fakeapi.aiohttp_handlers.aiohttp_non_str_non_json_response
       produces:
         - text/plain
       responses:
@@ -58,7 +58,7 @@ paths:
     get:
       summary: Return a bytes response
       description: Test returning a bytes response
-      operationId: fakeapi.aiohttp_hello.aiohttp_bytes_response
+      operationId: fakeapi.aiohttp_handlers.aiohttp_bytes_response
       produces:
         - text/plain
       responses:
@@ -71,7 +71,7 @@ paths:
     get:
       summary: Return a bytes response
       description: Test returning a bytes response
-      operationId: fakeapi.aiohttp_hello.aiohttp_validate_responses
+      operationId: fakeapi.aiohttp_handlers.aiohttp_validate_responses
       produces:
         - application/json
       responses:
@@ -80,27 +80,47 @@ paths:
           schema:
             type: object
 
-  /multiple_methods:
+  /users:
     get:
-      summary: Test path with multiple methods when get
-      description: Test path with multiple methods when get
-      operationId: fakeapi.aiohttp_hello.aiohttp_multiple_methods_get
+      summary: Test get users
+      description: Get test users list
+      operationId: fakeapi.aiohttp_handlers.aiohttp_users_get
       produces:
         - application/json
       responses:
         200:
-          description: json response
+          description: Return users
           schema:
-            type: object
+            type: array
+            items:
+              $ref: '#/definitions/User'
 
     post:
-      summary: Test path with multiple methods when post
-      description: Test path with multiple methods when post
-      operationId: fakeapi.aiohttp_hello.aiohttp_multiple_methods_post
-      produces:
+      summary: Create a new user
+      description: Add new user to a list of users
+      operationId: fakeapi.aiohttp_handlers.aiohttp_users_post
+      consumes:
         - application/json
+      parameters:
+        - in: body
+          name: user
+          description: The user to create
+          schema:
+            $ref: '#/definitions/User'
       responses:
-        200:
+        201:
           description: json response
           schema:
-            type: object
+            $ref: '#/definitions/User'
+
+
+definitions:
+  User:
+    type: object
+    required:
+      - name
+    properties:
+      id:
+        type: number
+      name:
+        type: string

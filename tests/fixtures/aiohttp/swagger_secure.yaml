@@ -24,7 +24,7 @@ paths:
     post:
       summary: Generate greeting
       description: Generates a greeting message.
-      operationId: fakeapi.aiohttp_hello.aiohttp_post_greeting
+      operationId: fakeapi.aiohttp_handlers.aiohttp_post_greeting
       responses:
         200:
           description: greeting response
