@@ -11,7 +11,7 @@ paths:
     get:
       summary: Generate goodbye
       description: Generates a goodbye message.
-      operationId: fakeapi.aiohttp_hello.get_bye
+      operationId: fakeapi.aiohttp_handlers.get_bye
       produces:
         - text/plain
       responses:

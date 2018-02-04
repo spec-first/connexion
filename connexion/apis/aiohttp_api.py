@@ -6,14 +6,14 @@ from urllib.parse import parse_qs
 import jinja2
 
 import aiohttp_jinja2
-from aiohttp.web import Application as AioHtppApplication
-from aiohttp.web import Response as AioHttpResponse
 from aiohttp.web_exceptions import HTTPNotFound
+from aiohttp import web
 from connexion.apis.abstract import AbstractAPI
 from connexion.exceptions import OAuthProblem
 from connexion.handlers import AuthErrorHandler
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.utils import is_json_mimetype
+
 
 try:
     import ujson as json
@@ -26,51 +26,44 @@ except ImportError:  # pragma: no cover
 logger = logging.getLogger('connexion.apis.aiohttp_api')
 
 
-class AioHttpApi(AbstractAPI):
+@web.middleware
+@asyncio.coroutine
+def oauth_problem_middleware(request, handler):
+    try:
+        response = yield from handler(request)
+    except OAuthProblem as oauth_error:
+        return web.Response(
+            status=oauth_error.code,
+            body=json.dumps(oauth_error.description).encode(),
+            content_type='application/problem+json'
+        )
+    return response
 
+
+class AioHttpApi(AbstractAPI):
     def __init__(self, *args, **kwargs):
-        self.subapp = AioHtppApplication(
-            debug=kwargs.get('debug', False)
+        self.subapp = web.Application(
+            debug=kwargs.get('debug', False),
+            middlewares=[oauth_problem_middleware]
         )
         AbstractAPI.__init__(self, *args, **kwargs)
+
         aiohttp_jinja2.setup(
             self.subapp,
             loader=jinja2.FileSystemLoader(
                 str(self.options.openapi_console_ui_from_dir)
             )
         )
-        self._set_middlewares(self.options.as_dict().get('middlewares'))
+        middlewares = self.options.as_dict().get('middlewares', [])
+        self.subapp.middlewares.extend(middlewares)
 
     def _set_base_path(self, base_path):
         AbstractAPI._set_base_path(self, base_path)
-        self._api_name = self._normalize_string(self.base_path)
+        self._api_name = AioHttpApi.normalize_string(self.base_path)
 
-    def _set_middlewares(self, middlewares):
-        @asyncio.coroutine
-        def oauth_problem_middleware(app, handler):
-            @asyncio.coroutine
-            def middleware_handler(request):
-                try:
-                    return (yield from handler(request))
-
-                except OAuthProblem as oauth_error:
-                    return AioHttpResponse(
-                        status=oauth_error.code,
-                        body=json.dumps(oauth_error.description).encode(),
-                        content_type='application/problem+json'
-                    )
-
-            return middleware_handler
-
-        self.subapp.middlewares.append(oauth_problem_middleware)
-
-        if middlewares:
-            self.subapp.middlewares.extend(middlewares)
-
-    def _normalize_string(self, string):
-        return re.sub(
-            r'[^a-zA-Z0-9]', '_', string.strip('/')
-        )
+    @staticmethod
+    def normalize_string(string):
+        return re.sub(r'[^a-zA-Z0-9]', '_', string.strip('/'))
 
     def add_swagger_json(self):
         """
@@ -85,7 +78,7 @@ class AioHttpApi(AbstractAPI):
 
     @asyncio.coroutine
     def _get_swagger_json(self, req):
-        return AioHttpResponse(
+        return web.Response(
             status=200,
             content_type='application/json',
             body=json.dumps(self.specification)
@@ -150,7 +143,7 @@ class AioHttpApi(AbstractAPI):
         handler = operation.function
         endpoint_name = '{}_{}_{}'.format(
             self._api_name,
-            self._normalize_string(path),
+            AioHttpApi.normalize_string(path),
             method.lower()
         )
         self.subapp.router.add_route(
@@ -164,26 +157,40 @@ class AioHttpApi(AbstractAPI):
 
     @classmethod
     def get_request(cls, req):
+        """Convert aiohttp request to connexion
+
+        :param req: instance of aiohttp.web.Request
+        :return: connexion request instance
+        :rtype: ConnexionRequest
+        """
         url = str(req.url)
         logger.debug('Getting data and status code',
-                     extra={
-                         'has_body': req.has_body,
-                         'url': url
-                     })
+                     extra={'has_body': req.has_body, 'url': url})
 
         query = {k: ','.join(v) for k, v in parse_qs(req.rel_url.query_string).items()}
         headers = {k.decode(): v.decode() for k, v in req.raw_headers}
-        body = req.content if req.has_body else None
+        body = None
+        if req.can_read_body:
+            # FIXME: the body is awaitable
+            # body = yield from req.read()
+            body = req.content
 
-        return ConnexionRequest(
-            url, req.method.lower(),
-            path_params=dict(req.match_info),
-            query=query, headers=headers,
-            body=body, files={})
+        return ConnexionRequest(url=url,
+                                method=req.method.lower(),
+                                path_params=dict(req.match_info),
+                                query=query,
+                                headers=headers,
+                                body=body,
+                                files={})
 
     @classmethod
     @asyncio.coroutine
     def get_response(cls, response, mimetype=None, request=None):
+        """Get response.
+        This method is used in the lifecycle decorators
+
+        :rtype: aiohttp.web.Response
+        """
         while asyncio.iscoroutine(response):
             response = yield from response
 
@@ -199,11 +206,7 @@ class AioHttpApi(AbstractAPI):
             response = cls._get_aiohttp_response_from_connexion(response, mimetype)
 
         logger.debug('Got data and status code (%d)',
-                     response.status,
-                     extra={
-                         'data': response.body,
-                         'url': url
-                     })
+                     response.status, extra={'data': response.body, 'url': url})
 
         return response
 
@@ -224,7 +227,7 @@ class AioHttpApi(AbstractAPI):
 
         body = cls._cast_body(response.body, content_type)
 
-        return AioHttpResponse(
+        return web.Response(
             status=response.status_code,
             content_type=content_type,
             headers=response.headers,
@@ -262,4 +265,5 @@ class _HttpNotFoundError(HTTPNotFound):
         )
         self.code = type(self).status_code
         self.empty_body = True
+
         HTTPNotFound.__init__(self, reason=self.name)

@@ -6,11 +6,11 @@ from connexion import AioHttpApp
 
 
 @asyncio.coroutine
-def test_auth_all_paths(oauth_requests, secure_aiohttp_api_spec_dir, test_client):
+def test_auth_all_paths(oauth_requests, aiohttp_api_spec_dir, test_client):
     app = AioHttpApp(__name__, port=5001,
-                     specification_dir=secure_aiohttp_api_spec_dir,
+                     specification_dir=aiohttp_api_spec_dir,
                      debug=True, auth_all_paths=True)
-    app.add_api('swagger.yaml')
+    app.add_api('swagger_secure.yaml')
 
     app_client = yield from test_client(app.app)
 
@@ -30,12 +30,12 @@ def test_auth_all_paths(oauth_requests, secure_aiohttp_api_spec_dir, test_client
 
 
 @asyncio.coroutine
-def test_secure_app(oauth_requests, secure_aiohttp_api_spec_dir, test_client):
+def test_secure_app(oauth_requests, aiohttp_api_spec_dir, test_client):
     # Create the app and run the test_app testcase below.
     app = AioHttpApp(__name__, port=5001,
-                     specification_dir=secure_aiohttp_api_spec_dir,
+                     specification_dir=aiohttp_api_spec_dir,
                      debug=True)
-    app.add_api('swagger.yaml')
+    app.add_api('swagger_secure.yaml')
     app_client = yield from test_client(app.app)
 
     post_hello = yield from app_client.post('/v1.0/greeting/jsantos')
