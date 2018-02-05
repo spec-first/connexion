@@ -7,8 +7,8 @@ import pytest
 from conftest import FIXTURES_FOLDER
 from connexion.cli import main
 from connexion.exceptions import ResolverError
-from mock import call as mock_call
 from mock import MagicMock
+from mock import call as mock_call
 
 
 @pytest.fixture()

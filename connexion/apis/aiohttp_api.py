@@ -6,14 +6,13 @@ from urllib.parse import parse_qs
 import jinja2
 
 import aiohttp_jinja2
-from aiohttp.web_exceptions import HTTPNotFound
 from aiohttp import web
+from aiohttp.web_exceptions import HTTPNotFound
 from connexion.apis.abstract import AbstractAPI
 from connexion.exceptions import OAuthProblem
 from connexion.handlers import AuthErrorHandler
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
-from connexion.utils import is_json_mimetype
-
+from connexion.utils import Jsonifier, is_json_mimetype
 
 try:
     import ujson as json
@@ -81,7 +80,7 @@ class AioHttpApi(AbstractAPI):
         return web.Response(
             status=200,
             content_type='application/json',
-            body=json.dumps(self.specification)
+            body=self.jsonifier.dumps(self.specification)
         )
 
     def add_swagger_ui(self):
@@ -156,6 +155,7 @@ class AioHttpApi(AbstractAPI):
             )
 
     @classmethod
+    @asyncio.coroutine
     def get_request(cls, req):
         """Convert aiohttp request to connexion
 
@@ -171,9 +171,7 @@ class AioHttpApi(AbstractAPI):
         headers = {k.decode(): v.decode() for k, v in req.raw_headers}
         body = None
         if req.can_read_body:
-            # FIXME: the body is awaitable
-            # body = yield from req.read()
-            body = req.content
+            body = yield from req.read()
 
         return ConnexionRequest(url=url,
                                 method=req.method.lower(),
@@ -181,6 +179,7 @@ class AioHttpApi(AbstractAPI):
                                 query=query,
                                 headers=headers,
                                 body=body,
+                                json_getter=lambda: cls.jsonifier.loads(body),
                                 files={})
 
     @classmethod
@@ -248,11 +247,9 @@ class AioHttpApi(AbstractAPI):
         else:
             return body
 
-    def json_loads(self, data):
-        """
-        Use json as JSON loader
-        """
-        return json.loads(data)
+    @classmethod
+    def _set_jsonifier(cls):
+        cls.jsonifier = Jsonifier(json)
 
 
 class _HttpNotFoundError(HTTPNotFound):

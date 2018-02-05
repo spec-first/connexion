@@ -14,6 +14,7 @@ from ..exceptions import ResolverError
 from ..operation import Operation
 from ..options import ConnexionOptions
 from ..resolver import Resolver
+from ..utils import Jsonifier
 
 MODULE_PATH = pathlib.Path(__file__).absolute().parent.parent
 SWAGGER_UI_PATH = MODULE_PATH / 'vendor' / 'swagger-ui'
@@ -24,7 +25,14 @@ RESOLVER_ERROR_ENDPOINT_RANDOM_DIGITS = 6
 logger = logging.getLogger('connexion.apis.abstract')
 
 
-@six.add_metaclass(abc.ABCMeta)
+class AbstractAPIMeta(abc.ABCMeta):
+
+    def __init__(cls, name, bases, attrs):
+        abc.ABCMeta.__init__(cls, name, bases, attrs)
+        cls._set_jsonifier()
+
+
+@six.add_metaclass(AbstractAPIMeta)
 class AbstractAPI(object):
     """
     Defines an abstract interface for a Swagger API
@@ -303,15 +311,13 @@ class AbstractAPI(object):
         :param response: A response to cast.
         """
 
-    @classmethod
-    @abc.abstractmethod
     def json_loads(self, data):
-        """
-        API specific JSON loader.
+        return self.jsonifier.loads(data)
 
-        :param data:
-        :return:
-        """
+    @classmethod
+    def _set_jsonifier(cls):
+        import json
+        cls.jsonifier = Jsonifier(json)
 
 
 def canonical_base_path(base_path):

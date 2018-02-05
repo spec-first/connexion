@@ -1,14 +1,13 @@
 # Decorators to change the return type of endpoints
 import functools
 import logging
-import sys
 
 from jsonschema import ValidationError
 
 from ..exceptions import (NonConformingResponseBody,
                           NonConformingResponseHeaders)
 from ..problem import problem
-from ..utils import all_json
+from ..utils import all_json, has_coroutine
 from .decorator import BaseDecorator
 from .validation import ResponseBodyValidator
 
@@ -95,17 +94,11 @@ class ResponseValidator(BaseDecorator):
 
             return response
 
-        is_coroutine = False
+        if has_coroutine(function):  # pragma: 2.7 no cover
+            from .coroutine_wrappers import get_response_validator_wrapper
+            wrapper = get_response_validator_wrapper(function, _wrapper)
 
-        if sys.version_info[0] >= 3:  # pragma: 2.7 no cover
-            import asyncio
-            is_coroutine = asyncio.iscoroutinefunction(function)
-
-        if is_coroutine:  # pragma: 2.7 no cover
-            from .response_coroutine import get_wrapper
-            wrapper = get_wrapper(function, _wrapper)
-
-        else:
+        else:  # pragma: 3 no cover
             @functools.wraps(function)
             def wrapper(request):
                 response = function(request)

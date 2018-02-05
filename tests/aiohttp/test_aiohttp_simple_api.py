@@ -1,14 +1,14 @@
 import asyncio
+
 import aiohttp.web
+import pytest
+from conftest import TEST_FOLDER
+from connexion import AioHttpApp
 
 try:
     import ujson as json
 except ImportError:
     import json
-
-import pytest
-from conftest import TEST_FOLDER
-from connexion import AioHttpApp
 
 
 @pytest.fixture
@@ -16,7 +16,7 @@ def aiohttp_app(aiohttp_api_spec_dir):
     app = AioHttpApp(__name__, port=5001,
                      specification_dir=aiohttp_api_spec_dir,
                      debug=True)
-    app.add_api('swagger_simple.yaml')
+    app.add_api('swagger_simple.yaml', validate_responses=True)
     return app
 
 
@@ -191,7 +191,6 @@ def test_response_with_bytes_body(aiohttp_app, test_client):
 
 @asyncio.coroutine
 def test_validate_responses(aiohttp_app, test_client):
-    aiohttp_app.add_api('swagger_simple.yaml', validate_responses=True)
     app_client = yield from test_client(aiohttp_app.app)
     get_bye = yield from app_client.get('/v1.0/aiohttp_validate_responses')
     assert get_bye.status == 200
@@ -200,8 +199,6 @@ def test_validate_responses(aiohttp_app, test_client):
 
 @asyncio.coroutine
 def test_get_users(test_client, aiohttp_app):
-    aiohttp_app.add_api('swagger_simple.yaml', validate_responses=True)
-
     app_client = yield from test_client(aiohttp_app.app)
     resp = yield from app_client.get('/v1.0/users')
     assert resp.status == 200
@@ -213,9 +210,7 @@ def test_get_users(test_client, aiohttp_app):
 
 @asyncio.coroutine
 def test_create_user(test_client, aiohttp_app):
-    aiohttp_app.add_api('swagger_simple.yaml', validate_responses=True)
     app_client = yield from test_client(aiohttp_app.app)
     user = {'name': 'Maksim'}
-    # FIXME: currently it fails during request body validation
-    # resp = yield from app_client.post('/v1.0/users', json=user, headers={'Content-type': 'application/json'})
-    # assert resp.status == 201
+    resp = yield from app_client.post('/v1.0/users', json=user, headers={'Content-type': 'application/json'})
+    assert resp.status == 201

@@ -50,9 +50,7 @@ paths:
         - text/plain
       responses:
         200:
-          description: json response
-          schema:
-            type: string
+          description: non str non json response
 
   /aiohttp_bytes_response:
     get:
@@ -63,9 +61,7 @@ paths:
         - text/plain
       responses:
         200:
-          description: json response
-          schema:
-            type: object
+          description: bytes response
 
   /aiohttp_validate_responses:
     get:

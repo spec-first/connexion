@@ -66,6 +66,8 @@ class PyTest(TestCommand):
         if sys.version_info[0] < 3:
             self.pytest_args.append('--cov-config=py2-coveragerc')
             self.pytest_args.append('--ignore=tests/aiohttp')
+        else:
+            self.pytest_args.append('--cov-config=py3-coveragerc')
 
         self.cov_html = False
 

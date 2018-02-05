@@ -8,7 +8,7 @@ class ConnexionRequest(object):
                  headers=None,
                  form=None,
                  body=None,
-                 json=None,
+                 json_getter=None,
                  files=None,
                  context=None):
         self.url = url
@@ -18,9 +18,13 @@ class ConnexionRequest(object):
         self.headers = headers or {}
         self.form = form or {}
         self.body = body
-        self.json = json
+        self.json_getter = json_getter
         self.files = files
         self.context = context or {}
+
+    @property
+    def json(self):
+        return self.json_getter()
 
 
 class ConnexionResponse(object):

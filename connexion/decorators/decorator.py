@@ -1,6 +1,8 @@
 import functools
 import logging
 
+from ..utils import has_coroutine
+
 logger = logging.getLogger('connexion.decorators.decorator')
 
 
@@ -60,10 +62,15 @@ class EndOfRequestLifecycleDecorator(BaseDecorator):
         :type function: types.FunctionType
         :rtype: types.FunctionType
         """
-        @functools.wraps(function)
-        def wrapper(*args, **kwargs):
-            request = self.api.get_request(*args, **kwargs)
-            response = function(request)
-            return self.api.get_response(response, self.mimetype, request)
+        if has_coroutine(function, self.api):  # pragma: 2.7 no cover
+            from .coroutine_wrappers import get_request_life_cycle_wrapper
+            wrapper = get_request_life_cycle_wrapper(function, self.api, self.mimetype)
+
+        else:  # pragma: 3 no cover
+            @functools.wraps(function)
+            def wrapper(*args, **kwargs):
+                request = self.api.get_request(*args, **kwargs)
+                response = function(request)
+                return self.api.get_response(response, self.mimetype, request)
 
         return wrapper

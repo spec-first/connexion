@@ -3,7 +3,6 @@ import asyncio
 
 import aiohttp
 from aiohttp.web import Response as AioHttpResponse
-
 from connexion.lifecycle import ConnexionResponse
 
 
@@ -50,11 +49,11 @@ def aiohttp_users_get(*args):
 
 
 @asyncio.coroutine
-def aiohttp_users_post(request):
-    data = yield from request.json()
-    if "user_name" not in data:
-        return ConnexionResponse(body={"error": "user_name is undefined"},
+def aiohttp_users_post(user):
+    if "name" not in user:
+        return ConnexionResponse(body={"error": "name is undefined"},
                                  status_code=400,
                                  content_type='application/json')
-    USERS.append({**data, 'id': len(USERS) + 1})
+    user['id'] = len(USERS) + 1
+    USERS.append(user)
     return aiohttp.web.json_response(data=USERS[-1], status=201)
