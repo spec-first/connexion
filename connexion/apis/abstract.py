@@ -89,7 +89,7 @@ class AbstractAPI(object):
 
         # Avoid validator having ability to modify specification
         spec = copy.deepcopy(self.specification)
-        validate_spec(spec)
+        self._validate_spec(spec)
 
         # https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#fixed-fields
         # If base_path is not on provided then we try to read it from the swagger.yaml or use / by default
@@ -132,6 +132,9 @@ class AbstractAPI(object):
 
         if auth_all_paths:
             self.add_auth_on_not_found(self.security, self.security_definitions)
+
+    def _validate_spec(self, spec):
+        validate_spec(spec)
 
     def _set_base_path(self, base_path):
         # type: (AnyStr) -> None
