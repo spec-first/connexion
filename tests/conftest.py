@@ -48,6 +48,8 @@ def oauth_requests(monkeypatch):
                 return FakeResponse(200, '{"uid": "test-user", "scope": ["myscope", "otherscope"]}')
             if token in ["300", "is_not_invalid"]:
                 return FakeResponse(404, '')
+            if token == "has_scopes_in_scopes_with_s":
+                return FakeResponse(200, '{"uid": "test-user", "scopes": ["myscope", "otherscope"]}')
         return url
 
     monkeypatch.setattr('connexion.decorators.security.session.get', fake_get)

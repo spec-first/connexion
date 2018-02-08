@@ -73,10 +73,11 @@ def validate_token_info(token_info, allowed_scopes):
     :type token_info: dict
     :return: None
     """
-    if isinstance(token_info['scope'], list):
-        user_scopes = set(token_info['scope'])
+    scope = token_info.get('scope') or token_info.get('scopes')
+    if isinstance(scope, list):
+        user_scopes = set(scope)
     else:
-        user_scopes = set(token_info['scope'].split())
+        user_scopes = set(scope.split())
     logger.debug("... Scopes required: %s", allowed_scopes)
     logger.debug("... User scopes: %s", user_scopes)
     if not allowed_scopes <= user_scopes:
