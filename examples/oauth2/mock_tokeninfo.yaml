@@ -9,11 +9,6 @@ paths:
     get:
       summary: OAuth2 token info
       operationId: mock_tokeninfo.get_tokeninfo
-      parameters:
-        - name: access_token
-          in: query
-          type: string
-          required: true
       responses:
         200:
           description: Token info object

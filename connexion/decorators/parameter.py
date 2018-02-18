@@ -119,7 +119,7 @@ def parameter_to_arg(parameters, consumes, function, pythonic_params=False):
                 else:
                     request_query[k] = v[0]
         except AttributeError:
-            request_query = {sanitize_param(k): v for k, v in request.form.items()}
+            request_query = {sanitize_param(k): v for k, v in request.query.items()}
         return request_query
 
     body_parameters = [parameter for parameter in parameters if parameter['in'] == 'body'] or [{}]

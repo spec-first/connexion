@@ -1,16 +1,15 @@
-==============
-OAuth2 Example
-==============
+===============================
+OAuth2 Local Validation Example
+===============================
 
 This example demonstrates how to implement a resource server with Connexion.
-The app will lookup OAuth2 Bearer tokens with the given token info function.
+The app will lookup OAuth2 Bearer tokens in a static map.
 
 Running:
 
 .. code-block:: bash
 
     $ sudo pip3 install --upgrade connexion  # install Connexion from PyPI
-    $ ./mock_tokeninfo.py &                  # start mock in background
     $ ./app.py
 
 Now open your browser and go to http://localhost:8080/ui/ to see the Swagger UI.

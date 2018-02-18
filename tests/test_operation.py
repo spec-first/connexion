@@ -1,10 +1,13 @@
+import math
 import pathlib
 import types
 
 import mock
 import pytest
 from connexion.apis.flask_api import Jsonifier
-from connexion.decorators.security import security_passthrough, verify_oauth
+from connexion.decorators.security import (security_passthrough,
+                                           verify_oauth_local,
+                                           verify_oauth_remote)
 from connexion.exceptions import InvalidSpecification
 from connexion.operation import Operation
 from connexion.resolver import Resolver
@@ -226,10 +229,21 @@ OPERATION10 = {'description': 'Adds a new stack to be created by lizzy and retur
                'security': [{'oauth': ['uid']}],
                'summary': 'Create new stack'}
 
-SECURITY_DEFINITIONS = {'oauth': {'type': 'oauth2',
-                                  'flow': 'password',
-                                  'x-tokenInfoUrl': 'https://oauth.example/token_info',
-                                  'scopes': {'myscope': 'can do stuff'}}}
+SECURITY_DEFINITIONS_REMOTE = {'oauth': {'type': 'oauth2',
+                                         'flow': 'password',
+                                         'x-tokenInfoUrl': 'https://oauth.example/token_info',
+                                         'scopes': {'myscope': 'can do stuff'}}}
+
+SECURITY_DEFINITIONS_LOCAL = {'oauth': {'type': 'oauth2',
+                                        'flow': 'password',
+                                        'x-tokenInfoFunc': 'math.ceil',
+                                        'scopes': {'myscope': 'can do stuff'}}}
+
+SECURITY_DEFINITIONS_BOTH = {'oauth': {'type': 'oauth2',
+                                       'flow': 'password',
+                                       'x-tokenInfoFunc': 'math.ceil',
+                                       'x-tokenInfoUrl': 'https://oauth.example/token_info',
+                                       'scopes': {'myscope': 'can do stuff'}}}
 
 SECURITY_DEFINITIONS_WO_INFO = {'oauth': {'type': 'oauth2',
                                           'flow': 'password',
@@ -250,14 +264,14 @@ def test_operation(api):
                           app_produces=['application/json'],
                           app_consumes=['application/json'],
                           app_security=[],
-                          security_definitions=SECURITY_DEFINITIONS,
+                          security_definitions=SECURITY_DEFINITIONS_REMOTE,
                           definitions=DEFINITIONS,
                           parameter_definitions=PARAMETER_DEFINITIONS,
                           resolver=Resolver())
     assert isinstance(operation.function, types.FunctionType)
-    # security decorator should be a partial with verify_oauth as the function and token url and scopes as arguments.
+    # security decorator should be a partial with verify_oauth_remote as the function and token url and scopes as arguments.
     # See https://docs.python.org/2/library/functools.html#partial-objects
-    assert operation.security_decorator.func is verify_oauth
+    assert operation.security_decorator.func is verify_oauth_remote
     assert operation.security_decorator.args == ('https://oauth.example/token_info', set(['uid']))
 
     assert operation.method == 'GET'
@@ -281,14 +295,15 @@ def test_operation_array(api):
                           app_produces=['application/json'],
                           app_consumes=['application/json'],
                           app_security=[],
-                          security_definitions=SECURITY_DEFINITIONS,
+                          security_definitions=SECURITY_DEFINITIONS_REMOTE,
                           definitions=DEFINITIONS,
                           parameter_definitions=PARAMETER_DEFINITIONS,
                           resolver=Resolver())
     assert isinstance(operation.function, types.FunctionType)
-    # security decorator should be a partial with verify_oauth as the function and token url and scopes as arguments.
+    # security decorator should be a partial with verify_oauth_remote as the function and token url
+    #  and scopes as arguments.
     # See https://docs.python.org/2/library/functools.html#partial-objects
-    assert operation.security_decorator.func is verify_oauth
+    assert operation.security_decorator.func is verify_oauth_remote
     assert operation.security_decorator.args == ('https://oauth.example/token_info', set(['uid']))
 
     assert operation.method == 'GET'
@@ -312,14 +327,15 @@ def test_operation_composed_definition(api):
                           app_produces=['application/json'],
                           app_consumes=['application/json'],
                           app_security=[],
-                          security_definitions=SECURITY_DEFINITIONS,
+                          security_definitions=SECURITY_DEFINITIONS_REMOTE,
                           definitions=DEFINITIONS,
                           parameter_definitions=PARAMETER_DEFINITIONS,
                           resolver=Resolver())
     assert isinstance(operation.function, types.FunctionType)
-    # security decorator should be a partial with verify_oauth as the function and token url and scopes as arguments.
+    # security decorator should be a partial with verify_oauth_remote as the function and
+    # token url and scopes as arguments.
     # See https://docs.python.org/2/library/functools.html#partial-objects
-    assert operation.security_decorator.func is verify_oauth
+    assert operation.security_decorator.func is verify_oauth_remote
     assert operation.security_decorator.args == ('https://oauth.example/token_info', set(['uid']))
 
     assert operation.method == 'GET'
@@ -332,6 +348,69 @@ def test_operation_composed_definition(api):
     }
     assert operation.body_schema == expected_body_schema
 
+
+def test_operation_local_security_oauth2(api):
+    operation = Operation(api=api,
+                          method='GET',
+                          path='endpoint',
+                          path_parameters=[],
+                          operation=OPERATION10,
+                          app_produces=['application/json'],
+                          app_consumes=['application/json'],
+                          app_security=[],
+                          security_definitions=SECURITY_DEFINITIONS_LOCAL,
+                          definitions=DEFINITIONS,
+                          parameter_definitions=PARAMETER_DEFINITIONS,
+                          resolver=Resolver())
+    assert isinstance(operation.function, types.FunctionType)
+    # security decorator should be a partial with verify_oauth_remote as the function and
+    # token url and scopes as arguments.
+    # See https://docs.python.org/2/library/functools.html#partial-objects
+
+    assert operation.security_decorator.func is verify_oauth_local
+    assert operation.security_decorator.args == (math.ceil, set(['uid']))
+
+    assert operation.method == 'GET'
+    assert operation.produces == ['application/json']
+    assert operation.consumes == ['application/json']
+    assert operation.security == [{'oauth': ['uid']}]
+    expected_body_schema = {
+        '$ref': '#/definitions/composed',
+        'definitions': DEFINITIONS
+    }
+    assert operation.body_schema == expected_body_schema
+
+
+def test_operation_local_security_duplicate_token_info(api):
+    operation = Operation(api=api,
+                          method='GET',
+                          path='endpoint',
+                          path_parameters=[],
+                          operation=OPERATION10,
+                          app_produces=['application/json'],
+                          app_consumes=['application/json'],
+                          app_security=[],
+                          security_definitions=SECURITY_DEFINITIONS_BOTH,
+                          definitions=DEFINITIONS,
+                          parameter_definitions=PARAMETER_DEFINITIONS,
+                          resolver=Resolver())
+    assert isinstance(operation.function, types.FunctionType)
+    # security decorator should be a partial with verify_oauth_remote as the function and
+    # token url and scopes as arguments.
+    # See https://docs.python.org/2/library/functools.html#partial-objects
+
+    assert operation.security_decorator.func is verify_oauth_local
+    assert operation.security_decorator.args == (math.ceil, set(['uid']))
+
+    assert operation.method == 'GET'
+    assert operation.produces == ['application/json']
+    assert operation.consumes == ['application/json']
+    assert operation.security == [{'oauth': ['uid']}]
+    expected_body_schema = {
+        '$ref': '#/definitions/composed',
+        'definitions': DEFINITIONS
+    }
+    assert operation.body_schema == expected_body_schema
 
 def test_non_existent_reference(api):
     with pytest.raises(InvalidSpecification) as exc_info:  # type: py.code.ExceptionInfo
