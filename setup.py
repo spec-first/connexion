@@ -34,7 +34,7 @@ install_requires = [
 
 flask_require = 'flask>=0.10.1'
 aiohttp_require = [
-    'aiohttp>=2.2.5',
+    'aiohttp>=2.3.10',
     'aiohttp-jinja2>=0.14.0'
 ]
 ujson_require = 'ujson>=1.35'
