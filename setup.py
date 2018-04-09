@@ -33,6 +33,11 @@ install_requires = [
 ]
 
 flask_require = 'flask>=0.10.1'
+aiohttp_require = [
+    'aiohttp>=2.3.10',
+    'aiohttp-jinja2>=0.14.0'
+]
+ujson_require = 'ujson>=1.35'
 
 tests_require = [
     'decorator',
@@ -43,6 +48,11 @@ tests_require = [
     flask_require
 ]
 
+if sys.version_info[0] >= 3:
+    tests_require.extend(aiohttp_require)
+    tests_require.append(ujson_require)
+    tests_require.append('pytest-aiohttp')
+
 
 class PyTest(TestCommand):
 
@@ -52,6 +62,13 @@ class PyTest(TestCommand):
         TestCommand.initialize_options(self)
         self.cov = None
         self.pytest_args = ['--cov', 'connexion', '--cov-report', 'term-missing', '-v']
+
+        if sys.version_info[0] < 3:
+            self.pytest_args.append('--cov-config=py2-coveragerc')
+            self.pytest_args.append('--ignore=tests/aiohttp')
+        else:
+            self.pytest_args.append('--cov-config=py3-coveragerc')
+
         self.cov_html = False
 
     def finalize_options(self):
@@ -87,7 +104,12 @@ setup(
     setup_requires=['flake8'],
     install_requires=install_requires + [flask_require],
     tests_require=tests_require,
-    extras_require={'tests': tests_require, 'flask': flask_require},
+    extras_require={
+        'tests': tests_require,
+        'flask': flask_require,
+        'aiohttp': aiohttp_require,
+        'ujson': ujson_require
+    },
     cmdclass={'test': PyTest},
     test_suite='tests',
     classifiers=[

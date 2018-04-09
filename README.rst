@@ -416,6 +416,17 @@ Flask with uWSGI`_ (this is common):
     app = connexion.App(__name__, specification_dir='swagger/')
     application = app.app # expose global WSGI application object
 
+You can use the ``aiohttp`` framework as server backend as well:
+
+.. code-block:: python
+
+    import connexion
+
+    app = connexion.AioHttpApp(__name__, specification_dir='swagger/')
+    app.run(port=8080)
+
+**NOTE:** Also check aiohttp handler examples_.
+
 Set up and run the installation code:
 
 .. code-block:: bash
@@ -427,6 +438,8 @@ See the `uWSGI documentation`_ for more information.
 
 .. _using Flask with uWSGI: http://flask.pocoo.org/docs/latest/deploying/uwsgi/
 .. _uWSGI documentation: https://uwsgi-docs.readthedocs.org/
+.. _examples: https://docs.aiohttp.org/en/stable/web.html#handler
+
 
 Documentation
 =============
