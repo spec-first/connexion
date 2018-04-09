@@ -133,7 +133,7 @@ def run(spec_file,
     """
     if wsgi_server and server:
         raise click.BadParameter(
-            "these options are mutually excludent",
+            "these options are mutually exclusive",
             param_hint="'wsgi-server' and 'server'"
         )
     elif wsgi_server:

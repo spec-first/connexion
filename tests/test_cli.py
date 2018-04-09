@@ -281,7 +281,7 @@ def test_run_with_wsgi_server_and_server_opts(mock_app_run, spec_file):
                             '-w', 'flask',
                             '-s', 'flask'],
                            catch_exceptions=False)
-    assert "these options are mutually excludent" in result.output
+    assert "these options are mutually exclusive" in result.output
     assert result.exit_code == 2
 
 
