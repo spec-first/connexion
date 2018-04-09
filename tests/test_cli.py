@@ -8,15 +8,26 @@ from conftest import FIXTURES_FOLDER
 from connexion.cli import main
 from connexion.exceptions import ResolverError
 from mock import MagicMock
+from mock import call as mock_call
 
 
 @pytest.fixture()
-def mock_app_run(monkeypatch):
+def mock_app_run(mock_get_function_from_name):
     test_server = MagicMock(wraps=connexion.FlaskApp(__name__))
     test_server.run = MagicMock(return_value=True)
     test_app = MagicMock(return_value=test_server)
-    monkeypatch.setattr('connexion.cli.connexion.FlaskApp', test_app)
+    mock_get_function_from_name.return_value = test_app
     return test_app
+
+
+@pytest.fixture()
+def mock_get_function_from_name(monkeypatch):
+    get_function_from_name = MagicMock()
+    monkeypatch.setattr(
+        'connexion.cli.connexion.utils.get_function_from_name',
+        get_function_from_name
+    )
+    return get_function_from_name
 
 
 @pytest.fixture()
@@ -60,7 +71,7 @@ def test_run_simple_spec(mock_app_run, spec_file):
     app_instance.run.assert_called_with(
         port=default_port,
         host=None,
-        server=None,
+        server='flask',
         debug=False)
 
 
@@ -73,7 +84,7 @@ def test_run_spec_with_host(mock_app_run, spec_file):
     app_instance.run.assert_called_with(
         port=default_port,
         host='custom.host',
-        server=None,
+        server='flask',
         debug=False)
 
 
@@ -244,3 +255,54 @@ def test_run_with_wsgi_containers(mock_app_run, spec_file):
                            ['run', spec_file, '-w', 'flask'],
                            catch_exceptions=False)
     assert result.exit_code == 0
+
+
+def test_run_with_aiohttp_not_installed(mock_app_run, spec_file):
+    import sys
+    aiohttp_bkp = sys.modules.pop('aiohttp', None)
+
+    runner = CliRunner()
+
+    # missing aiohttp
+    result = runner.invoke(main,
+                           ['run', spec_file, '-f', 'aiohttp'],
+                           catch_exceptions=False)
+    sys.modules['aiohttp'] = aiohttp_bkp
+
+    assert 'aiohttp library is not installed' in result.output
+    assert result.exit_code == 1
+
+
+def test_run_with_wsgi_server_and_server_opts(mock_app_run, spec_file):
+    runner = CliRunner()
+
+    result = runner.invoke(main,
+                           ['run', spec_file,
+                            '-w', 'flask',
+                            '-s', 'flask'],
+                           catch_exceptions=False)
+    assert "these options are mutually exclusive" in result.output
+    assert result.exit_code == 2
+
+
+def test_run_with_incompatible_server_and_default_framework(mock_app_run, spec_file):
+    runner = CliRunner()
+
+    result = runner.invoke(main,
+                           ['run', spec_file,
+                           '-s', 'aiohttp'],
+                           catch_exceptions=False)
+    assert "Invalid server 'aiohttp' for app-framework 'flask'" in result.output
+    assert result.exit_code == 2
+
+
+def test_run_with_incompatible_server_and_framework(mock_app_run, spec_file):
+    runner = CliRunner()
+
+    result = runner.invoke(main,
+                           ['run', spec_file,
+                           '-s', 'flask',
+                           '-f', 'aiohttp'],
+                           catch_exceptions=False)
+    assert "Invalid server 'flask' for app-framework 'aiohttp'" in result.output
+    assert result.exit_code == 2
