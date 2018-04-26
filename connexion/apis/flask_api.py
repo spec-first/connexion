@@ -30,9 +30,13 @@ class FlaskApi(AbstractAPI):
         """
         Adds swagger json to {base_path}/swagger.json
         """
-        logger.debug('Adding swagger.json: %s/swagger.json', self.base_path)
+        spec_url = '/{spec_url}'.format(
+            spec_url=self.options.openapi_spec_path)
+
+        logger.debug('Adding spec json: %s/%s', self.base_path,
+            self.options.openapi_spec_path)
         endpoint_name = "{name}_swagger_json".format(name=self.blueprint.name)
-        self.blueprint.add_url_rule('/swagger.json',
+        self.blueprint.add_url_rule(self.options.openapi_spec_path,
                                     endpoint_name,
                                     lambda: flask.jsonify(self.specification))
 

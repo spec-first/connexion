@@ -50,11 +50,10 @@ class ConnexionOptions(object):
         # type: () -> bool
         """
         Whether to make available the OpenAPI Specification under
-        `openapi_console_ui_path`/swagger.json path.
+        `openapi_spec_path`.
 
         Default: True
         """
-        # NOTE: Under OpenAPI v3 this should change to "/openapi.json"
         return self._options.get('swagger_json', True)
 
     @property
