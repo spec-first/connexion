@@ -58,6 +58,24 @@ class ConnexionOptions(object):
         return self._options.get('swagger_json', True)
 
     @property
+    def openapi_spec_version(self):
+        # type: () -> str
+        """
+        The version of the OpenAPI Specification
+
+        Default: "2.0.0"
+        """
+        return self._options.get('openapi_spec_version', "2.0.0")
+
+    @property
+    def openapi_spec_major_version(self):
+        # type: () -> str
+        """
+        The major version of the OpenAPI Specification (likely either "2" or "3")
+        """
+        return self._options.get('openapi_spec_version', "2.0.0").split(".")[0]
+
+    @property
     def openapi_console_ui_available(self):
         # type: () -> bool
         """
@@ -73,6 +91,20 @@ class ConnexionOptions(object):
             logger.warning(NO_UI_MSG)
             return False
         return self._options.get('swagger_ui', True)
+
+    @property
+    def openapi_spec_path(self):
+        # type: () -> str
+        """
+        Path to mount the OpenAPI Console UI and make it accessible via a browser.
+
+        Default: /openapi.json for openapi3, otherwise /swagger.json
+        """
+        major_version = self.openapi_spec_major_version
+        default_path = "/swagger.json"
+        if major_version == "3":
+            default_path = "/openapi.json"
+        return self._options.get('openapi_spec_path', default_path)
 
     @property
     def openapi_console_ui_path(self):
@@ -93,7 +125,10 @@ class ConnexionOptions(object):
 
         Default: Connexion's vendored version of the OpenAPI Console UI.
         """
-        return self._options.get('swagger_path', INTERNAL_CONSOLE_UI_PATH)
+        major_version = self.openapi_spec_major_version
+        ui_path = MODULE_PATH / 'vendor' / 'swagger-ui-{version}'.format(
+            version=major_version)
+        return self._options.get('swagger_path', ui_path)
 
     @property
     def uri_parser_class(self):
