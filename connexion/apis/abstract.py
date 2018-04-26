@@ -8,7 +8,7 @@ from typing import AnyStr, List  # NOQA
 import jinja2
 import six
 import yaml
-from swagger_spec_validator.validator20 import validate_spec
+from openapi_spec_validator import validate_spec
 
 from ..exceptions import ResolverError
 from ..operation import Operation
@@ -141,6 +141,17 @@ class AbstractAPI(object):
             self.add_auth_on_not_found(self.security, self.security_definitions)
 
     def _validate_spec(self, spec):
+        if "openapi" in spec:
+            logger.info('Using OpenApi 3.x.x specification')
+            from openapi_spec_validator import validate_v3_spec as validate_spec
+            self.options = self.options.extend({"openapi_spec_version": spec["openapi"]})
+        elif "swagger" in spec:
+            logger.warning('Using Swagger 2.0 specification')
+            self.options = self.options.extend({"openapi_spec_version": spec["swagger"]})
+            from openapi_spec_validator import validate_v2_spec as validate_spec
+        else:
+            logger.error('Unknown Spec Version')
+            exit(1)
         validate_spec(spec)
 
     def _set_base_path(self, base_path):

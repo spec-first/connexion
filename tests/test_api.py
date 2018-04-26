@@ -3,7 +3,7 @@
 import pathlib
 import tempfile
 
-from swagger_spec_validator.common import SwaggerValidationError
+from openapi_spec_validator.exceptions import OpenAPIValidationError
 from yaml import YAMLError
 
 import pytest
