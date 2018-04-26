@@ -61,8 +61,16 @@ def get_val_from_param(value, query_param):
     if is_nullable(query_param) and is_null(value):
         return None
 
-    if query_param["type"] == "array":
-        return [make_type(v, query_param["items"]["type"]) for v in value]
+    if "schema" in query_param:
+        query_param = query_param["schema"]
+
+    if query_param["type"] == "array":  # then logic is more complex
+        if query_param.get("collectionFormat") and query_param.get("collectionFormat") == "pipes":
+            parts = value.split("|")
+        else:  # default: csv
+            parts = value.split(",")
+        # TODO not sure if this works?
+        return [make_type(part, query_param["items"].get("schema", query_param["items"])["type"]) for part in parts]
     else:
         return make_type(value, query_param["type"])
 
@@ -101,6 +109,28 @@ def parameter_to_arg(parameters, consumes, function, pythonic_params=False):
             name = snake_and_shadow(name)
         return name and re.sub('^[^a-zA-Z_]+', '', re.sub('[^0-9a-zA-Z_]', '', name))
 
+<<<<<<< HEAD
+=======
+    def make_request_query(request):
+        request_query = {}
+        try:
+            for k, v in request.query.to_dict(flat=False).items():
+                k = sanitize_param(k)
+                query_param = query_types.get(k, None)
+                if "schema" in query_param:
+                    query_param = query_param["schema"]
+                if query_param is not None and query_param["type"] == "array":
+                    if query_param.get("collectionFormat", None) == "pipes":
+                        request_query[k] = "|".join(v)
+                    else:
+                        request_query[k] = ",".join(v)
+                else:
+                    request_query[k] = v[0]
+        except AttributeError:
+            request_query = {sanitize_param(k): v for k, v in request.query.items()}
+        return request_query
+
+>>>>>>> initial support for requestBody
     body_parameters = [parameter for parameter in parameters if parameter['in'] == 'body'] or [{}]
     body_name = sanitize_param(body_parameters[0].get('name'))
     default_body = body_parameters[0].get('schema', {}).get('default')
@@ -141,9 +171,13 @@ def parameter_to_arg(parameters, consumes, function, pythonic_params=False):
         # Add body parameters
         if not has_kwargs and body_name not in arguments:
             logger.debug("Body parameter '%s' not in function arguments", body_name)
+            # OAS3
+            if request_body:
+                kwargs.update(request_body)
         elif body_name:
             logger.debug("Body parameter '%s' in function arguments", body_name)
             kwargs[body_name] = request_body
+
 
         # Add query parameters
         query_arguments = copy.deepcopy(default_query_params)

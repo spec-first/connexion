@@ -176,6 +176,9 @@ class Operation(SecureOperation):
         :param definitions: `Definitions Object
             <https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#definitionsObject>`_
         :type definitions: dict
+        :param components: `Components Object
+            <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#componentsObject>`_
+        :type definitions: dict
         :param parameter_definitions: Global parameter definitions
         :type parameter_definitions: dict
         :param response_definitions: Global response definitions
@@ -200,9 +203,11 @@ class Operation(SecureOperation):
         self.validator_map.update(validator_map or {})
         self.security_definitions = security_definitions or {}
         self.definitions = definitions or {}
+        self.components = components or {}
         self.parameter_definitions = parameter_definitions or {}
         self.response_definitions = response_definitions or {}
         self.definitions_map = {
+            'components.schemas': self.components["schemas"],
             'definitions': self.definitions,
             'parameters': self.parameter_definitions,
             'responses': self.response_definitions
@@ -216,6 +221,7 @@ class Operation(SecureOperation):
 
         # todo support definition references
         # todo support references to application level parameters
+        self.request_body = operation.get('requestBody')
         self.parameters = list(self.resolve_parameters(operation.get('parameters', [])))
         if path_parameters:
             self.parameters += list(self.resolve_parameters(path_parameters))
@@ -256,6 +262,14 @@ class Operation(SecureOperation):
             obj.update(definition)
             del obj['$ref']
 
+        # if the schema includes allOf or oneOf or anyOf
+        for multi in ["allOf", "anyOf", "oneOf"]:
+            upd = []
+            for s in schema.get(multi, []):
+                upd.append(self.resolve_reference(s))
+            if upd:
+                schema[multi] = upd
+
         # if there is a schema object on this param or response, then we just
         # need to include the defs and it can be validated by jsonschema
         if 'schema' in schema:
@@ -295,7 +309,7 @@ class Operation(SecureOperation):
             raise InvalidSpecification(
                 "{method} {path} '$ref' needs to start with '#/'".format(**vars(self)))
         path = reference.split('/')
-        definition_type = path[1]
+        definition_type = ".".join(path[1:-1])
         try:
             definitions = self.definitions_map[definition_type]
         except KeyError:
@@ -341,6 +355,9 @@ class Operation(SecureOperation):
             param = self.resolve_reference(param)
             yield param
 
+    def resolve_request_body(self, request_body):
+        return self.resolve_reference(request_body)
+
     def get_path_parameter_types(self):
         return {p['name']: 'path' if p.get('type') == 'string' and p.get('format') == 'path' else p.get('type')
                 for p in self.parameters if p['in'] == 'path'}
@@ -350,7 +367,8 @@ class Operation(SecureOperation):
         """
         The body schema definition for this operation.
         """
-        return self.body_definition.get('schema')
+        return self.resolve_request_body(self.body_definition.get('schema', {}))
+
 
     @property
     def body_definition(self):
@@ -361,6 +379,9 @@ class Operation(SecureOperation):
 
         :rtype: dict
         """
+        if self.request_body:
+            #XXX
+            return self.request_body.get("content",{}).get("application/json", {})
         body_parameters = [parameter for parameter in self.parameters if parameter['in'] == 'body']
         if len(body_parameters) > 1:
             raise InvalidSpecification(

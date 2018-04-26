@@ -10,6 +10,11 @@ import six
 import yaml
 from openapi_spec_validator import validate_spec
 
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
+
 from ..exceptions import ResolverError
 from ..operation import Operation
 from ..options import ConnexionOptions
@@ -115,6 +120,7 @@ class AbstractAPI(object):
         logger.debug('Security Definitions: %s', self.security_definitions)
 
         self.definitions = self.specification.get('definitions', {})
+        self.components = self.specification.get('components', {})
         self.parameter_definitions = self.specification.get('parameters', {})
         self.response_definitions = self.specification.get('responses', {})
 
@@ -157,7 +163,14 @@ class AbstractAPI(object):
     def _set_base_path(self, base_path):
         # type: (AnyStr) -> None
         if base_path is None:
-            self.base_path = canonical_base_path(self.specification.get('basePath', ''))
+            if self.options.openapi_spec_major_version == "3":
+              #TODO variable subsitution in urls for oas3
+              servers = self.specification.get("servers", [])
+              for server in servers:
+                #TODO how to handle multiple servers in an oas3 spec with different paths?
+                self.base_path = urlparse(server["url"]).path
+            else:
+              self.base_path = canonical_base_path(self.specification.get('basePath', ''))
         else:
             self.base_path = canonical_base_path(base_path)
             self.specification['basePath'] = base_path
@@ -207,6 +220,7 @@ class AbstractAPI(object):
                               app_security=self.security,
                               security_definitions=self.security_definitions,
                               definitions=self.definitions,
+                              components=self.components,
                               parameter_definitions=self.parameter_definitions,
                               response_definitions=self.response_definitions,
                               validate_responses=self.validate_responses,
@@ -235,6 +249,7 @@ class AbstractAPI(object):
                                                 app_security=self.security,
                                                 security_definitions=self.security_definitions,
                                                 definitions=self.definitions,
+                                                components=self.components,
                                                 parameter_definitions=self.parameter_definitions,
                                                 response_definitions=self.response_definitions,
                                                 validate_responses=self.validate_responses,
@@ -256,6 +271,7 @@ class AbstractAPI(object):
             # search for parameters definitions in the path level
             # http://swagger.io/specification/#pathItemObject
             path_parameters = methods.get('parameters', [])
+            request_body = methods.get('requestBody', {})
 
             for method, endpoint in methods.items():
                 if method == 'parameters':
