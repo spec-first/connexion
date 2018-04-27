@@ -207,7 +207,7 @@ class Operation(SecureOperation):
         self.parameter_definitions = parameter_definitions or {}
         self.response_definitions = response_definitions or {}
         self.definitions_map = {
-            'components.schemas': self.components["schemas"],
+            'components.schemas': self.components.get("schemas", []),
             'definitions': self.definitions,
             'parameters': self.parameter_definitions,
             'responses': self.response_definitions
