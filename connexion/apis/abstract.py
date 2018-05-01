@@ -163,14 +163,14 @@ class AbstractAPI(object):
     def _set_base_path(self, base_path):
         # type: (AnyStr) -> None
         if base_path is None:
+            self.base_path = canonical_base_path(self.specification.get('basePath', ''))
             if self.options.openapi_spec_major_version == "3":
               #TODO variable subsitution in urls for oas3
               servers = self.specification.get("servers", [])
               for server in servers:
                 #TODO how to handle multiple servers in an oas3 spec with different paths?
                 self.base_path = urlparse(server["url"]).path
-            else:
-              self.base_path = canonical_base_path(self.specification.get('basePath', ''))
+                break
         else:
             self.base_path = canonical_base_path(base_path)
             self.specification['basePath'] = base_path
