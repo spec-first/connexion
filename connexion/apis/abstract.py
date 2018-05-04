@@ -169,7 +169,7 @@ class AbstractAPI(object):
               servers = self.specification.get("servers", [])
               for server in servers:
                 #TODO how to handle multiple servers in an oas3 spec with different paths?
-                self.base_path = urlparse(server["url"]).path
+                self.base_path = canonical_base_path(urlparse(server["url"]).path)
                 break
         else:
             self.base_path = canonical_base_path(base_path)
