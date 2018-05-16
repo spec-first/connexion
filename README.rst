@@ -123,7 +123,7 @@ include a 'x-tokenInfoUrl' or 'x-tokenInfoFunc (or set ``TOKENINFO_URL``
 or ``TOKENINFO_FUNC`` env var respectively). 'x-tokenInfoUrl' must contain an
 URL to validate and get the `token information`_ and 'x-tokenInfoFunc must
 contain a reference to a function used to obtain the token info. When both 'x-tokenInfoUrl'
- and 'x-tokenInfoFunc' are used, Connexion will prioritize the function method. Connexion expects to
+and 'x-tokenInfoFunc' are used, Connexion will prioritize the function method. Connexion expects to
 receive the OAuth token in the ``Authorization`` header field in the
 format described in `RFC 6750 <rfc6750_>`_ section 2.1. This aspect
 represents a significant difference from the usual OAuth flow.
@@ -391,7 +391,7 @@ Make sure that `swagger_ui/index.html` loads by default local swagger json.
 You can use the `api_url` jinja variable for this purpose:
 
 .. code-block::
-    
+
     const ui = SwaggerUIBundle({ url: "{{ api_url }}/swagger.json"})
 
 Server Backend
@@ -458,10 +458,10 @@ Contributing to Connexion/TODOs
 We welcome your ideas, issues, and pull requests. Just follow the
 usual/standard GitHub practices.
 
-Unless you explicitly state otherwise in advance, any non trivial 
-contribution intentionally submitted for inclusion in this project by you 
-to the steward of this repository (Zalando SE, Berlin) shall be under the 
-terms and conditions of Apache License 2.0 written below, without any 
+Unless you explicitly state otherwise in advance, any non trivial
+contribution intentionally submitted for inclusion in this project by you
+to the steward of this repository (Zalando SE, Berlin) shall be under the
+terms and conditions of Apache License 2.0 written below, without any
 additional copyright information, terms or conditions.
 
 TODOs
