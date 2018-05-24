@@ -64,6 +64,10 @@ def get_val_from_body(value, body):
     if body is not None:
         body = body.get("schema", body)
 
+    if "type" not in body:
+        logger.error(body)
+        raise Exception("wtf! {body} {value}".format(body=body, value=value))
+
     if body["type"] == "array":
         return [make_type(v, body["items"].get("schema", body["items"])["type"])
                 for v in value]
@@ -131,7 +135,7 @@ def parameter_to_arg(parameters, body_schema, consumes, function, pythonic_param
     default_body = body_parameters[0].get('schema', {}).get('default')
 
     # openapi3 body
-    if body_schema is not None:
+    if body_name is None and body_schema is not None:
         logger.debug("body schema is %s", body_schema)
         body_properties = {sanitize_param(key): value for key, value in body_schema.get("properties",{}).items()}
         default_body = {sanitize_param(key): value['default']
@@ -180,7 +184,7 @@ def parameter_to_arg(parameters, body_schema, consumes, function, pythonic_param
 
         if request_body:
             # OAS3 request body
-            if request_body and body_schema.get('type') is 'object':
+            if body_schema.get('type') is 'object':
                 for key, value in request_body.items():
                     if not has_kwargs and key not in arguments:
                         logger.debug("Body Property '%s' not in function arguments", key)
@@ -198,7 +202,9 @@ def parameter_to_arg(parameters, body_schema, consumes, function, pythonic_param
                 #XXX 1. always call it body
                 #XXX 2. unpack the object
                 logger.debug(request_body)
-                kwargs['body'] = get_val_from_body(request_body, body_schema)
+                if body_schema and body_name is None:
+                    # hmm...
+                    kwargs['body'] = get_val_from_body(request_body, body_schema)
 
         # swagger2 body param and formData
         # Add body parameters
@@ -207,6 +213,8 @@ def parameter_to_arg(parameters, body_schema, consumes, function, pythonic_param
         elif body_name:
             logger.debug("Body parameter '%s' in function arguments", body_name)
             kwargs[body_name] = request_body
+
+        logger.debug(kwargs)
 
         # Add formData parameters
         form_arguments = copy.deepcopy(default_form_params)
