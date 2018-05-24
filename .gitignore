@@ -11,3 +11,4 @@ htmlcov/
 *.swp
 .tox/
 .idea/
+.pytest_cache/
