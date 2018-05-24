@@ -160,16 +160,21 @@ class Operation(SecureOperation):
         :param operation: swagger operation object
         :type operation: dict
         :param resolver: Callable that maps operationID to a function
+
+        # NOTE@DGK factor out?
         :param app_produces: list of content types the application can return by default
         :type app_produces: list
         :param app_consumes: list of content types the application consumes by default
         :type app_consumes: list
+
         :param validator_map: map of validators
         :type validator_map: dict
         :param path_parameters: Parameters defined in the path level
         :type path_parameters: list
         :param app_security: list of security rules the application uses by default
         :type app_security: list
+
+        # NOTE@DGK factor out?
         :param security_definitions: `Security Definitions Object
             <https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-definitions-object>`_
         :type security_definitions: dict
@@ -183,6 +188,7 @@ class Operation(SecureOperation):
         :type parameter_definitions: dict
         :param response_definitions: Global response definitions
         :type response_definitions: dict
+
         :param validator_map: Custom validators for the types "parameter", "body" and "response".
         :type validator_map: dict
         :param validate_responses: True enables validation. Validation errors generate HTTP 500 responses.
@@ -201,14 +207,31 @@ class Operation(SecureOperation):
         self.path = path
         self.validator_map = dict(VALIDATOR_MAP)
         self.validator_map.update(validator_map or {})
-        self.security_definitions = security_definitions or {}
-        self.definitions = definitions or {}
+
+        # NOTE@dgk maybe the path resolution should be done when processing the spec?
+        # it's a bit odd to require so many arguments relating to definitions.
+
+        # swagger2
+        self.definitions = definitions
+
+        self.security_definitions = security_definitions
+        self.parameter_definitions = parameter_definitions
+        self.response_definitions = response_definitions
+
+        # openapi3
         self.components = components or {}
-        self.parameter_definitions = parameter_definitions or {}
-        self.response_definitions = response_definitions or {}
+        def component_get(oas3_name):
+            return self.components.get(oas3_name, {})
+
+        self.security_definitions = self.security_definitions or component_get("securitySchemes")
+        self.parameter_definitions = self.parameter_definitions or component_get("parameters")
+        self.response_definitions = self.response_definitions or component_get("responses")
+
         self.definitions_map = {
-            'components.schemas': self.components.get("schemas", []),
-            'components.parameters': self.components.get("parameters", []),
+            'components.schemas': self.components.get("schemas", {}),
+            'components.parameters': self.components.get("parameters", {}),
+            'components.securitySchemes': self.components.get("securitySchemes", {}),
+            'components.responses': self.components.get("responses", {}),
             'definitions': self.definitions,
             'parameters': self.parameter_definitions,
             'responses': self.response_definitions
@@ -368,7 +391,8 @@ class Operation(SecureOperation):
         """
         The body schema definition for this operation.
         """
-        return self.resolve_request_body(self.body_definition.get('schema', {}))
+        #return self.resolve_reference(self.body_definition.get('schema', {}))
+        return self.resolve_reference(self.body_definition.get('schema', {}))
 
 
     @property
@@ -381,7 +405,7 @@ class Operation(SecureOperation):
         :rtype: dict
         """
         if self.request_body:
-            #XXX
+            #XXX use self.consumes?
             return self.request_body.get("content",{}).get("application/json", {})
         body_parameters = [parameter for parameter in self.parameters if parameter['in'] == 'body']
         if len(body_parameters) > 1:
@@ -399,7 +423,8 @@ class Operation(SecureOperation):
         """
 
         function = parameter_to_arg(
-            self.parameters, self.consumes, self.__undecorated_function, self.pythonic_params)
+            self.parameters, self.body_schema, self.consumes, self.__undecorated_function,
+            self.pythonic_params)
         function = self._request_begin_lifecycle_decorator(function)
 
         if self.validate_responses:

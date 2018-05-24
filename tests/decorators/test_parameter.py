@@ -16,7 +16,7 @@ def test_injection(monkeypatch):
     def handler(**kwargs):
         func(**kwargs)
 
-    parameter_to_arg({}, [], handler)(request)
+    parameter_to_arg({}, {}, [], handler)(request)
 
     func.assert_called_with(p1='123')
 

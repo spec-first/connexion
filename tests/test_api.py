@@ -4,6 +4,7 @@ import pathlib
 import tempfile
 
 from openapi_spec_validator.exceptions import OpenAPIValidationError
+from jsonschema.exceptions import ValidationError
 from yaml import YAMLError
 
 import pytest
@@ -92,7 +93,7 @@ def test_other_errors_stop_application_to_setup():
 
 
 def test_invalid_schema_file_structure():
-    with pytest.raises(SwaggerValidationError):
+    with pytest.raises(ValidationError):
         FlaskApi(TEST_FOLDER / "fixtures/invalid_schema/swagger.yaml",
                  base_path="/api/v1.0", arguments={'title': 'OK'}, debug=True)
 
@@ -111,12 +112,12 @@ def test_use_of_safe_load_for_yaml_swagger_specs():
             f.flush()
             try:
                 FlaskApi(pathlib.Path(f.name), base_path="/api/v1.0")
-            except SwaggerValidationError:
+            except OpenAPIValidationError:
                 pytest.fail("Could load invalid YAML file, use yaml.safe_load!")
 
 
 def test_validation_error_on_completely_invalid_swagger_spec():
-    with pytest.raises(SwaggerValidationError):
+    with pytest.raises(OpenAPIValidationError):
         with tempfile.NamedTemporaryFile() as f:
             f.write('[1]\n'.encode())
             f.flush()

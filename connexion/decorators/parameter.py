@@ -57,12 +57,26 @@ def make_type(value, type):
     return type_func(value)
 
 
+def get_val_from_body(value, body):
+    if is_nullable(body) and is_null(value):
+        return None
+
+    if body is not None:
+        body = body.get("schema", body)
+
+    if body["type"] == "array":
+        return [make_type(v, body["items"].get("schema", body["items"])["type"])
+                for v in value]
+    else:
+        return make_type(value, body["type"])
+
+
 def get_val_from_param(value, query_param):
     if is_nullable(query_param) and is_null(value):
         return None
 
-    if "schema" in query_param:
-        query_param = query_param["schema"]
+    if query_param is not None:
+        query_param = query_param.get("schema", query_param)
 
     if query_param["type"] == "array":  # then logic is more complex
         if query_param.get("collectionFormat") and query_param.get("collectionFormat") == "pipes":
@@ -89,13 +103,15 @@ def snake_and_shadow(name):
     return snake
 
 
-def parameter_to_arg(parameters, consumes, function, pythonic_params=False):
+def parameter_to_arg(parameters, body_schema, consumes, function, pythonic_params=False):
     """
     Pass query and body parameters as keyword arguments to handler function.
 
     See (https://github.com/zalando/connexion/issues/59)
-    :param parameters: All the parameters of the handler functions
+    :param parameters: All the schema parameters of the handler functions
     :type parameters: dict|None
+    :param body_schema: All the schema parameters of the handler functions
+    :type body_schema: dict|None
     :param consumes: The list of content types the operation consumes
     :type consumes: list
     :param function: The handler function for the REST endpoint.
@@ -109,42 +125,36 @@ def parameter_to_arg(parameters, consumes, function, pythonic_params=False):
             name = snake_and_shadow(name)
         return name and re.sub('^[^a-zA-Z_]+', '', re.sub('[^0-9a-zA-Z_]', '', name))
 
-<<<<<<< HEAD
-=======
-    def make_request_query(request):
-        request_query = {}
-        try:
-            for k, v in request.query.to_dict(flat=False).items():
-                k = sanitize_param(k)
-                query_param = query_types.get(k, None)
-                if "schema" in query_param:
-                    query_param = query_param["schema"]
-                if query_param is not None and query_param["type"] == "array":
-                    if query_param.get("collectionFormat", None) == "pipes":
-                        request_query[k] = "|".join(v)
-                    else:
-                        request_query[k] = ",".join(v)
-                else:
-                    request_query[k] = v[0]
-        except AttributeError:
-            request_query = {sanitize_param(k): v for k, v in request.query.items()}
-        return request_query
-
->>>>>>> initial support for requestBody
+    # swagger2 body
     body_parameters = [parameter for parameter in parameters if parameter['in'] == 'body'] or [{}]
     body_name = sanitize_param(body_parameters[0].get('name'))
     default_body = body_parameters[0].get('schema', {}).get('default')
+
+    # openapi3 body
+    if body_schema is not None:
+        logger.debug("body schema is %s", body_schema)
+        body_properties = {sanitize_param(key): value for key, value in body_schema.get("properties",{}).items()}
+        default_body = {sanitize_param(key): value['default']
+                        for key, value in body_properties.items()
+                        if 'default' in body_properties}
+    else:
+        body_properties = {}
+
     query_types = {sanitize_param(parameter['name']): parameter
                    for parameter in parameters if parameter['in'] == 'query'}  # type: dict[str, str]
     form_types = {sanitize_param(parameter['name']): parameter
-                  for parameter in parameters if parameter['in'] == 'formData'}
+                  for parameter in parameters
+                  if parameter['in'] == 'formData'}
     path_types = {parameter['name']: parameter
-                  for parameter in parameters if parameter['in'] == 'path'}
+                  for parameter in parameters
+                  if parameter['in'] == 'path'}
     arguments, has_kwargs = inspect_function_arguments(function)
     default_query_params = {sanitize_param(param['name']): param['default']
-                            for param in parameters if param['in'] == 'query' and 'default' in param}
+                            for param in parameters
+                            if param['in'] == 'query' and 'default' in param}
     default_form_params = {sanitize_param(param['name']): param['default']
-                           for param in parameters if param['in'] == 'formData' and 'default' in param}
+                           for param in parameters
+                           if param['in'] == 'formData' and 'default' in param}
 
     @functools.wraps(function)
     def wrapper(request):
@@ -168,15 +178,50 @@ def parameter_to_arg(parameters, consumes, function, pythonic_params=False):
             else:  # Assume path params mechanism used for injection
                 kwargs[key] = value
 
+        if request_body:
+            # OAS3 request body
+            if request_body and body_schema.get('type') is 'object':
+                for key, value in request_body.items():
+                    if not has_kwargs and key not in arguments:
+                        logger.debug("Body Property '%s' not in function arguments", key)
+                    else:
+                        logger.debug("Body Property '%s' in function arguments", key)
+                        try:
+                            body_prop = body_properties[key]
+                        except KeyError:  # pragma: no cover
+                            logger.error("Function argument '{}' not defined in specification".format(key))
+                        else:
+                            logger.debug('%s is a %s', key, body_prop)
+                            kwargs[key] = get_val_from_body(value, body_prop)
+            else:
+                #XXX we don't have a body name in OAS3, so there are two options
+                #XXX 1. always call it body
+                #XXX 2. unpack the object
+                logger.debug(request_body)
+                kwargs['body'] = get_val_from_body(request_body, body_schema)
+
+        # swagger2 body param and formData
         # Add body parameters
         if not has_kwargs and body_name not in arguments:
             logger.debug("Body parameter '%s' not in function arguments", body_name)
-            # OAS3
-            if request_body:
-                kwargs.update(request_body)
         elif body_name:
             logger.debug("Body parameter '%s' in function arguments", body_name)
             kwargs[body_name] = request_body
+
+        # Add formData parameters
+        form_arguments = copy.deepcopy(default_form_params)
+        form_arguments.update({sanitize_param(k): v for k, v in request.form.items()})
+        for key, value in form_arguments.items():
+            if not has_kwargs and key not in arguments:
+                logger.debug("FormData parameter '%s' not in function arguments", key)
+            else:
+                logger.debug("FormData parameter '%s' in function arguments", key)
+                try:
+                    form_param = form_types[key]
+                except KeyError:  # pragma: no cover
+                    logger.error("Function argument '{}' not defined in specification".format(key))
+                else:
+                    kwargs[key] = get_val_from_param(value, form_param)
 
 
         # Add query parameters
@@ -195,21 +240,6 @@ def parameter_to_arg(parameters, consumes, function, pythonic_params=False):
                 else:
                     logger.debug('%s is a %s', key, query_param)
                     kwargs[key] = get_val_from_param(value, query_param)
-
-        # Add formData parameters
-        form_arguments = copy.deepcopy(default_form_params)
-        form_arguments.update({sanitize_param(k): v for k, v in request.form.items()})
-        for key, value in form_arguments.items():
-            if not has_kwargs and key not in arguments:
-                logger.debug("FormData parameter '%s' not in function arguments", key)
-            else:
-                logger.debug("FormData parameter '%s' in function arguments", key)
-                try:
-                    form_param = form_types[key]
-                except KeyError:  # pragma: no cover
-                    logger.error("Function argument '{}' not defined in specification".format(key))
-                else:
-                    kwargs[key] = get_val_from_param(value, form_param)
 
         # Add file parameters
         file_arguments = request.files

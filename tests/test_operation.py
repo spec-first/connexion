@@ -279,10 +279,8 @@ def test_operation(api):
     assert operation.consumes == ['application/json']
     assert operation.security == [{'oauth': ['uid']}]
 
-    expected_body_schema = {
-        '$ref': '#/definitions/new_stack',
-        'definitions': DEFINITIONS
-    }
+    expected_body_schema = {"definitions": DEFINITIONS}
+    expected_body_schema.update(DEFINITIONS["new_stack"])
     assert operation.body_schema == expected_body_schema
 
 
@@ -310,11 +308,12 @@ def test_operation_array(api):
     assert operation.produces == ['application/json']
     assert operation.consumes == ['application/json']
     assert operation.security == [{'oauth': ['uid']}]
-    expected_body_schema = {
+
+    expected_body_schema = {"definitions": DEFINITIONS}
+    expected_body_schema.update({
         'type': 'array',
-        'items': {'$ref': '#/definitions/new_stack'},
-        'definitions': DEFINITIONS
-    }
+        'items': DEFINITIONS["new_stack"]
+    })
     assert operation.body_schema == expected_body_schema
 
 
@@ -342,10 +341,8 @@ def test_operation_composed_definition(api):
     assert operation.produces == ['application/json']
     assert operation.consumes == ['application/json']
     assert operation.security == [{'oauth': ['uid']}]
-    expected_body_schema = {
-        '$ref': '#/definitions/composed',
-        'definitions': DEFINITIONS
-    }
+    expected_body_schema = {"definitions": DEFINITIONS}
+    expected_body_schema.update(DEFINITIONS["composed"])
     assert operation.body_schema == expected_body_schema
 
 
@@ -374,10 +371,8 @@ def test_operation_local_security_oauth2(api):
     assert operation.produces == ['application/json']
     assert operation.consumes == ['application/json']
     assert operation.security == [{'oauth': ['uid']}]
-    expected_body_schema = {
-        '$ref': '#/definitions/composed',
-        'definitions': DEFINITIONS
-    }
+    expected_body_schema = {"definitions": DEFINITIONS}
+    expected_body_schema.update(DEFINITIONS["composed"])
     assert operation.body_schema == expected_body_schema
 
 
@@ -406,10 +401,8 @@ def test_operation_local_security_duplicate_token_info(api):
     assert operation.produces == ['application/json']
     assert operation.consumes == ['application/json']
     assert operation.security == [{'oauth': ['uid']}]
-    expected_body_schema = {
-        '$ref': '#/definitions/composed',
-        'definitions': DEFINITIONS
-    }
+    expected_body_schema = {"definitions": DEFINITIONS}
+    expected_body_schema.update(DEFINITIONS["composed"])
     assert operation.body_schema == expected_body_schema
 
 def test_non_existent_reference(api):
@@ -496,10 +489,8 @@ def test_no_token_info(api):
     assert operation.consumes == ['application/json']
     assert operation.security == [{'oauth': ['uid']}]
 
-    expected_body_schema = {
-        '$ref': '#/definitions/new_stack',
-        'definitions': DEFINITIONS
-    }
+    expected_body_schema = {"definitions": DEFINITIONS}
+    expected_body_schema.update(DEFINITIONS["new_stack"])
     assert operation.body_schema == expected_body_schema
 
 
