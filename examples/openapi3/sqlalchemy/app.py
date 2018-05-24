@@ -22,16 +22,16 @@ def get_pet(pet_id):
     return pet.dump() if pet is not None else ('Not found', 404)
 
 
-def put_pet(pet_id, pet):
+def put_pet(pet_id, body):
     p = db_session.query(orm.Pet).filter(orm.Pet.id == pet_id).one_or_none()
-    pet['id'] = pet_id
+    body['id'] = pet_id
     if p is not None:
         logging.info('Updating pet %s..', pet_id)
-        p.update(**pet)
+        p.update(**body)
     else:
         logging.info('Creating pet %s..', pet_id)
-        pet['created'] = datetime.datetime.utcnow()
-        db_session.add(orm.Pet(**pet))
+        body['created'] = datetime.datetime.utcnow()
+        db_session.add(orm.Pet(**body))
     db_session.commit()
     return NoContent, (200 if p is not None else 201)
 
@@ -60,4 +60,4 @@ def shutdown_session(exception=None):
 
 
 if __name__ == '__main__':
-    app.run(port=8081)
+    app.run(port=8081,  use_reloader=False, threaded=False)
