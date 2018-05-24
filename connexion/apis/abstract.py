@@ -152,12 +152,12 @@ class AbstractAPI(object):
             from openapi_spec_validator import validate_v3_spec as validate_spec
             self.options = self.options.extend({"openapi_spec_version": spec["openapi"]})
         elif "swagger" in spec:
-            logger.warning('Using Swagger 2.0 specification')
+            logger.info('Using Swagger 2.0 specification')
             self.options = self.options.extend({"openapi_spec_version": spec["swagger"]})
             from openapi_spec_validator import validate_v2_spec as validate_spec
         else:
-            logger.error('Unknown Spec Version')
-            exit(1)
+            from openapi_spec_validator.exceptions import OpenAPIValidationError
+            raise OpenAPIValidationError("Unable to get spec version")
         validate_spec(spec)
 
     def _set_base_path(self, base_path):
