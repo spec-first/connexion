@@ -409,7 +409,9 @@ class Operation(SecureOperation):
         if self.request_body:
             #XXX use self.consumes?
             res = (self.request_body.get("content",{}).get("application/json", {}) or
-                   self.request_body.get("content",{}).get("application/x-www-form-urlencoded", {}))
+                   self.request_body.get("content",{}).get("application/x-www-form-urlencoded", {}) or
+                   self.request_body.get("content",{}).get("multipart/form-data", {}) or
+                   self.request_body.get("content",{}).get("text/plain", {}))
             return res
         body_parameters = [parameter for parameter in self.parameters if parameter['in'] == 'body']
         if len(body_parameters) > 1:

@@ -141,7 +141,10 @@ def test_formdata_bad_request(simple_app):
     resp = app_client.post('/v1.0/test-formData-param')
     assert resp.status_code == 400
     response = json.loads(resp.data.decode('utf-8', 'replace'))
-    assert response['detail'] == "Missing formdata parameter 'formData'"
+    assert response['detail'] in [
+        "Missing formdata parameter 'formData'",
+        "'formData' is a required property" # OAS3
+    ]
 
 
 def test_formdata_missing_param(simple_app):

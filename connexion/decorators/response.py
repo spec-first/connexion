@@ -32,12 +32,25 @@ class ResponseValidator(BaseDecorator):
         :type headers: dict
         :rtype bool | None
         """
+
+        content_type = headers.get("Content-Type", "")
+        logger.debug(content_type)
+        logger.debug(self.mimetype)
+
         response_definitions = self.operation.operation["responses"]
         response_definition = response_definitions.get(str(status_code), response_definitions.get("default", {}))
         response_definition = self.operation.resolve_reference(response_definition)
 
         if self.is_json_schema_compatible(response_definition):
-            schema = response_definition.get("schema")
+            # XXX DGK only supporting json
+            # TODO check based on mimetype
+            def by_mimetype(rdef, content_type):
+                content = response_definition.get("content", {})
+                defn = content[content_type]
+                return defn["schema"]
+                    
+            schema = response_definition.get("schema") or by_mimetype(response_definition, content_type)
+            logger.debug(schema)
             v = ResponseBodyValidator(schema)
             try:
                 data = self.operation.json_loads(data)
