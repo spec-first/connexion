@@ -26,7 +26,6 @@ install_requires = [
     'PyYAML>=3.11',
     'requests>=2.9.1',
     'six>=1.9',
-    '-e git+https://github.com/dtkav/openapi-spec-validator.git#egg=openapi-spec-validator'
     'inflection>=0.3.1',
     'pathlib>=1.0.1; python_version < "3.4"',
     'typing>=3.6.1; python_version < "3.6"',
