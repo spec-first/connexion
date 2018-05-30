@@ -65,7 +65,7 @@ def test_array_query_param(simple_app):
     url = '/v1.0/test_array_pipes_query_param?items=4&items=5&items=6&items=7|8|9'
     response = app_client.get(url, headers=headers)
     array_response = json.loads(response.data.decode('utf-8', 'replace'))  # type: [int] multi array with pipes format
-    assert array_response == [4, 5, 6, 7, 8, 9]
+    assert array_response == [7, 8, 9]
 
 
 def test_extra_query_param(simple_app):

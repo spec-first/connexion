@@ -37,6 +37,11 @@ def post_greeting(name, **kwargs):
     data = {'greeting': 'Hello {name}'.format(name=name)}
     return data
 
+def post_greeting3(body, **kwargs):
+    print(body)
+    data = {'greeting': 'Hello {name}'.format(name=body["name"])}
+    return data
+
 def post_greeting_url(name, remainder, **kwargs):
     data = {'greeting': 'Hello {name} thanks for {remainder}'.format(name=name,remainder=remainder)}
     return data
@@ -254,8 +259,8 @@ def test_falsy_param(falsy):
     return falsy
 
 
-def test_formdata_param(formData):
-    return formData
+def test_formdata_param(body):
+    return body["formData"]
 
 
 def test_formdata_missing_param():

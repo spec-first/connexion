@@ -75,6 +75,11 @@ def simple_app(simple_api_spec_dir):
     app.add_api('swagger.yaml', validate_responses=True)
     return app
 
+@pytest.fixture
+def simple_app3(simple_api_spec_dir):
+    app = FlaskApp(__name__, 5001, simple_api_spec_dir, debug=True)
+    app.add_api('openapi.yaml', validate_responses=True)
+    return app
 
 @pytest.fixture
 def problem_app(problem_api_spec_dir):

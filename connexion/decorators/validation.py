@@ -46,7 +46,8 @@ class TypeValidationError(Exception):
 
 
 def validate_type(param, value, parameter_type, parameter_name=None):
-    param_type = param.get('type')
+    param_defn = param.get('schema', param) # oas3
+    param_type = param_defn.get('type')
     parameter_name = parameter_name if parameter_name else param['name']
     if param_type == "array":
         converted_params = []
@@ -99,7 +100,8 @@ class RequestBodyValidator(object):
         @functools.wraps(function)
         def wrapper(request):
             if all_json(self.consumes):
-                data = request.json
+                data = request.json or dict(request.form.items())
+                logger.debug(data)
                 if data is None and len(request.body) > 0 and not self.is_null_value_valid:
                     try:
                         ctype_is_json = is_json_mimetype(request.headers.get("Content-Type", ""))
@@ -216,7 +218,7 @@ class ParameterValidator(object):
                 logger.info(debug_msg.format(**fmt_params))
                 return str(exception)
 
-        elif param.get('required'):
+        elif param.get('schema', param).get('required'):
             return "Missing {parameter_type} parameter '{param[name]}'".format(**locals())
 
     def validate_query_parameter_list(self, request):

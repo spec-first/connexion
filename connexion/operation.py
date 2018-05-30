@@ -263,12 +263,13 @@ class Operation(SecureOperation):
     def validate_defaults(self):
         for param in self.parameters:
             try:
-                if param['in'] == 'query' and 'default' in param:
-                    validation.validate_type(param, param['default'], 'query', param['name'])
+                param_defn = param.get("schema", param) #oas3
+                if param['in'] == 'query' and 'default' in param_defn:
+                    validation.validate_type(param, param_defn['default'], 'query', param['name'])
             except (TypeValidationError, ValidationError):
                 raise InvalidSpecification('The parameter \'{param_name}\' has a default value which is not of'
                                            ' type \'{param_type}\''.format(param_name=param['name'],
-                                                                           param_type=param['type']))
+                                                                           param_type=param_defn['type']))
 
     def resolve_reference(self, schema):
         schema = deepcopy(schema)  # avoid changing the original schema
@@ -383,8 +384,9 @@ class Operation(SecureOperation):
         return self.resolve_reference(request_body)
 
     def get_path_parameter_types(self):
-        return {p['name']: 'path' if p.get('type') == 'string' and p.get('format') == 'path' else p.get('type')
+        types = {p['name']: 'path' if p.get('schema', p).get('type') == 'string' and p.get('format') == 'path' else p.get('schema',p).get('type')
                 for p in self.parameters if p['in'] == 'path'}
+        return types
 
     @property
     def body_schema(self):
@@ -406,7 +408,9 @@ class Operation(SecureOperation):
         """
         if self.request_body:
             #XXX use self.consumes?
-            return self.request_body.get("content",{}).get("application/json", {})
+            res = (self.request_body.get("content",{}).get("application/json", {}) or
+                   self.request_body.get("content",{}).get("application/x-www-form-urlencoded", {}))
+            return res
         body_parameters = [parameter for parameter in self.parameters if parameter['in'] == 'body']
         if len(body_parameters) > 1:
             raise InvalidSpecification(
