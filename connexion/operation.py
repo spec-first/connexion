@@ -229,6 +229,7 @@ class Operation(SecureOperation):
 
         self.definitions_map = {
             'components.schemas': self.components.get("schemas", {}),
+            'components.requestBodies': self.components.get("requestBodies", {}),
             'components.parameters': self.components.get("parameters", {}),
             'components.securitySchemes': self.components.get("securitySchemes", {}),
             'components.responses': self.components.get("responses", {}),
@@ -246,13 +247,33 @@ class Operation(SecureOperation):
         # todo support definition references
         # todo support references to application level parameters
         self.request_body = operation.get('requestBody')
+        if self.request_body:
+            self.request_body = self.resolve_reference(self.request_body)
         self.parameters = list(self.resolve_parameters(operation.get('parameters', [])))
         if path_parameters:
             self.parameters += list(self.resolve_parameters(path_parameters))
 
         self.security = operation.get('security', app_security)
         self.produces = operation.get('produces', app_produces)
+        # oas3 produces
+        # TODO figure out how to support multiple mimetypes
+        # NOTE we currently just combine all of the possible mimetypes,
+        #      but we need to refactor to support mimetypes by response code
+        response_codes = operation.get("responses", {})
+        response_content_types = []
+        for code, defn in response_codes.items():
+            response_content_types += defn.get("content", {}).keys()
+        if response_content_types:
+            self.produces = response_content_types
+
         self.consumes = operation.get('consumes', app_consumes)
+        # oas3 consumes
+        request_content = operation.get("requestBody", {}).get("content", {})
+        if request_content:
+            self.consumes = list(request_content.keys())
+
+        logger.debug("consumes: %s" % self.consumes)
+        logger.debug("produces: %s" % self.produces)
 
         resolution = resolver.resolve(self)
         self.operation_id = resolution.operation_id
@@ -408,9 +429,13 @@ class Operation(SecureOperation):
         """
         if self.request_body:
             #XXX use self.consumes?
+            if len(self.consumes) > 1:
+                logger.warning("this operation accepts multiple content types, but we assume only the first one")
+            
             res = (self.request_body.get("content",{}).get("application/json", {}) or
                    self.request_body.get("content",{}).get("application/x-www-form-urlencoded", {}) or
                    self.request_body.get("content",{}).get("multipart/form-data", {}) or
+                   self.request_body.get("content",{}).get("application/xml", {}) or
                    self.request_body.get("content",{}).get("text/plain", {}))
             return res
         body_parameters = [parameter for parameter in self.parameters if parameter['in'] == 'body']
@@ -519,7 +544,8 @@ class Operation(SecureOperation):
                                      strict_validation=self.strict_validation)
         if self.body_schema:
             yield RequestBodyValidator(self.body_schema, self.consumes, self.api,
-                                       is_nullable(self.body_definition))
+                                       is_nullable(self.body_definition),
+                                       strict_validation=self.strict_validation)
 
     @property
     def __response_validation_decorator(self):

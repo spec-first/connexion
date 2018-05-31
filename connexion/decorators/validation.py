@@ -75,7 +75,8 @@ def validate_parameter_list(request_params, spec_params):
 
 
 class RequestBodyValidator(object):
-    def __init__(self, schema, consumes, api, is_null_value_valid=False, validator=None):
+    def __init__(self, schema, consumes, api, is_null_value_valid=False, validator=None,
+                 strict_validation=False):
         """
         :param schema: The schema of the request body
         :param consumes: The list of content types the operation consumes
@@ -83,13 +84,20 @@ class RequestBodyValidator(object):
         :param validator: Validator class that should be used to validate passed data
                           against API schema. Default is jsonschema.Draft4Validator.
         :type validator: jsonschema.IValidator
+        :param strict_validation: Flag indicating if parameters not in spec are allowed
         """
         self.consumes = consumes
+        self.schema = schema
         self.has_default = schema.get('default', False)
         self.is_null_value_valid = is_null_value_valid
         validatorClass = validator or Draft4Validator
         self.validator = validatorClass(schema, format_checker=draft4_format_checker)
         self.api = api
+        self.strict_validation = strict_validation
+
+    def validate_requestbody_property_list(self, data):
+        spec_params = self.schema.get('properties', {}).keys()
+        return validate_parameter_list(data, spec_params)
 
     def __call__(self, function):
         """
@@ -100,8 +108,7 @@ class RequestBodyValidator(object):
         @functools.wraps(function)
         def wrapper(request):
             if all_json(self.consumes):
-                data = request.json or dict(request.form.items()) or (request.body if len(request.body) > 0 else {})
-                logger.debug(data)
+                data = request.json 
                 if data is None and len(request.body) > 0 and not self.is_null_value_valid:
                     try:
                         ctype_is_json = is_json_mimetype(request.headers.get("Content-Type", ""))
@@ -123,6 +130,23 @@ class RequestBodyValidator(object):
                                        ))
 
                 logger.debug("%s validating schema...", request.url)
+                error = self.validate_schema(data, request.url)
+                if error and not self.has_default:
+                    return error
+            elif "form" in self.consumes[0]:
+                # XXX
+
+                data = dict(request.form.items()) or (request.body if len(request.body) > 0 else {})
+                if data is None and len(request.body) > 0 and not self.is_null_value_valid:
+                    # complain about no data?
+                    pass
+                data.update({k: "" for k in dict(request.files)}) # validator expects string..
+                logger.debug("%s validating schema...", request.url)
+                if self.strict_validation:
+                    formdata_errors = self.validate_requestbody_property_list(data)
+                    if formdata_errors:
+                        raise ExtraParameterProblem(formdata_errors, [])
+
                 error = self.validate_schema(data, request.url)
                 if error and not self.has_default:
                     return error
@@ -185,7 +209,6 @@ class ParameterValidator(object):
 
     @staticmethod
     def validate_parameter(parameter_type, value, param):
-        logger.debug(param)
         if value is not None:
             if is_nullable(param) and is_null(value):
                 return

@@ -108,7 +108,7 @@ def boolean(s):
 
 
 def is_nullable(param_def):
-    return param_def.get('x-nullable', False)
+    return param_def.get('x-nullable', False) or param_def.get("schema", param_def).get('nullable', False)
 
 
 def is_null(value):

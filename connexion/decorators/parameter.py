@@ -96,7 +96,7 @@ def get_val_from_param(value, query_param):
             parts = value.split(delimiters.get(style, ","))
         except KeyError:
             # swagger2
-            if query_param.get("collectionFormat") and query_param.get("collectionFormat") == "pipes":
+            if query_param.get("collectionFormat") == "pipes":
                 parts = value.split("|")
             else:  # default: csv
                 parts = value.split(",")
@@ -180,7 +180,12 @@ def parameter_to_arg(parameters, body_schema, consumes, function, pythonic_param
         kwargs = {}
 
         if all_json(consumes):
-            request_body = request.json or dict(request.form.items())
+            request_body = request.json
+            #or {sanitize_param(k): v for k, v in dict(request.form.items()).items()}
+        elif "application/x-www-form-urlencoded" == consumes[0]:
+            request_body = {sanitize_param(k): v for k, v in dict(request.form.items()).items()}
+        elif "multipart/form-data" == consumes[0]:
+            request_body = {sanitize_param(k): v for k, v in dict(request.form.items()).items()}
         else:
             request_body = request.body
 
@@ -196,32 +201,13 @@ def parameter_to_arg(parameters, body_schema, consumes, function, pythonic_param
             else:  # Assume path params mechanism used for injection
                 kwargs[key] = value
 
-        logger.debug(kwargs)
-
-        if request_body:
-            # OAS3 request body
-            #if body_schema.get('type') is 'object':
-            #    for key, value in request_body.items():
-            #        key = sanitize_param(key)
-            #        if not has_kwargs and key not in arguments:
-            #            logger.debug("Body Property '%s' not in function arguments", key)
-            #        else:
-            #            logger.debug("Body Property '%s' in function arguments", key)
-            #            try:
-            #                body_prop = body_properties[key]
-            #            except KeyError:  # pragma: no cover
-            #                logger.error("Function argument '{}' not defined in specification".format(key))
-            #            else:
-            #                logger.debug('%s is a %s', key, body_prop)
-            #                kwargs[key] = get_val_from_body(value, body_prop)
-            #else:
-            if body_schema and body_name is None:
-                x_body_name = body_schema.get("x-body-name", "body")
-                logger.debug(body_schema)
-                logger.debug("x-body-name is %s" % x_body_name)
-                if x_body_name in arguments or has_kwargs:
-                    val = get_val_from_body(request_body, body_schema)
-                    kwargs[x_body_name] = val
+        #if request_body:
+        if body_schema and body_name is None:
+            x_body_name = body_schema.get("x-body-name", "body")
+            logger.debug("x-body-name is %s" % x_body_name)
+            if x_body_name in arguments or has_kwargs:
+                val = get_val_from_body(request_body, body_schema)
+                kwargs[x_body_name] = val
 
         # swagger2 body param and formData
         # Add body parameters
@@ -231,8 +217,6 @@ def parameter_to_arg(parameters, body_schema, consumes, function, pythonic_param
             else:
                 logger.debug("Body parameter '%s' in function arguments", body_name)
                 kwargs[body_name] = request_body
-
-        logger.debug(kwargs)
 
         if not body_properties:
             # swagger 2
