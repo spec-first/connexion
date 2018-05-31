@@ -338,6 +338,12 @@ def test_nullable_param_post(post_param):
     return post_param
 
 
+def test_nullable_param_post3(body):
+    if body["post_param"] is None:
+        return 'it was None'
+    return body["post_param"]
+
+
 def test_nullable_param_put(contents):
     if contents is None:
         return 'it was None'
@@ -399,6 +405,15 @@ def test_param_sanitization(query=None, form=None):
         result['query'] = query
     if form:
         result['form'] = form
+    return result
+
+
+def test_param_sanitization3(query=None, body=None):
+    result = {}
+    if query:
+        result['query'] = query
+    if body:
+        result['form'] = body["form"]
     return result
 
 
