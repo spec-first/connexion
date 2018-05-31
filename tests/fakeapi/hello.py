@@ -258,9 +258,12 @@ def test_default_integer_body(stack_version):
 def test_falsy_param(falsy):
     return falsy
 
-
-def test_formdata_param(body):
+def test_formdata_param3(body):
     return body["formData"]
+
+
+def test_formdata_param(formData):
+    return formData
 
 
 def test_formdata_missing_param():

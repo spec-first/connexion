@@ -97,6 +97,8 @@ def build_app_from_fixture(api_spec_folder, **kwargs):
                   port=5001,
                   specification_dir=FIXTURES_FOLDER / api_spec_folder,
                   debug=debug)
+
+    ## TODO parameterize openapi.yaml/swagger.yaml
     cnx_app.add_api('openapi.yaml', **kwargs)
     return cnx_app
 
