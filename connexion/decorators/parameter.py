@@ -154,9 +154,7 @@ def parameter_to_arg(parameters, body_schema, consumes, function, pythonic_param
     if body_name is None and body_schema is not None:
         logger.debug("body schema is %s", body_schema)
         body_properties = {sanitize_param(key): value for key, value in body_schema.get("properties",{}).items()}
-        default_body = {sanitize_param(key): value['default']
-                        for key, value in body_properties.items()
-                        if 'default' in body_properties}
+        default_body = body_schema.get("default", default_body)
     else:
         body_properties = {}
 

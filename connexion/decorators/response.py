@@ -39,6 +39,11 @@ class ResponseValidator(BaseDecorator):
 
         response_definitions = self.operation.operation["responses"]
         response_definition = response_definitions.get(str(status_code), response_definitions.get("default", {}))
+
+        # oas3
+        response_definition = response_definition.get("content", response_definition)
+        response_definition = response_definition.get(self.mimetype, response_definition)
+
         response_definition = self.operation.resolve_reference(response_definition)
 
         if self.is_json_schema_compatible(response_definition):
