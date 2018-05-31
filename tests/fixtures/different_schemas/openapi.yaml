@@ -264,8 +264,6 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/GeneralList'
-servers:
-  - url: /v1.0
 components:
   responses:
     GeneralList:

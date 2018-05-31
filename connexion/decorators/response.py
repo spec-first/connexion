@@ -40,21 +40,16 @@ class ResponseValidator(BaseDecorator):
         response_definitions = self.operation.operation["responses"]
         response_definition = response_definitions.get(str(status_code), response_definitions.get("default", {}))
 
-        # oas3
-        response_definition = response_definition.get("content", response_definition)
-        response_definition = response_definition.get(self.mimetype, response_definition)
-
         response_definition = self.operation.resolve_reference(response_definition)
+        logger.debug(response_definition)
 
-        if self.is_json_schema_compatible(response_definition):
-            # XXX DGK only supporting json
-            # TODO check based on mimetype
-            def by_mimetype(rdef, content_type):
-                content = response_definition.get("content", {})
-                defn = content[content_type]
-                return defn["schema"]
-                    
-            schema = response_definition.get("schema") or by_mimetype(response_definition, content_type)
+        # oas3
+        content_definition = response_definition.get("content", response_definition)
+        content_definition = content_definition.get(self.mimetype, content_definition)
+
+
+        if self.is_json_schema_compatible(content_definition):
+            schema = self.operation.resolve_reference(content_definition.get("schema"))
             logger.debug(schema)
             v = ResponseBodyValidator(schema)
             try:

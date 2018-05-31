@@ -316,10 +316,19 @@ class Operation(SecureOperation):
             if upd:
                 schema[multi] = upd
 
+        # additionalProperties
+        try:
+            ap = schema["additionalProperties"]
+            if ap:
+                schema["additionalProperties"] = self.resolve_reference(ap)
+        except KeyError:
+            pass
+
         # if there is a schema object on this param or response, then we just
         # need to include the defs and it can be validated by jsonschema
         if 'schema' in schema:
             schema['schema']['definitions'] = self.definitions
+            schema['schema']['components'] = self.components
             return schema
 
         return schema
@@ -437,7 +446,7 @@ class Operation(SecureOperation):
                    self.request_body.get("content",{}).get("multipart/form-data", {}) or
                    self.request_body.get("content",{}).get("application/xml", {}) or
                    self.request_body.get("content",{}).get("text/plain", {}))
-            return res
+            return self.resolve_reference(res)
         body_parameters = [parameter for parameter in self.parameters if parameter['in'] == 'body']
         if len(body_parameters) > 1:
             raise InvalidSpecification(
