@@ -262,12 +262,14 @@ class Operation(SecureOperation):
         #      but we need to refactor to support mimetypes by response code
         response_codes = operation.get("responses", {})
         response_content_types = []
-        for code, defn in response_codes.items():
+        for _, defn in response_codes.items():
             response_content_types += defn.get("content", {}).keys()
         if response_content_types:
             self.produces = response_content_types
 
+        # swagger2
         self.consumes = operation.get('consumes', app_consumes)
+
         # oas3 consumes
         request_content = operation.get("requestBody", {}).get("content", {})
         if request_content:
@@ -415,11 +417,16 @@ class Operation(SecureOperation):
         return self.resolve_reference(request_body)
 
     def get_path_parameter_types(self):
-        types = {p['name']: 'path'
-                            if p.get('schema', p).get('type') == 'string'
-                            and p.get("schema", p).get('format') == 'path'
-                            else p.get('schema', p).get('type')
-                 for p in self.parameters if p['in'] == 'path'}
+        types = {}
+        path_parameters = (p for p in self.parameters if p["in"] == "path")
+        for path in path_parameters:
+            path_defn = path.get("schema", path)  # oas3
+            if path_defn.get("type") == "string" and path_defn.get("format") == "path":
+                # path is special case for type "string"
+                path_type = 'path'
+            else:
+                path_type = path_defn.get("type")
+            types[path["name"]] = path_type
         return types
 
     @property
@@ -439,15 +446,12 @@ class Operation(SecureOperation):
         :rtype: dict
         """
         if self.request_body:
-            # XXX use self.consumes?
+            # oas3
             if len(self.consumes) > 1:
-                logger.warning("this operation accepts multiple content types, but we assume only the first one")
-
-            res = (self.request_body.get("content", {}).get("application/json", {}) or
-                   self.request_body.get("content", {}).get("application/x-www-form-urlencoded", {}) or
-                   self.request_body.get("content", {}).get("multipart/form-data", {}) or
-                   self.request_body.get("content", {}).get("application/xml", {}) or
-                   self.request_body.get("content", {}).get("text/plain", {}))
+                logger.warning(
+                    "this operation accepts multiple content types, using %s",
+                    self.consumes[0])
+            res = self.request_body.get("content", {}).get(self.consumes[0], {})
             return self.resolve_reference(res)
         body_parameters = [parameter for parameter in self.parameters if parameter['in'] == 'body']
         if len(body_parameters) > 1:
