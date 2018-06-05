@@ -20,7 +20,7 @@ def get_function_from_name(function_name):
     :type function_name: str
     """
     if function_name is None:
-        raise ValueError("Empty function name")
+        raise ValueError('Empty function name')
 
     if '.' in function_name:
         module_name, attr_path = function_name.rsplit('.', 1)
@@ -108,7 +108,8 @@ def boolean(s):
 
 
 def is_nullable(param_def):
-    return param_def.get('x-nullable', False) or param_def.get("schema", param_def).get('nullable', False)
+    return param_def.get('x-nullable', False) or \
+        param_def.get('schema', param_def).get('nullable', False)  # oas3
 
 
 def is_null(value):

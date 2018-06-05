@@ -129,17 +129,17 @@ class RequestBodyValidator(object):
                                            content_type=request.headers.get("Content-Type", "")
                                        ))
 
-                logger.debug("%s validating schema...", request.url)
+                logger.debug('%s validating schema...', request.url)
                 error = self.validate_schema(data, request.url)
                 if error and not self.has_default:
                     return error
-            elif "form" in self.consumes[0]:  # XXX
+            elif 'form' in self.consumes[0]:  # XXX
                 data = dict(request.form.items()) or (request.body if len(request.body) > 0 else {})
                 if data is None and len(request.body) > 0 and not self.is_null_value_valid:
                     # complain about no data?
                     pass
-                data.update({k: "" for k in dict(request.files)})  # validator expects string..
-                logger.debug("%s validating schema...", request.url)
+                data.update({k: '' for k in dict(request.files)})  # validator expects string..
+                logger.debug('%s validating schema...', request.url)
                 if self.strict_validation:
                     formdata_errors = self.validate_requestbody_property_list(data)
                     if formdata_errors:
@@ -162,7 +162,7 @@ class RequestBodyValidator(object):
         try:
             self.validator.validate(data)
         except ValidationError as exception:
-            logger.error("{url} validation error: {error}".format(url=url,
+            logger.error('{url} validation error: {error}'.format(url=url,
                                                                   error=exception.message))
             return problem(400, 'Bad Request', str(exception.message))
 

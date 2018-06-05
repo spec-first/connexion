@@ -152,11 +152,11 @@ def parameter_to_arg(parameters, body_schema, consumes, function, pythonic_param
 
     # openapi3 body
     if body_name is None and body_schema is not None:
-        logger.debug("body schema is %s", body_schema)
+        logger.debug('body schema is %s', body_schema)
         body_properties = {sanitize_param(key): value
                            for key, value
-                           in body_schema.get("properties", {}).items()}
-        default_body = body_schema.get("default", default_body)
+                           in body_schema.get('properties', {}).items()}
+        default_body = body_schema.get('default', default_body)
     else:
         body_properties = {}
 
@@ -166,12 +166,12 @@ def parameter_to_arg(parameters, body_schema, consumes, function, pythonic_param
                   for parameter in parameters
                   if parameter['in'] == 'path'}
     arguments, has_kwargs = inspect_function_arguments(function)
-    default_query_params = {sanitize_param(param['name']): param.get("schema", param)['default']
+    default_query_params = {sanitize_param(param['name']): param.get('schema', param)['default']
                             for param in parameters
-                            if param['in'] == 'query' and 'default' in param.get("schema", param)}
-    default_form_params = {sanitize_param(param['name']): param.get("schema", param)['default']
+                            if param['in'] == 'query' and 'default' in param.get('schema', param)}
+    default_form_params = {sanitize_param(param['name']): param.get('schema', param)['default']
                            for param in parameters
-                           if param['in'] == 'formData' and 'default' in param.get("schema", param)}
+                           if param['in'] == 'formData' and 'default' in param.get('schema', param)}
 
     @functools.wraps(function)
     def wrapper(request):
@@ -181,9 +181,9 @@ def parameter_to_arg(parameters, body_schema, consumes, function, pythonic_param
 
         if all_json(consumes):
             request_body = request.json
-        elif "application/x-www-form-urlencoded" == consumes[0]:
+        elif 'application/x-www-form-urlencoded' == consumes[0]:
             request_body = {sanitize_param(k): v for k, v in dict(request.form.items()).items()}
-        elif "multipart/form-data" == consumes[0]:
+        elif 'multipart/form-data' == consumes[0]:
             request_body = {sanitize_param(k): v for k, v in dict(request.form.items()).items()}
         else:
             request_body = request.body
@@ -201,8 +201,8 @@ def parameter_to_arg(parameters, body_schema, consumes, function, pythonic_param
                 kwargs[key] = value
 
         if body_schema and body_name is None:
-            x_body_name = body_schema.get("x-body-name", "body")
-            logger.debug("x-body-name is %s" % x_body_name)
+            x_body_name = body_schema.get('x-body-name', 'body')
+            logger.debug('x-body-name is %s' % x_body_name)
             if x_body_name in arguments or has_kwargs:
                 val = get_val_from_body(request_body, body_schema)
                 kwargs[x_body_name] = val

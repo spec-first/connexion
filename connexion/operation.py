@@ -224,16 +224,16 @@ class Operation(SecureOperation):
         def component_get(oas3_name):
             return self.components.get(oas3_name, {})
 
-        self.security_definitions = self.security_definitions or component_get("securitySchemes")
-        self.parameter_definitions = self.parameter_definitions or component_get("parameters")
-        self.response_definitions = self.response_definitions or component_get("responses")
+        self.security_definitions = self.security_definitions or component_get('securitySchemes')
+        self.parameter_definitions = self.parameter_definitions or component_get('parameters')
+        self.response_definitions = self.response_definitions or component_get('responses')
 
         self.definitions_map = {
-            'components.schemas': self.components.get("schemas", {}),
-            'components.requestBodies': self.components.get("requestBodies", {}),
-            'components.parameters': self.components.get("parameters", {}),
-            'components.securitySchemes': self.components.get("securitySchemes", {}),
-            'components.responses': self.components.get("responses", {}),
+            'components.schemas': self.components.get('schemas', {}),
+            'components.requestBodies': self.components.get('requestBodies', {}),
+            'components.parameters': self.components.get('parameters', {}),
+            'components.securitySchemes': self.components.get('securitySchemes', {}),
+            'components.responses': self.components.get('responses', {}),
             'definitions': self.definitions,
             'parameters': self.parameter_definitions,
             'responses': self.response_definitions
@@ -260,10 +260,10 @@ class Operation(SecureOperation):
         # TODO figure out how to support multiple mimetypes
         # NOTE we currently just combine all of the possible mimetypes,
         #      but we need to refactor to support mimetypes by response code
-        response_codes = operation.get("responses", {})
+        response_codes = operation.get('responses', {})
         response_content_types = []
         for _, defn in response_codes.items():
-            response_content_types += defn.get("content", {}).keys()
+            response_content_types += defn.get('content', {}).keys()
         if response_content_types:
             self.produces = response_content_types
 
@@ -271,12 +271,12 @@ class Operation(SecureOperation):
         self.consumes = operation.get('consumes', app_consumes)
 
         # oas3 consumes
-        request_content = operation.get("requestBody", {}).get("content", {})
+        request_content = operation.get('requestBody', {}).get('content', {})
         if request_content:
             self.consumes = list(request_content.keys())
 
-        logger.debug("consumes: %s" % self.consumes)
-        logger.debug("produces: %s" % self.produces)
+        logger.debug('consumes: %s' % self.consumes)
+        logger.debug('produces: %s' % self.produces)
 
         resolution = resolver.resolve(self)
         self.operation_id = resolution.operation_id
@@ -287,7 +287,7 @@ class Operation(SecureOperation):
     def validate_defaults(self):
         for param in self.parameters:
             try:
-                param_defn = param.get("schema", param)  # oas3
+                param_defn = param.get('schema', param)  # oas3
                 if param['in'] == 'query' and 'default' in param_defn:
                     validation.validate_type(param, param_defn['default'], 'query', param['name'])
             except (TypeValidationError, ValidationError):
@@ -312,7 +312,7 @@ class Operation(SecureOperation):
             del obj['$ref']
 
         # if the schema includes allOf or oneOf or anyOf
-        for multi in ["allOf", "anyOf", "oneOf"]:
+        for multi in ['allOf', 'anyOf', 'oneOf']:
             upd = []
             for s in schema.get(multi, []):
                 upd.append(self.resolve_reference(s))
@@ -321,9 +321,9 @@ class Operation(SecureOperation):
 
         # additionalProperties
         try:
-            ap = schema["additionalProperties"]
+            ap = schema['additionalProperties']
             if ap:
-                schema["additionalProperties"] = self.resolve_reference(ap)
+                schema['additionalProperties'] = self.resolve_reference(ap)
         except KeyError:
             pass
 
@@ -420,13 +420,13 @@ class Operation(SecureOperation):
         types = {}
         path_parameters = (p for p in self.parameters if p["in"] == "path")
         for path in path_parameters:
-            path_defn = path.get("schema", path)  # oas3
-            if path_defn.get("type") == "string" and path_defn.get("format") == "path":
-                # path is special case for type "string"
+            path_defn = path.get('schema', path)  # oas3
+            if path_defn.get('type') == 'string' and path_defn.get('format') == 'path':
+                # path is special case for type 'string'
                 path_type = 'path'
             else:
-                path_type = path_defn.get("type")
-            types[path["name"]] = path_type
+                path_type = path_defn.get('type')
+            types[path['name']] = path_type
         return types
 
     @property
@@ -449,9 +449,9 @@ class Operation(SecureOperation):
             # oas3
             if len(self.consumes) > 1:
                 logger.warning(
-                    "this operation accepts multiple content types, using %s",
+                    'this operation accepts multiple content types, using %s',
                     self.consumes[0])
-            res = self.request_body.get("content", {}).get(self.consumes[0], {})
+            res = self.request_body.get('content', {}).get(self.consumes[0], {})
             return self.resolve_reference(res)
         body_parameters = [parameter for parameter in self.parameters if parameter['in'] == 'body']
         if len(body_parameters) > 1:
