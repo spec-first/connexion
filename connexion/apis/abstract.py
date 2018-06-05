@@ -8,7 +8,6 @@ from typing import AnyStr, List  # NOQA
 import jinja2
 import six
 import yaml
-from openapi_spec_validator import validate_spec
 
 try:
     from urllib.parse import urlparse
@@ -150,10 +149,12 @@ class AbstractAPI(object):
         if "openapi" in spec:
             logger.info('Using OpenApi 3.x.x specification')
             from openapi_spec_validator import validate_v3_spec as validate_spec
-            self.options = self.options.extend({"openapi_spec_version": spec["openapi"]})
+            self.options = self.options.extend(
+                {"openapi_spec_version": spec["openapi"]})
         elif "swagger" in spec:
             logger.info('Using Swagger 2.0 specification')
-            self.options = self.options.extend({"openapi_spec_version": spec["swagger"]})
+            self.options = self.options.extend(
+                {"openapi_spec_version": spec["swagger"]})
             from openapi_spec_validator import validate_v2_spec as validate_spec
         else:
             from openapi_spec_validator.exceptions import OpenAPIValidationError
@@ -165,12 +166,12 @@ class AbstractAPI(object):
         if base_path is None:
             self.base_path = canonical_base_path(self.specification.get('basePath', ''))
             if self.options.openapi_spec_major_version == "3":
-              #TODO variable subsitution in urls for oas3
-              servers = self.specification.get("servers", [])
-              for server in servers:
-                #TODO how to handle multiple servers in an oas3 spec with different paths?
-                self.base_path = canonical_base_path(urlparse(server["url"]).path)
-                break
+                # TODO variable subsitution in urls for oas3
+                servers = self.specification.get("servers", [])
+                for server in servers:
+                    # TODO how to handle multiple servers in an oas3 spec with different paths?
+                    self.base_path = canonical_base_path(urlparse(server["url"]).path)
+                    break
         else:
             self.base_path = canonical_base_path(base_path)
             self.specification['basePath'] = base_path
@@ -271,7 +272,6 @@ class AbstractAPI(object):
             # search for parameters definitions in the path level
             # http://swagger.io/specification/#pathItemObject
             path_parameters = methods.get('parameters', [])
-            request_body = methods.get('requestBody', {})
 
             for method, endpoint in methods.items():
                 if method == 'parameters':

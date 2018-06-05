@@ -220,6 +220,7 @@ class Operation(SecureOperation):
 
         # openapi3
         self.components = components or {}
+
         def component_get(oas3_name):
             return self.components.get(oas3_name, {})
 
@@ -284,7 +285,7 @@ class Operation(SecureOperation):
     def validate_defaults(self):
         for param in self.parameters:
             try:
-                param_defn = param.get("schema", param) #oas3
+                param_defn = param.get("schema", param)  # oas3
                 if param['in'] == 'query' and 'default' in param_defn:
                     validation.validate_type(param, param_defn['default'], 'query', param['name'])
             except (TypeValidationError, ValidationError):
@@ -414,8 +415,11 @@ class Operation(SecureOperation):
         return self.resolve_reference(request_body)
 
     def get_path_parameter_types(self):
-        types = {p['name']: 'path' if p.get('schema', p).get('type') == 'string' and p.get("schema", p).get('format') == 'path' else p.get('schema',p).get('type')
-                for p in self.parameters if p['in'] == 'path'}
+        types = {p['name']: 'path'
+                            if p.get('schema', p).get('type') == 'string'
+                            and p.get("schema", p).get('format') == 'path'
+                            else p.get('schema', p).get('type')
+                 for p in self.parameters if p['in'] == 'path'}
         return types
 
     @property
@@ -423,9 +427,7 @@ class Operation(SecureOperation):
         """
         The body schema definition for this operation.
         """
-        #return self.resolve_reference(self.body_definition.get('schema', {}))
         return self.resolve_reference(self.body_definition.get('schema', {}))
-
 
     @property
     def body_definition(self):
@@ -437,15 +439,15 @@ class Operation(SecureOperation):
         :rtype: dict
         """
         if self.request_body:
-            #XXX use self.consumes?
+            # XXX use self.consumes?
             if len(self.consumes) > 1:
                 logger.warning("this operation accepts multiple content types, but we assume only the first one")
-            
-            res = (self.request_body.get("content",{}).get("application/json", {}) or
-                   self.request_body.get("content",{}).get("application/x-www-form-urlencoded", {}) or
-                   self.request_body.get("content",{}).get("multipart/form-data", {}) or
-                   self.request_body.get("content",{}).get("application/xml", {}) or
-                   self.request_body.get("content",{}).get("text/plain", {}))
+
+            res = (self.request_body.get("content", {}).get("application/json", {}) or
+                   self.request_body.get("content", {}).get("application/x-www-form-urlencoded", {}) or
+                   self.request_body.get("content", {}).get("multipart/form-data", {}) or
+                   self.request_body.get("content", {}).get("application/xml", {}) or
+                   self.request_body.get("content", {}).get("text/plain", {}))
             return self.resolve_reference(res)
         body_parameters = [parameter for parameter in self.parameters if parameter['in'] == 'body']
         if len(body_parameters) > 1:

@@ -47,7 +47,6 @@ class ResponseValidator(BaseDecorator):
         content_definition = response_definition.get("content", response_definition)
         content_definition = content_definition.get(self.mimetype, content_definition)
 
-
         if self.is_json_schema_compatible(content_definition):
             schema = self.operation.resolve_reference(content_definition.get("schema"))
             logger.debug(schema)

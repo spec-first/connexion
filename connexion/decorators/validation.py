@@ -46,7 +46,7 @@ class TypeValidationError(Exception):
 
 
 def validate_type(param, value, parameter_type, parameter_name=None):
-    param_defn = param.get('schema', param) # oas3
+    param_defn = param.get('schema', param)  # oas3
     param_type = param_defn.get('type')
     parameter_name = parameter_name if parameter_name else param['name']
     if param_type == "array":
@@ -108,7 +108,7 @@ class RequestBodyValidator(object):
         @functools.wraps(function)
         def wrapper(request):
             if all_json(self.consumes):
-                data = request.json 
+                data = request.json
                 if data is None and len(request.body) > 0 and not self.is_null_value_valid:
                     try:
                         ctype_is_json = is_json_mimetype(request.headers.get("Content-Type", ""))
@@ -133,14 +133,12 @@ class RequestBodyValidator(object):
                 error = self.validate_schema(data, request.url)
                 if error and not self.has_default:
                     return error
-            elif "form" in self.consumes[0]:
-                # XXX
-
+            elif "form" in self.consumes[0]:  # XXX
                 data = dict(request.form.items()) or (request.body if len(request.body) > 0 else {})
                 if data is None and len(request.body) > 0 and not self.is_null_value_valid:
                     # complain about no data?
                     pass
-                data.update({k: "" for k in dict(request.files)}) # validator expects string..
+                data.update({k: "" for k in dict(request.files)})  # validator expects string..
                 logger.debug("%s validating schema...", request.url)
                 if self.strict_validation:
                     formdata_errors = self.validate_requestbody_property_list(data)

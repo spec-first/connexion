@@ -82,7 +82,7 @@ def get_val_from_param(value, query_param):
     query_defn = query_param.get("schema", query_param)  # oas3
 
     if query_defn["type"] == "array":  # then logic is more complex
-        #TODO DGK refactor common code with validation
+        # TODO DGK refactor common code with validation
         try:
             # oas3
             style = query_param["style"]
@@ -153,7 +153,9 @@ def parameter_to_arg(parameters, body_schema, consumes, function, pythonic_param
     # openapi3 body
     if body_name is None and body_schema is not None:
         logger.debug("body schema is %s", body_schema)
-        body_properties = {sanitize_param(key): value for key, value in body_schema.get("properties",{}).items()}
+        body_properties = {sanitize_param(key): value
+                           for key, value
+                           in body_schema.get("properties", {}).items()}
         default_body = body_schema.get("default", default_body)
     else:
         body_properties = {}
@@ -179,7 +181,6 @@ def parameter_to_arg(parameters, body_schema, consumes, function, pythonic_param
 
         if all_json(consumes):
             request_body = request.json
-            #or {sanitize_param(k): v for k, v in dict(request.form.items()).items()}
         elif "application/x-www-form-urlencoded" == consumes[0]:
             request_body = {sanitize_param(k): v for k, v in dict(request.form.items()).items()}
         elif "multipart/form-data" == consumes[0]:
@@ -199,7 +200,6 @@ def parameter_to_arg(parameters, body_schema, consumes, function, pythonic_param
             else:  # Assume path params mechanism used for injection
                 kwargs[key] = value
 
-        #if request_body:
         if body_schema and body_name is None:
             x_body_name = body_schema.get("x-body-name", "body")
             logger.debug("x-body-name is %s" % x_body_name)
@@ -232,7 +232,6 @@ def parameter_to_arg(parameters, body_schema, consumes, function, pythonic_param
                         logger.error("Function argument '{}' not defined in specification".format(key))
                     else:
                         kwargs[key] = get_val_from_param(value, form_param)
-
 
         # Add query parameters
         query_arguments = copy.deepcopy(default_query_params)
