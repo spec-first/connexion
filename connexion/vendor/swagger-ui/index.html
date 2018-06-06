@@ -37,7 +37,9 @@
       if (url && url.length > 1) {
         url = decodeURIComponent(url[1]);
       } else {
-        url = "{{ api_url }}/swagger.json";
+        var prefixEnd = window.location.pathname.search("{{ api_url }}");
+        var prefix = window.location.pathname.slice(0, prefixEnd);
+        url = prefix + "{{ api_url }}/swagger.json";
       }
 
       hljs.configure({
