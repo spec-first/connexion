@@ -15,7 +15,7 @@ Instructions for getting started:
     pip install -e .[tests]
     pip install -r requirements-devel.txt
     pip install -r requirements-aiohttp.txt
-    pytest
+    tox
 
 
 Connexion
