@@ -13,7 +13,8 @@ Instructions for getting started:
     virtualenv -p python3 venv
     . venv/bin/activate
     pip install -e .[tests]
-    pip install -r requirements-devel.txt 
+    pip install -r requirements-devel.txt
+    pip install -r requirements-aiohttp.txt
     pytest
 
 
