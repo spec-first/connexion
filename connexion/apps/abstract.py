@@ -95,7 +95,7 @@ class AbstractApp(object):
         Adds an API to the application based on a swagger file or API dict
 
         :param specification: swagger file with the specification | specification dict
-        :type specification: pathlib.Path or dict
+        :type specification: pathlib.Path or str or dict
         :param base_path: base path where to add this api
         :type base_path: str | None
         :param arguments: api version specific arguments to replace on the specification
