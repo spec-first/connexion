@@ -26,7 +26,7 @@ class FlaskApi(AbstractAPI):
         self.blueprint = flask.Blueprint(endpoint, __name__, url_prefix=self.base_path,
                                          template_folder=str(self.options.openapi_console_ui_from_dir))
 
-    def add_swagger_json(self):
+    def add_openapi_json(self):
         """
         Adds swagger json to {base_path}/swagger.json
         or {base_path}/openapi.json (for oas3)

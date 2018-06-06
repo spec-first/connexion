@@ -64,19 +64,21 @@ class AioHttpApi(AbstractAPI):
     def normalize_string(string):
         return re.sub(r'[^a-zA-Z0-9]', '_', string.strip('/'))
 
-    def add_swagger_json(self):
+    def add_openapi_json(self):
         """
-        Adds swagger json to {base_path}/swagger.json
+        Adds openapi json to {base_path}/openapi.json
+             (or {base_path}/swagger.json for swagger2)
         """
-        logger.debug('Adding swagger.json: %s/swagger.json', self.base_path)
+        logger.debug('Adding spec json: %s/%s', self.base_path,
+                     self.options.openapi_spec_path)
         self.subapp.router.add_route(
             'GET',
-            '/swagger.json',
-            self._get_swagger_json
+            self.options.openapi_spec_path,
+            self._get_openapi_json
         )
 
     @asyncio.coroutine
-    def _get_swagger_json(self, req):
+    def _get_openapi_json(self, req):
         return web.Response(
             status=200,
             content_type='application/json',

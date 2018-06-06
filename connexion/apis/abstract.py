@@ -9,7 +9,7 @@ import jinja2
 import six
 import yaml
 
-from ..exceptions import ResolverError
+from ..exceptions import InvalidSpecification, ResolverError
 from ..operation import Operation
 from ..options import ConnexionOptions
 from ..resolver import Resolver
@@ -71,22 +71,10 @@ class AbstractAPI(object):
         self.validator_map = validator_map
         self.resolver_error_handler = resolver_error_handler
 
-        self.options = ConnexionOptions(old_style_options)
-        # options is added last to preserve the highest priority
-        self.options = self.options.extend(options)
-
-        # TODO: Remove this in later versions (Current version is 1.1.9)
-        if base_path is None and 'base_url' in old_style_options:
-            base_path = old_style_options['base_url']
-            logger.warning("Parameter base_url should be no longer used. Use base_path instead.")
-
         logger.debug('Loading specification: %s', specification,
                      extra={'swagger_yaml': specification,
                             'base_path': base_path,
                             'arguments': arguments,
-                            'swagger_ui': self.options.openapi_console_ui_available,
-                            'swagger_path': self.options.openapi_console_ui_from_dir,
-                            'swagger_url': self.options.openapi_console_ui_path,
                             'auth_all_paths': auth_all_paths})
 
         if isinstance(specification, dict):
@@ -97,6 +85,38 @@ class AbstractAPI(object):
 
         self.specification = compatibility_layer(self.specification)
         logger.debug('Read specification', extra={'spec': self.specification})
+
+        def get_semver_tuple(spec):
+            # assume oas3
+            try:
+                version_string = spec.get('openapi') or spec.get('swagger')
+            except Exception:
+                raise InvalidSpecification('Unable to get spec version')
+            if version_string is None:
+                raise InvalidSpecification('Unable to get spec version')
+            try:
+                version_tuple = tuple(map(int, version_string.split(".")))
+            except TypeError:
+                # unable to convert to semver tuple
+                raise InvalidSpecification('Invalid Spec Version')
+            return version_tuple
+
+        self.spec_version = get_semver_tuple(self.specification)
+        logger.debug(self.spec_version)
+
+        self.options = ConnexionOptions(old_style_options, oas_version=self.spec_version)
+        # options is added last to preserve the highest priority
+        self.options = self.options.extend(options)
+
+        # TODO: Remove this in later versions (Current version is 1.1.9)
+        if base_path is None and 'base_url' in old_style_options:
+            base_path = old_style_options['base_url']
+            logger.warning("Parameter base_url should be no longer used. Use base_path instead.")
+
+        logger.debug('Options Loaded',
+                     extra={'swagger_ui': self.options.openapi_console_ui_available,
+                            'swagger_path': self.options.openapi_console_ui_from_dir,
+                            'swagger_url': self.options.openapi_console_ui_path})
 
         # Avoid validator having ability to modify specification
         spec = copy.deepcopy(self.specification)
@@ -135,7 +155,7 @@ class AbstractAPI(object):
         self.pythonic_params = pythonic_params
 
         if self.options.openapi_spec_available:
-            self.add_swagger_json()
+            self.add_openapi_json()
 
         if self.options.openapi_console_ui_available:
             self.add_swagger_ui()
@@ -146,26 +166,19 @@ class AbstractAPI(object):
             self.add_auth_on_not_found(self.security, self.security_definitions)
 
     def _validate_spec(self, spec):
-        if 'openapi' in spec:
+        if self.spec_version >= (3, 0, 0):
             logger.info('Using OpenApi 3.x.x specification')
             from openapi_spec_validator import validate_v3_spec as validate_spec
-            self.options = self.options.extend(
-                {'openapi_spec_version': spec['openapi']})
-        elif 'swagger' in spec:
-            logger.info('Using Swagger 2.0 specification')
-            self.options = self.options.extend(
-                {'openapi_spec_version': spec['swagger']})
-            from openapi_spec_validator import validate_v2_spec as validate_spec
         else:
-            from openapi_spec_validator.exceptions import OpenAPIValidationError
-            raise OpenAPIValidationError('Unable to get spec version')
+            logger.info('Using Swagger 2.0 specification')
+            from openapi_spec_validator import validate_v2_spec as validate_spec
         validate_spec(spec)
 
     def _set_base_path(self, base_path):
         # type: (AnyStr) -> None
         if base_path is None:
             self.base_path = canonical_base_path(self.specification.get('basePath', ''))
-            if self.options.openapi_spec_major_version == '3':
+            if self.spec_version >= (3, 0, 0):
                 # TODO variable subsitution in urls for oas3
                 servers = self.specification.get('servers', [])
                 for server in servers:
@@ -177,9 +190,10 @@ class AbstractAPI(object):
             self.specification['basePath'] = base_path
 
     @abc.abstractmethod
-    def add_swagger_json(self):
+    def add_openapi_json(self):
         """
-        Adds swagger json to {base_path}/swagger.json
+        Adds openapi spec to {base_path}/openapi.json
+             (or {base_path}/swagger.json for swagger2)
         """
 
     @abc.abstractmethod

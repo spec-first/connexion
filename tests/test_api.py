@@ -117,7 +117,7 @@ def test_use_of_safe_load_for_yaml_swagger_specs():
 
 
 def test_validation_error_on_completely_invalid_swagger_spec():
-    with pytest.raises(OpenAPIValidationError):
+    with pytest.raises(InvalidSpecification):
         with tempfile.NamedTemporaryFile() as f:
             f.write('[1]\n'.encode())
             f.flush()

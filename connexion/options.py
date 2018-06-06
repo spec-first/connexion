@@ -25,8 +25,16 @@ logger = logging.getLogger("connexion.options")
 
 
 class ConnexionOptions(object):
-    def __init__(self, options=None):
+
+    def __init__(self, options=None, oas_version=(2,)):
         self._options = {}
+        if oas_version >= (3, 0, 0):
+            self.openapi_spec_name = '/openapi.json'
+            self.swagger_ui_local_path = MODULE_PATH / 'vendor' / 'swagger-ui-3'
+        else:
+            self.openapi_spec_name = '/swagger.json'
+            self.swagger_ui_local_path = MODULE_PATH / 'vendor' / 'swagger-ui-2'
+
         if options:
             self._options.update(filter_values(options))
 
@@ -58,24 +66,6 @@ class ConnexionOptions(object):
         return self._options.get('swagger_json', True)
 
     @property
-    def openapi_spec_version(self):
-        # type: () -> str
-        """
-        The version of the OpenAPI Specification
-
-        Default: "2.0.0"
-        """
-        return self._options.get('openapi_spec_version', "2.0.0")
-
-    @property
-    def openapi_spec_major_version(self):
-        # type: () -> str
-        """
-        The major version of the OpenAPI Specification (likely either "2" or "3")
-        """
-        return self._options.get('openapi_spec_version', "2.0.0").split(".")[0]
-
-    @property
     def openapi_console_ui_available(self):
         # type: () -> bool
         """
@@ -100,11 +90,7 @@ class ConnexionOptions(object):
 
         Default: /openapi.json for openapi3, otherwise /swagger.json
         """
-        major_version = self.openapi_spec_major_version
-        default_path = "/swagger.json"
-        if major_version == "3":
-            default_path = "/openapi.json"
-        return self._options.get('openapi_spec_path', default_path)
+        return self._options.get('openapi_spec_path', self.openapi_spec_name)
 
     @property
     def openapi_console_ui_path(self):
@@ -125,10 +111,7 @@ class ConnexionOptions(object):
 
         Default: Connexion's vendored version of the OpenAPI Console UI.
         """
-        major_version = self.openapi_spec_major_version
-        ui_path = MODULE_PATH / 'vendor' / 'swagger-ui-{version}'.format(
-            version=major_version)
-        return self._options.get('swagger_path', ui_path)
+        return self._options.get('swagger_path', self.swagger_ui_local_path)
 
     @property
     def uri_parser_class(self):
