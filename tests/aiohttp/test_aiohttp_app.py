@@ -73,7 +73,7 @@ def test_app_run_server_error(web_run_app_mock, aiohttp_api_spec_dir):
 def test_app_get_root_path(aiohttp_api_spec_dir):
     app = AioHttpApp(__name__, port=5001,
                      specification_dir=aiohttp_api_spec_dir)
-    assert app.get_root_path().endswith('connexion/tests/aio') == True
+    assert app.get_root_path().endswith('connexion/tests/aiohttp') == True
 
 
 def test_app_get_root_path_not_in_sys_modules(sys_modules_mock, aiohttp_api_spec_dir):
