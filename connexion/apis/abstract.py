@@ -9,16 +9,16 @@ import jinja2
 import six
 import yaml
 
-try:
-    from urllib.parse import urlparse
-except ImportError:
-    from urlparse import urlparse
-
 from ..exceptions import ResolverError
 from ..operation import Operation
 from ..options import ConnexionOptions
 from ..resolver import Resolver
 from ..utils import Jsonifier
+
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
 
 MODULE_PATH = pathlib.Path(__file__).absolute().parent.parent
 SWAGGER_UI_URL = 'ui'
@@ -165,12 +165,12 @@ class AbstractAPI(object):
         # type: (AnyStr) -> None
         if base_path is None:
             self.base_path = canonical_base_path(self.specification.get('basePath', ''))
-            if self.options.openapi_spec_major_version == "3":
+            if self.options.openapi_spec_major_version == '3':
                 # TODO variable subsitution in urls for oas3
-                servers = self.specification.get("servers", [])
+                servers = self.specification.get('servers', [])
                 for server in servers:
                     # TODO how to handle multiple servers in an oas3 spec with different paths?
-                    self.base_path = canonical_base_path(urlparse(server["url"]).path)
+                    self.base_path = canonical_base_path(urlparse(server['url']).path)
                     break
         else:
             self.base_path = canonical_base_path(base_path)

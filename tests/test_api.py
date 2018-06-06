@@ -3,8 +3,8 @@
 import pathlib
 import tempfile
 
-from openapi_spec_validator.exceptions import OpenAPIValidationError
 from jsonschema.exceptions import ValidationError
+from openapi_spec_validator.exceptions import OpenAPIValidationError
 from yaml import YAMLError
 
 import pytest
