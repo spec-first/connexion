@@ -99,6 +99,7 @@ def build_app_from_fixture(api_spec_folder, spec_file='openapi.yaml', **kwargs):
                   debug=debug)
 
     cnx_app.add_api(spec_file, **kwargs)
+    cnx_app._spec_file = spec_file
     return cnx_app
 
 

@@ -28,7 +28,8 @@ class ConnexionOptions(object):
 
     def __init__(self, options=None, oas_version=(2,)):
         self._options = {}
-        if oas_version >= (3, 0, 0):
+        self.oas_version = oas_version
+        if self.oas_version >= (3, 0, 0):
             self.openapi_spec_name = '/openapi.json'
             self.swagger_ui_local_path = MODULE_PATH / 'vendor' / 'swagger-ui-3'
         else:
@@ -49,7 +50,7 @@ class ConnexionOptions(object):
 
         options = dict(self._options)
         options.update(filter_values(new_values))
-        return ConnexionOptions(options)
+        return ConnexionOptions(options, self.oas_version)
 
     def as_dict(self):
         return self._options
