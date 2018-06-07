@@ -8,6 +8,7 @@ import pytest
 from conftest import TEST_FOLDER, build_app_from_fixture
 from connexion import App
 
+
 @pytest.mark.parametrize("spec", ["swagger.yaml", "openapi.yaml"])
 def test_app_with_relative_path(simple_api_spec_dir, spec):
     # Create the app with a relative path and run the test_app testcase below.
