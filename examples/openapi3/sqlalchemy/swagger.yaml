@@ -65,6 +65,7 @@ paths:
         content:
           application/json:
             schema:
+              x-body-name: pet
               $ref: '#/components/schemas/Pet'
     delete:
       tags:
