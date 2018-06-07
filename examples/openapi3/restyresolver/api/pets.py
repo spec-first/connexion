@@ -5,7 +5,9 @@ from connexion import NoContent
 pets = {}
 
 
-def post(name, tag=None):
+def post(body):
+    name = body.get("name")
+    tag = body.get("tag")
     count = len(pets)
     pet = {}
     pet['id'] = count + 1
@@ -16,7 +18,10 @@ def post(name, tag=None):
     return pet, 201
 
 
-def put(id, name, tag=None):
+def put(body):
+    id = body["id"]
+    name = body["name"]
+    tag = body.get("tag")
     id = int(id)
     pet = pets.get(id, {"id": id})
     pet["name"] = name

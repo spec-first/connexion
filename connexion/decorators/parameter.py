@@ -57,24 +57,6 @@ def make_type(value, type):
     return type_func(value)
 
 
-def get_val_from_body(value, body):
-    if is_nullable(body) and is_null(value):
-        return None
-
-    if body is not None:
-        body = body.get("schema", body)
-
-    if "type" not in body:
-        logger.error(body)
-        raise Exception("wtf! {body} {value}".format(body=body, value=value))
-
-    if body["type"] == "array":
-        return [make_type(v, body["items"].get("schema", body["items"])["type"])
-                for v in value]
-    else:
-        return make_type(value, body["type"])
-
-
 def get_val_from_param(value, query_param):
     if is_nullable(query_param) and is_null(value):
         return None
@@ -204,8 +186,7 @@ def parameter_to_arg(parameters, body_schema, consumes, function, pythonic_param
             x_body_name = body_schema.get('x-body-name', 'body')
             logger.debug('x-body-name is %s' % x_body_name)
             if x_body_name in arguments or has_kwargs:
-                val = get_val_from_body(request_body, body_schema)
-                kwargs[x_body_name] = val
+                kwargs[x_body_name] = request_body
 
         # swagger2 body param and formData
         # Add body parameters
