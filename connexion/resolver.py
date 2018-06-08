@@ -76,6 +76,15 @@ class RestyResolver(Resolver):
         """
         :param default_module_name: Default module name for operations
         :type default_module_name: str
+        :param \**kwargs:
+            Pass arguments to Resolver.__init__
+
+        :Keyword Arguments:
+            * *function_resolver* (``types.FunctionType``) --
+              Function that resolves functions using an operationId
+
+        :param kwargs: Keyword arguments to pass on to Resolver.__init__
+        :type kwargs: dict
         """
         Resolver.__init__(self, **kwargs)
         self.default_module_name = default_module_name
