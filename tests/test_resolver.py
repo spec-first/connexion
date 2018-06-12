@@ -1,5 +1,7 @@
-import connexion.apps
+import mock
 import pytest
+
+import connexion.apps
 from connexion.exceptions import ResolverError
 from connexion.operation import Operation
 from connexion.resolver import Resolver, RestyResolver
@@ -235,3 +237,31 @@ def test_resty_resolve_with_default_module_name_will_resolve_resource_root_post_
                           parameter_definitions=PARAMETER_DEFINITIONS,
                           resolver=RestyResolver('fakeapi'))
     assert operation.operation_id == 'fakeapi.hello.post'
+
+
+@pytest.mark.parametrize('function,path', [
+    ('fakeapi.get', '/'),
+    ('fakeapi.nested.search', '/nested'),
+    ('fakeapi.nested.get', '/nested/'),
+    ('fakeapi.nested.game.search', '/nested/game'),
+    ('fakeapi.nested.game.get', '/nested/game/'),
+    ('fakeapi.nested.game.get', '/nested/game/{name}'),
+    ('fakeapi.nested.game.name.brand.search', '/nested/game/{name}/brand'),
+    ('fakeapi.nested.game.name.brand.get', '/nested/game/{name}/brand/'),
+])
+def test_resty_resolve_with_nested_paths(function, path):
+    resolver = RestyResolver('fakeapi')
+    resolver.function_resolver = mock.MagicMock()
+    operation = Operation(api=None,
+                          method='GET',
+                          path=path,
+                          path_parameters=[],
+                          operation={},
+                          app_produces=['application/json'],
+                          app_consumes=['application/json'],
+                          app_security=[],
+                          security_definitions={},
+                          definitions={},
+                          parameter_definitions=PARAMETER_DEFINITIONS,
+                          resolver=resolver)
+    assert operation.operation_id == function
