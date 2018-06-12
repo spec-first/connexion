@@ -265,3 +265,31 @@ def test_resty_resolve_with_nested_paths(function, path):
                           parameter_definitions=PARAMETER_DEFINITIONS,
                           resolver=resolver)
     assert operation.operation_id == function
+
+
+@pytest.mark.parametrize('function,path', [
+    ('fakeapi.get', '/'),
+    ('fakeapi_nested.search', '/nested'),
+    ('fakeapi_nested.get', '/nested/'),
+    ('fakeapi_nested_game.search', '/nested/game'),
+    ('fakeapi_nested_game.get', '/nested/game/'),
+    ('fakeapi_nested_game.get', '/nested/game/{name}'),
+    ('fakeapi_nested_game_name_brand.search', '/nested/game/{name}/brand'),
+    ('fakeapi_nested_game_name_brand.get', '/nested/game/{name}/brand/'),
+])
+def test_resty_resolve_with_nested_paths_and_module_separator(function, path):
+    resolver = RestyResolver('fakeapi', module_separator='_')
+    resolver.function_resolver = mock.MagicMock()
+    operation = Operation(api=None,
+                          method='GET',
+                          path=path,
+                          path_parameters=[],
+                          operation={},
+                          app_produces=['application/json'],
+                          app_consumes=['application/json'],
+                          app_security=[],
+                          security_definitions={},
+                          definitions={},
+                          parameter_definitions=PARAMETER_DEFINITIONS,
+                          resolver=resolver)
+    assert operation.operation_id == function
