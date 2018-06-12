@@ -1,3 +1,5 @@
+import functools
+
 import mock
 import pytest
 
@@ -7,6 +9,22 @@ from connexion.operation import Operation
 from connexion.resolver import Resolver, RestyResolver
 
 PARAMETER_DEFINITIONS = {'myparam': {'in': 'path', 'type': 'integer'}}
+
+OPERATION = functools.partial(
+    Operation,
+    api=None,
+    method='GET',
+    path='/',
+    path_parameters=[],
+    operation={},
+    app_produces=['application/json'],
+    app_consumes=['application/json'],
+    app_security=[],
+    security_definitions={},
+    definitions={},
+    parameter_definitions=PARAMETER_DEFINITIONS,
+    resolver=RestyResolver('fakeapi'),
+)
 
 
 def test_standard_get_function():
@@ -239,6 +257,16 @@ def test_resty_resolve_with_default_module_name_will_resolve_resource_root_post_
     assert operation.operation_id == 'fakeapi.hello.post'
 
 
+def flat_module(path):
+    """Convert nested Module structure to flat namespace.
+
+    >>> flat_module('one.two.three.get') == 'one_two_three.get'
+    True
+    """
+    one_less = path.count('.') - 1
+    return path.replace('.', '_', one_less)
+
+
 @pytest.mark.parametrize('function,path', [
     ('fakeapi.get', '/'),
     ('fakeapi.nested.search', '/nested'),
@@ -252,44 +280,7 @@ def test_resty_resolve_with_default_module_name_will_resolve_resource_root_post_
 def test_resty_resolve_with_nested_paths(function, path):
     resolver = RestyResolver('fakeapi')
     resolver.function_resolver = mock.MagicMock()
-    operation = Operation(api=None,
-                          method='GET',
-                          path=path,
-                          path_parameters=[],
-                          operation={},
-                          app_produces=['application/json'],
-                          app_consumes=['application/json'],
-                          app_security=[],
-                          security_definitions={},
-                          definitions={},
-                          parameter_definitions=PARAMETER_DEFINITIONS,
-                          resolver=resolver)
-    assert operation.operation_id == function
+    assert OPERATION(path=path, resolver=resolver).operation_id == function
 
-
-@pytest.mark.parametrize('function,path', [
-    ('fakeapi.get', '/'),
-    ('fakeapi_nested.search', '/nested'),
-    ('fakeapi_nested.get', '/nested/'),
-    ('fakeapi_nested_game.search', '/nested/game'),
-    ('fakeapi_nested_game.get', '/nested/game/'),
-    ('fakeapi_nested_game.get', '/nested/game/{name}'),
-    ('fakeapi_nested_game_name_brand.search', '/nested/game/{name}/brand'),
-    ('fakeapi_nested_game_name_brand.get', '/nested/game/{name}/brand/'),
-])
-def test_resty_resolve_with_nested_paths_and_module_separator(function, path):
-    resolver = RestyResolver('fakeapi', module_separator='_')
-    resolver.function_resolver = mock.MagicMock()
-    operation = Operation(api=None,
-                          method='GET',
-                          path=path,
-                          path_parameters=[],
-                          operation={},
-                          app_produces=['application/json'],
-                          app_consumes=['application/json'],
-                          app_security=[],
-                          security_definitions={},
-                          definitions={},
-                          parameter_definitions=PARAMETER_DEFINITIONS,
-                          resolver=resolver)
-    assert operation.operation_id == function
+    resolver.module_separator = '_'
+    assert OPERATION(path=path, resolver=resolver).operation_id == flat_module(function)
