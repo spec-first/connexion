@@ -71,7 +71,7 @@ class RestyResolver(Resolver):
     Resolves endpoint functions using REST semantics (unless overridden by specifying operationId)
     """
 
-    def __init__(self, default_module_name, collection_endpoint_name='search'):
+    def __init__(self, default_module_name, collection_endpoint_name='search', module_separator='.'):
         """
         :param default_module_name: Default module name for operations
         :type default_module_name: str
@@ -79,6 +79,7 @@ class RestyResolver(Resolver):
         Resolver.__init__(self)
         self.default_module_name = default_module_name
         self.collection_endpoint_name = collection_endpoint_name
+        self.module_separator = module_separator
 
     def resolve_operation_id(self, operation):
         """
@@ -126,7 +127,7 @@ class RestyResolver(Resolver):
                 converted_resource_names = [
                     resource_name.replace('-', '_').strip('{}') for resource_name in resource_names
                 ]
-                name = '.'.join([name] + converted_resource_names)
+                name = self.module_separator.join([name] + converted_resource_names)
                 logger.debug('Controller name from resource names: %s', name)
 
             else:
