@@ -107,8 +107,11 @@ class RestyResolver(Resolver):
                 has_trailing_slash = True
             elif tail.startswith('{'):
                 tail_parameter = path_fragments.pop()
+        logger.debug('Has trailing slash: %s', has_trailing_slash)
+        logger.debug('Tail parameter: %s', tail_parameter)
 
         resource_names = [resource_name for resource_name in path_fragments if resource_name]
+        logger.debug('Resource names: %s', resource_names)
 
         def get_controller_name():
             x_router_controller = operation.operation.get('x-swagger-router-controller')
@@ -117,12 +120,17 @@ class RestyResolver(Resolver):
 
             if x_router_controller:
                 name = x_router_controller
+                logger.debug('Controller name from router controller: %s', x_router_controller)
 
             elif resource_names:
                 converted_resource_names = [
                     resource_name.replace('-', '_').strip('{}') for resource_name in resource_names
                 ]
                 name = '.'.join([name] + converted_resource_names)
+                logger.debug('Controller name from resource names: %s', name)
+
+            else:
+                logger.debug('Controller name from default module name: %s', name)
 
             return name
 
@@ -133,6 +141,7 @@ class RestyResolver(Resolver):
                 method == 'get' \
                 and resource_names \
                 and not (has_trailing_slash or tail_parameter)
+            logger.debug('Use "search" function: %s', is_collection_endpoint)
 
             return self.collection_endpoint_name if is_collection_endpoint else method
 
