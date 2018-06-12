@@ -1,5 +1,4 @@
 import logging
-import re
 import sys
 
 import connexion.utils as utils
@@ -98,33 +97,43 @@ class RestyResolver(Resolver):
 
         :type operation: connexion.operation.Operation
         """
-        path_match = re.search(
-            '^/?(?P<resource_name>([\w\-](?<!/))*)(?P<trailing_slash>/*)(?P<extended_path>.*)$', operation.path
-        )
+        path_fragments = operation.path.split('/')
+
+        tail_parameter = ''
+        has_trailing_slash = False
+        if path_fragments:
+            tail = path_fragments[-1]
+            if tail == '':
+                has_trailing_slash = True
+            elif tail.startswith('{'):
+                tail_parameter = path_fragments.pop()
+
+        resource_names = [resource_name for resource_name in path_fragments if resource_name]
 
         def get_controller_name():
             x_router_controller = operation.operation.get('x-swagger-router-controller')
 
             name = self.default_module_name
-            resource_name = path_match.group('resource_name')
 
             if x_router_controller:
                 name = x_router_controller
 
-            elif resource_name:
-                resource_controller_name = resource_name.replace('-', '_')
-                name += '.' + resource_controller_name
+            elif resource_names:
+                converted_resource_names = [
+                    resource_name.replace('-', '_').strip('{}') for resource_name in resource_names
+                ]
+                name = '.'.join([name] + converted_resource_names)
 
             return name
 
         def get_function_name():
-            method = operation.method
+            method = operation.method.lower()
 
             is_collection_endpoint = \
-                method.lower() == 'get' \
-                and path_match.group('resource_name') \
-                and not path_match.group('extended_path')
+                method == 'get' \
+                and resource_names \
+                and not (has_trailing_slash or tail_parameter)
 
-            return self.collection_endpoint_name if is_collection_endpoint else method.lower()
+            return self.collection_endpoint_name if is_collection_endpoint else method
 
         return '{}.{}'.format(get_controller_name(), get_function_name())
