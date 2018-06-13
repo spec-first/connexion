@@ -827,6 +827,7 @@ paths:
           description: Some array response
           schema:
             type: array
+            items: {}
 
 definitions:
   new_stack:
