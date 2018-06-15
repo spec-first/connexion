@@ -20,7 +20,7 @@ class ConnexionRequest(object):
         self.body = body
         self.json_getter = json_getter
         self.files = files
-        self.context = context or {}
+        self.context = context if context is not None else {}
 
     @property
     def json(self):
