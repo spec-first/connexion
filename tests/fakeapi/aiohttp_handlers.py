@@ -2,6 +2,7 @@
 import asyncio
 
 import aiohttp
+from aiohttp.web import Request
 from aiohttp.web import Response as AioHttpResponse
 from connexion.lifecycle import ConnexionResponse
 
@@ -35,6 +36,13 @@ def aiohttp_validate_responses():
 def aiohttp_post_greeting(name, **kwargs):
     data = {'greeting': 'Hello {name}'.format(name=name)}
     return ConnexionResponse(body=data)
+
+
+@asyncio.coroutine
+def aiohttp_access_request_context(request_ctx):
+    assert request_ctx is not None
+    assert isinstance(request_ctx, aiohttp.web.Request)
+    return ConnexionResponse(status_code=204)
 
 
 USERS = [
