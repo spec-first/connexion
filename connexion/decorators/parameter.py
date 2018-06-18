@@ -10,7 +10,7 @@ import six
 from ..http_facts import FORM_CONTENT_TYPES
 from ..lifecycle import ConnexionRequest  # NOQA
 from ..query_parsing import resolve_query_duplicates, query_split
-from ..utils import all_json, boolean, is_null, is_nullable
+from ..utils import all_json, boolean, get_schema, is_null, is_nullable
 
 try:
     import builtins
@@ -133,12 +133,12 @@ def parameter_to_arg(parameters, body_schema, consumes, function, pythonic_param
                   for parameter in parameters
                   if parameter['in'] == 'path'}
     arguments, has_kwargs = inspect_function_arguments(function)
-    default_query_params = {sanitize_param(param['name']): param.get('schema', param)['default']
+    default_query_params = {sanitize_param(param['name']): get_schema(param)['default']
                             for param in parameters
-                            if param['in'] == 'query' and 'default' in param.get('schema', param)}
-    default_form_params = {sanitize_param(param['name']): param.get('schema', param)['default']
+                            if param['in'] == 'query' and 'default' in get_schema(param)}
+    default_form_params = {sanitize_param(param['name']): get_schema(param)['default']
                            for param in parameters
-                           if param['in'] == 'formData' and 'default' in param.get('schema', param)}
+                           if param['in'] == 'formData' and 'default' in get_schema(param)}
 
     @functools.wraps(function)
     def wrapper(request):

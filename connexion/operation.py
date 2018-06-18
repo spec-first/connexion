@@ -18,7 +18,7 @@ from .decorators.uri_parsing import AlwaysMultiURIParser
 from .decorators.validation import (ParameterValidator, RequestBodyValidator,
                                     TypeValidationError)
 from .exceptions import InvalidSpecification
-from .utils import all_json, deep_get, is_nullable
+from .utils import all_json, deep_get, get_schema, is_nullable
 
 logger = logging.getLogger('connexion.operation')
 
@@ -288,15 +288,16 @@ class Operation(SecureOperation):
         self.validate_defaults()
 
     def validate_defaults(self):
-        for param in self.parameters:
+        for param_defn in self.parameters:
             try:
-                param_defn = param.get('schema', param)  # oas3
-                if param['in'] == 'query' and 'default' in param_defn:
-                    validation.validate_type(param, param_defn['default'], 'query', param['name'])
+                param_schema = get_schema(param_defn)
+                if param_defn['in'] == 'query' and 'default' in param_schema:
+                    validation.validate_type(param_defn, param_schema['default'],
+                                             'query', param_defn['name'])
             except (TypeValidationError, ValidationError):
                 raise InvalidSpecification('The parameter \'{param_name}\' has a default value which is not of'
-                                           ' type \'{param_type}\''.format(param_name=param['name'],
-                                                                           param_type=param_defn['type']))
+                                           ' type \'{param_type}\''.format(param_name=param_defn['name'],
+                                                                           param_type=param_schema['type']))
 
     def resolve_reference(self, schema):
         schema = deepcopy(schema)  # avoid changing the original schema
@@ -407,14 +408,14 @@ class Operation(SecureOperation):
     def get_path_parameter_types(self):
         types = {}
         path_parameters = (p for p in self.parameters if p["in"] == "path")
-        for path in path_parameters:
-            path_defn = path.get('schema', path)  # oas3
-            if path_defn.get('type') == 'string' and path_defn.get('format') == 'path':
+        for path_defn in path_parameters:
+            path_schema = get_schema(path_defn)
+            if path_schema.get('type') == 'string' and path_schema.get('format') == 'path':
                 # path is special case for type 'string'
                 path_type = 'path'
             else:
-                path_type = path_defn.get('type')
-            types[path['name']] = path_type
+                path_type = path_schema.get('type')
+            types[path_defn['name']] = path_type
         return types
 
     @property

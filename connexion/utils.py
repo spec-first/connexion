@@ -4,6 +4,14 @@ import importlib
 import six
 
 
+def get_schema(obj):
+    """ OpenAPI3 spec has some parameters moved under a 'schema' definition
+        In Swagger2 these parameters were flat, so if we are unable to find
+        a schema key, just return the original object.
+    """
+    return obj.get('schema', obj)
+
+
 def deep_getattr(obj, attr):
     """
     Recurses through an attribute chain to get the ultimate value.
