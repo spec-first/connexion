@@ -13,7 +13,6 @@ from ..http_facts import FORM_CONTENT_TYPES
 from ..problem import problem
 from ..utils import all_json, boolean, is_json_mimetype, is_null, is_nullable
 
-
 logger = logging.getLogger('connexion.decorators.validation')
 
 TYPE_MAP = {

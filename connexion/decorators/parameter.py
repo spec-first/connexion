@@ -9,7 +9,7 @@ import six
 
 from ..http_facts import FORM_CONTENT_TYPES
 from ..lifecycle import ConnexionRequest  # NOQA
-from ..query_parsing import resolve_query_duplicates, query_split
+from ..query_parsing import query_split, resolve_query_duplicates
 from ..utils import all_json, boolean, get_schema, is_null, is_nullable
 
 try:
