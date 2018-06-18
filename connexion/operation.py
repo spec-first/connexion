@@ -221,7 +221,8 @@ class Operation(SecureOperation):
         # openapi3
         self.components = components or {}
 
-        component_get = lambda oas3_name: self.components.get(oas3_name, {})
+        def component_get(oas3_name):
+            return self.components.get(oas3_name, {})
 
         self.security_definitions = self.security_definitions or component_get('securitySchemes')
         self.parameter_definitions = self.parameter_definitions or component_get('parameters')
@@ -229,12 +230,12 @@ class Operation(SecureOperation):
 
         self.definitions_map = {
             'components': {
-                'schemas': self.components.get('schemas', {}),
-                'requestBodies': self.components.get('requestBodies', {}),
-                'parameters': self.components.get('parameters', {}),
-                'securitySchemes': self.components.get('securitySchemes', {}),
-                'responses': self.components.get('responses', {}),
-                'headers': self.components.get('headers', {}),
+                'schemas': component_get('schemas'),
+                'requestBodies': component_get('requestBodies'),
+                'parameters': component_get('parameters'),
+                'securitySchemes': component_get('securitySchemes'),
+                'responses': component_get('responses'),
+                'headers': component_get('headers'),
             },
             'definitions': self.definitions,
             'parameters': self.parameter_definitions,
