@@ -139,7 +139,7 @@ class RequestBodyValidator(object):
                 if data is None and len(request.body) > 0 and not self.is_null_value_valid:
                     # complain about no data?
                     pass
-                data.update({k: '' for k in dict(request.files)})  # validator expects string..
+                data.update(dict.fromkeys(request.files, ''))  # validator expects string..
                 logger.debug('%s validating schema...', request.url)
                 if self.strict_validation:
                     formdata_errors = self.validate_requestbody_property_list(data)
