@@ -314,7 +314,7 @@ class AbstractAPI(object):
     def _get_spec_version(self, spec):
         try:
             version_string = spec.get('openapi') or spec.get('swagger')
-        except Exception:
+        except AttributeError:
             raise InvalidSpecification('Unable to get spec version')
         if version_string is None:
             raise InvalidSpecification('Unable to get spec version')
