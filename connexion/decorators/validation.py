@@ -9,8 +9,10 @@ from jsonschema import Draft4Validator, ValidationError, draft4_format_checker
 from werkzeug import FileStorage
 
 from ..exceptions import ExtraParameterProblem
+from ..http_facts import FORM_CONTENT_TYPES
 from ..problem import problem
 from ..utils import all_json, boolean, is_json_mimetype, is_null, is_nullable
+
 
 logger = logging.getLogger('connexion.decorators.validation')
 
@@ -133,7 +135,7 @@ class RequestBodyValidator(object):
                 error = self.validate_schema(data, request.url)
                 if error and not self.has_default:
                     return error
-            elif 'form' in self.consumes[0]:  # XXX
+            elif self.consumes[0] in FORM_CONTENT_TYPES:
                 data = dict(request.form.items()) or (request.body if len(request.body) > 0 else {})
                 if data is None and len(request.body) > 0 and not self.is_null_value_valid:
                     # complain about no data?

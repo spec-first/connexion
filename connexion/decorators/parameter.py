@@ -7,6 +7,7 @@ import re
 import inflection
 import six
 
+from ..http_facts import FORM_CONTENT_TYPES
 from ..lifecycle import ConnexionRequest  # NOQA
 from ..utils import all_json, boolean, is_null, is_nullable
 
@@ -106,9 +107,9 @@ def parameter_to_arg(parameters, body_schema, consumes, function, pythonic_param
     Pass query and body parameters as keyword arguments to handler function.
 
     See (https://github.com/zalando/connexion/issues/59)
-    :param parameters: All the schema parameters of the handler functions
+    :param parameters: All the expected parameters of the handler functions
     :type parameters: dict|None
-    :param body_schema: All the schema parameters of the handler functions
+    :param body_schema: The schema for a request body
     :type body_schema: dict|None
     :param consumes: The list of content types the operation consumes
     :type consumes: list
@@ -163,9 +164,7 @@ def parameter_to_arg(parameters, body_schema, consumes, function, pythonic_param
 
         if all_json(consumes):
             request_body = request.json
-        elif 'application/x-www-form-urlencoded' == consumes[0]:
-            request_body = {sanitize_param(k): v for k, v in dict(request.form.items()).items()}
-        elif 'multipart/form-data' == consumes[0]:
+        elif consumes[0] in FORM_CONTENT_TYPES:
             request_body = {sanitize_param(k): v for k, v in dict(request.form.items()).items()}
         else:
             request_body = request.body
