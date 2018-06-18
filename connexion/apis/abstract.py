@@ -312,7 +312,6 @@ class AbstractAPI(object):
             return yaml.safe_load(swagger_string)  # type: dict
 
     def _get_spec_version(self, spec):
-        # assume oas3
         try:
             version_string = spec.get('openapi') or spec.get('swagger')
         except Exception:
