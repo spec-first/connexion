@@ -63,7 +63,7 @@ def get_val_from_param(value, query_defn):
     if is_nullable(query_defn) and is_null(value):
         return None
 
-    query_schema = query_defn.get("schema", query_defn)
+    query_schema = get_schema(query_defn)
 
     if query_schema["type"] == "array":
         parts = query_split(value, query_defn)
