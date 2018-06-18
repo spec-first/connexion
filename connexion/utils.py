@@ -37,7 +37,7 @@ def get_function_from_name(function_name):
     :type function_name: str
     """
     if function_name is None:
-        raise ValueError('Empty function name')
+        raise ValueError("Empty function name")
 
     if '.' in function_name:
         module_name, attr_path = function_name.rsplit('.', 1)
