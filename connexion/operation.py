@@ -18,7 +18,7 @@ from .decorators.uri_parsing import AlwaysMultiURIParser
 from .decorators.validation import (ParameterValidator, RequestBodyValidator,
                                     TypeValidationError)
 from .exceptions import InvalidSpecification
-from .utils import all_json, is_nullable
+from .utils import all_json, deep_get, is_nullable
 
 logger = logging.getLogger('connexion.operation')
 
@@ -221,19 +221,21 @@ class Operation(SecureOperation):
         # openapi3
         self.components = components or {}
 
-        def component_get(oas3_name):
-            return self.components.get(oas3_name, {})
+        component_get = lambda oas3_name: self.components.get(oas3_name, {})
 
         self.security_definitions = self.security_definitions or component_get('securitySchemes')
         self.parameter_definitions = self.parameter_definitions or component_get('parameters')
         self.response_definitions = self.response_definitions or component_get('responses')
 
         self.definitions_map = {
-            'components.schemas': self.components.get('schemas', {}),
-            'components.requestBodies': self.components.get('requestBodies', {}),
-            'components.parameters': self.components.get('parameters', {}),
-            'components.securitySchemes': self.components.get('securitySchemes', {}),
-            'components.responses': self.components.get('responses', {}),
+            'components': {
+                'schemas': self.components.get('schemas', {}),
+                'requestBodies': self.components.get('requestBodies', {}),
+                'parameters': self.components.get('parameters', {}),
+                'securitySchemes': self.components.get('securitySchemes', {}),
+                'responses': self.components.get('responses', {}),
+                'headers': self.components.get('headers', {}),
+            },
             'definitions': self.definitions,
             'parameters': self.parameter_definitions,
             'responses': self.response_definitions
@@ -366,28 +368,13 @@ class Operation(SecureOperation):
         if not reference.startswith('#/'):
             raise InvalidSpecification(
                 "{method} {path} '$ref' needs to start with '#/'".format(**vars(self)))
-        path = reference.split('/')
-        definition_type = ".".join(path[1:-1])
+        path = reference[2:].split('/')
         try:
-            definitions = self.definitions_map[definition_type]
-        except KeyError:
-            ref_possible = ', '.join(self.definitions_map.keys())
-            raise InvalidSpecification(
-                "{method} {path} $ref \"{reference}\" needs to point to one of: "
-                "{ref_possible}".format(
-                    method=self.method,
-                    path=self.path,
-                    reference=reference,
-                    ref_possible=ref_possible
-                ))
-        definition_name = path[-1]
-        try:
-            # Get sub definition
-            definition = deepcopy(definitions[definition_name])
+            definition = deep_get(self.definitions_map, path)
         except KeyError:
             raise InvalidSpecification(
-                "{method} {path} Definition '{definition_name}' not found".format(
-                    definition_name=definition_name, method=self.method, path=self.path))
+                "{method} {path} $ref '{reference}' not found".format(
+                    reference=reference, method=self.method, path=self.path))
 
         return definition
 

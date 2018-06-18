@@ -13,6 +13,15 @@ def deep_getattr(obj, attr):
     return functools.reduce(getattr, attr.split('.'), obj)
 
 
+def deep_get(obj, keys):
+    """
+    Recurses through a nested object get a leaf value.
+    """
+    if not keys:
+        return obj
+    return deep_get(obj[keys[0]], keys[1:])
+
+
 def get_function_from_name(function_name):
     """
     Tries to get function by fully qualified name (e.g. "mymodule.myobj.myfunc")

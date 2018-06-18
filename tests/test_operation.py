@@ -422,8 +422,8 @@ def test_non_existent_reference(api):
         operation.body_schema
 
     exception = exc_info.value
-    assert str(exception) == "<InvalidSpecification: GET endpoint Definition 'new_stack' not found>"
-    assert repr(exception) == "<InvalidSpecification: GET endpoint Definition 'new_stack' not found>"
+    assert str(exception).startswith("<InvalidSpecification: GET endpoint $ref")
+    assert repr(exception).startswith("<InvalidSpecification: GET endpoint $ref")
 
 
 def test_multi_body(api):
