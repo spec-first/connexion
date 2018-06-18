@@ -160,21 +160,16 @@ class Operation(SecureOperation):
         :param operation: swagger operation object
         :type operation: dict
         :param resolver: Callable that maps operationID to a function
-
-        # NOTE@DGK factor out?
         :param app_produces: list of content types the application can return by default
         :type app_produces: list
         :param app_consumes: list of content types the application consumes by default
         :type app_consumes: list
-
         :param validator_map: map of validators
         :type validator_map: dict
         :param path_parameters: Parameters defined in the path level
         :type path_parameters: list
         :param app_security: list of security rules the application uses by default
         :type app_security: list
-
-        # NOTE@DGK factor out?
         :param security_definitions: `Security Definitions Object
             <https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-definitions-object>`_
         :type security_definitions: dict
@@ -188,7 +183,6 @@ class Operation(SecureOperation):
         :type parameter_definitions: dict
         :param response_definitions: Global response definitions
         :type response_definitions: dict
-
         :param validator_map: Custom validators for the types "parameter", "body" and "response".
         :type validator_map: dict
         :param validate_responses: True enables validation. Validation errors generate HTTP 500 responses.
@@ -207,9 +201,6 @@ class Operation(SecureOperation):
         self.path = path
         self.validator_map = dict(VALIDATOR_MAP)
         self.validator_map.update(validator_map or {})
-
-        # NOTE@dgk maybe the path resolution should be done when processing the spec?
-        # it's a bit odd to require so many arguments relating to definitions.
 
         # swagger2
         self.definitions = definitions
