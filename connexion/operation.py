@@ -195,8 +195,6 @@ class Operation(SecureOperation):
             return self.components.get(oas3_name, {})
 
         self.security_definitions = component_get('securitySchemes')
-        self.parameter_definitions = component_get('parameters')
-        self.response_definitions = component_get('responses')
 
         self.definitions_map = {
             'components': {
@@ -224,6 +222,9 @@ class Operation(SecureOperation):
         self.parameters = list(self.resolve_parameters(operation.get('parameters', [])))
         if path_parameters:
             self.parameters += list(self.resolve_parameters(path_parameters))
+
+        self.responses = self.resolve_responses(operation.get('responses', {}))
+        logger.debug(self.responses)
 
         self.security = operation.get('security', app_security)
 
@@ -358,10 +359,63 @@ class Operation(SecureOperation):
         else:
             return DEFAULT_MIMETYPE
 
+    def example_response(self, code='default', mimetype=None):
+        """
+        Returns example response from spec
+        """
+        content_type = mimetype or self.get_mimetype()
+        examples_path = [code, 'content', content_type, 'examples']
+        example_path = [code, 'content', content_type, 'example']
+        schema_example_path = [code, 'content', content_type, 'schema', 'example']
+        logger.debug(self.responses)
+        try:
+            return deep_get(self.responses, examples_path)[0]
+        except (KeyError, IndexError):
+            logger.debug(examples_path)
+            pass
+        try:
+            return deep_get(self.responses, example_path)
+        except KeyError:
+            logger.debug(example_path)
+            pass
+        try:
+            return deep_get(self.responses, schema_example_path)
+        except KeyError:
+            logger.debug(schema_example_path)
+            return
+
     def resolve_parameters(self, parameters):
         for param in parameters:
             param = self.resolve_reference(param)
             yield param
+
+    def resolve_responses(self, responses):
+        responses = deepcopy(responses)
+        for status_code, resp in responses.items():
+            # check components/responses
+            if '$ref' in resp:
+                ref = self.resolve_reference(resp)
+                del resp['$ref']
+                resp = ref
+
+            content = resp.get("content", {})
+            for mimetype, resp in content.items():
+                # check components/examples
+                examples = resp.get("examples", [])
+                for example in examples:
+                    example = self.resolve_reference(example)
+
+                example = resp.get("example", {})
+                ref = self.resolve_reference(example)
+                if ref:
+                    resp["example"] = ref
+
+                schema = resp.get("schema", {})
+                ref = self.resolve_reference(schema)
+                if ref:
+                    resp["schema"] = ref
+
+        return responses
 
     def resolve_request_body(self, request_body):
         return self.resolve_reference(request_body)
@@ -618,6 +672,9 @@ class Swagger2Operation(Operation):
         if path_parameters:
             self.parameters += list(self.resolve_parameters(path_parameters))
 
+        self.responses = self.resolve_responses(operation.get('responses'))
+        logger.debug(self.responses)
+
         self.security = operation.get('security', app_security)
         self.produces = operation.get('produces', app_produces)
         self.consumes = operation.get('consumes', app_consumes)
@@ -630,6 +687,26 @@ class Swagger2Operation(Operation):
         self._undecorated_function = resolution.function
 
         self.validate_defaults()
+
+    def resolve_responses(self, responses):
+        for status_code, resp in responses.items():
+            # check definitions
+            if '$ref' in resp:
+                ref = self.resolve_reference(resp)
+                del resp['$ref']
+                resp = ref
+
+            examples = resp.get("examples", [])
+            ref = self.resolve_reference(examples)
+            if ref:
+                resp["examples"] = ref
+
+            schema = resp.get("schema", {})
+            ref = self.resolve_reference(schema)
+            if ref:
+                resp["schema"] = ref
+
+        return responses
 
     def validate_defaults(self):
         for param_defn in self.parameters:
@@ -676,3 +753,18 @@ class Swagger2Operation(Operation):
             schema['schema']['definitions'] = self.definitions
 
         return schema
+
+    def example_response(self, code='default', *args, **kwargs):
+        """
+        Returns example response from spec
+        """
+        examples_path = [code, 'examples']
+        schema_example_path = [code, 'schema', 'example']
+        try:
+            return list(deep_get(self.responses, examples_path).values())[0]
+        except KeyError:
+            pass
+        try:
+            return deep_get(self.responses, schema_example_path)
+        except KeyError:
+            return

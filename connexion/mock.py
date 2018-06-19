@@ -54,30 +54,11 @@ class MockResolver(Resolver):
         response_definitions = operation.operation["responses"]
         # simply use the first/lowest status code, this is probably 200 or 201
         status_code = sorted(response_definitions.keys())[0]
-        response_definition = response_definitions.get(status_code, {})
+        example = operation.example_response(status_code)
         try:
             status_code = int(status_code)
         except ValueError:
             status_code = 200
-        response_definition = operation.resolve_reference(response_definition)
-        examples = response_definition.get('examples')
-        if examples:
-            return list(examples.values())[0], status_code
-        else:
-            # No response example, check for schema example
-            response_schema = response_definition.get('schema', {})
-            definitions = response_schema.get('definitions', {})
-            schema_example = None
-            ref = response_schema.get('$ref')
-            if ref:
-                # Referenced schema
-                ref = ref[ref.rfind('/')+1:] or ''
-                ref_schema = definitions.get(ref, {})
-                schema_example = ref_schema.get('example')
-            else:
-                # Inline schema
-                schema_example = response_schema.get('example')
-            if schema_example:
-                return schema_example, status_code
-            else:
-                return 'No example response was defined.', status_code
+        if example is not None:
+            return example, status_code
+        return 'No example response was defined.', status_code
