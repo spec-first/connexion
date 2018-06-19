@@ -132,6 +132,7 @@ def parameter_to_arg(parameters, body_schema, consumes, function, pythonic_param
     path_defns = {p['name']: p
                   for p in parameters
                   if p['in'] == 'path'}
+
     arguments, has_kwargs = inspect_function_arguments(function)
     default_query_params = {sanitize_param(p['name']): get_schema(p)['default']
                             for p in parameters

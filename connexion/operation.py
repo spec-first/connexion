@@ -624,7 +624,7 @@ class Swagger2Operation(Operation):
         self.security = operation.get('security', app_security)
         self.produces = operation.get('produces', app_produces)
         self.consumes = operation.get('consumes', app_consumes)
-        
+
         logger.debug('consumes: %s' % self.consumes)
         logger.debug('produces: %s' % self.produces)
 
@@ -679,6 +679,3 @@ class Swagger2Operation(Operation):
             schema['schema']['definitions'] = self.definitions
 
         return schema
-
-
-
