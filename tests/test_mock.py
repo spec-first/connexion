@@ -1,5 +1,5 @@
 from connexion.mock import MockResolver, partial
-from connexion.operation import Operation
+from connexion.operation import Swagger2Operation
 
 
 def test_partial():
@@ -23,7 +23,7 @@ def test_mock_resolver():
         }
     }
 
-    operation = Operation(api=None,
+    operation = Swagger2Operation(api=None,
                           method='GET',
                           path='endpoint',
                           path_parameters=[],
@@ -54,7 +54,7 @@ def test_mock_resolver_ref_schema_example():
         }
     }
 
-    operation = Operation(api=None,
+    operation = Swagger2Operation(api=None,
                           method='GET',
                           path='endpoint',
                           path_parameters=[],
@@ -99,7 +99,7 @@ def test_mock_resolver_inline_schema_example():
         }
     }
 
-    operation = Operation(api=None,
+    operation = Swagger2Operation(api=None,
                           method='GET',
                           path='endpoint',
                           path_parameters=[],
@@ -126,7 +126,7 @@ def test_mock_resolver_no_examples():
         '418': {}
     }
 
-    operation = Operation(api=None,
+    operation = Swagger2Operation(api=None,
                           method='GET',
                           path='endpoint',
                           path_parameters=[],
@@ -155,7 +155,7 @@ def test_mock_resolver_notimplemented():
     }
 
     # do not mock the existent functions
-    operation = Operation(api=None,
+    operation = Swagger2Operation(api=None,
                           method='GET',
                           path='endpoint',
                           path_parameters=[],
@@ -172,7 +172,7 @@ def test_mock_resolver_notimplemented():
     assert operation.operation_id == 'fakeapi.hello.get'
 
     # mock only the nonexistent ones
-    operation = Operation(api=None,
+    operation = Swagger2Operation(api=None,
                           method='GET',
                           path='endpoint',
                           path_parameters=[],
@@ -189,4 +189,4 @@ def test_mock_resolver_notimplemented():
                           resolver=resolver)
 
     # check if it is using the mock function
-    assert operation._Operation__undecorated_function() == ('No example response was defined.', 418)
+    assert operation._undecorated_function() == ('No example response was defined.', 418)

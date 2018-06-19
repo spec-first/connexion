@@ -18,7 +18,7 @@ from .decorators.uri_parsing import AlwaysMultiURIParser
 from .decorators.validation import (ParameterValidator, RequestBodyValidator,
                                     TypeValidationError)
 from .exceptions import InvalidSpecification
-from .utils import all_json, deep_get, get_schema, is_nullable
+from .utils import all_json, deep_get, is_nullable
 
 logger = logging.getLogger('connexion.operation')
 
@@ -138,11 +138,10 @@ class Operation(SecureOperation):
     A single API operation on a path.
     """
 
-    def __init__(self, api, method, path, operation, resolver, app_produces, app_consumes,
-                 path_parameters=None, app_security=None, security_definitions=None,
-                 definitions=None, parameter_definitions=None, response_definitions=None,
-                 validate_responses=False, strict_validation=False, randomize_endpoint=None,
-                 validator_map=None, pythonic_params=False, uri_parser_class=None):
+    def __init__(self, api, method, path, operation, resolver, path_parameters=None,
+                 app_security=None, components=None, validate_responses=False,
+                 strict_validation=False, randomize_endpoint=None, validator_map=None,
+                 pythonic_params=False, uri_parser_class=None):
         """
         This class uses the OperationID identify the module and function that will handle the operation
 
@@ -160,35 +159,23 @@ class Operation(SecureOperation):
         :param operation: swagger operation object
         :type operation: dict
         :param resolver: Callable that maps operationID to a function
-        :param app_produces: list of content types the application can return by default
-        :type app_produces: list
-        :param app_consumes: list of content types the application consumes by default
-        :type app_consumes: list
         :param validator_map: map of validators
         :type validator_map: dict
         :param path_parameters: Parameters defined in the path level
         :type path_parameters: list
         :param app_security: list of security rules the application uses by default
         :type app_security: list
-        :param security_definitions: `Security Definitions Object
-            <https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-definitions-object>`_
-        :type security_definitions: dict
-        :param definitions: `Definitions Object
-            <https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#definitionsObject>`_
-        :type definitions: dict
         :param components: `Components Object
             <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#componentsObject>`_
-        :type definitions: dict
-        :param parameter_definitions: Global parameter definitions
-        :type parameter_definitions: dict
-        :param response_definitions: Global response definitions
-        :type response_definitions: dict
-        :param validator_map: Custom validators for the types "parameter", "body" and "response".
-        :type validator_map: dict
+        :type components: dict
         :param validate_responses: True enables validation. Validation errors generate HTTP 500 responses.
         :type validate_responses: bool
         :param strict_validation: True enables validation on invalid request parameters
         :type strict_validation: bool
+        :param randomize_endpoint: number of random characters to append to operation name
+        :type randomize_endpoint: integer
+        :param validator_map: Custom validators for the types "parameter", "body" and "response".
+        :type validator_map: dict
         :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended
         to any shadowed built-ins
         :type pythonic_params: bool
@@ -202,22 +189,15 @@ class Operation(SecureOperation):
         self.validator_map = dict(VALIDATOR_MAP)
         self.validator_map.update(validator_map or {})
 
-        # swagger2
-        self.definitions = definitions
-
-        self.security_definitions = security_definitions
-        self.parameter_definitions = parameter_definitions
-        self.response_definitions = response_definitions
-
-        # openapi3
         self.components = components or {}
+        self.definitions = None  # XXX
 
         def component_get(oas3_name):
             return self.components.get(oas3_name, {})
 
-        self.security_definitions = self.security_definitions or component_get('securitySchemes')
-        self.parameter_definitions = self.parameter_definitions or component_get('parameters')
-        self.response_definitions = self.response_definitions or component_get('responses')
+        self.security_definitions = component_get('securitySchemes')
+        self.parameter_definitions = component_get('parameters')
+        self.response_definitions = component_get('responses')
 
         self.definitions_map = {
             'components': {
@@ -227,10 +207,7 @@ class Operation(SecureOperation):
                 'securitySchemes': component_get('securitySchemes'),
                 'responses': component_get('responses'),
                 'headers': component_get('headers'),
-            },
-            'definitions': self.definitions,
-            'parameters': self.parameter_definitions,
-            'responses': self.response_definitions
+            }
         }
         self.validate_responses = validate_responses
         self.strict_validation = strict_validation
@@ -244,13 +221,13 @@ class Operation(SecureOperation):
         self.request_body = operation.get('requestBody')
         if self.request_body:
             self.request_body = self.resolve_reference(self.request_body)
+
         self.parameters = list(self.resolve_parameters(operation.get('parameters', [])))
         if path_parameters:
             self.parameters += list(self.resolve_parameters(path_parameters))
 
         self.security = operation.get('security', app_security)
-        self.produces = operation.get('produces', app_produces)
-        # oas3 produces
+
         # TODO figure out how to support multiple mimetypes
         # NOTE we currently just combine all of the possible mimetypes,
         #      but we need to refactor to support mimetypes by response code
@@ -258,30 +235,24 @@ class Operation(SecureOperation):
         response_content_types = []
         for _, defn in response_codes.items():
             response_content_types += defn.get('content', {}).keys()
-        if response_content_types:
-            self.produces = response_content_types
+        self.produces = response_content_types or ['application/json']
 
-        # swagger2
-        self.consumes = operation.get('consumes', app_consumes)
-
-        # oas3 consumes
         request_content = operation.get('requestBody', {}).get('content', {})
-        if request_content:
-            self.consumes = list(request_content.keys())
+        self.consumes = list(request_content.keys()) or ['application/json']
 
         logger.debug('consumes: %s' % self.consumes)
         logger.debug('produces: %s' % self.produces)
 
         resolution = resolver.resolve(self)
         self.operation_id = resolution.operation_id
-        self.__undecorated_function = resolution.function
+        self._undecorated_function = resolution.function
 
         self.validate_defaults()
 
     def validate_defaults(self):
         for param_defn in self.parameters:
             try:
-                param_schema = get_schema(param_defn)
+                param_schema = param_defn["schema"]
                 if param_defn['in'] == 'query' and 'default' in param_schema:
                     validation.validate_type(param_defn, param_schema['default'],
                                              'query', param_defn['name'])
@@ -324,9 +295,11 @@ class Operation(SecureOperation):
 
         # if there is a schema object on this param or response, then we just
         # need to include the defs and it can be validated by jsonschema
-        if 'schema' in schema:
-            schema['schema']['definitions'] = self.definitions
-            schema['schema']['components'] = self.components
+        if "schema" in schema:
+            if self.definitions:
+                schema['schema']['definitions'] = self.definitions
+            if self.components:
+                schema['schema']['components'] = self.components
             return schema
 
         return schema
@@ -400,7 +373,7 @@ class Operation(SecureOperation):
         types = {}
         path_parameters = (p for p in self.parameters if p["in"] == "path")
         for path_defn in path_parameters:
-            path_schema = get_schema(path_defn)
+            path_schema = path_defn["schema"]
             if path_schema.get('type') == 'string' and path_schema.get('format') == 'path':
                 # path is special case for type 'string'
                 path_type = 'path'
@@ -449,7 +422,7 @@ class Operation(SecureOperation):
         """
 
         function = parameter_to_arg(
-            self.parameters, self.body_schema, self.consumes, self.__undecorated_function,
+            self.parameters, self.body_schema, self.consumes, self._undecorated_function,
             self.pythonic_params)
         function = self._request_begin_lifecycle_decorator(function)
 
@@ -559,3 +532,153 @@ class Operation(SecureOperation):
         :type data: bytes
         """
         return self.api.json_loads(data)
+
+
+class Swagger2Operation(Operation):
+
+    def __init__(self, api, method, path, operation, resolver, app_produces, app_consumes,
+                 path_parameters=None, app_security=None, security_definitions=None,
+                 definitions=None, parameter_definitions=None,
+                 response_definitions=None, validate_responses=False, strict_validation=False,
+                 randomize_endpoint=None, validator_map=None, pythonic_params=False):
+        """
+        This class uses the OperationID identify the module and function that will handle the operation
+
+        From Swagger Specification:
+
+        **OperationID**
+
+        A friendly name for the operation. The id MUST be unique among all operations described in the API.
+        Tools and libraries MAY use the operation id to uniquely identify an operation.
+
+        :param method: HTTP method
+        :type method: str
+        :param path:
+        :type path: str
+        :param operation: swagger operation object
+        :type operation: dict
+        :param resolver: Callable that maps operationID to a function
+        :param app_produces: list of content types the application can return by default
+        :type app_produces: list
+        :param app_consumes: list of content types the application consumes by default
+        :type app_consumes: list
+        :param validator_map: map of validators
+        :type validator_map: dict
+        :param path_parameters: Parameters defined in the path level
+        :type path_parameters: list
+        :param app_security: list of security rules the application uses by default
+        :type app_security: list
+        :param security_definitions: `Security Definitions Object
+            <https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-definitions-object>`_
+        :type security_definitions: dict
+        :param definitions: `Definitions Object
+            <https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#definitionsObject>`_
+        :type definitions: dict
+        :param parameter_definitions: Global parameter definitions
+        :type parameter_definitions: dict
+        :param response_definitions: Global response definitions
+        :type response_definitions: dict
+        :param validator_map: Custom validators for the types "parameter", "body" and "response".
+        :type validator_map: dict
+        :param validate_responses: True enables validation. Validation errors generate HTTP 500 responses.
+        :type validate_responses: bool
+        :param strict_validation: True enables validation on invalid request parameters
+        :type strict_validation: bool
+        :param randomize_endpoint: number of random characters to append to operation name
+        :type randomize_endpoint: integer
+        :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended
+        to any shadowed built-ins
+        :type pythonic_params: bool
+        """
+
+        self.api = api
+        self.method = method
+        self.path = path
+        self.validator_map = dict(VALIDATOR_MAP)
+        self.validator_map.update(validator_map or {})
+
+        self.definitions = definitions
+        self.components = None
+
+        self.security_definitions = security_definitions
+        self.parameter_definitions = parameter_definitions
+        self.response_definitions = response_definitions
+
+        self.definitions_map = {
+            'components': {},
+            'definitions': self.definitions,
+            'parameters': self.parameter_definitions,
+            'responses': self.response_definitions
+        }
+        self.validate_responses = validate_responses
+        self.strict_validation = strict_validation
+        self.operation = operation
+        self.randomize_endpoint = randomize_endpoint
+        self.pythonic_params = pythonic_params
+
+        self.request_body = None
+        self.parameters = list(self.resolve_parameters(operation.get('parameters', [])))
+        if path_parameters:
+            self.parameters += list(self.resolve_parameters(path_parameters))
+
+        self.security = operation.get('security', app_security)
+        self.produces = operation.get('produces', app_produces)
+        self.consumes = operation.get('consumes', app_consumes)
+        
+        logger.debug('consumes: %s' % self.consumes)
+        logger.debug('produces: %s' % self.produces)
+
+        resolution = resolver.resolve(self)
+        self.operation_id = resolution.operation_id
+        self._undecorated_function = resolution.function
+
+        self.validate_defaults()
+
+    def validate_defaults(self):
+        for param_defn in self.parameters:
+            try:
+                if param_defn['in'] == 'query' and 'default' in param_defn:
+                    validation.validate_type(param_defn, param_defn['default'],
+                                             'query', param_defn['name'])
+            except (TypeValidationError, ValidationError):
+                raise InvalidSpecification('The parameter \'{param_name}\' has a default value which is not of'
+                                           ' type \'{param_type}\''.format(param_name=param_defn['name'],
+                                                                           param_type=param_defn['type']))
+
+    def get_path_parameter_types(self):
+        types = {}
+        path_parameters = (p for p in self.parameters if p["in"] == "path")
+        for path_defn in path_parameters:
+            if path_defn.get('type') == 'string' and path_defn.get('format') == 'path':
+                # path is special case for type 'string'
+                path_type = 'path'
+            else:
+                path_type = path_defn.get('type')
+            types[path_defn['name']] = path_type
+        return types
+
+    def resolve_reference(self, schema):
+        schema = deepcopy(schema)  # avoid changing the original schema
+        self.check_references(schema)
+
+        # find the object we need to resolve/update if this is not a proper SchemaObject
+        # e.g a response or parameter object
+        for obj in schema, schema.get('items'):
+            reference = obj and obj.get('$ref')  # type: str
+            if reference:
+                break
+        if reference:
+            definition = deepcopy(self._retrieve_reference(reference))
+            # Update schema
+            obj.update(definition)
+            del obj['$ref']
+
+        # if there is a schema object on this param or response, then we just
+        # need to include the defs and it can be validated by jsonschema
+        if "schema" in schema:
+            schema['schema']['definitions'] = self.definitions
+
+        return schema
+
+
+

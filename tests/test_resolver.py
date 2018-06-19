@@ -1,7 +1,7 @@
 import connexion.apps
 import pytest
 from connexion.exceptions import ResolverError
-from connexion.operation import Operation
+from connexion.operation import Swagger2Operation
 from connexion.resolver import Resolver, RestyResolver
 
 PARAMETER_DEFINITIONS = {'myparam': {'in': 'path', 'type': 'integer'}}
@@ -36,7 +36,7 @@ def test_bad_operation_id():
 
 
 def test_standard_resolve_x_router_controller():
-    operation = Operation(api=None,
+    operation = Swagger2Operation(api=None,
                           method='GET',
                           path='endpoint',
                           path_parameters=[],
@@ -55,7 +55,7 @@ def test_standard_resolve_x_router_controller():
 
 
 def test_resty_resolve_operation_id():
-    operation = Operation(api=None,
+    operation = Swagger2Operation(api=None,
                           method='GET',
                           path='endpoint',
                           path_parameters=[],
@@ -73,7 +73,7 @@ def test_resty_resolve_operation_id():
 
 
 def test_resty_resolve_x_router_controller_with_operation_id():
-    operation = Operation(api=None,
+    operation = Swagger2Operation(api=None,
                           method='GET',
                           path='endpoint',
                           path_parameters=[],
@@ -92,7 +92,7 @@ def test_resty_resolve_x_router_controller_with_operation_id():
 
 
 def test_resty_resolve_x_router_controller_without_operation_id():
-    operation = Operation(api=None,
+    operation = Swagger2Operation(api=None,
                           method='GET',
                           path='/hello/{id}',
                           path_parameters=[],
@@ -108,7 +108,7 @@ def test_resty_resolve_x_router_controller_without_operation_id():
 
 
 def test_resty_resolve_with_default_module_name():
-    operation = Operation(api=None,
+    operation = Swagger2Operation(api=None,
                           method='GET',
                           path='/hello/{id}',
                           path_parameters=[],
@@ -124,7 +124,7 @@ def test_resty_resolve_with_default_module_name():
 
 
 def test_resty_resolve_with_default_module_name_lowercase_verb():
-    operation = Operation(api=None,
+    operation = Swagger2Operation(api=None,
                           method='get',
                           path='/hello/{id}',
                           path_parameters=[],
@@ -140,7 +140,7 @@ def test_resty_resolve_with_default_module_name_lowercase_verb():
 
 
 def test_resty_resolve_with_default_module_name_will_translate_dashes_in_resource_name():
-    operation = Operation(api=None,
+    operation = Swagger2Operation(api=None,
                           method='GET',
                           path='/foo-bar',
                           path_parameters=[],
@@ -156,7 +156,7 @@ def test_resty_resolve_with_default_module_name_will_translate_dashes_in_resourc
 
 
 def test_resty_resolve_with_default_module_name_can_resolve_api_root():
-    operation = Operation(api=None,
+    operation = Swagger2Operation(api=None,
                           method='GET',
                           path='/',
                           path_parameters=[],
@@ -172,7 +172,7 @@ def test_resty_resolve_with_default_module_name_can_resolve_api_root():
 
 
 def test_resty_resolve_with_default_module_name_will_resolve_resource_root_get_as_search():
-    operation = Operation(api=None,
+    operation = Swagger2Operation(api=None,
                           method='GET',
                           path='/hello',
                           path_parameters=[],
@@ -188,7 +188,7 @@ def test_resty_resolve_with_default_module_name_will_resolve_resource_root_get_a
 
 
 def test_resty_resolve_with_default_module_name_and_x_router_controller_will_resolve_resource_root_get_as_search():
-    operation = Operation(api=None,
+    operation = Swagger2Operation(api=None,
                           method='GET',
                           path='/hello',
                           path_parameters=[],
@@ -206,7 +206,7 @@ def test_resty_resolve_with_default_module_name_and_x_router_controller_will_res
 
 
 def test_resty_resolve_with_default_module_name_will_resolve_resource_root_as_configured():
-    operation = Operation(api=None,
+    operation = Swagger2Operation(api=None,
                           method='GET',
                           path='/hello',
                           path_parameters=[],
@@ -222,7 +222,7 @@ def test_resty_resolve_with_default_module_name_will_resolve_resource_root_as_co
 
 
 def test_resty_resolve_with_default_module_name_will_resolve_resource_root_post_as_post():
-    operation = Operation(api=None,
+    operation = Swagger2Operation(api=None,
                           method='POST',
                           path='/hello',
                           path_parameters=[],

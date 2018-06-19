@@ -9,7 +9,7 @@ from connexion.decorators.security import (security_passthrough,
                                            verify_oauth_local,
                                            verify_oauth_remote)
 from connexion.exceptions import InvalidSpecification
-from connexion.operation import Operation
+from connexion.operation import Operation, Swagger2Operation
 from connexion.resolver import Resolver
 
 TEST_FOLDER = pathlib.Path(__file__).parent
@@ -256,18 +256,18 @@ def api():
 
 
 def test_operation(api):
-    operation = Operation(api=api,
-                          method='GET',
-                          path='endpoint',
-                          path_parameters=[],
-                          operation=OPERATION1,
-                          app_produces=['application/json'],
-                          app_consumes=['application/json'],
-                          app_security=[],
-                          security_definitions=SECURITY_DEFINITIONS_REMOTE,
-                          definitions=DEFINITIONS,
-                          parameter_definitions=PARAMETER_DEFINITIONS,
-                          resolver=Resolver())
+    operation = Swagger2Operation(api=api,
+                                  method='GET',
+                                  path='endpoint',
+                                  path_parameters=[],
+                                  operation=OPERATION1,
+                                  app_produces=['application/json'],
+                                  app_consumes=['application/json'],
+                                  app_security=[],
+                                  security_definitions=SECURITY_DEFINITIONS_REMOTE,
+                                  definitions=DEFINITIONS,
+                                  parameter_definitions=PARAMETER_DEFINITIONS,
+                                  resolver=Resolver())
     assert isinstance(operation.function, types.FunctionType)
     # security decorator should be a partial with verify_oauth_remote as the function and token url and scopes as arguments.
     # See https://docs.python.org/2/library/functools.html#partial-objects
@@ -279,13 +279,13 @@ def test_operation(api):
     assert operation.consumes == ['application/json']
     assert operation.security == [{'oauth': ['uid']}]
 
-    expected_body_schema = {"definitions": DEFINITIONS, "components": {}}
+    expected_body_schema = {"definitions": DEFINITIONS}
     expected_body_schema.update(DEFINITIONS["new_stack"])
     assert operation.body_schema == expected_body_schema
 
 
 def test_operation_array(api):
-    operation = Operation(api=api,
+    operation = Swagger2Operation(api=api,
                           method='GET',
                           path='endpoint',
                           path_parameters=[],
@@ -309,7 +309,7 @@ def test_operation_array(api):
     assert operation.consumes == ['application/json']
     assert operation.security == [{'oauth': ['uid']}]
 
-    expected_body_schema = {"definitions": DEFINITIONS, "components": {}}
+    expected_body_schema = {"definitions": DEFINITIONS}
     expected_body_schema.update({
         'type': 'array',
         'items': DEFINITIONS["new_stack"]
@@ -318,7 +318,7 @@ def test_operation_array(api):
 
 
 def test_operation_composed_definition(api):
-    operation = Operation(api=api,
+    operation = Swagger2Operation(api=api,
                           method='GET',
                           path='endpoint',
                           path_parameters=[],
@@ -341,13 +341,13 @@ def test_operation_composed_definition(api):
     assert operation.produces == ['application/json']
     assert operation.consumes == ['application/json']
     assert operation.security == [{'oauth': ['uid']}]
-    expected_body_schema = {"definitions": DEFINITIONS, "components": {}}
+    expected_body_schema = {"definitions": DEFINITIONS}
     expected_body_schema.update(DEFINITIONS["composed"])
     assert operation.body_schema == expected_body_schema
 
 
 def test_operation_local_security_oauth2(api):
-    operation = Operation(api=api,
+    operation = Swagger2Operation(api=api,
                           method='GET',
                           path='endpoint',
                           path_parameters=[],
@@ -371,13 +371,13 @@ def test_operation_local_security_oauth2(api):
     assert operation.produces == ['application/json']
     assert operation.consumes == ['application/json']
     assert operation.security == [{'oauth': ['uid']}]
-    expected_body_schema = {"definitions": DEFINITIONS, "components": {}}
+    expected_body_schema = {"definitions": DEFINITIONS}
     expected_body_schema.update(DEFINITIONS["composed"])
     assert operation.body_schema == expected_body_schema
 
 
 def test_operation_local_security_duplicate_token_info(api):
-    operation = Operation(api=api,
+    operation = Swagger2Operation(api=api,
                           method='GET',
                           path='endpoint',
                           path_parameters=[],
@@ -401,13 +401,13 @@ def test_operation_local_security_duplicate_token_info(api):
     assert operation.produces == ['application/json']
     assert operation.consumes == ['application/json']
     assert operation.security == [{'oauth': ['uid']}]
-    expected_body_schema = {"definitions": DEFINITIONS, "components": {}}
+    expected_body_schema = {"definitions": DEFINITIONS}
     expected_body_schema.update(DEFINITIONS["composed"])
     assert operation.body_schema == expected_body_schema
 
 def test_non_existent_reference(api):
     with pytest.raises(InvalidSpecification) as exc_info:  # type: py.code.ExceptionInfo
-        operation = Operation(api=api,
+        operation = Swagger2Operation(api=api,
                               method='GET',
                               path='endpoint',
                               path_parameters=[],
@@ -428,7 +428,7 @@ def test_non_existent_reference(api):
 
 def test_multi_body(api):
     with pytest.raises(InvalidSpecification) as exc_info:  # type: py.code.ExceptionInfo
-        operation = Operation(api=api,
+        operation = Swagger2Operation(api=api,
                               method='GET',
                               path='endpoint',
                               path_parameters=[],
@@ -449,7 +449,7 @@ def test_multi_body(api):
 
 def test_invalid_reference(api):
     with pytest.raises(InvalidSpecification) as exc_info:  # type: py.code.ExceptionInfo
-        operation = Operation(api=api,
+        operation = Swagger2Operation(api=api,
                               method='GET',
                               path='endpoint',
                               path_parameters=[],
@@ -469,7 +469,7 @@ def test_invalid_reference(api):
 
 
 def test_no_token_info(api):
-    operation = Operation(api=api,
+    operation = Swagger2Operation(api=api,
                           method='GET',
                           path='endpoint',
                           path_parameters=[],
@@ -489,13 +489,13 @@ def test_no_token_info(api):
     assert operation.consumes == ['application/json']
     assert operation.security == [{'oauth': ['uid']}]
 
-    expected_body_schema = {"definitions": DEFINITIONS, "components": {}}
+    expected_body_schema = {"definitions": DEFINITIONS}
     expected_body_schema.update(DEFINITIONS["new_stack"])
     assert operation.body_schema == expected_body_schema
 
 
 def test_parameter_reference(api):
-    operation = Operation(api=api,
+    operation = Swagger2Operation(api=api,
                           method='GET',
                           path='endpoint',
                           path_parameters=[],
@@ -512,7 +512,7 @@ def test_parameter_reference(api):
 
 def test_resolve_invalid_reference(api):
     with pytest.raises(InvalidSpecification) as exc_info:
-        Operation(api=api, method='GET', path='endpoint', path_parameters=[],
+        Swagger2Operation(api=api, method='GET', path='endpoint', path_parameters=[],
                   operation=OPERATION5, app_produces=['application/json'],
                   app_consumes=['application/json'], app_security=[],
                   security_definitions={}, definitions={},
@@ -525,7 +525,7 @@ def test_resolve_invalid_reference(api):
 def test_default(api):
     op = OPERATION6.copy()
     op['parameters'][1]['default'] = 1
-    Operation(api=api, method='GET', path='endpoint', path_parameters=[], operation=op,
+    Swagger2Operation(api=api, method='GET', path='endpoint', path_parameters=[], operation=op,
               app_produces=['application/json'], app_consumes=['application/json'],
               app_security=[], security_definitions={}, definitions=DEFINITIONS,
               parameter_definitions=PARAMETER_DEFINITIONS,
@@ -534,7 +534,7 @@ def test_default(api):
     op['parameters'][0]['default'] = {
         'keep_stacks': 1, 'image_version': 'one', 'senza_yaml': 'senza.yaml', 'new_traffic': 100
     }
-    Operation(api=api, method='POST', path='endpoint', path_parameters=[], operation=op,
+    Swagger2Operation(api=api, method='POST', path='endpoint', path_parameters=[], operation=op,
               app_produces=['application/json'], app_consumes=['application/json'], app_security=[],
               security_definitions={}, definitions=DEFINITIONS, parameter_definitions={}, resolver=Resolver())
 
@@ -545,7 +545,7 @@ def test_get_path_parameter_types(api):
                         {'in': 'path', 'type': 'string', 'name': 'string_path'},
                         {'in': 'path', 'type': 'string', 'format': 'path', 'name': 'path_path'}]
 
-    operation = Operation(api=api, method='GET', path='endpoint', path_parameters=[], operation=op,
+    operation = Swagger2Operation(api=api, method='GET', path='endpoint', path_parameters=[], operation=op,
                           app_produces=['application/json'], app_consumes=['application/json'], resolver=Resolver())
 
     assert {'int_path': 'int', 'string_path': 'string', 'path_path': 'path'} == operation.get_path_parameter_types()

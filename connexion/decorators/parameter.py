@@ -206,6 +206,8 @@ def parameter_to_arg(parameters, body_schema, consumes, function, pythonic_param
                 logger.debug("Query Parameter '%s' not in function arguments", key)
             else:
                 logger.debug("Query Parameter '%s' in function arguments", key)
+                logger.debug(query_defns)
+                logger.debug(key)
                 try:
                     query_defn = query_defns[key]
                 except KeyError:  # pragma: no cover

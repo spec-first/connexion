@@ -164,7 +164,6 @@ class AbstractApp(object):
         kwargs['operation'] = {
             'operationId': 'connexion.handlers.ResolverErrorHandler',
         }
-        kwargs.setdefault('app_consumes', ['application/json'])
         return ResolverErrorHandler(self.api_cls, self.resolver_error, *args, **kwargs)
 
     def add_url_rule(self, rule, endpoint=None, view_func=None, **options):
