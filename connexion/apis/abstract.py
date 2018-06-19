@@ -6,16 +6,15 @@ import sys
 from typing import AnyStr, List  # NOQA
 
 import jinja2
+import yaml
 import six
 from six.moves.urllib.parse import urlparse
-import yaml
 
 from ..exceptions import InvalidSpecification, ResolverError
 from ..operation import Operation
 from ..options import ConnexionOptions
 from ..resolver import Resolver
 from ..utils import Jsonifier
-
 
 MODULE_PATH = pathlib.Path(__file__).absolute().parent.parent
 SWAGGER_UI_URL = 'ui'
