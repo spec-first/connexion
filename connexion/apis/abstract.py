@@ -6,8 +6,8 @@ import sys
 from typing import AnyStr, List  # NOQA
 
 import jinja2
-import yaml
 import six
+import yaml
 from six.moves.urllib.parse import urlparse
 
 from ..exceptions import InvalidSpecification, ResolverError
