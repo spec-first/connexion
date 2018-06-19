@@ -125,8 +125,10 @@ def boolean(s):
 
 
 def is_nullable(param_def):
-    return param_def.get('x-nullable', False) or \
-        param_def.get('schema', param_def).get('nullable', False)  # oas3
+    return (
+        get_schema(param_def).get('nullable', False) or
+        param_def.get('x-nullable', False)  # swagger2
+    )
 
 
 def is_null(value):
