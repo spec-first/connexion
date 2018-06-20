@@ -4,59 +4,34 @@ import types
 
 import mock
 import pytest
-
-from copy import deepcopy
-
 from connexion.apis.flask_api import Jsonifier
 from connexion.decorators.security import (security_passthrough,
                                            verify_oauth_local,
                                            verify_oauth_remote)
 from connexion.exceptions import InvalidSpecification
-from connexion.operation import Operation
+from connexion.operation import Operation, Swagger2Operation
 from connexion.resolver import Resolver
 
 TEST_FOLDER = pathlib.Path(__file__).parent
 
-
-COMPONENTS = {
-    "schemas": {
-        'new_stack': {
-                'required': ['image_version', 'keep_stacks', 'new_traffic', 'senza_yaml'],
-                'type': 'object',
-                'properties': {
-                    'keep_stacks': {
-                        'type': 'integer',
-                        'description': 'Number of older stacks to keep'
-                    },
-                    'image_version': {
-                        'type': 'string',
-                        'description': 'Docker image version to deploy'
-                    },
-                    'senza_yaml': {
-                        'type': 'string',
-                        'description': 'YAML to provide to senza'
-                    },
-                    'new_traffic': {
-                        'type': 'integer',
-                        'description': 'Percentage of the traffic'
-                    }
-                }
-        },
-        'problem': {'type': 'object'},
-        'composed': {
-                'required': ['test'],
-                'type': 'object',
-                'properties': {
-                    'test': {
-                            '$ref': '#/components/schemas/new_stack'
-                    }
-                }
-        }
-    },
-    'parameters': {
-        'myparam': {'in': 'path', 'schema': {'type': 'integer'}}
-    }
-}
+DEFINITIONS = {'new_stack': {'required': ['image_version', 'keep_stacks', 'new_traffic', 'senza_yaml'],
+                             'type': 'object',
+                             'properties': {'keep_stacks': {'type': 'integer',
+                                                            'description':
+                                                            'Number of older stacks to keep'},
+                                            'image_version': {'type': 'string',
+                                                              'description':
+                                                              'Docker image version to deploy'},
+                                            'senza_yaml': {'type': 'string',
+                                                           'description': 'YAML to provide to senza'},
+                                            'new_traffic': {'type': 'integer',
+                                                            'description':
+                                                            'Percentage of the traffic'}}},
+               'problem': {'type': 'object'},
+               'composed': {'required': ['test'],
+                            'type': 'object',
+                            'properties': {'test': {'schema': {'$ref': '#/definitions/new_stack'}}}}}
+PARAMETER_DEFINITIONS = {'myparam': {'in': 'path', 'type': 'integer'}}
 
 OPERATION1 = {'description': 'Adds a new stack to be created by lizzy and returns the '
               'information needed to keep track of deployment',
@@ -64,19 +39,19 @@ OPERATION1 = {'description': 'Adds a new stack to be created by lizzy and return
               'parameters': [{'in': 'body',
                               'name': 'new_stack',
                               'required': True,
-                              'schema': {'$ref': '#/components/schemas/new_stack'}}],
+                              'schema': {'$ref': '#/definitions/new_stack'}}],
               'responses': {201: {'description': 'Stack to be created. The '
                                   'CloudFormation Stack creation can '
                                   "still fail if it's rejected by senza "
                                   'or AWS CF.',
-                                  'schema': {'$ref': '#/components/schemas/new_stack'}},
+                                  'schema': {'$ref': '#/definitions/new_stack'}},
                             400: {'description': 'Stack was not created because request '
                                   'was invalid',
-                                  'schema': {'$ref': '#/components/schemas/problem'}},
+                                  'schema': {'$ref': '#/definitions/problem'}},
                             401: {'description': 'Stack was not created because the '
                                   'access token was not provided or was '
                                   'not valid for this operation',
-                                  'schema': {'$ref': '#/components/schemas/problem'}}},
+                                  'schema': {'$ref': '#/definitions/problem'}}},
               'security': [{'oauth': ['uid']}],
               'summary': 'Create new stack'}
 
@@ -86,23 +61,23 @@ OPERATION2 = {'description': 'Adds a new stack to be created by lizzy and return
               'parameters': [{'in': 'body',
                               'name': 'new_stack',
                               'required': True,
-                              'schema': {'$ref': '#/components/schemas/new_stack'}},
+                              'schema': {'$ref': '#/definitions/new_stack'}},
                              {'in': 'body',
                               'name': 'new_stack',
                               'required': True,
-                              'schema': {'$ref': '#/components/schemas/new_stack'}}],
+                              'schema': {'$ref': '#/definitions/new_stack'}}],
               'responses': {201: {'description': 'Stack to be created. The '
                                   'CloudFormation Stack creation can '
                                   "still fail if it's rejected by senza "
                                   'or AWS CF.',
-                                  'schema': {'$ref': '#/components/schemas/new_stack'}},
+                                  'schema': {'$ref': '#/definitions/new_stack'}},
                             400: {'description': 'Stack was not created because request '
                                   'was invalid',
-                                  'schema': {'$ref': '#/components/schemas/problem'}},
+                                  'schema': {'$ref': '#/definitions/problem'}},
                             401: {'description': 'Stack was not created because the '
                                   'access token was not provided or was '
                                   'not valid for this operation',
-                                  'schema': {'$ref': '#/components/schemas/problem'}}},
+                                  'schema': {'$ref': '#/definitions/problem'}}},
               'security': [{'oauth': ['uid']}],
               'summary': 'Create new stack'}
 
@@ -112,27 +87,27 @@ OPERATION3 = {'description': 'Adds a new stack to be created by lizzy and return
               'parameters': [{'in': 'body',
                               'name': 'new_stack',
                               'required': True,
-                              'schema': {'$ref': '#/notcomponents/schemas/new_stack'}}],
+                              'schema': {'$ref': '#/notdefinitions/new_stack'}}],
               'responses': {201: {'description': 'Stack to be created. The '
                                   'CloudFormation Stack creation can '
                                   "still fail if it's rejected by senza "
                                   'or AWS CF.',
-                                  'schema': {'$ref': '#/components/schemas/new_stack'}},
+                                  'schema': {'$ref': '#/definitions/new_stack'}},
                             400: {'description': 'Stack was not created because request '
                                   'was invalid',
-                                  'schema': {'$ref': '#/components/schemas/problem'}},
+                                  'schema': {'$ref': '#/definitions/problem'}},
                             401: {'description': 'Stack was not created because the '
                                   'access token was not provided or was '
                                   'not valid for this operation',
-                                  'schema': {'$ref': '#/components/schemas/problem'}}},
+                                  'schema': {'$ref': '#/definitions/problem'}}},
               'security': [{'oauth': ['uid']}],
               'summary': 'Create new stack'}
 
 OPERATION4 = {'operationId': 'fakeapi.hello.post_greeting',
-              'parameters': [{'$ref': '#/components/parameters/myparam'}]}
+              'parameters': [{'$ref': '#/parameters/myparam'}]}
 
 OPERATION5 = {'operationId': 'fakeapi.hello.post_greeting',
-              'parameters': [{'$ref': '/components/parameters/fail'}]}
+              'parameters': [{'$ref': '/parameters/fail'}]}
 
 OPERATION6 = {'description': 'Adds a new stack to be created by lizzy and returns the '
               'information needed to keep track of deployment',
@@ -142,29 +117,27 @@ OPERATION6 = {'description': 'Adds a new stack to be created by lizzy and return
                       'in': 'body',
                       'name': 'new_stack',
                       'required': True,
-                      'schema': {'$ref': '#/components/schemas/new_stack'}
+                      'schema': {'$ref': '#/definitions/new_stack'}
                   },
                   {
                       'in': 'query',
                       'name': 'stack_version',
                       'default': 'one',
-                      'schema': {
-                          'type': 'number'
-                      }
+                      'type': 'number'
                   }
               ],
               'responses': {201: {'description': 'Stack to be created. The '
                                   'CloudFormation Stack creation can '
                                   "still fail if it's rejected by senza "
                                   'or AWS CF.',
-                                  'schema': {'$ref': '#/components/schemas/new_stack'}},
+                                  'schema': {'$ref': '#/definitions/new_stack'}},
                             400: {'description': 'Stack was not created because request '
                                   'was invalid',
-                                  'schema': {'$ref': '#/components/schemas/problem'}},
+                                  'schema': {'$ref': '#/definitions/problem'}},
                             401: {'description': 'Stack was not created because the '
                                   'access token was not provided or was '
                                   'not valid for this operation',
-                                  'schema': {'$ref': '#/components/schemas/problem'}}},
+                                  'schema': {'$ref': '#/definitions/problem'}}},
               'summary': 'Create new stack'}
 
 OPERATION7 = {
@@ -184,14 +157,14 @@ OPERATION7 = {
                           'CloudFormation Stack creation can '
                           "still fail if it's rejected by senza "
                           'or AWS CF.',
-                          'schema': {'$ref': '#/components/schemas/new_stack'}},
+                          'schema': {'$ref': '#/definitions/new_stack'}},
                   '400': {'description': 'Stack was not created because request '
                           'was invalid',
-                          'schema': {'$ref': '#/components/schemas/problem'}},
+                          'schema': {'$ref': '#/definitions/problem'}},
                   '401': {'description': 'Stack was not created because the '
                           'access token was not provided or was '
                           'not valid for this operation',
-                          'schema': {'$ref': '#/components/schemas/problem'}}},
+                          'schema': {'$ref': '#/definitions/problem'}}},
     'security': [{'oauth': ['uid']}],
     'summary': 'Create new stack'
 }
@@ -205,7 +178,7 @@ OPERATION8 = {
             'name': 'new_stack',
             'default': {'keep_stack': 1, 'image_version': 1, 'senza_yaml': 'senza.yaml',
                         'new_traffic': 100},
-            'schema': {'$ref': '#/components/schemas/new_stack'}
+            'schema': {'$ref': '#/definitions/new_stack'}
         }
     ],
     'responses': {},
@@ -219,19 +192,19 @@ OPERATION9 = {'description': 'Adds a new stack to be created by lizzy and return
               'parameters': [{'in': 'body',
                               'name': 'new_stack',
                               'required': True,
-                              'schema': {'type': 'array', 'items': {'$ref': '#/components/schemas/new_stack'}}}],
+                              'schema': {'type': 'array', 'items': {'$ref': '#/definitions/new_stack'}}}],
               'responses': {'201': {'description': 'Stack to be created. The '
                                     'CloudFormation Stack creation can '
                                     "still fail if it's rejected by senza "
                                     'or AWS CF.',
-                                    'schema': {'$ref': '#/components/schemas/new_stack'}},
+                                    'schema': {'$ref': '#/definitions/new_stack'}},
                             '400': {'description': 'Stack was not created because request '
                                     'was invalid',
-                                    'schema': {'$ref': '#/components/schemas/problem'}},
+                                    'schema': {'$ref': '#/definitions/problem'}},
                             '401': {'description': 'Stack was not created because the '
                                     'access token was not provided or was '
                                     'not valid for this operation',
-                                    'schema': {'$ref': '#/components/schemas/problem'}}},
+                                    'schema': {'$ref': '#/definitions/problem'}}},
               'security': [{'oauth': ['uid']}],
               'summary': 'Create new stack'}
 
@@ -241,19 +214,19 @@ OPERATION10 = {'description': 'Adds a new stack to be created by lizzy and retur
                'parameters': [{'in': 'body',
                                'name': 'test',
                                'required': True,
-                               'schema': {'$ref': '#/components/schemas/composed'}}],
+                               'schema': {'$ref': '#/definitions/composed'}}],
                'responses': {'201': {'description': 'Stack to be created. The '
                                      'CloudFormation Stack creation can '
                                      "still fail if it's rejected by senza "
                                      'or AWS CF.',
-                                     'schema': {'$ref': '#/components/schemas/new_stack'}},
+                                     'schema': {'$ref': '#/definitions/new_stack'}},
                              '400': {'description': 'Stack was not created because request '
                                      'was invalid',
-                                     'schema': {'$ref': '#/components/schemas/problem'}},
+                                     'schema': {'$ref': '#/definitions/problem'}},
                              '401': {'description': 'Stack was not created because the '
                                      'access token was not provided or was '
                                      'not valid for this operation',
-                                     'schema': {'$ref': '#/components/schemas/problem'}}},
+                                     'schema': {'$ref': '#/definitions/problem'}}},
                'security': [{'oauth': ['uid']}],
                'summary': 'Create new stack'}
 
@@ -284,16 +257,18 @@ def api():
 
 
 def test_operation(api):
-    components = deepcopy(COMPONENTS)
-    components.update({"securitySchemes": SECURITY_DEFINITIONS_REMOTE})
-    operation = Operation(api=api,
-                          method='GET',
-                          path='endpoint',
-                          path_parameters=[],
-                          operation=OPERATION1,
-                          app_security=[],
-                          components=components,
-                          resolver=Resolver())
+    operation = Swagger2Operation(api=api,
+                                  method='GET',
+                                  path='endpoint',
+                                  path_parameters=[],
+                                  operation=OPERATION1,
+                                  app_produces=['application/json'],
+                                  app_consumes=['application/json'],
+                                  app_security=[],
+                                  security_definitions=SECURITY_DEFINITIONS_REMOTE,
+                                  definitions=DEFINITIONS,
+                                  parameter_definitions=PARAMETER_DEFINITIONS,
+                                  resolver=Resolver())
     assert isinstance(operation.function, types.FunctionType)
     # security decorator should be a partial with verify_oauth_remote as the function and token url and scopes as arguments.
     # See https://docs.python.org/2/library/functools.html#partial-objects
@@ -305,21 +280,23 @@ def test_operation(api):
     assert operation.consumes == ['application/json']
     assert operation.security == [{'oauth': ['uid']}]
 
-    expected_body_schema = {"components": components}
-    expected_body_schema.update(components["schemas"]["new_stack"])
+    expected_body_schema = {"definitions": DEFINITIONS}
+    expected_body_schema.update(DEFINITIONS["new_stack"])
     assert operation.body_schema == expected_body_schema
 
 
 def test_operation_array(api):
-    components = deepcopy(COMPONENTS)
-    components.update({"securitySchemes": SECURITY_DEFINITIONS_REMOTE})
-    operation = Operation(api=api,
+    operation = Swagger2Operation(api=api,
                           method='GET',
                           path='endpoint',
                           path_parameters=[],
                           operation=OPERATION9,
+                          app_produces=['application/json'],
+                          app_consumes=['application/json'],
                           app_security=[],
-                          components=components,
+                          security_definitions=SECURITY_DEFINITIONS_REMOTE,
+                          definitions=DEFINITIONS,
+                          parameter_definitions=PARAMETER_DEFINITIONS,
                           resolver=Resolver())
     assert isinstance(operation.function, types.FunctionType)
     # security decorator should be a partial with verify_oauth_remote as the function and token url
@@ -333,24 +310,26 @@ def test_operation_array(api):
     assert operation.consumes == ['application/json']
     assert operation.security == [{'oauth': ['uid']}]
 
-    expected_body_schema = {}
+    expected_body_schema = {"definitions": DEFINITIONS}
     expected_body_schema.update({
         'type': 'array',
-        'items': components["schemas"]["new_stack"]
+        'items': DEFINITIONS["new_stack"]
     })
     assert operation.body_schema == expected_body_schema
 
 
 def test_operation_composed_definition(api):
-    components = deepcopy(COMPONENTS)
-    components.update({"securitySchemes": SECURITY_DEFINITIONS_REMOTE})
-    operation = Operation(api=api,
+    operation = Swagger2Operation(api=api,
                           method='GET',
                           path='endpoint',
                           path_parameters=[],
                           operation=OPERATION10,
+                          app_produces=['application/json'],
+                          app_consumes=['application/json'],
                           app_security=[],
-                          components=components,
+                          security_definitions=SECURITY_DEFINITIONS_REMOTE,
+                          definitions=DEFINITIONS,
+                          parameter_definitions=PARAMETER_DEFINITIONS,
                           resolver=Resolver())
     assert isinstance(operation.function, types.FunctionType)
     # security decorator should be a partial with verify_oauth_remote as the function and
@@ -363,21 +342,23 @@ def test_operation_composed_definition(api):
     assert operation.produces == ['application/json']
     assert operation.consumes == ['application/json']
     assert operation.security == [{'oauth': ['uid']}]
-    expected_body_schema = {"components": components}
-    expected_body_schema.update(components["schemas"]["composed"])
+    expected_body_schema = {"definitions": DEFINITIONS}
+    expected_body_schema.update(DEFINITIONS["composed"])
     assert operation.body_schema == expected_body_schema
 
 
 def test_operation_local_security_oauth2(api):
-    components = deepcopy(COMPONENTS)
-    components.update({"securitySchemes": SECURITY_DEFINITIONS_LOCAL})
-    operation = Operation(api=api,
+    operation = Swagger2Operation(api=api,
                           method='GET',
                           path='endpoint',
                           path_parameters=[],
                           operation=OPERATION10,
+                          app_produces=['application/json'],
+                          app_consumes=['application/json'],
                           app_security=[],
-                          components=components,
+                          security_definitions=SECURITY_DEFINITIONS_LOCAL,
+                          definitions=DEFINITIONS,
+                          parameter_definitions=PARAMETER_DEFINITIONS,
                           resolver=Resolver())
     assert isinstance(operation.function, types.FunctionType)
     # security decorator should be a partial with verify_oauth_remote as the function and
@@ -391,21 +372,23 @@ def test_operation_local_security_oauth2(api):
     assert operation.produces == ['application/json']
     assert operation.consumes == ['application/json']
     assert operation.security == [{'oauth': ['uid']}]
-    expected_body_schema = {"components": components}
-    expected_body_schema.update(components["schemas"]["composed"])
+    expected_body_schema = {"definitions": DEFINITIONS}
+    expected_body_schema.update(DEFINITIONS["composed"])
     assert operation.body_schema == expected_body_schema
 
 
 def test_operation_local_security_duplicate_token_info(api):
-    components = deepcopy(COMPONENTS)
-    components.update({"securitySchemes": SECURITY_DEFINITIONS_BOTH})
-    operation = Operation(api=api,
+    operation = Swagger2Operation(api=api,
                           method='GET',
                           path='endpoint',
                           path_parameters=[],
                           operation=OPERATION10,
+                          app_produces=['application/json'],
+                          app_consumes=['application/json'],
                           app_security=[],
-                          components=components,
+                          security_definitions=SECURITY_DEFINITIONS_BOTH,
+                          definitions=DEFINITIONS,
+                          parameter_definitions=PARAMETER_DEFINITIONS,
                           resolver=Resolver())
     assert isinstance(operation.function, types.FunctionType)
     # security decorator should be a partial with verify_oauth_remote as the function and
@@ -419,18 +402,23 @@ def test_operation_local_security_duplicate_token_info(api):
     assert operation.produces == ['application/json']
     assert operation.consumes == ['application/json']
     assert operation.security == [{'oauth': ['uid']}]
-    expected_body_schema = {"components": components}
-    expected_body_schema.update(components["schemas"]["composed"])
+    expected_body_schema = {"definitions": DEFINITIONS}
+    expected_body_schema.update(DEFINITIONS["composed"])
     assert operation.body_schema == expected_body_schema
 
 def test_non_existent_reference(api):
     with pytest.raises(InvalidSpecification) as exc_info:  # type: py.code.ExceptionInfo
-        operation = Operation(api=api,
+        operation = Swagger2Operation(api=api,
                               method='GET',
                               path='endpoint',
                               path_parameters=[],
                               operation=OPERATION1,
+                              app_produces=['application/json'],
+                              app_consumes=['application/json'],
                               app_security=[],
+                              security_definitions={},
+                              definitions={},
+                              parameter_definitions={},
                               resolver=Resolver())
         operation.body_schema
 
@@ -441,14 +429,17 @@ def test_non_existent_reference(api):
 
 def test_multi_body(api):
     with pytest.raises(InvalidSpecification) as exc_info:  # type: py.code.ExceptionInfo
-        components = deepcopy(COMPONENTS)
-        operation = Operation(api=api,
+        operation = Swagger2Operation(api=api,
                               method='GET',
                               path='endpoint',
                               path_parameters=[],
                               operation=OPERATION2,
+                              app_produces=['application/json'],
+                              app_consumes=['application/json'],
                               app_security=[],
-                              components=components,
+                              security_definitions={},
+                              definitions=DEFINITIONS,
+                              parameter_definitions=PARAMETER_DEFINITIONS,
                               resolver=Resolver())
         operation.body_schema
 
@@ -459,14 +450,17 @@ def test_multi_body(api):
 
 def test_invalid_reference(api):
     with pytest.raises(InvalidSpecification) as exc_info:  # type: py.code.ExceptionInfo
-        components = deepcopy(COMPONENTS)
-        operation = Operation(api=api,
+        operation = Swagger2Operation(api=api,
                               method='GET',
                               path='endpoint',
                               path_parameters=[],
                               operation=OPERATION3,
+                              app_produces=['application/json'],
+                              app_consumes=['application/json'],
                               app_security=[],
-                              components=components,
+                              security_definitions={},
+                              definitions=DEFINITIONS,
+                              parameter_definitions=PARAMETER_DEFINITIONS,
                               resolver=Resolver())
         operation.body_schema
 
@@ -476,15 +470,17 @@ def test_invalid_reference(api):
 
 
 def test_no_token_info(api):
-    components = deepcopy(COMPONENTS)
-    components.update({"securitySchemes": SECURITY_DEFINITIONS_WO_INFO})
-    operation = Operation(api=api,
+    operation = Swagger2Operation(api=api,
                           method='GET',
                           path='endpoint',
                           path_parameters=[],
                           operation=OPERATION1,
+                          app_produces=['application/json'],
+                          app_consumes=['application/json'],
                           app_security=SECURITY_DEFINITIONS_WO_INFO,
-                          components=components,
+                          security_definitions=SECURITY_DEFINITIONS_WO_INFO,
+                          definitions=DEFINITIONS,
+                          parameter_definitions=PARAMETER_DEFINITIONS,
                           resolver=Resolver())
     assert isinstance(operation.function, types.FunctionType)
     assert operation.security_decorator is security_passthrough
@@ -494,78 +490,63 @@ def test_no_token_info(api):
     assert operation.consumes == ['application/json']
     assert operation.security == [{'oauth': ['uid']}]
 
-    expected_body_schema = {"components": components}
-    expected_body_schema.update(components["schemas"]["new_stack"])
+    expected_body_schema = {"definitions": DEFINITIONS}
+    expected_body_schema.update(DEFINITIONS["new_stack"])
     assert operation.body_schema == expected_body_schema
 
 
 def test_parameter_reference(api):
-    components = deepcopy(COMPONENTS)
-    operation = Operation(api=api,
+    operation = Swagger2Operation(api=api,
                           method='GET',
                           path='endpoint',
                           path_parameters=[],
                           operation=OPERATION4,
+                          app_produces=['application/json'],
+                          app_consumes=['application/json'],
                           app_security=[],
-                          components=components,
+                          security_definitions={},
+                          definitions={},
+                          parameter_definitions=PARAMETER_DEFINITIONS,
                           resolver=Resolver())
-    assert operation.parameters == [{'in': 'path', 'schema': {'type': 'integer'}}]
+    assert operation.parameters == [{'in': 'path', 'type': 'integer'}]
 
 
 def test_resolve_invalid_reference(api):
-    components = deepcopy(COMPONENTS)
     with pytest.raises(InvalidSpecification) as exc_info:
-        Operation(api=api,
-                  method='GET',
-                  path='endpoint',
-                  path_parameters=[],
-                  operation=OPERATION5,
-                  app_security=[],
-                  components=components,
-                  resolver=Resolver())
+        Swagger2Operation(api=api, method='GET', path='endpoint', path_parameters=[],
+                  operation=OPERATION5, app_produces=['application/json'],
+                  app_consumes=['application/json'], app_security=[],
+                  security_definitions={}, definitions={},
+                  parameter_definitions=PARAMETER_DEFINITIONS, resolver=Resolver())
 
     exception = exc_info.value  # type: InvalidSpecification
     assert exception.reason == "GET endpoint '$ref' needs to start with '#/'"
 
 
 def test_default(api):
-    components = deepcopy(COMPONENTS)
     op = OPERATION6.copy()
     op['parameters'][1]['default'] = 1
-    Operation(api=api,
-              method='GET',
-              path='endpoint',
-              path_parameters=[],
-              operation=op,
-              app_security=[],
-              components=components,
+    Swagger2Operation(api=api, method='GET', path='endpoint', path_parameters=[], operation=op,
+              app_produces=['application/json'], app_consumes=['application/json'],
+              app_security=[], security_definitions={}, definitions=DEFINITIONS,
+              parameter_definitions=PARAMETER_DEFINITIONS,
               resolver=Resolver())
     op = OPERATION8.copy()
     op['parameters'][0]['default'] = {
         'keep_stacks': 1, 'image_version': 'one', 'senza_yaml': 'senza.yaml', 'new_traffic': 100
     }
-    Operation(api=api,
-              method='POST',
-              path='endpoint',
-              path_parameters=[],
-              operation=op,
-              app_security=[],
-              components=components,
-              resolver=Resolver())
+    Swagger2Operation(api=api, method='POST', path='endpoint', path_parameters=[], operation=op,
+              app_produces=['application/json'], app_consumes=['application/json'], app_security=[],
+              security_definitions={}, definitions=DEFINITIONS, parameter_definitions={}, resolver=Resolver())
 
 
 def test_get_path_parameter_types(api):
     op = OPERATION1.copy()
-    op['parameters'] = [
-        {'in': 'path', 'schema': {'type': 'int'}, 'name': 'int_path'},
-        {'in': 'path', 'schema': {'type': 'string'}, 'name': 'string_path'},
-        {'in': 'path', 'schema': {'type': 'string', 'format': 'path'}, 'name': 'path_path'}]
+    op['parameters'] = [{'in': 'path', 'type': 'int', 'name': 'int_path'},
+                        {'in': 'path', 'type': 'string', 'name': 'string_path'},
+                        {'in': 'path', 'type': 'string', 'format': 'path', 'name': 'path_path'}]
 
-    operation = Operation(api=api,
-                          method='GET',
-                          path='endpoint',
-                          path_parameters=[],
-                          operation=op,
-                          resolver=Resolver())
+    operation = Swagger2Operation(api=api, method='GET', path='endpoint', path_parameters=[], operation=op,
+                          app_produces=['application/json'], app_consumes=['application/json'], resolver=Resolver())
 
     assert {'int_path': 'int', 'string_path': 'string', 'path_path': 'path'} == operation.get_path_parameter_types()

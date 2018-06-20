@@ -295,7 +295,7 @@ class Operation(SecureOperation):
 
         # if there is a schema object on this param or response, then we just
         # need to include the defs and it can be validated by jsonschema
-        if "schema" in schema:
+        if "$ref" in schema.get("schema", {}):
             if self.components:
                 schema['schema']['components'] = self.components
             return schema
@@ -367,21 +367,17 @@ class Operation(SecureOperation):
         examples_path = [code, 'content', content_type, 'examples']
         example_path = [code, 'content', content_type, 'example']
         schema_example_path = [code, 'content', content_type, 'schema', 'example']
-        logger.debug(self.responses)
         try:
             return deep_get(self.responses, examples_path)[0]
         except (KeyError, IndexError):
-            logger.debug(examples_path)
             pass
         try:
             return deep_get(self.responses, example_path)
         except KeyError:
-            logger.debug(example_path)
             pass
         try:
             return deep_get(self.responses, schema_example_path)
         except KeyError:
-            logger.debug(schema_example_path)
             return
 
     def resolve_parameters(self, parameters):
@@ -390,6 +386,8 @@ class Operation(SecureOperation):
             yield param
 
     def resolve_responses(self, responses):
+        if not responses:
+            return responses
         responses = deepcopy(responses)
         for status_code, resp in responses.items():
             # check components/responses
@@ -648,7 +646,7 @@ class Swagger2Operation(Operation):
         self.validator_map = dict(VALIDATOR_MAP)
         self.validator_map.update(validator_map or {})
 
-        self.definitions = definitions
+        self.definitions = definitions or {}
         self.components = None
 
         self.security_definitions = security_definitions
@@ -672,7 +670,7 @@ class Swagger2Operation(Operation):
         if path_parameters:
             self.parameters += list(self.resolve_parameters(path_parameters))
 
-        self.responses = self.resolve_responses(operation.get('responses'))
+        self.responses = self.resolve_responses(operation.get('responses', {}))
         logger.debug(self.responses)
 
         self.security = operation.get('security', app_security)
@@ -689,14 +687,19 @@ class Swagger2Operation(Operation):
         self.validate_defaults()
 
     def resolve_responses(self, responses):
+        if not responses:
+            return {}
         for status_code, resp in responses.items():
+            if not resp:
+                continue
+
             # check definitions
             if '$ref' in resp:
                 ref = self.resolve_reference(resp)
                 del resp['$ref']
                 resp = ref
 
-            examples = resp.get("examples", [])
+            examples = resp.get("examples", {})
             ref = self.resolve_reference(examples)
             if ref:
                 resp["examples"] = ref
