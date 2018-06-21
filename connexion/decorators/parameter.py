@@ -109,36 +109,36 @@ def parameter_to_arg(parameters, body_schema, consumes, function, pythonic_param
         return name and re.sub('^[^a-zA-Z_]+', '', re.sub('[^0-9a-zA-Z_]', '', name))
 
     # swagger2 body
-    body_parameters = [parameter for parameter in parameters if parameter['in'] == 'body'] or [{}]
+    body_parameters = [p for p in parameters if p['in'] == 'body'] or [{}]
     body_name = sanitize_param(body_parameters[0].get('name'))
     default_body = body_parameters[0].get('schema', {}).get('default')
 
-    form_defns = {sanitize_param(parameter['name']): parameter
-                  for parameter in parameters
-                  if parameter['in'] == 'formData'}
+    form_defns = {sanitize_param(p['name']): p
+                  for p in parameters
+                  if p['in'] == 'formData'}
 
     # openapi3 body
     if body_name is None and body_schema is not None:
         logger.debug('body schema is %s', body_schema)
-        body_properties = {sanitize_param(key): value
-                           for key, value
+        body_properties = {sanitize_param(k): v
+                           for k, v
                            in body_schema.get('properties', {}).items()}
         default_body = body_schema.get('default', default_body)
     else:
         body_properties = {}
 
-    query_defns = {sanitize_param(parameter['name']): parameter
-                   for parameter in parameters if parameter['in'] == 'query'}  # type: dict[str, str]
-    path_defns = {parameter['name']: parameter
-                  for parameter in parameters
-                  if parameter['in'] == 'path'}
+    query_defns = {sanitize_param(p['name']): p
+                   for p in parameters if p['in'] == 'query'}  # type: dict[str, str]
+    path_defns = {p['name']: p
+                  for p in parameters
+                  if p['in'] == 'path'}
     arguments, has_kwargs = inspect_function_arguments(function)
-    default_query_params = {sanitize_param(param['name']): get_schema(param)['default']
-                            for param in parameters
-                            if param['in'] == 'query' and 'default' in get_schema(param)}
-    default_form_params = {sanitize_param(param['name']): get_schema(param)['default']
-                           for param in parameters
-                           if param['in'] == 'formData' and 'default' in get_schema(param)}
+    default_query_params = {sanitize_param(p['name']): get_schema(p)['default']
+                            for p in parameters
+                            if p['in'] == 'query' and 'default' in get_schema(p)}
+    default_form_params = {sanitize_param(p['name']): get_schema(p)['default']
+                           for p in parameters
+                           if p['in'] == 'formData' and 'default' in get_schema(p)}
 
     @functools.wraps(function)
     def wrapper(request):
@@ -149,7 +149,7 @@ def parameter_to_arg(parameters, body_schema, consumes, function, pythonic_param
         if all_json(consumes):
             request_body = request.json
         elif consumes[0] in FORM_CONTENT_TYPES:
-            request_body = {sanitize_param(k): v for k, v in dict(request.form.items()).items()}
+            request_body = {sanitize_param(k): v for k, v in request.form.items()}
         else:
             request_body = request.body
 
