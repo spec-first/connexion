@@ -11,7 +11,7 @@ import yaml
 from six.moves.urllib.parse import urlparse
 
 from ..exceptions import InvalidSpecification, ResolverError
-from ..operation import Operation, Swagger2Operation
+from ..operations import OpenAPIOperation, Swagger2Operation
 from ..options import ConnexionOptions
 from ..resolver import Resolver
 from ..utils import Jsonifier
@@ -225,19 +225,19 @@ class AbstractAPI(object):
                                           pythonic_params=self.pythonic_params,
                                           uri_parser_class=self.options.uri_parser_class)
         else:
-            operation = Operation(self,
-                                  method=method,
-                                  path=path,
-                                  operation=swagger_operation,
-                                  path_parameters=path_parameters,
-                                  app_security=self.security,
-                                  components=self.components,
-                                  validate_responses=self.validate_responses,
-                                  validator_map=self.validator_map,
-                                  strict_validation=self.strict_validation,
-                                  resolver=self.resolver,
-                                  pythonic_params=self.pythonic_params,
-                                  uri_parser_class=self.options.uri_parser_class)
+            operation = OpenAPIOperation(self,
+                                         method=method,
+                                         path=path,
+                                         operation=swagger_operation,
+                                         path_parameters=path_parameters,
+                                         app_security=self.security,
+                                         components=self.components,
+                                         validate_responses=self.validate_responses,
+                                         validator_map=self.validator_map,
+                                         strict_validation=self.strict_validation,
+                                         resolver=self.resolver,
+                                         pythonic_params=self.pythonic_params,
+                                         uri_parser_class=self.options.uri_parser_class)
 
         self._add_operation_internal(method, path, operation)
 
@@ -255,7 +255,8 @@ class AbstractAPI(object):
         operation = self.resolver_error_handler(err,
                                                 method=method,
                                                 path=path,
-                                                components=self.components,
+                                                app_security=self.security,
+                                                security_schemes=self.security_definitions,
                                                 validate_responses=self.validate_responses,
                                                 strict_validation=self.strict_validation,
                                                 resolver=self.resolver,

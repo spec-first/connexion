@@ -10,7 +10,7 @@ from connexion.decorators.security import (security_passthrough,
                                            verify_oauth_local,
                                            verify_oauth_remote)
 from connexion.exceptions import InvalidSpecification
-from connexion.operation import Operation
+from connexion.operations import OpenAPIOperation
 from connexion.resolver import Resolver
 
 TEST_FOLDER = pathlib.Path(__file__).parent
@@ -59,36 +59,8 @@ COMPONENTS = {
 OPERATION1 = {'description': 'Adds a new stack to be created by lizzy and returns the '
               'information needed to keep track of deployment',
               'operationId': 'fakeapi.hello.post_greeting',
-              'parameters': [{'in': 'body',
-                              'name': 'new_stack',
-                              'required': True,
-                              'schema': {'$ref': '#/components/schemas/new_stack'}}],
-              'responses': {201: {'description': 'Stack to be created. The '
-                                  'CloudFormation Stack creation can '
-                                  "still fail if it's rejected by senza "
-                                  'or AWS CF.',
-                                  'schema': {'$ref': '#/components/schemas/new_stack'}},
-                            400: {'description': 'Stack was not created because request '
-                                  'was invalid',
-                                  'schema': {'$ref': '#/components/schemas/problem'}},
-                            401: {'description': 'Stack was not created because the '
-                                  'access token was not provided or was '
-                                  'not valid for this operation',
-                                  'schema': {'$ref': '#/components/schemas/problem'}}},
-              'security': [{'oauth': ['uid']}],
-              'summary': 'Create new stack'}
-
-OPERATION2 = {'description': 'Adds a new stack to be created by lizzy and returns the '
-              'information needed to keep track of deployment',
-              'operationId': 'fakeapi.hello.post_greeting',
-              'parameters': [{'in': 'body',
-                              'name': 'new_stack',
-                              'required': True,
-                              'schema': {'$ref': '#/components/schemas/new_stack'}},
-                             {'in': 'body',
-                              'name': 'new_stack',
-                              'required': True,
-                              'schema': {'$ref': '#/components/schemas/new_stack'}}],
+              'requestBody': {'content': {'application/json': {
+                              'schema': {'$ref': '#/components/schemas/new_stack'}}}},
               'responses': {201: {'description': 'Stack to be created. The '
                                   'CloudFormation Stack creation can '
                                   "still fail if it's rejected by senza "
@@ -107,10 +79,8 @@ OPERATION2 = {'description': 'Adds a new stack to be created by lizzy and return
 OPERATION3 = {'description': 'Adds a new stack to be created by lizzy and returns the '
               'information needed to keep track of deployment',
               'operationId': 'fakeapi.hello.post_greeting',
-              'parameters': [{'in': 'body',
-                              'name': 'new_stack',
-                              'required': True,
-                              'schema': {'$ref': '#/notcomponents/schemas/new_stack'}}],
+              'requestBody': {'content': {'application/json': {
+                              'schema': {'$ref': '#/notcomponents/schemas/new_stack'}}}},
               'responses': {201: {'description': 'Stack to be created. The '
                                   'CloudFormation Stack creation can '
                                   "still fail if it's rejected by senza "
@@ -135,13 +105,9 @@ OPERATION5 = {'operationId': 'fakeapi.hello.post_greeting',
 OPERATION6 = {'description': 'Adds a new stack to be created by lizzy and returns the '
               'information needed to keep track of deployment',
               'operationId': 'fakeapi.hello.post_greeting',
+              'requestBody': {'content': {'application/json': {
+                              'schema': {'$ref': '#/components/schemas/new_stack'}}}},
               'parameters': [
-                  {
-                      'in': 'body',
-                      'name': 'new_stack',
-                      'required': True,
-                      'schema': {'$ref': '#/components/schemas/new_stack'}
-                  },
                   {
                       'in': 'query',
                       'name': 'stack_version',
@@ -169,15 +135,9 @@ OPERATION7 = {
     'description': 'Adds a new stack to be created by lizzy and returns the '
     'information needed to keep track of deployment',
     'operationId': 'fakeapi.hello.post_greeting',
-    'parameters': [
-        {
-            'in': 'body',
-            'name': 'new_stack',
-            'required': True,
-            'type': 'integer',
-            'default': 'stack'
-        }
-    ],
+    'requestBody': {'content': {'application/json': {
+                    'schema': {'$ref': '#/components/schemas/new_stack'},
+                    'default': 'stack'}}},
     'responses': {'201': {'description': 'Stack to be created. The '
                           'CloudFormation Stack creation can '
                           "still fail if it's rejected by senza "
@@ -196,16 +156,10 @@ OPERATION7 = {
 
 OPERATION8 = {
     'operationId': 'fakeapi.hello.schema',
-    'parameters': [
-        {
-            'type': 'object',
-            'in': 'body',
-            'name': 'new_stack',
-            'default': {'keep_stack': 1, 'image_version': 1, 'senza_yaml': 'senza.yaml',
-                        'new_traffic': 100},
-            'schema': {'$ref': '#/components/schemas/new_stack'}
-        }
-    ],
+    'requestBody': {'content': {'application/json': {
+                    'schema': {'$ref': '#/components/schemas/new_stack'},
+                    'default': {'keep_stack': 1, 'image_version': 1, 'senza_yaml': 'senza.yaml',
+                                'new_traffic': 100}}}},
     'responses': {},
     'security': [{'oauth': ['uid']}],
     'summary': 'Create new stack'
@@ -214,10 +168,9 @@ OPERATION8 = {
 OPERATION9 = {'description': 'Adds a new stack to be created by lizzy and returns the '
               'information needed to keep track of deployment',
               'operationId': 'fakeapi.hello.post_greeting',
-              'parameters': [{'in': 'body',
-                              'name': 'new_stack',
-                              'required': True,
-                              'schema': {'type': 'array', 'items': {'$ref': '#/components/schemas/new_stack'}}}],
+              'requestBody': {'content': {'application/json': {
+                              'schema': {'type': 'array',
+                                         'items': {'$ref': '#/components/schemas/new_stack'}}}}},
               'responses': {'201': {'description': 'Stack to be created. The '
                                     'CloudFormation Stack creation can '
                                     "still fail if it's rejected by senza "
@@ -236,10 +189,8 @@ OPERATION9 = {'description': 'Adds a new stack to be created by lizzy and return
 OPERATION10 = {'description': 'Adds a new stack to be created by lizzy and returns the '
                'information needed to keep track of deployment',
                'operationId': 'fakeapi.hello.post_greeting',
-               'parameters': [{'in': 'body',
-                               'name': 'test',
-                               'required': True,
-                               'schema': {'$ref': '#/components/schemas/composed'}}],
+               'requestBody': {'content': {'application/json': {
+                              'schema': {'$ref': '#/components/schemas/composed'}}}},
                'responses': {'201': {'description': 'Stack to be created. The '
                                      'CloudFormation Stack creation can '
                                      "still fail if it's rejected by senza "
@@ -284,7 +235,7 @@ def api():
 def test_operation(api):
     components = deepcopy(COMPONENTS)
     components.update({"securitySchemes": SECURITY_DEFINITIONS_REMOTE})
-    operation = Operation(api=api,
+    operation = OpenAPIOperation(api=api,
                           method='GET',
                           path='endpoint',
                           path_parameters=[],
@@ -311,7 +262,7 @@ def test_operation(api):
 def test_operation_array(api):
     components = deepcopy(COMPONENTS)
     components.update({"securitySchemes": SECURITY_DEFINITIONS_REMOTE})
-    operation = Operation(api=api,
+    operation = OpenAPIOperation(api=api,
                           method='GET',
                           path='endpoint',
                           path_parameters=[],
@@ -342,7 +293,7 @@ def test_operation_array(api):
 def test_operation_composed_definition(api):
     components = deepcopy(COMPONENTS)
     components.update({"securitySchemes": SECURITY_DEFINITIONS_REMOTE})
-    operation = Operation(api=api,
+    operation = OpenAPIOperation(api=api,
                           method='GET',
                           path='endpoint',
                           path_parameters=[],
@@ -369,7 +320,7 @@ def test_operation_composed_definition(api):
 def test_operation_local_security_oauth2(api):
     components = deepcopy(COMPONENTS)
     components.update({"securitySchemes": SECURITY_DEFINITIONS_LOCAL})
-    operation = Operation(api=api,
+    operation = OpenAPIOperation(api=api,
                           method='GET',
                           path='endpoint',
                           path_parameters=[],
@@ -397,7 +348,7 @@ def test_operation_local_security_oauth2(api):
 def test_operation_local_security_duplicate_token_info(api):
     components = deepcopy(COMPONENTS)
     components.update({"securitySchemes": SECURITY_DEFINITIONS_BOTH})
-    operation = Operation(api=api,
+    operation = OpenAPIOperation(api=api,
                           method='GET',
                           path='endpoint',
                           path_parameters=[],
@@ -423,7 +374,7 @@ def test_operation_local_security_duplicate_token_info(api):
 
 def test_non_existent_reference(api):
     with pytest.raises(InvalidSpecification) as exc_info:  # type: py.code.ExceptionInfo
-        operation = Operation(api=api,
+        operation = OpenAPIOperation(api=api,
                               method='GET',
                               path='endpoint',
                               path_parameters=[],
@@ -437,28 +388,10 @@ def test_non_existent_reference(api):
     assert repr(exception).startswith("<InvalidSpecification: GET endpoint $ref")
 
 
-def test_multi_body(api):
-    with pytest.raises(InvalidSpecification) as exc_info:  # type: py.code.ExceptionInfo
-        components = deepcopy(COMPONENTS)
-        operation = Operation(api=api,
-                              method='GET',
-                              path='endpoint',
-                              path_parameters=[],
-                              operation=OPERATION2,
-                              app_security=[],
-                              components=components,
-                              resolver=Resolver())
-        operation.body_schema
-
-    exception = exc_info.value
-    assert str(exception) == "<InvalidSpecification: GET endpoint There can be one 'body' parameter at most>"
-    assert repr(exception) == "<InvalidSpecification: GET endpoint There can be one 'body' parameter at most>"
-
-
 def test_invalid_reference(api):
     with pytest.raises(InvalidSpecification) as exc_info:  # type: py.code.ExceptionInfo
         components = deepcopy(COMPONENTS)
-        operation = Operation(api=api,
+        operation = OpenAPIOperation(api=api,
                               method='GET',
                               path='endpoint',
                               path_parameters=[],
@@ -476,7 +409,7 @@ def test_invalid_reference(api):
 def test_no_token_info(api):
     components = deepcopy(COMPONENTS)
     components.update({"securitySchemes": SECURITY_DEFINITIONS_WO_INFO})
-    operation = Operation(api=api,
+    operation = OpenAPIOperation(api=api,
                           method='GET',
                           path='endpoint',
                           path_parameters=[],
@@ -499,7 +432,7 @@ def test_no_token_info(api):
 
 def test_parameter_reference(api):
     components = deepcopy(COMPONENTS)
-    operation = Operation(api=api,
+    operation = OpenAPIOperation(api=api,
                           method='GET',
                           path='endpoint',
                           path_parameters=[],
@@ -513,7 +446,7 @@ def test_parameter_reference(api):
 def test_resolve_invalid_reference(api):
     components = deepcopy(COMPONENTS)
     with pytest.raises(InvalidSpecification) as exc_info:
-        Operation(api=api,
+        OpenAPIOperation(api=api,
                   method='GET',
                   path='endpoint',
                   path_parameters=[],
@@ -529,8 +462,8 @@ def test_resolve_invalid_reference(api):
 def test_default(api):
     components = deepcopy(COMPONENTS)
     op = OPERATION6.copy()
-    op['parameters'][1]['default'] = 1
-    Operation(api=api,
+    op['requestBody']['default'] = 1
+    OpenAPIOperation(api=api,
               method='GET',
               path='endpoint',
               path_parameters=[],
@@ -539,10 +472,10 @@ def test_default(api):
               components=components,
               resolver=Resolver())
     op = OPERATION8.copy()
-    op['parameters'][0]['default'] = {
+    op['requestBody']['default'] = {
         'keep_stacks': 1, 'image_version': 'one', 'senza_yaml': 'senza.yaml', 'new_traffic': 100
     }
-    Operation(api=api,
+    OpenAPIOperation(api=api,
               method='POST',
               path='endpoint',
               path_parameters=[],
@@ -554,16 +487,18 @@ def test_default(api):
 
 def test_get_path_parameter_types(api):
     op = OPERATION1.copy()
+    components = deepcopy(COMPONENTS)
     op['parameters'] = [
         {'in': 'path', 'schema': {'type': 'int'}, 'name': 'int_path'},
         {'in': 'path', 'schema': {'type': 'string'}, 'name': 'string_path'},
         {'in': 'path', 'schema': {'type': 'string', 'format': 'path'}, 'name': 'path_path'}]
 
-    operation = Operation(api=api,
+    operation = OpenAPIOperation(api=api,
                           method='GET',
                           path='endpoint',
                           path_parameters=[],
                           operation=op,
+                          components=components,
                           resolver=Resolver())
 
     assert {'int_path': 'int', 'string_path': 'string', 'path_path': 'path'} == operation.get_path_parameter_types()

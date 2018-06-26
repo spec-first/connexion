@@ -27,7 +27,7 @@ class MockResolver(Resolver):
         """
         Mock operation resolver
 
-        :type operation: connexion.operation.Operation
+        :type operation: connexion.operations.AbstractOperation
         """
         operation_id = self.resolve_operation_id(operation)
         if not operation_id:
@@ -51,14 +51,7 @@ class MockResolver(Resolver):
         return Resolution(func, operation_id)
 
     def mock_operation(self, operation, *args, **kwargs):
-        response_definitions = operation.operation["responses"]
-        # simply use the first/lowest status code, this is probably 200 or 201
-        status_code = sorted(response_definitions.keys())[0]
-        example = operation.example_response(status_code)
-        try:
-            status_code = int(status_code)
-        except ValueError:
-            status_code = 200
-        if example is not None:
-            return example, status_code
-        return 'No example response was defined.', status_code
+        resp, code = operation.example_response()
+        if resp is not None:
+            return resp, code
+        return 'No example response was defined.', code

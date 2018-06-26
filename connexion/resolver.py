@@ -34,7 +34,7 @@ class Resolver(object):
         """
         Default operation resolver
 
-        :type operation: connexion.operation.Operation
+        :type operation: connexion.operations.AbstractOperation
         """
         operation_id = self.resolve_operation_id(operation)
         return Resolution(self.resolve_function_from_operation_id(operation_id), operation_id)
@@ -43,14 +43,13 @@ class Resolver(object):
         """
         Default operationId resolver
 
-        :type operation: connexion.operation.Operation
+        :type operation: connexion.operations.AbstractOperation
         """
-        spec = operation.operation
-        operation_id = spec.get('operationId', '')
-        x_router_controller = spec.get('x-swagger-router-controller')
-        if x_router_controller is None:
+        operation_id = operation.operation_id
+        router_controller = operation.router_controller
+        if operation.router_controller is None:
             return operation_id
-        return '{}.{}'.format(x_router_controller, operation_id)
+        return '{}.{}'.format(router_controller, operation_id)
 
     def resolve_function_from_operation_id(self, operation_id):
         """
@@ -85,9 +84,9 @@ class RestyResolver(Resolver):
         """
         Resolves the operationId using REST semantics unless explicitly configured in the spec
 
-        :type operation: connexion.operation.Operation
+        :type operation: connexion.operations.AbstractOperation
         """
-        if operation.operation.get('operationId'):
+        if operation.operation_id:
             return Resolver.resolve_operation_id(self, operation)
 
         return self.resolve_operation_id_using_rest_semantics(operation)
@@ -96,14 +95,14 @@ class RestyResolver(Resolver):
         """
         Resolves the operationId using REST semantics
 
-        :type operation: connexion.operation.Operation
+        :type operation: connexion.operations.AbstractOperation
         """
         path_match = re.search(
             '^/?(?P<resource_name>([\w\-](?<!/))*)(?P<trailing_slash>/*)(?P<extended_path>.*)$', operation.path
         )
 
         def get_controller_name():
-            x_router_controller = operation.operation.get('x-swagger-router-controller')
+            x_router_controller = operation.router_controller
 
             name = self.default_module_name
             resource_name = path_match.group('resource_name')

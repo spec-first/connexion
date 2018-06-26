@@ -9,7 +9,7 @@ from connexion.decorators.security import (security_passthrough,
                                            verify_oauth_local,
                                            verify_oauth_remote)
 from connexion.exceptions import InvalidSpecification
-from connexion.operation import Operation, Swagger2Operation
+from connexion.operations import Swagger2Operation
 from connexion.resolver import Resolver
 
 TEST_FOLDER = pathlib.Path(__file__).parent

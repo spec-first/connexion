@@ -1,6 +1,7 @@
 import logging
 
-from .operation import Operation, SecureOperation
+from .operations.secure import SecureOperation
+from .operations.noop import NoOperation
 from .problem import problem
 
 logger = logging.getLogger('connexion.handlers')
@@ -52,7 +53,7 @@ class AuthErrorHandler(SecureOperation):
         return self.api.get_response(response)
 
 
-class ResolverErrorHandler(Operation):
+class ResolverErrorHandler(NoOperation):
     """
     Handler for responding to ResolverError.
     """
@@ -60,7 +61,7 @@ class ResolverErrorHandler(Operation):
     def __init__(self, api, status_code, exception, *args, **kwargs):
         self.status_code = status_code
         self.exception = exception
-        Operation.__init__(self, api, *args, **kwargs)
+        NoOperation.__init__(self, api, *args, **kwargs)
 
     @property
     def function(self):
