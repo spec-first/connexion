@@ -1,7 +1,7 @@
 import connexion.apps
 import pytest
 from connexion.exceptions import ResolverError
-from connexion.operation import Swagger2Operation, Operation
+from connexion.operation import Operation, Swagger2Operation
 from connexion.resolver import Resolver, RestyResolver
 
 COMPONENTS = {'parameters': {'myparam': {'in': 'path', 'schema': {'type': 'integer'}}}}

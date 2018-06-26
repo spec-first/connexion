@@ -1,12 +1,10 @@
 import math
 import pathlib
 import types
+from copy import deepcopy
 
 import mock
 import pytest
-
-from copy import deepcopy
-
 from connexion.apis.flask_api import Jsonifier
 from connexion.decorators.security import (security_passthrough,
                                            verify_oauth_local,
