@@ -58,3 +58,9 @@ class NoOperation(AbstractOperation):
 
     def get_path_parameter_types(self):
         pass
+
+    def response_definition(self):
+        pass
+
+    def response_schema(self):
+        pass

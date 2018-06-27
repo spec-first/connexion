@@ -32,25 +32,16 @@ class ResponseValidator(BaseDecorator):
         :type headers: dict
         :rtype bool | None
         """
+        # check against returned header, fall back to expected mimetype
+        content_type = headers.get("Content-Type", self.mimetype)
+        content_type = content_type.rsplit(";", 1)[0]  # remove things like utf8 metadata
 
-        content_type = headers.get("Content-Type", "")
-        logger.debug(content_type)
-        logger.debug(self.mimetype)
+        response_definition = self.operation.response_definition(str(status_code), content_type)
+        response_schema = self.operation.response_schema(str(status_code), content_type)
 
-        response_definitions = self.operation.operation["responses"]
-        response_definition = response_definitions.get(str(status_code), response_definitions.get("default", {}))
-
-        response_definition = self.operation.resolve_reference(response_definition)
-        logger.debug(response_definition)
-
-        # oas3
-        content_definition = response_definition.get("content", response_definition)
-        content_definition = content_definition.get(self.mimetype, content_definition)
-
-        if self.is_json_schema_compatible(content_definition):
-            schema = self.operation.resolve_reference(content_definition.get("schema"))
-            logger.debug(schema)
-            v = ResponseBodyValidator(schema)
+        if self.is_json_schema_compatible(response_schema):
+            logger.debug(response_schema)
+            v = ResponseBodyValidator(response_schema)
             try:
                 data = self.operation.json_loads(data)
                 v.validate_schema(data, url)
@@ -69,7 +60,7 @@ class ResponseValidator(BaseDecorator):
                 raise NonConformingResponseHeaders(message=msg)
         return True
 
-    def is_json_schema_compatible(self, response_definition):
+    def is_json_schema_compatible(self, response_schema):
         """
         Verify if the specified operation responses are JSON schema
         compatible.
@@ -78,13 +69,14 @@ class ResponseValidator(BaseDecorator):
         type "application/json" or "text/plain" can be validated using
         json_schema package.
 
-        :type response_definition: dict
+        :type response_schema: dict
         :rtype bool
         """
-        if not response_definition:
+        logger.error(self.operation.path)
+        logger.error(self.mimetype)
+        if not response_schema:
             return False
-        return ('schema' in response_definition and
-                (all_json([self.mimetype]) or self.mimetype == 'text/plain'))
+        return (all_json([self.mimetype]) or self.mimetype == 'text/plain')
 
     def __call__(self, function):
         """

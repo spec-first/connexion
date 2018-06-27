@@ -11,7 +11,6 @@ from ..decorators.produces import BaseSerializer, Produces
 from ..decorators.response import ResponseValidator
 from ..decorators.validation import ParameterValidator, RequestBodyValidator
 from ..exceptions import InvalidSpecification
-
 from ..utils import all_json, deep_get, is_nullable
 
 logger = logging.getLogger('connexion.operations.abstract')
@@ -125,7 +124,19 @@ class AbstractOperation(SecureOperation):
         """
         If True, validate all requests against the spec
         """
-        return False
+        return self._strict_validation
+
+    @property
+    def pythonic_params(self):
+        """
+        """
+        return self._pythonic_params
+
+    @property
+    def validate_responses(self):
+        """
+        """
+        return self._validate_responses
 
     @abc.abstractproperty
     def produces(self):
@@ -169,18 +180,20 @@ class AbstractOperation(SecureOperation):
         :rtype: dict
         """
 
-    @property
-    def pythonic_params(self):
+    @abc.abstractmethod
+    def response_definition(self, code=None, mimetype=None):
         """
-        """
-
-    @property
-    def validate_responses(self):
-        """
+        response definitions for this endpoint
         """
 
     @abc.abstractmethod
-    def example_response(self, code='default', mimetype=None):
+    def response_schema(self, code=None, mimetype=None):
+        """
+        response schema for this endpoint
+        """
+
+    @abc.abstractmethod
+    def example_response(self, code=None, mimetype=None):
         """
         Returns an example from the spec
         """
@@ -219,7 +232,6 @@ class AbstractOperation(SecureOperation):
         :type schema: dict
         :raises InvalidSpecification: raised when a reference isn't found
         """
-
         stack = [schema]
         visited = set()
         while stack:

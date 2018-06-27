@@ -227,7 +227,20 @@ class OpenAPIOperation(AbstractOperation):
 
         return schema
 
-    def example_response(self, code=None, mimetype=None):
+    def response_definition(self, status_code=None, content_type=None):
+        content_type = content_type or self.get_mimetype()
+        response_definitions = self._responses
+        response_definition = response_definitions.get(str(status_code), response_definitions.get("default", {}))
+        response_definition = self._resolve_reference(response_definition)
+        return response_definition
+
+    def response_schema(self, status_code=None, content_type=None):
+        response_definition = self.response_definition(status_code, content_type)
+        content_definition = response_definition.get("content", response_definition)
+        content_definition = content_definition.get(content_type, content_definition)
+        return self._resolve_reference(content_definition.get("schema", {}))
+
+    def example_response(self, code=None, content_type=None):
         """
         Returns example response from spec
         """
@@ -237,7 +250,7 @@ class OpenAPIOperation(AbstractOperation):
         except IndexError:
             code = 200
 
-        content_type = mimetype or self.get_mimetype()
+        content_type = content_type or self.get_mimetype()
         examples_path = [str(code), 'content', content_type, 'examples']
         example_path = [str(code), 'content', content_type, 'example']
         schema_example_path = [str(code), 'content', content_type, 'schema', 'example']

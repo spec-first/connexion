@@ -197,6 +197,17 @@ class Swagger2Operation(AbstractOperation):
 
         return schema
 
+    def response_definition(self, status_code=None, content_type=None):
+        content_type = content_type or self.get_mimetype()
+        response_definitions = self._responses
+        response_definition = response_definitions.get(str(status_code), response_definitions.get("default", {}))
+        response_definition = self._resolve_reference(response_definition)
+        return response_definition
+
+    def response_schema(self, status_code=None, content_type=None):
+        response_definition = self.response_definition(status_code, content_type)
+        return self._resolve_reference(response_definition.get("schema", {}))
+
     def example_response(self, code=None, *args, **kwargs):
         """
         Returns example response from spec
