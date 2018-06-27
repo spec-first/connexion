@@ -1,17 +1,15 @@
 import abc
 import logging
-import six
 
+import six
 
 from connexion.operations.secure import SecureOperation
 
-from ..decorators.parameter import parameter_to_arg
 from ..decorators.metrics import UWSGIMetricsCollector
+from ..decorators.parameter import parameter_to_arg
 from ..decorators.produces import BaseSerializer, Produces
-
 from ..decorators.response import ResponseValidator
-from ..decorators.validation import (ParameterValidator, RequestBodyValidator)
-
+from ..decorators.validation import ParameterValidator, RequestBodyValidator
 from ..exceptions import InvalidSpecification
 
 from ..utils import all_json, deep_get, is_nullable

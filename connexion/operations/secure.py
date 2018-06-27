@@ -1,11 +1,11 @@
 import functools
 import logging
 
+from ..decorators.decorator import (BeginOfRequestLifecycleDecorator,
+                                    EndOfRequestLifecycleDecorator)
 from ..decorators.security import (get_tokeninfo_func, get_tokeninfo_url,
                                    security_passthrough, verify_oauth_local,
                                    verify_oauth_remote)
-from ..decorators.decorator import (BeginOfRequestLifecycleDecorator,
-                                    EndOfRequestLifecycleDecorator)
 
 logger = logging.getLogger("connexion.operations.secure")
 

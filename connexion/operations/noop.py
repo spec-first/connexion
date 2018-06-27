@@ -1,5 +1,6 @@
-from connexion.operations.abstract import AbstractOperation
 import logging
+
+from connexion.operations.abstract import AbstractOperation
 
 logger = logging.getLogger("connexion.operations.noop")
 

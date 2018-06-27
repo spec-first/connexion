@@ -1,11 +1,14 @@
-from connexion.operations.abstract import AbstractOperation
-from jsonschema import ValidationError
-from ..exceptions import InvalidSpecification
-from ..decorators import validation
-from ..decorators.validation import TypeValidationError
-from ..utils import deep_get
 import logging
 from copy import deepcopy
+
+from jsonschema import ValidationError
+
+from connexion.operations.abstract import AbstractOperation
+
+from ..decorators import validation
+from ..decorators.validation import TypeValidationError
+from ..exceptions import InvalidSpecification
+from ..utils import deep_get
 
 logger = logging.getLogger("connexion.operations.swagger2")
 
@@ -109,30 +112,30 @@ class Swagger2Operation(AbstractOperation):
             for status_code, resp in responses.items():
                 if not resp:
                     continue
-    
+
                 # check definitions
                 if '$ref' in resp:
                     ref = self._resolve_reference(resp)
                     del resp['$ref']
                     resp = ref
-    
+
                 examples = resp.get("examples", {})
                 ref = self._resolve_reference(examples)
                 if ref:
                     resp["examples"] = ref
-    
+
                 schema = resp.get("schema", {})
                 ref = self._resolve_reference(schema)
                 if ref:
                     resp["schema"] = ref
-    
+
             return responses
 
         self._responses = resolve_responses(operation.get('responses', {}))
         logger.debug(self._responses)
 
-        logger.debug('consumes: %s' % self.consumes)
-        logger.debug('produces: %s' % self.produces)
+        logger.debug('consumes: %s', self.consumes)
+        logger.debug('produces: %s', self.produces)
 
         self._validate_defaults()
 
@@ -241,4 +244,3 @@ class Swagger2Operation(AbstractOperation):
                     method=self.method,
                     path=self.path))
         return body_parameters[0] if body_parameters else {}
-

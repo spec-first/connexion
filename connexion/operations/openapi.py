@@ -1,11 +1,14 @@
-from connexion.operations.abstract import AbstractOperation
-from jsonschema import ValidationError
-from ..exceptions import InvalidSpecification
-from ..decorators import validation
-from ..decorators.validation import TypeValidationError
-from ..utils import deep_get
 import logging
 from copy import deepcopy
+
+from jsonschema import ValidationError
+
+from connexion.operations.abstract import AbstractOperation
+
+from ..decorators import validation
+from ..decorators.validation import TypeValidationError
+from ..exceptions import InvalidSpecification
+from ..utils import deep_get
 
 logger = logging.getLogger("connexion.operations.openapi3")
 

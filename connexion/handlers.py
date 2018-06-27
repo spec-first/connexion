@@ -1,7 +1,7 @@
 import logging
 
-from .operations.secure import SecureOperation
 from .operations.noop import NoOperation
+from .operations.secure import SecureOperation
 from .problem import problem
 
 logger = logging.getLogger('connexion.handlers')
