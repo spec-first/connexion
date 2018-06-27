@@ -5,12 +5,26 @@ from jsonschema import ValidationError
 
 from connexion.operations.abstract import AbstractOperation
 
-from ..decorators import validation
-from ..decorators.validation import TypeValidationError
+from ..decorators.response import ResponseValidator
+from ..decorators.validation import (OpenAPIParameterValidator,
+                                     RequestBodyValidator, TypeValidationError)
 from ..exceptions import InvalidSpecification
-from ..utils import deep_get
+from ..utils import deep_get, is_null, is_nullable, make_type
 
 logger = logging.getLogger("connexion.operations.openapi3")
+
+QUERY_STRING_DELIMITERS = {
+    'spaceDelimited': ' ',
+    'pipeDelimited': '|',
+    'simple': ',',
+    'form': ','
+}
+
+VALIDATOR_MAP = {
+    'parameter': OpenAPIParameterValidator,
+    'body': RequestBodyValidator,
+    'response': ResponseValidator,
+}
 
 
 class OpenAPIOperation(AbstractOperation):
@@ -70,6 +84,9 @@ class OpenAPIOperation(AbstractOperation):
         security_schemes = component_get('securitySchemes')
         app_security = operation.get('security', app_security)
 
+        self._validator_map = dict(VALIDATOR_MAP)
+        self._validator_map.update(validator_map or {})
+
         super(OpenAPIOperation, self).__init__(
             api=api,
             method=method,
@@ -82,7 +99,6 @@ class OpenAPIOperation(AbstractOperation):
             strict_validation=strict_validation,
             randomize_endpoint=randomize_endpoint,
             pythonic_params=pythonic_params,
-            validator_map=validator_map
         )
 
         self._definitions_map = {
@@ -179,8 +195,8 @@ class OpenAPIOperation(AbstractOperation):
             try:
                 param_schema = param_defn["schema"]
                 if param_defn['in'] == 'query' and 'default' in param_schema:
-                    validation.validate_type(param_defn, param_schema['default'],
-                                             'query', param_defn['name'])
+                    self.validate_type(param_defn, param_schema['default'],
+                                       'query', param_defn['name'])
             except (TypeValidationError, ValidationError):
                 raise InvalidSpecification('The parameter \'{param_name}\' has a default value which is not of'
                                            ' type \'{param_type}\''.format(param_name=param_defn['name'],
@@ -309,3 +325,131 @@ class OpenAPIOperation(AbstractOperation):
             res = self._request_body.get('content', {}).get(self.consumes[0], {})
             return self._resolve_reference(res)
         return {}
+
+    def _get_body_argument(self, body, arguments, has_kwargs):
+        body_schema = self.body_schema
+        default_body = body_schema.get('default')
+        body = body or default_body
+        if body_schema:
+            x_body_name = body_schema.get('x-body-name', 'body')
+            logger.debug('x-body-name is %s' % x_body_name)
+            if x_body_name in arguments or has_kwargs:
+                return {x_body_name: body}
+        return {}
+
+    def get_arguments(self, path_params, query_params, body, files, arguments,
+                      has_kwargs, sanitize):
+        """
+        get arguments for handler function
+        """
+        ret = {}
+        ret.update(self._get_path_arguments(path_params, sanitize))
+        ret.update(self._get_query_arguments(query_params, arguments, has_kwargs, sanitize))
+        ret.update(self._get_body_argument(body, arguments, has_kwargs))
+        ret.update(self._get_file_arguments(files, arguments, has_kwargs))
+        return ret
+
+    def _get_query_arguments(self, query, arguments, has_kwargs, sanitize):
+        query_defns = {sanitize(p["name"]): p
+                       for p in self.parameters
+                       if p["in"] == "query"}
+        default_query_params = {k: v["schema"]['default']
+                                for k, v in query_defns.items()
+                                if 'default' in v["schema"]}
+        query_arguments = deepcopy(default_query_params)
+
+        request_query = {}
+        if query:
+            for k, values in query.items():
+                k = sanitize(k)
+                query_defn = query_defns.get(k, {})
+                query_schema = query_defn.get("schema")
+                if (query_schema is not None and query_schema['type'] == 'array'):
+                    request_query[k] = self._resolve_query_duplicates(values, query_defn)
+                else:
+                    request_query[k] = values[-1]
+
+        query_arguments.update(request_query)
+        res = {}
+        for key, value in query_arguments.items():
+            key = sanitize(key)
+            if not has_kwargs and key not in arguments:
+                logger.debug("Query Parameter '%s' not in function arguments", key)
+            else:
+                logger.debug("Query Parameter '%s' in function arguments", key)
+                try:
+                    query_defn = query_defns[key]
+                except KeyError:  # pragma: no cover
+                    logger.error("Function argument '{}' not defined in specification".format(key))
+                else:
+                    logger.debug('%s is a %s', key, query_defn)
+                    res[key] = self._get_val_from_param(value, query_defn)
+        return res
+
+    @staticmethod
+    def _resolve_query_duplicates(values, param_defn):
+        """ Resolve cases where query parameters are provided multiple times.
+            The default behavior is to use the last-defined value.
+            For example, if the query string is '?a=1,2,3&a=4,5,6' the value of
+            `a` would be "4,5,6".
+            However, if 'explode' is true, or the 'collectionFormat' is 'multi'
+            (swagger2) then the duplicate values are concatenated together and
+            `a` would be "1,2,3,4,5,6".
+        """
+        try:
+            style = param_defn['style']
+            delimiter = QUERY_STRING_DELIMITERS.get(style, ',')
+            is_form = (style == 'form')
+            explode = param_defn.get('explode', is_form)
+            if explode:
+                return delimiter.join(values)
+        except KeyError:
+            if param_defn.get('collectionFormat') == 'multi':
+                return ','.join(values)
+        # default to last defined value
+        return values[-1]
+
+    @staticmethod
+    def query_split(value, param_defn):
+        try:
+            style = param_defn['style']
+            delimiter = QUERY_STRING_DELIMITERS.get(style, ',')
+            return value.split(delimiter)
+        except KeyError:
+            return value.split(',')
+
+    def _get_val_from_param(self, value, query_defn):
+        if is_nullable(query_defn) and is_null(value):
+            return None
+
+        query_schema = query_defn["schema"]
+
+        if query_schema["type"] == "array":  # then logic is more complex
+            parts = self.query_split(value, query_defn)
+            return [make_type(part, query_schema["items"]["type"]) for part in parts]
+        else:
+            return make_type(value, query_schema["type"])
+
+    @staticmethod
+    def validate_type(param_defn, value, parameter_type, parameter_name=None):
+        # XXX DGK - figure out how to decouple this
+        param_schema = param_defn["schema"]
+        param_type = param_schema.get('type')
+        parameter_name = parameter_name or param_defn['name']
+        if param_type == 'array':
+            parts = OpenAPIOperation.query_split(value, param_defn)
+            converted_parts = []
+            for part in parts:
+                try:
+                    converted = make_type(part, param_schema['items']['type'])
+                except (ValueError, TypeError):
+                    converted = part
+                converted_parts.append(converted)
+            return converted_parts
+        else:
+            try:
+                return make_type(value, param_type)
+            except ValueError:
+                raise TypeValidationError(param_type, parameter_type, parameter_name)
+            except TypeError:
+                return value

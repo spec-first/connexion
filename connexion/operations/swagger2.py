@@ -5,12 +5,20 @@ from jsonschema import ValidationError
 
 from connexion.operations.abstract import AbstractOperation
 
-from ..decorators import validation
-from ..decorators.validation import TypeValidationError
+from ..decorators.response import ResponseValidator
+from ..decorators.validation import (RequestBodyValidator,
+                                     Swagger2ParameterValidator,
+                                     TypeValidationError)
 from ..exceptions import InvalidSpecification
-from ..utils import deep_get
+from ..utils import deep_get, is_null, is_nullable, make_type
 
 logger = logging.getLogger("connexion.operations.swagger2")
+
+VALIDATOR_MAP = {
+    'parameter': Swagger2ParameterValidator,
+    'body': RequestBodyValidator,
+    'response': ResponseValidator,
+}
 
 
 class Swagger2Operation(AbstractOperation):
@@ -71,6 +79,9 @@ class Swagger2Operation(AbstractOperation):
         """
         app_security = operation.get('security', app_security)
 
+        self._validator_map = dict(VALIDATOR_MAP)
+        self._validator_map.update(validator_map or {})
+
         super(Swagger2Operation, self).__init__(
             api=api,
             method=method,
@@ -82,21 +93,18 @@ class Swagger2Operation(AbstractOperation):
             validate_responses=validate_responses,
             strict_validation=strict_validation,
             randomize_endpoint=randomize_endpoint,
-            pythonic_params=pythonic_params,
-            validator_map=validator_map
+            pythonic_params=pythonic_params
         )
 
         self._produces = operation.get('produces', app_produces)
         self._consumes = operation.get('consumes', app_consumes)
 
         self.definitions = definitions or {}
-        self.parameter_definitions = parameter_definitions
-        self.response_definitions = response_definitions
 
         self.definitions_map = {
             'definitions': self.definitions,
-            'parameters': self.parameter_definitions,
-            'responses': self.response_definitions
+            'parameters': parameter_definitions,
+            'responses': response_definitions
         }
 
         def resolve_parameters(parameters):
@@ -134,8 +142,8 @@ class Swagger2Operation(AbstractOperation):
         self._responses = resolve_responses(operation.get('responses', {}))
         logger.debug(self._responses)
 
-        logger.debug('consumes: %s', self.consumes)
-        logger.debug('produces: %s', self.produces)
+        logger.error('consumes: %s', self.consumes)
+        logger.error('produces: %s', self.produces)
 
         self._validate_defaults()
 
@@ -155,8 +163,8 @@ class Swagger2Operation(AbstractOperation):
         for param_defn in self.parameters:
             try:
                 if param_defn['in'] == 'query' and 'default' in param_defn:
-                    validation.validate_type(param_defn, param_defn['default'],
-                                             'query', param_defn['name'])
+                    self.validate_type(param_defn, param_defn['default'],
+                                       'query', param_defn['name'])
             except (TypeValidationError, ValidationError):
                 raise InvalidSpecification('The parameter \'{param_name}\' has a default value which is not of'
                                            ' type \'{param_type}\''.format(param_name=param_defn['name'],
@@ -255,3 +263,150 @@ class Swagger2Operation(AbstractOperation):
                     method=self.method,
                     path=self.path))
         return body_parameters[0] if body_parameters else {}
+
+    def get_arguments(self, path_params, query_params, body, files, arguments,
+                      has_kwargs, sanitize):
+        """
+        get arguments for handler function
+        """
+        ret = {}
+        ret.update(self._get_path_arguments(path_params, sanitize))
+        ret.update(self._get_query_arguments(query_params, arguments, has_kwargs, sanitize))
+        ret.update(self._get_body_argument(body, arguments, has_kwargs, sanitize))
+        ret.update(self._get_file_arguments(files, arguments, has_kwargs))
+        return ret
+
+    def _get_query_arguments(self, query, arguments, has_kwargs, sanitize):
+        query_defns = {sanitize(p["name"]): p
+                       for p in self.parameters
+                       if p["in"] == "query"}
+        default_query_params = {k: v['default']
+                                for k, v in query_defns.items()
+                                if 'default' in v}
+        query_arguments = deepcopy(default_query_params)
+
+        logger.error(query)
+
+        request_query = {}
+        for k, values in query.items():
+            k = sanitize(k)
+            query_defn = query_defns.get(k, None)
+            query_schema = query_defn
+            if (query_schema is not None and query_schema['type'] == 'array'):
+                request_query[k] = self._resolve_query_duplicates(values, query_defn)
+            else:
+                request_query[k] = values[-1]
+
+        query_arguments.update(request_query)
+        res = {}
+        for key, value in query_arguments.items():
+            key = sanitize(key)
+            if not has_kwargs and key not in arguments:
+                logger.debug("Query Parameter '%s' not in function arguments", key)
+            else:
+                logger.debug("Query Parameter '%s' in function arguments", key)
+                try:
+                    query_defn = query_defns[key]
+                except KeyError:  # pragma: no cover
+                    logger.error("Function argument '{}' not defined in specification".format(key))
+                else:
+                    logger.debug('%s is a %s', key, query_defn)
+                    res[key] = self._get_val_from_param(value, query_defn)
+        return res
+
+    def _get_body_argument(self, body, arguments, has_kwargs, sanitize):
+        kwargs = {}
+        body_parameters = [p for p in self.parameters if p['in'] == 'body'] or [{}]
+        default_body = body_parameters[0].get('schema', {}).get('default')
+        body_name = sanitize(body_parameters[0].get('name'))
+
+        body = body or default_body
+
+        form_defns = {sanitize(p['name']): p
+                      for p in self.parameters
+                      if p['in'] == 'formData'}
+
+        default_form_params = {sanitize(p['name']): p['default']
+                               for p in form_defns
+                               if 'default' in p}
+
+        # Add body parameters
+        if body_name:
+            if not has_kwargs and body_name not in arguments:
+                logger.debug("Body parameter '%s' not in function arguments", body_name)
+            else:
+                logger.debug("Body parameter '%s' in function arguments", body_name)
+                kwargs[body_name] = body
+
+        # Add formData parameters
+        form_arguments = deepcopy(default_form_params)
+        if form_defns and body:
+            form_arguments.update(body)
+        for key, value in form_arguments.items():
+            if not has_kwargs and key not in arguments:
+                logger.debug("FormData parameter '%s' not in function arguments", key)
+            else:
+                logger.debug("FormData parameter '%s' in function arguments", key)
+                try:
+                    form_defn = form_defns[key]
+                except KeyError:  # pragma: no cover
+                    logger.error("Function argument '{}' not defined in specification".format(key))
+                else:
+                    kwargs[key] = self._get_val_from_param(value, form_defn)
+        return kwargs
+
+    @staticmethod
+    def _resolve_query_duplicates(values, param_defn):
+        """ Resolve cases where query parameters are provided multiple times.
+            The default behavior is to use the last-defined value.
+            For example, if the query string is '?a=1,2,3&a=4,5,6' the value of
+            `a` would be "4,5,6".
+            However, if 'collectionFormat' is 'multi' then the duplicate values
+            are concatenated together and `a` would be "1,2,3,4,5,6".
+        """
+        if param_defn.get('collectionFormat') == 'multi':
+            return ','.join(values)
+        # default to last defined value
+        return values[-1]
+
+    @staticmethod
+    def query_split(value, param_defn):
+        if param_defn.get("collectionFormat") == 'pipes':
+            return value.split('|')
+        return value.split(',')
+
+    def _get_val_from_param(self, value, query_defn):
+        if is_nullable(query_defn) and is_null(value):
+            return None
+
+        query_schema = query_defn
+
+        if query_schema["type"] == "array":  # then logic is more complex
+            parts = self.query_split(value, query_defn)
+            return [make_type(part, query_defn["items"]["type"]) for part in parts]
+        else:
+            return make_type(value, query_defn["type"])
+
+    @staticmethod
+    def validate_type(param_defn, value, parameter_type, parameter_name=None):
+        # XXX DGK - figure out how to decouple this
+        param_schema = param_defn
+        param_type = param_schema.get('type')
+        parameter_name = parameter_name or param_defn['name']
+        if param_type == 'array':
+            parts = Swagger2Operation.query_split(value, param_defn)
+            converted_parts = []
+            for part in parts:
+                try:
+                    converted = make_type(part, param_schema['items']['type'])
+                except (ValueError, TypeError):
+                    converted = part
+                converted_parts.append(converted)
+            return converted_parts
+        else:
+            try:
+                return make_type(value, param_type)
+            except ValueError:
+                raise TypeValidationError(param_type, parameter_type, parameter_name)
+            except TypeError:
+                return value

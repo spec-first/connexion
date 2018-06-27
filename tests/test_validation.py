@@ -3,7 +3,7 @@ import json
 import flask
 
 from connexion.apis.flask_api import FlaskApi
-from connexion.decorators.validation import ParameterValidator
+from connexion.decorators.validation import Swagger2ParameterValidator
 # we are using "mock" module here for Py 2.7 support
 from mock import MagicMock
 
@@ -27,7 +27,7 @@ def test_parameter_validator(monkeypatch):
               {'name': 'q1', 'in': 'query', 'type': 'integer', 'maximum': 3},
               {'name': 'a1', 'in': 'query', 'type': 'array', 'minItems': 2, 'maxItems': 3,
                'items': {'type': 'integer', 'minimum': 0}}]
-    validator = ParameterValidator(params, FlaskApi)
+    validator = Swagger2ParameterValidator(params, FlaskApi)
     handler = validator(orig_handler)
 
     kwargs = {'query': {}, 'headers': {}}

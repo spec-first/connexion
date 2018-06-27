@@ -8,8 +8,6 @@ from connexion.operations.secure import SecureOperation
 from ..decorators.metrics import UWSGIMetricsCollector
 from ..decorators.parameter import parameter_to_arg
 from ..decorators.produces import BaseSerializer, Produces
-from ..decorators.response import ResponseValidator
-from ..decorators.validation import ParameterValidator, RequestBodyValidator
 from ..exceptions import InvalidSpecification
 from ..utils import all_json, deep_get, is_nullable
 
@@ -17,15 +15,10 @@ logger = logging.getLogger('connexion.operations.abstract')
 
 DEFAULT_MIMETYPE = 'application/json'
 
-VALIDATOR_MAP = {
-    'parameter': ParameterValidator,
-    'body': RequestBodyValidator,
-    'response': ResponseValidator,
-}
-
 
 @six.add_metaclass(abc.ABCMeta)
 class AbstractOperation(SecureOperation):
+
     """ What is an Operation?
         An API routes requests to the operation by a (path, method) pair.
         The operation uses a resolver to resolve its handler function.
@@ -52,8 +45,7 @@ class AbstractOperation(SecureOperation):
     def __init__(self, api, method, path, operation, resolver,
                  app_security=None, security_schemes=None,
                  validate_responses=False, strict_validation=False,
-                 randomize_endpoint=None, pythonic_params=False,
-                 validator_map=None):
+                 randomize_endpoint=None, pythonic_params=False):
         """
         """
         self._api = api
@@ -67,9 +59,6 @@ class AbstractOperation(SecureOperation):
         self._strict_validation = strict_validation
         self._pythonic_params = pythonic_params
         self._randomize_endpoint = randomize_endpoint
-
-        self._validator_map = dict(VALIDATOR_MAP)
-        self._validator_map.update(validator_map or {})
 
         self._router_controller = self._operation.get('x-swagger-router-controller')
 
@@ -138,6 +127,51 @@ class AbstractOperation(SecureOperation):
         """
         return self._validate_responses
 
+    def _get_file_arguments(self, files, arguments, has_kwargs=False):
+        return {k: v for k, v in files.items() if not has_kwargs and k in arguments}
+
+    @abc.abstractmethod
+    def _resolve_query_duplicates(self, values, query_defn):
+        """
+        takes a list of all of the query parameters that were passed in and
+        removes duplicates, and handles delimiters.
+        """
+
+    @abc.abstractmethod
+    def query_split(self, value, param_defn):
+        """
+        """
+
+    @abc.abstractmethod
+    def _get_val_from_param(self, value, query_defn):
+        """
+        """
+
+    @abc.abstractmethod
+    def _get_query_arguments(self, query, arguments, has_kwargs, sanitize):
+        """
+        """
+
+    def _get_path_arguments(self, path_params, sanitize):
+        kwargs = {}
+        path_defns = {p["name"]: p for p in self.parameters if p["in"] == "path"}
+        for key, value in path_params.items():
+            key = sanitize(key)
+            if key in path_defns:
+                kwargs[key] = self._get_val_from_param(value, path_defns[key])
+            else:  # Assume path params mechanism used for injection
+                kwargs[key] = value
+        return kwargs
+
+    def _get_body_argument(self, body, arguments, has_kwargs):
+        body_schema = self.body_schema
+        if body_schema:
+            x_body_name = body_schema.get('x-body-name', 'body')
+            logger.debug('x-body-name is %s' % x_body_name)
+            if x_body_name in arguments or has_kwargs:
+                return {x_body_name: body}
+        return {}
+
     @abc.abstractproperty
     def produces(self):
         """
@@ -181,9 +215,16 @@ class AbstractOperation(SecureOperation):
         """
 
     @abc.abstractmethod
+    def get_arguments(self, path_params, query_params, body, files, arguments,
+                      has_kwargs, sanitize):
+        """
+        get arguments for handler function
+        """
+
+    @abc.abstractmethod
     def response_definition(self, code=None, mimetype=None):
         """
-        response definitions for this endpoint
+        response definition for this endpoint
         """
 
     @abc.abstractmethod
@@ -208,6 +249,12 @@ class AbstractOperation(SecureOperation):
     def _validate_defaults(self):
         """
         validate the openapi operation defaults using the openapi schema
+        """
+
+    @abc.abstractmethod
+    def validate_type(self, param_defn, value, parameter_type, parameter_name=None):
+        """
+        ensure that a value can be cast to a type as defined by the parameter defn
         """
 
     @abc.abstractmethod
@@ -287,11 +334,7 @@ class AbstractOperation(SecureOperation):
 
         :rtype: types.FunctionType
         """
-
-        # XXX DGK
-        function = parameter_to_arg(
-            self.parameters, self.body_schema, self.consumes, self._resolution.function,
-            self.pythonic_params)
+        function = parameter_to_arg(self, self._resolution.function, self.pythonic_params)
         function = self._request_begin_lifecycle_decorator(function)
 
         if self.validate_responses:
