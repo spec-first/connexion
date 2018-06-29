@@ -9,7 +9,7 @@ from ..decorators.response import ResponseValidator
 from ..decorators.validation import (RequestBodyValidator,
                                      Swagger2ParameterValidator,
                                      TypeValidationError)
-from ..decorators.query_parser import Swagger2QueryParser
+from ..decorators.uri_parsing import Swagger2URIParser
 from ..exceptions import InvalidSpecification
 from ..utils import deep_get, is_null, is_nullable, make_type
 
@@ -268,7 +268,7 @@ class Swagger2Operation(AbstractOperation):
 
     @property
     def _query_parsing_decorator(self):
-        return Swagger2QueryParser({p["name"]: p for p in self.parameters if p["in"] in ["query", "path"]})
+        return Swagger2URIParser({p["name"]: p for p in self.parameters if p["in"] in ["query", "path"]})
 
     def get_arguments(self, path_params, query_params, body, files, arguments,
                       has_kwargs, sanitize):

@@ -8,7 +8,7 @@ from connexion.operations.abstract import AbstractOperation
 from ..decorators.response import ResponseValidator
 from ..decorators.validation import (OpenAPIParameterValidator,
                                      RequestBodyValidator, TypeValidationError)
-from ..decorators.query_parser import BaseParser
+from ..decorators.uri_parsing import OpenAPIURIParser
 from ..exceptions import InvalidSpecification
 from ..utils import deep_get, is_null, is_nullable, make_type
 
@@ -330,7 +330,7 @@ class OpenAPIOperation(AbstractOperation):
 
     @property
     def _query_parsing_decorator(self):
-        return BaseParser({p["name"]: p for p in self.parameters if p["in"] in ["query", "path"]})
+        return OpenAPIURIParser({p["name"]: p for p in self.parameters if p["in"] in ["query", "path"]})
 
     def _get_body_argument(self, body, arguments, has_kwargs):
         body_schema = self.body_schema
