@@ -341,21 +341,14 @@ class ParameterValidator(object):
 
 class Swagger2ParameterValidator(ParameterValidator):
 
-    @staticmethod
-    def query_split(value, param_defn):
-        if param_defn.get("collectionFormat") == 'pipes':
-            return value.split('|')
-        return value.split(',')
-
     @classmethod
     def validate_type(cls, param_defn, value, parameter_type, parameter_name=None):
         param_schema = param_defn
         param_type = param_schema.get('type')
         parameter_name = parameter_name or param_defn['name']
         if param_type == 'array':
-            parts = cls.query_split(value, param_defn)
             converted_parts = []
-            for part in parts:
+            for part in value:
                 try:
                     converted = make_type(part, param_schema['items']['type'])
                 except (ValueError, TypeError):
@@ -373,24 +366,14 @@ class Swagger2ParameterValidator(ParameterValidator):
 
 class OpenAPIParameterValidator(ParameterValidator):
 
-    @staticmethod
-    def query_split(value, param_defn):
-        try:
-            style = param_defn['style']
-            delimiter = QUERY_STRING_DELIMITERS.get(style, ',')
-            return value.split(delimiter)
-        except KeyError:
-            return value.split(',')
-
     @classmethod
     def validate_type(cls, param_defn, value, parameter_type, parameter_name=None):
         param_schema = param_defn["schema"]
         param_type = param_schema.get('type')
         parameter_name = parameter_name or param_defn['name']
         if param_type == 'array':
-            parts = cls.query_split(value, param_defn)
             converted_parts = []
-            for part in parts:
+            for part in value:
                 try:
                     converted = make_type(part, param_schema['items']['type'])
                 except (ValueError, TypeError):

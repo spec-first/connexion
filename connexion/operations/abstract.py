@@ -131,18 +131,6 @@ class AbstractOperation(SecureOperation):
         return {k: v for k, v in files.items() if not has_kwargs and k in arguments}
 
     @abc.abstractmethod
-    def _resolve_query_duplicates(self, values, query_defn):
-        """
-        takes a list of all of the query parameters that were passed in and
-        removes duplicates, and handles delimiters.
-        """
-
-    @abc.abstractmethod
-    def query_split(self, value, param_defn):
-        """
-        """
-
-    @abc.abstractmethod
     def _get_val_from_param(self, value, query_defn):
         """
         """
@@ -214,6 +202,13 @@ class AbstractOperation(SecureOperation):
         :rtype: dict
         """
 
+    @abc.abstractproperty
+    def _query_parsing_decorator(self):
+        """
+        Get a decorator for parsing query params
+        :rtype: types.FunctionType
+        """
+
     @abc.abstractmethod
     def get_arguments(self, path_params, query_params, body, files, arguments,
                       has_kwargs, sanitize):
@@ -249,12 +244,6 @@ class AbstractOperation(SecureOperation):
     def _validate_defaults(self):
         """
         validate the openapi operation defaults using the openapi schema
-        """
-
-    @abc.abstractmethod
-    def validate_type(self, param_defn, value, parameter_type, parameter_name=None):
-        """
-        ensure that a value can be cast to a type as defined by the parameter defn
         """
 
     @abc.abstractmethod
@@ -349,6 +338,9 @@ class AbstractOperation(SecureOperation):
 
         for validation_decorator in self.__validation_decorators:
             function = validation_decorator(function)
+
+        query_decorator = self._query_parsing_decorator
+        function = query_decorator(function)
 
         # NOTE: the security decorator should be applied last to check auth before anything else :-)
         security_decorator = self.security_decorator

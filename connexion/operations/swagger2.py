@@ -9,6 +9,7 @@ from ..decorators.response import ResponseValidator
 from ..decorators.validation import (RequestBodyValidator,
                                      Swagger2ParameterValidator,
                                      TypeValidationError)
+from ..decorators.query_parser import Swagger2QueryParser
 from ..exceptions import InvalidSpecification
 from ..utils import deep_get, is_null, is_nullable, make_type
 
@@ -160,11 +161,12 @@ class Swagger2Operation(AbstractOperation):
         return self._produces
 
     def _validate_defaults(self):
+        validator = self.validator_map["parameter"]
         for param_defn in self.parameters:
             try:
                 if param_defn['in'] == 'query' and 'default' in param_defn:
-                    self.validate_type(param_defn, param_defn['default'],
-                                       'query', param_defn['name'])
+                    validator.validate_type(param_defn, param_defn['default'],
+                                            'query', param_defn['name'])
             except (TypeValidationError, ValidationError):
                 raise InvalidSpecification('The parameter \'{param_name}\' has a default value which is not of'
                                            ' type \'{param_type}\''.format(param_name=param_defn['name'],
@@ -264,6 +266,10 @@ class Swagger2Operation(AbstractOperation):
                     path=self.path))
         return body_parameters[0] if body_parameters else {}
 
+    @property
+    def _query_parsing_decorator(self):
+        return Swagger2QueryParser({p["name"]: p for p in self.parameters if p["in"] in ["query", "path"]})
+
     def get_arguments(self, path_params, query_params, body, files, arguments,
                       has_kwargs, sanitize):
         """
@@ -285,19 +291,7 @@ class Swagger2Operation(AbstractOperation):
                                 if 'default' in v}
         query_arguments = deepcopy(default_query_params)
 
-        logger.error(query)
-
-        request_query = {}
-        for k, values in query.items():
-            k = sanitize(k)
-            query_defn = query_defns.get(k, None)
-            query_schema = query_defn
-            if (query_schema is not None and query_schema['type'] == 'array'):
-                request_query[k] = self._resolve_query_duplicates(values, query_defn)
-            else:
-                request_query[k] = values[-1]
-
-        query_arguments.update(request_query)
+        query_arguments.update(query)
         res = {}
         for key, value in query_arguments.items():
             key = sanitize(key)
@@ -355,58 +349,13 @@ class Swagger2Operation(AbstractOperation):
                     kwargs[key] = self._get_val_from_param(value, form_defn)
         return kwargs
 
-    @staticmethod
-    def _resolve_query_duplicates(values, param_defn):
-        """ Resolve cases where query parameters are provided multiple times.
-            The default behavior is to use the last-defined value.
-            For example, if the query string is '?a=1,2,3&a=4,5,6' the value of
-            `a` would be "4,5,6".
-            However, if 'collectionFormat' is 'multi' then the duplicate values
-            are concatenated together and `a` would be "1,2,3,4,5,6".
-        """
-        if param_defn.get('collectionFormat') == 'multi':
-            return ','.join(values)
-        # default to last defined value
-        return values[-1]
-
-    @staticmethod
-    def query_split(value, param_defn):
-        if param_defn.get("collectionFormat") == 'pipes':
-            return value.split('|')
-        return value.split(',')
-
     def _get_val_from_param(self, value, query_defn):
         if is_nullable(query_defn) and is_null(value):
             return None
 
         query_schema = query_defn
 
-        if query_schema["type"] == "array":  # then logic is more complex
-            parts = self.query_split(value, query_defn)
-            return [make_type(part, query_defn["items"]["type"]) for part in parts]
+        if query_schema["type"] == "array":
+            return [make_type(part, query_defn["items"]["type"]) for part in value]
         else:
             return make_type(value, query_defn["type"])
-
-    @staticmethod
-    def validate_type(param_defn, value, parameter_type, parameter_name=None):
-        # XXX DGK - figure out how to decouple this
-        param_schema = param_defn
-        param_type = param_schema.get('type')
-        parameter_name = parameter_name or param_defn['name']
-        if param_type == 'array':
-            parts = Swagger2Operation.query_split(value, param_defn)
-            converted_parts = []
-            for part in parts:
-                try:
-                    converted = make_type(part, param_schema['items']['type'])
-                except (ValueError, TypeError):
-                    converted = part
-                converted_parts.append(converted)
-            return converted_parts
-        else:
-            try:
-                return make_type(value, param_type)
-            except ValueError:
-                raise TypeValidationError(param_type, parameter_type, parameter_name)
-            except TypeError:
-                return value

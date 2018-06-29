@@ -8,6 +8,7 @@ from connexion.operations.abstract import AbstractOperation
 from ..decorators.response import ResponseValidator
 from ..decorators.validation import (OpenAPIParameterValidator,
                                      RequestBodyValidator, TypeValidationError)
+from ..decorators.query_parser import BaseParser
 from ..exceptions import InvalidSpecification
 from ..utils import deep_get, is_null, is_nullable, make_type
 
@@ -191,12 +192,13 @@ class OpenAPIOperation(AbstractOperation):
         return self._definitions_map
 
     def _validate_defaults(self):
+        validator = self.validator_map["parameter"]
         for param_defn in self.parameters:
             try:
                 param_schema = param_defn["schema"]
                 if param_defn['in'] == 'query' and 'default' in param_schema:
-                    self.validate_type(param_defn, param_schema['default'],
-                                       'query', param_defn['name'])
+                    validator.validate_type(param_defn, param_schema['default'],
+                                            'query', param_defn['name'])
             except (TypeValidationError, ValidationError):
                 raise InvalidSpecification('The parameter \'{param_name}\' has a default value which is not of'
                                            ' type \'{param_type}\''.format(param_name=param_defn['name'],
@@ -326,6 +328,10 @@ class OpenAPIOperation(AbstractOperation):
             return self._resolve_reference(res)
         return {}
 
+    @property
+    def _query_parsing_decorator(self):
+        return BaseParser({p["name"]: p for p in self.parameters if p["in"] in ["query", "path"]})
+
     def _get_body_argument(self, body, arguments, has_kwargs):
         body_schema = self.body_schema
         default_body = body_schema.get('default')
@@ -358,18 +364,7 @@ class OpenAPIOperation(AbstractOperation):
                                 if 'default' in v["schema"]}
         query_arguments = deepcopy(default_query_params)
 
-        request_query = {}
-        if query:
-            for k, values in query.items():
-                k = sanitize(k)
-                query_defn = query_defns.get(k, {})
-                query_schema = query_defn.get("schema")
-                if (query_schema is not None and query_schema['type'] == 'array'):
-                    request_query[k] = self._resolve_query_duplicates(values, query_defn)
-                else:
-                    request_query[k] = values[-1]
-
-        query_arguments.update(request_query)
+        query_arguments.update(query)
         res = {}
         for key, value in query_arguments.items():
             key = sanitize(key)
@@ -386,70 +381,13 @@ class OpenAPIOperation(AbstractOperation):
                     res[key] = self._get_val_from_param(value, query_defn)
         return res
 
-    @staticmethod
-    def _resolve_query_duplicates(values, param_defn):
-        """ Resolve cases where query parameters are provided multiple times.
-            The default behavior is to use the last-defined value.
-            For example, if the query string is '?a=1,2,3&a=4,5,6' the value of
-            `a` would be "4,5,6".
-            However, if 'explode' is true, or the 'collectionFormat' is 'multi'
-            (swagger2) then the duplicate values are concatenated together and
-            `a` would be "1,2,3,4,5,6".
-        """
-        try:
-            style = param_defn['style']
-            delimiter = QUERY_STRING_DELIMITERS.get(style, ',')
-            is_form = (style == 'form')
-            explode = param_defn.get('explode', is_form)
-            if explode:
-                return delimiter.join(values)
-        except KeyError:
-            if param_defn.get('collectionFormat') == 'multi':
-                return ','.join(values)
-        # default to last defined value
-        return values[-1]
-
-    @staticmethod
-    def query_split(value, param_defn):
-        try:
-            style = param_defn['style']
-            delimiter = QUERY_STRING_DELIMITERS.get(style, ',')
-            return value.split(delimiter)
-        except KeyError:
-            return value.split(',')
-
     def _get_val_from_param(self, value, query_defn):
         if is_nullable(query_defn) and is_null(value):
             return None
 
         query_schema = query_defn["schema"]
 
-        if query_schema["type"] == "array":  # then logic is more complex
-            parts = self.query_split(value, query_defn)
-            return [make_type(part, query_schema["items"]["type"]) for part in parts]
+        if query_schema["type"] == "array":
+            return [make_type(part, query_schema["items"]["type"]) for part in value]
         else:
             return make_type(value, query_schema["type"])
-
-    @staticmethod
-    def validate_type(param_defn, value, parameter_type, parameter_name=None):
-        # XXX DGK - figure out how to decouple this
-        param_schema = param_defn["schema"]
-        param_type = param_schema.get('type')
-        parameter_name = parameter_name or param_defn['name']
-        if param_type == 'array':
-            parts = OpenAPIOperation.query_split(value, param_defn)
-            converted_parts = []
-            for part in parts:
-                try:
-                    converted = make_type(part, param_schema['items']['type'])
-                except (ValueError, TypeError):
-                    converted = part
-                converted_parts.append(converted)
-            return converted_parts
-        else:
-            try:
-                return make_type(value, param_type)
-            except ValueError:
-                raise TypeValidationError(param_type, parameter_type, parameter_name)
-            except TypeError:
-                return value
