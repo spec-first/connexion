@@ -10,7 +10,7 @@ from werkzeug import FileStorage
 
 from ..exceptions import ExtraParameterProblem
 from ..problem import problem
-from ..utils import all_json, boolean, is_null, is_nullable
+from ..utils import all_json, boolean, is_null, is_nullable, is_json_mimetype
 
 logger = logging.getLogger('connexion.decorators.validation')
 
@@ -102,12 +102,24 @@ class RequestBodyValidator(object):
                 data = request.json
 
                 if data is None and len(request.body) > 0 and not self.is_null_value_valid:
-                    # the body has contents that were not parsed as JSON
-                    return problem(415,
-                                   "Unsupported Media Type",
-                                   "Invalid Content-type ({content_type}), expected JSON data".format(
-                                       content_type=request.headers.get("Content-Type", "")
-                                   ))
+                    try:
+                        ctype_is_json = is_json_mimetype(request.headers.get("Content-Type", "") )
+                    except:
+                        ctype_is_json = False
+                        
+                    if ctype_is_json:
+                        # Content-Type is json but actual body was not parsed
+                        return problem(400, 
+                                       "Bad Request", 
+                                       "Request body is not valid JSON"
+                                       )
+                    else:
+                        # the body has contents that were not parsed as JSON
+                        return problem(415,
+                                       "Unsupported Media Type",
+                                       "Invalid Content-type ({content_type}), expected JSON data".format(
+                                           content_type=request.headers.get("Content-Type", "")
+                                       ))
 
                 logger.debug("%s validating schema...", request.url)
                 error = self.validate_schema(data, request.url)
