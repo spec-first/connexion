@@ -111,13 +111,12 @@ def parameter_to_arg(parameters, consumes, function, pythonic_params=False):
             for k, v in request.query.to_dict(flat=False).items():
                 k = sanitize_param(k)
                 query_param = query_types.get(k, None)
-                if query_param is not None and query_param["type"] == "array":
-                    if query_param.get("collectionFormat", None) == "pipes":
-                        request_query[k] = "|".join(v)
-                    else:
-                        request_query[k] = ",".join(v)
+                if (query_param is not None
+                        and query_param["type"] == "array"
+                        and query_param.get("collectionFormat") == "multi"):
+                    request_query[k] = ",".join(v)
                 else:
-                    request_query[k] = v[0]
+                    request_query[k] = v[-1]
         except AttributeError:
             request_query = {sanitize_param(k): v for k, v in request.query.items()}
         return request_query
