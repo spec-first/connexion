@@ -16,13 +16,13 @@ def test_injection(monkeypatch):
     def handler(**kwargs):
         func(**kwargs)
 
-    class Op:
+    class Op(object):
         consumes = ['application/json']
 
-        def get_arguments(*args, **kwargs):
+        def get_arguments(self, *args, **kwargs):
             return {"p1": "123"}
 
-    parameter_to_arg(Op, handler)(request)
+    parameter_to_arg(Op(), handler)(request)
 
     func.assert_called_with(p1='123')
 
