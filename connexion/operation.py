@@ -14,6 +14,7 @@ from .decorators.response import ResponseValidator
 from .decorators.security import (get_tokeninfo_func, get_tokeninfo_url,
                                   security_passthrough, verify_oauth_local,
                                   verify_oauth_remote)
+from .decorators.uri_parsing import AlwaysMultiURIParser
 from .decorators.validation import (ParameterValidator, RequestBodyValidator,
                                     TypeValidationError)
 from .exceptions import InvalidSpecification
@@ -389,6 +390,10 @@ class Operation(SecureOperation):
         for validation_decorator in self.__validation_decorators:
             function = validation_decorator(function)
 
+        uri_parsing_decorator = self.__uri_parsing_decorator
+        logging.debug('... Adding uri parsing decorator (%r)', uri_parsing_decorator)
+        function = uri_parsing_decorator(function)
+
         # NOTE: the security decorator should be applied last to check auth before anything else :-)
         security_decorator = self.security_decorator
         logger.debug('... Adding security decorator (%r)', security_decorator)
@@ -401,6 +406,16 @@ class Operation(SecureOperation):
         function = self._request_end_lifecycle_decorator(function)
 
         return function
+
+    @property
+    def __uri_parsing_decorator(self):
+        """
+        Get uri parsing decorator
+
+        This decorator handles query and path parameter deduplication and
+        array types.
+        """
+        return AlwaysMultiURIParser(self.parameters)
 
     @property
     def __content_type_decorator(self):

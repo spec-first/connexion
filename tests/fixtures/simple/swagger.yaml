@@ -251,11 +251,11 @@ paths:
         - name: items
           in: query
           description: An comma separated array of items
-          required: true
           type: array
           items:
             type: string
           collectionFormat: csv
+          default: ["squash", "banana"]
       responses:
         200:
           description: OK
