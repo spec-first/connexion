@@ -1,6 +1,7 @@
 import logging
 import pathlib
 from typing import Optional  # NOQA
+from swagger_ui_bundle import swagger_ui_2_path
 
 try:
     from swagger_ui_bundle import swagger_ui_2_path

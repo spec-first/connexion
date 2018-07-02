@@ -11,6 +11,7 @@ import yaml
 
 from openapi_spec_validator import validate_v2_spec as validate_spec
 from openapi_spec_validator.exceptions import OpenAPIValidationError
+from swagger_ui_bundle import swagger_ui_2_path
 
 from ..exceptions import InvalidSpecification, ResolverError
 from ..jsonref import resolve_refs
@@ -20,6 +21,7 @@ from ..resolver import Resolver
 from ..utils import Jsonifier
 
 MODULE_PATH = pathlib.Path(__file__).absolute().parent.parent
+SWAGGER_UI_PATH = swagger_ui_2_path
 SWAGGER_UI_URL = 'ui'
 
 logger = logging.getLogger('connexion.apis.abstract')
