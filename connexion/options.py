@@ -1,8 +1,9 @@
 import pathlib
 from typing import Optional  # NOQA
+from swagger_ui_bundle import swagger_ui_2_path
 
 MODULE_PATH = pathlib.Path(__file__).absolute().parent
-INTERNAL_CONSOLE_UI_PATH = MODULE_PATH / 'vendor' / 'swagger-ui'
+INTERNAL_CONSOLE_UI_PATH = swagger_ui_2_path
 
 
 class ConnexionOptions(object):

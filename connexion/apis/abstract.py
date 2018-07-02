@@ -9,6 +9,7 @@ import jinja2
 import six
 import yaml
 from swagger_spec_validator.validator20 import validate_spec
+from swagger_ui_bundle import swagger_ui_2_path
 
 from ..exceptions import ResolverError
 from ..operation import Operation
@@ -17,7 +18,7 @@ from ..resolver import Resolver
 from ..utils import Jsonifier
 
 MODULE_PATH = pathlib.Path(__file__).absolute().parent.parent
-SWAGGER_UI_PATH = MODULE_PATH / 'vendor' / 'swagger-ui'
+SWAGGER_UI_PATH = swagger_ui_2_path
 SWAGGER_UI_URL = 'ui'
 
 RESOLVER_ERROR_ENDPOINT_RANDOM_DIGITS = 6
