@@ -54,8 +54,8 @@ class TypeValidationError(Exception):
 
 
 def validate_type(param, value, parameter_type, parameter_name=None):
-    param_defn = param.get('schema', param)  # oas3
-    param_type = param_defn.get('type')
+    param_schema = param.get('schema', param)  # oas3
+    param_type = param_schema.get('type')
     parameter_name = parameter_name if parameter_name else param['name']
     if param_type == "array":
         converted_params = []
