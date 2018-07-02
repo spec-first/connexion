@@ -120,6 +120,10 @@ class Swagger2Operation(AbstractOperation):
         return self._parameters
 
     @property
+    def responses(self):
+        return self._responses
+
+    @property
     def consumes(self):
         return self._consumes
 
@@ -144,37 +148,36 @@ class Swagger2Operation(AbstractOperation):
             schema['schema']['definitions'] = self.definitions
         return schema
 
-    def response_definition(self, status_code=None, content_type=None):
-        content_type = content_type or self.get_mimetype()
-        response_definitions = self._responses
-        response_definition = response_definitions.get(str(status_code), response_definitions.get("default", {}))
-        response_definition = self.with_definitions(response_definition)
-        return response_definition
-
     def response_schema(self, status_code=None, content_type=None):
-        response_definition = self.response_definition(status_code, content_type)
+        response_definition = self.response_definition(
+            status_code, content_type
+        )
         return self.with_definitions(response_definition.get("schema", {}))
 
-    def example_response(self, code=None, *args, **kwargs):
+    def example_response(self, status_code=None, *args, **kwargs):
         """
         Returns example response from spec
         """
         # simply use the first/lowest status code, this is probably 200 or 201
-        code = code or sorted(self._responses.keys())[0]
-        examples_path = [str(code), 'examples']
-        schema_example_path = [str(code), 'schema', 'example']
+        status_code = status_code or sorted(self._responses.keys())[0]
+        examples_path = [str(status_code), 'examples']
+        schema_example_path = [str(status_code), 'schema', 'example']
         try:
-            code = int(code)
+            status_code = int(status_code)
         except ValueError:
-            code = 200
+            status_code = 200
         try:
-            return (list(deep_get(self._responses, examples_path).values())[0], code)
+            return (
+                list(deep_get(self._responses, examples_path).values())[0],
+                status_code
+            )
         except KeyError:
             pass
         try:
-            return (deep_get(self._responses, schema_example_path), code)
+            return (deep_get(self._responses, schema_example_path),
+                    status_code)
         except KeyError:
-            return (None, code)
+            return (None, status_code)
 
     @property
     def body_schema(self):
@@ -200,18 +203,6 @@ class Swagger2Operation(AbstractOperation):
                     path=self.path))
         return body_parameters[0] if body_parameters else {}
 
-    def get_arguments(self, path_params, query_params, body, files, arguments,
-                      has_kwargs, sanitize):
-        """
-        get arguments for handler function
-        """
-        ret = {}
-        ret.update(self._get_path_arguments(path_params, sanitize))
-        ret.update(self._get_query_arguments(query_params, arguments, has_kwargs, sanitize))
-        ret.update(self._get_body_argument(body, arguments, has_kwargs, sanitize))
-        ret.update(self._get_file_arguments(files, arguments, has_kwargs))
-        return ret
-
     def _get_query_arguments(self, query, arguments, has_kwargs, sanitize):
         query_defns = {sanitize(p["name"]): p
                        for p in self.parameters
@@ -220,23 +211,9 @@ class Swagger2Operation(AbstractOperation):
                                 for k, v in query_defns.items()
                                 if 'default' in v}
         query_arguments = deepcopy(default_query_params)
-
         query_arguments.update(query)
-        res = {}
-        for key, value in query_arguments.items():
-            key = sanitize(key)
-            if not has_kwargs and key not in arguments:
-                logger.debug("Query Parameter '%s' not in function arguments", key)
-            else:
-                logger.debug("Query Parameter '%s' in function arguments", key)
-                try:
-                    query_defn = query_defns[key]
-                except KeyError:  # pragma: no cover
-                    logger.error("Function argument '{}' not defined in specification".format(key))
-                else:
-                    logger.debug('%s is a %s', key, query_defn)
-                    res[key] = self._get_val_from_param(value, query_defn)
-        return res
+        return self._query_args_helper(query_defns, query_arguments,
+                                       arguments, has_kwargs, sanitize)
 
     def _get_body_argument(self, body, arguments, has_kwargs, sanitize):
         kwargs = {}

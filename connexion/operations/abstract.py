@@ -42,7 +42,6 @@ class AbstractOperation(SecureOperation):
             if important:
                 serious_business(stuff)
     """
-
     def __init__(self, api, method, path, operation, resolver,
                  app_security=None, security_schemes=None,
                  validate_responses=False, strict_validation=False,
@@ -178,10 +177,34 @@ class AbstractOperation(SecureOperation):
         Convert input parameters into the correct type
         """
 
+    def _query_args_helper(self, query_defns, query_arguments,
+                           function_arguments, has_kwargs, sanitize):
+        res = {}
+        for key, value in query_arguments.items():
+            key = sanitize(key)
+            if not has_kwargs and key not in function_arguments:
+                logger.debug("Query Parameter '%s' not in function arguments", key)
+            else:
+                logger.debug("Query Parameter '%s' in function arguments", key)
+                try:
+                    query_defn = query_defns[key]
+                except KeyError:  # pragma: no cover
+                    logger.error("Function argument '{}' not defined in specification".format(key))
+                else:
+                    logger.debug('%s is a %s', key, query_defn)
+                    res[key] = self._get_val_from_param(value, query_defn)
+        return res
+
     @abc.abstractmethod
     def _get_query_arguments(self, query, arguments, has_kwargs, sanitize):
         """
         extract handler function arguments from the query parameters
+        """
+
+    @abc.abstractmethod
+    def _get_body_argument(self, body, arguments, has_kwargs, sanitize):
+        """
+        extract handler function arguments from the request body
         """
 
     def _get_path_arguments(self, path_params, sanitize):
@@ -202,6 +225,12 @@ class AbstractOperation(SecureOperation):
     def parameters(self):
         """
         Returns the parameters for this operation
+        """
+
+    @abc.abstractproperty
+    def responses(self):
+        """
+        Returns the responses for this operation
         """
 
     @abc.abstractproperty
@@ -229,27 +258,40 @@ class AbstractOperation(SecureOperation):
         :rtype: dict
         """
 
-    @abc.abstractmethod
     def get_arguments(self, path_params, query_params, body, files, arguments,
                       has_kwargs, sanitize):
         """
-        get all of the arguments for handler function
+        get arguments for handler function
         """
+        ret = {}
+        ret.update(self._get_path_arguments(path_params, sanitize))
+        ret.update(self._get_query_arguments(query_params, arguments,
+                                             has_kwargs, sanitize))
+        ret.update(self._get_body_argument(body, arguments,
+                                           has_kwargs, sanitize))
+        ret.update(self._get_file_arguments(files, arguments, has_kwargs))
+        return ret
 
-    @abc.abstractmethod
-    def response_definition(self, code=None, mimetype=None):
+    def response_definition(self, status_code=None,
+                            content_type=None):
         """
         response definition for this endpoint
         """
+        content_type = content_type or self.get_mimetype()
+        response_definition = self.responses.get(
+            str(status_code),
+            self.responses.get("default", {})
+        )
+        return response_definition
 
     @abc.abstractmethod
-    def response_schema(self, code=None, mimetype=None):
+    def response_schema(self, status_code=None, content_type=None):
         """
         response schema for this endpoint
         """
 
     @abc.abstractmethod
-    def example_response(self, code=None, mimetype=None):
+    def example_response(self, status_code=None, content_type=None):
         """
         Returns an example from the spec
         """
@@ -291,7 +333,7 @@ class AbstractOperation(SecureOperation):
         Returns a decorator that parses request data and handles things like
         array types, and duplicate parameter definitions.
         """
-        return self._uri_parser_class(self.parameters)
+        return self._uri_parser_class(self.parameters, self.body_definition)
 
     @property
     def function(self):

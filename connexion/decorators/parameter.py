@@ -98,10 +98,6 @@ def parameter_to_arg(operation, function, pythonic_params=False,
         else:
             request_body = request.body
 
-        # accept formData even even if mimetype is wrong for backwards
-        # compatability  :/
-        request_body = request_body or {sanitize(k): v for k, v in request.form.items()}
-
         try:
             query = request.query.to_dict(flat=False)
         except AttributeError:

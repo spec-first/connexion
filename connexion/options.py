@@ -1,12 +1,12 @@
 import logging
 import pathlib
 from typing import Optional  # NOQA
-from swagger_ui_bundle import swagger_ui_2_path
 
 try:
-    from swagger_ui_bundle import swagger_ui_2_path
+    from swagger_ui_bundle import (swagger_ui_2_path,
+                                   swagger_ui_3_path)
 except ImportError:
-    swagger_ui_2_path = None
+    swagger_ui_2_path = swagger_ui_3_path = None
 
 MODULE_PATH = pathlib.Path(__file__).absolute().parent
 NO_UI_MSG = """The swagger_ui directory could not be found.
@@ -22,8 +22,12 @@ class ConnexionOptions(object):
     def __init__(self, options=None, oas_version=(2,)):
         self._options = {}
         self.oas_version = oas_version
-        self.openapi_spec_name = '/swagger.json'
-        self.swagger_ui_local_path = swagger_ui_2_path
+        if self.oas_version >= (3, 0, 0):
+            self.openapi_spec_name = '/openapi.json'
+            self.swagger_ui_local_path = swagger_ui_3_path
+        else:
+            self.openapi_spec_name = '/swagger.json'
+            self.swagger_ui_local_path = swagger_ui_2_path
 
         if options:
             self._options.update(filter_values(options))

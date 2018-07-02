@@ -80,6 +80,7 @@ Other Sources/Mentions
 New in Connexion 2.0:
 ---------------------
 - App and Api options must be provided through the "options" argument (``old_style_options`` have been removed).
+- You must specify a form content-type in 'consumes' in order to consume form data.
 - The `Operation` interface has been formalized in the `AbstractOperation` class.
 - The `Operation` class has been renamed to `Swagger2Operation`.
 - Array parameter deserialization now follows the Swagger 2.0 spec more closely.

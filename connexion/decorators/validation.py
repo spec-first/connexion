@@ -10,6 +10,7 @@ from jsonschema import (Draft4Validator, ValidationError,
 from werkzeug import FileStorage
 
 from ..exceptions import ExtraParameterProblem
+from ..http_facts import FORM_CONTENT_TYPES
 from ..problem import problem
 from ..utils import all_json, boolean, is_json_mimetype, is_null, is_nullable
 
@@ -20,11 +21,6 @@ TYPE_MAP = {
     'number': float,
     'boolean': boolean
 }
-
-
-def make_type(value, type_literal):
-    type_func = TYPE_MAP.get(type_literal)
-    return type_func(value)
 
 
 class TypeValidationError(Exception):
@@ -46,10 +42,18 @@ class TypeValidationError(Exception):
         return msg.format(**vars(self))
 
 
-def validate_type(param, value, parameter_type, parameter_name=None):
+def coerce_type(param, value, parameter_type, parameter_name=None):
+
+    def make_type(value, type_literal):
+        type_func = TYPE_MAP.get(type_literal)
+        return type_func(value)
+
     param_schema = param.get("schema", param)
+    if is_nullable(param_schema) and is_null(value):
+        return None
+
     param_type = param_schema.get('type')
-    parameter_name = parameter_name if parameter_name else param['name']
+    parameter_name = parameter_name if parameter_name else param.get('name')
     if param_type == "array":
         converted_params = []
         for v in value:
@@ -90,10 +94,15 @@ def extend_with_nullable_support(validator_class):
     def nullable_support(validator, properties, instance, schema):
         null_properties = {}
         for property_, subschema in six.iteritems(properties):
-            if isinstance(instance, collections.Iterable) and \
-                    property_ in instance and \
-                    instance[property_] is None and \
-                    subschema.get('x-nullable') is True:
+            # check equal to True, because x-nullable is an extension
+            # whereas nullable value is validated by 3.0 spec
+            nullable = (subschema.get('x-nullable') is True or
+                        subschema.get('nullable'))
+            has_property = (
+                isinstance(instance, collections.Iterable) and
+                property_ in instance
+            )
+            if has_property and instance[property_] is None and nullable:
                 # exclude from following validation
                 null_properties[property_] = instance.pop(property_)
         for error in validate_properties(validator, properties, instance, schema):
@@ -108,6 +117,7 @@ Draft4ValidatorSupportNullable = extend_with_nullable_support(Draft4Validator)
 
 
 class RequestBodyValidator(object):
+
     def __init__(self, schema, consumes, api, is_null_value_valid=False, validator=None,
                  strict_validation=False):
         """
@@ -127,6 +137,11 @@ class RequestBodyValidator(object):
         self.validator = validatorClass(schema, format_checker=draft4_format_checker)
         self.api = api
         self.strict_validation = strict_validation
+
+    def validate_formdata_parameter_list(self, request):
+        request_params = request.form.keys()
+        spec_params = self.schema.get('properties', {}).keys()
+        return validate_parameter_list(request_params, spec_params)
 
     def __call__(self, function):
         """
@@ -163,6 +178,25 @@ class RequestBodyValidator(object):
                 logger.debug("%s validating schema...", request.url)
                 error = self.validate_schema(data, request.url)
                 if error and not self.has_default:
+                    return error
+            elif self.consumes[0] in FORM_CONTENT_TYPES:
+                data = dict(request.form.items()) or (request.body if len(request.body) > 0 else {})
+                data.update(dict.fromkeys(request.files, ''))  # validator expects string..
+                logger.debug('%s validating schema...', request.url)
+
+                if self.strict_validation:
+                    formdata_errors = self.validate_formdata_parameter_list(request)
+                    if formdata_errors:
+                        raise ExtraParameterProblem(formdata_errors, [])
+
+                if data:
+                    props = self.schema.get("properties", {})
+                    for k, param_defn in props.items():
+                        if k in data:
+                            data[k] = coerce_type(param_defn, data[k], 'requestBody', k)
+
+                error = self.validate_schema(data, request.url)
+                if error:
                     return error
 
             response = function(request)
@@ -225,13 +259,13 @@ class ParameterValidator(object):
         self.strict_validation = strict_validation
 
     @staticmethod
-    def validate_parameter(parameter_type, value, param):
+    def validate_parameter(parameter_type, value, param, param_name=None):
         if value is not None:
             if is_nullable(param) and is_null(value):
                 return
 
             try:
-                converted_value = validate_type(param, value, parameter_type)
+                converted_value = coerce_type(param, value, parameter_type, param_name)
             except TypeValidationError as e:
                 return str(e)
 
@@ -290,11 +324,11 @@ class ParameterValidator(object):
         val = request.headers.get(param['name'])
         return self.validate_parameter('header', val, param)
 
-    def validate_formdata_parameter(self, param, request):
+    def validate_formdata_parameter(self, param_name, param, request):
         if param.get('type') == 'file' or param.get('format') == 'binary':
-            val = request.files.get(param['name'])
+            val = request.files.get(param_name)
         else:
-            val = request.form.get(param['name'])
+            val = request.form.get(param_name)
 
         return self.validate_parameter('formdata', val, param)
 
@@ -334,7 +368,7 @@ class ParameterValidator(object):
                     return self.api.get_response(response)
 
             for param in self.parameters.get('formData', []):
-                error = self.validate_formdata_parameter(param, request)
+                error = self.validate_formdata_parameter(param["name"], param, request)
                 if error:
                     response = problem(400, 'Bad Request', error)
                     return self.api.get_response(response)
