@@ -103,14 +103,14 @@ class RequestBodyValidator(object):
 
                 if data is None and len(request.body) > 0 and not self.is_null_value_valid:
                     try:
-                        ctype_is_json = is_json_mimetype(request.headers.get("Content-Type", "") )
-                    except:
+                        ctype_is_json = is_json_mimetype(request.headers.get("Content-Type", ""))
+                    except ValueError:
                         ctype_is_json = False
-                        
+
                     if ctype_is_json:
                         # Content-Type is json but actual body was not parsed
-                        return problem(400, 
-                                       "Bad Request", 
+                        return problem(400,
+                                       "Bad Request",
                                        "Request body is not valid JSON"
                                        )
                     else:
