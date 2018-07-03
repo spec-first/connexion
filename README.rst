@@ -131,7 +131,7 @@ represents a significant difference from the usual OAuth flow.
 Dynamic Rendering of Your Specification
 ---------------------------------------
 
-Connexion uses Jinja2_ to allow specification parameterization through the `arguments` parameter. You can define specification arguments for the application either globally (via the `connexion.App` constructor) or for each specific API (via the `connexion.App#add_api` method):
+Connexion uses Jinja2_ to allow specification parameterization through the ``arguments`` parameter. You can define specification arguments for the application either globally (via the ``connexion.App`` constructor) or for each specific API (via the ``connexion.App#add_api`` method):
 
 .. code-block:: python
 
@@ -243,11 +243,13 @@ And the view function:
         return 'You send the message: {}'.format(message), 200
 
 In this example, Connexion automatically recognizes that your view
-function expects an argument named `message` and assigns the value
-of the endpoint parameter `message` to your view function.
+function expects an argument named ``message`` and assigns the value
+of the endpoint parameter ``message`` to your view function.
 
-.. warning:: When you define a parameter at your endpoint as *not* required, and your Python view has
-             a non-named argument, you will get a "missing positional argument" exception whenever you call this endpoint WITHOUT the parameter.
+.. warning:: When you define a parameter at your endpoint as *not* required, and
+    your Python view has a non-named argument, you will get a "missing
+    positional argument" exception whenever you call this endpoint WITHOUT the
+    parameter.
 
 Type casting
 ^^^^^^^^^^^^
@@ -272,8 +274,8 @@ available type castings are:
 | object       | dict        |
 +--------------+-------------+
 
-If you use the `array` type In the Swagger definition, you can define the
-`collectionFormat` so that it won't be recognized. Connexion currently
+If you use the ``array`` type In the Swagger definition, you can define the
+``collectionFormat`` so that it won't be recognized. Connexion currently
 supports collection formats "pipes" and "csv". The default format is "csv".
 
 Parameter validation
@@ -353,8 +355,8 @@ One way, `described by Flask`_, looks like this:
            debug=False/True, ssl_context=context)
 
 However, Connexion doesn't provide an ssl_context parameter. This is
-because Flask doesn't, either--but it uses `**kwargs` to send the
-parameters to the underlying [werkzeug](http://werkzeug.pocoo.org/) server.
+because Flask doesn't, either--but it uses ``**kwargs`` to send the
+parameters to the underlying `werkzeug`_ server.
 
 The Swagger UI Console
 ----------------------
@@ -387,8 +389,8 @@ In order to do this, you should specify the following option:
    options = {'swagger_path': '/path/to/swagger_ui/'}
    app = connexion.App(__name__, specification_dir='swagger/', options=options)
 
-Make sure that `swagger_ui/index.html` loads by default local swagger json.
-You can use the `api_url` jinja variable for this purpose:
+Make sure that ``swagger_ui/index.html`` loads by default local swagger json.
+You can use the ``api_url`` jinja variable for this purpose:
 
 .. code-block::
 
@@ -425,7 +427,7 @@ You can use the ``aiohttp`` framework as server backend as well:
     app = connexion.AioHttpApp(__name__, specification_dir='swagger/')
     app.run(port=8080)
 
-**NOTE:** Also check aiohttp handler examples_.
+.. note:: Also check aiohttp handler examples_.
 
 Set up and run the installation code:
 
@@ -502,6 +504,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 .. _Tornado: http://www.tornadoweb.org/en/stable/
 .. _Connexion Pet Store Example Application: https://github.com/hjacobs/connexion-example
 .. _described by Flask: http://flask.pocoo.org/snippets/111/
+.. _werkzeug: http://werkzeug.pocoo.org/
 .. _Connexion's Documentation Page: http://connexion.readthedocs.org/en/latest/
 .. _Crafting effective Microservices in Python: http://caricio.com/2016/09/16/crafting-effective-microservices-in-python/
 .. _issues where we are looking for contributions: https://github.com/zalando/connexion/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22
