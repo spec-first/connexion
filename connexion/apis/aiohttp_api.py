@@ -114,7 +114,8 @@ class AioHttpApi(AbstractAPI):
     @aiohttp_jinja2.template('index.j2')
     @asyncio.coroutine
     def _get_swagger_ui_home(self, req):
-        return {'openapi_spec_url': self.base_path + '/swagger.json'}
+        return {'openapi_spec_url': (self.base_path +
+                                     self.options.openapi_spec_path)}
 
     def add_auth_on_not_found(self, security, security_definitions):
         """
