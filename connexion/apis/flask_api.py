@@ -283,7 +283,7 @@ class InternalHandlers(object):
         """
         return flask.render_template(
             'index.j2',
-            openapi_spec_url=(self.base_path + self.options.open_api_spec_path)
+            openapi_spec_url=(self.base_path + self.options.openapi_spec_path)
         )
 
     def console_ui_static_files(self, filename):
