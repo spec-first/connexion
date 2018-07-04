@@ -46,7 +46,8 @@ tests_require = [
     'pytest',
     'pytest-cov',
     'testfixtures',
-    flask_require
+    flask_require,
+    swagger_ui_require
 ]
 
 if sys.version_info[0] >= 3:
