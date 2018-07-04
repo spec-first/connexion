@@ -72,8 +72,6 @@ class ResponseValidator(BaseDecorator):
         :type response_schema: dict
         :rtype bool
         """
-        logger.error(self.operation.path)
-        logger.error(self.mimetype)
         if not response_schema:
             return False
         return (all_json([self.mimetype]) or self.mimetype == 'text/plain')
