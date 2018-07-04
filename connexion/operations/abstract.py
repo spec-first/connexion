@@ -203,7 +203,7 @@ class AbstractOperation(SecureOperation):
         """
 
     @abc.abstractproperty
-    def _query_parsing_decorator(self):
+    def _uri_parsing_decorator(self):
         """
         Get a decorator for parsing query params
         :rtype: types.FunctionType
@@ -339,8 +339,8 @@ class AbstractOperation(SecureOperation):
         for validation_decorator in self.__validation_decorators:
             function = validation_decorator(function)
 
-        query_decorator = self._query_parsing_decorator
-        function = query_decorator(function)
+        uri_parsing_decorator = self._uri_parsing_decorator
+        function = uri_parsing_decorator(function)
 
         # NOTE: the security decorator should be applied last to check auth before anything else :-)
         security_decorator = self.security_decorator

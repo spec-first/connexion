@@ -254,7 +254,7 @@ paths:
           type: array
           items:
             type: string
-          collectionFormat: csv
+          collectionFormat: multi
           default: ["squash", "banana"]
       responses:
         200:

@@ -6,7 +6,7 @@ from jsonschema import ValidationError
 from connexion.operations.abstract import AbstractOperation
 
 from ..decorators.response import ResponseValidator
-from ..decorators.validation import (OpenAPIParameterValidator,
+from ..decorators.validation import (ParameterValidator,
                                      RequestBodyValidator, TypeValidationError)
 from ..decorators.uri_parsing import OpenAPIURIParser
 from ..exceptions import InvalidSpecification
@@ -22,7 +22,7 @@ QUERY_STRING_DELIMITERS = {
 }
 
 VALIDATOR_MAP = {
-    'parameter': OpenAPIParameterValidator,
+    'parameter': ParameterValidator,
     'body': RequestBodyValidator,
     'response': ResponseValidator,
 }
@@ -329,8 +329,8 @@ class OpenAPIOperation(AbstractOperation):
         return {}
 
     @property
-    def _query_parsing_decorator(self):
-        return OpenAPIURIParser({p["name"]: p for p in self.parameters if p["in"] in ["query", "path"]})
+    def _uri_parsing_decorator(self):
+        return OpenAPIURIParser(self.parameters)
 
     def _get_body_argument(self, body, arguments, has_kwargs):
         body_schema = self.body_schema

@@ -216,8 +216,26 @@ class ParameterValidator(object):
         self.strict_validation = strict_validation
 
     @classmethod
-    def validate_type(cls, param, value, parameter_type):
-        raise NotImplementedError("Use Validator for your spec version")
+    def validate_type(cls, param_defn, value, parameter_type, parameter_name=None):
+        param_schema = param_defn.get("schema", param_defn)  # XXX DGK
+        param_type = param_schema.get('type')
+        parameter_name = parameter_name or param_defn['name']
+        if param_type == 'array':
+            converted_parts = []
+            for part in value:
+                try:
+                    converted = make_type(part, param_schema['items']['type'])
+                except (ValueError, TypeError):
+                    converted = part
+                converted_parts.append(converted)
+            return converted_parts
+        else:
+            try:
+                return make_type(value, param_type)
+            except ValueError:
+                raise TypeValidationError(param_type, parameter_type, parameter_name)
+            except TypeError:
+                return value
 
     @classmethod
     def validate_parameter(cls, parameter_type, value, param):
@@ -337,53 +355,3 @@ class ParameterValidator(object):
             return function(request)
 
         return wrapper
-
-
-class Swagger2ParameterValidator(ParameterValidator):
-
-    @classmethod
-    def validate_type(cls, param_defn, value, parameter_type, parameter_name=None):
-        param_schema = param_defn
-        param_type = param_schema.get('type')
-        parameter_name = parameter_name or param_defn['name']
-        if param_type == 'array':
-            converted_parts = []
-            for part in value:
-                try:
-                    converted = make_type(part, param_schema['items']['type'])
-                except (ValueError, TypeError):
-                    converted = part
-                converted_parts.append(converted)
-            return converted_parts
-        else:
-            try:
-                return make_type(value, param_type)
-            except ValueError:
-                raise TypeValidationError(param_type, parameter_type, parameter_name)
-            except TypeError:
-                return value
-
-
-class OpenAPIParameterValidator(ParameterValidator):
-
-    @classmethod
-    def validate_type(cls, param_defn, value, parameter_type, parameter_name=None):
-        param_schema = param_defn["schema"]
-        param_type = param_schema.get('type')
-        parameter_name = parameter_name or param_defn['name']
-        if param_type == 'array':
-            converted_parts = []
-            for part in value:
-                try:
-                    converted = make_type(part, param_schema['items']['type'])
-                except (ValueError, TypeError):
-                    converted = part
-                converted_parts.append(converted)
-            return converted_parts
-        else:
-            try:
-                return make_type(value, param_type)
-            except ValueError:
-                raise TypeValidationError(param_type, parameter_type, parameter_name)
-            except TypeError:
-                return value

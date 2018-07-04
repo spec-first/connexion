@@ -7,7 +7,7 @@ from connexion.operations.abstract import AbstractOperation
 
 from ..decorators.response import ResponseValidator
 from ..decorators.validation import (RequestBodyValidator,
-                                     Swagger2ParameterValidator,
+                                     ParameterValidator,
                                      TypeValidationError)
 from ..decorators.uri_parsing import Swagger2URIParser
 from ..exceptions import InvalidSpecification
@@ -16,7 +16,7 @@ from ..utils import deep_get, is_null, is_nullable, make_type
 logger = logging.getLogger("connexion.operations.swagger2")
 
 VALIDATOR_MAP = {
-    'parameter': Swagger2ParameterValidator,
+    'parameter': ParameterValidator,
     'body': RequestBodyValidator,
     'response': ResponseValidator,
 }
@@ -267,8 +267,8 @@ class Swagger2Operation(AbstractOperation):
         return body_parameters[0] if body_parameters else {}
 
     @property
-    def _query_parsing_decorator(self):
-        return Swagger2URIParser({p["name"]: p for p in self.parameters if p["in"] in ["query", "path"]})
+    def _uri_parsing_decorator(self):
+        return Swagger2URIParser(self.parameters)
 
     def get_arguments(self, path_params, query_params, body, files, arguments,
                       has_kwargs, sanitize):
