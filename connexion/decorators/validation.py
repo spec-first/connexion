@@ -21,13 +21,6 @@ TYPE_MAP = {
     'boolean': boolean
 }
 
-QUERY_STRING_DELIMITERS = {
-    'spaceDelimited': ' ',
-    'pipeDelimited': '|',
-    'simple': ',',
-    'form': ','
-}
-
 
 def make_type(value, type_literal):
     type_func = TYPE_MAP.get(type_literal)
