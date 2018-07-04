@@ -110,15 +110,11 @@ def parameter_to_arg(operation, function, pythonic_params=False):
         logger.error(pythonic_params)
         if all_json(consumes):
             request_body = request.json
-            logger.error("json")
         elif consumes[0] in FORM_CONTENT_TYPES:
             request_body = {sanitize(k): v for k, v in request.form.items()}
-            logger.error("form")
         else:
             request_body = request.body
-            logger.error("raw body")
 
-        logger.error(request_body)
         # accept formData even even if mimetype is wrong for backwards
         # compatability  :/
         request_body = request_body or {sanitize(k): v for k, v in request.form.items()}
@@ -127,65 +123,6 @@ def parameter_to_arg(operation, function, pythonic_params=False):
             query = request.query.to_dict(flat=False)
         except AttributeError:
             query = dict(request.query.items())
-
-<<<<<<< HEAD
-        if body_schema and body_name is None:
-            x_body_name = body_schema.get('x-body-name', 'body')
-            logger.debug('x-body-name is %s' % x_body_name)
-            if x_body_name in arguments or has_kwargs:
-                kwargs[x_body_name] = request_body
-
-        # swagger2 body param and formData
-        # Add body parameters
-        if body_name:
-            if not has_kwargs and body_name not in arguments:
-                logger.debug("Body parameter '%s' not in function arguments", body_name)
-            else:
-                logger.debug("Body parameter '%s' in function arguments", body_name)
-                kwargs[body_name] = request_body
-
-        if not body_properties:
-            # swagger 2
-            # Add formData parameters
-            form_arguments = copy.deepcopy(default_form_params)
-            form_arguments.update({sanitize_param(k): v for k, v in request.form.items()})
-            for key, value in form_arguments.items():
-                if not has_kwargs and key not in arguments:
-                    logger.debug("FormData parameter '%s' not in function arguments", key)
-                else:
-                    logger.debug("FormData parameter '%s' in function arguments", key)
-                    try:
-                        form_defn = form_defns[key]
-                    except KeyError:  # pragma: no cover
-                        logger.error("Function argument '{}' not defined in specification".format(key))
-                    else:
-                        kwargs[key] = get_val_from_param(value, form_defn)
-
-        # Add query parameters
-        query_arguments = copy.deepcopy(default_query_params)
-        query_arguments.update(request.query)
-        for key, value in query_arguments.items():
-            key = sanitize_param(key)
-            if not has_kwargs and key not in arguments:
-                logger.debug("Query Parameter '%s' not in function arguments", key)
-            else:
-                logger.debug("Query Parameter '%s' in function arguments", key)
-                try:
-                    query_defn = query_defns[key]
-                except KeyError:  # pragma: no cover
-                    logger.error("Function argument '{}' not defined in specification".format(key))
-                else:
-                    logger.debug('%s is a %s', key, query_defn)
-                    kwargs[key] = get_val_from_param(value, query_defn)
-
-        # Add file parameters
-        file_arguments = request.files
-        for key, value in file_arguments.items():
-            if not has_kwargs and key not in arguments:
-                logger.debug("File parameter (formData) '%s' not in function arguments", key)
-            else:
-                logger.debug("File parameter (formData) '%s' in function arguments", key)
-                kwargs[key] = value
 
         kwargs.update(
             operation.get_arguments(request.path_params, query, request_body,
