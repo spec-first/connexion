@@ -2,7 +2,11 @@ import logging
 import pathlib
 from typing import Optional  # NOQA
 
-from swagger_ui_bundle import swagger_ui_2_path
+try:
+    from swagger_ui_bundle import swagger_ui_2_path
+    INTERNAL_CONSOLE_UI_PATH = swagger_ui_2_path
+except ImportError:
+    INTERNAL_CONSOLE_UI_PATH = None
 
 try:
     from swagger_ui_bundle import swagger_ui_2_path
