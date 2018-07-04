@@ -27,12 +27,12 @@ install_requires = [
     'requests>=2.9.1',
     'six>=1.9',
     'swagger-spec-validator>=2.3.1',
-    'swagger-ui-bundle==0.0.2',
     'inflection>=0.3.1',
     'pathlib>=1.0.1; python_version < "3.4"',
     'typing>=3.6.1; python_version < "3.6"',
 ]
 
+swagger_ui_require = 'swagger-ui-bundle>=0.0.2'
 flask_require = 'flask>=0.10.1'
 aiohttp_require = [
     'aiohttp>=2.3.10',
@@ -108,6 +108,7 @@ setup(
     extras_require={
         'tests': tests_require,
         'flask': flask_require,
+        'swagger-ui': swagger_ui_require,
         'aiohttp': aiohttp_require,
         'ujson': ujson_require
     },

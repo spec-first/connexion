@@ -1,10 +1,20 @@
+import logging
 import pathlib
 from typing import Optional  # NOQA
 
-from swagger_ui_bundle import swagger_ui_2_path
+try:
+    from swagger_ui_bundle import swagger_ui_2_path
+    INTERNAL_CONSOLE_UI_PATH = swagger_ui_2_path
+except ImportError:
+    INTERNAL_CONSOLE_UI_PATH = None
 
 MODULE_PATH = pathlib.Path(__file__).absolute().parent
-INTERNAL_CONSOLE_UI_PATH = swagger_ui_2_path
+NO_UI_MSG = """The swagger_ui directory could not be found.
+    Please install connexion with extra install: pip install connexion[swagger-ui]
+    or provide the path to your local installation by passing swagger_path=<your path>
+"""
+
+logger = logging.getLogger("connexion.options")
 
 
 class ConnexionOptions(object):
@@ -52,6 +62,10 @@ class ConnexionOptions(object):
 
         Default: True
         """
+        if (self._options.get('swagger_ui', True) and
+                self.openapi_console_ui_from_dir is None):
+            logger.warning(NO_UI_MSG)
+            return False
         return self._options.get('swagger_ui', True)
 
     @property

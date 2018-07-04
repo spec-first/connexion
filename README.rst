@@ -361,8 +361,10 @@ parameters to the underlying `werkzeug`_ server.
 The Swagger UI Console
 ----------------------
 
-The Swagger UI for an API is available, by default, in
-``{base_path}/ui/`` where ``base_path`` is the base path of the API.
+The Swagger UI for an API is available through pip extras.
+You can install it with ``pip install connexion[swagger-ui]``.
+It will be served up at ``{base_path}/ui/`` where ``base_path`` is the
+base path of the API.
 
 You can disable the Swagger UI at the application level:
 
@@ -381,7 +383,7 @@ You can also disable it at the API level:
     app.add_api('my_api.yaml', swagger_ui=False)
 
 If necessary, you can explicitly specify the path to the directory with
-swagger-ui to not use the connexion-embedded swagger-ui distro.
+swagger-ui to not use the connexion[swagger-ui] distro.
 In order to do this, you should specify the following option:
 
 .. code-block:: python
@@ -389,12 +391,24 @@ In order to do this, you should specify the following option:
    options = {'swagger_path': '/path/to/swagger_ui/'}
    app = connexion.App(__name__, specification_dir='swagger/', options=options)
 
-Make sure that ``swagger_ui/index.html`` loads by default local swagger json.
-You can use the ``api_url`` jinja variable for this purpose:
+If you wish to provide your own swagger-ui distro, note that connextion
+expects a jinja2 file called ``swagger_ui/index.j2`` in order to load the
+correct ``swagger.json`` by default. Your ``index.j2`` file can use the
+``openapi_spec_url`` jinja variable for this purpose:
 
 .. code-block::
 
-    const ui = SwaggerUIBundle({ url: "{{ api_url }}/swagger.json"})
+    const ui = SwaggerUIBundle({ url: "{{ openapi_spec_url }}"})
+
+Additionally, if you wish to use swagger-ui-3.x.x, it is also provided by
+installing connexion[swagger-ui], and can be enabled like this:
+
+.. code-block:: python
+
+   from swagger_ui_bundle import swagger_ui_3_path
+   options = {'swagger_path': swagger_ui_3_path}
+   app = connexion.App(__name__, specification_dir='swagger/', options=options)
+
 
 Server Backend
 --------------
