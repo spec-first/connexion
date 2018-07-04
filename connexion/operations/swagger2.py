@@ -5,21 +5,12 @@ from jsonschema import ValidationError
 
 from connexion.operations.abstract import AbstractOperation
 
-from ..decorators.response import ResponseValidator
-from ..decorators.validation import (RequestBodyValidator,
-                                     ParameterValidator,
-                                     TypeValidationError)
 from ..decorators.uri_parsing import Swagger2URIParser
+from ..decorators.validation import (validate_type, TypeValidationError)
 from ..exceptions import InvalidSpecification
 from ..utils import deep_get, is_null, is_nullable, make_type
 
 logger = logging.getLogger("connexion.operations.swagger2")
-
-VALIDATOR_MAP = {
-    'parameter': ParameterValidator,
-    'body': RequestBodyValidator,
-    'response': ResponseValidator,
-}
 
 
 class Swagger2Operation(AbstractOperation):
@@ -50,8 +41,6 @@ class Swagger2Operation(AbstractOperation):
         :type app_produces: list
         :param app_consumes: list of content types the application consumes by default
         :type app_consumes: list
-        :param validator_map: map of validators
-        :type validator_map: dict
         :param path_parameters: Parameters defined in the path level
         :type path_parameters: list
         :param app_security: list of security rules the application uses by default
@@ -80,9 +69,6 @@ class Swagger2Operation(AbstractOperation):
         """
         app_security = operation.get('security', app_security)
 
-        self._validator_map = dict(VALIDATOR_MAP)
-        self._validator_map.update(validator_map or {})
-
         super(Swagger2Operation, self).__init__(
             api=api,
             method=method,
@@ -94,6 +80,7 @@ class Swagger2Operation(AbstractOperation):
             validate_responses=validate_responses,
             strict_validation=strict_validation,
             randomize_endpoint=randomize_endpoint,
+            validator_map=validator_map,
             pythonic_params=pythonic_params
         )
 
@@ -161,12 +148,11 @@ class Swagger2Operation(AbstractOperation):
         return self._produces
 
     def _validate_defaults(self):
-        validator = self.validator_map["parameter"]
         for param_defn in self.parameters:
             try:
                 if param_defn['in'] == 'query' and 'default' in param_defn:
-                    validator.validate_type(param_defn, param_defn['default'],
-                                            'query', param_defn['name'])
+                    validate_type(param_defn, param_defn['default'],
+                                  'query', param_defn['name'])
             except (TypeValidationError, ValidationError):
                 raise InvalidSpecification('The parameter \'{param_name}\' has a default value which is not of'
                                            ' type \'{param_type}\''.format(param_name=param_defn['name'],

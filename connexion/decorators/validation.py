@@ -47,14 +47,14 @@ class TypeValidationError(Exception):
 
 
 def validate_type(param, value, parameter_type, parameter_name=None):
-    param_schema = param.get('schema', param)  # oas3
+    param_schema = param.get("schema", param)
     param_type = param_schema.get('type')
     parameter_name = parameter_name if parameter_name else param['name']
     if param_type == "array":
         converted_params = []
         for v in value:
             try:
-                converted = make_type(v, param["items"]["type"])
+                converted = make_type(v, param_schema["items"]["type"])
             except (ValueError, TypeError):
                 converted = v
             converted_params.append(converted)
@@ -198,7 +198,6 @@ class ParameterValidator(object):
         """
         :param parameters: List of request parameter dictionaries
         :param api: api that the validator is attached to
-        :param validate_type: function for validating a type
         :param strict_validation: Flag indicating if parameters not in spec are allowed
         """
         self.parameters = collections.defaultdict(list)
@@ -209,35 +208,13 @@ class ParameterValidator(object):
         self.strict_validation = strict_validation
 
     @classmethod
-    def validate_type(cls, param_defn, value, parameter_type, parameter_name=None):
-        param_schema = param_defn.get("schema", param_defn)  # XXX DGK
-        param_type = param_schema.get('type')
-        parameter_name = parameter_name or param_defn['name']
-        if param_type == 'array':
-            converted_parts = []
-            for part in value:
-                try:
-                    converted = make_type(part, param_schema['items']['type'])
-                except (ValueError, TypeError):
-                    converted = part
-                converted_parts.append(converted)
-            return converted_parts
-        else:
-            try:
-                return make_type(value, param_type)
-            except ValueError:
-                raise TypeValidationError(param_type, parameter_type, parameter_name)
-            except TypeError:
-                return value
-
-    @classmethod
     def validate_parameter(cls, parameter_type, value, param):
         if value is not None:
             if is_nullable(param) and is_null(value):
                 return
 
             try:
-                converted_value = cls.validate_type(param, value, parameter_type)
+                converted_value = validate_type(param, value, parameter_type)
             except TypeValidationError as e:
                 return str(e)
 

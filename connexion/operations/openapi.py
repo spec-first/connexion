@@ -5,10 +5,8 @@ from jsonschema import ValidationError
 
 from connexion.operations.abstract import AbstractOperation
 
-from ..decorators.response import ResponseValidator
-from ..decorators.validation import (ParameterValidator,
-                                     RequestBodyValidator, TypeValidationError)
 from ..decorators.uri_parsing import OpenAPIURIParser
+from ..decorators.validation import (validate_type, TypeValidationError)
 from ..exceptions import InvalidSpecification
 from ..utils import deep_get, is_null, is_nullable, make_type
 
@@ -19,12 +17,6 @@ QUERY_STRING_DELIMITERS = {
     'pipeDelimited': '|',
     'simple': ',',
     'form': ','
-}
-
-VALIDATOR_MAP = {
-    'parameter': ParameterValidator,
-    'body': RequestBodyValidator,
-    'response': ResponseValidator,
 }
 
 
@@ -55,8 +47,6 @@ class OpenAPIOperation(AbstractOperation):
         :param operation: swagger operation object
         :type operation: dict
         :param resolver: Callable that maps operationID to a function
-        :param validator_map: map of validators
-        :type validator_map: dict
         :param path_parameters: Parameters defined in the path level
         :type path_parameters: list
         :param app_security: list of security rules the application uses by default
@@ -85,9 +75,6 @@ class OpenAPIOperation(AbstractOperation):
         security_schemes = component_get('securitySchemes')
         app_security = operation.get('security', app_security)
 
-        self._validator_map = dict(VALIDATOR_MAP)
-        self._validator_map.update(validator_map or {})
-
         super(OpenAPIOperation, self).__init__(
             api=api,
             method=method,
@@ -99,6 +86,7 @@ class OpenAPIOperation(AbstractOperation):
             validate_responses=validate_responses,
             strict_validation=strict_validation,
             randomize_endpoint=randomize_endpoint,
+            validator_map=validator_map,
             pythonic_params=pythonic_params,
         )
 
@@ -192,13 +180,12 @@ class OpenAPIOperation(AbstractOperation):
         return self._definitions_map
 
     def _validate_defaults(self):
-        validator = self.validator_map["parameter"]
         for param_defn in self.parameters:
             try:
                 param_schema = param_defn["schema"]
                 if param_defn['in'] == 'query' and 'default' in param_schema:
-                    validator.validate_type(param_defn, param_schema['default'],
-                                            'query', param_defn['name'])
+                    validate_type(param_defn, param_schema['default'],
+                                  'query', param_defn['name'])
             except (TypeValidationError, ValidationError):
                 raise InvalidSpecification('The parameter \'{param_name}\' has a default value which is not of'
                                            ' type \'{param_type}\''.format(param_name=param_defn['name'],

@@ -8,12 +8,21 @@ from connexion.operations.secure import SecureOperation
 from ..decorators.metrics import UWSGIMetricsCollector
 from ..decorators.parameter import parameter_to_arg
 from ..decorators.produces import BaseSerializer, Produces
+from ..decorators.response import ResponseValidator
+from ..decorators.validation import (ParameterValidator,
+                                     RequestBodyValidator)
 from ..exceptions import InvalidSpecification
 from ..utils import all_json, deep_get, is_nullable
 
 logger = logging.getLogger('connexion.operations.abstract')
 
 DEFAULT_MIMETYPE = 'application/json'
+
+VALIDATOR_MAP = {
+    'parameter': ParameterValidator,
+    'body': RequestBodyValidator,
+    'response': ResponseValidator,
+}
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -45,7 +54,8 @@ class AbstractOperation(SecureOperation):
     def __init__(self, api, method, path, operation, resolver,
                  app_security=None, security_schemes=None,
                  validate_responses=False, strict_validation=False,
-                 randomize_endpoint=None, pythonic_params=False):
+                 randomize_endpoint=None, validator_map=None,
+                 pythonic_params=False):
         """
         """
         self._api = api
@@ -65,6 +75,9 @@ class AbstractOperation(SecureOperation):
         self._operation_id = self._operation.get("operationId")
         self._resolution = resolver.resolve(self)
         self._operation_id = self._resolution.operation_id
+
+        self._validator_map = dict(VALIDATOR_MAP)
+        self._validator_map.update(validator_map or {})
 
     @property
     def method(self):
