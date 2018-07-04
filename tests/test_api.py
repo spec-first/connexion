@@ -87,7 +87,7 @@ def test_invalid_operation_does_not_stop_application_in_debug_mode():
 
 def test_other_errors_stop_application_to_setup():
     # Errors should still result exceptions!
-    with pytest.raises(SwaggerValidationError):
+    with pytest.raises(InvalidSpecification):
         FlaskApi(TEST_FOLDER / "fixtures/bad_specs/swagger.yaml",
                  base_path="/api/v1.0", arguments={'title': 'OK'})
 

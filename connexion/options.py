@@ -3,10 +3,10 @@ import pathlib
 from typing import Optional  # NOQA
 
 try:
-    from swagger_ui_bundle import swagger_ui_2_path
-    INTERNAL_CONSOLE_UI_PATH = swagger_ui_2_path
+    from swagger_ui_bundle import (swagger_ui_2_path,
+                                   swagger_ui_3_path)
 except ImportError:
-    INTERNAL_CONSOLE_UI_PATH = None
+    swagger_ui_2_path = swagger_ui_3_path = None
 
 try:
     from swagger_ui_bundle import swagger_ui_2_path
@@ -31,10 +31,10 @@ class ConnexionOptions(object):
         self.oas_version = oas_version
         if self.oas_version >= (3, 0, 0):
             self.openapi_spec_name = '/openapi.json'
-            self.swagger_ui_local_path = MODULE_PATH / 'vendor' / 'swagger-ui-3'
+            self.swagger_ui_local_path = swagger_ui_3_path
         else:
             self.openapi_spec_name = '/swagger.json'
-            self.swagger_ui_local_path = MODULE_PATH / 'vendor' / 'swagger-ui-2'
+            self.swagger_ui_local_path = swagger_ui_2_path
 
         if options:
             self._options.update(filter_values(options))
