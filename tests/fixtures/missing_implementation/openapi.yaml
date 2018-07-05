@@ -1,0 +1,14 @@
+openapi: 3.0.0
+info:
+  title: Testing API
+  version: '1.0'
+paths:
+  /operation-not-implemented:
+    get:
+      summary: Operation function does not exist.
+      operationId: api.this_function_does_not_exist
+      responses:
+        '200':
+          description: OK
+servers:
+  - url: /testing

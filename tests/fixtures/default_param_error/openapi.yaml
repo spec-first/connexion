@@ -1,0 +1,21 @@
+openapi: 3.0.0
+info:
+  title: '{{title}}'
+  version: '1.0'
+paths:
+  /default-param-query-does-not-match-type:
+    get:
+      summary: Default value does not match the param type
+      operationId: fakeapi.hello.test_default_missmatch_definition
+      responses:
+        '200':
+          description: OK
+      parameters:
+        - name: age
+          in: query
+          description: Simple age
+          schema:
+            type: integer
+            default: 'error'
+servers:
+  - url: /v1.0
