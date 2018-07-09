@@ -1,0 +1,14 @@
+openapi: 3.0.0
+info:
+  title: Not Exist API
+  version: '1.0'
+paths:
+  /module-not-implemented:
+    get:
+      summary: Operation function does not exist.
+      operationId: m.module_does_not_exist
+      responses:
+        '200':
+          description: OK
+servers:
+  - url: /na

@@ -1,0 +1,16 @@
+openapi: 3.0.0
+info:
+  title: '{{title}}'
+  version: '1.0'
+paths:
+  /welcome:
+    put:
+      responses:
+        '200':
+          description: greeting response
+          content:
+            '*/*':
+              schema:
+                type: object
+servers:
+  - url: /v1.0
