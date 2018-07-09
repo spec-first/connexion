@@ -497,7 +497,7 @@ paths:
       operationId: fakeapi.hello.post_goodday_no_header
       responses:
         '201':
-          description: gooday response
+          description: goodday response
           headers:
             Location:
               description: The URI of the created resource
@@ -524,6 +524,10 @@ paths:
             text/plain:
               schema:
                 type: string
+              examples:
+                justAnExample:
+                  summary: a basic example.
+                  value: Good evening, doctor.
       parameters:
         - name: name
           in: path

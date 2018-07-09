@@ -17,11 +17,11 @@ def test_mock_resolver():
         'default': {
             'content': {
                 'application/json': {
-                    'examples': [
-                        {
+                    'examples': {
+                        "super_cool_example": {
                             'foo': 'bar'
                         }
-                    ]
+                    }
                 }
             }
         }

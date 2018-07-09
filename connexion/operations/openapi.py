@@ -128,8 +128,8 @@ class OpenAPIOperation(AbstractOperation):
                 content = resp.get("content", {})
                 for mimetype, resp in content.items():
                     # check components/examples
-                    examples = resp.get("examples", [])
-                    for example in examples:
+                    examples = resp.get("examples", {})
+                    for _, example in examples.items():
                         example = self._resolve_reference(example)
 
                     example = resp.get("example", {})
@@ -265,7 +265,8 @@ class OpenAPIOperation(AbstractOperation):
         except ValueError:
             code = 200
         try:
-            return (deep_get(self._responses, examples_path)[0], code)
+            # TODO also use example header?
+            return (list(deep_get(self._responses, examples_path).values())[0], code)
         except (KeyError, IndexError):
             pass
         try:
