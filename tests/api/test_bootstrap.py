@@ -39,8 +39,8 @@ def test_app_with_different_uri_parser(simple_api_spec_dir):
     from connexion.decorators.uri_parsing import Swagger2URIParser
     app = App(__name__, port=5001,
               specification_dir='..' / simple_api_spec_dir.relative_to(TEST_FOLDER),
-              options={"uri_parser_class": Swagger2URIParser})
-              #debug=True)
+              options={"uri_parser_class": Swagger2URIParser},
+              debug=True)
     app.add_api('swagger.yaml')
 
     app_client = app.app.test_client()
