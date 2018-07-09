@@ -48,7 +48,8 @@ def test_app_with_different_uri_parser(simple_api_spec_dir):
         '/v1.0/test_array_csv_query_param?items=a,b,c&items=d,e,f'
     )  # type: flask.Response
     assert resp.status_code == 200
-    assert json.loads(resp.data) == ['d', 'e', 'f']
+    j = json.loads(resp.get_data(as_text=True))
+    assert j == ['d', 'e', 'f']
 
 
 def test_no_swagger_ui(simple_api_spec_dir):
