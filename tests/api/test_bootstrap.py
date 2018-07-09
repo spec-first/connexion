@@ -1,5 +1,6 @@
-import jinja2
 import json
+
+import jinja2
 import yaml
 from swagger_spec_validator.common import SwaggerValidationError
 
