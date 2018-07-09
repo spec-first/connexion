@@ -14,6 +14,7 @@ from .decorators.response import ResponseValidator
 from .decorators.security import (get_tokeninfo_func, get_tokeninfo_url,
                                   security_passthrough, verify_oauth_local,
                                   verify_oauth_remote)
+from .decorators.uri_parsing import AlwaysMultiURIParser
 from .decorators.validation import (ParameterValidator, RequestBodyValidator,
                                     TypeValidationError)
 from .exceptions import InvalidSpecification
@@ -141,7 +142,7 @@ class Operation(SecureOperation):
                  path_parameters=None, app_security=None, security_definitions=None,
                  definitions=None, parameter_definitions=None, response_definitions=None,
                  validate_responses=False, strict_validation=False, randomize_endpoint=None,
-                 validator_map=None, pythonic_params=False):
+                 validator_map=None, pythonic_params=False, uri_parser_class=None):
         """
         This class uses the OperationID identify the module and function that will handle the operation
 
@@ -188,6 +189,8 @@ class Operation(SecureOperation):
         :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended
         to any shadowed built-ins
         :type pythonic_params: bool
+        :param uri_parser_class: A URI parser class that inherits from AbstractURIParser
+        :type uri_parser_class: AbstractURIParser
         """
 
         self.api = api
@@ -209,6 +212,7 @@ class Operation(SecureOperation):
         self.operation = operation
         self.randomize_endpoint = randomize_endpoint
         self.pythonic_params = pythonic_params
+        self.uri_parser_class = uri_parser_class or AlwaysMultiURIParser
 
         # todo support definition references
         # todo support references to application level parameters
@@ -389,6 +393,10 @@ class Operation(SecureOperation):
         for validation_decorator in self.__validation_decorators:
             function = validation_decorator(function)
 
+        uri_parsing_decorator = self.__uri_parsing_decorator
+        logging.debug('... Adding uri parsing decorator (%r)', uri_parsing_decorator)
+        function = uri_parsing_decorator(function)
+
         # NOTE: the security decorator should be applied last to check auth before anything else :-)
         security_decorator = self.security_decorator
         logger.debug('... Adding security decorator (%r)', security_decorator)
@@ -401,6 +409,16 @@ class Operation(SecureOperation):
         function = self._request_end_lifecycle_decorator(function)
 
         return function
+
+    @property
+    def __uri_parsing_decorator(self):
+        """
+        Get uri parsing decorator
+
+        This decorator handles query and path parameter deduplication and
+        array types.
+        """
+        return self.uri_parser_class(self.parameters)
 
     @property
     def __content_type_decorator(self):

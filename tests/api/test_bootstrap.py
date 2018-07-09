@@ -1,3 +1,5 @@
+import json
+
 import jinja2
 import yaml
 from swagger_spec_validator.common import SwaggerValidationError
@@ -32,6 +34,23 @@ def test_app_with_different_server_option(simple_api_spec_dir):
     get_bye = app_client.get('/v1.0/bye/jsantos')  # type: flask.Response
     assert get_bye.status_code == 200
     assert get_bye.data == b'Goodbye jsantos'
+
+
+def test_app_with_different_uri_parser(simple_api_spec_dir):
+    from connexion.decorators.uri_parsing import Swagger2URIParser
+    app = App(__name__, port=5001,
+              specification_dir='..' / simple_api_spec_dir.relative_to(TEST_FOLDER),
+              options={"uri_parser_class": Swagger2URIParser},
+              debug=True)
+    app.add_api('swagger.yaml')
+
+    app_client = app.app.test_client()
+    resp = app_client.get(
+        '/v1.0/test_array_csv_query_param?items=a,b,c&items=d,e,f'
+    )  # type: flask.Response
+    assert resp.status_code == 200
+    j = json.loads(resp.get_data(as_text=True))
+    assert j == ['d', 'e', 'f']
 
 
 def test_no_swagger_ui(simple_api_spec_dir):

@@ -48,20 +48,15 @@ class TypeValidationError(Exception):
 def validate_type(param, value, parameter_type, parameter_name=None):
     param_type = param.get('type')
     parameter_name = parameter_name if parameter_name else param['name']
-    if param_type == "array":  # then logic is more complex
-        if param.get("collectionFormat") and param.get("collectionFormat") == "pipes":
-            parts = value.split("|")
-        else:  # default: csv
-            parts = value.split(",")
-
-        converted_parts = []
-        for part in parts:
+    if param_type == "array":
+        converted_params = []
+        for v in value:
             try:
-                converted = make_type(part, param["items"]["type"])
+                converted = make_type(v, param["items"]["type"])
             except (ValueError, TypeError):
-                converted = part
-            converted_parts.append(converted)
-        return converted_parts
+                converted = v
+            converted_params.append(converted)
+        return converted_params
     else:
         try:
             return make_type(value, param_type)

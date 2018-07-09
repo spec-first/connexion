@@ -42,6 +42,10 @@ def test_required_query_param(simple_app):
 def test_array_query_param(simple_app):
     app_client = simple_app.app.test_client()
     headers = {'Content-type': 'application/json'}
+    url = '/v1.0/test_array_csv_query_param'
+    response = app_client.get(url, headers=headers)
+    array_response = json.loads(response.data.decode('utf-8', 'replace'))  # type: [str]
+    assert array_response == ['squash', 'banana']
     url = '/v1.0/test_array_csv_query_param?items=one,two,three'
     response = app_client.get(url, headers=headers)
     array_response = json.loads(response.data.decode('utf-8', 'replace'))  # type: [str]
