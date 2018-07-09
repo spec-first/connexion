@@ -24,6 +24,8 @@ templates['apikey_auth'] = template({"1":function(container,depth0,helpers,parti
     + ((stack1 = (helpers.escape || (depth0 && depth0.escape) || alias2).call(alias1,(depth0 != null ? depth0.name : depth0),{"name":"escape","hash":{},"data":data})) != null ? stack1 : "")
     + "</span>\n        </div>\n        <div class=\"key_auth__field\">\n            <span class=\"key_auth__label\">in:</span>\n            <span class=\"key_auth__value\">"
     + ((stack1 = (helpers.escape || (depth0 && depth0.escape) || alias2).call(alias1,(depth0 != null ? depth0["in"] : depth0),{"name":"escape","hash":{},"data":data})) != null ? stack1 : "")
+    + "</span>\n        </div>\n        <div class=\"key_auth__field\">\n            <span class=\"key_auth__label\">x-authentication-scheme:</span>\n            <span class=\"key_auth__value\">"
+    + ((stack1 = (helpers.escape || (depth0 && depth0.escape) || alias2).call(alias1,(depth0 != null ? depth0["authenticationScheme"] : depth0),{"name":"escape","hash":{},"data":data})) != null ? stack1 : "")
     + "</span>\n        </div>\n        <div class=\"key_auth__field\">\n            <span class=\"key_auth__label\">value:</span>\n"
     + ((stack1 = helpers["if"].call(alias1,(depth0 != null ? depth0.isLogout : depth0),{"name":"if","hash":{},"fn":container.program(1, data, 0),"inverse":container.program(3, data, 0),"data":data})) != null ? stack1 : "")
     + "        </div>\n    </div>\n</div>\n";
@@ -3270,10 +3272,11 @@ SwaggerAuthorizations.prototype.apply = function (obj, securities) {
 /**
  * ApiKeyAuthorization allows a query param or header to be injected
  */
-var ApiKeyAuthorization = module.exports.ApiKeyAuthorization = function (name, value, type) {
+var ApiKeyAuthorization = module.exports.ApiKeyAuthorization = function (name, value, type, authenticationScheme) {
   this.name = name;
   this.value = value;
   this.type = type;
+  this.authenticationScheme = authenticationScheme || '';
 };
 
 ApiKeyAuthorization.prototype.apply = function (obj) {
@@ -3306,7 +3309,12 @@ ApiKeyAuthorization.prototype.apply = function (obj) {
     return true;
   } else if (this.type === 'header') {
     if(typeof obj.headers[this.name] === 'undefined') {
-      obj.headers[this.name] = this.value;
+      var headerValue = (
+        this.authenticationScheme === 'Bearer' ?
+        'Bearer ' + this.value :
+        this.value
+      );
+      obj.headers[this.name] = headerValue;
     }
 
     return true;
@@ -22293,7 +22301,8 @@ SwaggerUi.Views.AuthView = Backbone.View.extend({
                 keyAuth = new SwaggerClient.ApiKeyAuthorization(
                     auth.get('name'),
                     auth.get('value'),
-                    auth.get('in')
+                    auth.get('in'),
+                    auth.get('x-authentication-scheme')
                 );
 
                 this.router.api.clientAuthorizations.add(auth.get('title'), keyAuth);
