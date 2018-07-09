@@ -6,7 +6,7 @@ from jsonschema import ValidationError
 from connexion.operations.abstract import AbstractOperation
 
 from ..decorators.uri_parsing import OpenAPIURIParser
-from ..decorators.validation import (validate_type, TypeValidationError)
+from ..decorators.validation import TypeValidationError, validate_type
 from ..exceptions import InvalidSpecification
 from ..utils import deep_get, is_null, is_nullable, make_type
 
