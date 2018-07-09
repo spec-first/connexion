@@ -200,7 +200,8 @@ class AbstractAPI(object):
                               validator_map=self.validator_map,
                               strict_validation=self.strict_validation,
                               resolver=self.resolver,
-                              pythonic_params=self.pythonic_params)
+                              pythonic_params=self.pythonic_params,
+                              uri_parser_class=self.options.uri_parser_class)
         self._add_operation_internal(method, path, operation)
 
     @abc.abstractmethod

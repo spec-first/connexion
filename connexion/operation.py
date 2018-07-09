@@ -142,7 +142,7 @@ class Operation(SecureOperation):
                  path_parameters=None, app_security=None, security_definitions=None,
                  definitions=None, parameter_definitions=None, response_definitions=None,
                  validate_responses=False, strict_validation=False, randomize_endpoint=None,
-                 validator_map=None, pythonic_params=False):
+                 validator_map=None, pythonic_params=False, uri_parser_class=None):
         """
         This class uses the OperationID identify the module and function that will handle the operation
 
@@ -189,6 +189,8 @@ class Operation(SecureOperation):
         :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended
         to any shadowed built-ins
         :type pythonic_params: bool
+        :param uri_parser_class: A URI parser class that inherits from AbstractURIParser
+        :type uri_parser_class: AbstractURIParser
         """
 
         self.api = api
@@ -210,6 +212,7 @@ class Operation(SecureOperation):
         self.operation = operation
         self.randomize_endpoint = randomize_endpoint
         self.pythonic_params = pythonic_params
+        self.uri_parser_class = uri_parser_class
 
         # todo support definition references
         # todo support references to application level parameters
@@ -415,7 +418,9 @@ class Operation(SecureOperation):
         This decorator handles query and path parameter deduplication and
         array types.
         """
-        return AlwaysMultiURIParser(self.parameters)
+        if self.uri_parser_class is None:
+            return AlwaysMultiURIParser(self.parameters)
+        return self.uri_parser_class(self.parameters)
 
     @property
     def __content_type_decorator(self):

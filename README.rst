@@ -276,6 +276,42 @@ If you use the `array` type In the Swagger definition, you can define the
 `collectionFormat` so that it won't be recognized. Connexion currently
 supports collection formats "pipes" and "csv". The default format is "csv".
 
+Connexion is opinionated about how the URI is parsed for ``array`` types.
+The default behavior for query parameters that have been defined multiple
+times is to join them all together. For example, if you provide a URI with
+the the query string ``?letters=a,b,c&letters=d,e,f``, connexion will set
+``letters = ['a', 'b', 'c', 'd', 'e', 'f']``.
+
+You can override this behavior by specifying the URI parser in the app or
+api options.
+
+.. code-block:: python
+
+   from connexion.decorators.uri_parsing import Swagger2URIParser
+   options = {'uri_parsing_class': Swagger2URIParser}
+   app = connexion.App(__name__, specification_dir='swagger/', options=options)
+
+You can implement your own URI parsing behavior by inheriting from
+``connextion.decorators.uri_parsing.AbstractURIParser``.
+
+There are three URI parsers included with connection.
+1. AlwaysMultiURIParser (default)
+   This parser is backwards compatible, and joins together multiple instances
+   of the same query parameter.
+2. Swagger2URIParser
+   This parser adheres to the Swagger 2.0 spec, and will only join together
+   multiple instance of the same query parameter if the ``collectionFormat``
+   is set to ``multi``. Query parameters are parsed from left to right, so
+   if a query parameter is defined twice, then the right-most definition wins.
+   For example, if you provided a URI with the query string
+   ``?letters=a,b,c&letters=d,e,f``, and ``collectionFormat: csv``, then
+   connexion will set ``letters = ['d', 'e', 'f']``
+3. FirstValueURIParser
+   This parser behaves like the Swagger2URIParser, except that it prefers the
+   first defined value. For example, if you provided a URI with the query
+   string ``?letters=a,b,c&letters=d,e,f`` and ``collectionFormat: csv``
+   then connexion will set ``letters = ['a', 'b', 'c']``
+
 Parameter validation
 ^^^^^^^^^^^^^^^^^^^^
 
