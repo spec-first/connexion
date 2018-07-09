@@ -212,7 +212,7 @@ class Operation(SecureOperation):
         self.operation = operation
         self.randomize_endpoint = randomize_endpoint
         self.pythonic_params = pythonic_params
-        self.uri_parser_class = uri_parser_class
+        self.uri_parser_class = uri_parser_class or AlwaysMultiURIParser
 
         # todo support definition references
         # todo support references to application level parameters
@@ -418,8 +418,6 @@ class Operation(SecureOperation):
         This decorator handles query and path parameter deduplication and
         array types.
         """
-        if self.uri_parser_class is None:
-            return AlwaysMultiURIParser(self.parameters)
         return self.uri_parser_class(self.parameters)
 
     @property
