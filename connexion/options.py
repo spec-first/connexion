@@ -23,7 +23,6 @@ NO_UI_MSG = """The swagger_ui directory could not be found.
 logger = logging.getLogger("connexion.options")
 
 
-
 class ConnexionOptions(object):
 
     def __init__(self, options=None, oas_version=(2,)):
