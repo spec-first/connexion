@@ -72,25 +72,6 @@ def parameter_to_arg(operation, function, pythonic_params=False):
     """
     consumes = operation.consumes
 
-    # swagger2 body
-    body_parameters = [p for p in parameters if p['in'] == 'body'] or [{}]
-    body_name = sanitize_param(body_parameters[0].get('name'))
-    default_body = body_parameters[0].get('schema', {}).get('default')
-
-    form_defns = {sanitize_param(p['name']): p
-                  for p in parameters
-                  if p['in'] == 'formData'}
-
-    # openapi3 body
-    if body_name is None and body_schema is not None:
-        logger.debug('body schema is %s', body_schema)
-        body_properties = {sanitize_param(k): v
-                           for k, v
-                           in body_schema.get('properties', {}).items()}
-        default_body = body_schema.get('default', default_body)
-    else:
-        body_properties = {}
-
     def pythonic(name):
         name = name and snake_and_shadow(name)
         return name and re.sub('^[^a-zA-Z_]+', '', re.sub('[^0-9a-zA-Z_]', '', name))
@@ -107,7 +88,6 @@ def parameter_to_arg(operation, function, pythonic_params=False):
         logger.debug('Function Arguments: %s', arguments)
         kwargs = {}
 
-        logger.error(pythonic_params)
         if all_json(consumes):
             request_body = request.json
         elif consumes[0] in FORM_CONTENT_TYPES:

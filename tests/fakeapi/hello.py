@@ -215,6 +215,10 @@ def test_array_csv_query_param(items):
     return items
 
 
+def test_array_multi_query_param(items):
+    return items
+
+
 def test_array_pipes_query_param(items):
     return items
 

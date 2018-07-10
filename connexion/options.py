@@ -115,7 +115,7 @@ class ConnexionOptions(object):
 
     @property
     def uri_parser_class(self):
-        # type: () -> str
+        # type: () -> AbstractURIParser
         """
         The class to use for parsing URIs into path and query parameters.
         Default: None

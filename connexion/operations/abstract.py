@@ -54,7 +54,7 @@ class AbstractOperation(SecureOperation):
                  app_security=None, security_schemes=None,
                  validate_responses=False, strict_validation=False,
                  randomize_endpoint=None, validator_map=None,
-                 pythonic_params=False):
+                 pythonic_params=False, uri_parser_class=None):
         """
         """
         self._api = api
@@ -67,6 +67,7 @@ class AbstractOperation(SecureOperation):
         self._validate_responses = validate_responses
         self._strict_validation = strict_validation
         self._pythonic_params = pythonic_params
+        self._uri_parser_class = uri_parser_class
         self._randomize_endpoint = randomize_endpoint
 
         self._router_controller = self._operation.get('x-swagger-router-controller')
@@ -214,13 +215,6 @@ class AbstractOperation(SecureOperation):
         :rtype: dict
         """
 
-    @abc.abstractproperty
-    def _uri_parsing_decorator(self):
-        """
-        Get a decorator for parsing query params
-        :rtype: types.FunctionType
-        """
-
     @abc.abstractmethod
     def get_arguments(self, path_params, query_params, body, files, arguments,
                       has_kwargs, sanitize):
@@ -327,6 +321,10 @@ class AbstractOperation(SecureOperation):
             return self.produces[0]
         else:
             return DEFAULT_MIMETYPE
+
+    @property
+    def _uri_parsing_decorator(self):
+        return self._uri_parser_class(self.parameters)
 
     @property
     def function(self):

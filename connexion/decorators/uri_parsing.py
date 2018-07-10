@@ -18,7 +18,7 @@ QUERY_STRING_DELIMITERS = {
 
 
 @six.add_metaclass(abc.ABCMeta)
-class BaseURIParser(BaseDecorator):
+class AbstractURIParser(BaseDecorator):
     def __init__(self, param_defns):
         """
         a URI parser is initialized with parameter definitions.
@@ -123,7 +123,7 @@ class BaseURIParser(BaseDecorator):
         return wrapper
 
 
-class OpenAPIURIParser(BaseURIParser):
+class OpenAPIURIParser(AbstractURIParser):
 
     @property
     def param_defns(self):
@@ -165,7 +165,7 @@ class OpenAPIURIParser(BaseURIParser):
             return value.split(',')
 
 
-class Swagger2URIParser(BaseURIParser):
+class Swagger2URIParser(AbstractURIParser):
     """
     Adheres to the Swagger2 spec,
     Assumes the the last defined query parameter should be used.

@@ -248,7 +248,24 @@ paths:
         - name: items
           in: query
           description: An comma separated array of items
-          style: form
+          style: simple
+          schema:
+            type: array
+            default: ["squash", "banana"]
+            items:
+              type: string
+      responses:
+        '200':
+          description: OK
+  /test_array_multi_query_param:
+    get:
+      operationId: fakeapi.hello.test_array_multi_query_param
+      parameters:
+        - name: items
+          in: query
+          description: An comma separated array of items
+          style: csv
+          explode: true
           schema:
             type: array
             default: ["squash", "banana"]

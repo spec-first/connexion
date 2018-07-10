@@ -29,7 +29,7 @@ class OpenAPIOperation(AbstractOperation):
     def __init__(self, api, method, path, operation, resolver, path_parameters=None,
                  app_security=None, components=None, validate_responses=False,
                  strict_validation=False, randomize_endpoint=None, validator_map=None,
-                 pythonic_params=False):
+                 pythonic_params=False, uri_parser_class=None):
         """
         This class uses the OperationID identify the module and function that will handle the operation
 
@@ -65,6 +65,8 @@ class OpenAPIOperation(AbstractOperation):
         :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended
         to any shadowed built-ins
         :type pythonic_params: bool
+        :param uri_parser_class: class to use for uri parseing
+        :type uri_parser_class: AbstractURIParser
         """
         self.components = components or {}
 
@@ -74,6 +76,7 @@ class OpenAPIOperation(AbstractOperation):
         # operation overrides globals
         security_schemes = component_get('securitySchemes')
         app_security = operation.get('security', app_security)
+        uri_parser_class = uri_parser_class or OpenAPIURIParser
 
         super(OpenAPIOperation, self).__init__(
             api=api,
@@ -88,6 +91,7 @@ class OpenAPIOperation(AbstractOperation):
             randomize_endpoint=randomize_endpoint,
             validator_map=validator_map,
             pythonic_params=pythonic_params,
+            uri_parser_class=uri_parser_class
         )
 
         self._definitions_map = {
@@ -315,10 +319,6 @@ class OpenAPIOperation(AbstractOperation):
             res = self._request_body.get('content', {}).get(self.consumes[0], {})
             return self._resolve_reference(res)
         return {}
-
-    @property
-    def _uri_parsing_decorator(self):
-        return OpenAPIURIParser(self.parameters)
 
     def _get_body_argument(self, body, arguments, has_kwargs):
         body_schema = self.body_schema

@@ -19,7 +19,8 @@ class Swagger2Operation(AbstractOperation):
                  path_parameters=None, app_security=None, security_definitions=None,
                  definitions=None, parameter_definitions=None,
                  response_definitions=None, validate_responses=False, strict_validation=False,
-                 randomize_endpoint=None, validator_map=None, pythonic_params=False):
+                 randomize_endpoint=None, validator_map=None, pythonic_params=False,
+                 uri_parser_class=None):
         """
         This class uses the OperationID identify the module and function that will handle the operation
 
@@ -66,8 +67,11 @@ class Swagger2Operation(AbstractOperation):
         :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended
         to any shadowed built-ins
         :type pythonic_params: bool
+        :param uri_parser_class: class to use for uri parseing
+        :type uri_parser_class: AbstractURIParser
         """
         app_security = operation.get('security', app_security)
+        uri_parser_class = uri_parser_class or Swagger2URIParser
 
         super(Swagger2Operation, self).__init__(
             api=api,
@@ -81,7 +85,8 @@ class Swagger2Operation(AbstractOperation):
             strict_validation=strict_validation,
             randomize_endpoint=randomize_endpoint,
             validator_map=validator_map,
-            pythonic_params=pythonic_params
+            pythonic_params=pythonic_params,
+            uri_parser_class=uri_parser_class
         )
 
         self._produces = operation.get('produces', app_produces)
@@ -130,8 +135,8 @@ class Swagger2Operation(AbstractOperation):
         self._responses = resolve_responses(operation.get('responses', {}))
         logger.debug(self._responses)
 
-        logger.error('consumes: %s', self.consumes)
-        logger.error('produces: %s', self.produces)
+        logger.debug('consumes: %s', self.consumes)
+        logger.debug('produces: %s', self.produces)
 
         self._validate_defaults()
 
@@ -251,10 +256,6 @@ class Swagger2Operation(AbstractOperation):
                     method=self.method,
                     path=self.path))
         return body_parameters[0] if body_parameters else {}
-
-    @property
-    def _uri_parsing_decorator(self):
-        return Swagger2URIParser(self.parameters)
 
     def get_arguments(self, path_params, query_params, body, files, arguments,
                       has_kwargs, sanitize):
