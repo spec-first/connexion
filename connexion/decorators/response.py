@@ -15,7 +15,7 @@ logger = logging.getLogger('connexion.decorators.response')
 
 
 class ResponseValidator(BaseDecorator):
-    def __init__(self, operation,  mimetype):
+    def __init__(self, operation, mimetype):
         """
         :type operation: Operation
         :type mimetype: str
