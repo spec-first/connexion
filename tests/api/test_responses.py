@@ -235,6 +235,14 @@ def test_post_wrong_content_type(simple_app):
     assert resp.status_code == 415
 
 
+    resp = app_client.post('/v1.0/post_wrong_content_type',
+                           content_type="application/json",
+                           data="not a valid json"
+                           )
+    assert resp.status_code == 400, \
+        "Should return 400 when Content-Type is json but content not parsable"
+
+
 def test_get_unicode_response(simple_app):
     app_client = simple_app.app.test_client()
     resp = app_client.get('/v1.0/get_unicode_response')
