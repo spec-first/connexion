@@ -1,23 +1,3 @@
-Fork Notes
-=========
-This is a fork to support the OpenAPI 3.x spec.
-
-There are some minor dependency changes needed while upstream patches are pending.
-
-Instructions for getting started:
-
-.. code-block:: bash
-
-    git clone -b oas3 git@github.com:dtkav/connexion.git connexion
-    cd connexion
-    virtualenv -p python3 venv
-    . venv/bin/activate
-    pip install -e .[tests]
-    pip install -r requirements-devel.txt
-    pip install -r requirements-aiohttp.txt
-    tox
-
-
 Connexion
 =========
 
