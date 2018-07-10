@@ -17,7 +17,6 @@ from ..resolver import Resolver
 from ..utils import Jsonifier
 
 MODULE_PATH = pathlib.Path(__file__).absolute().parent.parent
-SWAGGER_UI_PATH = MODULE_PATH / 'vendor' / 'swagger-ui'
 SWAGGER_UI_URL = 'ui'
 
 RESOLVER_ERROR_ENDPOINT_RANDOM_DIGITS = 6
