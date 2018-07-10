@@ -279,7 +279,10 @@ class InternalHandlers(object):
 
         :return:
         """
-        return flask.render_template('index.html', api_url=self.base_path)
+        return flask.render_template(
+            'index.j2',
+            openapi_spec_url=(self.base_path + '/swagger.json')
+        )
 
     def console_ui_static_files(self, filename):
         """
