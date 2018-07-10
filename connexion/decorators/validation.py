@@ -10,7 +10,7 @@ from werkzeug import FileStorage
 
 from ..exceptions import ExtraParameterProblem
 from ..problem import problem
-from ..utils import all_json, boolean, is_null, is_nullable, is_json_mimetype
+from ..utils import all_json, boolean, is_json_mimetype, is_null, is_nullable
 
 logger = logging.getLogger('connexion.decorators.validation')
 
