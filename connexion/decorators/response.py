@@ -74,7 +74,7 @@ class ResponseValidator(BaseDecorator):
         """
         if not response_schema:
             return False
-        return (all_json([self.mimetype]) or self.mimetype == 'text/plain')
+        return all_json([self.mimetype]) or self.mimetype == 'text/plain'
 
     def __call__(self, function):
         """
