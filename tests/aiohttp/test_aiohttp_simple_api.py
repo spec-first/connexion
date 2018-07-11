@@ -63,9 +63,10 @@ def test_swagger_json(aiohttp_api_spec_dir, test_client):
 @asyncio.coroutine
 def test_no_swagger_json(aiohttp_api_spec_dir, test_client):
     """ Verify the swagger.json file is not returned when set to False when creating app. """
+    options = {"swagger_json": False}
     app = AioHttpApp(__name__, port=5001,
                      specification_dir=aiohttp_api_spec_dir,
-                     swagger_json=False,
+                     options=options,
                      debug=True)
     api = app.add_api('swagger_simple.yaml')
 
@@ -122,9 +123,10 @@ def test_swagger_ui_static(aiohttp_api_spec_dir, test_client):
 
 @asyncio.coroutine
 def test_no_swagger_ui(aiohttp_api_spec_dir, test_client):
+    options = {"swagger_ui": False}
     app = AioHttpApp(__name__, port=5001,
                      specification_dir=aiohttp_api_spec_dir,
-                     swagger_ui=False, debug=True)
+                     options=options, debug=True)
     app.add_api('swagger_simple.yaml')
 
     app_client = yield from test_client(app.app)
@@ -153,9 +155,10 @@ def test_middlewares(aiohttp_api_spec_dir, test_client):
 
         return middleware_handler
 
+    options = {"middlewares": [middleware]}
     app = AioHttpApp(__name__, port=5001,
                      specification_dir=aiohttp_api_spec_dir,
-                     debug=True, middlewares=[middleware])
+                     debug=True, options=options)
     app.add_api('swagger_simple.yaml')
     app_client = yield from test_client(app.app)
     get_bye = yield from app_client.get('/v1.0/bye/jsantos')
