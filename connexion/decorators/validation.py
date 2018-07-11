@@ -9,6 +9,7 @@ from jsonschema import Draft4Validator, ValidationError, draft4_format_checker
 from werkzeug import FileStorage
 
 from ..exceptions import ExtraParameterProblem
+from ..http_facts import FORM_CONTENT_TYPES
 from ..problem import problem
 from ..utils import all_json, boolean, is_json_mimetype, is_null, is_nullable
 
@@ -46,13 +47,14 @@ class TypeValidationError(Exception):
 
 
 def validate_type(param, value, parameter_type, parameter_name=None):
-    param_type = param.get('type')
+    param_schema = param.get("schema", param)
+    param_type = param_schema.get('type')
     parameter_name = parameter_name if parameter_name else param['name']
     if param_type == "array":
         converted_params = []
         for v in value:
             try:
-                converted = make_type(v, param["items"]["type"])
+                converted = make_type(v, param_schema["items"]["type"])
             except (ValueError, TypeError):
                 converted = v
             converted_params.append(converted)
@@ -74,7 +76,8 @@ def validate_parameter_list(request_params, spec_params):
 
 
 class RequestBodyValidator(object):
-    def __init__(self, schema, consumes, api, is_null_value_valid=False, validator=None):
+    def __init__(self, schema, consumes, api, is_null_value_valid=False, validator=None,
+                 strict_validation=False):
         """
         :param schema: The schema of the request body
         :param consumes: The list of content types the operation consumes
@@ -82,13 +85,20 @@ class RequestBodyValidator(object):
         :param validator: Validator class that should be used to validate passed data
                           against API schema. Default is jsonschema.Draft4Validator.
         :type validator: jsonschema.IValidator
+        :param strict_validation: Flag indicating if parameters not in spec are allowed
         """
         self.consumes = consumes
+        self.schema = schema
         self.has_default = schema.get('default', False)
         self.is_null_value_valid = is_null_value_valid
         validatorClass = validator or Draft4Validator
         self.validator = validatorClass(schema, format_checker=draft4_format_checker)
         self.api = api
+        self.strict_validation = strict_validation
+
+    def validate_requestbody_property_list(self, data):
+        spec_params = self.schema.get('properties', {}).keys()
+        return validate_parameter_list(data, spec_params)
 
     def __call__(self, function):
         """
@@ -100,7 +110,6 @@ class RequestBodyValidator(object):
         def wrapper(request):
             if all_json(self.consumes):
                 data = request.json
-
                 if data is None and len(request.body) > 0 and not self.is_null_value_valid:
                     try:
                         ctype_is_json = is_json_mimetype(request.headers.get("Content-Type", ""))
@@ -121,7 +130,22 @@ class RequestBodyValidator(object):
                                            content_type=request.headers.get("Content-Type", "")
                                        ))
 
-                logger.debug("%s validating schema...", request.url)
+                logger.debug('%s validating schema...', request.url)
+                error = self.validate_schema(data, request.url)
+                if error and not self.has_default:
+                    return error
+            elif self.consumes[0] in FORM_CONTENT_TYPES:
+                data = dict(request.form.items()) or (request.body if len(request.body) > 0 else {})
+                if data is None and len(request.body) > 0 and not self.is_null_value_valid:
+                    # complain about no data?
+                    pass
+                data.update(dict.fromkeys(request.files, ''))  # validator expects string..
+                logger.debug('%s validating schema...', request.url)
+                if self.strict_validation:
+                    formdata_errors = self.validate_requestbody_property_list(data)
+                    if formdata_errors:
+                        raise ExtraParameterProblem(formdata_errors, [])
+
                 error = self.validate_schema(data, request.url)
                 if error and not self.has_default:
                     return error
@@ -173,6 +197,7 @@ class ParameterValidator(object):
     def __init__(self, parameters, api, strict_validation=False):
         """
         :param parameters: List of request parameter dictionaries
+        :param api: api that the validator is attached to
         :param strict_validation: Flag indicating if parameters not in spec are allowed
         """
         self.parameters = collections.defaultdict(list)
@@ -182,8 +207,8 @@ class ParameterValidator(object):
         self.api = api
         self.strict_validation = strict_validation
 
-    @staticmethod
-    def validate_parameter(parameter_type, value, param):
+    @classmethod
+    def validate_parameter(cls, parameter_type, value, param):
         if value is not None:
             if is_nullable(param) and is_null(value):
                 return
@@ -249,7 +274,7 @@ class ParameterValidator(object):
         return self.validate_parameter('header', val, param)
 
     def validate_formdata_parameter(self, param, request):
-        if param.get('type') == 'file':
+        if param.get('type') == 'file' or param.get('format') == 'binary':
             val = request.files.get(param['name'])
         else:
             val = request.form.get(param['name'])

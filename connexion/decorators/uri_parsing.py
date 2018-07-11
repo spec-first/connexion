@@ -9,6 +9,13 @@ from .decorator import BaseDecorator
 
 logger = logging.getLogger('connexion.decorators.uri_parsing')
 
+QUERY_STRING_DELIMITERS = {
+    'spaceDelimited': ' ',
+    'pipeDelimited': '|',
+    'simple': ',',
+    'form': ','
+}
+
 
 @six.add_metaclass(abc.ABCMeta)
 class AbstractURIParser(BaseDecorator):
@@ -114,6 +121,48 @@ class AbstractURIParser(BaseDecorator):
             return response
 
         return wrapper
+
+
+class OpenAPIURIParser(AbstractURIParser):
+
+    @property
+    def param_defns(self):
+        return self._param_defns
+
+    @property
+    def param_schemas(self):
+        return {k: v.get("schema", {}) for k, v in self.param_defns.items()}
+
+    @staticmethod
+    def _resolve_param_duplicates(values, param_defn):
+        """ Resolve cases where query parameters are provided multiple times.
+            The default behavior is to use the first-defined value.
+            For example, if the query string is '?a=1,2,3&a=4,5,6' the value of
+            `a` would be "4,5,6".
+            However, if 'explode' is 'True' then the duplicate values
+            are concatenated together and `a` would be "1,2,3,4,5,6".
+        """
+        try:
+            style = param_defn['style']
+            delimiter = QUERY_STRING_DELIMITERS.get(style, ',')
+            is_form = (style == 'form')
+            explode = param_defn.get('explode', is_form)
+            if explode:
+                return delimiter.join(values)
+        except KeyError:
+            pass
+
+        # default to last defined value
+        return values[-1]
+
+    @staticmethod
+    def _split(value, param_defn):
+        try:
+            style = param_defn['style']
+            delimiter = QUERY_STRING_DELIMITERS.get(style, ',')
+            return value.split(delimiter)
+        except KeyError:
+            return value.split(',')
 
 
 class Swagger2URIParser(AbstractURIParser):

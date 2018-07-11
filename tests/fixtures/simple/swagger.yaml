@@ -260,6 +260,21 @@ paths:
         200:
           description: OK
 
+  /test_array_multi_query_param:
+    get:
+      operationId: fakeapi.hello.test_array_multi_query_param
+      parameters:
+        - name: items
+          in: query
+          description: An comma separated array of items
+          type: array
+          items:
+            type: string
+          collectionFormat: multi
+      responses:
+        200:
+          description: OK
+
   /test_array_pipes_query_param:
     get:
       operationId: fakeapi.hello.test_array_pipes_query_param

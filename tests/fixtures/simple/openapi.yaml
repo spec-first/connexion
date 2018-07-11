@@ -248,7 +248,24 @@ paths:
         - name: items
           in: query
           description: An comma separated array of items
-          style: form
+          style: simple
+          schema:
+            type: array
+            default: ["squash", "banana"]
+            items:
+              type: string
+      responses:
+        '200':
+          description: OK
+  /test_array_multi_query_param:
+    get:
+      operationId: fakeapi.hello.test_array_multi_query_param
+      parameters:
+        - name: items
+          in: query
+          description: An comma separated array of items
+          style: csv
+          explode: true
           schema:
             type: array
             default: ["squash", "banana"]
@@ -497,7 +514,7 @@ paths:
       operationId: fakeapi.hello.post_goodday_no_header
       responses:
         '201':
-          description: gooday response
+          description: goodday response
           headers:
             Location:
               description: The URI of the created resource
@@ -524,6 +541,10 @@ paths:
             text/plain:
               schema:
                 type: string
+              examples:
+                justAnExample:
+                  summary: a basic example.
+                  value: Good evening, doctor.
       parameters:
         - name: name
           in: path
