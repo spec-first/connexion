@@ -3,9 +3,10 @@ import json
 from connexion import FlaskApp
 
 
-def test_security_over_inexistent_endpoints(oauth_requests, secure_api_spec_dir):
+def test_security_over_nonexistent_endpoints(oauth_requests, secure_api_spec_dir):
+    options = {"swagger_ui": False}
     app1 = FlaskApp(__name__, port=5001, specification_dir=secure_api_spec_dir,
-                    swagger_ui=False, debug=True, auth_all_paths=True)
+                    options=options, debug=True, auth_all_paths=True)
     app1.add_api('swagger.yaml')
     assert app1.port == 5001
 
