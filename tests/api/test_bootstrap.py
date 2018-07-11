@@ -54,8 +54,9 @@ def test_app_with_different_uri_parser(simple_api_spec_dir):
 
 
 def test_no_swagger_ui(simple_api_spec_dir):
+    options = {"swagger_ui": False}
     app = App(__name__, port=5001, specification_dir=simple_api_spec_dir,
-              swagger_ui=False, debug=True)
+              options=options, debug=True)
     app.add_api('swagger.yaml')
 
     app_client = app.app.test_client()
@@ -63,7 +64,7 @@ def test_no_swagger_ui(simple_api_spec_dir):
     assert swagger_ui.status_code == 404
 
     app2 = App(__name__, port=5001, specification_dir=simple_api_spec_dir, debug=True)
-    app2.add_api('swagger.yaml', swagger_ui=False)
+    app2.add_api('swagger.yaml', options={"swagger_ui": False})
     app2_client = app2.app.test_client()
     swagger_ui2 = app2_client.get('/v1.0/ui/')  # type: flask.Response
     assert swagger_ui2.status_code == 404
@@ -81,8 +82,9 @@ def test_swagger_json_app(simple_api_spec_dir):
 
 def test_no_swagger_json_app(simple_api_spec_dir):
     """ Verify the swagger.json file is not returned when set to False when creating app. """
+    options = {"swagger_json": False}
     app = App(__name__, port=5001, specification_dir=simple_api_spec_dir,
-              swagger_json=False, debug=True)
+              options=options, debug=True)
     app.add_api('swagger.yaml')
 
     app_client = app.app.test_client()
@@ -124,7 +126,7 @@ def test_swagger_json_api(simple_api_spec_dir):
 def test_no_swagger_json_api(simple_api_spec_dir):
     """ Verify the swagger.json file is not returned when set to False when adding api. """
     app = App(__name__, port=5001, specification_dir=simple_api_spec_dir, debug=True)
-    app.add_api('swagger.yaml', swagger_json=False)
+    app.add_api('swagger.yaml', options={"swagger_json": False})
 
     app_client = app.app.test_client()
     swagger_json = app_client.get('/v1.0/swagger.json')  # type: flask.Response

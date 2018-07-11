@@ -16,7 +16,8 @@ def aiohttp_app(aiohttp_api_spec_dir):
     app = AioHttpApp(__name__, port=5001,
                      specification_dir=aiohttp_api_spec_dir,
                      debug=True)
-    app.add_api('swagger_simple.yaml', validate_responses=True)
+    options = {"validate_responses": True}
+    app.add_api('swagger_simple.yaml', options=options)
     return app
 
 
@@ -133,7 +134,8 @@ def test_no_swagger_ui(aiohttp_api_spec_dir, test_client):
     app2 = AioHttpApp(__name__, port=5001,
                       specification_dir=aiohttp_api_spec_dir,
                       debug=True)
-    app2.add_api('swagger_simple.yaml', swagger_ui=False)
+    options = {"swagger_ui": False}
+    app2.add_api('swagger_simple.yaml', options=options)
     app2_client = yield from test_client(app.app)
     swagger_ui2 = yield from app2_client.get('/v1.0/ui/')
     assert swagger_ui2.status == 404
