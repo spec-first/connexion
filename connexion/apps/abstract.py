@@ -14,7 +14,7 @@ logger = logging.getLogger('connexion.app')
 class AbstractApp(object):
     def __init__(self, import_name, api_cls, port=None, specification_dir='',
                  host=None, server=None, arguments=None, auth_all_paths=False, debug=False,
-                 validator_map=None, options=None, **old_style_options):
+                 validator_map=None, options=None):
         """
         :param import_name: the name of the application package
         :type import_name: str
@@ -47,9 +47,7 @@ class AbstractApp(object):
         self.auth_all_paths = auth_all_paths
         self.validator_map = validator_map
 
-        self.options = ConnexionOptions(old_style_options)
-        # options is added last to preserve the highest priority
-        self.options = self.options.extend(options)  # type: ConnexionOptions
+        self.options = ConnexionOptions(options)
 
         self.app = self.create_app()
         self.server = server
@@ -90,7 +88,7 @@ class AbstractApp(object):
     def add_api(self, specification, base_path=None, arguments=None,
                 auth_all_paths=None, validate_responses=False,
                 strict_validation=False, resolver=Resolver(), resolver_error=None,
-                pythonic_params=False, options=None, **old_style_options):
+                pythonic_params=False, options=None):
         """
         Adds an API to the application based on a swagger file or API dict
 
@@ -115,9 +113,6 @@ class AbstractApp(object):
         :type pythonic_params: bool
         :param options: New style options dictionary.
         :type options: dict | None
-        :param old_style_options: Old style options support for backward compatibility. Preference is
-                                  what is defined in `options` parameter.
-        :type old_style_options: dict
         :rtype: AbstractAPI
         """
         # Turn the resolver_error code into a handler object
@@ -138,12 +133,7 @@ class AbstractApp(object):
         else:
             specification = self.specification_dir / specification
 
-        # Old style options have higher priority compared to the already
-        # defined options in the App class
-        api_options = self.options.extend(old_style_options)
-
-        # locally defined options are added last to preserve highest priority
-        api_options = api_options.extend(options)
+        api_options = self.options.extend(options)
 
         api = self.api_cls(specification,
                            base_path=base_path,
