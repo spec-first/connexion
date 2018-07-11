@@ -77,6 +77,10 @@ Other Sources/Mentions
 - Connexion listed on Swagger_'s website
 - Blog post: `Crafting effective Microservices in Python`_
 
+New in Connexion 2.0:
+---------------------
+- App and Api options must be provided through the "options" argument (``old_style_options`` have been removed).
+
 How to Use
 ==========
 
