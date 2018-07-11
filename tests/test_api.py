@@ -128,9 +128,3 @@ def mock_api_logger(monkeypatch):
     mocked_logger = MagicMock(name='mocked_logger')
     monkeypatch.setattr('connexion.apis.abstract.logger', mocked_logger)
     return mocked_logger
-
-
-def test_warn_users_about_base_url_parameter_name_change(mock_api_logger):
-    FlaskApi(TEST_FOLDER / "fixtures/simple/swagger.yaml", base_url="/api/v1")
-    mock_api_logger.warning.assert_called_with(
-        'Parameter base_url should be no longer used. Use base_path instead.')
