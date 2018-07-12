@@ -247,9 +247,10 @@ function expects an argument named ``message`` and assigns the value
 of the endpoint parameter ``message`` to your view function.
 
 .. warning:: When you define a parameter at your endpoint as *not* required, and
-    your Python view has a non-named argument, you will get a "missing
-    positional argument" exception whenever you call this endpoint WITHOUT the
-    parameter.
+    this argument does not have default value in your Python view, you will get 
+    a "missing positional argument" exception whenever you call this endpoint 
+    WITHOUT the parameter. Provide a default value for a named argument or use
+    ``**kwargs`` dict.
 
 Type casting
 ^^^^^^^^^^^^
