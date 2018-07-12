@@ -8,7 +8,6 @@ from typing import AnyStr, List  # NOQA
 import jinja2
 import six
 import yaml
-
 from swagger_spec_validator.validator20 import validate_spec
 
 from ..exceptions import ResolverError

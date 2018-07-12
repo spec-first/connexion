@@ -3,6 +3,7 @@
 import pathlib
 import tempfile
 
+from swagger_spec_validator.common import SwaggerValidationError
 from yaml import YAMLError
 
 import pytest
@@ -10,7 +11,6 @@ from connexion import FlaskApi
 from connexion.apis.abstract import canonical_base_path
 from connexion.exceptions import InvalidSpecification, ResolverError
 from mock import MagicMock
-from swagger_spec_validator.common import SwaggerValidationError
 
 TEST_FOLDER = pathlib.Path(__file__).parent
 
