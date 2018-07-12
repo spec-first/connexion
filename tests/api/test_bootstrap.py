@@ -2,11 +2,11 @@ import json
 
 import jinja2
 import yaml
+from swagger_spec_validator.common import SwaggerValidationError
 
 import pytest
 from conftest import TEST_FOLDER, build_app_from_fixture
 from connexion import App
-from swagger_spec_validator.common import SwaggerValidationError
 
 
 def test_app_with_relative_path(simple_api_spec_dir):
