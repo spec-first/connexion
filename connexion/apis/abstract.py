@@ -40,7 +40,7 @@ class AbstractAPI(object):
     def __init__(self, specification, base_path=None, arguments=None,
                  validate_responses=False, strict_validation=False, resolver=None,
                  auth_all_paths=False, debug=False, resolver_error_handler=None,
-                 validator_map=None, pythonic_params=False,  pass_context_arg_name=None, options=None):
+                 validator_map=None, pythonic_params=False, pass_context_arg_name=None, options=None):
         """
         :type specification: pathlib.Path | dict
         :type base_path: str | None
