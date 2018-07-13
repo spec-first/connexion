@@ -17,7 +17,7 @@ def aiohttp_app(aiohttp_api_spec_dir):
                      specification_dir=aiohttp_api_spec_dir,
                      debug=True)
     options = {"validate_responses": True}
-    app.add_api('swagger_simple.yaml', options=options)
+    app.add_api('swagger_simple.yaml', validate_responses=True, pass_context_arg_name='request_ctx', options=options)
     return app
 
 
@@ -219,3 +219,10 @@ def test_create_user(test_client, aiohttp_app):
     user = {'name': 'Maksim'}
     resp = yield from app_client.post('/v1.0/users', json=user, headers={'Content-type': 'application/json'})
     assert resp.status == 201
+
+
+@asyncio.coroutine
+def test_access_request_context(test_client, aiohttp_app):
+    app_client = yield from test_client(aiohttp_app.app)
+    resp = yield from app_client.post('/v1.0/aiohttp_access_request_context')
+    assert resp.status == 204

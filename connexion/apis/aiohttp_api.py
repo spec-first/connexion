@@ -180,7 +180,8 @@ class AioHttpApi(AbstractAPI):
                                 headers=headers,
                                 body=body,
                                 json_getter=lambda: cls.jsonifier.loads(body),
-                                files={})
+                                files={},
+                                context=req)
 
     @classmethod
     @asyncio.coroutine

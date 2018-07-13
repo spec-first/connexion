@@ -40,7 +40,7 @@ class AbstractAPI(object):
     def __init__(self, specification, base_path=None, arguments=None,
                  validate_responses=False, strict_validation=False, resolver=None,
                  auth_all_paths=False, debug=False, resolver_error_handler=None,
-                 validator_map=None, pythonic_params=False, options=None):
+                 validator_map=None, pythonic_params=False,  pass_context_arg_name=None, options=None):
         """
         :type specification: pathlib.Path | dict
         :type base_path: str | None
@@ -60,6 +60,9 @@ class AbstractAPI(object):
         :type pythonic_params: bool
         :param options: New style options dictionary.
         :type options: dict | None
+        :param pass_context_arg_name: If not None URL request handling functions with an argument matching this name
+        will be passed the framework's request context.
+        :type pass_context_arg_name: str | None
         """
         self.debug = debug
         self.validator_map = validator_map
@@ -119,6 +122,9 @@ class AbstractAPI(object):
 
         logger.debug('Pythonic params: %s', str(pythonic_params))
         self.pythonic_params = pythonic_params
+
+        logger.debug('pass_context_arg_name: %s', pass_context_arg_name)
+        self.pass_context_arg_name = pass_context_arg_name
 
         if self.options.openapi_spec_available:
             self.add_swagger_json()
@@ -194,7 +200,8 @@ class AbstractAPI(object):
                               strict_validation=self.strict_validation,
                               resolver=self.resolver,
                               pythonic_params=self.pythonic_params,
-                              uri_parser_class=self.options.uri_parser_class)
+                              uri_parser_class=self.options.uri_parser_class,
+                              pass_context_arg_name=self.pass_context_arg_name)
         self._add_operation_internal(method, path, operation)
 
     @abc.abstractmethod

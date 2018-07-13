@@ -88,7 +88,7 @@ class AbstractApp(object):
     def add_api(self, specification, base_path=None, arguments=None,
                 auth_all_paths=None, validate_responses=False,
                 strict_validation=False, resolver=Resolver(), resolver_error=None,
-                pythonic_params=False, options=None):
+                pythonic_params=False, pass_context_arg_name=None, options=None):
         """
         Adds an API to the application based on a swagger file or API dict
 
@@ -113,6 +113,8 @@ class AbstractApp(object):
         :type pythonic_params: bool
         :param options: New style options dictionary.
         :type options: dict | None
+        :param pass_context_arg_name: Name of argument in handler functions to pass request context to.
+        :type pass_context_arg_name: str | None
         :rtype: AbstractAPI
         """
         # Turn the resolver_error code into a handler object
@@ -146,6 +148,7 @@ class AbstractApp(object):
                            debug=self.debug,
                            validator_map=self.validator_map,
                            pythonic_params=pythonic_params,
+                           pass_context_arg_name=pass_context_arg_name,
                            options=api_options.as_dict())
         return api
 

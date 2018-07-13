@@ -76,6 +76,15 @@ paths:
           schema:
             type: object
 
+  /aiohttp_access_request_context:
+    post:
+      summary: Test request context access
+      description: Test request context access in handlers.
+      operationId: fakeapi.aiohttp_handlers.aiohttp_access_request_context
+      responses:
+        204:
+          description: success no content.
+
   /users:
     get:
       summary: Test get users

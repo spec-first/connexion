@@ -142,7 +142,8 @@ class Operation(SecureOperation):
                  path_parameters=None, app_security=None, security_definitions=None,
                  definitions=None, parameter_definitions=None, response_definitions=None,
                  validate_responses=False, strict_validation=False, randomize_endpoint=None,
-                 validator_map=None, pythonic_params=False, uri_parser_class=None):
+                 validator_map=None, pythonic_params=False, uri_parser_class=None,
+                 pass_context_arg_name=None):
         """
         This class uses the OperationID identify the module and function that will handle the operation
 
@@ -191,6 +192,9 @@ class Operation(SecureOperation):
         :type pythonic_params: bool
         :param uri_parser_class: A URI parser class that inherits from AbstractURIParser
         :type uri_parser_class: AbstractURIParser
+        :param pass_context_arg_name: If not None will try to inject the request context to the function using this
+        name.
+        :type pass_context_arg_name: str|None
         """
 
         self.api = api
@@ -213,6 +217,7 @@ class Operation(SecureOperation):
         self.randomize_endpoint = randomize_endpoint
         self.pythonic_params = pythonic_params
         self.uri_parser_class = uri_parser_class or AlwaysMultiURIParser
+        self.pass_context_arg_name = pass_context_arg_name
 
         # todo support definition references
         # todo support references to application level parameters
@@ -377,7 +382,8 @@ class Operation(SecureOperation):
         """
 
         function = parameter_to_arg(
-            self.parameters, self.consumes, self.__undecorated_function, self.pythonic_params)
+            self.parameters, self.consumes, self.__undecorated_function, self.pythonic_params,
+            self.pass_context_arg_name)
         function = self._request_begin_lifecycle_decorator(function)
 
         if self.validate_responses:
