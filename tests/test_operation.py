@@ -9,6 +9,7 @@ from connexion.decorators.security import (security_passthrough,
                                            verify_oauth_local,
                                            verify_oauth_remote)
 from connexion.exceptions import InvalidSpecification
+from connexion.jsonref import resolve_refs
 from connexion.operation import Operation
 from connexion.resolver import Resolver
 
@@ -29,7 +30,8 @@ DEFINITIONS = {'new_stack': {'required': ['image_version', 'keep_stacks', 'new_t
                                                             'Percentage of the traffic'}}},
                'composed': {'required': ['test'],
                             'type': 'object',
-                            'properties': {'test': {'schema': {'$ref': '#/definitions/new_stack'}}}}}
+                            'properties': {'test': {'schema': {'$ref': '#/definitions/new_stack'}}}},
+               'problem': {"not": "defined"}}
 PARAMETER_DEFINITIONS = {'myparam': {'in': 'path', 'type': 'integer'}}
 
 OPERATION1 = {'description': 'Adds a new stack to be created by lizzy and returns the '
@@ -43,7 +45,7 @@ OPERATION1 = {'description': 'Adds a new stack to be created by lizzy and return
                                   'CloudFormation Stack creation can '
                                   "still fail if it's rejected by senza "
                                   'or AWS CF.',
-                                  'schema': {'$ref': '#/definitions/stack'}},
+                                  'schema': {'$ref': '#/definitions/new_stack'}},
                             400: {'description': 'Stack was not created because request '
                                   'was invalid',
                                   'schema': {'$ref': '#/definitions/problem'}},
@@ -69,7 +71,7 @@ OPERATION2 = {'description': 'Adds a new stack to be created by lizzy and return
                                   'CloudFormation Stack creation can '
                                   "still fail if it's rejected by senza "
                                   'or AWS CF.',
-                                  'schema': {'$ref': '#/definitions/stack'}},
+                                  'schema': {'$ref': '#/definitions/new_stack'}},
                             400: {'description': 'Stack was not created because request '
                                   'was invalid',
                                   'schema': {'$ref': '#/definitions/problem'}},
@@ -80,35 +82,10 @@ OPERATION2 = {'description': 'Adds a new stack to be created by lizzy and return
               'security': [{'oauth': ['uid']}],
               'summary': 'Create new stack'}
 
-OPERATION3 = {'description': 'Adds a new stack to be created by lizzy and returns the '
-              'information needed to keep track of deployment',
-              'operationId': 'fakeapi.hello.post_greeting',
-              'parameters': [{'in': 'body',
-                              'name': 'new_stack',
-                              'required': True,
-                              'schema': {'$ref': '#/notdefinitions/new_stack'}}],
-              'responses': {201: {'description': 'Stack to be created. The '
-                                  'CloudFormation Stack creation can '
-                                  "still fail if it's rejected by senza "
-                                  'or AWS CF.',
-                                  'schema': {'$ref': '#/definitions/stack'}},
-                            400: {'description': 'Stack was not created because request '
-                                  'was invalid',
-                                  'schema': {'$ref': '#/definitions/problem'}},
-                            401: {'description': 'Stack was not created because the '
-                                  'access token was not provided or was '
-                                  'not valid for this operation',
-                                  'schema': {'$ref': '#/definitions/problem'}}},
-              'security': [{'oauth': ['uid']}],
-              'summary': 'Create new stack'}
-
-OPERATION4 = {'operationId': 'fakeapi.hello.post_greeting',
+OPERATION3 = {'operationId': 'fakeapi.hello.post_greeting',
               'parameters': [{'$ref': '#/parameters/myparam'}]}
 
-OPERATION5 = {'operationId': 'fakeapi.hello.post_greeting',
-              'parameters': [{'$ref': '/parameters/fail'}]}
-
-OPERATION6 = {'description': 'Adds a new stack to be created by lizzy and returns the '
+OPERATION4 = {'description': 'Adds a new stack to be created by lizzy and returns the '
               'information needed to keep track of deployment',
               'operationId': 'fakeapi.hello.post_greeting',
               'parameters': [
@@ -129,7 +106,7 @@ OPERATION6 = {'description': 'Adds a new stack to be created by lizzy and return
                                   'CloudFormation Stack creation can '
                                   "still fail if it's rejected by senza "
                                   'or AWS CF.',
-                                  'schema': {'$ref': '#/definitions/stack'}},
+                                  'schema': {'$ref': '#/definitions/new_stack'}},
                             400: {'description': 'Stack was not created because request '
                                   'was invalid',
                                   'schema': {'$ref': '#/definitions/problem'}},
@@ -139,7 +116,7 @@ OPERATION6 = {'description': 'Adds a new stack to be created by lizzy and return
                                   'schema': {'$ref': '#/definitions/problem'}}},
               'summary': 'Create new stack'}
 
-OPERATION7 = {
+OPERATION5 = {
     'description': 'Adds a new stack to be created by lizzy and returns the '
     'information needed to keep track of deployment',
     'operationId': 'fakeapi.hello.post_greeting',
@@ -156,7 +133,7 @@ OPERATION7 = {
                           'CloudFormation Stack creation can '
                           "still fail if it's rejected by senza "
                           'or AWS CF.',
-                          'schema': {'$ref': '#/definitions/stack'}},
+                          'schema': {'$ref': '#/definitions/new_stack'}},
                   '400': {'description': 'Stack was not created because request '
                           'was invalid',
                           'schema': {'$ref': '#/definitions/problem'}},
@@ -168,7 +145,7 @@ OPERATION7 = {
     'summary': 'Create new stack'
 }
 
-OPERATION8 = {
+OPERATION6 = {
     'operationId': 'fakeapi.hello.schema',
     'parameters': [
         {
@@ -185,7 +162,7 @@ OPERATION8 = {
     'summary': 'Create new stack'
 }
 
-OPERATION9 = {'description': 'Adds a new stack to be created by lizzy and returns the '
+OPERATION7 = {'description': 'Adds a new stack to be created by lizzy and returns the '
               'information needed to keep track of deployment',
               'operationId': 'fakeapi.hello.post_greeting',
               'parameters': [{'in': 'body',
@@ -196,7 +173,7 @@ OPERATION9 = {'description': 'Adds a new stack to be created by lizzy and return
                                     'CloudFormation Stack creation can '
                                     "still fail if it's rejected by senza "
                                     'or AWS CF.',
-                                    'schema': {'$ref': '#/definitions/stack'}},
+                                    'schema': {'$ref': '#/definitions/new_stack'}},
                             '400': {'description': 'Stack was not created because request '
                                     'was invalid',
                                     'schema': {'$ref': '#/definitions/problem'}},
@@ -207,7 +184,7 @@ OPERATION9 = {'description': 'Adds a new stack to be created by lizzy and return
               'security': [{'oauth': ['uid']}],
               'summary': 'Create new stack'}
 
-OPERATION10 = {'description': 'Adds a new stack to be created by lizzy and returns the '
+OPERATION8 = {'description': 'Adds a new stack to be created by lizzy and returns the '
                'information needed to keep track of deployment',
                'operationId': 'fakeapi.hello.post_greeting',
                'parameters': [{'in': 'body',
@@ -218,7 +195,7 @@ OPERATION10 = {'description': 'Adds a new stack to be created by lizzy and retur
                                      'CloudFormation Stack creation can '
                                      "still fail if it's rejected by senza "
                                      'or AWS CF.',
-                                     'schema': {'$ref': '#/definitions/stack'}},
+                                     'schema': {'$ref': '#/definitions/new_stack'}},
                              '400': {'description': 'Stack was not created because request '
                                      'was invalid',
                                      'schema': {'$ref': '#/definitions/problem'}},
@@ -256,11 +233,15 @@ def api():
 
 
 def test_operation(api):
+    op_spec = resolve_refs(OPERATION1, {
+        "definitions": DEFINITIONS,
+        "parameters": PARAMETER_DEFINITIONS
+    })
     operation = Operation(api=api,
                           method='GET',
                           path='endpoint',
                           path_parameters=[],
-                          operation=OPERATION1,
+                          operation=op_spec,
                           app_produces=['application/json'],
                           app_consumes=['application/json'],
                           app_security=[],
@@ -279,19 +260,21 @@ def test_operation(api):
     assert operation.consumes == ['application/json']
     assert operation.security == [{'oauth': ['uid']}]
 
-    expected_body_schema = {
-        '$ref': '#/definitions/new_stack',
-        'definitions': DEFINITIONS
-    }
+    expected_body_schema = {'definitions': DEFINITIONS}
+    expected_body_schema.update(DEFINITIONS["new_stack"])
     assert operation.body_schema == expected_body_schema
 
 
 def test_operation_array(api):
+    op_spec = resolve_refs(OPERATION7, {
+        "definitions": DEFINITIONS,
+        "parameters": PARAMETER_DEFINITIONS
+    })
     operation = Operation(api=api,
                           method='GET',
                           path='endpoint',
                           path_parameters=[],
-                          operation=OPERATION9,
+                          operation=op_spec,
                           app_produces=['application/json'],
                           app_consumes=['application/json'],
                           app_security=[],
@@ -312,18 +295,22 @@ def test_operation_array(api):
     assert operation.security == [{'oauth': ['uid']}]
     expected_body_schema = {
         'type': 'array',
-        'items': {'$ref': '#/definitions/new_stack'},
+        'items': DEFINITIONS["new_stack"],
         'definitions': DEFINITIONS
     }
     assert operation.body_schema == expected_body_schema
 
 
 def test_operation_composed_definition(api):
+    op_spec = resolve_refs(OPERATION8, {
+        "definitions": DEFINITIONS,
+        "parameters": PARAMETER_DEFINITIONS
+    })
     operation = Operation(api=api,
                           method='GET',
                           path='endpoint',
                           path_parameters=[],
-                          operation=OPERATION10,
+                          operation=op_spec,
                           app_produces=['application/json'],
                           app_consumes=['application/json'],
                           app_security=[],
@@ -342,19 +329,21 @@ def test_operation_composed_definition(api):
     assert operation.produces == ['application/json']
     assert operation.consumes == ['application/json']
     assert operation.security == [{'oauth': ['uid']}]
-    expected_body_schema = {
-        '$ref': '#/definitions/composed',
-        'definitions': DEFINITIONS
-    }
+    expected_body_schema = {'definitions': DEFINITIONS}
+    expected_body_schema.update(DEFINITIONS["composed"])
     assert operation.body_schema == expected_body_schema
 
 
 def test_operation_local_security_oauth2(api):
+    op_spec = resolve_refs(OPERATION8, {
+        "definitions": DEFINITIONS,
+        "parameters": PARAMETER_DEFINITIONS
+    })
     operation = Operation(api=api,
                           method='GET',
                           path='endpoint',
                           path_parameters=[],
-                          operation=OPERATION10,
+                          operation=op_spec,
                           app_produces=['application/json'],
                           app_consumes=['application/json'],
                           app_security=[],
@@ -374,19 +363,21 @@ def test_operation_local_security_oauth2(api):
     assert operation.produces == ['application/json']
     assert operation.consumes == ['application/json']
     assert operation.security == [{'oauth': ['uid']}]
-    expected_body_schema = {
-        '$ref': '#/definitions/composed',
-        'definitions': DEFINITIONS
-    }
+    expected_body_schema = {'definitions': DEFINITIONS}
+    expected_body_schema.update(DEFINITIONS["composed"])
     assert operation.body_schema == expected_body_schema
 
 
 def test_operation_local_security_duplicate_token_info(api):
+    op_spec = resolve_refs(OPERATION8, {
+        "definitions": DEFINITIONS,
+        "parameters": PARAMETER_DEFINITIONS
+    })
     operation = Operation(api=api,
                           method='GET',
                           path='endpoint',
                           path_parameters=[],
-                          operation=OPERATION10,
+                          operation=op_spec,
                           app_produces=['application/json'],
                           app_consumes=['application/json'],
                           app_security=[],
@@ -406,40 +397,22 @@ def test_operation_local_security_duplicate_token_info(api):
     assert operation.produces == ['application/json']
     assert operation.consumes == ['application/json']
     assert operation.security == [{'oauth': ['uid']}]
-    expected_body_schema = {
-        '$ref': '#/definitions/composed',
-        'definitions': DEFINITIONS
-    }
+    expected_body_schema = {'definitions': DEFINITIONS}
+    expected_body_schema.update(DEFINITIONS["composed"])
     assert operation.body_schema == expected_body_schema
-
-def test_non_existent_reference(api):
-    with pytest.raises(InvalidSpecification) as exc_info:  # type: py.code.ExceptionInfo
-        operation = Operation(api=api,
-                              method='GET',
-                              path='endpoint',
-                              path_parameters=[],
-                              operation=OPERATION1,
-                              app_produces=['application/json'],
-                              app_consumes=['application/json'],
-                              app_security=[],
-                              security_definitions={},
-                              definitions={},
-                              parameter_definitions={},
-                              resolver=Resolver())
-        operation.body_schema
-
-    exception = exc_info.value
-    assert str(exception) == "<InvalidSpecification: GET endpoint Definition 'new_stack' not found>"
-    assert repr(exception) == "<InvalidSpecification: GET endpoint Definition 'new_stack' not found>"
 
 
 def test_multi_body(api):
     with pytest.raises(InvalidSpecification) as exc_info:  # type: py.code.ExceptionInfo
+        op_spec = resolve_refs(OPERATION2, {
+            "definitions": DEFINITIONS,
+            "parameters": PARAMETER_DEFINITIONS
+        })
         operation = Operation(api=api,
                               method='GET',
                               path='endpoint',
                               path_parameters=[],
-                              operation=OPERATION2,
+                              operation=op_spec,
                               app_produces=['application/json'],
                               app_consumes=['application/json'],
                               app_security=[],
@@ -454,33 +427,16 @@ def test_multi_body(api):
     assert repr(exception) == "<InvalidSpecification: GET endpoint There can be one 'body' parameter at most>"
 
 
-def test_invalid_reference(api):
-    with pytest.raises(InvalidSpecification) as exc_info:  # type: py.code.ExceptionInfo
-        operation = Operation(api=api,
-                              method='GET',
-                              path='endpoint',
-                              path_parameters=[],
-                              operation=OPERATION3,
-                              app_produces=['application/json'],
-                              app_consumes=['application/json'],
-                              app_security=[],
-                              security_definitions={},
-                              definitions=DEFINITIONS,
-                              parameter_definitions=PARAMETER_DEFINITIONS,
-                              resolver=Resolver())
-        operation.body_schema
-
-    exception = exc_info.value
-    assert str(exception).startswith("<InvalidSpecification: GET endpoint $ref")
-    assert repr(exception).startswith("<InvalidSpecification: GET endpoint $ref")
-
-
 def test_no_token_info(api):
+    op_spec = resolve_refs(OPERATION1, {
+        "definitions": DEFINITIONS,
+        "parameters": PARAMETER_DEFINITIONS
+    })
     operation = Operation(api=api,
                           method='GET',
                           path='endpoint',
                           path_parameters=[],
-                          operation=OPERATION1,
+                          operation=op_spec,
                           app_produces=['application/json'],
                           app_consumes=['application/json'],
                           app_security=SECURITY_DEFINITIONS_WO_INFO,
@@ -496,19 +452,20 @@ def test_no_token_info(api):
     assert operation.consumes == ['application/json']
     assert operation.security == [{'oauth': ['uid']}]
 
-    expected_body_schema = {
-        '$ref': '#/definitions/new_stack',
-        'definitions': DEFINITIONS
-    }
+    expected_body_schema = {'definitions': DEFINITIONS}
+    expected_body_schema.update(DEFINITIONS["new_stack"])
     assert operation.body_schema == expected_body_schema
 
 
 def test_parameter_reference(api):
+    op_spec = resolve_refs(OPERATION3, {
+        "parameters": PARAMETER_DEFINITIONS
+    })
     operation = Operation(api=api,
                           method='GET',
                           path='endpoint',
                           path_parameters=[],
-                          operation=OPERATION4,
+                          operation=op_spec,
                           app_produces=['application/json'],
                           app_consumes=['application/json'],
                           app_security=[],
@@ -519,42 +476,52 @@ def test_parameter_reference(api):
     assert operation.parameters == [{'in': 'path', 'type': 'integer'}]
 
 
-def test_resolve_invalid_reference(api):
-    with pytest.raises(InvalidSpecification) as exc_info:
-        Operation(api=api, method='GET', path='endpoint', path_parameters=[],
-                  operation=OPERATION5, app_produces=['application/json'],
-                  app_consumes=['application/json'], app_security=[],
-                  security_definitions={}, definitions={},
-                  parameter_definitions=PARAMETER_DEFINITIONS, resolver=Resolver())
-
-    exception = exc_info.value  # type: InvalidSpecification
-    assert exception.reason == "GET endpoint '$ref' needs to start with '#/'"
-
-
 def test_default(api):
-    op = OPERATION6.copy()
-    op['parameters'][1]['default'] = 1
-    Operation(api=api, method='GET', path='endpoint', path_parameters=[], operation=op,
-              app_produces=['application/json'], app_consumes=['application/json'],
-              app_security=[], security_definitions={}, definitions=DEFINITIONS,
-              parameter_definitions=PARAMETER_DEFINITIONS,
-              resolver=Resolver())
-    op = OPERATION8.copy()
-    op['parameters'][0]['default'] = {
-        'keep_stacks': 1, 'image_version': 'one', 'senza_yaml': 'senza.yaml', 'new_traffic': 100
+    op_spec = resolve_refs(OPERATION4, {
+        "definitions": DEFINITIONS,
+        "parameters": PARAMETER_DEFINITIONS
+    })
+    op_spec['parameters'][1]['default'] = 1
+    Operation(
+        api=api, method='GET', path='endpoint', path_parameters=[],
+        operation=op_spec, app_produces=['application/json'],
+        app_consumes=['application/json'], app_security=[],
+        security_definitions={}, definitions=DEFINITIONS,
+        parameter_definitions=PARAMETER_DEFINITIONS, resolver=Resolver()
+    )
+    op_spec = resolve_refs(OPERATION6, {
+        "definitions": DEFINITIONS
+    })
+    op_spec['parameters'][0]['default'] = {
+        'keep_stacks': 1,
+        'image_version': 'one',
+        'senza_yaml': 'senza.yaml',
+        'new_traffic': 100
     }
-    Operation(api=api, method='POST', path='endpoint', path_parameters=[], operation=op,
-              app_produces=['application/json'], app_consumes=['application/json'], app_security=[],
-              security_definitions={}, definitions=DEFINITIONS, parameter_definitions={}, resolver=Resolver())
+    Operation(
+        api=api, method='POST', path='endpoint', path_parameters=[],
+        operation=op_spec, app_produces=['application/json'],
+        app_consumes=['application/json'], app_security=[],
+        security_definitions={}, definitions=DEFINITIONS,
+        parameter_definitions={}, resolver=Resolver()
+    )
 
 
 def test_get_path_parameter_types(api):
-    op = OPERATION1.copy()
-    op['parameters'] = [{'in': 'path', 'type': 'int', 'name': 'int_path'},
-                        {'in': 'path', 'type': 'string', 'name': 'string_path'},
-                        {'in': 'path', 'type': 'string', 'format': 'path', 'name': 'path_path'}]
+    op_spec = resolve_refs(OPERATION1, {
+        "definitions": DEFINITIONS
+    })
+    op_spec['parameters'] = [
+        {'in': 'path', 'type': 'int', 'name': 'int_path'},
+        {'in': 'path', 'type': 'string', 'name': 'string_path'},
+        {'in': 'path', 'type': 'string', 'format': 'path', 'name': 'path_path'}
+    ]
 
-    operation = Operation(api=api, method='GET', path='endpoint', path_parameters=[], operation=op,
-                          app_produces=['application/json'], app_consumes=['application/json'], resolver=Resolver())
+    operation = Operation(
+        api=api, method='GET', path='endpoint', path_parameters=[],
+        operation=op_spec, app_produces=['application/json'],
+        app_consumes=['application/json'],
+        definitions=DEFINITIONS, resolver=Resolver()
+    )
 
     assert {'int_path': 'int', 'string_path': 'string', 'path_path': 'path'} == operation.get_path_parameter_types()

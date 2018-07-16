@@ -59,7 +59,7 @@ class MockResolver(Resolver):
             status_code = int(status_code)
         except ValueError:
             status_code = 200
-        response_definition = operation.resolve_reference(response_definition)
+        response_definition = operation.with_definitions(response_definition)
         examples = response_definition.get('examples')
         if examples:
             return list(examples.values())[0], status_code

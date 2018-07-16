@@ -1,6 +1,5 @@
 import functools
 import logging
-from copy import deepcopy
 
 from jsonschema import ValidationError
 
@@ -202,23 +201,18 @@ class Operation(SecureOperation):
         self.definitions = definitions or {}
         self.parameter_definitions = parameter_definitions or {}
         self.response_definitions = response_definitions or {}
-        self.definitions_map = {
-            'definitions': self.definitions,
-            'parameters': self.parameter_definitions,
-            'responses': self.response_definitions
-        }
+        self.operation = operation
         self.validate_responses = validate_responses
         self.strict_validation = strict_validation
-        self.operation = operation
         self.randomize_endpoint = randomize_endpoint
         self.pythonic_params = pythonic_params
         self.uri_parser_class = uri_parser_class or AlwaysMultiURIParser
 
         # todo support definition references
         # todo support references to application level parameters
-        self.parameters = list(self.resolve_parameters(operation.get('parameters', [])))
+        self.parameters = list(self.operation.get('parameters', []))
         if path_parameters:
-            self.parameters += list(self.resolve_parameters(path_parameters))
+            self.parameters += list(path_parameters)
 
         self.security = operation.get('security', app_security)
         self.produces = operation.get('produces', app_produces)
@@ -240,84 +234,11 @@ class Operation(SecureOperation):
                                            ' type \'{param_type}\''.format(param_name=param['name'],
                                                                            param_type=param['type']))
 
-    def resolve_reference(self, schema):
-        schema = deepcopy(schema)  # avoid changing the original schema
-        self.check_references(schema)
-
-        # find the object we need to resolve/update if this is not a proper SchemaObject
-        # e.g a response or parameter object
-        for obj in schema, schema.get('items'):
-            reference = obj and obj.get('$ref')  # type: str
-            if reference:
-                break
-        if reference:
-            definition = deepcopy(self._retrieve_reference(reference))
-            # Update schema
-            obj.update(definition)
-            del obj['$ref']
-
-        # if there is a schema object on this param or response, then we just
-        # need to include the defs and it can be validated by jsonschema
+    def with_definitions(self, schema):
         if 'schema' in schema:
             schema['schema']['definitions'] = self.definitions
             return schema
-
         return schema
-
-    def check_references(self, schema):
-        """
-        Searches the keys and values of a schema object for json references.
-        If it finds one, it attempts to locate it and will thrown an exception
-        if the reference can't be found in the definitions dictionary.
-
-        :param schema: The schema object to check
-        :type schema: dict
-        :raises InvalidSpecification: raised when a reference isn't found
-        """
-
-        stack = [schema]
-        visited = set()
-        while stack:
-            schema = stack.pop()
-            for k, v in schema.items():
-                if k == "$ref":
-                    if v in visited:
-                        continue
-                    visited.add(v)
-                    stack.append(self._retrieve_reference(v))
-                elif isinstance(v, (list, tuple)):
-                    continue
-                elif hasattr(v, "items"):
-                    stack.append(v)
-
-    def _retrieve_reference(self, reference):
-        if not reference.startswith('#/'):
-            raise InvalidSpecification(
-                "{method} {path} '$ref' needs to start with '#/'".format(**vars(self)))
-        path = reference.split('/')
-        definition_type = path[1]
-        try:
-            definitions = self.definitions_map[definition_type]
-        except KeyError:
-            ref_possible = ', '.join(self.definitions_map.keys())
-            raise InvalidSpecification(
-                "{method} {path} $ref \"{reference}\" needs to point to one of: "
-                "{ref_possible}".format(
-                    method=self.method,
-                    path=self.path,
-                    reference=reference,
-                    ref_possible=ref_possible
-                ))
-        definition_name = path[-1]
-        try:
-            # Get sub definition
-            definition = deepcopy(definitions[definition_name])
-        except KeyError:
-            raise InvalidSpecification(
-                "{method} {path} Definition '{definition_name}' not found".format(
-                    definition_name=definition_name, method=self.method, path=self.path))
-
-        return definition
 
     def get_mimetype(self):
         """
@@ -336,11 +257,6 @@ class Operation(SecureOperation):
         else:
             return DEFAULT_MIMETYPE
 
-    def resolve_parameters(self, parameters):
-        for param in parameters:
-            param = self.resolve_reference(param)
-            yield param
-
     def get_path_parameter_types(self):
         return {p['name']: 'path' if p.get('type') == 'string' and p.get('format') == 'path' else p.get('type')
                 for p in self.parameters if p['in'] == 'path'}
@@ -350,7 +266,7 @@ class Operation(SecureOperation):
         """
         The body schema definition for this operation.
         """
-        return self.body_definition.get('schema')
+        return self.with_definitions(self.body_definition).get('schema')
 
     @property
     def body_definition(self):
