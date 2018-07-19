@@ -101,7 +101,7 @@ class RequestBodyValidator(object):
             if all_json(self.consumes):
                 data = request.json
 
-                empty_body = len(request.body)==0 and len(request.form)==0 and len(request.files)==0
+                empty_body = len(request.body) == 0 and len(request.form) == 0 and len(request.files) == 0
                 if data is None and not empty_body and not self.is_null_value_valid:
                     try:
                         ctype_is_json = is_json_mimetype(request.headers.get("Content-Type", ""))
