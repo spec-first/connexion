@@ -10,8 +10,8 @@ import six
 import yaml
 from swagger_spec_validator.validator20 import validate_spec
 
-from ..exceptions import InvalidSpecification, ResolverError
-from ..jsonref import RefResolutionError, resolve_refs
+from ..exceptions import ResolverError
+from ..jsonref import resolve_refs
 from ..operation import Operation
 from ..options import ConnexionOptions
 from ..resolver import Resolver
@@ -89,10 +89,7 @@ class AbstractAPI(object):
         # Avoid validator having ability to modify specification
         spec = copy.deepcopy(self.specification)
         self._validate_spec(spec)
-        try:
-            self.specification = resolve_refs(spec)
-        except RefResolutionError as exc:
-            raise InvalidSpecification(repr(exc))
+        self.specification = resolve_refs(spec)
 
         # https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#fixed-fields
         # If base_path is not on provided then we try to read it from the swagger.yaml or use / by default
