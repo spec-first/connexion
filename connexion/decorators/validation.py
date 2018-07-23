@@ -46,13 +46,14 @@ class TypeValidationError(Exception):
 
 
 def validate_type(param, value, parameter_type, parameter_name=None):
-    param_type = param.get('type')
+    param_schema = param.get("schema", param)
+    param_type = param_schema.get('type')
     parameter_name = parameter_name if parameter_name else param['name']
     if param_type == "array":
         converted_params = []
         for v in value:
             try:
-                converted = make_type(v, param["items"]["type"])
+                converted = make_type(v, param_schema["items"]["type"])
             except (ValueError, TypeError):
                 converted = v
             converted_params.append(converted)
@@ -74,7 +75,8 @@ def validate_parameter_list(request_params, spec_params):
 
 
 class RequestBodyValidator(object):
-    def __init__(self, schema, consumes, api, is_null_value_valid=False, validator=None):
+    def __init__(self, schema, consumes, api, is_null_value_valid=False, validator=None,
+                 strict_validation=False):
         """
         :param schema: The schema of the request body
         :param consumes: The list of content types the operation consumes
@@ -82,13 +84,16 @@ class RequestBodyValidator(object):
         :param validator: Validator class that should be used to validate passed data
                           against API schema. Default is jsonschema.Draft4Validator.
         :type validator: jsonschema.IValidator
+        :param strict_validation: Flag indicating if parameters not in spec are allowed
         """
         self.consumes = consumes
+        self.schema = schema
         self.has_default = schema.get('default', False)
         self.is_null_value_valid = is_null_value_valid
         validatorClass = validator or Draft4Validator
         self.validator = validatorClass(schema, format_checker=draft4_format_checker)
         self.api = api
+        self.strict_validation = strict_validation
 
     def __call__(self, function):
         """
@@ -173,6 +178,7 @@ class ParameterValidator(object):
     def __init__(self, parameters, api, strict_validation=False):
         """
         :param parameters: List of request parameter dictionaries
+        :param api: api that the validator is attached to
         :param strict_validation: Flag indicating if parameters not in spec are allowed
         """
         self.parameters = collections.defaultdict(list)
@@ -249,7 +255,7 @@ class ParameterValidator(object):
         return self.validate_parameter('header', val, param)
 
     def validate_formdata_parameter(self, param, request):
-        if param.get('type') == 'file':
+        if param.get('type') == 'file' or param.get('format') == 'binary':
             val = request.files.get(param['name'])
         else:
             val = request.form.get(param['name'])

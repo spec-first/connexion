@@ -11,7 +11,7 @@ from connexion.decorators.security import (security_passthrough,
                                            verify_oauth_remote)
 from connexion.exceptions import InvalidSpecification
 from connexion.jsonref import resolve_refs
-from connexion.operation import Swagger2Operation
+from connexion.operations import Swagger2Operation
 from connexion.resolver import Resolver
 
 TEST_FOLDER = pathlib.Path(__file__).parent
