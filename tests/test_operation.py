@@ -1,3 +1,4 @@
+import copy
 import math
 import pathlib
 import types
@@ -232,11 +233,18 @@ def api():
   return mock.MagicMock(jsonifier=Jsonifier)
 
 
+def make_operation(op):
+    """ note the wrapper because definitions namespace and
+        operation namespace collide
+    """
+    new_op = {"wrapper": copy.deepcopy(op)}
+    new_op.update({"definitions": DEFINITIONS})
+    new_op.update({"parameters": PARAMETER_DEFINITIONS})
+    return resolve_refs(new_op)["wrapper"]
+
+
 def test_operation(api):
-    op_spec = resolve_refs(OPERATION1, {
-        "definitions": DEFINITIONS,
-        "parameters": PARAMETER_DEFINITIONS
-    })
+    op_spec = make_operation(OPERATION1)
     operation = Operation(api=api,
                           method='GET',
                           path='endpoint',
@@ -260,16 +268,13 @@ def test_operation(api):
     assert operation.consumes == ['application/json']
     assert operation.security == [{'oauth': ['uid']}]
 
-    expected_body_schema = {'definitions': DEFINITIONS}
-    expected_body_schema.update(DEFINITIONS["new_stack"])
+    expected_body_schema = op_spec["parameters"][0]["schema"]
+    expected_body_schema.update({'definitions': DEFINITIONS})
     assert operation.body_schema == expected_body_schema
 
 
 def test_operation_array(api):
-    op_spec = resolve_refs(OPERATION7, {
-        "definitions": DEFINITIONS,
-        "parameters": PARAMETER_DEFINITIONS
-    })
+    op_spec = make_operation(OPERATION7)
     operation = Operation(api=api,
                           method='GET',
                           path='endpoint',
@@ -302,10 +307,7 @@ def test_operation_array(api):
 
 
 def test_operation_composed_definition(api):
-    op_spec = resolve_refs(OPERATION8, {
-        "definitions": DEFINITIONS,
-        "parameters": PARAMETER_DEFINITIONS
-    })
+    op_spec = make_operation(OPERATION8)
     operation = Operation(api=api,
                           method='GET',
                           path='endpoint',
@@ -329,16 +331,13 @@ def test_operation_composed_definition(api):
     assert operation.produces == ['application/json']
     assert operation.consumes == ['application/json']
     assert operation.security == [{'oauth': ['uid']}]
-    expected_body_schema = {'definitions': DEFINITIONS}
-    expected_body_schema.update(DEFINITIONS["composed"])
+    expected_body_schema = op_spec["parameters"][0]["schema"]
+    expected_body_schema.update({'definitions': DEFINITIONS})
     assert operation.body_schema == expected_body_schema
 
 
 def test_operation_local_security_oauth2(api):
-    op_spec = resolve_refs(OPERATION8, {
-        "definitions": DEFINITIONS,
-        "parameters": PARAMETER_DEFINITIONS
-    })
+    op_spec = make_operation(OPERATION8)
     operation = Operation(api=api,
                           method='GET',
                           path='endpoint',
@@ -363,16 +362,13 @@ def test_operation_local_security_oauth2(api):
     assert operation.produces == ['application/json']
     assert operation.consumes == ['application/json']
     assert operation.security == [{'oauth': ['uid']}]
-    expected_body_schema = {'definitions': DEFINITIONS}
-    expected_body_schema.update(DEFINITIONS["composed"])
+    expected_body_schema = op_spec["parameters"][0]["schema"]
+    expected_body_schema.update({'definitions': DEFINITIONS})
     assert operation.body_schema == expected_body_schema
 
 
 def test_operation_local_security_duplicate_token_info(api):
-    op_spec = resolve_refs(OPERATION8, {
-        "definitions": DEFINITIONS,
-        "parameters": PARAMETER_DEFINITIONS
-    })
+    op_spec = make_operation(OPERATION8)
     operation = Operation(api=api,
                           method='GET',
                           path='endpoint',
@@ -397,17 +393,14 @@ def test_operation_local_security_duplicate_token_info(api):
     assert operation.produces == ['application/json']
     assert operation.consumes == ['application/json']
     assert operation.security == [{'oauth': ['uid']}]
-    expected_body_schema = {'definitions': DEFINITIONS}
-    expected_body_schema.update(DEFINITIONS["composed"])
+    expected_body_schema = op_spec["parameters"][0]["schema"]
+    expected_body_schema.update({'definitions': DEFINITIONS})
     assert operation.body_schema == expected_body_schema
 
 
 def test_multi_body(api):
     with pytest.raises(InvalidSpecification) as exc_info:  # type: py.code.ExceptionInfo
-        op_spec = resolve_refs(OPERATION2, {
-            "definitions": DEFINITIONS,
-            "parameters": PARAMETER_DEFINITIONS
-        })
+        op_spec = make_operation(OPERATION2)
         operation = Operation(api=api,
                               method='GET',
                               path='endpoint',
@@ -428,10 +421,7 @@ def test_multi_body(api):
 
 
 def test_no_token_info(api):
-    op_spec = resolve_refs(OPERATION1, {
-        "definitions": DEFINITIONS,
-        "parameters": PARAMETER_DEFINITIONS
-    })
+    op_spec = make_operation(OPERATION1)
     operation = Operation(api=api,
                           method='GET',
                           path='endpoint',
@@ -458,9 +448,7 @@ def test_no_token_info(api):
 
 
 def test_parameter_reference(api):
-    op_spec = resolve_refs(OPERATION3, {
-        "parameters": PARAMETER_DEFINITIONS
-    })
+    op_spec = make_operation(OPERATION3)
     operation = Operation(api=api,
                           method='GET',
                           path='endpoint',
@@ -477,10 +465,7 @@ def test_parameter_reference(api):
 
 
 def test_default(api):
-    op_spec = resolve_refs(OPERATION4, {
-        "definitions": DEFINITIONS,
-        "parameters": PARAMETER_DEFINITIONS
-    })
+    op_spec = make_operation(OPERATION4)
     op_spec['parameters'][1]['default'] = 1
     Operation(
         api=api, method='GET', path='endpoint', path_parameters=[],
@@ -489,9 +474,7 @@ def test_default(api):
         security_definitions={}, definitions=DEFINITIONS,
         parameter_definitions=PARAMETER_DEFINITIONS, resolver=Resolver()
     )
-    op_spec = resolve_refs(OPERATION6, {
-        "definitions": DEFINITIONS
-    })
+    op_spec = make_operation(OPERATION6)
     op_spec['parameters'][0]['default'] = {
         'keep_stacks': 1,
         'image_version': 'one',
@@ -508,9 +491,7 @@ def test_default(api):
 
 
 def test_get_path_parameter_types(api):
-    op_spec = resolve_refs(OPERATION1, {
-        "definitions": DEFINITIONS
-    })
+    op_spec = make_operation(OPERATION1)
     op_spec['parameters'] = [
         {'in': 'path', 'type': 'int', 'name': 'int_path'},
         {'in': 'path', 'type': 'string', 'name': 'string_path'},
