@@ -384,7 +384,7 @@ class Operation(SecureOperation):
             function = validation_decorator(function)
 
         uri_parsing_decorator = self.__uri_parsing_decorator
-        logging.debug('... Adding uri parsing decorator (%r)', uri_parsing_decorator)
+        logger.debug('... Adding uri parsing decorator (%r)', uri_parsing_decorator)
         function = uri_parsing_decorator(function)
 
         # NOTE: the security decorator should be applied last to check auth before anything else :-)
