@@ -4,6 +4,8 @@ from copy import deepcopy
 from jsonschema import RefResolver
 from jsonschema.exceptions import RefResolutionError  # noqa
 
+from .utils import deep_get
+
 
 def resolve_refs(spec, store=None):
     """
@@ -17,8 +19,16 @@ def resolve_refs(spec, store=None):
 
     def _do_resolve(node):
         if isinstance(node, collections.Mapping) and '$ref' in node:
-            with resolver.resolving(node['$ref']) as resolved:
-                return resolved
+            path = node['$ref'][2:].split("/")
+            try:
+                # resolve known references
+                node.update(deep_get(spec, path))
+                del node['$ref']
+                return node
+            except KeyError:
+                # resolve external references
+                with resolver.resolving(node['$ref']) as resolved:
+                    return resolved
         elif isinstance(node, collections.Mapping):
             for k, v in node.items():
                 node[k] = _do_resolve(v)
