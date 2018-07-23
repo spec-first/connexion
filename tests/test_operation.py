@@ -233,13 +233,15 @@ def api():
   return mock.MagicMock(jsonifier=Jsonifier)
 
 
-def make_operation(op):
+def make_operation(op, definitions=True, parameters=True):
     """ note the wrapper because definitions namespace and
         operation namespace collide
     """
     new_op = {"wrapper": copy.deepcopy(op)}
-    new_op.update({"definitions": DEFINITIONS})
-    new_op.update({"parameters": PARAMETER_DEFINITIONS})
+    if definitions:
+        new_op.update({"definitions": DEFINITIONS})
+    if parameters:
+        new_op.update({"parameters": PARAMETER_DEFINITIONS})
     return resolve_refs(new_op)["wrapper"]
 
 
@@ -448,7 +450,7 @@ def test_no_token_info(api):
 
 
 def test_parameter_reference(api):
-    op_spec = make_operation(OPERATION3)
+    op_spec = make_operation(OPERATION3, definitions=False)
     operation = Operation(api=api,
                           method='GET',
                           path='endpoint',
@@ -474,7 +476,7 @@ def test_default(api):
         security_definitions={}, definitions=DEFINITIONS,
         parameter_definitions=PARAMETER_DEFINITIONS, resolver=Resolver()
     )
-    op_spec = make_operation(OPERATION6)
+    op_spec = make_operation(OPERATION6, parameters=False)
     op_spec['parameters'][0]['default'] = {
         'keep_stacks': 1,
         'image_version': 'one',
@@ -491,7 +493,7 @@ def test_default(api):
 
 
 def test_get_path_parameter_types(api):
-    op_spec = make_operation(OPERATION1)
+    op_spec = make_operation(OPERATION1, parameters=False)
     op_spec['parameters'] = [
         {'in': 'path', 'type': 'int', 'name': 'int_path'},
         {'in': 'path', 'type': 'string', 'name': 'string_path'},
