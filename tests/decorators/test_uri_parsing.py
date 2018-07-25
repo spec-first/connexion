@@ -8,8 +8,8 @@ QUERY1 = MultiDict([("letters", "a"), ("letters", "b,c"),
                     ("letters", "d,e,f")])
 QUERY2 = MultiDict([("letters", "a"), ("letters", "b|c"),
                     ("letters", "d|e|f")])
-PATH1 = "d,e,f"
-PATH2 = "d|e|f"
+PATH1 = {"letters": "d,e,f"}
+PATH2 = {"letters": "d|e|f"}
 CSV = "csv"
 PIPES = "pipes"
 MULTI = "multi"
@@ -84,7 +84,7 @@ def test_uri_parser_path_params(parser_class, expected, query_in, collection_for
     class Request(object):
         query = {}
         form = {}
-        path_params = {"letters": query_in}
+        path_params = query_in
 
     request = Request()
     parameters = [
@@ -97,6 +97,3 @@ def test_uri_parser_path_params(parser_class, expected, query_in, collection_for
     p = parser_class(parameters)
     res = p(lambda x: x)(request)
     assert res.path_params["letters"] == expected
-
-
-
