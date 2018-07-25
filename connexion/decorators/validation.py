@@ -5,7 +5,7 @@ import logging
 import sys
 
 import six
-from jsonschema import Draft4Validator, ValidationError, draft4_format_checker
+from jsonschema import Draft4Validator, ValidationError, draft4_format_checker, validators
 from werkzeug import FileStorage
 
 from ..exceptions import ExtraParameterProblem
@@ -73,6 +73,36 @@ def validate_parameter_list(request_params, spec_params):
     return request_params.difference(spec_params)
 
 
+def extend_with_nullable_support(validator_class):
+    """Add support for null values in body.
+
+    It adds property validator to given validator_class.
+
+    :param validator_class: validator to add nullable support
+    :type validator_class: jsonschema.IValidator
+    :return: new validator with added nullable support in properties
+    :rtype: jsonschema.IValidator
+    """
+    validate_properties = validator_class.VALIDATORS['properties']
+
+    def nullable_support(validator, properties, instance, schema):
+        null_properties = {}
+        for property_, subschema in six.iteritems(properties):
+            if property_ in instance and \
+                    instance[property_] is None and \
+                    subschema.get('x-nullable') is True:
+                # exclude from following validation
+                null_properties[property_] = instance.pop(property_)
+        for error in validate_properties(validator, properties, instance, schema):
+            yield error
+        # add null properties back
+        instance.update(null_properties)
+    return validators.extend(validator_class, {'properties': nullable_support})
+
+
+Draft4ValidatorSupportNullable = extend_with_nullable_support(Draft4Validator)
+
+
 class RequestBodyValidator(object):
     def __init__(self, schema, consumes, api, is_null_value_valid=False, validator=None):
         """
@@ -86,7 +116,7 @@ class RequestBodyValidator(object):
         self.consumes = consumes
         self.has_default = schema.get('default', False)
         self.is_null_value_valid = is_null_value_valid
-        validatorClass = validator or Draft4Validator
+        validatorClass = validator or Draft4ValidatorSupportNullable
         self.validator = validatorClass(schema, format_checker=draft4_format_checker)
         self.api = api
 
@@ -154,7 +184,7 @@ class ResponseBodyValidator(object):
                           against API schema. Default is jsonschema.Draft4Validator.
         :type validator: jsonschema.IValidator
         """
-        ValidatorClass = validator or Draft4Validator
+        ValidatorClass = validator or Draft4ValidatorSupportNullable
         self.validator = ValidatorClass(schema, format_checker=draft4_format_checker)
 
     def validate_schema(self, data, url):
