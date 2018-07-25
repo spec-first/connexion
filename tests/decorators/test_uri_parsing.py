@@ -1,5 +1,6 @@
-import pytest
 from werkzeug.datastructures import MultiDict
+
+import pytest
 from connexion.decorators.uri_parsing import (AlwaysMultiURIParser,
                                               FirstValueURIParser,
                                               Swagger2URIParser)
