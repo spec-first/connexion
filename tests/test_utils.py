@@ -12,6 +12,11 @@ def test_get_function_from_name():
     assert function(2.7) == 3
 
 
+def test_get_function_from_name_no_module():
+    with pytest.raises(ValueError):
+        utils.get_function_from_name('math')
+
+
 def test_get_function_from_name_attr_error(monkeypatch):
     """
     Test attribute error without import error on get_function_from_name.
