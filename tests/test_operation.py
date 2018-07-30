@@ -11,7 +11,7 @@ from connexion.decorators.security import (security_passthrough,
                                            verify_oauth_remote)
 from connexion.exceptions import InvalidSpecification
 from connexion.jsonref import resolve_refs
-from connexion.operation import Operation
+from connexion.operation import Swagger2Operation
 from connexion.resolver import Resolver
 
 TEST_FOLDER = pathlib.Path(__file__).parent
@@ -247,18 +247,18 @@ def make_operation(op, definitions=True, parameters=True):
 
 def test_operation(api):
     op_spec = make_operation(OPERATION1)
-    operation = Operation(api=api,
-                          method='GET',
-                          path='endpoint',
-                          path_parameters=[],
-                          operation=op_spec,
-                          app_produces=['application/json'],
-                          app_consumes=['application/json'],
-                          app_security=[],
-                          security_definitions=SECURITY_DEFINITIONS_REMOTE,
-                          definitions=DEFINITIONS,
-                          parameter_definitions=PARAMETER_DEFINITIONS,
-                          resolver=Resolver())
+    operation = Swagger2Operation(api=api,
+                                  method='GET',
+                                  path='endpoint',
+                                  path_parameters=[],
+                                  operation=op_spec,
+                                  app_produces=['application/json'],
+                                  app_consumes=['application/json'],
+                                  app_security=[],
+                                  security_definitions=SECURITY_DEFINITIONS_REMOTE,
+                                  definitions=DEFINITIONS,
+                                  parameter_definitions=PARAMETER_DEFINITIONS,
+                                  resolver=Resolver())
     assert isinstance(operation.function, types.FunctionType)
     # security decorator should be a partial with verify_oauth_remote as the function and token url and scopes as arguments.
     # See https://docs.python.org/2/library/functools.html#partial-objects
@@ -277,18 +277,18 @@ def test_operation(api):
 
 def test_operation_array(api):
     op_spec = make_operation(OPERATION7)
-    operation = Operation(api=api,
-                          method='GET',
-                          path='endpoint',
-                          path_parameters=[],
-                          operation=op_spec,
-                          app_produces=['application/json'],
-                          app_consumes=['application/json'],
-                          app_security=[],
-                          security_definitions=SECURITY_DEFINITIONS_REMOTE,
-                          definitions=DEFINITIONS,
-                          parameter_definitions=PARAMETER_DEFINITIONS,
-                          resolver=Resolver())
+    operation = Swagger2Operation(api=api,
+                                  method='GET',
+                                  path='endpoint',
+                                  path_parameters=[],
+                                  operation=op_spec,
+                                  app_produces=['application/json'],
+                                  app_consumes=['application/json'],
+                                  app_security=[],
+                                  security_definitions=SECURITY_DEFINITIONS_REMOTE,
+                                  definitions=DEFINITIONS,
+                                  parameter_definitions=PARAMETER_DEFINITIONS,
+                                  resolver=Resolver())
     assert isinstance(operation.function, types.FunctionType)
     # security decorator should be a partial with verify_oauth_remote as the function and token url
     #  and scopes as arguments.
@@ -310,18 +310,18 @@ def test_operation_array(api):
 
 def test_operation_composed_definition(api):
     op_spec = make_operation(OPERATION8)
-    operation = Operation(api=api,
-                          method='GET',
-                          path='endpoint',
-                          path_parameters=[],
-                          operation=op_spec,
-                          app_produces=['application/json'],
-                          app_consumes=['application/json'],
-                          app_security=[],
-                          security_definitions=SECURITY_DEFINITIONS_REMOTE,
-                          definitions=DEFINITIONS,
-                          parameter_definitions=PARAMETER_DEFINITIONS,
-                          resolver=Resolver())
+    operation = Swagger2Operation(api=api,
+                                  method='GET',
+                                  path='endpoint',
+                                  path_parameters=[],
+                                  operation=op_spec,
+                                  app_produces=['application/json'],
+                                  app_consumes=['application/json'],
+                                  app_security=[],
+                                  security_definitions=SECURITY_DEFINITIONS_REMOTE,
+                                  definitions=DEFINITIONS,
+                                  parameter_definitions=PARAMETER_DEFINITIONS,
+                                  resolver=Resolver())
     assert isinstance(operation.function, types.FunctionType)
     # security decorator should be a partial with verify_oauth_remote as the function and
     # token url and scopes as arguments.
@@ -340,18 +340,18 @@ def test_operation_composed_definition(api):
 
 def test_operation_local_security_oauth2(api):
     op_spec = make_operation(OPERATION8)
-    operation = Operation(api=api,
-                          method='GET',
-                          path='endpoint',
-                          path_parameters=[],
-                          operation=op_spec,
-                          app_produces=['application/json'],
-                          app_consumes=['application/json'],
-                          app_security=[],
-                          security_definitions=SECURITY_DEFINITIONS_LOCAL,
-                          definitions=DEFINITIONS,
-                          parameter_definitions=PARAMETER_DEFINITIONS,
-                          resolver=Resolver())
+    operation = Swagger2Operation(api=api,
+                                  method='GET',
+                                  path='endpoint',
+                                  path_parameters=[],
+                                  operation=op_spec,
+                                  app_produces=['application/json'],
+                                  app_consumes=['application/json'],
+                                  app_security=[],
+                                  security_definitions=SECURITY_DEFINITIONS_LOCAL,
+                                  definitions=DEFINITIONS,
+                                  parameter_definitions=PARAMETER_DEFINITIONS,
+                                  resolver=Resolver())
     assert isinstance(operation.function, types.FunctionType)
     # security decorator should be a partial with verify_oauth_remote as the function and
     # token url and scopes as arguments.
@@ -371,18 +371,18 @@ def test_operation_local_security_oauth2(api):
 
 def test_operation_local_security_duplicate_token_info(api):
     op_spec = make_operation(OPERATION8)
-    operation = Operation(api=api,
-                          method='GET',
-                          path='endpoint',
-                          path_parameters=[],
-                          operation=op_spec,
-                          app_produces=['application/json'],
-                          app_consumes=['application/json'],
-                          app_security=[],
-                          security_definitions=SECURITY_DEFINITIONS_BOTH,
-                          definitions=DEFINITIONS,
-                          parameter_definitions=PARAMETER_DEFINITIONS,
-                          resolver=Resolver())
+    operation = Swagger2Operation(api=api,
+                                  method='GET',
+                                  path='endpoint',
+                                  path_parameters=[],
+                                  operation=op_spec,
+                                  app_produces=['application/json'],
+                                  app_consumes=['application/json'],
+                                  app_security=[],
+                                  security_definitions=SECURITY_DEFINITIONS_BOTH,
+                                  definitions=DEFINITIONS,
+                                  parameter_definitions=PARAMETER_DEFINITIONS,
+                                  resolver=Resolver())
     assert isinstance(operation.function, types.FunctionType)
     # security decorator should be a partial with verify_oauth_remote as the function and
     # token url and scopes as arguments.
@@ -403,18 +403,18 @@ def test_operation_local_security_duplicate_token_info(api):
 def test_multi_body(api):
     with pytest.raises(InvalidSpecification) as exc_info:  # type: py.code.ExceptionInfo
         op_spec = make_operation(OPERATION2)
-        operation = Operation(api=api,
-                              method='GET',
-                              path='endpoint',
-                              path_parameters=[],
-                              operation=op_spec,
-                              app_produces=['application/json'],
-                              app_consumes=['application/json'],
-                              app_security=[],
-                              security_definitions={},
-                              definitions=DEFINITIONS,
-                              parameter_definitions=PARAMETER_DEFINITIONS,
-                              resolver=Resolver())
+        operation = Swagger2Operation(api=api,
+                                      method='GET',
+                                      path='endpoint',
+                                      path_parameters=[],
+                                      operation=op_spec,
+                                      app_produces=['application/json'],
+                                      app_consumes=['application/json'],
+                                      app_security=[],
+                                      security_definitions={},
+                                      definitions=DEFINITIONS,
+                                      parameter_definitions=PARAMETER_DEFINITIONS,
+                                      resolver=Resolver())
         operation.body_schema
 
     exception = exc_info.value
@@ -424,18 +424,18 @@ def test_multi_body(api):
 
 def test_no_token_info(api):
     op_spec = make_operation(OPERATION1)
-    operation = Operation(api=api,
-                          method='GET',
-                          path='endpoint',
-                          path_parameters=[],
-                          operation=op_spec,
-                          app_produces=['application/json'],
-                          app_consumes=['application/json'],
-                          app_security=SECURITY_DEFINITIONS_WO_INFO,
-                          security_definitions=SECURITY_DEFINITIONS_WO_INFO,
-                          definitions=DEFINITIONS,
-                          parameter_definitions=PARAMETER_DEFINITIONS,
-                          resolver=Resolver())
+    operation = Swagger2Operation(api=api,
+                                  method='GET',
+                                  path='endpoint',
+                                  path_parameters=[],
+                                  operation=op_spec,
+                                  app_produces=['application/json'],
+                                  app_consumes=['application/json'],
+                                  app_security=SECURITY_DEFINITIONS_WO_INFO,
+                                  security_definitions=SECURITY_DEFINITIONS_WO_INFO,
+                                  definitions=DEFINITIONS,
+                                  parameter_definitions=PARAMETER_DEFINITIONS,
+                                  resolver=Resolver())
     assert isinstance(operation.function, types.FunctionType)
     assert operation.security_decorator is security_passthrough
 
@@ -451,25 +451,25 @@ def test_no_token_info(api):
 
 def test_parameter_reference(api):
     op_spec = make_operation(OPERATION3, definitions=False)
-    operation = Operation(api=api,
-                          method='GET',
-                          path='endpoint',
-                          path_parameters=[],
-                          operation=op_spec,
-                          app_produces=['application/json'],
-                          app_consumes=['application/json'],
-                          app_security=[],
-                          security_definitions={},
-                          definitions={},
-                          parameter_definitions=PARAMETER_DEFINITIONS,
-                          resolver=Resolver())
+    operation = Swagger2Operation(api=api,
+                                  method='GET',
+                                  path='endpoint',
+                                  path_parameters=[],
+                                  operation=op_spec,
+                                  app_produces=['application/json'],
+                                  app_consumes=['application/json'],
+                                  app_security=[],
+                                  security_definitions={},
+                                  definitions={},
+                                  parameter_definitions=PARAMETER_DEFINITIONS,
+                                  resolver=Resolver())
     assert operation.parameters == [{'in': 'path', 'type': 'integer'}]
 
 
 def test_default(api):
     op_spec = make_operation(OPERATION4)
     op_spec['parameters'][1]['default'] = 1
-    Operation(
+    Swagger2Operation(
         api=api, method='GET', path='endpoint', path_parameters=[],
         operation=op_spec, app_produces=['application/json'],
         app_consumes=['application/json'], app_security=[],
@@ -483,7 +483,7 @@ def test_default(api):
         'senza_yaml': 'senza.yaml',
         'new_traffic': 100
     }
-    Operation(
+    Swagger2Operation(
         api=api, method='POST', path='endpoint', path_parameters=[],
         operation=op_spec, app_produces=['application/json'],
         app_consumes=['application/json'], app_security=[],
@@ -500,7 +500,7 @@ def test_get_path_parameter_types(api):
         {'in': 'path', 'type': 'string', 'format': 'path', 'name': 'path_path'}
     ]
 
-    operation = Operation(
+    operation = Swagger2Operation(
         api=api, method='GET', path='endpoint', path_parameters=[],
         operation=op_spec, app_produces=['application/json'],
         app_consumes=['application/json'],

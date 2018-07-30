@@ -131,7 +131,7 @@ class SecureOperation(object):
         return EndOfRequestLifecycleDecorator(self.api, self.get_mimetype())
 
 
-class Operation(SecureOperation):
+class Swagger2Operation(SecureOperation):
 
     """
     A single API operation on a path.
