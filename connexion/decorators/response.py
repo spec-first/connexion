@@ -110,4 +110,4 @@ class ResponseValidator(BaseDecorator):
         """
         :rtype: str
         """
-        return '<ResponseValidator>'
+        return '<ResponseValidator>'  # pragma: no cover
