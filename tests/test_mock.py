@@ -1,5 +1,5 @@
 from connexion.mock import MockResolver, partial
-from connexion.operation import Operation
+from connexion.operation import Swagger2Operation
 
 
 def test_partial():
@@ -23,20 +23,20 @@ def test_mock_resolver():
         }
     }
 
-    operation = Operation(api=None,
-                          method='GET',
-                          path='endpoint',
-                          path_parameters=[],
-                          operation={
-                              'responses': responses
-                          },
-                          app_produces=['application/json'],
-                          app_consumes=['application/json'],
-                          app_security=[],
-                          security_definitions={},
-                          definitions={},
-                          parameter_definitions={},
-                          resolver=resolver)
+    operation = Swagger2Operation(api=None,
+                                  method='GET',
+                                  path='endpoint',
+                                  path_parameters=[],
+                                  operation={
+                                      'responses': responses
+                                  },
+                                  app_produces=['application/json'],
+                                  app_consumes=['application/json'],
+                                  app_security=[],
+                                  security_definitions={},
+                                  definitions={},
+                                  parameter_definitions={},
+                                  resolver=resolver)
     assert operation.operation_id == 'mock-1'
 
     response, status_code = resolver.mock_operation(operation)
@@ -62,20 +62,20 @@ def test_mock_resolver_example():
         }
     }
 
-    operation = Operation(api=None,
-                          method='GET',
-                          path='endpoint',
-                          path_parameters=[],
-                          operation={
-                              'responses': responses
-                          },
-                          app_produces=['application/json'],
-                          app_consumes=['application/json'],
-                          app_security=[],
-                          security_definitions={},
-                          definitions={},
-                          parameter_definitions={},
-                          resolver=resolver)
+    operation = Swagger2Operation(api=None,
+                                  method='GET',
+                                  path='endpoint',
+                                  path_parameters=[],
+                                  operation={
+                                      'responses': responses
+                                  },
+                                  app_produces=['application/json'],
+                                  app_consumes=['application/json'],
+                                  app_security=[],
+                                  security_definitions={},
+                                  definitions={},
+                                  parameter_definitions={},
+                                  resolver=resolver)
     assert operation.operation_id == 'mock-1'
 
     response, status_code = resolver.mock_operation(operation)
@@ -89,20 +89,20 @@ def test_mock_resolver_no_examples():
         '418': {}
     }
 
-    operation = Operation(api=None,
-                          method='GET',
-                          path='endpoint',
-                          path_parameters=[],
-                          operation={
-                              'responses': responses
-                          },
-                          app_produces=['application/json'],
-                          app_consumes=['application/json'],
-                          app_security=[],
-                          security_definitions={},
-                          definitions={},
-                          parameter_definitions={},
-                          resolver=resolver)
+    operation = Swagger2Operation(api=None,
+                                  method='GET',
+                                  path='endpoint',
+                                  path_parameters=[],
+                                  operation={
+                                      'responses': responses
+                                  },
+                                  app_produces=['application/json'],
+                                  app_consumes=['application/json'],
+                                  app_security=[],
+                                  security_definitions={},
+                                  definitions={},
+                                  parameter_definitions={},
+                                  resolver=resolver)
     assert operation.operation_id == 'mock-1'
 
     response, status_code = resolver.mock_operation(operation)
@@ -118,38 +118,38 @@ def test_mock_resolver_notimplemented():
     }
 
     # do not mock the existent functions
-    operation = Operation(api=None,
-                          method='GET',
-                          path='endpoint',
-                          path_parameters=[],
-                          operation={
-                              'operationId': 'fakeapi.hello.get'
-                          },
-                          app_produces=['application/json'],
-                          app_consumes=['application/json'],
-                          app_security=[],
-                          security_definitions={},
-                          definitions={},
-                          parameter_definitions={},
-                          resolver=resolver)
+    operation = Swagger2Operation(api=None,
+                                  method='GET',
+                                  path='endpoint',
+                                  path_parameters=[],
+                                  operation={
+                                      'operationId': 'fakeapi.hello.get'
+                                  },
+                                  app_produces=['application/json'],
+                                  app_consumes=['application/json'],
+                                  app_security=[],
+                                  security_definitions={},
+                                  definitions={},
+                                  parameter_definitions={},
+                                  resolver=resolver)
     assert operation.operation_id == 'fakeapi.hello.get'
 
     # mock only the nonexistent ones
-    operation = Operation(api=None,
-                          method='GET',
-                          path='endpoint',
-                          path_parameters=[],
-                          operation={
-                              'operationId': 'fakeapi.hello.nonexistent_function',
-                              'responses': responses
-                          },
-                          app_produces=['application/json'],
-                          app_consumes=['application/json'],
-                          app_security=[],
-                          security_definitions={},
-                          definitions={},
-                          parameter_definitions={},
-                          resolver=resolver)
+    operation = Swagger2Operation(api=None,
+                                  method='GET',
+                                  path='endpoint',
+                                  path_parameters=[],
+                                  operation={
+                                      'operationId': 'fakeapi.hello.nonexistent_function',
+                                      'responses': responses
+                                  },
+                                  app_produces=['application/json'],
+                                  app_consumes=['application/json'],
+                                  app_security=[],
+                                  security_definitions={},
+                                  definitions={},
+                                  parameter_definitions={},
+                                  resolver=resolver)
 
     # check if it is using the mock function
-    assert operation._Operation__undecorated_function() == ('No example response was defined.', 418)
+    assert operation._Swagger2Operation__undecorated_function() == ('No example response was defined.', 418)

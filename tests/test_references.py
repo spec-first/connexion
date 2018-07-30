@@ -2,7 +2,6 @@ import mock
 import pytest
 from connexion.apis.flask_api import Jsonifier
 from connexion.jsonref import RefResolutionError, resolve_refs
-from connexion.operation import Operation
 
 DEFINITIONS = {
     'new_stack': {

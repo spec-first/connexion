@@ -12,7 +12,7 @@ from swagger_spec_validator.validator20 import validate_spec
 
 from ..exceptions import ResolverError
 from ..jsonref import resolve_refs
-from ..operation import Operation
+from ..operation import Swagger2Operation
 from ..options import ConnexionOptions
 from ..resolver import Resolver
 from ..utils import Jsonifier
@@ -185,25 +185,25 @@ class AbstractAPI(object):
         :type path: str
         :type swagger_operation: dict
         """
-        operation = Operation(self,
-                              method=method,
-                              path=path,
-                              path_parameters=path_parameters,
-                              operation=swagger_operation,
-                              app_produces=self.produces,
-                              app_consumes=self.consumes,
-                              app_security=self.security,
-                              security_definitions=self.security_definitions,
-                              definitions=self.definitions,
-                              parameter_definitions=self.parameter_definitions,
-                              response_definitions=self.response_definitions,
-                              validate_responses=self.validate_responses,
-                              validator_map=self.validator_map,
-                              strict_validation=self.strict_validation,
-                              resolver=self.resolver,
-                              pythonic_params=self.pythonic_params,
-                              uri_parser_class=self.options.uri_parser_class,
-                              pass_context_arg_name=self.pass_context_arg_name)
+        operation = Swagger2Operation(self,
+                                      method=method,
+                                      path=path,
+                                      path_parameters=path_parameters,
+                                      operation=swagger_operation,
+                                      app_produces=self.produces,
+                                      app_consumes=self.consumes,
+                                      app_security=self.security,
+                                      security_definitions=self.security_definitions,
+                                      definitions=self.definitions,
+                                      parameter_definitions=self.parameter_definitions,
+                                      response_definitions=self.response_definitions,
+                                      validate_responses=self.validate_responses,
+                                      validator_map=self.validator_map,
+                                      strict_validation=self.strict_validation,
+                                      resolver=self.resolver,
+                                      pythonic_params=self.pythonic_params,
+                                      uri_parser_class=self.options.uri_parser_class,
+                                      pass_context_arg_name=self.pass_context_arg_name)
         self._add_operation_internal(method, path, operation)
 
     @abc.abstractmethod
