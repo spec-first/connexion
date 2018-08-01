@@ -1,6 +1,6 @@
 import logging
 
-from .operation import Swagger2Operation, SecureOperation
+from .operation import SecureOperation, Swagger2Operation
 from .problem import problem
 
 logger = logging.getLogger('connexion.handlers')
