@@ -860,6 +860,20 @@ paths:
             type: array
             items:
               type: integer
+              
+  /get_several_mimetypes:
+    get:
+      operationId: fakeapi.hello.get_several_mimetypes
+      produces:
+        - "application/json"
+        - "text/plain"
+      responses:
+        200:
+          description: |-
+            This endpoint produces either json or txt depending on 
+            Accept header
+          schema:
+            type: object
 
 definitions:
   new_stack:

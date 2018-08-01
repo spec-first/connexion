@@ -444,3 +444,10 @@ def get_httpstatus_response():
 
 def get_bad_default_response(response_code):
     return {}, response_code
+
+
+def get_several_mimetypes():
+    if connexion.request.headers['Accept'].find('json') != -1:
+        return {}, 200
+    else:
+        return "A text", 200
