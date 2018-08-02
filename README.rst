@@ -80,9 +80,12 @@ Other Sources/Mentions
 New in Connexion 2.0:
 ---------------------
 - App and Api options must be provided through the "options" argument (``old_style_options`` have been removed).
+- The `Operation` interface has been formalized in the `AbstractOperation` class.
+- The `Operation` class has been renamed to `Swagger2Operation`.
 - Array parameter deserialization now follows the Swagger 2.0 spec more closely.
   In situations when a query parameter is passed multiple times, and the collectionFormat is either csv or pipes, the right-most value will be used.
   For example, `?q=1,2,3&q=4,5,6` will result in `q = [4, 5, 6]`.
+  The old behavior is available by setting the collectionFormat to `multi`, or by importing `decorators.uri_parsing.AlwaysMultiURIParser` and passing `parser_class=AlwaysMultiURIParser` to your Api.
 - The spec validator library has changed from `swagger-spec-validator` to `openapi-spec-validator`.
 - Errors that previously raised `SwaggerValidationError` now raise the `InvalidSpecification` exception.
   All spec validation errors should be wrapped with `InvalidSpecification`.
