@@ -1,9 +1,6 @@
 import functools
 import logging
 
-from jsonschema import ValidationError
-
-from .decorators import validation
 from .decorators.decorator import (BeginOfRequestLifecycleDecorator,
                                    EndOfRequestLifecycleDecorator)
 from .decorators.metrics import UWSGIMetricsCollector
@@ -14,8 +11,7 @@ from .decorators.security import (get_tokeninfo_func, get_tokeninfo_url,
                                   security_passthrough, verify_oauth_local,
                                   verify_oauth_remote)
 from .decorators.uri_parsing import Swagger2URIParser
-from .decorators.validation import (ParameterValidator, RequestBodyValidator,
-                                    TypeValidationError)
+from .decorators.validation import ParameterValidator, RequestBodyValidator
 from .exceptions import InvalidSpecification
 from .utils import all_json, is_nullable
 
@@ -226,18 +222,6 @@ class Swagger2Operation(SecureOperation):
         resolution = resolver.resolve(self)
         self.operation_id = resolution.operation_id
         self.__undecorated_function = resolution.function
-
-        self.validate_defaults()
-
-    def validate_defaults(self):
-        for param in self.parameters:
-            try:
-                if param['in'] == 'query' and 'default' in param:
-                    validation.validate_type(param, param['default'], 'query', param['name'])
-            except (TypeValidationError, ValidationError):
-                raise InvalidSpecification('The parameter \'{param_name}\' has a default value which is not of'
-                                           ' type \'{param_type}\''.format(param_name=param['name'],
-                                                                           param_type=param['type']))
 
     def with_definitions(self, schema):
         if 'schema' in schema:
