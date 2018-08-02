@@ -2,7 +2,7 @@ import json
 
 import jinja2
 import yaml
-from swagger_spec_validator.common import SwaggerValidationError
+from openapi_spec_validator.exceptions import OpenAPIValidationError
 
 import pytest
 from conftest import TEST_FOLDER, build_app_from_fixture
@@ -204,5 +204,5 @@ def test_add_api_with_function_resolver_function_is_wrapped(simple_api_spec_dir,
 
 def test_default_query_param_does_not_match_defined_type(
         default_param_error_spec_dir):
-    with pytest.raises(SwaggerValidationError):
+    with pytest.raises(OpenAPIValidationError):
         build_app_from_fixture(default_param_error_spec_dir, validate_responses=True, debug=False)
