@@ -447,7 +447,10 @@ def get_bad_default_response(response_code):
 
 
 def get_several_mimetypes():
-    if connexion.request.headers['Accept'].find('json') != -1:
+    accept_header = connexion.request.headers['Accept']
+    if accept_header.find('json') != -1:
         return {}, 200
+    elif accept_header.find('html') != -1:
+        return "<html><body>An html</body></html>", 200, {'Content-Type': 'text/plain'}
     else:
-        return "A text", 200
+        return "A text", 200, {'Content-Type': 'text/plain'}

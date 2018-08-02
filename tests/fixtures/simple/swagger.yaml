@@ -867,10 +867,11 @@ paths:
       produces:
         - "application/json"
         - "text/plain"
+        - "text/html"
       responses:
         200:
           description: |-
-            This endpoint produces either json or txt depending on 
+            This endpoint produces multiple responses depending on 
             Accept header
           schema:
             type: object
