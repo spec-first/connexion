@@ -407,3 +407,6 @@ class Swagger2Operation(SecureOperation):
         :type data: bytes
         """
         return self.api.json_loads(data)
+
+
+Operation = Swagger2Operation
