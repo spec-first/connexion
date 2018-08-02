@@ -41,10 +41,10 @@ def test_app_with_different_server_option(simple_api_spec_dir, spec):
 
 
 def test_app_with_different_uri_parser(simple_api_spec_dir):
-    from connexion.decorators.uri_parsing import Swagger2URIParser
+    from connexion.decorators.uri_parsing import FirstValueURIParser
     app = App(__name__, port=5001,
               specification_dir='..' / simple_api_spec_dir.relative_to(TEST_FOLDER),
-              options={"uri_parser_class": Swagger2URIParser},
+              options={"uri_parser_class": FirstValueURIParser},
               debug=True)
     app.add_api('swagger.yaml')
 
@@ -54,7 +54,7 @@ def test_app_with_different_uri_parser(simple_api_spec_dir):
     )  # type: flask.Response
     assert resp.status_code == 200
     j = json.loads(resp.get_data(as_text=True))
-    assert j == ['d', 'e', 'f']
+    assert j == ['a', 'b', 'c']
 
 
 @pytest.mark.parametrize("spec", SPECS)

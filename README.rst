@@ -80,6 +80,9 @@ Other Sources/Mentions
 New in Connexion 2.0:
 ---------------------
 - App and Api options must be provided through the "options" argument (``old_style_options`` have been removed).
+- Array parameter deserialization now follows the Swagger 2.0 spec more closely.
+  In situations when a query parameter is passed multiple times, and the collectionFormat is either csv or pipes, the right-most value will be used.
+  For example, `?q=1,2,3&q=4,5,6` will result in `q = [4, 5, 6]`.
 
 How to Use
 ==========
