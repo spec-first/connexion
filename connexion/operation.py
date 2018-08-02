@@ -13,7 +13,7 @@ from .decorators.response import ResponseValidator
 from .decorators.security import (get_tokeninfo_func, get_tokeninfo_url,
                                   security_passthrough, verify_oauth_local,
                                   verify_oauth_remote)
-from .decorators.uri_parsing import AlwaysMultiURIParser
+from .decorators.uri_parsing import Swagger2URIParser
 from .decorators.validation import (ParameterValidator, RequestBodyValidator,
                                     TypeValidationError)
 from .exceptions import InvalidSpecification
@@ -210,7 +210,7 @@ class Swagger2Operation(SecureOperation):
         self.strict_validation = strict_validation
         self.randomize_endpoint = randomize_endpoint
         self.pythonic_params = pythonic_params
-        self.uri_parser_class = uri_parser_class or AlwaysMultiURIParser
+        self.uri_parser_class = uri_parser_class or Swagger2URIParser
         self.pass_context_arg_name = pass_context_arg_name
 
         # todo support definition references
