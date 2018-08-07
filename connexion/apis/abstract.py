@@ -139,7 +139,6 @@ class AbstractAPI(object):
             self.add_auth_on_not_found(self.security, self.security_definitions)
 
     def _validate_spec(self, spec):
-        logger.info('Using Swagger 2.0 specification')
         from openapi_spec_validator import validate_v2_spec as validate_spec
         validate_spec(spec)
 
