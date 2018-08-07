@@ -84,7 +84,8 @@ New in Connexion 2.0:
   In situations when a query parameter is passed multiple times, and the collectionFormat is either csv or pipes, the right-most value will be used.
   For example, `?q=1,2,3&q=4,5,6` will result in `q = [4, 5, 6]`.
 - The spec validator library has changed from `swagger-spec-validator` to `openapi-spec-validator`.
-  Connexion now raises `OpenAPIValidationError` instead of `SwaggerValidationError`.
+- Errors that previously raised `SwaggerValidationError` now raise the `InvalidSpecification` exception.
+  All spec validation errors should be wrapped with `InvalidSpecification`.
 
 How to Use
 ==========
