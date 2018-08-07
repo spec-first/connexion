@@ -49,13 +49,7 @@ class ResolverError(LookupError):
 
 
 class InvalidSpecification(ConnexionException, ValidationError):
-    def __init__(self, reason='Unknown Reason', *args, **kwargs):
-        """
-        :param reason: Reason why the specification is invalid
-        :type reason: str
-        """
-        self.reason = reason  # for backwards compatability
-        ValidationError.__init__(self, message=reason, *args, **kwargs)
+    pass
 
 
 class NonConformingResponse(ConnexionException):
