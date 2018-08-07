@@ -3,13 +3,12 @@
 import pathlib
 import tempfile
 
-from openapi_spec_validator.exceptions import OpenAPIValidationError
 from yaml import YAMLError
 
 import pytest
 from connexion import FlaskApi
 from connexion.apis.abstract import canonical_base_path
-from connexion.exceptions import ResolverError
+from connexion.exceptions import InvalidSpecification, ResolverError
 from mock import MagicMock
 
 TEST_FOLDER = pathlib.Path(__file__).parent
@@ -86,13 +85,13 @@ def test_invalid_operation_does_not_stop_application_in_debug_mode():
 
 def test_other_errors_stop_application_to_setup():
     # Errors should still result exceptions!
-    with pytest.raises(OpenAPIValidationError):
+    with pytest.raises(InvalidSpecification):
         FlaskApi(TEST_FOLDER / "fixtures/bad_specs/swagger.yaml",
                  base_path="/api/v1.0", arguments={'title': 'OK'})
 
 
 def test_invalid_schema_file_structure():
-    with pytest.raises(OpenAPIValidationError):
+    with pytest.raises(InvalidSpecification):
         FlaskApi(TEST_FOLDER / "fixtures/invalid_schema/swagger.yaml",
                  base_path="/api/v1.0", arguments={'title': 'OK'}, debug=True)
 
@@ -111,12 +110,12 @@ def test_use_of_safe_load_for_yaml_swagger_specs():
             f.flush()
             try:
                 FlaskApi(pathlib.Path(f.name), base_path="/api/v1.0")
-            except OpenAPIValidationError:
+            except InvalidSpecification:
                 pytest.fail("Could load invalid YAML file, use yaml.safe_load!")
 
 
 def test_validation_error_on_completely_invalid_swagger_spec():
-    with pytest.raises(OpenAPIValidationError):
+    with pytest.raises(InvalidSpecification):
         with tempfile.NamedTemporaryFile() as f:
             f.write('[1]\n'.encode())
             f.flush()

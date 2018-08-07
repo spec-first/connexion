@@ -9,7 +9,10 @@ import jinja2
 import six
 import yaml
 
-from ..exceptions import ResolverError
+from openapi_spec_validator import validate_v2_spec as validate_spec
+from openapi_spec_validator.exceptions import OpenAPIValidationError
+
+from ..exceptions import InvalidSpecification, ResolverError
 from ..jsonref import resolve_refs
 from ..operation import Swagger2Operation
 from ..options import ConnexionOptions
@@ -139,8 +142,10 @@ class AbstractAPI(object):
             self.add_auth_on_not_found(self.security, self.security_definitions)
 
     def _validate_spec(self, spec):
-        from openapi_spec_validator import validate_v2_spec as validate_spec
-        validate_spec(spec)
+        try:
+            validate_spec(spec)
+        except OpenAPIValidationError as e:
+            raise InvalidSpecification.create_from(e)
 
     def _set_base_path(self, base_path):
         # type: (AnyStr) -> None

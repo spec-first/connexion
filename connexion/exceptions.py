@@ -1,3 +1,4 @@
+from jsonschema.exceptions import ValidationError
 from werkzeug.exceptions import Forbidden, Unauthorized
 
 from .problem import problem
@@ -47,13 +48,14 @@ class ResolverError(LookupError):
         return '<ResolverError: {}>'.format(self.reason)
 
 
-class InvalidSpecification(ConnexionException):
-    def __init__(self, reason='Unknown Reason'):
+class InvalidSpecification(ConnexionException, ValidationError):
+    def __init__(self, message='Unknown Reason', *args, **kwargs):
         """
         :param reason: Reason why the specification is invalid
         :type reason: str
         """
-        self.reason = reason
+        self.reason = message  # for backwards compatability
+        ValidationError.__init__(self, message=message, *args, **kwargs)
 
     def __str__(self):  # pragma: no cover
         return '<InvalidSpecification: {}>'.format(self.reason)
