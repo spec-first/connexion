@@ -1,8 +1,9 @@
 from jsonschema import ValidationError
-from mock import MagicMock
-import pytest
 
-from connexion.decorators.validation import ParameterValidator, Draft4ValidatorSupportNullable
+import pytest
+from connexion.decorators.validation import (Draft4ValidatorSupportNullable,
+                                             ParameterValidator)
+from mock import MagicMock
 
 
 def test_get_valid_parameter():
@@ -69,3 +70,12 @@ def test_support_nullable_properties_raises_validation_error():
 
     with pytest.raises(ValidationError):
         Draft4ValidatorSupportNullable(schema).validate({"foo": None})
+
+
+def test_support_nullable_properties_not_iterable():
+    schema = {
+        "type": "object",
+        "properties": {"foo": {"type": "string", "x-nullable": True}},
+    }
+    with pytest.raises(ValidationError):
+        Draft4ValidatorSupportNullable(schema).validate(12345)

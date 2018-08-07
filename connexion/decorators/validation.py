@@ -5,7 +5,8 @@ import logging
 import sys
 
 import six
-from jsonschema import Draft4Validator, ValidationError, draft4_format_checker, validators
+from jsonschema import (Draft4Validator, ValidationError,
+                        draft4_format_checker, validators)
 from werkzeug import FileStorage
 
 from ..exceptions import ExtraParameterProblem
@@ -88,7 +89,8 @@ def extend_with_nullable_support(validator_class):
     def nullable_support(validator, properties, instance, schema):
         null_properties = {}
         for property_, subschema in six.iteritems(properties):
-            if property_ in instance and \
+            if isinstance(instance, collections.Iterable) and \
+                    property_ in instance and \
                     instance[property_] is None and \
                     subschema.get('x-nullable') is True:
                 # exclude from following validation
@@ -96,7 +98,8 @@ def extend_with_nullable_support(validator_class):
         for error in validate_properties(validator, properties, instance, schema):
             yield error
         # add null properties back
-        instance.update(null_properties)
+        if null_properties:
+            instance.update(null_properties)
     return validators.extend(validator_class, {'properties': nullable_support})
 
 
