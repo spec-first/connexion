@@ -26,15 +26,17 @@ class FlaskApi(AbstractAPI):
         self.blueprint = flask.Blueprint(endpoint, __name__, url_prefix=self.base_path,
                                          template_folder=str(self.options.openapi_console_ui_from_dir))
 
-    def add_swagger_json(self):
+    def add_openapi_json(self):
         """
-        Adds swagger json to {base_path}/swagger.json
+        Adds spec json to {base_path}/swagger.json
+        or {base_path}/openapi.json (for oas3)
         """
-        logger.debug('Adding swagger.json: %s/swagger.json', self.base_path)
-        endpoint_name = "{name}_swagger_json".format(name=self.blueprint.name)
-        self.blueprint.add_url_rule('/swagger.json',
+        logger.debug('Adding spec json: %s/%s', self.base_path,
+                     self.options.openapi_spec_path)
+        endpoint_name = "{name}_openapi_json".format(name=self.blueprint.name)
+        self.blueprint.add_url_rule(self.options.openapi_spec_path,
                                     endpoint_name,
-                                    lambda: flask.jsonify(self.specification))
+                                    lambda: flask.jsonify(self.raw_spec))
 
     def add_swagger_ui(self):
         """
@@ -281,7 +283,7 @@ class InternalHandlers(object):
         """
         return flask.render_template(
             'index.j2',
-            openapi_spec_url=(self.base_path + '/swagger.json')
+            openapi_spec_url=(self.base_path + self.options.openapi_spec_path)
         )
 
     def console_ui_static_files(self, filename):
