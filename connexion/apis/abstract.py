@@ -72,13 +72,15 @@ class AbstractAPI(object):
 
         self.options = ConnexionOptions(options)
 
+        logger.debug('Options Loaded',
+                     extra={'swagger_ui': self.options.openapi_console_ui_available,
+                            'swagger_path': self.options.openapi_console_ui_from_dir,
+                            'swagger_url': self.options.openapi_console_ui_path})
+
         logger.debug('Loading specification: %s', specification,
                      extra={'swagger_yaml': specification,
                             'base_path': base_path,
                             'arguments': arguments,
-                            'swagger_ui': self.options.openapi_console_ui_available,
-                            'swagger_path': self.options.openapi_console_ui_from_dir,
-                            'swagger_url': self.options.openapi_console_ui_path,
                             'auth_all_paths': auth_all_paths})
 
         if isinstance(specification, dict):
@@ -91,9 +93,9 @@ class AbstractAPI(object):
         logger.debug('Read specification', extra={'spec': self.specification})
 
         # Avoid validator having ability to modify specification
-        spec = copy.deepcopy(self.specification)
-        self._validate_spec(spec)
-        self.specification = resolve_refs(spec)
+        self.raw_spec = copy.deepcopy(self.specification)
+        self._validate_spec(self.specification)
+        self.specification = resolve_refs(self.specification)
 
         # https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#fixed-fields
         # If base_path is not on provided then we try to read it from the swagger.yaml or use / by default
@@ -130,7 +132,7 @@ class AbstractAPI(object):
         self.pass_context_arg_name = pass_context_arg_name
 
         if self.options.openapi_spec_available:
-            self.add_swagger_json()
+            self.add_openapi_json()
 
         if self.options.openapi_console_ui_available:
             self.add_swagger_ui()
@@ -155,9 +157,10 @@ class AbstractAPI(object):
             self.specification['basePath'] = base_path
 
     @abc.abstractmethod
-    def add_swagger_json(self):
+    def add_openapi_json(self):
         """
-        Adds swagger json to {base_path}/swagger.json
+        Adds openapi spec to {base_path}/openapi.json
+             (or {base_path}/swagger.json for swagger2)
         """
 
     @abc.abstractmethod
