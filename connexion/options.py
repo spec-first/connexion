@@ -52,7 +52,13 @@ class ConnexionOptions(object):
 
         Default: True
         """
-        return self._options.get('swagger_json', True)
+        serve_spec = self._options.get('serve_spec', False)
+        if 'swagger_json' in self._options:
+            deprecation_warning = ("The 'swagger_json' option is deprecated. "
+                                   "Please use 'serve_spec' instead")
+            logger.warning(deprecation_warning)
+            serve_spec = serve_spec or self._options.get('swagger_json')
+        return serve_spec
 
     @property
     def openapi_console_ui_available(self):
