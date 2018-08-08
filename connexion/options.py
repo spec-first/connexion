@@ -4,9 +4,8 @@ from typing import Optional  # NOQA
 
 try:
     from swagger_ui_bundle import swagger_ui_2_path
-    INTERNAL_CONSOLE_UI_PATH = swagger_ui_2_path
 except ImportError:
-    INTERNAL_CONSOLE_UI_PATH = None
+    swagger_ui_2_path = None
 
 MODULE_PATH = pathlib.Path(__file__).absolute().parent
 NO_UI_MSG = """The swagger_ui directory could not be found.
@@ -18,8 +17,13 @@ logger = logging.getLogger("connexion.options")
 
 
 class ConnexionOptions(object):
-    def __init__(self, options=None):
+
+    def __init__(self, options=None, oas_version=(2,)):
         self._options = {}
+        self.oas_version = oas_version
+        self.openapi_spec_name = '/swagger.json'
+        self.swagger_ui_local_path = swagger_ui_2_path
+
         if options:
             self._options.update(filter_values(options))
 
@@ -34,7 +38,7 @@ class ConnexionOptions(object):
 
         options = dict(self._options)
         options.update(filter_values(new_values))
-        return ConnexionOptions(options)
+        return ConnexionOptions(options, self.oas_version)
 
     def as_dict(self):
         return self._options
@@ -44,11 +48,10 @@ class ConnexionOptions(object):
         # type: () -> bool
         """
         Whether to make available the OpenAPI Specification under
-        `openapi_console_ui_path`/swagger.json path.
+        `openapi_spec_path`.
 
         Default: True
         """
-        # NOTE: Under OpenAPI v3 this should change to "/openapi.json"
         return self._options.get('swagger_json', True)
 
     @property
@@ -69,6 +72,16 @@ class ConnexionOptions(object):
         return self._options.get('swagger_ui', True)
 
     @property
+    def openapi_spec_path(self):
+        # type: () -> str
+        """
+        Path to mount the OpenAPI Console UI and make it accessible via a browser.
+
+        Default: /openapi.json for openapi3, otherwise /swagger.json
+        """
+        return self._options.get('openapi_spec_path', self.openapi_spec_name)
+
+    @property
     def openapi_console_ui_path(self):
         # type: () -> str
         """
@@ -87,11 +100,11 @@ class ConnexionOptions(object):
 
         Default: Connexion's vendored version of the OpenAPI Console UI.
         """
-        return self._options.get('swagger_path', INTERNAL_CONSOLE_UI_PATH)
+        return self._options.get('swagger_path', self.swagger_ui_local_path)
 
     @property
     def uri_parser_class(self):
-        # type: () -> str
+        # type: () -> AbstractURIParser
         """
         The class to use for parsing URIs into path and query parameters.
         Default: None
