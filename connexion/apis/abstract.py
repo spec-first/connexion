@@ -8,6 +8,7 @@ from typing import AnyStr, List  # NOQA
 import jinja2
 import six
 import yaml
+
 from openapi_spec_validator import validate_v2_spec as validate_spec
 from openapi_spec_validator.exceptions import OpenAPIValidationError
 
