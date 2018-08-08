@@ -58,6 +58,8 @@ class ConnexionOptions(object):
                                    "Please use 'serve_spec' instead")
             logger.warning(deprecation_warning)
             serve_spec = serve_spec or self._options.get('swagger_json')
+        # override if swagger UI is enabled
+        serve_spec = serve_spec or self.openapi_console_ui_available
         return serve_spec
 
     @property
