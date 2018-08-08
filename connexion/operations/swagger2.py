@@ -115,20 +115,6 @@ class Swagger2Operation(AbstractOperation):
         logger.debug('consumes: %s', self.consumes)
         logger.debug('produces: %s', self.produces)
 
-        self._validate_defaults()
-
-    def _validate_defaults(self):
-        # FIXME openapi-spec-validator should catch this
-        for param_defn in self.parameters:
-            try:
-                if param_defn['in'] == 'query' and 'default' in param_defn:
-                    validate_type(param_defn, param_defn['default'],
-                                  'query', param_defn['name'])
-            except (TypeValidationError, ValidationError):
-                raise InvalidSpecification('The parameter \'{param_name}\' has a default value which is not of'
-                                           ' type \'{param_type}\''.format(param_name=param_defn['name'],
-                                                                           param_type=param_defn['type']))
-
     @property
     def _spec_definitions(self):
         return self.definitions_map
