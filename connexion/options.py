@@ -52,14 +52,12 @@ class ConnexionOptions(object):
 
         Default: True
         """
-        serve_spec = self._options.get('serve_spec', False)
+        deprecated_option = self._options.get('swagger_json', True)
+        serve_spec = self._options.get('serve_spec', deprecated_option)
         if 'swagger_json' in self._options:
             deprecation_warning = ("The 'swagger_json' option is deprecated. "
                                    "Please use 'serve_spec' instead")
             logger.warning(deprecation_warning)
-            serve_spec = serve_spec or self._options.get('swagger_json')
-        # override if swagger UI is enabled
-        serve_spec = serve_spec or self.openapi_console_ui_available
         return serve_spec
 
     @property
@@ -67,9 +65,7 @@ class ConnexionOptions(object):
         # type: () -> bool
         """
         Whether to make the OpenAPI Console UI available under the path
-        defined in `openapi_console_ui_path` option. Note that if enabled,
-        this overrides the `openapi_spec_available` option since the specification
-        is required to be available via a HTTP endpoint to display the console UI.
+        defined in `openapi_console_ui_path` option.
 
         Default: True
         """
