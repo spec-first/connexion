@@ -90,7 +90,7 @@ def test_swagger_json_app(simple_api_spec_dir, spec):
 @pytest.mark.parametrize("spec", SPECS)
 def test_no_swagger_json_app(simple_api_spec_dir, spec):
     """ Verify the spec json file is not returned when set to False when creating app. """
-    options = {"swagger_json": False}
+    options = {"serve_spec": False}
     app = App(__name__, port=5001, specification_dir=simple_api_spec_dir,
               options=options, debug=True)
     app.add_api(spec)
@@ -141,7 +141,7 @@ def test_swagger_json_api(simple_api_spec_dir, spec):
 def test_no_swagger_json_api(simple_api_spec_dir, spec):
     """ Verify the spec json file is not returned when set to False when adding api. """
     app = App(__name__, port=5001, specification_dir=simple_api_spec_dir, debug=True)
-    app.add_api(spec, options={"swagger_json": False})
+    app.add_api(spec, options={"serve_spec": False})
 
     app_client = app.app.test_client()
     url = '/v1.0/{spec}'.format(spec=spec.replace("yaml", "json"))
