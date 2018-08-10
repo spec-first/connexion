@@ -198,21 +198,6 @@ class AbstractOperation(SecureOperation):
                 kwargs[key] = value
         return kwargs
 
-    def _get_body_argument(self, body, arguments, has_kwargs):
-        """
-        extract handler function arguments from the request body
-        argument can be renamed by setting the "x-body-name" extension
-        in the body schema, otherwise the body will be passed to the
-        handler function as an argument named "body".
-        """
-        body_schema = self.body_schema
-        if body_schema:
-            x_body_name = body_schema.get('x-body-name', 'body')
-            logger.debug('x-body-name is %s' % x_body_name)
-            if x_body_name in arguments or has_kwargs:
-                return {x_body_name: body}
-        return {}
-
     @abc.abstractproperty
     def parameters(self):
         """

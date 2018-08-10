@@ -116,10 +116,6 @@ class Swagger2Operation(AbstractOperation):
         logger.debug('produces: %s', self.produces)
 
     @property
-    def _spec_definitions(self):
-        return self.definitions_map
-
-    @property
     def parameters(self):
         return self._parameters
 
