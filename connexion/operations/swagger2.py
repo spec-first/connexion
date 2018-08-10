@@ -160,10 +160,7 @@ class Swagger2Operation(AbstractOperation):
         Returns example response from spec
         """
         # simply use the first/lowest status code, this is probably 200 or 201
-        try:
-            code = code or sorted(self._responses.keys())[0]
-        except IndexError:
-            code = 200
+        code = code or sorted(self._responses.keys())[0]
         examples_path = [str(code), 'examples']
         schema_example_path = [str(code), 'schema', 'example']
         try:
