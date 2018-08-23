@@ -1,5 +1,5 @@
 from connexion.mock import MockResolver, partial
-from connexion.operation import Swagger2Operation
+from connexion.operations import Swagger2Operation
 
 
 def test_partial():
@@ -152,4 +152,4 @@ def test_mock_resolver_notimplemented():
                                   resolver=resolver)
 
     # check if it is using the mock function
-    assert operation._Swagger2Operation__undecorated_function() == ('No example response was defined.', 418)
+    assert operation._resolution.function() == ('No example response was defined.', 418)

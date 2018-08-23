@@ -9,6 +9,13 @@ from .decorator import BaseDecorator
 
 logger = logging.getLogger('connexion.decorators.uri_parsing')
 
+QUERY_STRING_DELIMITERS = {
+    'spaceDelimited': ' ',
+    'pipeDelimited': '|',
+    'simple': ',',
+    'form': ','
+}
+
 
 @six.add_metaclass(abc.ABCMeta)
 class AbstractURIParser(BaseDecorator):
@@ -43,7 +50,8 @@ class AbstractURIParser(BaseDecorator):
         """
         :rtype: str
         """
-        return "<{classname}>".format(classname=self.__class__.__name__)
+        return "<{classname}>".format(
+            classname=self.__class__.__name__)  # pragma: no cover
 
     @abc.abstractmethod
     def _resolve_param_duplicates(self, values, param_defn):

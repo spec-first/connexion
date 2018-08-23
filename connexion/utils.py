@@ -3,6 +3,48 @@ import importlib
 
 import six
 
+# Python 2/3 compatibility:
+try:
+    py_string = unicode
+except NameError:  # pragma: no cover
+    py_string = str  # pragma: no cover
+
+
+def boolean(s):
+    '''
+    Convert JSON/Swagger boolean value to Python, raise ValueError otherwise
+
+    >>> boolean('true')
+    True
+
+    >>> boolean('false')
+    False
+    '''
+    if isinstance(s, bool):
+        return s
+    elif not hasattr(s, 'lower'):
+        raise ValueError('Invalid boolean value')
+    elif s.lower() == 'true':
+        return True
+    elif s.lower() == 'false':
+        return False
+    else:
+        raise ValueError('Invalid boolean value')
+
+
+# https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#data-types
+TYPE_MAP = {'integer': int,
+            'number': float,
+            'string': py_string,
+            'boolean': boolean,
+            'array': list,
+            'object': dict}  # map of swagger types to python types
+
+
+def make_type(value, type):
+    type_func = TYPE_MAP[type]  # convert value to right type
+    return type_func(value)
+
 
 def deep_getattr(obj, attr):
     """
@@ -94,30 +136,11 @@ def all_json(mimetypes):
     return all(is_json_mimetype(mimetype) for mimetype in mimetypes)
 
 
-def boolean(s):
-    '''
-    Convert JSON/Swagger boolean value to Python, raise ValueError otherwise
-
-    >>> boolean('true')
-    True
-
-    >>> boolean('false')
-    False
-    '''
-    if isinstance(s, bool):
-        return s
-    elif not hasattr(s, 'lower'):
-        raise ValueError('Invalid boolean value')
-    elif s.lower() == 'true':
-        return True
-    elif s.lower() == 'false':
-        return False
-    else:
-        raise ValueError('Invalid boolean value')
-
-
 def is_nullable(param_def):
-    return param_def.get('x-nullable', False)
+    return (
+        param_def.get('schema', param_def).get('nullable', False) or
+        param_def.get('x-nullable', False)  # swagger2
+    )
 
 
 def is_null(value):

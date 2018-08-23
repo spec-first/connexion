@@ -15,7 +15,7 @@ logger = logging.getLogger('connexion.decorators.response')
 
 
 class ResponseValidator(BaseDecorator):
-    def __init__(self, operation,  mimetype):
+    def __init__(self, operation, mimetype):
         """
         :type operation: Operation
         :type mimetype: str
@@ -32,13 +32,15 @@ class ResponseValidator(BaseDecorator):
         :type headers: dict
         :rtype bool | None
         """
-        response_definitions = self.operation.operation["responses"]
-        response_definition = response_definitions.get(str(status_code), response_definitions.get("default", {}))
-        response_definition = self.operation.with_definitions(response_definition)
+        # check against returned header, fall back to expected mimetype
+        content_type = headers.get("Content-Type", self.mimetype)
+        content_type = content_type.rsplit(";", 1)[0]  # remove things like utf8 metadata
 
-        if self.is_json_schema_compatible(response_definition):
-            schema = response_definition.get("schema")
-            v = ResponseBodyValidator(schema)
+        response_definition = self.operation.response_definition(str(status_code), content_type)
+        response_schema = self.operation.response_schema(str(status_code), content_type)
+
+        if self.is_json_schema_compatible(response_schema):
+            v = ResponseBodyValidator(response_schema)
             try:
                 data = self.operation.json_loads(data)
                 v.validate_schema(data, url)
@@ -57,7 +59,7 @@ class ResponseValidator(BaseDecorator):
                 raise NonConformingResponseHeaders(message=msg)
         return True
 
-    def is_json_schema_compatible(self, response_definition):
+    def is_json_schema_compatible(self, response_schema):
         """
         Verify if the specified operation responses are JSON schema
         compatible.
@@ -66,13 +68,12 @@ class ResponseValidator(BaseDecorator):
         type "application/json" or "text/plain" can be validated using
         json_schema package.
 
-        :type response_definition: dict
+        :type response_schema: dict
         :rtype bool
         """
-        if not response_definition:
+        if not response_schema:
             return False
-        return ('schema' in response_definition and
-                (all_json([self.mimetype]) or self.mimetype == 'text/plain'))
+        return all_json([self.mimetype]) or self.mimetype == 'text/plain'
 
     def __call__(self, function):
         """
