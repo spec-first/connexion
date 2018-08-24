@@ -19,6 +19,8 @@ QUERY_STRING_DELIMITERS = {
 
 @six.add_metaclass(abc.ABCMeta)
 class AbstractURIParser(BaseDecorator):
+    parsable_parameters = ["query", "path"]
+
     def __init__(self, param_defns):
         """
         a URI parser is initialized with parameter definitions.
@@ -32,7 +34,7 @@ class AbstractURIParser(BaseDecorator):
         """
         self._param_defns = {p["name"]: p
                              for p in param_defns
-                             if p["in"] in ["query", "path"]}
+                             if p["in"] in self.parsable_parameters}
 
     @abc.abstractproperty
     def param_defns(self):
@@ -105,18 +107,20 @@ class AbstractURIParser(BaseDecorator):
 
         @functools.wraps(function)
         def wrapper(request):
+            def coerce_dict(md):
+                """ MultiDict -> dict of lists
+                """
+                try:
+                    return md.to_dict(flat=False)
+                except AttributeError:
+                    return dict(md.items())
 
-            try:
-                query = request.query.to_dict(flat=False)
-            except AttributeError:
-                query = dict(request.query.items())
-
-            try:
-                path_params = request.path_params.to_dict(flat=False)
-            except AttributeError:
-                path_params = dict(request.path_params.items())
+            query = coerce_dict(request.query)
+            path_params = coerce_dict(request.path_params)
+            form = coerce_dict(request.form)
 
             request.query = self.resolve_params(query, resolve_duplicates=True)
+            request.form = self.resolve_params(form, resolve_duplicates=True)
             request.path_params = self.resolve_params(path_params)
             response = function(request)
             return response
@@ -129,6 +133,7 @@ class Swagger2URIParser(AbstractURIParser):
     Adheres to the Swagger2 spec,
     Assumes the the last defined query parameter should be used.
     """
+    parsable_parameters = ["query", "path", "formData"]
 
     @property
     def param_defns(self):
