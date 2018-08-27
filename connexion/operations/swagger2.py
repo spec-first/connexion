@@ -250,9 +250,9 @@ class Swagger2Operation(AbstractOperation):
                       for p in self.parameters
                       if p['in'] == 'formData'}
 
-        default_form_params = {sanitize(p['name']): p['default']
-                               for p in form_defns
-                               if 'default' in p}
+        default_form_params = {k: v['default']
+                               for k, v in form_defns.items()
+                               if 'default' in v}
 
         # Add body parameters
         if body_name:

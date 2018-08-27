@@ -87,12 +87,12 @@ def test_array_form_param(simple_app):
     data = 'items=A&items=B&items=C&items=D,E,F'
     response = app_client.post(url, headers=headers, data=data)
     array_response = json.loads(response.data.decode('utf-8', 'replace'))  # type: [str] multi array with csv format
-    assert array_response == ['A', 'B', 'C', 'D', 'E', 'F']
+    assert array_response == ['D', 'E', 'F']
     url = '/v1.0/test_array_pipes_form_param'
     data = 'items=4&items=5&items=6&items=7|8|9'
     response = app_client.post(url, headers=headers, data=data)
     array_response = json.loads(response.data.decode('utf-8', 'replace'))  # type: [int] multi array with pipes format
-    assert array_response == [4, 5, 6, 7, 8, 9]
+    assert array_response == [7, 8, 9]
 
 
 def test_extra_query_param(simple_app):
