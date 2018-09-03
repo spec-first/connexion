@@ -179,7 +179,8 @@ class RequestBodyValidator(object):
             self.validator.validate(data)
         except ValidationError as exception:
             logger.error("{url} validation error: {error}".format(url=url,
-                                                                  error=exception.message))
+                                                                  error=exception.message),
+                         extra={'validator': 'body'})
             return problem(400, 'Bad Request', str(exception.message))
 
         return None
@@ -202,7 +203,8 @@ class ResponseBodyValidator(object):
             self.validator.validate(data)
         except ValidationError as exception:
             logger.error("{url} validation error: {error}".format(url=url,
-                                                                  error=exception))
+                                                                  error=exception),
+                         extra={'validator': 'response'})
             six.reraise(*sys.exc_info())
 
         return None
