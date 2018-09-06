@@ -2,6 +2,8 @@ import functools
 import os
 import time
 
+from werkzeug.exceptions import HTTPException
+
 try:
     import uwsgi_metrics
     HAS_UWSGI_METRICS = True  # pragma: no cover
@@ -30,16 +32,19 @@ class UWSGIMetricsCollector(object):
 
         @functools.wraps(function)
         def wrapper(request):
-            status_code = 500
+            status = 'unknown-exception'
             start_time_s = time.time()
             try:
                 response = function(request)
-                status_code = response.status_code
+                status = response.status_code
+            except HTTPException as http_e:
+                status = http_e.code
+                raise http_e
             finally:
                 end_time_s = time.time()
                 delta_s = end_time_s - start_time_s
                 delta_ms = delta_s * 1000
-                key = '{status}.{suffix}'.format(status=status_code, suffix=self.key_suffix)
+                key = '{status}.{suffix}'.format(status=status, suffix=self.key_suffix)
                 uwsgi_metrics.timer(self.prefix, key, delta_ms)
             return response
 
