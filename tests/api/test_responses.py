@@ -215,6 +215,12 @@ def test_post_wrong_content_type(simple_app):
                            )
     assert resp.status_code == 415
 
+    resp = app_client.post('/v1.0/post_wrong_content_type',
+                           content_type="application/x-www-form-urlencoded",
+                           data="a=1&b=2"
+                           )
+    assert resp.status_code == 415
+
     # this test checks exactly what the test directly above is supposed to check,
     # i.e. no content-type is provided in the header
     # unfortunately there is an issue with the werkzeug test environment
