@@ -171,6 +171,8 @@ If you provide this path in your specification POST requests to
           x-swagger-router-controller: myapp.api
           operationId: hello_world
 
+Keep in mind that Connexion follows how `HTTP methods work in Flask`_ and therefore HEAD requests will be handled by the ``operationId`` specified under GET in the specification. If both methods are supported, ``connexion.request.method`` can be used to determine which request was made.
+
 Automatic Routing
 -----------------
 
@@ -545,3 +547,4 @@ Unless required by applicable law or agreed to in writing, software distributed 
 .. _Connexion's Documentation Page: http://connexion.readthedocs.org/en/latest/
 .. _Crafting effective Microservices in Python: http://caricio.com/2016/09/16/crafting-effective-microservices-in-python/
 .. _issues where we are looking for contributions: https://github.com/zalando/connexion/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22
+.. _HTTP Methods work in Flask: http://flask.pocoo.org/docs/1.0/quickstart/#http-methods
