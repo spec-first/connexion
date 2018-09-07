@@ -32,7 +32,7 @@ class UWSGIMetricsCollector(object):
 
         @functools.wraps(function)
         def wrapper(request):
-            status = 'unknown-exception'
+            status = 500
             start_time_s = time.time()
             try:
                 response = function(request)
