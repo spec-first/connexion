@@ -8,20 +8,40 @@ from typing import AnyStr, List  # NOQA
 import jinja2
 import six
 import yaml
-from openapi_spec_validator import validate_v2_spec as validate_spec
 from openapi_spec_validator.exceptions import OpenAPIValidationError
+from six.moves.urllib.parse import urlparse
 
 from ..exceptions import InvalidSpecification, ResolverError
 from ..jsonref import resolve_refs
-from ..operations import Swagger2Operation
+from ..operations import OpenAPIOperation, Swagger2Operation
 from ..options import ConnexionOptions
 from ..resolver import Resolver
 from ..utils import Jsonifier
 
 MODULE_PATH = pathlib.Path(__file__).absolute().parent.parent
 SWAGGER_UI_URL = 'ui'
+NO_SPEC_VERSION_ERR_MSG = """Unable to get the spec version.
+You are missing either '"swagger": "2.0"' or '"openapi": "3.0.0"'
+from the top level of your spec."""
 
 logger = logging.getLogger('connexion.apis.abstract')
+
+
+def _get_spec_version(spec):
+    try:
+        version_string = spec.get('openapi') or spec.get('swagger')
+    except AttributeError:
+        raise InvalidSpecification(NO_SPEC_VERSION_ERR_MSG)
+    if version_string is None:
+        raise InvalidSpecification(NO_SPEC_VERSION_ERR_MSG)
+    try:
+        version_tuple = tuple(map(int, version_string.split(".")))
+    except TypeError:
+        err = ('Unable to convert version string to semantic version tuple: '
+               '{version_string}.')
+        err = err.format(version_string=version_string)
+        raise InvalidSpecification(err)
+    return version_tuple
 
 
 class AbstractAPIMeta(abc.ABCMeta):
@@ -68,13 +88,6 @@ class AbstractAPI(object):
         self.validator_map = validator_map
         self.resolver_error_handler = resolver_error_handler
 
-        self.options = ConnexionOptions(options)
-
-        logger.debug('Options Loaded',
-                     extra={'swagger_ui': self.options.openapi_console_ui_available,
-                            'swagger_path': self.options.openapi_console_ui_from_dir,
-                            'swagger_url': self.options.openapi_console_ui_path})
-
         logger.debug('Loading specification: %s', specification,
                      extra={'swagger_yaml': specification,
                             'base_path': base_path,
@@ -89,6 +102,15 @@ class AbstractAPI(object):
 
         self.specification = compatibility_layer(self.specification)
         logger.debug('Read specification', extra={'spec': self.specification})
+
+        self.spec_version = _get_spec_version(self.specification)
+
+        self.options = ConnexionOptions(options, oas_version=self.spec_version)
+
+        logger.debug('Options Loaded',
+                     extra={'swagger_ui': self.options.openapi_console_ui_available,
+                            'swagger_path': self.options.openapi_console_ui_from_dir,
+                            'swagger_url': self.options.openapi_console_ui_path})
 
         # Avoid validator having ability to modify specification
         self.raw_spec = copy.deepcopy(self.specification)
@@ -112,6 +134,7 @@ class AbstractAPI(object):
         logger.debug('Security Definitions: %s', self.security_definitions)
 
         self.definitions = self.specification.get('definitions', {})
+        self.components = self.specification.get('components', {})
         self.parameter_definitions = self.specification.get('parameters', {})
         self.response_definitions = self.specification.get('responses', {})
 
@@ -141,6 +164,10 @@ class AbstractAPI(object):
             self.add_auth_on_not_found(self.security, self.security_definitions)
 
     def _validate_spec(self, spec):
+        if self.spec_version < (3, 0, 0):
+            from openapi_spec_validator import validate_v2_spec as validate_spec
+        else:
+            from openapi_spec_validator import validate_v3_spec as validate_spec
         try:
             validate_spec(spec)
         except OpenAPIValidationError as e:
@@ -149,10 +176,17 @@ class AbstractAPI(object):
     def _set_base_path(self, base_path):
         # type: (AnyStr) -> None
         if base_path is None:
-            self.base_path = canonical_base_path(self.specification.get('basePath', ''))
-        else:
-            self.base_path = canonical_base_path(base_path)
-            self.specification['basePath'] = base_path
+            if self.spec_version < (3, 0, 0):
+                base_path = self.specification.get('basePath', '')
+            else:
+                # TODO variable subsitution in urls for oas3
+                servers = self.specification.get('servers', [])
+                for server in servers:
+                    # TODO how to handle multiple servers in an
+                    #      oas3 spec with different paths?
+                    base_path = urlparse(server['url']).path
+                    break
+        self.base_path = canonical_base_path(base_path)
 
     @abc.abstractmethod
     def add_openapi_json(self):
@@ -190,25 +224,36 @@ class AbstractAPI(object):
         :type path: str
         :type swagger_operation: dict
         """
-        operation = Swagger2Operation(self,
-                                      method=method,
-                                      path=path,
-                                      path_parameters=path_parameters,
-                                      operation=swagger_operation,
-                                      app_produces=self.produces,
-                                      app_consumes=self.consumes,
-                                      app_security=self.security,
-                                      security_definitions=self.security_definitions,
-                                      definitions=self.definitions,
-                                      parameter_definitions=self.parameter_definitions,
-                                      response_definitions=self.response_definitions,
-                                      validate_responses=self.validate_responses,
-                                      validator_map=self.validator_map,
-                                      strict_validation=self.strict_validation,
-                                      resolver=self.resolver,
-                                      pythonic_params=self.pythonic_params,
-                                      uri_parser_class=self.options.uri_parser_class,
-                                      pass_context_arg_name=self.pass_context_arg_name)
+
+        shared_args = {
+            "method": method,
+            "path": path,
+            "path_parameters": path_parameters,
+            "operation": swagger_operation,
+            "app_security": self.security,
+            "validate_responses": self.validate_responses,
+            "validator_map": self.validator_map,
+            "strict_validation": self.strict_validation,
+            "resolver": self.resolver,
+            "pythonic_params": self.pythonic_params,
+            "uri_parser_class": self.options.uri_parser_class,
+            "pass_context_arg_name": self.pass_context_arg_name
+        }
+
+        if self.spec_version < (3, 0, 0):
+            operation = Swagger2Operation(self,
+                                          app_produces=self.produces,
+                                          app_consumes=self.consumes,
+                                          security_definitions=self.security_definitions,
+                                          definitions=self.definitions,
+                                          parameter_definitions=self.parameter_definitions,
+                                          response_definitions=self.response_definitions,
+                                          **shared_args)
+        else:
+            operation = OpenAPIOperation(self,
+                                         components=self.components,
+                                         **shared_args)
+
         self._add_operation_internal(method, path, operation)
 
     @abc.abstractmethod

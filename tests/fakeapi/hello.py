@@ -37,6 +37,10 @@ def post_greeting(name, **kwargs):
     data = {'greeting': 'Hello {name}'.format(name=name)}
     return data
 
+def post_greeting3(body, **kwargs):
+    data = {'greeting': 'Hello {name}'.format(name=body["name"])}
+    return data
+
 def post_greeting_url(name, remainder, **kwargs):
     data = {'greeting': 'Hello {name} thanks for {remainder}'.format(name=name,remainder=remainder)}
     return data
@@ -210,11 +214,23 @@ def test_array_csv_query_param(items):
     return items
 
 
+def test_array_pipes_form_param3(items):
+    return items['items']
+
+
+def test_array_csv_form_param3(items):
+    return items['items']
+
+
 def test_array_pipes_form_param(items):
     return items
 
 
 def test_array_csv_form_param(items):
+    return items
+
+
+def test_array_multi_query_param(items):
     return items
 
 
@@ -260,6 +276,9 @@ def test_default_integer_body(stack_version):
 
 def test_falsy_param(falsy):
     return falsy
+
+def test_formdata_param3(body):
+    return body["formData"]
 
 
 def test_formdata_param(formData):
@@ -341,6 +360,14 @@ def test_nullable_param_post(post_param):
     return post_param
 
 
+def test_nullable_param_post3(body):
+    if body is None:
+        return 'it was None'
+    if body["post_param"] is None:
+        return 'it was None'
+    return body["post_param"]
+
+
 def test_nullable_param_put(contents):
     if contents is None:
         return 'it was None'
@@ -396,12 +423,25 @@ def test_args_kwargs(*args, **kwargs):
     return kwargs
 
 
+def test_args_kwargs3(body=None, *args, **kwargs):
+    return kwargs
+
+
 def test_param_sanitization(query=None, form=None):
     result = {}
     if query:
         result['query'] = query
     if form:
         result['form'] = form
+    return result
+
+
+def test_param_sanitization3(query=None, body=None):
+    result = {}
+    if query:
+        result['query'] = query
+    if body:
+        result['form'] = body["form"]
     return result
 
 

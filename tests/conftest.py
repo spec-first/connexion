@@ -10,7 +10,7 @@ logging.basicConfig(level=logging.DEBUG)
 TEST_FOLDER = pathlib.Path(__file__).parent
 FIXTURES_FOLDER = TEST_FOLDER / 'fixtures'
 SPEC_FOLDER = TEST_FOLDER / "fakeapi"
-SPECS = ["swagger.yaml"]
+SPECS = ["swagger.yaml", "openapi.yaml"]
 
 
 class FakeResponse(object):
@@ -88,7 +88,7 @@ def default_param_error_spec_dir():
     return FIXTURES_FOLDER / 'default_param_error'
 
 
-def build_app_from_fixture(api_spec_folder, spec_file='swagger.yaml', **kwargs):
+def build_app_from_fixture(api_spec_folder, spec_file='openapi.yaml', **kwargs):
     debug = True
     if 'debug' in kwargs:
         debug = kwargs['debug']
