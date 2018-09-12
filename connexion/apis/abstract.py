@@ -186,6 +186,8 @@ class AbstractAPI(object):
                     #      oas3 spec with different paths?
                     base_path = urlparse(server['url']).path
                     break
+                else:
+                    base_path = ''
         self.base_path = canonical_base_path(base_path)
 
     @abc.abstractmethod
