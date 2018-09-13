@@ -168,7 +168,8 @@ class AbstractOperation(SecureOperation):
         """
         return self._validate_responses
 
-    def _get_file_arguments(self, files, arguments, has_kwargs=False):
+    @staticmethod
+    def _get_file_arguments(files, arguments, has_kwargs=False):
         return {k: v for k, v in files.items() if not has_kwargs and k in arguments}
 
     @abc.abstractmethod
