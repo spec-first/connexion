@@ -4,6 +4,7 @@ import jinja2
 import yaml
 from swagger_spec_validator.common import SwaggerValidationError
 
+import mock
 import pytest
 from conftest import TEST_FOLDER, build_app_from_fixture
 from connexion import App
@@ -187,3 +188,20 @@ def test_default_query_param_does_not_match_defined_type(
         default_param_error_spec_dir):
     with pytest.raises(SwaggerValidationError):
         build_app_from_fixture(default_param_error_spec_dir, validate_responses=True, debug=False)
+
+
+def test_handle_add_operation_error_debug(simple_api_spec_dir):
+    app = App(__name__, specification_dir=simple_api_spec_dir, debug=True)
+    app.api_cls = type('AppTest', (app.api_cls,), {})
+    app.api_cls.add_operation = mock.MagicMock(side_effect=Exception('operation error!'))
+    api = app.add_api('swagger.yaml', resolver=lambda oid: (lambda foo: 'bar'))
+    assert app.api_cls.add_operation.called
+    assert api.resolver.resolve_function_from_operation_id('faux')('bah') == 'bar'
+
+
+def test_handle_add_operation_error(simple_api_spec_dir):
+    app = App(__name__, specification_dir=simple_api_spec_dir)
+    app.api_cls = type('AppTest', (app.api_cls,), {})
+    app.api_cls.add_operation = mock.MagicMock(side_effect=Exception('operation error!'))
+    with pytest.raises(Exception):
+        app.add_api('swagger.yaml', resolver=lambda oid: (lambda foo: 'bar'))

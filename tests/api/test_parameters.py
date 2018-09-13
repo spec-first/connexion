@@ -68,6 +68,33 @@ def test_array_query_param(simple_app):
     assert array_response == [4, 5, 6, 7, 8, 9]
 
 
+def test_array_form_param(simple_app):
+    app_client = simple_app.app.test_client()
+    headers = {'Content-type': 'application/x-www-form-urlencoded'}
+    url = '/v1.0/test_array_csv_form_param'
+    response = app_client.post(url, headers=headers)
+    array_response = json.loads(response.data.decode('utf-8', 'replace'))  # type: [str]
+    assert array_response == ['squash', 'banana']
+    url = '/v1.0/test_array_csv_form_param'
+    response = app_client.post(url, headers=headers, data={"items": "one,two,three"})
+    array_response = json.loads(response.data.decode('utf-8', 'replace'))  # type: [str]
+    assert array_response == ['one', 'two', 'three']
+    url = '/v1.0/test_array_pipes_form_param'
+    response = app_client.post(url, headers=headers, data={"items": "1|2|3"})
+    array_response = json.loads(response.data.decode('utf-8', 'replace'))  # type: [int]
+    assert array_response == [1, 2, 3]
+    url = '/v1.0/test_array_csv_form_param'
+    data = 'items=A&items=B&items=C&items=D,E,F'
+    response = app_client.post(url, headers=headers, data=data)
+    array_response = json.loads(response.data.decode('utf-8', 'replace'))  # type: [str] multi array with csv format
+    assert array_response == ['A', 'B', 'C', 'D', 'E', 'F']
+    url = '/v1.0/test_array_pipes_form_param'
+    data = 'items=4&items=5&items=6&items=7|8|9'
+    response = app_client.post(url, headers=headers, data=data)
+    array_response = json.loads(response.data.decode('utf-8', 'replace'))  # type: [int] multi array with pipes format
+    assert array_response == [4, 5, 6, 7, 8, 9]
+
+
 def test_extra_query_param(simple_app):
     app_client = simple_app.app.test_client()
     headers = {'Content-type': 'application/json'}
