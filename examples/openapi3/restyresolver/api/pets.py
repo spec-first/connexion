@@ -19,31 +19,31 @@ def post(body):
 
 
 def put(body):
-    id = body["id"]
+    id_ = body["id"]
     name = body["name"]
     tag = body.get("tag")
-    id = int(id)
-    pet = pets.get(id, {"id": id})
+    id_ = int(id_)
+    pet = pets.get(id_, {"id": id_})
     pet["name"] = name
     pet["tag"] = tag
     pet['last_updated'] = datetime.datetime.now()
-    pets[id] = pet
-    return pets[id]
+    pets[id_] = pet
+    return pets[id_]
 
 
-def delete(id):
-    id = int(id)
-    if pets.get(id) is None:
+def delete(id_):
+    id_ = int(id_)
+    if pets.get(id_) is None:
         return NoContent, 404
-    del pets[id]
+    del pets[id_]
     return NoContent, 204
 
 
 def get(petId):
-    id = int(petId)
-    if pets.get(id) is None:
+    id_ = int(petId)
+    if pets.get(id_) is None:
         return NoContent, 404
-    return pets[id]
+    return pets[id_]
 
 
 def search(limit=100):

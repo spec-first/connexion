@@ -33,7 +33,7 @@ def resolve_refs(spec, store=None):
             for k, v in node.items():
                 node[k] = _do_resolve(v)
         elif isinstance(node, (list, tuple)):
-            for i in range(len(node)):
+            for i, _ in enumerate(node):
                 node[i] = _do_resolve(node[i])
         return node
 
