@@ -148,7 +148,6 @@ class Jsonifier(object):
 def has_coroutine(function, api=None):
     """
     Checks if function is a couroutine.
- 
     If ``function`` is a decorator (has a ``__wrapped__`` attribute)
     this function will also look at the wrapped function.
     """
