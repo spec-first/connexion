@@ -41,8 +41,8 @@ TYPE_MAP = {'integer': int,
             'object': dict}  # map of swagger types to python types
 
 
-def make_type(value, type):
-    type_func = TYPE_MAP[type]  # convert value to right type
+def make_type(value, _type):
+    type_func = TYPE_MAP[_type]  # convert value to right type
     return type_func(value)
 
 
