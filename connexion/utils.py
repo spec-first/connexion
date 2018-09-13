@@ -146,6 +146,12 @@ class Jsonifier(object):
 
 
 def has_coroutine(function, api=None):
+    """
+    Checks if function is a couroutine.
+ 
+    If ``function`` is a decorator (has a ``__wrapped__`` attribute)
+    this function will also look at the wrapped function.
+    """
     if six.PY3:  # pragma: 2.7 no cover
         import asyncio
 
@@ -166,4 +172,5 @@ def has_coroutine(function, api=None):
                 )
             )
     else:  # pragma: 3 no cover
+        # there's no asyncio in python 2
         return False
