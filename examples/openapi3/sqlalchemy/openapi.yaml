@@ -1,0 +1,120 @@
+openapi: 3.0.0
+servers:
+  - url: http://localhost:8081/
+info:
+  title: Pet Shop Example API
+  version: '0.1'
+paths:
+  /pets:
+    get:
+      tags:
+        - Pets
+      operationId: app.get_pets
+      summary: Get all pets
+      parameters:
+        - name: animal_type
+          in: query
+          schema:
+            type: string
+            pattern: '^[a-zA-Z0-9]*$'
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 100
+      responses:
+        '200':
+          description: Return pets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Pet'
+  '/pets/{pet_id}':
+    get:
+      tags:
+        - Pets
+      operationId: app.get_pet
+      summary: Get a single pet
+      parameters:
+        - $ref: '#/components/parameters/pet_id'
+      responses:
+        '200':
+          description: Return pet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pet'
+        '404':
+          description: Pet does not exist
+    put:
+      tags:
+        - Pets
+      operationId: app.put_pet
+      summary: Create or update a pet
+      parameters:
+        - $ref: '#/components/parameters/pet_id'
+      responses:
+        '200':
+          description: Pet updated
+        '201':
+          description: New pet created
+      requestBody:
+        content:
+          application/json:
+            schema:
+              x-body-name: pet
+              $ref: '#/components/schemas/Pet'
+    delete:
+      tags:
+        - Pets
+      operationId: app.delete_pet
+      summary: Remove a pet
+      parameters:
+        - $ref: '#/components/parameters/pet_id'
+      responses:
+        '204':
+          description: Pet was deleted
+        '404':
+          description: Pet does not exist
+components:
+  parameters:
+    pet_id:
+      name: pet_id
+      description: Pet's Unique identifier
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: '^[a-zA-Z0-9-]+$'
+  schemas:
+    Pet:
+      type: object
+      required:
+        - name
+        - animal_type
+      properties:
+        id:
+          type: string
+          description: Unique identifier
+          example: '123'
+          readOnly: true
+        name:
+          type: string
+          description: Pet's name
+          example: Susie
+          minLength: 1
+          maxLength: 100
+        animal_type:
+          type: string
+          description: Kind of animal
+          example: cat
+          minLength: 1
+        created:
+          type: string
+          format: date-time
+          description: Creation time
+          example: '2015-07-07T15:49:51.230+02:00'
+          readOnly: true
