@@ -1,4 +1,5 @@
 import asyncio
+import sys
 
 import aiohttp.web
 import pytest
@@ -221,3 +222,21 @@ def test_access_request_context(test_client, aiohttp_app):
     app_client = yield from test_client(aiohttp_app.app)
     resp = yield from app_client.post('/v1.0/aiohttp_access_request_context')
     assert resp.status == 204
+
+
+if sys.version_info[0:2] >= (3, 5):
+    @pytest.fixture
+    def aiohttp_app_async_def(aiohttp_api_spec_dir):
+        app = AioHttpApp(__name__, port=5001,
+                         specification_dir=aiohttp_api_spec_dir,
+                         debug=True)
+        app.add_api('swagger_simple_async_def.yaml', validate_responses=True)
+        return app
+
+
+    @asyncio.coroutine
+    def test_validate_responses_async_def(aiohttp_app_async_def, test_client):
+        app_client = yield from test_client(aiohttp_app_async_def.app)
+        get_bye = yield from app_client.get('/v1.0/aiohttp_validate_responses')
+        assert get_bye.status == 200
+        assert (yield from get_bye.read()) == b'{"validate": true}'
