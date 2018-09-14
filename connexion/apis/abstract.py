@@ -100,7 +100,6 @@ class AbstractAPI(object):
             specification_path = pathlib.Path(specification)
             self.specification = self.load_spec_from_file(arguments, specification_path)
 
-        self.specification = compatibility_layer(self.specification)
         logger.debug('Read specification', extra={'spec': self.specification})
 
         self.spec_version = _get_spec_version(self.specification)
@@ -316,17 +315,18 @@ class AbstractAPI(object):
             six.reraise(*exc_info)
 
     def load_spec_from_file(self, arguments, specification):
+        from openapi_spec_validator.loaders import ExtendedSafeLoader
         arguments = arguments or {}
 
-        with specification.open(mode='rb') as swagger_yaml:
-            contents = swagger_yaml.read()
+        with specification.open(mode='rb') as openapi_yaml:
+            contents = openapi_yaml.read()
             try:
-                swagger_template = contents.decode()
+                openapi_template = contents.decode()
             except UnicodeDecodeError:
-                swagger_template = contents.decode('utf-8', 'replace')
+                openapi_template = contents.decode('utf-8', 'replace')
 
-            swagger_string = jinja2.Template(swagger_template).render(**arguments)
-            return yaml.safe_load(swagger_string)  # type: dict
+            openapi_string = jinja2.Template(openapi_template).render(**arguments)
+            return yaml.load(openapi_string, ExtendedSafeLoader)  # type: dict
 
     @classmethod
     @abc.abstractmethod
@@ -370,24 +370,3 @@ def canonical_base_path(base_path):
     Make given "basePath" a canonical base URL which can be prepended to paths starting with "/".
     """
     return base_path.rstrip('/')
-
-
-def compatibility_layer(spec):
-    """Make specs compatible with older versions of Connexion."""
-    if not isinstance(spec, dict):
-        return spec
-
-    # Make all response codes be string
-    for path_name, methods_available in spec.get('paths', {}).items():
-        for method_name, method_def in methods_available.items():
-            if (method_name == 'parameters' or not isinstance(
-                    method_def, dict)):
-                continue
-
-            response_definitions = {}
-            for response_code, response_def in method_def.get(
-                    'responses', {}).items():
-                response_definitions[str(response_code)] = response_def
-
-            method_def['responses'] = response_definitions
-    return spec

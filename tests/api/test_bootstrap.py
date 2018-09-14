@@ -2,6 +2,7 @@ import json
 
 import jinja2
 import yaml
+from openapi_spec_validator.loaders import ExtendedSafeLoader
 
 import mock
 import pytest
@@ -105,17 +106,17 @@ def test_no_swagger_json_app(simple_api_spec_dir, spec):
 
 @pytest.mark.parametrize("spec", SPECS)
 def test_dict_as_yaml_path(simple_api_spec_dir, spec):
-    swagger_yaml_path = simple_api_spec_dir / spec
+    openapi_yaml_path = simple_api_spec_dir / spec
 
-    with swagger_yaml_path.open(mode='rb') as swagger_yaml:
-        contents = swagger_yaml.read()
+    with openapi_yaml_path.open(mode='rb') as openapi_yaml:
+        contents = openapi_yaml.read()
         try:
-            swagger_template = contents.decode()
+            openapi_template = contents.decode()
         except UnicodeDecodeError:
-            swagger_template = contents.decode('utf-8', 'replace')
+            openapi_template = contents.decode('utf-8', 'replace')
 
-        swagger_string = jinja2.Template(swagger_template).render({})
-        specification = yaml.safe_load(swagger_string)  # type: dict
+        openapi_string = jinja2.Template(openapi_template).render({})
+        specification = yaml.load(openapi_string, ExtendedSafeLoader)  # type: dict
 
     app = App(__name__, port=5001, specification_dir=simple_api_spec_dir, debug=True)
     app.add_api(specification)

@@ -3,11 +3,18 @@ from copy import deepcopy
 
 from jsonschema import RefResolver
 from jsonschema.exceptions import RefResolutionError  # noqa
+from openapi_spec_validator.handlers import UrlHandler
 
 from .utils import deep_get
 
+default_handlers = {
+    'http': UrlHandler('http'),
+    'https': UrlHandler('https'),
+    'file': UrlHandler('file'),
+}
 
-def resolve_refs(spec, store=None):
+
+def resolve_refs(spec, store=None, handlers=None):
     """
     Resolve JSON references like {"$ref": <some URI>} in a spec.
     Optionally takes a store, which is a mapping from reference URLs to a
@@ -15,7 +22,8 @@ def resolve_refs(spec, store=None):
     """
     spec = deepcopy(spec)
     store = store or {}
-    resolver = RefResolver('', spec, store)
+    handlers = handlers or default_handlers
+    resolver = RefResolver('', spec, store, handlers=handlers)
 
     def _do_resolve(node):
         if isinstance(node, collections.Mapping) and '$ref' in node:
