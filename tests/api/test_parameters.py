@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
 import json
 from io import BytesIO
 
@@ -39,6 +42,10 @@ def test_required_query_param(simple_app):
 def test_array_query_param(simple_app):
     app_client = simple_app.app.test_client()
     headers = {'Content-type': 'application/json'}
+    url = '/v1.0/test_array_csv_query_param'
+    response = app_client.get(url, headers=headers)
+    array_response = json.loads(response.data.decode('utf-8', 'replace'))  # type: [str]
+    assert array_response == ['squash', 'banana']
     url = '/v1.0/test_array_csv_query_param?items=one,two,three'
     response = app_client.get(url, headers=headers)
     array_response = json.loads(response.data.decode('utf-8', 'replace'))  # type: [str]
@@ -51,6 +58,41 @@ def test_array_query_param(simple_app):
     response = app_client.get(url, headers=headers)
     array_response = json.loads(response.data.decode('utf-8', 'replace'))  # [str] unsupported collectionFormat
     assert array_response == ["1;2;3"]
+    url = '/v1.0/test_array_csv_query_param?items=A&items=B&items=C&items=D,E,F'
+    response = app_client.get(url, headers=headers)
+    array_response = json.loads(response.data.decode('utf-8', 'replace'))  # type: [str] multi array with csv format
+    assert array_response == ['A', 'B', 'C', 'D', 'E', 'F']
+    url = '/v1.0/test_array_pipes_query_param?items=4&items=5&items=6&items=7|8|9'
+    response = app_client.get(url, headers=headers)
+    array_response = json.loads(response.data.decode('utf-8', 'replace'))  # type: [int] multi array with pipes format
+    assert array_response == [4, 5, 6, 7, 8, 9]
+
+
+def test_array_form_param(simple_app):
+    app_client = simple_app.app.test_client()
+    headers = {'Content-type': 'application/x-www-form-urlencoded'}
+    url = '/v1.0/test_array_csv_form_param'
+    response = app_client.post(url, headers=headers)
+    array_response = json.loads(response.data.decode('utf-8', 'replace'))  # type: [str]
+    assert array_response == ['squash', 'banana']
+    url = '/v1.0/test_array_csv_form_param'
+    response = app_client.post(url, headers=headers, data={"items": "one,two,three"})
+    array_response = json.loads(response.data.decode('utf-8', 'replace'))  # type: [str]
+    assert array_response == ['one', 'two', 'three']
+    url = '/v1.0/test_array_pipes_form_param'
+    response = app_client.post(url, headers=headers, data={"items": "1|2|3"})
+    array_response = json.loads(response.data.decode('utf-8', 'replace'))  # type: [int]
+    assert array_response == [1, 2, 3]
+    url = '/v1.0/test_array_csv_form_param'
+    data = 'items=A&items=B&items=C&items=D,E,F'
+    response = app_client.post(url, headers=headers, data=data)
+    array_response = json.loads(response.data.decode('utf-8', 'replace'))  # type: [str] multi array with csv format
+    assert array_response == ['A', 'B', 'C', 'D', 'E', 'F']
+    url = '/v1.0/test_array_pipes_form_param'
+    data = 'items=4&items=5&items=6&items=7|8|9'
+    response = app_client.post(url, headers=headers, data=data)
+    array_response = json.loads(response.data.decode('utf-8', 'replace'))  # type: [int] multi array with pipes format
+    assert array_response == [4, 5, 6, 7, 8, 9]
 
 
 def test_extra_query_param(simple_app):
@@ -331,3 +373,11 @@ def test_parameters_snake_case(snake_case_app):
     assert resp.status_code == 200
     resp = app_client.get('/v1.0/test-get-query-shadow?list=123')
     assert resp.status_code == 200
+
+
+def test_get_unicode_request(simple_app):
+    """Regression test for Python 2 UnicodeEncodeError bug during parameter parsing."""
+    app_client = simple_app.app.test_client()
+    resp = app_client.get('/v1.0/get_unicode_request?price=%C2%A319.99')  # £19.99
+    assert resp.status_code == 200
+    assert json.loads(resp.data.decode('utf-8'))['price'] == '£19.99'

@@ -1,0 +1,31 @@
+openapi: 3.0.0
+info:
+  title: '{{title}}'
+  version: '1.0'
+paths:
+  '/unordered-params/{path_param}':
+    get:
+      summary: Mixed parameters in swagger definition
+      operationId: fakeapi.hello.unordered_params_response
+      responses:
+        '200':
+          description: OK
+      parameters:
+        - name: first
+          in: query
+          description: First Param
+          schema:
+            type: integer
+        - name: path_param
+          in: path
+          required: true
+          description: Path Param
+          schema:
+            type: string
+        - name: second
+          in: query
+          description: Second Param
+          schema:
+            type: integer
+servers:
+  - url: /v1.0

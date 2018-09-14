@@ -244,6 +244,37 @@ paths:
         200:
           description: OK
 
+  /test_array_csv_form_param:
+    post:
+      operationId: fakeapi.hello.test_array_csv_form_param
+      parameters:
+        - name: items
+          in: formData
+          description: An comma separated array of items
+          type: array
+          items:
+            type: string
+          collectionFormat: csv
+          default: ["squash", "banana"]
+      responses:
+        200:
+          description: OK
+
+  /test_array_pipes_form_param:
+    post:
+      operationId: fakeapi.hello.test_array_pipes_form_param
+      parameters:
+        - name: items
+          in: formData
+          description: An comma separated array of items
+          type: array
+          items:
+            type: integer
+          collectionFormat: pipes
+      responses:
+        200:
+          description: OK
+
   /test_array_csv_query_param:
     get:
       operationId: fakeapi.hello.test_array_csv_query_param
@@ -251,11 +282,11 @@ paths:
         - name: items
           in: query
           description: An comma separated array of items
-          required: true
           type: array
           items:
             type: string
           collectionFormat: csv
+          default: ["squash", "banana"]
       responses:
         200:
           description: OK
@@ -763,6 +794,18 @@ paths:
         215:
           description: NOT-OK
 
+  /get_unicode_request:
+    get:
+      summary: Test if a unicode string in query parameter works properly in Python 2
+      operationId: fakeapi.hello.get_unicode_query
+      parameters:
+        - name: price
+          in: query
+          type: string
+      responses:
+        200:
+          description: OK
+
   /get_unicode_response:
     get:
       operationId: fakeapi.hello.get_unicode_data
@@ -773,6 +816,50 @@ paths:
           description: Some unicode response
           schema:
             type: object
+
+  /get_enum_response:
+    get:
+      operationId: fakeapi.hello.get_enum_response
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: Some HTTPStatus response
+          schema:
+            type: object
+
+  /get_httpstatus_response:
+    get:
+      operationId: fakeapi.hello.get_httpstatus_response
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: Some HTTPStatus response
+          schema:
+            type: object
+
+  /get_bad_default_response/{response_code}:
+    get:
+      operationId: fakeapi.hello.get_bad_default_response
+      produces:
+        - "application/json"
+      parameters:
+        - name: response_code
+          in: path
+          type: integer
+          required: true
+      responses:
+        200:
+          description: Some object response
+          schema:
+            type: object
+        default:
+          description: Some array response
+          schema:
+            type: array
+            items:
+              type: integer
 
 definitions:
   new_stack:

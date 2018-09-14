@@ -69,7 +69,7 @@ the endpoints in your specification:
 
 ``RestyResolver`` will give precedence to any ``operationId``
 encountered in the specification. It will also respect
-``x-router-controller``. You may import and extend
+``x-swagger-router-controller``. You may import and extend
 ``connexion.resolver.Resolver`` to implement your own ``operationId``
 (and function) resolution algorithm.
 
@@ -88,7 +88,8 @@ under-score is encountered. As an example:
     'top'
 
 Without this sanitation it would e.g. be impossible to implement an
-[OData](http://www.odata.org) API.
+`OData
+<http://www.odata.org>`_ API.
 
 Parameter Variable Converters
 -----------------------------

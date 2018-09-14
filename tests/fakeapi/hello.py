@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 import flask
 from flask import jsonify, redirect
 
@@ -211,6 +210,14 @@ def test_array_csv_query_param(items):
     return items
 
 
+def test_array_pipes_form_param(items):
+    return items
+
+
+def test_array_csv_form_param(items):
+    return items
+
+
 def test_array_pipes_query_param(items):
     return items
 
@@ -401,9 +408,39 @@ def test_param_sanitization(query=None, form=None):
 def test_body_sanitization(body=None):
     return body
 
+
 def post_wrong_content_type():
     return "NOT OK"
+
+
+def get_unicode_query(price=None):
+    return {'price': price}
+
 
 def get_unicode_data():
     jsonResponse = {u'currency': u'\xa3', u'key': u'leena'}
     return jsonResponse
+
+
+def get_enum_response():
+    try:
+        from enum import Enum
+        class HTTPStatus(Enum):
+            OK = 200
+    except ImportError:
+        return {}, 200
+    else:
+        return {}, HTTPStatus.OK
+
+
+def get_httpstatus_response():
+    try:
+        from http import HTTPStatus
+    except ImportError:
+        return {}, 200
+    else:
+        return {}, HTTPStatus.OK
+
+
+def get_bad_default_response(response_code):
+    return {}, response_code

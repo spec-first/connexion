@@ -12,16 +12,22 @@ from ..utils import all_json, boolean, is_null, is_nullable
 
 try:
     import builtins
-except ImportError:
+except ImportError:  # pragma: no cover
     import __builtin__ as builtins
 
 
 logger = logging.getLogger(__name__)
 
+# Python 2/3 compatibility:
+try:
+    py_string = unicode
+except NameError:  # pragma: no cover
+    py_string = str  # pragma: no cover
+
 # https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#data-types
 TYPE_MAP = {'integer': int,
             'number': float,
-            'string': str,
+            'string': py_string,
             'boolean': boolean,
             'array': list,
             'object': dict}  # map of swagger types to python types
@@ -55,12 +61,8 @@ def get_val_from_param(value, query_param):
     if is_nullable(query_param) and is_null(value):
         return None
 
-    if query_param["type"] == "array":  # then logic is more complex
-        if query_param.get("collectionFormat") and query_param.get("collectionFormat") == "pipes":
-            parts = value.split("|")
-        else:  # default: csv
-            parts = value.split(",")
-        return [make_type(part, query_param["items"]["type"]) for part in parts]
+    if query_param["type"] == "array":
+        return [make_type(v, query_param["items"]["type"]) for v in value]
     else:
         return make_type(value, query_param["type"])
 
@@ -79,7 +81,7 @@ def snake_and_shadow(name):
     return snake
 
 
-def parameter_to_arg(parameters, consumes, function, pythonic_params=False):
+def parameter_to_arg(parameters, consumes, function, pythonic_params=False, pass_context_arg_name=None):
     """
     Pass query and body parameters as keyword arguments to handler function.
 
@@ -89,10 +91,13 @@ def parameter_to_arg(parameters, consumes, function, pythonic_params=False):
     :param consumes: The list of content types the operation consumes
     :type consumes: list
     :param function: The handler function for the REST endpoint.
+    :type function: function|None
     :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended to
     any shadowed built-ins
     :type pythonic_params: bool
-    :type function: function|None
+    :param pass_context_arg_name: If not None URL and function has an argument matching this name, the framework's
+    request context will be passed as that argument.
+    :type pass_context_arg_name: str|None
     """
     def sanitize_param(name):
         if name and pythonic_params:
@@ -130,10 +135,11 @@ def parameter_to_arg(parameters, consumes, function, pythonic_params=False):
 
         # Parse path parameters
         path_params = request.path_params
-        for key, path_param_definitions in path_types.items():
-            if key in path_params:
-                kwargs[key] = get_val_from_param(path_params[key],
-                                                 path_param_definitions)
+        for key, value in path_params.items():
+            if key in path_types:
+                kwargs[key] = get_val_from_param(value, path_types[key])
+            else:  # Assume path params mechanism used for injection
+                kwargs[key] = value
 
         # Add body parameters
         if not has_kwargs and body_name not in arguments:
@@ -144,8 +150,9 @@ def parameter_to_arg(parameters, consumes, function, pythonic_params=False):
 
         # Add query parameters
         query_arguments = copy.deepcopy(default_query_params)
-        query_arguments.update({sanitize_param(k): v for k, v in request.query.items()})
+        query_arguments.update(request.query)
         for key, value in query_arguments.items():
+            key = sanitize_param(key)
             if not has_kwargs and key not in arguments:
                 logger.debug("Query Parameter '%s' not in function arguments", key)
             else:
@@ -192,6 +199,11 @@ def parameter_to_arg(parameters, consumes, function, pythonic_params=False):
                 kwargs[key] = value
             else:
                 logger.debug("Context parameter '%s' not in function arguments", key)
+
+        # attempt to provide the request context to the function
+        if pass_context_arg_name and (has_kwargs or pass_context_arg_name in arguments):
+            kwargs[pass_context_arg_name] = request.context
+
         return function(**kwargs)
 
     return wrapper

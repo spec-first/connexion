@@ -1,6 +1,8 @@
 import json
 from struct import unpack
 
+from werkzeug.test import Client, EnvironBuilder
+
 from connexion.apps.flask_app import FlaskJSONEncoder
 
 
@@ -213,9 +215,62 @@ def test_post_wrong_content_type(simple_app):
                            )
     assert resp.status_code == 415
 
+    resp = app_client.post('/v1.0/post_wrong_content_type',
+                           content_type="application/x-www-form-urlencoded",
+                           data="a=1&b=2"
+                           )
+    assert resp.status_code == 415
+
+    # this test checks exactly what the test directly above is supposed to check,
+    # i.e. no content-type is provided in the header
+    # unfortunately there is an issue with the werkzeug test environment
+    # (https://github.com/pallets/werkzeug/issues/1159)
+    # so that content-type is added to every request, we remove it here manually for our test
+    # this test can be removed once the werkzeug issue is addressed
+    builder = EnvironBuilder(path='/v1.0/post_wrong_content_type', method='POST',
+                             data=json.dumps({"some": "data"}))
+    try:
+        environ = builder.get_environ()
+    finally:
+        builder.close()
+    environ.pop('CONTENT_TYPE')
+    # we cannot just call app_client.open() since app_client is a flask.testing.FlaskClient
+    # which overrides werkzeug.test.Client.open() but does not allow passing an environment
+    # directly
+    resp = Client.open(app_client, environ)
+    assert resp.status_code == 415
+
+
+    resp = app_client.post('/v1.0/post_wrong_content_type',
+                           content_type="application/json",
+                           data="not a valid json"
+                           )
+    assert resp.status_code == 400, \
+        "Should return 400 when Content-Type is json but content not parsable"
+
 
 def test_get_unicode_response(simple_app):
     app_client = simple_app.app.test_client()
     resp = app_client.get('/v1.0/get_unicode_response')
     actualJson = {u'currency': u'\xa3', u'key': u'leena'}
     assert json.loads(resp.data.decode('utf-8','replace')) == actualJson
+
+
+def test_get_enum_response(simple_app):
+    app_client = simple_app.app.test_client()
+    resp = app_client.get('/v1.0/get_enum_response')
+    assert resp.status_code == 200
+
+def test_get_httpstatus_response(simple_app):
+    app_client = simple_app.app.test_client()
+    resp = app_client.get('/v1.0/get_httpstatus_response')
+    assert resp.status_code == 200
+
+
+def test_get_bad_default_response(simple_app):
+    app_client = simple_app.app.test_client()
+    resp = app_client.get('/v1.0/get_bad_default_response/200')
+    assert resp.status_code == 200
+
+    resp = app_client.get('/v1.0/get_bad_default_response/202')
+    assert resp.status_code == 500

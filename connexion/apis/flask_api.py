@@ -9,12 +9,13 @@ from connexion.apis.abstract import AbstractAPI
 from connexion.decorators.produces import NoContent
 from connexion.handlers import AuthErrorHandler
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
-from connexion.utils import is_json_mimetype
+from connexion.utils import Jsonifier, is_json_mimetype
 
 logger = logging.getLogger('connexion.apis.flask_api')
 
 
 class FlaskApi(AbstractAPI):
+
     def _set_base_path(self, base_path):
         super(FlaskApi, self)._set_base_path(base_path)
         self._set_blueprint()
@@ -24,12 +25,6 @@ class FlaskApi(AbstractAPI):
         endpoint = flask_utils.flaskify_endpoint(self.base_path)
         self.blueprint = flask.Blueprint(endpoint, __name__, url_prefix=self.base_path,
                                          template_folder=str(self.options.openapi_console_ui_from_dir))
-
-    def json_loads(self, data):
-        """
-        Use Flask specific JSON loader
-        """
-        return Jsonifier.loads(data)
 
     def add_swagger_json(self):
         """
@@ -154,6 +149,10 @@ class FlaskApi(AbstractAPI):
         flask_response = flask.current_app.response_class(**kwargs)  # type: flask.Response
 
         if status_code is not None:
+            # If we got an enum instead of an int, extract the value.
+            if hasattr(status_code, "value"):
+                status_code = status_code.value
+
             flask_response.status_code = status_code
 
         if data is not None and data is not NoContent:
@@ -169,7 +168,7 @@ class FlaskApi(AbstractAPI):
     def _jsonify_data(cls, data, mimetype):
         if (isinstance(mimetype, six.string_types) and is_json_mimetype(mimetype)) \
                 or not (isinstance(data, six.binary_type) or isinstance(data, six.text_type)):
-            return Jsonifier.dumps(data)
+            return cls.jsonifier.dumps(data)
 
         return data
 
@@ -195,6 +194,16 @@ class FlaskApi(AbstractAPI):
             return cls._build_flask_response(mimetype=mimetype, data=response)
 
     @classmethod
+    def get_connexion_response(cls, response):
+        return ConnexionResponse(
+            status_code=response.status_code,
+            mimetype=response.mimetype,
+            content_type=response.content_type,
+            headers=response.headers,
+            body=response.get_data(),
+        )
+
+    @classmethod
     def get_request(cls, *args, **params):
         # type: (*Any, **Any) -> ConnexionRequest
         """Gets ConnexionRequest instance for the operation handler
@@ -215,7 +224,7 @@ class FlaskApi(AbstractAPI):
             form=flask_request.form,
             query=flask_request.args,
             body=flask_request.get_data(),
-            json=flask_request.get_json(silent=True),
+            json_getter=lambda: flask_request.get_json(silent=True),
             files=flask_request.files,
             path_params=params,
             context=FlaskRequestContextProxy()
@@ -227,6 +236,13 @@ class FlaskApi(AbstractAPI):
                          'url': request.url
                      })
         return request
+
+    @classmethod
+    def _set_jsonifier(cls):
+        """
+        Use Flask specific JSON loader
+        """
+        cls.jsonifier = Jsonifier(flask.json)
 
 
 class FlaskRequestContextProxy(object):
@@ -246,29 +262,6 @@ class FlaskRequestContextProxy(object):
     def items(self):
         # type: () -> list
         return self.values.items()
-
-
-class Jsonifier(object):
-    @staticmethod
-    def dumps(data):
-        """ Central point where JSON serialization happens inside
-        Connexion.
-        """
-        return "{}\n".format(flask.json.dumps(data, indent=2))
-
-    @staticmethod
-    def loads(data):
-        """ Central point where JSON serialization happens inside
-        Connexion.
-        """
-        if isinstance(data, six.binary_type):
-            data = data.decode()
-
-        try:
-            return flask.json.loads(data)
-        except Exception as error:
-            if isinstance(data, six.string_types):
-                return data
 
 
 class InternalHandlers(object):

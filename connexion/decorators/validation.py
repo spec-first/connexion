@@ -10,7 +10,7 @@ from werkzeug import FileStorage
 
 from ..exceptions import ExtraParameterProblem
 from ..problem import problem
-from ..utils import all_json, boolean, is_null, is_nullable
+from ..utils import all_json, boolean, is_json_mimetype, is_null, is_nullable
 
 logger = logging.getLogger('connexion.decorators.validation')
 
@@ -48,20 +48,15 @@ class TypeValidationError(Exception):
 def validate_type(param, value, parameter_type, parameter_name=None):
     param_type = param.get('type')
     parameter_name = parameter_name if parameter_name else param['name']
-    if param_type == "array":  # then logic is more complex
-        if param.get("collectionFormat") and param.get("collectionFormat") == "pipes":
-            parts = value.split("|")
-        else:  # default: csv
-            parts = value.split(",")
-
-        converted_parts = []
-        for part in parts:
+    if param_type == "array":
+        converted_params = []
+        for v in value:
             try:
-                converted = make_type(part, param["items"]["type"])
+                converted = make_type(v, param["items"]["type"])
             except (ValueError, TypeError):
-                converted = part
-            converted_parts.append(converted)
-        return converted_parts
+                converted = v
+            converted_params.append(converted)
+        return converted_params
     else:
         try:
             return make_type(value, param_type)
@@ -106,13 +101,26 @@ class RequestBodyValidator(object):
             if all_json(self.consumes):
                 data = request.json
 
-                if data is None and len(request.body) > 0 and not self.is_null_value_valid:
-                    # the body has contents that were not parsed as JSON
-                    return problem(415,
-                                   "Unsupported Media Type",
-                                   "Invalid Content-type ({content_type}), expected JSON data".format(
-                                       content_type=request.headers["Content-Type"]
-                                   ))
+                empty_body = not(request.body or request.form or request.files)
+                if data is None and not empty_body and not self.is_null_value_valid:
+                    try:
+                        ctype_is_json = is_json_mimetype(request.headers.get("Content-Type", ""))
+                    except ValueError:
+                        ctype_is_json = False
+
+                    if ctype_is_json:
+                        # Content-Type is json but actual body was not parsed
+                        return problem(400,
+                                       "Bad Request",
+                                       "Request body is not valid JSON"
+                                       )
+                    else:
+                        # the body has contents that were not parsed as JSON
+                        return problem(415,
+                                       "Unsupported Media Type",
+                                       "Invalid Content-type ({content_type}), expected JSON data".format(
+                                           content_type=request.headers.get("Content-Type", "")
+                                       ))
 
                 logger.debug("%s validating schema...", request.url)
                 error = self.validate_schema(data, request.url)
@@ -133,7 +141,8 @@ class RequestBodyValidator(object):
             self.validator.validate(data)
         except ValidationError as exception:
             logger.error("{url} validation error: {error}".format(url=url,
-                                                                  error=exception.message))
+                                                                  error=exception.message),
+                         extra={'validator': 'body'})
             return problem(400, 'Bad Request', str(exception.message))
 
         return None
@@ -156,7 +165,8 @@ class ResponseBodyValidator(object):
             self.validator.validate(data)
         except ValidationError as exception:
             logger.error("{url} validation error: {error}".format(url=url,
-                                                                  error=exception))
+                                                                  error=exception),
+                         extra={'validator': 'response'})
             six.reraise(*sys.exc_info())
 
         return None

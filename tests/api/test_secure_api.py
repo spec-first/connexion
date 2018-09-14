@@ -111,3 +111,8 @@ def test_checking_that_client_token_has_all_necessary_scopes(
     headers = {"Authorization": "Bearer has_myscope_otherscope"}
     response = app_client.get('/v1.0/more-than-one-scope', headers=headers)  # type: flask.Response
     assert response.status_code == 200
+
+    # has all necessary scopes but under key 'scopes'
+    headers = {"Authorization": "Bearer has_scopes_in_scopes_with_s"}
+    response = app_client.get('/v1.0/more-than-one-scope', headers=headers)  # type: flask.Response
+    assert response.status_code == 200

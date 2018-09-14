@@ -47,15 +47,15 @@ def test_parameter_validator(monkeypatch):
     request = MagicMock(path_params={'p1': 1}, query={'q1': '3'}, headers={})
     assert handler(request) == 'OK'
 
-    request = MagicMock(path_params={'p1': 1}, query={'a1': "1,2"}, headers={})
+    request = MagicMock(path_params={'p1': 1}, query={'a1': ['1', '2']}, headers={})
     assert handler(request) == "OK"
-    request = MagicMock(path_params={'p1': 1}, query={'a1': "1,a"}, headers={})
+    request = MagicMock(path_params={'p1': 1}, query={'a1': ['1', 'a']}, headers={})
     assert json.loads(handler(request).data.decode())['detail'].startswith("'a' is not of type 'integer'")
-    request = MagicMock(path_params={'p1': 1}, query={'a1': "1,-1"}, headers={})
+    request = MagicMock(path_params={'p1': 1}, query={'a1': ['1', '-1']}, headers={})
     assert json.loads(handler(request).data.decode())['detail'].startswith("-1 is less than the minimum of 0")
-    request = MagicMock(path_params={'p1': 1}, query={'a1': "1"}, headers={})
+    request = MagicMock(path_params={'p1': 1}, query={'a1': ['1']}, headers={})
     assert json.loads(handler(request).data.decode())['detail'].startswith("[1] is too short")
-    request = MagicMock(path_params={'p1': 1}, query={'a1': "1,2,3,4"}, headers={})
+    request = MagicMock(path_params={'p1': 1}, query={'a1': ['1', '2', '3', '4']}, headers={})
     assert json.loads(handler(request).data.decode())['detail'].startswith("[1, 2, 3, 4] is too long")
 
     request = MagicMock(path_params={'p1': '123'}, query={}, headers={'h1': 'a'})

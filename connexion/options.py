@@ -73,6 +73,15 @@ class ConnexionOptions(object):
         """
         return self._options.get('swagger_path', INTERNAL_CONSOLE_UI_PATH)
 
+    @property
+    def uri_parser_class(self):
+        # type: () -> str
+        """
+        The class to use for parsing URIs into path and query parameters.
+        Default: None
+        """
+        return self._options.get('uri_parser_class', None)
+
 
 def filter_values(dictionary):
     # type: (dict) -> dict
