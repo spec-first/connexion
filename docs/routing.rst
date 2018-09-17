@@ -30,6 +30,8 @@ If you provided this path in your specification POST requests to
           x-swagger-router-controller: myapp.api
           operationId: hello_world
 
+Keep in mind that Connexion follows how `HTTP methods work in Flask`_ and therefore HEAD requests will be handled by the ``operationId`` specified under GET in the specification. If both methods are supported, ``connexion.request.method`` can be used to determine which request was made.
+
 Automatic Routing
 -----------------
 
@@ -157,3 +159,6 @@ You can also disable it at the API level:
 
     app = connexion.FlaskApp(__name__, specification_dir='swagger/')
     app.add_api('my_api.yaml', swagger_json=False)
+
+.. _Operation Object: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#operation-object
+.. _HTTP Methods work in Flask: http://flask.pocoo.org/docs/1.0/quickstart/#http-methods
