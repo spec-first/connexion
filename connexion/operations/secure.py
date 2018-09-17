@@ -3,9 +3,11 @@ import logging
 
 from ..decorators.decorator import (BeginOfRequestLifecycleDecorator,
                                     EndOfRequestLifecycleDecorator)
-from ..decorators.security import (get_tokeninfo_func, get_tokeninfo_url,
-                                   security_passthrough, verify_oauth_local,
-                                   verify_oauth_remote)
+from ..decorators.security import (get_apikeyinfo_func, get_basicinfo_func,
+                                   get_scope_validate_func, get_tokeninfo_func,
+                                   security_deny, security_passthrough,
+                                   verify_apikey, verify_basic, verify_oauth,
+                                   verify_security)
 
 logger = logging.getLogger("connexion.operations.secure")
 
@@ -53,6 +55,14 @@ class SecureOperation(object):
         for each scheme.
 
 
+        **Operation Object -> security**
+
+        A declaration of which security schemes are applied for this operation. The list of values describes alternative
+        security schemes that can be used (that is, there is a logical OR between the security requirements).
+        This definition overrides any declared top-level security. To remove a top-level security declaration,
+        an empty array can be used.
+
+
         **Security Requirement Object**
 
         Lists the required security schemes to execute this operation. The object can have multiple security schemes
@@ -63,40 +73,66 @@ class SecureOperation(object):
         :rtype: types.FunctionType
         """
         logger.debug('... Security: %s', self.security, extra=vars(self))
-        if self.security:
-            if len(self.security) > 1:
-                logger.debug("... More than one security requirement defined. **IGNORING SECURITY REQUIREMENTS**",
-                             extra=vars(self))
-                return security_passthrough
+        if not self.security:
+            return security_passthrough
 
-            security = self.security[0]  # type: dict
-            # the following line gets the first (and because of the previous condition only) scheme and scopes
-            # from the operation's security requirements
+        auth_funcs = []
+        required_scopes = None
+        for security_req in self.security:
+            if not security_req:
+                continue
+            elif len(security_req) > 1:
+                logger.warning("... More than one security scheme in security requirement defined. "
+                               "**DENYING ALL REQUESTS**", extra=vars(self))
+                return security_deny
 
-            scheme_name, scopes = next(iter(security.items()))  # type: str, list
-            security_definition = self.security_schemes[scheme_name]
-            if security_definition['type'] == 'oauth2':
-                token_info_url = get_tokeninfo_url(security_definition)
-                token_info_func = get_tokeninfo_func(security_definition)
-                scopes = set(scopes)  # convert scopes to set because this is needed for verify_oauth_remote
+            scheme_name, scopes = next(iter(security_req.items()))
+            security_scheme = self.security_schemes[scheme_name]
 
-                if token_info_url and token_info_func:
-                    logger.warning("... Both x-tokenInfoUrl and x-tokenInfoFunc are defined, using x-tokenInfoFunc",
-                                   extra=vars(self))
-                if token_info_func:
-                    return functools.partial(verify_oauth_local, token_info_func, scopes)
-                if token_info_url:
-                    return functools.partial(verify_oauth_remote, token_info_url, scopes)
+            if security_scheme['type'] == 'oauth2':
+                required_scopes = scopes
+                token_info_func = get_tokeninfo_func(security_scheme)
+                scope_validate_func = get_scope_validate_func(security_scheme)
+                if not token_info_func:
+                    logger.warning("... x-tokenInfoFunc missing", extra=vars(self))
+                    continue
+
+                auth_funcs.append(verify_oauth(token_info_func, scope_validate_func))
+
+            # Swagger 2.0
+            elif security_scheme['type'] == 'basic':
+                basic_info_func = get_basicinfo_func(security_scheme)
+                if not basic_info_func:
+                    logger.warning("... x-basicInfoFunc missing", extra=vars(self))
+                    continue
+
+                auth_funcs.append(verify_basic(basic_info_func))
+
+            # OpenAPI 3.0.0
+            elif security_scheme['type'] == 'http':
+                scheme = security_scheme['scheme'].lower()
+                if scheme == 'basic':
+                    basic_info_func = get_basicinfo_func(security_scheme)
+                    if not basic_info_func:
+                        logger.warning("... x-basicInfoFunc missing", extra=vars(self))
+                        continue
+
+                    auth_funcs.append(verify_basic(basic_info_func))
                 else:
-                    logger.warning("... OAuth2 token info URL missing. **IGNORING SECURITY REQUIREMENTS**",
-                                   extra=vars(self))
-            elif security_definition['type'] in ('apiKey', 'basic'):
-                logger.debug(
-                    "... Security type '%s' not natively supported by Connexion; you should handle it yourself",
-                    security_definition['type'], extra=vars(self))
+                    logger.warning("... Unsupported http authorization scheme %s" % scheme, extra=vars(self))
 
-        # if we don't know how to handle the security or it's not defined we will usa a passthrough decorator
-        return security_passthrough
+            elif security_scheme['type'] == 'apiKey':
+                apikey_info_func = get_apikeyinfo_func(security_scheme)
+                if not apikey_info_func:
+                    logger.warning("... x-apikeyInfoFunc missing", extra=vars(self))
+                    continue
+
+                auth_funcs.append(verify_apikey(apikey_info_func, security_scheme['in'], security_scheme['name']))
+
+            else:
+                logger.warning("... Unsupported security scheme type %s" % security_scheme['type'], extra=vars(self))
+
+        return functools.partial(verify_security, auth_funcs, required_scopes)
 
     def get_mimetype(self):
         return DEFAULT_MIMETYPE

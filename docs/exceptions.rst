@@ -65,6 +65,5 @@ This scope indicates the OAuth 2 Server did not generate a token with all the sc
 contains 3 properties
 - ``required_scopes`` - The scopes that were required for this endpoint
 - ``token_scopes`` - The scopes that were granted for this endpoint
-- ``missing_scopes`` - The scopes that were not given by the OAuth 2 server that are required to access this endpoint
 
 
