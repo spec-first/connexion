@@ -1,4 +1,8 @@
-from connexion.decorators.validation import ParameterValidator
+from jsonschema import ValidationError
+
+import pytest
+from connexion.decorators.validation import (Draft4ValidatorSupportNullable,
+                                             ParameterValidator)
 from mock import MagicMock
 
 
@@ -46,3 +50,32 @@ def test_invalid_type_value_error(monkeypatch):
     value = {'test': 1, 'second': 2}
     result = ParameterValidator.validate_parameter('formdata', value, {'type': 'boolean', 'name': 'foo'})
     assert result == "Wrong type, expected 'boolean' for formdata parameter 'foo'"
+
+def test_support_nullable_properties():
+    schema = {
+        "type": "object",
+        "properties": {"foo": {"type": "string", "x-nullable": True}},
+    }
+    try:
+        Draft4ValidatorSupportNullable(schema).validate({"foo": None})
+    except ValidationError:
+        pytest.fail("Shouldn't raise ValidationError")
+
+
+def test_support_nullable_properties_raises_validation_error():
+    schema = {
+        "type": "object",
+        "properties": {"foo": {"type": "string", "x-nullable": False}},
+    }
+
+    with pytest.raises(ValidationError):
+        Draft4ValidatorSupportNullable(schema).validate({"foo": None})
+
+
+def test_support_nullable_properties_not_iterable():
+    schema = {
+        "type": "object",
+        "properties": {"foo": {"type": "string", "x-nullable": True}},
+    }
+    with pytest.raises(ValidationError):
+        Draft4ValidatorSupportNullable(schema).validate(12345)
