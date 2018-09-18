@@ -12,7 +12,7 @@ from openapi_spec_validator.exceptions import OpenAPIValidationError
 from six.moves.urllib.parse import urlparse
 
 from ..exceptions import InvalidSpecification, ResolverError
-from ..jsonref import resolve_refs
+from ..json_schema import resolve_refs
 from ..operations import OpenAPIOperation, Swagger2Operation
 from ..options import ConnexionOptions
 from ..resolver import Resolver
