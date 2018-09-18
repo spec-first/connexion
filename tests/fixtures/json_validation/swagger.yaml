@@ -1,0 +1,69 @@
+swagger: "2.0"
+
+info:
+  title: "{{title}}"
+  version: "1.0"
+
+basePath: /v1.0
+
+definitions:
+  User:
+    type: object
+    required:
+    - name
+    properties:
+      user_id:
+        type: integer
+        readOnly: true
+      name:
+        type: string
+      password:
+        type: string
+        x-writeOnly: true
+
+paths:
+  /minlength:
+    post:
+      operationId: fakeapi.hello.post
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              foo:
+                type: string
+      responses:
+        200:
+          description: Success
+
+  /user:
+    get:
+      operationId: fakeapi.hello.get_user
+      responses:
+        200:
+          description: User object
+          schema:
+            $ref: '#/definitions/User'
+    post:
+      operationId: fakeapi.hello.post_user
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/User'
+      responses:
+        200:
+          description: User object
+          schema:
+            $ref: '#/definitions/User'
+  /user_with_password:
+    get:
+      operationId: fakeapi.hello.get_user_with_password
+      responses:
+        200:
+          description: User object
+          schema:
+            $ref: '#/definitions/User'
