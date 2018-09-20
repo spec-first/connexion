@@ -575,6 +575,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 .. _described by Flask: http://flask.pocoo.org/snippets/111/
 .. _werkzeug: http://werkzeug.pocoo.org/
 .. _Connexion's Documentation Page: http://connexion.readthedocs.org/en/latest/
-.. _Crafting effective Microservices in Python: http://caricio.com/2016/09/16/crafting-effective-microservices-in-python/
+.. _Crafting effective Microservices in Python: https://jobs.zalando.com/tech/blog/crafting-effective-microservices-in-python/
 .. _issues where we are looking for contributions: https://github.com/zalando/connexion/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22
 .. _HTTP Methods work in Flask: http://flask.pocoo.org/docs/1.0/quickstart/#http-methods
