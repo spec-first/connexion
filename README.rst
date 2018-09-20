@@ -90,6 +90,8 @@ New in Connexion 2.0:
 - The spec validator library has changed from `swagger-spec-validator` to `openapi-spec-validator`.
 - Errors that previously raised `SwaggerValidationError` now raise the `InvalidSpecification` exception.
   All spec validation errors should be wrapped with `InvalidSpecification`.
+- Support for nullable/x-nullable, readOnly and writeOnly/x-writeOnly has been added to the standard json schema validator.
+- Custom validators can now be specified on api level (instead of app level).
 
 How to Use
 ==========

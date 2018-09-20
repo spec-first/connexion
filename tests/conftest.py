@@ -88,6 +88,11 @@ def default_param_error_spec_dir():
     return FIXTURES_FOLDER / 'default_param_error'
 
 
+@pytest.fixture
+def json_validation_spec_dir():
+    return FIXTURES_FOLDER / 'json_validation'
+
+
 def build_app_from_fixture(api_spec_folder, spec_file='openapi.yaml', **kwargs):
     debug = True
     if 'debug' in kwargs:

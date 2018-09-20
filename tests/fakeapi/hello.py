@@ -484,3 +484,17 @@ def get_httpstatus_response():
 
 def get_bad_default_response(response_code):
     return {}, response_code
+
+
+def get_user():
+    return {'user_id': 7, 'name': 'max'}
+
+
+def get_user_with_password():
+    return {'user_id': 7, 'name': 'max', 'password': '5678'}
+
+
+def post_user(body):
+    body['user_id'] = 8
+    body.pop('password', None)
+    return body

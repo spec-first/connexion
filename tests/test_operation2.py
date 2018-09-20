@@ -10,7 +10,7 @@ from connexion.decorators.security import (security_passthrough,
                                            verify_oauth_local,
                                            verify_oauth_remote)
 from connexion.exceptions import InvalidSpecification
-from connexion.jsonref import resolve_refs
+from connexion.json_schema import resolve_refs
 from connexion.operations import Swagger2Operation
 from connexion.resolver import Resolver
 

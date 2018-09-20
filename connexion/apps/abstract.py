@@ -14,7 +14,7 @@ logger = logging.getLogger('connexion.app')
 class AbstractApp(object):
     def __init__(self, import_name, api_cls, port=None, specification_dir='',
                  host=None, server=None, arguments=None, auth_all_paths=False, debug=False,
-                 validator_map=None, options=None):
+                 options=None):
         """
         :param import_name: the name of the application package
         :type import_name: str
@@ -32,8 +32,6 @@ class AbstractApp(object):
         :type auth_all_paths: bool
         :param debug: include debugging information
         :type debug: bool
-        :param validator_map: map of validators
-        :type validator_map: dict
         """
         self.port = port
         self.host = host
@@ -45,7 +43,6 @@ class AbstractApp(object):
 
         # Options
         self.auth_all_paths = auth_all_paths
-        self.validator_map = validator_map
 
         self.options = ConnexionOptions(options)
 
@@ -88,7 +85,8 @@ class AbstractApp(object):
     def add_api(self, specification, base_path=None, arguments=None,
                 auth_all_paths=None, validate_responses=False,
                 strict_validation=False, resolver=Resolver(), resolver_error=None,
-                pythonic_params=False, pass_context_arg_name=None, options=None):
+                pythonic_params=False, pass_context_arg_name=None, options=None,
+                validator_map=None):
         """
         Adds an API to the application based on a swagger file or API dict
 
@@ -115,6 +113,8 @@ class AbstractApp(object):
         :type options: dict | None
         :param pass_context_arg_name: Name of argument in handler functions to pass request context to.
         :type pass_context_arg_name: str | None
+        :param validator_map: map of validators
+        :type validator_map: dict
         :rtype: AbstractAPI
         """
         # Turn the resolver_error code into a handler object
@@ -146,7 +146,7 @@ class AbstractApp(object):
                            strict_validation=strict_validation,
                            auth_all_paths=auth_all_paths,
                            debug=self.debug,
-                           validator_map=self.validator_map,
+                           validator_map=validator_map,
                            pythonic_params=pythonic_params,
                            pass_context_arg_name=pass_context_arg_name,
                            options=api_options.as_dict())

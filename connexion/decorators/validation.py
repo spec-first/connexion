@@ -5,12 +5,12 @@ import logging
 import sys
 
 import six
-from jsonschema import (Draft4Validator, ValidationError,
-                        draft4_format_checker, validators)
+from jsonschema import Draft4Validator, ValidationError, draft4_format_checker
 from werkzeug import FileStorage
 
 from ..exceptions import ExtraParameterProblem
 from ..http_facts import FORM_CONTENT_TYPES
+from ..json_schema import Draft4RequestValidator, Draft4ResponseValidator
 from ..problem import problem
 from ..utils import all_json, boolean, is_json_mimetype, is_null, is_nullable
 
@@ -79,43 +79,6 @@ def validate_parameter_list(request_params, spec_params):
     return request_params.difference(spec_params)
 
 
-def extend_with_nullable_support(validator_class):
-    """Add support for null values in body.
-
-    It adds property validator to given validator_class.
-
-    :param validator_class: validator to add nullable support
-    :type validator_class: jsonschema.IValidator
-    :return: new validator with added nullable support in properties
-    :rtype: jsonschema.IValidator
-    """
-    validate_properties = validator_class.VALIDATORS['properties']
-
-    def nullable_support(validator, properties, instance, schema):
-        null_properties = {}
-        for property_, subschema in six.iteritems(properties):
-            # check equal to True, because x-nullable is an extension
-            # whereas nullable value is validated by 3.0 spec
-            nullable = (subschema.get('x-nullable') is True or
-                        subschema.get('nullable'))
-            has_property = (
-                isinstance(instance, collections.Iterable) and
-                property_ in instance
-            )
-            if has_property and instance[property_] is None and nullable:
-                # exclude from following validation
-                null_properties[property_] = instance.pop(property_)
-        for error in validate_properties(validator, properties, instance, schema):
-            yield error
-        # add null properties back
-        if null_properties:
-            instance.update(null_properties)
-    return validators.extend(validator_class, {'properties': nullable_support})
-
-
-Draft4ValidatorSupportNullable = extend_with_nullable_support(Draft4Validator)
-
-
 class RequestBodyValidator(object):
 
     def __init__(self, schema, consumes, api, is_null_value_valid=False, validator=None,
@@ -133,7 +96,7 @@ class RequestBodyValidator(object):
         self.schema = schema
         self.has_default = schema.get('default', False)
         self.is_null_value_valid = is_null_value_valid
-        validatorClass = validator or Draft4ValidatorSupportNullable
+        validatorClass = validator or Draft4RequestValidator
         self.validator = validatorClass(schema, format_checker=draft4_format_checker)
         self.api = api
         self.strict_validation = strict_validation
@@ -228,7 +191,7 @@ class ResponseBodyValidator(object):
                           against API schema. Default is jsonschema.Draft4Validator.
         :type validator: jsonschema.IValidator
         """
-        ValidatorClass = validator or Draft4ValidatorSupportNullable
+        ValidatorClass = validator or Draft4ResponseValidator
         self.validator = ValidatorClass(schema, format_checker=draft4_format_checker)
 
     def validate_schema(self, data, url):

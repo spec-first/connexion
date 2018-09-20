@@ -15,13 +15,17 @@ logger = logging.getLogger('connexion.decorators.response')
 
 
 class ResponseValidator(BaseDecorator):
-    def __init__(self, operation, mimetype):
+    def __init__(self, operation, mimetype, validator=None):
         """
         :type operation: Operation
         :type mimetype: str
+        :param validator: Validator class that should be used to validate passed data
+                          against API schema. Default is jsonschema.Draft4Validator.
+        :type validator: jsonschema.IValidator
         """
         self.operation = operation
         self.mimetype = mimetype
+        self.validator = validator
 
     def validate_response(self, data, status_code, headers, url):
         """
@@ -40,7 +44,7 @@ class ResponseValidator(BaseDecorator):
         response_schema = self.operation.response_schema(str(status_code), content_type)
 
         if self.is_json_schema_compatible(response_schema):
-            v = ResponseBodyValidator(response_schema)
+            v = ResponseBodyValidator(response_schema, validator=self.validator)
             try:
                 data = self.operation.json_loads(data)
                 v.validate_schema(data, url)
