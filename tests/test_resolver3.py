@@ -11,7 +11,7 @@ def test_standard_resolve_x_router_controller():
         path='endpoint',
         path_parameters=[],
         operation={
-            'x-swagger-router-controller': 'fakeapi.hello',
+            'x-openapi-router-controller': 'fakeapi.hello',
             'operationId': 'post_greeting',
         },
         app_security=[],
@@ -44,7 +44,7 @@ def test_resty_resolve_x_router_controller_with_operation_id():
         path='endpoint',
         path_parameters=[],
         operation={
-            'x-swagger-router-controller': 'fakeapi.hello',
+            'x-openapi-router-controller': 'fakeapi.hello',
             'operationId': 'post_greeting',
         },
         app_security=[],
@@ -59,7 +59,7 @@ def test_resty_resolve_x_router_controller_without_operation_id():
                           method='GET',
                           path='/hello/{id}',
                           path_parameters=[],
-                          operation={'x-swagger-router-controller': 'fakeapi.hello'},
+                          operation={'x-openapi-router-controller': 'fakeapi.hello'},
                           app_security=[],
                           components=COMPONENTS,
                           resolver=RestyResolver('fakeapi'))
@@ -143,7 +143,7 @@ def test_resty_resolve_with_default_module_name_and_x_router_controller_will_res
         path='/hello',
         path_parameters=[],
         operation={
-            'x-swagger-router-controller': 'fakeapi.hello',
+            'x-openapi-router-controller': 'fakeapi.hello',
         },
         app_security=[],
         components=COMPONENTS,
