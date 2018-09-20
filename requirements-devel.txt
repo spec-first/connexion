@@ -1,4 +1,4 @@
--e git+https://github.com/Julian/jsonschema.git#egg=jsonschema
+-e git+https://github.com/palnes/jsonschema.git@313-ref-fix#egg=jsonschema
 -e git+https://github.com/pallets/flask.git#egg=flask
 -e git+https://github.com/kennethreitz/requests#egg=requests
 -e git+https://github.com/Yelp/swagger_spec_validator.git#egg=swagger-spec-validator
