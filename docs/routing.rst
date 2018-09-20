@@ -19,8 +19,8 @@ identify which Python function should handle each URL.
 If you provided this path in your specification POST requests to
 ``http://MYHOST/hello_world``, it would be handled by the function
 ``hello_world`` in ``myapp.api`` module. Optionally, you can include
-``x-swagger-router-controller`` in your operation definition, making
-``operationId`` relative:
+``x-swagger-router-controller`` or ``x-openapi-router-controller``
+ in your operation definition, making ``operationId`` relative:
 
 .. code-block:: yaml
 
@@ -68,10 +68,10 @@ the endpoints in your specification:
           # Implied operationId: api.foo.delete
 
 ``RestyResolver`` will give precedence to any ``operationId``
-encountered in the specification. It will also respect
-``x-swagger-router-controller``. You may import and extend
-``connexion.resolver.Resolver`` to implement your own ``operationId``
-(and function) resolution algorithm.
+encountered in the specification. It will also respect both
+``x-swagger-router-controller`` and ``x-openapi-router-controller``.
+ You may import and extend ``connexion.resolver.Resolver`` to implement
+  your own ``operationId`` (and function) resolution algorithm.
 
 Parameter Name Sanitation
 -------------------------

@@ -96,6 +96,7 @@ class AbstractOperation(SecureOperation):
         self._randomize_endpoint = randomize_endpoint
 
         self._router_controller = self._operation.get('x-swagger-router-controller')
+        self._router_controller = self._operation.get('x-openapi-router-controller')
 
         self._operation_id = self._operation.get("operationId")
         self._resolution = resolver.resolve(self)

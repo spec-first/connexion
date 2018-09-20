@@ -19,7 +19,22 @@ def test_standard_resolve_x_router_controller():
         resolver=Resolver()
     )
     assert operation.operation_id == 'fakeapi.hello.post_greeting'
-
+    
+def test_standard_resolve_x_openapi_router_controller():
+    operation = OpenAPIOperation(
+        api=None,
+        method='GET',
+        path='endpoint',
+        path_parameters=[],
+        operation={
+            'x-openapi-router-controller': 'fakeapi.hello',
+            'operationId': 'post_greeting',
+        },
+        app_security=[],
+        components=COMPONENTS,
+        resolver=Resolver()
+    )
+    assert operation.operation_id == 'fakeapi.hello.post_greeting'
 
 def test_resty_resolve_operation_id():
     operation = OpenAPIOperation(
