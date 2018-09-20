@@ -99,6 +99,8 @@ class OpenAPIOperation(AbstractOperation):
             }
         }
 
+        self._router_controller = operation.get('x-openapi-router-controller')
+
         self._request_body = operation.get('requestBody')
 
         self._parameters = operation.get('parameters', [])

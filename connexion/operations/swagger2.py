@@ -105,6 +105,8 @@ class Swagger2Operation(AbstractOperation):
             'responses': response_definitions
         }
 
+        self._router_controller = operation.get('x-swagger-router-controller')
+
         self._parameters = operation.get('parameters', [])
         if path_parameters:
             self._parameters += path_parameters
