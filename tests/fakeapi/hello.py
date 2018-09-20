@@ -498,3 +498,9 @@ def post_user(body):
     body['user_id'] = 8
     body.pop('password', None)
     return body
+
+
+def apikey_info(apikey, required_scopes=None):
+    if apikey == 'mykey':
+        return {'sub': 'admin'}
+    return None

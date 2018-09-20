@@ -69,9 +69,11 @@ def test_security(oauth_requests, secure_endpoint_app):
     assert get_bye_bad_token_reponse['detail'] == "Provided oauth token is not valid"
 
     response = app_client.get('/v1.0/more-than-one-security-definition')  # type: flask.Response
-    assert response.status_code == 200
+    assert response.status_code == 401
 
-    response = app_client.get('/v1.0/user-handled-security')  # type: flask.Response
+    # also tests case-insensitivity
+    headers = {"X-AUTH": "mykey"}
+    response = app_client.get('/v1.0/more-than-one-security-definition', headers=headers)  # type: flask.Response
     assert response.status_code == 200
 
     headers = {"Authorization": "Bearer 100"}
