@@ -70,6 +70,8 @@ class OpenAPIOperation(AbstractOperation):
         app_security = operation.get('security', app_security)
         uri_parser_class = uri_parser_class or OpenAPIURIParser
 
+        self._router_controller = operation.get('x-openapi-router-controller')
+
         super(OpenAPIOperation, self).__init__(
             api=api,
             method=method,

@@ -77,6 +77,8 @@ class Swagger2Operation(AbstractOperation):
         app_security = operation.get('security', app_security)
         uri_parser_class = uri_parser_class or Swagger2URIParser
 
+        self._router_controller = operation.get('x-swagger-router-controller')
+
         super(Swagger2Operation, self).__init__(
             api=api,
             method=method,
