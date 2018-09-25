@@ -167,7 +167,7 @@ class AioHttpApi(AbstractAPI):
         logger.debug('Getting data and status code',
                      extra={'has_body': req.has_body, 'url': url})
 
-        query = {k: ','.join(v) for k, v in parse_qs(req.rel_url.query_string).items()}
+        query = {query_key: query_values for query_key, query_values in parse_qs(req.rel_url.query_string).items()}
         headers = {k.decode(): v.decode() for k, v in req.raw_headers}
         body = None
         if req.can_read_body:
