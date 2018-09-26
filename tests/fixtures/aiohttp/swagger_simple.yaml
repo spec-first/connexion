@@ -123,8 +123,6 @@ paths:
       summary: Test proper parsing of query parameters
       description: Tests proper parsing
       operationId: fakeapi.aiohttp_handlers.aiohttp_query_parsing_str
-      produces:
-        - text/plain
       parameters:
         - in: query
           name: query
@@ -132,16 +130,16 @@ paths:
           type: string
           required: true
       responses:
-        204:
-          description: success no content.
+        200:
+          description: Query parsing result
+          schema:
+            $ref: '#/definitions/SimpleQuery'
 
   /aiohttp_query_parsing_array:
     get:
       summary: Test proper parsing of query parameters
       description: Tests proper parsing
       operationId: fakeapi.aiohttp_handlers.aiohttp_query_parsing_array
-      produces:
-        - text/plain
       parameters:
         - in: query
           name: query
@@ -151,16 +149,16 @@ paths:
             type: string
           required: true
       responses:
-        204:
-          description: success no content.
+        200:
+          description: Query parsing result
+          schema:
+            $ref: '#/definitions/MultiQuery'
 
   /aiohttp_query_parsing_array_multi:
     get:
       summary: Test proper parsing of query parameters
       description: Tests proper parsing
       operationId: fakeapi.aiohttp_handlers.aiohttp_query_parsing_array_multi
-      produces:
-        - text/plain
       parameters:
         - in: query
           name: query
@@ -171,11 +169,29 @@ paths:
           collectionFormat: multi
           required: true
       responses:
-        204:
-          description: success no content.
+        200:
+          description: Query parsing result
+          schema:
+            $ref: '#/definitions/MultiQuery'
 
 
 definitions:
+  SimpleQuery:
+    type: object
+    required:
+      - query
+    properties:
+      query:
+        type: string
+  MultiQuery:
+    type: object
+    required:
+      - query
+    properties:
+      query:
+        type: array
+        items:
+          type: string
   User:
     type: object
     required:
