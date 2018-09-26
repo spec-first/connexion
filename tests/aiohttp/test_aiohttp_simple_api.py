@@ -224,6 +224,39 @@ def test_access_request_context(test_client, aiohttp_app):
     assert resp.status == 204
 
 
+@asyncio.coroutine
+def test_query_parsing_simple(test_client, aiohttp_app):
+    app_client = yield from test_client(aiohttp_app.app)
+    resp = yield from app_client.get(
+        '/v1.0/aiohttp_query_parsing_str',
+        params={
+            'query': 'query',
+        },
+    )
+    assert resp.status == 204
+
+
+@asyncio.coroutine
+def test_query_parsing_array(test_client, aiohttp_app):
+    app_client = yield from test_client(aiohttp_app.app)
+    resp = yield from app_client.get(
+        '/v1.0/aiohttp_query_parsing_array',
+        params={
+            'query': 'queryA,queryB',
+        },
+    )
+    assert resp.status == 204
+
+
+@asyncio.coroutine
+def test_query_parsing_array_multi(test_client, aiohttp_app):
+    app_client = yield from test_client(aiohttp_app.app)
+    resp = yield from app_client.get(
+        '/v1.0/aiohttp_query_parsing_array_multi?query=queryA&query=queryB&query=queryC',
+    )
+    assert resp.status == 204
+
+
 if sys.version_info[0:2] >= (3, 5):
     @pytest.fixture
     def aiohttp_app_async_def(aiohttp_api_spec_dir):

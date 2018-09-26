@@ -45,6 +45,24 @@ def aiohttp_access_request_context(request_ctx):
     return ConnexionResponse(status_code=204)
 
 
+@asyncio.coroutine
+def aiohttp_query_parsing_str(query):
+    assert query == 'query'
+    return ConnexionResponse(status_code=204)
+
+
+@asyncio.coroutine
+def aiohttp_query_parsing_array(query):
+    assert query == ['queryA', 'queryB']
+    return ConnexionResponse(status_code=204)
+
+
+@asyncio.coroutine
+def aiohttp_query_parsing_array_multi(query):
+    assert query == ['queryA', 'queryB', 'queryC']
+    return ConnexionResponse(status_code=204)
+
+
 USERS = [
     {"id": 1, "name": "John Doe"},
     {"id": 2, "name": "Nick Carlson"}

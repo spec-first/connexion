@@ -118,6 +118,62 @@ paths:
           schema:
             $ref: '#/definitions/User'
 
+  /aiohttp_query_parsing_str:
+    get:
+      summary: Test proper parsing of query parameters
+      description: Tests proper parsing
+      operationId: fakeapi.aiohttp_handlers.aiohttp_query_parsing_str
+      produces:
+        - text/plain
+      parameters:
+        - in: query
+          name: query
+          description: Simple query param
+          type: string
+          required: true
+      responses:
+        204:
+          description: success no content.
+
+  /aiohttp_query_parsing_array:
+    get:
+      summary: Test proper parsing of query parameters
+      description: Tests proper parsing
+      operationId: fakeapi.aiohttp_handlers.aiohttp_query_parsing_array
+      produces:
+        - text/plain
+      parameters:
+        - in: query
+          name: query
+          description: Array like query param
+          type: array
+          items:
+            type: string
+          required: true
+      responses:
+        204:
+          description: success no content.
+
+  /aiohttp_query_parsing_array_multi:
+    get:
+      summary: Test proper parsing of query parameters
+      description: Tests proper parsing
+      operationId: fakeapi.aiohttp_handlers.aiohttp_query_parsing_array_multi
+      produces:
+        - text/plain
+      parameters:
+        - in: query
+          name: query
+          description: Array like query param
+          type: array
+          items:
+            type: string
+          collectionFormat: multi
+          required: true
+      responses:
+        204:
+          description: success no content.
+
 
 definitions:
   User:
