@@ -45,6 +45,21 @@ def aiohttp_access_request_context(request_ctx):
     return ConnexionResponse(status_code=204)
 
 
+@asyncio.coroutine
+def aiohttp_query_parsing_str(query):
+    return ConnexionResponse(body={'query': query})
+
+
+@asyncio.coroutine
+def aiohttp_query_parsing_array(query):
+    return ConnexionResponse(body={'query': query})
+
+
+@asyncio.coroutine
+def aiohttp_query_parsing_array_multi(query):
+    return ConnexionResponse(body={'query': query})
+
+
 USERS = [
     {"id": 1, "name": "John Doe"},
     {"id": 2, "name": "Nick Carlson"}

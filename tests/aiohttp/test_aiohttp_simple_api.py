@@ -224,6 +224,55 @@ def test_access_request_context(test_client, aiohttp_app):
     assert resp.status == 204
 
 
+@asyncio.coroutine
+def test_query_parsing_simple(test_client, aiohttp_app):
+    expected_query = 'query'
+
+    app_client = yield from test_client(aiohttp_app.app)
+    resp = yield from app_client.get(
+        '/v1.0/aiohttp_query_parsing_str',
+        params={
+            'query': expected_query,
+        },
+    )
+    assert resp.status == 200
+
+    json_data = yield from resp.json()
+    assert json_data == {'query': expected_query}
+
+
+@asyncio.coroutine
+def test_query_parsing_array(test_client, aiohttp_app):
+    expected_query = ['queryA', 'queryB']
+
+    app_client = yield from test_client(aiohttp_app.app)
+    resp = yield from app_client.get(
+        '/v1.0/aiohttp_query_parsing_array',
+        params={
+            'query': ','.join(expected_query),
+        },
+    )
+    assert resp.status == 200
+
+    json_data = yield from resp.json()
+    assert json_data == {'query': expected_query}
+
+
+@asyncio.coroutine
+def test_query_parsing_array_multi(test_client, aiohttp_app):
+    expected_query = ['queryA', 'queryB', 'queryC']
+    query_str = '&'.join(['query=%s' % q for q in expected_query])
+
+    app_client = yield from test_client(aiohttp_app.app)
+    resp = yield from app_client.get(
+        '/v1.0/aiohttp_query_parsing_array_multi?%s' % query_str,
+    )
+    assert resp.status == 200
+
+    json_data = yield from resp.json()
+    assert json_data == {'query': expected_query}
+
+
 if sys.version_info[0:2] >= (3, 5):
     @pytest.fixture
     def aiohttp_app_async_def(aiohttp_api_spec_dir):
