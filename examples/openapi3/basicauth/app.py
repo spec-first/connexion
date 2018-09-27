@@ -1,49 +1,39 @@
 #!/usr/bin/env python3
 '''
-Connexion HTTP Basic Auth example
-
-Most of the code stolen from http://flask.pocoo.org/snippets/8/
-
-Warning: It is recommended to use 'decorator' package to create decorators for
-         your view functions to keep Connexion working as expected. For more
-         details please check: https://github.com/zalando/connexion/issues/142
+Basic example of a resource server
 '''
 
 import connexion
-import flask
-
-try:
-    from decorator import decorator
-except ImportError:
-    import sys
-    import logging
-    logging.error('Missing dependency. Please run `pip install decorator`')
-    sys.exit(1)
+from connexion.decorators.security import validate_scope
+from connexion.exceptions import OAuthScopeProblem
 
 
-def check_auth(username: str, password: str):
-    '''This function is called to check if a username /
-    password combination is valid.'''
-    return username == 'admin' and password == 'secret'
+def basic_auth(username, password, required_scopes=None):
+    if username == 'admin' and password == 'secret':
+        info = {'sub': 'admin', 'scope': 'secret'}
+    elif username == 'foo' and password == 'bar':
+        info = {'sub': 'user1', 'scope': ''}
+    else:
+        # optional: raise exception for custom error response
+        return None
+
+    # optional
+    if required_scopes is not None and not validate_scope(required_scopes, info['scope']):
+        raise OAuthScopeProblem(
+                description='Provided user doesn\'t have the required access rights',
+                required_scopes=required_scopes,
+                token_scopes=info['scope']
+            )
+
+    return info
 
 
-def authenticate():
-    '''Sends a 401 response that enables basic auth'''
-    return flask.Response('You have to login with proper credentials', 401,
-                          {'WWW-Authenticate': 'Basic realm="Login Required"'})
+def dummy_func(token):
+    return None
 
 
-@decorator
-def requires_auth(f: callable, *args, **kwargs):
-    auth = flask.request.authorization
-    if not auth or not check_auth(auth.username, auth.password):
-        return authenticate()
-    return f(*args, **kwargs)
-
-
-@requires_auth
-def get_secret() -> str:
-    return 'This is a very secret string requiring authentication!'
+def get_secret(user) -> str:
+    return "You are {user} and the secret is 'wbevuec'".format(user=user)
 
 
 if __name__ == '__main__':
