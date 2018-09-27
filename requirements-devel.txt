@@ -7,7 +7,6 @@ inflection
 mock
 pytest
 testfixtures>=5.3.0
-pytest-aiohttp
 # This repo doesn't have the latest version released on PyPI
 # -e hg+https://bitbucket.org/pitrou/pathlib#egg=pathlib
 # PyYAML is not that easy to build manually, it may fail.
