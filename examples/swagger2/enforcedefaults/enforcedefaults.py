@@ -4,6 +4,7 @@ import connexion
 import jsonschema
 import six
 from connexion.decorators.validation import RequestBodyValidator
+from connexion.json_schema import Draft4RequestValidator
 
 
 def echo(data):
@@ -26,8 +27,7 @@ def extend_with_set_default(validator_class):
     return jsonschema.validators.extend(
         validator_class, {'properties': set_defaults})
 
-DefaultsEnforcingDraft4Validator = extend_with_set_default(
-    jsonschema.Draft4Validator)
+DefaultsEnforcingDraft4Validator = extend_with_set_default(Draft4RequestValidator)
 
 
 class DefaultsEnforcingRequestBodyValidator(RequestBodyValidator):
@@ -43,6 +43,6 @@ validator_map = {
 
 if __name__ == '__main__':
     app = connexion.FlaskApp(
-        __name__, port=8080, specification_dir='.', validator_map=validator_map)
-    app.add_api('enforcedefaults-api.yaml')
+        __name__, port=8080, specification_dir='.')
+    app.add_api('enforcedefaults-api.yaml', validator_map=validator_map)
     app.run()

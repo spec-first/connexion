@@ -164,6 +164,7 @@ change the validation, you can override the defaults with:
         'body': CustomRequestBodyValidator,
         'parameter': CustomParameterValidator
     }
-    app = connexion.FlaskApp(__name__, ..., validator_map=validator_map)
+    app = connexion.FlaskApp(__name__)
+    app.add_api('api.yaml', ..., validator_map=validator_map)
 
 See custom validator example in ``examples/enforcedefaults``.
