@@ -1,9 +1,11 @@
 import abc
+import functools
 import logging
 import pathlib
 
 import six
 
+from ..handlers import ResolverErrorHandler
 from ..options import ConnexionOptions
 from ..resolver import Resolver
 
@@ -39,7 +41,6 @@ class AbstractApp(object):
         self.import_name = import_name
         self.arguments = arguments or {}
         self.api_cls = api_cls
-        self.resolver_error = None
 
         # Options
         self.auth_all_paths = auth_all_paths
@@ -118,10 +119,9 @@ class AbstractApp(object):
         :rtype: AbstractAPI
         """
         # Turn the resolver_error code into a handler object
-        self.resolver_error = resolver_error
         resolver_error_handler = None
-        if self.resolver_error is not None:
-            resolver_error_handler = self._resolver_error_handler
+        if resolver_error is not None:
+            resolver_error_handler = functools.partial(ResolverErrorHandler, self.api_cls, resolver_error)
 
         resolver = Resolver(resolver) if hasattr(resolver, '__call__') else resolver
 
@@ -151,10 +151,6 @@ class AbstractApp(object):
                            pass_context_arg_name=pass_context_arg_name,
                            options=api_options.as_dict())
         return api
-
-    def _resolver_error_handler(self, *args, **kwargs):
-        from connexion.handlers import ResolverErrorHandler
-        return ResolverErrorHandler(self.api_cls, self.resolver_error, *args, **kwargs)
 
     def add_url_rule(self, rule, endpoint=None, view_func=None, **options):
         """
