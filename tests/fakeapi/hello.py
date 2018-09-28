@@ -2,8 +2,7 @@
 import flask
 from flask import jsonify, redirect
 
-import connexion
-from connexion import NoContent, ProblemException, problem
+from connexion import NoContent, ProblemException, context, problem
 
 
 class DummyClass(object):
@@ -79,11 +78,11 @@ def get_bye_secure(name, user, token_info):
 
 
 def get_bye_secure_from_flask():
-    return 'Goodbye {user} (Secure!)'.format(user=flask.request.user)
+    return 'Goodbye {user} (Secure!)'.format(user=context['user'])
 
 
-def get_bye_secure_from_connexion():
-    return 'Goodbye {user} (Secure!)'.format(user=connexion.request.user)
+def get_bye_secure_from_connexion(req_context):
+    return 'Goodbye {user} (Secure!)'.format(user=req_context['user'])
 
 
 def get_bye_secure_ignoring_context(name):
@@ -498,3 +497,9 @@ def post_user(body):
     body['user_id'] = 8
     body.pop('password', None)
     return body
+
+
+def apikey_info(apikey, required_scopes=None):
+    if apikey == 'mykey':
+        return {'sub': 'admin'}
+    return None

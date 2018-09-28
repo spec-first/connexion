@@ -6,9 +6,8 @@ import types
 import mock
 import pytest
 from connexion.apis.flask_api import Jsonifier
-from connexion.decorators.security import (security_passthrough,
-                                           verify_oauth_local,
-                                           verify_oauth_remote)
+from connexion.decorators.security import (get_tokeninfo_remote,
+                                           validate_scope, verify_security)
 from connexion.exceptions import InvalidSpecification
 from connexion.json_schema import resolve_refs
 from connexion.operations import Swagger2Operation
@@ -245,7 +244,11 @@ def make_operation(op, definitions=True, parameters=True):
     return resolve_refs(new_op)["wrapper"]
 
 
-def test_operation(api):
+def test_operation(api, monkeypatch):
+    dummy = object()
+    verify_oauth = mock.MagicMock(return_value=dummy)
+    monkeypatch.setattr('connexion.operations.secure.verify_oauth', verify_oauth)
+
     op_spec = make_operation(OPERATION1)
     operation = Swagger2Operation(api=api,
                                   method='GET',
@@ -260,10 +263,16 @@ def test_operation(api):
                                   parameter_definitions=PARAMETER_DEFINITIONS,
                                   resolver=Resolver())
     assert isinstance(operation.function, types.FunctionType)
-    # security decorator should be a partial with verify_oauth_remote as the function and token url and scopes as arguments.
-    # See https://docs.python.org/2/library/functools.html#partial-objects
-    assert operation.security_decorator.func is verify_oauth_remote
-    assert operation.security_decorator.args == ('https://oauth.example/token_info', set(['uid']))
+
+    security_decorator = operation.security_decorator
+    assert security_decorator.func is verify_security
+    assert len(security_decorator.args[0]) == 1
+    assert security_decorator.args[0][0] is dummy
+    assert security_decorator.args[1] == ['uid']
+    call_args = verify_oauth.call_args[0]
+    assert call_args[0].func is get_tokeninfo_remote
+    assert call_args[0].args == ('https://oauth.example/token_info',)
+    assert call_args[1] is validate_scope
 
     assert operation.method == 'GET'
     assert operation.produces == ['application/json']
@@ -290,11 +299,6 @@ def test_operation_array(api):
                                   parameter_definitions=PARAMETER_DEFINITIONS,
                                   resolver=Resolver())
     assert isinstance(operation.function, types.FunctionType)
-    # security decorator should be a partial with verify_oauth_remote as the function and token url
-    #  and scopes as arguments.
-    # See https://docs.python.org/2/library/functools.html#partial-objects
-    assert operation.security_decorator.func is verify_oauth_remote
-    assert operation.security_decorator.args == ('https://oauth.example/token_info', set(['uid']))
 
     assert operation.method == 'GET'
     assert operation.produces == ['application/json']
@@ -323,11 +327,6 @@ def test_operation_composed_definition(api):
                                   parameter_definitions=PARAMETER_DEFINITIONS,
                                   resolver=Resolver())
     assert isinstance(operation.function, types.FunctionType)
-    # security decorator should be a partial with verify_oauth_remote as the function and
-    # token url and scopes as arguments.
-    # See https://docs.python.org/2/library/functools.html#partial-objects
-    assert operation.security_decorator.func is verify_oauth_remote
-    assert operation.security_decorator.args == ('https://oauth.example/token_info', set(['uid']))
 
     assert operation.method == 'GET'
     assert operation.produces == ['application/json']
@@ -338,7 +337,11 @@ def test_operation_composed_definition(api):
     assert operation.body_schema == expected_body_schema
 
 
-def test_operation_local_security_oauth2(api):
+def test_operation_local_security_oauth2(api, monkeypatch):
+    dummy = object()
+    verify_oauth = mock.MagicMock(return_value=dummy)
+    monkeypatch.setattr('connexion.operations.secure.verify_oauth', verify_oauth)
+
     op_spec = make_operation(OPERATION8)
     operation = Swagger2Operation(api=api,
                                   method='GET',
@@ -353,12 +356,14 @@ def test_operation_local_security_oauth2(api):
                                   parameter_definitions=PARAMETER_DEFINITIONS,
                                   resolver=Resolver())
     assert isinstance(operation.function, types.FunctionType)
-    # security decorator should be a partial with verify_oauth_remote as the function and
-    # token url and scopes as arguments.
-    # See https://docs.python.org/2/library/functools.html#partial-objects
-
-    assert operation.security_decorator.func is verify_oauth_local
-    assert operation.security_decorator.args == (math.ceil, set(['uid']))
+    security_decorator = operation.security_decorator
+    assert security_decorator.func is verify_security
+    assert len(security_decorator.args[0]) == 1
+    assert security_decorator.args[0][0] is dummy
+    assert security_decorator.args[1] == ['uid']
+    call_args = verify_oauth.call_args[0]
+    assert call_args[0] is math.ceil
+    assert call_args[1] is validate_scope
 
     assert operation.method == 'GET'
     assert operation.produces == ['application/json']
@@ -369,7 +374,11 @@ def test_operation_local_security_oauth2(api):
     assert operation.body_schema == expected_body_schema
 
 
-def test_operation_local_security_duplicate_token_info(api):
+def test_operation_local_security_duplicate_token_info(api, monkeypatch):
+    dummy = object()
+    verify_oauth = mock.MagicMock(return_value=dummy)
+    monkeypatch.setattr('connexion.operations.secure.verify_oauth', verify_oauth)
+
     op_spec = make_operation(OPERATION8)
     operation = Swagger2Operation(api=api,
                                   method='GET',
@@ -384,12 +393,15 @@ def test_operation_local_security_duplicate_token_info(api):
                                   parameter_definitions=PARAMETER_DEFINITIONS,
                                   resolver=Resolver())
     assert isinstance(operation.function, types.FunctionType)
-    # security decorator should be a partial with verify_oauth_remote as the function and
-    # token url and scopes as arguments.
-    # See https://docs.python.org/2/library/functools.html#partial-objects
 
-    assert operation.security_decorator.func is verify_oauth_local
-    assert operation.security_decorator.args == (math.ceil, set(['uid']))
+    security_decorator = operation.security_decorator
+    assert security_decorator.func is verify_security
+    assert len(security_decorator.args[0]) == 1
+    assert security_decorator.args[0][0] is dummy
+    assert security_decorator.args[1] == ['uid']
+    call_args = verify_oauth.call_args[0]
+    assert call_args[0] is math.ceil
+    assert call_args[1] is validate_scope
 
     assert operation.method == 'GET'
     assert operation.produces == ['application/json']
@@ -437,7 +449,10 @@ def test_no_token_info(api):
                                   parameter_definitions=PARAMETER_DEFINITIONS,
                                   resolver=Resolver())
     assert isinstance(operation.function, types.FunctionType)
-    assert operation.security_decorator is security_passthrough
+
+    security_decorator = operation.security_decorator
+    assert security_decorator.func is verify_security
+    assert len(security_decorator.args[0]) == 0
 
     assert operation.method == 'GET'
     assert operation.produces == ['application/json']

@@ -3,6 +3,7 @@ import logging
 import flask
 import six
 import werkzeug.exceptions
+from werkzeug.local import LocalProxy
 
 from connexion.apis import flask_utils
 from connexion.apis.abstract import AbstractAPI
@@ -218,6 +219,8 @@ class FlaskApi(AbstractAPI):
 
         :rtype: ConnexionRequest
         """
+        context_dict = {}
+        setattr(flask._request_ctx_stack.top, 'connexion_context', context_dict)
         flask_request = flask.request
         request = ConnexionRequest(
             flask_request.url,
@@ -229,7 +232,7 @@ class FlaskApi(AbstractAPI):
             json_getter=lambda: flask_request.get_json(silent=True),
             files=flask_request.files,
             path_params=params,
-            context=FlaskRequestContextProxy()
+            context=context_dict
         )
         logger.debug('Getting data and status code',
                      extra={
@@ -247,23 +250,11 @@ class FlaskApi(AbstractAPI):
         cls.jsonifier = Jsonifier(flask.json)
 
 
-class FlaskRequestContextProxy(object):
-    """"Proxy assignments from `ConnexionRequest.context`
-    to `flask.request` instance.
-    """
+def _get_context():
+    return getattr(flask._request_ctx_stack.top, 'connexion_context')
 
-    def __init__(self):
-        self.values = {}
 
-    def __setitem__(self, key, value):
-        # type: (str, Any) -> None
-        logger.debug('Setting "%s" attribute in flask.request', key)
-        setattr(flask.request, key, value)
-        self.values[key] = value
-
-    def items(self):
-        # type: () -> list
-        return self.values.items()
+context = LocalProxy(_get_context)
 
 
 class InternalHandlers(object):

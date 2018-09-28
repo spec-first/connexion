@@ -92,6 +92,9 @@ New in Connexion 2.0:
   All spec validation errors should be wrapped with `InvalidSpecification`.
 - Support for nullable/x-nullable, readOnly and writeOnly/x-writeOnly has been added to the standard json schema validator.
 - Custom validators can now be specified on api level (instead of app level).
+- Added support for basic authentication and apikey authentication
+- If unsupported security requirements are defined or ``x-tokenInfoFunc``/``x-tokenInfoUrl`` is missing, connexion now denies requests instead of allowing access without security-check.
+- Accessing ``connexion.request.user`` / ``flask.request.user`` is no longer supported, use ``connexion.context['user']`` instead
 
 How to Use
 ==========

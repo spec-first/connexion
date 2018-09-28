@@ -149,7 +149,7 @@ def schema_app(request):
 @pytest.fixture(scope="session", params=SPECS)
 def secure_endpoint_app(request):
     return build_app_from_fixture('secure_endpoint', request.param,
-                                  validate_responses=True)
+                                  validate_responses=True, pass_context_arg_name='req_context')
 
 
 @pytest.fixture(scope="session", params=SPECS)

@@ -92,7 +92,6 @@ class OAuthScopeProblem(Forbidden):
     def __init__(self, token_scopes, required_scopes, **kwargs):
         self.required_scopes = required_scopes
         self.token_scopes = token_scopes
-        self.missing_scopes = required_scopes - token_scopes
 
         super(OAuthScopeProblem, self).__init__(**kwargs)
 

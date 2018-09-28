@@ -19,3 +19,4 @@ paths:
 securityDefinitions:
   basic:
     type: basic
+    x-basicInfoFunc: app.basic_auth
