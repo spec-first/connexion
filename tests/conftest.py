@@ -154,7 +154,9 @@ def secure_endpoint_app(request):
 
 @pytest.fixture(scope="session", params=SPECS)
 def secure_api_app(request):
-    return build_app_from_fixture('secure_api', request.param)
+    options = {"swagger_ui": False}
+    return build_app_from_fixture('secure_api', request.param,
+                                  options=options, auth_all_paths=True)
 
 
 @pytest.fixture(scope="session", params=SPECS)

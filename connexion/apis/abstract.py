@@ -120,22 +120,28 @@ class AbstractAPI(object):
         # If base_path is not on provided then we try to read it from the swagger.yaml or use / by default
         self._set_base_path(base_path)
 
-        # A list of MIME types the APIs can produce. This is global to all APIs but can be overridden on specific
-        # API calls.
-        self.produces = self.specification.get('produces', list())  # type: List[str]
+        if self.spec_version < (3, 0, 0):
+            # A list of MIME types the APIs can produce. This is global to all APIs but can be overridden on specific
+            # API calls.
+            self.specification.setdefault('produces', [])
 
-        # A list of MIME types the APIs can consume. This is global to all APIs but can be overridden on specific
-        # API calls.
-        self.consumes = self.specification.get('consumes', ['application/json'])  # type: List[str]
+            # A list of MIME types the APIs can consume. This is global to all APIs but can be overridden on specific
+            # API calls.
+            self.specification.setdefault('consumes', ['application/json'])  # type: List[str]
 
-        self.security = self.specification.get('security')
-        self.security_definitions = self.specification.get('securityDefinitions', dict())
+            self.specification.setdefault('definitions', {})
+            self.specification.setdefault('parameters', {})
+            self.specification.setdefault('responses', {})
+
+            self.security_definitions = self.specification.get('securityDefinitions', {})
+        else:
+            self.specification.setdefault('components', {})
+
+            self.security_definitions = self.specification['components'].get('securitySchemes', {})
+
         logger.debug('Security Definitions: %s', self.security_definitions)
 
-        self.definitions = self.specification.get('definitions', {})
-        self.components = self.specification.get('components', {})
-        self.parameter_definitions = self.specification.get('parameters', {})
-        self.response_definitions = self.specification.get('responses', {})
+        self.security = self.specification.get('security')
 
         self.resolver = resolver or Resolver()
 
@@ -259,16 +265,16 @@ class AbstractAPI(object):
 
         if self.spec_version < (3, 0, 0):
             operation = Swagger2Operation(self,
-                                          app_produces=self.produces,
-                                          app_consumes=self.consumes,
+                                          app_produces=self.specification['produces'],
+                                          app_consumes=self.specification['consumes'],
                                           security_definitions=self.security_definitions,
-                                          definitions=self.definitions,
-                                          parameter_definitions=self.parameter_definitions,
-                                          response_definitions=self.response_definitions,
+                                          definitions=self.specification['definitions'],
+                                          parameter_definitions=self.specification['parameters'],
+                                          response_definitions=self.specification['responses'],
                                           **shared_args)
         else:
             operation = OpenAPIOperation(self,
-                                         components=self.components,
+                                         components=self.specification['components'],
                                          **shared_args)
 
         self._add_operation_internal(method, path, operation)
