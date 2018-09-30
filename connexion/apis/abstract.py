@@ -9,7 +9,7 @@ import jinja2
 import six
 import yaml
 from openapi_spec_validator.exceptions import OpenAPIValidationError
-from six.moves.urllib.parse import urlparse
+from six.moves.urllib.parse import urlsplit
 
 from ..exceptions import InvalidSpecification, ResolverError
 from ..json_schema import resolve_refs
@@ -174,20 +174,36 @@ class AbstractAPI(object):
 
     def _set_base_path(self, base_path):
         # type: (AnyStr) -> None
-        if base_path is None:
-            if self.spec_version < (3, 0, 0):
+        if self.spec_version < (3, 0, 0):
+            if base_path is None:
                 base_path = self.specification.get('basePath', '')
+                self.base_path = canonical_base_path(base_path)
             else:
-                # TODO variable subsitution in urls for oas3
-                servers = self.specification.get('servers', [])
-                for server in servers:
-                    # TODO how to handle multiple servers in an
-                    #      oas3 spec with different paths?
-                    base_path = urlparse(server['url']).path
-                    break
-                else:
+                self.base_path = canonical_base_path(base_path)
+                self.raw_spec['base_path'] = self.base_path
+                self.specification['base_path'] = self.base_path
+        else:
+            servers = self.specification.get('servers', [])
+            if base_path is None:
+                # get the base_path from the spec
+                try:
+                    # assume we're the first server in list
+                    server = copy.deepcopy(servers[0])
+                    server_vars = server.pop("variables", {})
+                    server['url'] = server['url'].format(
+                        **{k: v['default'] for k, v
+                           in six.iteritems(server_vars)}
+                    )
+                    base_path = urlsplit(server['url']).path
+                except IndexError:
                     base_path = ''
-        self.base_path = canonical_base_path(base_path)
+                self.base_path = canonical_base_path(base_path)
+            else:
+                # overwrite the servers block with the given base_path
+                self.base_path = canonical_base_path(base_path)
+                user_servers = [{'url': self.base_path}]
+                self.raw_spec['servers'] = user_servers
+                self.specification['servers'] = user_servers
 
     @abc.abstractmethod
     def add_openapi_json(self):

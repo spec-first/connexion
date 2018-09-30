@@ -886,6 +886,18 @@ paths:
                 type: array
                 items: {}
 servers:
+  - url: http://localhost:{port}/{basePath}
+    variables:
+      port:
+        enum:
+         - '4000'
+         - '5000'
+        default: '5000'
+      basePath:
+        enum:
+         - v1.0
+         - v1
+        default: v1.0
   - url: /v1.0
 components:
   requestBodies:
