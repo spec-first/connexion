@@ -19,9 +19,12 @@ logger = logging.getLogger('connexion.app')
 class FlaskApp(AbstractApp):
     def __init__(self, import_name, server='flask', **kwargs):
         super(FlaskApp, self).__init__(import_name, FlaskApi, server=server, **kwargs)
-
+        self.flask_dict={}
+        for key value in kwargs.items():
+            self.flask_dict[key] = value
+            
     def create_app(self):
-        app = flask.Flask(self.import_name)
+        app = flask.Flask(self.import_name, **self.flask_dict)
         app.json_encoder = FlaskJSONEncoder
         return app
 
