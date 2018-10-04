@@ -118,8 +118,80 @@ paths:
           schema:
             $ref: '#/definitions/User'
 
+  /aiohttp_query_parsing_str:
+    get:
+      summary: Test proper parsing of query parameters
+      description: Tests proper parsing
+      operationId: fakeapi.aiohttp_handlers.aiohttp_query_parsing_str
+      parameters:
+        - in: query
+          name: query
+          description: Simple query param
+          type: string
+          required: true
+      responses:
+        200:
+          description: Query parsing result
+          schema:
+            $ref: '#/definitions/SimpleQuery'
+
+  /aiohttp_query_parsing_array:
+    get:
+      summary: Test proper parsing of query parameters
+      description: Tests proper parsing
+      operationId: fakeapi.aiohttp_handlers.aiohttp_query_parsing_array
+      parameters:
+        - in: query
+          name: query
+          description: Array like query param
+          type: array
+          items:
+            type: string
+          required: true
+      responses:
+        200:
+          description: Query parsing result
+          schema:
+            $ref: '#/definitions/MultiQuery'
+
+  /aiohttp_query_parsing_array_multi:
+    get:
+      summary: Test proper parsing of query parameters
+      description: Tests proper parsing
+      operationId: fakeapi.aiohttp_handlers.aiohttp_query_parsing_array_multi
+      parameters:
+        - in: query
+          name: query
+          description: Array like query param
+          type: array
+          items:
+            type: string
+          collectionFormat: multi
+          required: true
+      responses:
+        200:
+          description: Query parsing result
+          schema:
+            $ref: '#/definitions/MultiQuery'
+
 
 definitions:
+  SimpleQuery:
+    type: object
+    required:
+      - query
+    properties:
+      query:
+        type: string
+  MultiQuery:
+    type: object
+    required:
+      - query
+    properties:
+      query:
+        type: array
+        items:
+          type: string
   User:
     type: object
     required:
