@@ -91,3 +91,37 @@ to set CORS headers:
 
 .. _CORS: https://en.wikipedia.org/wiki/Cross-origin_resource_sharing
 .. _flask-cors: https://flask-cors.readthedocs.io/
+
+
+Logging
+------------
+
+You can customize logging accessing the `_flask-logger` directly
+or configuring the logger via dictConfig. 
+Remember that you should configure logging for your project as soon
+as possible when the program starts or you'll get the default configuration.
+
+.. code-block:: python
+
+    import connexion
+    from logging.config import dictConfig
+    
+    
+    dictConfig({
+        'version': 1,
+        'handlers': {
+            'syslog': {
+            'class': 'logging.handlers.SysLogHandler'
+            }
+        },
+        'root': {
+           'handlers': ['syslog']
+        }
+    })
+    app = connexion.FlaskApp(__name__)
+    app.app.logger.warn("I configured the flask logger!")
+    app.add_api('swagger.yaml')
+    app.run(port=8080)
+
+
+.. _flask-logger: http://flask.pocoo.org/docs/1.0/logging/
