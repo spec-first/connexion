@@ -20,7 +20,7 @@ class FlaskApp(AbstractApp):
     def __init__(self, import_name, server='flask', **kwargs):
         super(FlaskApp, self).__init__(import_name, FlaskApi, server=server, **kwargs)
         self.flask_dict={}
-        for key value in kwargs.items():
+        for key, value in kwargs.items():
             self.flask_dict[key] = value
             
     def create_app(self):
