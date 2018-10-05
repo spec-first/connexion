@@ -3,14 +3,8 @@ import json
 from connexion import FlaskApp
 
 
-def test_security_over_nonexistent_endpoints(oauth_requests, secure_api_spec_dir):
-    options = {"swagger_ui": False}
-    app1 = FlaskApp(__name__, port=5001, specification_dir=secure_api_spec_dir,
-                    options=options, debug=True, auth_all_paths=True)
-    app1.add_api('swagger.yaml')
-    assert app1.port == 5001
-
-    app_client = app1.app.test_client()
+def test_security_over_nonexistent_endpoints(oauth_requests, secure_api_app):
+    app_client = secure_api_app.app.test_client()
     headers = {"Authorization": "Bearer 300"}
     get_inexistent_endpoint = app_client.get('/v1.0/does-not-exist-invalid-token',
                                              headers=headers)  # type: flask.Response

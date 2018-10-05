@@ -128,12 +128,17 @@ class AbstractAPI(object):
         # API calls.
         self.consumes = self.specification.get('consumes', ['application/json'])  # type: List[str]
 
-        self.security = self.specification.get('security')
-        self.security_definitions = self.specification.get('securityDefinitions', dict())
-        logger.debug('Security Definitions: %s', self.security_definitions)
-
         self.definitions = self.specification.get('definitions', {})
         self.components = self.specification.get('components', {})
+
+        self.security = self.specification.get('security', dict())
+        _security_schemes = self.components.get('securitySchemes', dict())
+        self.security_definitions = self.specification.get(
+            'securityDefinitions',
+            _security_schemes
+        )
+        logger.debug('Security Definitions: %s', self.security_definitions)
+
         self.parameter_definitions = self.specification.get('parameters', {})
         self.response_definitions = self.specification.get('responses', {})
 
