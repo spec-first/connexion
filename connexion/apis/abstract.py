@@ -59,6 +59,10 @@ class Specification(collections_abc.Mapping):
     def version(self):
         return self._get_spec_version(self._spec)
 
+    @property
+    def security(self):
+        return self._spec.get('security')
+
     def __getitem__(self, k):
         return self._spec[k]
 
@@ -132,6 +136,18 @@ class Swagger2Specification(Specification):
         return self._spec['consumes']
 
     @property
+    def definitions(self):
+        return self._spec['definitions']
+
+    @property
+    def parameter_definitions(self):
+        return self._spec['parameters']
+
+    @property
+    def response_definitions(self):
+        return self._spec['responses']
+
+    @property
     def security_definitions(self):
         return self._spec.get('securityDefinitions', {})
 
@@ -164,6 +180,10 @@ class OpenAPISpecification(Specification):
     @property
     def security_definitions(self):
         return self._spec['components'].get('securitySchemes', {})
+
+    @property
+    def components(self):
+        return self._spec['components']
 
     def _validate_spec(self):
         from openapi_spec_validator import validate_v3_spec as validate_spec
@@ -253,27 +273,7 @@ class AbstractAPI(object):
 
         self._set_base_path(base_path)
 
-        # A list of MIME types the APIs can produce. This is global to all APIs but can be overridden on specific
-        # API calls.
-        self.produces = self.specification.get('produces', list())  # type: List[str]
-
-        # A list of MIME types the APIs can consume. This is global to all APIs but can be overridden on specific
-        # API calls.
-        self.consumes = self.specification.get('consumes', ['application/json'])  # type: List[str]
-
-        self.definitions = self.specification.get('definitions', {})
-        self.components = self.specification.get('components', {})
-
-        self.security = self.specification.get('security', dict())
-        _security_schemes = self.components.get('securitySchemes', dict())
-        self.security_definitions = self.specification.get(
-            'securityDefinitions',
-            _security_schemes
-        )
-        logger.debug('Security Definitions: %s', self.security_definitions)
-
-        self.parameter_definitions = self.specification.get('parameters', {})
-        self.response_definitions = self.specification.get('responses', {})
+        logger.debug('Security Definitions: %s', self.specification.security_definitions)
 
         self.resolver = resolver or Resolver()
 
@@ -298,7 +298,10 @@ class AbstractAPI(object):
         self.add_paths()
 
         if auth_all_paths:
-            self.add_auth_on_not_found(self.security, self.security_definitions)
+            self.add_auth_on_not_found(
+                self.specification.security,
+                self.specification.security_definitions
+            )
 
     def _set_base_path(self, base_path=None):
         if base_path is not None:
@@ -351,7 +354,7 @@ class AbstractAPI(object):
             "path": path,
             "path_parameters": path_parameters,
             "operation": swagger_operation,
-            "app_security": self.security,
+            "app_security": self.specification.security,
             "validate_responses": self.validate_responses,
             "validator_map": self.validator_map,
             "strict_validation": self.strict_validation,
@@ -364,16 +367,16 @@ class AbstractAPI(object):
         # TODO refactor into AbstractOperation.from_spec(Specification, method, path)
         if self.specification.version < (3, 0, 0):
             operation = Swagger2Operation(self,
-                                          app_produces=self.produces,
-                                          app_consumes=self.consumes,
-                                          security_definitions=self.security_definitions,
-                                          definitions=self.definitions,
-                                          parameter_definitions=self.parameter_definitions,
-                                          response_definitions=self.response_definitions,
+                                          app_produces=self.specification.produces,
+                                          app_consumes=self.specification.consumes,
+                                          security_definitions=self.specification.security_definitions,
+                                          definitions=self.specification.definitions,
+                                          parameter_definitions=self.specification.parameter_definitions,
+                                          response_definitions=self.specification.response_definitions,
                                           **shared_args)
         else:
             operation = OpenAPIOperation(self,
-                                         components=self.components,
+                                         components=self.specification.components,
                                          **shared_args)
 
         self._add_operation_internal(method, path, operation)
@@ -389,9 +392,11 @@ class AbstractAPI(object):
         """
         Adds a handler for ResolverError for the given method and path.
         """
-        operation = self.resolver_error_handler(err,
-                                                security=self.security,
-                                                security_definitions=self.security_definitions)
+        operation = self.resolver_error_handler(
+            err,
+            security=self.specification.security,
+            security_definitions=self.specification.security_definitions
+        )
         self._add_operation_internal(method, path, operation)
 
     def add_paths(self, paths=None):
