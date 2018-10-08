@@ -308,7 +308,6 @@ class AbstractAPI(object):
             # update spec to include user-provided base_path
             self.specification.base_path = base_path
             self.base_path = base_path
-            assert self.base_path == self.specification.base_path
         else:
             self.base_path = self.specification.base_path
 
