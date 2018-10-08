@@ -18,6 +18,11 @@ from ..options import ConnexionOptions
 from ..resolver import Resolver
 from ..utils import Jsonifier
 
+try:
+    import collections.abc as collections_abc  # python 3.3+
+except ImportError:
+    import collections as collections_abc
+
 MODULE_PATH = pathlib.Path(__file__).absolute().parent.parent
 SWAGGER_UI_URL = 'ui'
 NO_SPEC_VERSION_ERR_MSG = """Unable to get the spec version.
@@ -27,28 +32,168 @@ from the top level of your spec."""
 logger = logging.getLogger('connexion.apis.abstract')
 
 
-def _get_spec_version(spec):
-    try:
-        version_string = spec.get('openapi') or spec.get('swagger')
-    except AttributeError:
-        raise InvalidSpecification(NO_SPEC_VERSION_ERR_MSG)
-    if version_string is None:
-        raise InvalidSpecification(NO_SPEC_VERSION_ERR_MSG)
-    try:
-        version_tuple = tuple(map(int, version_string.split(".")))
-    except TypeError:
-        err = ('Unable to convert version string to semantic version tuple: '
-               '{version_string}.')
-        err = err.format(version_string=version_string)
-        raise InvalidSpecification(err)
-    return version_tuple
-
-
 class AbstractAPIMeta(abc.ABCMeta):
 
     def __init__(cls, name, bases, attrs):
         abc.ABCMeta.__init__(cls, name, bases, attrs)
         cls._set_jsonifier()
+
+
+class Specification(collections_abc.Mapping):
+
+    def __init__(self, raw_spec):
+        self._raw_spec = copy.deepcopy(raw_spec)
+        self._spec = resolve_refs(raw_spec)
+        self._validate_spec()
+
+    @abc.abstractmethod
+    def _validate_spec(self):
+        """ validate spec against schema
+        """
+
+    @property
+    def raw(self):
+        return self._raw_spec
+
+    @property
+    def version(self):
+        return self._get_spec_version(self._spec)
+
+    def __getitem__(self, k):
+        return self._spec[k]
+
+    def __iter__(self):
+        return self._spec.__iter__()
+
+    def __len__(self):
+        return self._spec.__len__()
+
+    @classmethod
+    def from_file(cls, spec, arguments=None):
+        if not isinstance(spec, dict):
+            specification_path = pathlib.Path(spec)
+            spec = cls._load_spec_from_file(arguments, specification_path)
+        version = cls._get_spec_version(spec)
+        if version < (3, 0, 0):
+            return Swagger2Specification(spec)
+        return OpenAPISpecification(spec)
+
+    @staticmethod
+    def _load_spec_from_file(arguments, specification):
+        from openapi_spec_validator.loaders import ExtendedSafeLoader
+        arguments = arguments or {}
+
+        with specification.open(mode='rb') as openapi_yaml:
+            contents = openapi_yaml.read()
+            try:
+                openapi_template = contents.decode()
+            except UnicodeDecodeError:
+                openapi_template = contents.decode('utf-8', 'replace')
+
+            openapi_string = jinja2.Template(openapi_template).render(**arguments)
+            return yaml.load(openapi_string, ExtendedSafeLoader)
+
+    @staticmethod
+    def _get_spec_version(spec):
+        try:
+            version_string = spec.get('openapi') or spec.get('swagger')
+        except AttributeError:
+            raise InvalidSpecification(NO_SPEC_VERSION_ERR_MSG)
+        if version_string is None:
+            raise InvalidSpecification(NO_SPEC_VERSION_ERR_MSG)
+        try:
+            version_tuple = tuple(map(int, version_string.split(".")))
+        except TypeError:
+            err = ('Unable to convert version string to semantic version tuple: '
+                   '{version_string}.')
+            err = err.format(version_string=version_string)
+            raise InvalidSpecification(err)
+        return version_tuple
+
+
+class Swagger2Specification(Specification):
+    yaml_name = 'swagger.yaml'
+    operation_cls = Swagger2Operation
+
+    def __init__(self, raw_spec):
+        super(Swagger2Specification, self).__init__(raw_spec)
+        self._spec.setdefault('produces', [])
+        self._spec.setdefault('consumes', ['application/json'])  # type: List[str]
+        self._spec.setdefault('definitions', {})
+        self._spec.setdefault('parameters', {})
+        self._spec.setdefault('responses', {})
+
+    @property
+    def produces(self):
+        return self._spec['produces']
+
+    @property
+    def consumes(self):
+        return self._spec['consumes']
+
+    @property
+    def security_definitions(self):
+        return self._spec.get('securityDefinitions', {})
+
+    @property
+    def base_path(self):
+        return canonical_base_path(self._spec.get('basePath', ''))
+
+    @base_path.setter
+    def base_path(self, base_path):
+        base_path = canonical_base_path(base_path)
+        self._raw_spec['basePath'] = base_path
+        self._spec['basePath'] = base_path
+
+    def _validate_spec(self):
+        from openapi_spec_validator import validate_v2_spec as validate_spec
+        try:
+            validate_spec(self._raw_spec)
+        except OpenAPIValidationError as e:
+            raise InvalidSpecification.create_from(e)
+
+
+class OpenAPISpecification(Specification):
+    yaml_name = 'openapi.yaml'
+    operation_cls = OpenAPIOperation
+
+    def __init__(self, raw_spec):
+        super(OpenAPISpecification, self).__init__(raw_spec)
+        self._spec.setdefault('components', {})
+
+    @property
+    def security_definitions(self):
+        return self._spec['components'].get('securitySchemes', {})
+
+    def _validate_spec(self):
+        from openapi_spec_validator import validate_v3_spec as validate_spec
+        try:
+            validate_spec(self._raw_spec)
+        except OpenAPIValidationError as e:
+            raise InvalidSpecification.create_from(e)
+
+    @property
+    def base_path(self):
+        servers = self._spec.get('servers', [])
+        try:
+            # assume we're the first server in list
+            server = copy.deepcopy(servers[0])
+            server_vars = server.pop("variables", {})
+            server['url'] = server['url'].format(
+                **{k: v['default'] for k, v
+                   in six.iteritems(server_vars)}
+            )
+            base_path = urlsplit(server['url']).path
+        except IndexError:
+            base_path = ''
+        return canonical_base_path(base_path)
+
+    @base_path.setter
+    def base_path(self, base_path):
+        base_path = canonical_base_path(base_path)
+        user_servers = [{'url': base_path}]
+        self._raw_spec['servers'] = user_servers
+        self._spec['servers'] = user_servers
 
 
 @six.add_metaclass(AbstractAPIMeta)
@@ -94,30 +239,18 @@ class AbstractAPI(object):
                             'arguments': arguments,
                             'auth_all_paths': auth_all_paths})
 
-        if isinstance(specification, dict):
-            self.specification = specification
-        else:
-            specification_path = pathlib.Path(specification)
-            self.specification = self.load_spec_from_file(arguments, specification_path)
+        # Avoid validator having ability to modify specification
+        self.specification = Specification.from_file(specification, arguments=arguments)
 
         logger.debug('Read specification', extra={'spec': self.specification})
 
-        self.spec_version = _get_spec_version(self.specification)
-
-        self.options = ConnexionOptions(options, oas_version=self.spec_version)
+        self.options = ConnexionOptions(options, oas_version=self.specification.version)
 
         logger.debug('Options Loaded',
                      extra={'swagger_ui': self.options.openapi_console_ui_available,
                             'swagger_path': self.options.openapi_console_ui_from_dir,
                             'swagger_url': self.options.openapi_console_ui_path})
 
-        # Avoid validator having ability to modify specification
-        self.raw_spec = copy.deepcopy(self.specification)
-        self._validate_spec(self.specification)
-        self.specification = resolve_refs(self.specification)
-
-        # https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#fixed-fields
-        # If base_path is not on provided then we try to read it from the swagger.yaml or use / by default
         self._set_base_path(base_path)
 
         # A list of MIME types the APIs can produce. This is global to all APIs but can be overridden on specific
@@ -167,48 +300,14 @@ class AbstractAPI(object):
         if auth_all_paths:
             self.add_auth_on_not_found(self.security, self.security_definitions)
 
-    def _validate_spec(self, spec):
-        if self.spec_version < (3, 0, 0):
-            from openapi_spec_validator import validate_v2_spec as validate_spec
+    def _set_base_path(self, base_path=None):
+        if base_path is not None:
+            # update spec to include user-provided base_path
+            self.specification.base_path = base_path
+            self.base_path = base_path
+            assert self.base_path == self.specification.base_path
         else:
-            from openapi_spec_validator import validate_v3_spec as validate_spec
-        try:
-            validate_spec(spec)
-        except OpenAPIValidationError as e:
-            raise InvalidSpecification.create_from(e)
-
-    def _set_base_path(self, base_path):
-        # type: (AnyStr) -> None
-        if self.spec_version < (3, 0, 0):
-            if base_path is None:
-                base_path = self.specification.get('basePath', '')
-                self.base_path = canonical_base_path(base_path)
-            else:
-                self.base_path = canonical_base_path(base_path)
-                self.raw_spec['base_path'] = self.base_path
-                self.specification['base_path'] = self.base_path
-        else:
-            servers = self.specification.get('servers', [])
-            if base_path is None:
-                # get the base_path from the spec
-                try:
-                    # assume we're the first server in list
-                    server = copy.deepcopy(servers[0])
-                    server_vars = server.pop("variables", {})
-                    server['url'] = server['url'].format(
-                        **{k: v['default'] for k, v
-                           in six.iteritems(server_vars)}
-                    )
-                    base_path = urlsplit(server['url']).path
-                except IndexError:
-                    base_path = ''
-                self.base_path = canonical_base_path(base_path)
-            else:
-                # overwrite the servers block with the given base_path
-                self.base_path = canonical_base_path(base_path)
-                user_servers = [{'url': self.base_path}]
-                self.raw_spec['servers'] = user_servers
-                self.specification['servers'] = user_servers
+            self.base_path = self.specification.base_path
 
     @abc.abstractmethod
     def add_openapi_json(self):
@@ -262,7 +361,8 @@ class AbstractAPI(object):
             "pass_context_arg_name": self.pass_context_arg_name
         }
 
-        if self.spec_version < (3, 0, 0):
+        # TODO refactor into AbstractOperation.from_spec(Specification, method, path)
+        if self.specification.version < (3, 0, 0):
             operation = Swagger2Operation(self,
                                           app_produces=self.produces,
                                           app_consumes=self.consumes,
@@ -334,20 +434,6 @@ class AbstractAPI(object):
         else:
             logger.error(error_msg)
             six.reraise(*exc_info)
-
-    def load_spec_from_file(self, arguments, specification):
-        from openapi_spec_validator.loaders import ExtendedSafeLoader
-        arguments = arguments or {}
-
-        with specification.open(mode='rb') as openapi_yaml:
-            contents = openapi_yaml.read()
-            try:
-                openapi_template = contents.decode()
-            except UnicodeDecodeError:
-                openapi_template = contents.decode('utf-8', 'replace')
-
-            openapi_string = jinja2.Template(openapi_template).render(**arguments)
-            return yaml.load(openapi_string, ExtendedSafeLoader)  # type: dict
 
     @classmethod
     @abc.abstractmethod

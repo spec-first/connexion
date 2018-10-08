@@ -82,7 +82,7 @@ class AioHttpApi(AbstractAPI):
         return web.Response(
             status=200,
             content_type='application/json',
-            body=self.jsonifier.dumps(self.raw_spec)
+            body=self.jsonifier.dumps(self.specification.raw)
         )
 
     def add_swagger_ui(self):
