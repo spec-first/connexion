@@ -58,7 +58,7 @@ def test_swagger_json(aiohttp_api_spec_dir, test_client):
     json_ = yield from swagger_json.read()
 
     assert swagger_json.status == 200
-    assert api.raw_spec == json.loads(json_)
+    assert api.specification.raw == json.loads(json_)
 
 
 @asyncio.coroutine
