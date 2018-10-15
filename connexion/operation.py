@@ -2,6 +2,8 @@ import functools
 import logging
 from copy import deepcopy
 
+from jsonschema import RefResolver
+
 from .decorators.decorator import (BeginOfRequestLifecycleDecorator,
                                    EndOfRequestLifecycleDecorator)
 from .decorators.metrics import UWSGIMetricsCollector
@@ -231,53 +233,11 @@ class Operation(SecureOperation):
 
     def resolve_reference(self, schema):
         schema = deepcopy(schema)  # avoid changing the original schema
-        self.check_references(schema)
-
-        # find the object we need to resolve/update if this is not a proper SchemaObject
-        # e.g a response or parameter object
-        for obj in schema, schema.get('items'):
-            reference = obj and obj.get('$ref')  # type: str
-            if reference:
-                break
-        if reference:
-            definition = deepcopy(self._retrieve_reference(reference))
-            # Update schema
-            obj.update(definition)
-            del obj['$ref']
-
-        # if there is a schema object on this param or response, then we just
-        # need to include the defs and it can be validated by jsonschema
-        if 'schema' in schema:
-            schema['schema']['definitions'] = self.definitions
-            return schema
-
+        ref = schema['schema']
+        ref_resolver = RefResolver('', None)
+        d = ref_resolver.resolve(ref['$ref'])
+        schema['schema'] = d
         return schema
-
-    def check_references(self, schema):
-        """
-        Searches the keys and values of a schema object for json references.
-        If it finds one, it attempts to locate it and will thrown an exception
-        if the reference can't be found in the definitions dictionary.
-
-        :param schema: The schema object to check
-        :type schema: dict
-        :raises InvalidSpecification: raised when a reference isn't found
-        """
-
-        stack = [schema]
-        visited = set()
-        while stack:
-            schema = stack.pop()
-            for k, v in schema.items():
-                if k == "$ref":
-                    if v in visited:
-                        continue
-                    visited.add(v)
-                    stack.append(self._retrieve_reference(v))
-                elif isinstance(v, (list, tuple)):
-                    continue
-                elif hasattr(v, "items"):
-                    stack.append(v)
 
     def _retrieve_reference(self, reference):
         if not reference.startswith('#/'):
