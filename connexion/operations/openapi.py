@@ -124,6 +124,21 @@ class OpenAPIOperation(AbstractOperation):
         logger.debug('consumes: %s' % self.consumes)
         logger.debug('produces: %s' % self.produces)
 
+    @classmethod
+    def from_spec(cls, spec, api, path, method, resolver, *args, **kwargs):
+        return cls(
+            api,
+            method,
+            path,
+            spec.get_operation(path, method),
+            resolver,
+            spec.get_path_params(path),
+            spec.security,
+            spec.components,
+            *args,
+            **kwargs
+        )
+
     @property
     def request_body(self):
         return self._request_body
