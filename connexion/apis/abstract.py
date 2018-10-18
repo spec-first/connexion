@@ -44,7 +44,13 @@ class Specification(collections_abc.Mapping):
     def __init__(self, raw_spec):
         self._raw_spec = copy.deepcopy(raw_spec)
         self._spec = resolve_refs(raw_spec)
+        self._set_defaults()
         self._validate_spec()
+
+    @abc.abstractmethod
+    def _set_defaults(self):
+        """ set some default values in the spec
+        """
 
     @abc.abstractmethod
     def _validate_spec(self):
@@ -72,16 +78,6 @@ class Specification(collections_abc.Mapping):
     def __len__(self):
         return self._spec.__len__()
 
-    @classmethod
-    def from_file(cls, spec, arguments=None):
-        if not isinstance(spec, dict):
-            specification_path = pathlib.Path(spec)
-            spec = cls._load_spec_from_file(arguments, specification_path)
-        version = cls._get_spec_version(spec)
-        if version < (3, 0, 0):
-            return Swagger2Specification(spec)
-        return OpenAPISpecification(spec)
-
     @staticmethod
     def _load_spec_from_file(arguments, specification):
         from openapi_spec_validator.loaders import ExtendedSafeLoader
@@ -96,6 +92,12 @@ class Specification(collections_abc.Mapping):
 
             openapi_string = jinja2.Template(openapi_template).render(**arguments)
             return yaml.load(openapi_string, ExtendedSafeLoader)
+
+    @classmethod
+    def from_file(cls, spec, arguments=None):
+        specification_path = pathlib.Path(spec)
+        spec = cls._load_spec_from_file(arguments, specification_path)
+        return cls.from_dict(spec)
 
     @staticmethod
     def _get_spec_version(spec):
@@ -114,13 +116,25 @@ class Specification(collections_abc.Mapping):
             raise InvalidSpecification(err)
         return version_tuple
 
+    @classmethod
+    def from_dict(cls, spec):
+        version = cls._get_spec_version(spec)
+        if version < (3, 0, 0):
+            return Swagger2Specification(spec)
+        return OpenAPISpecification(spec)
+
+    @classmethod
+    def load(cls, spec, arguments=None):
+        if not isinstance(spec, dict):
+            return cls.from_file(spec, arguments=arguments)
+        return cls.from_dict(spec)
+
 
 class Swagger2Specification(Specification):
     yaml_name = 'swagger.yaml'
     operation_cls = Swagger2Operation
 
-    def __init__(self, raw_spec):
-        super(Swagger2Specification, self).__init__(raw_spec)
+    def _set_defaults(self):
         self._spec.setdefault('produces', [])
         self._spec.setdefault('consumes', ['application/json'])  # type: List[str]
         self._spec.setdefault('definitions', {})
@@ -173,8 +187,7 @@ class OpenAPISpecification(Specification):
     yaml_name = 'openapi.yaml'
     operation_cls = OpenAPIOperation
 
-    def __init__(self, raw_spec):
-        super(OpenAPISpecification, self).__init__(raw_spec)
+    def _set_defaults(self):
         self._spec.setdefault('components', {})
 
     @property
@@ -260,7 +273,7 @@ class AbstractAPI(object):
                             'auth_all_paths': auth_all_paths})
 
         # Avoid validator having ability to modify specification
-        self.specification = Specification.from_file(specification, arguments=arguments)
+        self.specification = Specification.load(specification, arguments=arguments)
 
         logger.debug('Read specification', extra={'spec': self.specification})
 
