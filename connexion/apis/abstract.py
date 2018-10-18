@@ -13,10 +13,10 @@ from six.moves.urllib.parse import urlsplit
 
 from ..exceptions import InvalidSpecification, ResolverError
 from ..json_schema import resolve_refs
-from ..operations import OpenAPIOperation, Swagger2Operation
+from ..operations import OpenAPIOperation, Swagger2Operation, make_operation
 from ..options import ConnexionOptions
 from ..resolver import Resolver
-from ..utils import Jsonifier
+from ..utils import Jsonifier, deep_get
 
 try:
     import collections.abc as collections_abc  # python 3.3+
@@ -56,6 +56,12 @@ class Specification(collections_abc.Mapping):
     def _validate_spec(self):
         """ validate spec against schema
         """
+
+    def get_path_params(self, path):
+        return deep_get(self._spec, ["paths", path]).get("parameters", [])
+
+    def get_operation(self, path, method):
+        return deep_get(self._spec, ["paths", path, method])
 
     @property
     def raw(self):
@@ -343,7 +349,7 @@ class AbstractAPI(object):
         Adds a 404 error handler to authenticate and only expose the 404 status if the security validation pass.
         """
 
-    def add_operation(self, method, path, swagger_operation, path_parameters):
+    def add_operation(self, path, method):
         """
         Adds one operation to the api.
 
@@ -358,39 +364,20 @@ class AbstractAPI(object):
 
         :type method: str
         :type path: str
-        :type swagger_operation: dict
         """
-
-        shared_args = {
-            "method": method,
-            "path": path,
-            "path_parameters": path_parameters,
-            "operation": swagger_operation,
-            "app_security": self.specification.security,
-            "validate_responses": self.validate_responses,
-            "validator_map": self.validator_map,
-            "strict_validation": self.strict_validation,
-            "resolver": self.resolver,
-            "pythonic_params": self.pythonic_params,
-            "uri_parser_class": self.options.uri_parser_class,
-            "pass_context_arg_name": self.pass_context_arg_name
-        }
-
-        # TODO refactor into AbstractOperation.from_spec(Specification, method, path)
-        if self.specification.version < (3, 0, 0):
-            operation = Swagger2Operation(self,
-                                          app_produces=self.specification.produces,
-                                          app_consumes=self.specification.consumes,
-                                          security_definitions=self.specification.security_definitions,
-                                          definitions=self.specification.definitions,
-                                          parameter_definitions=self.specification.parameter_definitions,
-                                          response_definitions=self.specification.response_definitions,
-                                          **shared_args)
-        else:
-            operation = OpenAPIOperation(self,
-                                         components=self.specification.components,
-                                         **shared_args)
-
+        operation = make_operation(
+            self.specification,
+            self,
+            path,
+            method,
+            self.resolver,
+            validate_responses=self.validate_responses,
+            validator_map=self.validator_map,
+            strict_validation=self.strict_validation,
+            pythonic_params=self.pythonic_params,
+            uri_parser_class=self.options.uri_parser_class,
+            pass_context_arg_name=self.pass_context_arg_name
+        )
         self._add_operation_internal(method, path, operation)
 
     @abc.abstractmethod
@@ -421,15 +408,11 @@ class AbstractAPI(object):
         for path, methods in paths.items():
             logger.debug('Adding %s%s...', self.base_path, path)
 
-            # search for parameters definitions in the path level
-            # http://swagger.io/specification/#pathItemObject
-            path_parameters = methods.get('parameters', [])
-
-            for method, endpoint in methods.items():
+            for method in methods:
                 if method == 'parameters':
                     continue
                 try:
-                    self.add_operation(method, path, endpoint, path_parameters)
+                    self.add_operation(path, method)
                 except ResolverError as err:
                     # If we have an error handler for resolver errors, add it as an operation.
                     # Otherwise treat it as any other error.
