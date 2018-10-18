@@ -37,7 +37,7 @@ class FlaskApi(AbstractAPI):
         endpoint_name = "{name}_openapi_json".format(name=self.blueprint.name)
         self.blueprint.add_url_rule(self.options.openapi_spec_path,
                                     endpoint_name,
-                                    lambda: flask.jsonify(self.raw_spec))
+                                    lambda: flask.jsonify(self.specification.raw))
 
     def add_swagger_ui(self):
         """
