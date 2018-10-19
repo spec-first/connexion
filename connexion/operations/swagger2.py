@@ -124,7 +124,7 @@ class Swagger2Operation(AbstractOperation):
             method,
             path,
             spec.get_operation(path, method),
-            resolver,
+            resolver=resolver,
             path_parameters=spec.get_path_params(path),
             app_security=spec.security,
             app_produces=spec.produces,
