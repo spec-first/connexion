@@ -131,10 +131,10 @@ class OpenAPIOperation(AbstractOperation):
             method,
             path,
             spec.get_operation(path, method),
-            resolver,
-            spec.get_path_params(path),
-            spec.security,
-            spec.components,
+            resolver=resolver,
+            path_parameters=spec.get_path_params(path),
+            app_security=spec.security,
+            components=spec.components,
             *args,
             **kwargs
         )
