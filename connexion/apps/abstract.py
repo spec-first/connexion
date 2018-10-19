@@ -233,7 +233,6 @@ class AbstractApp(object):
         :param debug: include debugging information
         :type debug: bool
         :param options: options to be forwarded to the underlying server
-        :type options: dict
         """
 
     def __call__(self, environ, start_response):  # pragma: no cover
