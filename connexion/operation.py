@@ -6,6 +6,7 @@ from .decorators.decorator import (BeginOfRequestLifecycleDecorator,
                                    EndOfRequestLifecycleDecorator)
 from .decorators.metrics import UWSGIMetricsCollector
 from .decorators.parameter import parameter_to_arg
+from .decorators.plugins import PluginsDecorator
 from .decorators.produces import BaseSerializer, Produces
 from .decorators.response import ResponseValidator
 from .decorators.security import (get_tokeninfo_func, get_tokeninfo_url,
@@ -139,7 +140,7 @@ class Operation(SecureOperation):
                  definitions=None, parameter_definitions=None, response_definitions=None,
                  validate_responses=False, strict_validation=False, randomize_endpoint=None,
                  validator_map=None, pythonic_params=False, uri_parser_class=None,
-                 pass_context_arg_name=None):
+                 pass_context_arg_name=None, plugins=None):
         """
         This class uses the OperationID identify the module and function that will handle the operation
 
@@ -191,6 +192,8 @@ class Operation(SecureOperation):
         :param pass_context_arg_name: If not None will try to inject the request context to the function using this
         name.
         :type pass_context_arg_name: str|None
+        :param plugins: list of plugin classes
+        :type plugins: list
         """
 
         self.api = api
@@ -228,6 +231,8 @@ class Operation(SecureOperation):
         resolution = resolver.resolve(self)
         self.operation_id = resolution.operation_id
         self.__undecorated_function = resolution.function
+
+        self.plugins = plugins or []
 
     def resolve_reference(self, schema):
         schema = deepcopy(schema)  # avoid changing the original schema
@@ -387,6 +392,10 @@ class Operation(SecureOperation):
         logger.debug('... Adding uri parsing decorator (%r)', uri_parsing_decorator)
         function = uri_parsing_decorator(function)
 
+        for plugins_decorator in self.__plugins_decorator:
+            logger.debug('... Adding plugins decorator (%r)', plugins_decorator)
+            function = plugins_decorator(function)
+
         # NOTE: the security decorator should be applied last to check auth before anything else :-)
         security_decorator = self.security_decorator
         logger.debug('... Adding security decorator (%r)', security_decorator)
@@ -457,6 +466,16 @@ class Operation(SecureOperation):
         if self.body_schema:
             yield RequestBodyValidator(self.body_schema, self.consumes, self.api,
                                        is_nullable(self.body_definition))
+
+    @property
+    def __plugins_decorator(self):
+        """
+        Get plugins decorator.
+
+        :yields: types.FunctionType
+        """
+        if self.plugins:
+            yield PluginsDecorator(api=self.api, plugin_classes=self.plugins)
 
     @property
     def __response_validation_decorator(self):
