@@ -101,12 +101,6 @@ class Swagger2Operation(AbstractOperation):
 
         self.definitions = definitions or {}
 
-        self.definitions_map = {
-            'definitions': self.definitions,
-            'parameters': parameter_definitions,
-            'responses': response_definitions
-        }
-
         self._parameters = operation.get('parameters', [])
         if path_parameters:
             self._parameters += path_parameters

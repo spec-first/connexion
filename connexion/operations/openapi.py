@@ -62,11 +62,8 @@ class OpenAPIOperation(AbstractOperation):
         """
         self.components = components or {}
 
-        def component_get(oas3_name):
-            return self.components.get(oas3_name, {})
-
         # operation overrides globals
-        security_schemes = component_get('securitySchemes')
+        security_schemes = self.components.get('securitySchemes', {})
         app_security = operation.get('security', app_security)
         uri_parser_class = uri_parser_class or OpenAPIURIParser
 
@@ -89,19 +86,7 @@ class OpenAPIOperation(AbstractOperation):
             pass_context_arg_name=pass_context_arg_name
         )
 
-        self._definitions_map = {
-            'components': {
-                'schemas': component_get('schemas'),
-                'examples': component_get('examples'),
-                'requestBodies': component_get('requestBodies'),
-                'parameters': component_get('parameters'),
-                'securitySchemes': component_get('securitySchemes'),
-                'responses': component_get('responses'),
-                'headers': component_get('headers'),
-            }
-        }
-
-        self._request_body = operation.get('requestBody')
+        self._request_body = operation.get('requestBody', {})
 
         self._parameters = operation.get('parameters', [])
         if path_parameters:
@@ -112,13 +97,12 @@ class OpenAPIOperation(AbstractOperation):
         # TODO figure out how to support multiple mimetypes
         # NOTE we currently just combine all of the possible mimetypes,
         #      but we need to refactor to support mimetypes by response code
-        response_codes = operation.get('responses', {})
         response_content_types = []
-        for _, defn in response_codes.items():
+        for _, defn in self._responses.items():
             response_content_types += defn.get('content', {}).keys()
         self._produces = response_content_types or ['application/json']
 
-        request_content = operation.get('requestBody', {}).get('content', {})
+        request_content = self._request_body.get('content', {})
         self._consumes = list(request_content.keys()) or ['application/json']
 
         logger.debug('consumes: %s' % self.consumes)
@@ -158,10 +142,6 @@ class OpenAPIOperation(AbstractOperation):
     @property
     def produces(self):
         return self._produces
-
-    @property
-    def _spec_definitions(self):
-        return self._definitions_map
 
     def with_definitions(self, schema):
         if self.components:
