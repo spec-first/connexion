@@ -19,7 +19,7 @@ def get_pets(limit, animal_type=None):
 
 def get_pet(pet_id):
     pet = db_session.query(orm.Pet).filter(orm.Pet.id == pet_id).one_or_none()
-    return pet.dump() or ('Not found', 404)
+    return pet.dump() if pet is not None else ('Not found', 404)
 
 
 def put_pet(pet_id, pet):
@@ -60,4 +60,7 @@ def shutdown_session(exception=None):
 
 
 if __name__ == '__main__':
-    app.run(port=8080)
+    app.run(
+        port=8080,
+        threaded=False  # in-memory database isn't shared across threads
+    )

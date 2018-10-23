@@ -210,6 +210,14 @@ def test_array_csv_query_param(items):
     return items
 
 
+def test_array_pipes_form_param(items):
+    return items
+
+
+def test_array_csv_form_param(items):
+    return items
+
+
 def test_array_pipes_query_param(items):
     return items
 

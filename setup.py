@@ -26,13 +26,18 @@ install_requires = [
     'PyYAML>=3.11',
     'requests>=2.9.1',
     'six>=1.9',
-    'swagger-spec-validator>=2.0.2',
+    'swagger-spec-validator>=2.3.1',
     'inflection>=0.3.1',
     'pathlib>=1.0.1; python_version < "3.4"',
     'typing>=3.6.1; python_version < "3.6"',
 ]
 
 flask_require = 'flask>=0.10.1'
+aiohttp_require = [
+    'aiohttp>=2.3.10',
+    'aiohttp-jinja2>=0.14.0'
+]
+ujson_require = 'ujson>=1.35'
 
 tests_require = [
     'decorator',
@@ -43,6 +48,11 @@ tests_require = [
     flask_require
 ]
 
+if sys.version_info[0] >= 3:
+    tests_require.extend(aiohttp_require)
+    tests_require.append(ujson_require)
+    tests_require.append('pytest-aiohttp')
+
 
 class PyTest(TestCommand):
 
@@ -52,6 +62,13 @@ class PyTest(TestCommand):
         TestCommand.initialize_options(self)
         self.cov = None
         self.pytest_args = ['--cov', 'connexion', '--cov-report', 'term-missing', '-v']
+
+        if sys.version_info[0] < 3:
+            self.pytest_args.append('--cov-config=py2-coveragerc')
+            self.pytest_args.append('--ignore=tests/aiohttp')
+        else:
+            self.pytest_args.append('--cov-config=py3-coveragerc')
+
         self.cov_html = False
 
     def finalize_options(self):
@@ -87,7 +104,12 @@ setup(
     setup_requires=['flake8'],
     install_requires=install_requires + [flask_require],
     tests_require=tests_require,
-    extras_require={'tests': tests_require, 'flask': flask_require},
+    extras_require={
+        'tests': tests_require,
+        'flask': flask_require,
+        'aiohttp': aiohttp_require,
+        'ujson': ujson_require
+    },
     cmdclass={'test': PyTest},
     test_suite='tests',
     classifiers=[
@@ -95,6 +117,7 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
         'Operating System :: OS Independent',

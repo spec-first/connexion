@@ -1,6 +1,8 @@
 import functools
 import importlib
 
+import six
+
 
 def deep_getattr(obj, attr):
     """
@@ -117,3 +119,57 @@ def is_null(value):
         return True
 
     return False
+
+
+class Jsonifier(object):
+    def __init__(self, json_):
+        self.json = json_
+
+    def dumps(self, data):
+        """ Central point where JSON serialization happens inside
+        Connexion.
+        """
+        return "{}\n".format(self.json.dumps(data, indent=2))
+
+    def loads(self, data):
+        """ Central point where JSON serialization happens inside
+        Connexion.
+        """
+        if isinstance(data, six.binary_type):
+            data = data.decode()
+
+        try:
+            return self.json.loads(data)
+        except Exception as error:
+            if isinstance(data, six.string_types):
+                return data
+
+
+def has_coroutine(function, api=None):
+    """
+    Checks if function is a couroutine.
+    If ``function`` is a decorator (has a ``__wrapped__`` attribute)
+    this function will also look at the wrapped function.
+    """
+    if six.PY3:  # pragma: 2.7 no cover
+        import asyncio
+
+        def iscorofunc(func):
+            iscorofunc = asyncio.iscoroutinefunction(func)
+            while not iscorofunc and hasattr(func, '__wrapped__'):
+                func = func.__wrapped__
+                iscorofunc = asyncio.iscoroutinefunction(func)
+            return iscorofunc
+
+        if api is None:
+            return iscorofunc(function)
+
+        else:
+            return any(
+                iscorofunc(func) for func in (
+                    function, api.get_request, api.get_response
+                )
+            )
+    else:  # pragma: 3 no cover
+        # there's no asyncio in python 2
+        return False

@@ -106,10 +106,10 @@ class FlaskApp(AbstractApp):
             tornado.ioloop.IOLoop.instance().start()
         elif self.server == 'gevent':
             try:
-                import gevent.wsgi
+                import gevent.pywsgi
             except ImportError:
                 raise Exception('gevent library not installed')
-            http_server = gevent.wsgi.WSGIServer((self.host, self.port), self.app, **options)
+            http_server = gevent.pywsgi.WSGIServer((self.host, self.port), self.app, **options)
             logger.info('Listening on %s:%s..', self.host, self.port)
             http_server.serve_forever()
         else:

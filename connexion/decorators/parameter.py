@@ -61,12 +61,8 @@ def get_val_from_param(value, query_param):
     if is_nullable(query_param) and is_null(value):
         return None
 
-    if query_param["type"] == "array":  # then logic is more complex
-        if query_param.get("collectionFormat") and query_param.get("collectionFormat") == "pipes":
-            parts = value.split("|")
-        else:  # default: csv
-            parts = value.split(",")
-        return [make_type(part, query_param["items"]["type"]) for part in parts]
+    if query_param["type"] == "array":
+        return [make_type(v, query_param["items"]["type"]) for v in value]
     else:
         return make_type(value, query_param["type"])
 
@@ -85,7 +81,7 @@ def snake_and_shadow(name):
     return snake
 
 
-def parameter_to_arg(parameters, consumes, function, pythonic_params=False):
+def parameter_to_arg(parameters, consumes, function, pythonic_params=False, pass_context_arg_name=None):
     """
     Pass query and body parameters as keyword arguments to handler function.
 
@@ -95,32 +91,18 @@ def parameter_to_arg(parameters, consumes, function, pythonic_params=False):
     :param consumes: The list of content types the operation consumes
     :type consumes: list
     :param function: The handler function for the REST endpoint.
+    :type function: function|None
     :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended to
     any shadowed built-ins
     :type pythonic_params: bool
-    :type function: function|None
+    :param pass_context_arg_name: If not None URL and function has an argument matching this name, the framework's
+    request context will be passed as that argument.
+    :type pass_context_arg_name: str|None
     """
     def sanitize_param(name):
         if name and pythonic_params:
             name = snake_and_shadow(name)
         return name and re.sub('^[^a-zA-Z_]+', '', re.sub('[^0-9a-zA-Z_]', '', name))
-
-    def make_request_query(request):
-        request_query = {}
-        try:
-            for k, v in request.query.to_dict(flat=False).items():
-                k = sanitize_param(k)
-                query_param = query_types.get(k, None)
-                if query_param is not None and query_param["type"] == "array":
-                    if query_param.get("collectionFormat", None) == "pipes":
-                        request_query[k] = "|".join(v)
-                    else:
-                        request_query[k] = ",".join(v)
-                else:
-                    request_query[k] = v[0]
-        except AttributeError:
-            request_query = {sanitize_param(k): v for k, v in request.query.items()}
-        return request_query
 
     body_parameters = [parameter for parameter in parameters if parameter['in'] == 'body'] or [{}]
     body_name = sanitize_param(body_parameters[0].get('name'))
@@ -168,8 +150,9 @@ def parameter_to_arg(parameters, consumes, function, pythonic_params=False):
 
         # Add query parameters
         query_arguments = copy.deepcopy(default_query_params)
-        query_arguments.update(make_request_query(request))
+        query_arguments.update(request.query)
         for key, value in query_arguments.items():
+            key = sanitize_param(key)
             if not has_kwargs and key not in arguments:
                 logger.debug("Query Parameter '%s' not in function arguments", key)
             else:
@@ -216,6 +199,11 @@ def parameter_to_arg(parameters, consumes, function, pythonic_params=False):
                 kwargs[key] = value
             else:
                 logger.debug("Context parameter '%s' not in function arguments", key)
+
+        # attempt to provide the request context to the function
+        if pass_context_arg_name and (has_kwargs or pass_context_arg_name in arguments):
+            kwargs[pass_context_arg_name] = request.context
+
         return function(**kwargs)
 
     return wrapper

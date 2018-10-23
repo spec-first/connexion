@@ -1,0 +1,132 @@
+openapi: 3.0.0
+info:
+  title: '{{title}}'
+  version: '1.0'
+paths:
+  '/byesecure/{name}':
+    get:
+      summary: Generate goodbye
+      description: Generates a goodbye message.
+      operationId: fakeapi.hello.get_bye_secure
+      security:
+        - oauth:
+            - myscope
+      responses:
+        '200':
+          description: goodbye response
+          content:
+            text/plain:
+              schema:
+                type: string
+      parameters:
+        - name: name
+          in: path
+          description: Name of the person to say bye.
+          required: true
+          schema:
+            type: string
+  /byesecure-from-flask:
+    get:
+      summary: Generate goodbye
+      description: ''
+      operationId: fakeapi.hello.get_bye_secure_from_flask
+      security:
+        - oauth:
+            - myscope
+      responses:
+        '200':
+          description: goodbye response
+          content:
+            text/plain:
+              schema:
+                type: string
+  /byesecure-from-connexion:
+    get:
+      summary: Generate goodbye
+      description: ''
+      operationId: fakeapi.hello.get_bye_secure_from_connexion
+      security:
+        - oauth:
+            - myscope
+      responses:
+        '200':
+          description: goodbye response
+          content:
+            text/plain:
+              schema:
+                type: string
+  '/byesecure-ignoring-context/{name}':
+    get:
+      summary: Generate goodbye
+      description: Generates a goodbye message.
+      operationId: fakeapi.hello.get_bye_secure_ignoring_context
+      security:
+        - oauth:
+            - myscope
+      responses:
+        '200':
+          description: goodbye response
+          content:
+            text/plain:
+              schema:
+                type: string
+      parameters:
+        - name: name
+          in: path
+          description: Name of the person to say bye.
+          required: true
+          schema:
+            type: string
+  /more-than-one-security-definition:
+    get:
+      summary: Some external call to API
+      description: External application call
+      operationId: fakeapi.hello.schema_list
+      security:
+        - oauth:
+            - myscope
+        - api_key: []
+      responses:
+        '200':
+          description: OK
+  /more-than-one-scope:
+    get:
+      summary: Test more than one scope
+      description: |
+        Test that connexion handles scopes properly by verifying that user has
+        all scopes necessary to call the endpoint.
+      operationId: fakeapi.hello.more_than_one_scope_defined
+      security:
+        - oauth:
+            - myscope
+            - otherscope
+      responses:
+        '200':
+          description: some response
+  /user-handled-security:
+    get:
+      summary: Some external call to API
+      description: External application call
+      operationId: fakeapi.hello.schema_map
+      security:
+        - api_key: []
+      responses:
+        '200':
+          description: OK
+servers:
+  - url: /v1.0
+components:
+  securitySchemes:
+    oauth:
+      type: oauth2
+      x-tokenInfoUrl: 'https://oauth.example/token_info'
+      flows:
+        password:
+          tokenUrl: 'https://oauth.example/token'
+          scopes:
+            myscope: can do stuff
+            otherscope: another scope
+    api_key:
+      type: apiKey
+      name: api_key
+      in: header

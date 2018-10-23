@@ -1,0 +1,23 @@
+openapi: 3.0.0
+info:
+  title: '{{title}}'
+  version: '1.0'
+paths:
+  /welcome:
+    get:
+      operationId: fakeapi.foo_bar.search
+      parameters:
+        - name: foo
+          in: query
+          schema:
+            type: integer
+            default: somestring
+      responses:
+        '200':
+          description: search
+          content:
+            '*/*':
+              schema:
+                type: object
+servers:
+  - url: /v1.0

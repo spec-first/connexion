@@ -244,6 +244,37 @@ paths:
         200:
           description: OK
 
+  /test_array_csv_form_param:
+    post:
+      operationId: fakeapi.hello.test_array_csv_form_param
+      parameters:
+        - name: items
+          in: formData
+          description: An comma separated array of items
+          type: array
+          items:
+            type: string
+          collectionFormat: csv
+          default: ["squash", "banana"]
+      responses:
+        200:
+          description: OK
+
+  /test_array_pipes_form_param:
+    post:
+      operationId: fakeapi.hello.test_array_pipes_form_param
+      parameters:
+        - name: items
+          in: formData
+          description: An comma separated array of items
+          type: array
+          items:
+            type: integer
+          collectionFormat: pipes
+      responses:
+        200:
+          description: OK
+
   /test_array_csv_query_param:
     get:
       operationId: fakeapi.hello.test_array_csv_query_param
@@ -251,11 +282,11 @@ paths:
         - name: items
           in: query
           description: An comma separated array of items
-          required: true
           type: array
           items:
             type: string
           collectionFormat: csv
+          default: ["squash", "banana"]
       responses:
         200:
           description: OK
@@ -827,6 +858,8 @@ paths:
           description: Some array response
           schema:
             type: array
+            items:
+              type: integer
 
 definitions:
   new_stack:
