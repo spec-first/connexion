@@ -15,8 +15,7 @@ class OpenAPIOperation(AbstractOperation):
     A single API operation on a path.
     """
 
-    def __init__(self, api, method, path, operation, resolver, path_parameters=None,
-                 app_security=None, components=None, validate_responses=False,
+    def __init__(self, api, method, path, resolver, spec, validate_responses=False,
                  strict_validation=False, randomize_endpoint=None, validator_map=None,
                  pythonic_params=False, uri_parser_class=None, pass_context_arg_name=None):
         """
@@ -33,16 +32,9 @@ class OpenAPIOperation(AbstractOperation):
         :type method: str
         :param path:
         :type path: str
-        :param operation: swagger operation object
-        :type operation: dict
         :param resolver: Callable that maps operationID to a function
-        :param path_parameters: Parameters defined in the path level
-        :type path_parameters: list
-        :param app_security: list of security rules the application uses by default
-        :type app_security: list
-        :param components: `Components Object
-            <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#componentsObject>`_
-        :type components: dict
+        :param spec: OpenAPI specification
+        :type spec: OpenAPISpecification
         :param validate_responses: True enables validation. Validation errors generate HTTP 500 responses.
         :type validate_responses: bool
         :param strict_validation: True enables validation on invalid request parameters
@@ -60,23 +52,15 @@ class OpenAPIOperation(AbstractOperation):
         name.
         :type pass_context_arg_name: str|None
         """
-        self.components = components or {}
-
-        # operation overrides globals
-        security_schemes = self.components.get('securitySchemes', {})
-        app_security = operation.get('security', app_security)
         uri_parser_class = uri_parser_class or OpenAPIURIParser
-
-        self._router_controller = operation.get('x-openapi-router-controller')
 
         super(OpenAPIOperation, self).__init__(
             api=api,
             method=method,
             path=path,
-            operation=operation,
+            router_controller_key='x-openapi-router-controller',
             resolver=resolver,
-            app_security=app_security,
-            security_schemes=security_schemes,
+            spec=spec,
             validate_responses=validate_responses,
             strict_validation=strict_validation,
             randomize_endpoint=randomize_endpoint,
@@ -86,13 +70,7 @@ class OpenAPIOperation(AbstractOperation):
             pass_context_arg_name=pass_context_arg_name
         )
 
-        self._request_body = operation.get('requestBody', {})
-
-        self._parameters = operation.get('parameters', [])
-        if path_parameters:
-            self._parameters += path_parameters
-
-        self._responses = operation.get('responses', {})
+        self._request_body = self._operation.get('requestBody', {})
 
         # TODO figure out how to support multiple mimetypes
         # NOTE we currently just combine all of the possible mimetypes,
@@ -108,32 +86,9 @@ class OpenAPIOperation(AbstractOperation):
         logger.debug('consumes: %s' % self.consumes)
         logger.debug('produces: %s' % self.produces)
 
-    @classmethod
-    def from_spec(cls, spec, api, path, method, resolver, *args, **kwargs):
-        return cls(
-            api,
-            method,
-            path,
-            spec.get_operation(path, method),
-            resolver=resolver,
-            path_parameters=spec.get_path_params(path),
-            app_security=spec.security,
-            components=spec.components,
-            *args,
-            **kwargs
-        )
-
     @property
     def request_body(self):
         return self._request_body
-
-    @property
-    def parameters(self):
-        return self._parameters
-
-    @property
-    def responses(self):
-        return self._responses
 
     @property
     def consumes(self):
@@ -144,8 +99,9 @@ class OpenAPIOperation(AbstractOperation):
         return self._produces
 
     def with_definitions(self, schema):
-        if self.components:
-            schema['schema']['components'] = self.components
+        components = self._spec.components
+        if components:
+            schema['schema']['components'] = components
         return schema
 
     def response_schema(self, status_code=None, content_type=None):

@@ -22,10 +22,8 @@ class Swagger2Operation(AbstractOperation):
     and deserialization.
     """
 
-    def __init__(self, api, method, path, operation, resolver, app_produces, app_consumes,
-                 path_parameters=None, app_security=None, security_definitions=None,
-                 definitions=None, parameter_definitions=None,
-                 response_definitions=None, validate_responses=False, strict_validation=False,
+    def __init__(self, api, method, path, resolver, spec,
+                 validate_responses=False, strict_validation=False,
                  randomize_endpoint=None, validator_map=None, pythonic_params=False,
                  uri_parser_class=None, pass_context_arg_name=None):
         """
@@ -35,28 +33,10 @@ class Swagger2Operation(AbstractOperation):
         :type method: str
         :param path: relative path to this operation
         :type path: str
-        :param operation: swagger operation object
-        :type operation: dict
         :param resolver: Callable that maps operationID to a function
         :type resolver: resolver.Resolver
-        :param app_produces: list of content types the application can return by default
-        :type app_produces: list
-        :param app_consumes: list of content types the application consumes by default
-        :type app_consumes: list
-        :param path_parameters: Parameters defined in the path level
-        :type path_parameters: list
-        :param app_security: list of security rules the application uses by default
-        :type app_security: list
-        :param security_definitions: `Security Definitions Object
-            <https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-definitions-object>`_
-        :type security_definitions: dict
-        :param definitions: `Definitions Object
-            <https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#definitionsObject>`_
-        :type definitions: dict
-        :param parameter_definitions: Global parameter definitions
-        :type parameter_definitions: dict
-        :param response_definitions: Global response definitions
-        :type response_definitions: dict
+        :param spec: Swagger 2 specification
+        :type spec: Swagger2Specification
         :param validate_responses: True enables validation. Validation errors generate HTTP 500 responses.
         :type validate_responses: bool
         :param strict_validation: True enables validation on invalid request parameters
@@ -74,19 +54,15 @@ class Swagger2Operation(AbstractOperation):
         name.
         :type pass_context_arg_name: str|None
         """
-        app_security = operation.get('security', app_security)
         uri_parser_class = uri_parser_class or Swagger2URIParser
-
-        self._router_controller = operation.get('x-swagger-router-controller')
 
         super(Swagger2Operation, self).__init__(
             api=api,
             method=method,
             path=path,
-            operation=operation,
+            router_controller_key='x-swagger-router-controller',
             resolver=resolver,
-            app_security=app_security,
-            security_schemes=security_definitions,
+            spec=spec,
             validate_responses=validate_responses,
             strict_validation=strict_validation,
             randomize_endpoint=randomize_endpoint,
@@ -96,48 +72,11 @@ class Swagger2Operation(AbstractOperation):
             pass_context_arg_name=pass_context_arg_name
         )
 
-        self._produces = operation.get('produces', app_produces)
-        self._consumes = operation.get('consumes', app_consumes)
-
-        self.definitions = definitions or {}
-
-        self._parameters = operation.get('parameters', [])
-        if path_parameters:
-            self._parameters += path_parameters
-
-        self._responses = operation.get('responses', {})
-        logger.debug(self._responses)
+        self._produces = self._operation.get('produces', spec.produces)
+        self._consumes = self._operation.get('consumes', spec.consumes)
 
         logger.debug('consumes: %s', self.consumes)
         logger.debug('produces: %s', self.produces)
-
-    @classmethod
-    def from_spec(cls, spec, api, path, method, resolver, *args, **kwargs):
-        return cls(
-            api,
-            method,
-            path,
-            spec.get_operation(path, method),
-            resolver=resolver,
-            path_parameters=spec.get_path_params(path),
-            app_security=spec.security,
-            app_produces=spec.produces,
-            app_consumes=spec.consumes,
-            security_definitions=spec.security_definitions,
-            definitions=spec.definitions,
-            parameter_definitions=spec.parameter_definitions,
-            response_definitions=spec.response_definitions,
-            *args,
-            **kwargs
-        )
-
-    @property
-    def parameters(self):
-        return self._parameters
-
-    @property
-    def responses(self):
-        return self._responses
 
     @property
     def consumes(self):
@@ -161,7 +100,7 @@ class Swagger2Operation(AbstractOperation):
 
     def with_definitions(self, schema):
         if "schema" in schema:
-            schema['schema']['definitions'] = self.definitions
+            schema['schema']['definitions'] = self._spec.definitions
         return schema
 
     def response_schema(self, status_code=None, content_type=None):

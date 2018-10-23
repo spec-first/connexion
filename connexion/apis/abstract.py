@@ -7,7 +7,6 @@ from typing import AnyStr  # NOQA
 import six
 
 from ..exceptions import ResolverError
-from ..operations import make_operation
 from ..options import ConnexionOptions
 from ..resolver import Resolver
 from ..spec import Specification
@@ -156,12 +155,12 @@ class AbstractAPI(object):
         :type method: str
         :type path: str
         """
-        operation = make_operation(
-            self.specification,
+        operation = self.specification.operation_cls(
             self,
-            path,
             method,
-            self.resolver,
+            path,
+            resolver=self.resolver,
+            spec=self.specification,
             validate_responses=self.validate_responses,
             validator_map=self.validator_map,
             strict_validation=self.strict_validation,

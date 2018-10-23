@@ -42,8 +42,7 @@ class AbstractOperation(SecureOperation):
             if important:
                 serious_business(stuff)
     """
-    def __init__(self, api, method, path, operation, resolver,
-                 app_security=None, security_schemes=None,
+    def __init__(self, api, method, path, router_controller_key, resolver, spec,
                  validate_responses=False, strict_validation=False,
                  randomize_endpoint=None, validator_map=None,
                  pythonic_params=False, uri_parser_class=None,
@@ -55,15 +54,11 @@ class AbstractOperation(SecureOperation):
         :type method: str
         :param path:
         :type path: str
-        :param operation: swagger operation object
-        :type operation: dict
+        :param router_controller_key:
+        :type router_controller_key: str
         :param resolver: Callable that maps operationID to a function
-        :param app_produces: list of content types the application can return by default
-        :param app_security: list of security rules the application uses by default
-        :type app_security: list
-        :param security_schemes: `Security Definitions Object
-            <https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-definitions-object>`_
-        :type security_schemes: dict
+        :param spec: Specification object
+        :type spec: Specification
         :param validate_responses: True enables validation. Validation errors generate HTTP 500 responses.
         :type validate_responses: bool
         :param strict_validation: True enables validation on invalid request parameters
@@ -81,13 +76,20 @@ class AbstractOperation(SecureOperation):
         name.
         :type pass_context_arg_name: str|None
         """
-        self._api = api
+
+        self._operation = spec.get_operation(path, method)
+
+        super(AbstractOperation, self).__init__(
+            api=api,
+            security=self._operation.get('security', spec.security),
+            security_schemes=spec.security_definitions
+        )
+
         self._method = method
         self._path = path
-        self._operation = operation
+        self._router_controller = self._operation.get(router_controller_key)
         self._resolver = resolver
-        self._security = app_security
-        self._security_schemes = security_schemes
+        self._spec = spec
         self._validate_responses = validate_responses
         self._strict_validation = strict_validation
         self._pythonic_params = pythonic_params
@@ -101,6 +103,12 @@ class AbstractOperation(SecureOperation):
 
         self._validator_map = dict(VALIDATOR_MAP)
         self._validator_map.update(validator_map or {})
+
+        self._responses = self._operation.get('responses', {})
+        self._parameters = self._operation.get('parameters', [])
+        path_parameters = spec.get_path_params(path)
+        if path_parameters:
+            self._parameters += path_parameters
 
     @property
     def method(self):
@@ -166,6 +174,14 @@ class AbstractOperation(SecureOperation):
         """
         return self._validate_responses
 
+    @property
+    def responses(self):
+        return self._responses
+
+    @property
+    def parameters(self):
+        return self._parameters
+
     @staticmethod
     def _get_file_arguments(files, arguments, has_kwargs=False):
         return {k: v for k, v in files.items() if not has_kwargs and k in arguments}
@@ -219,18 +235,6 @@ class AbstractOperation(SecureOperation):
             else:  # Assume path params mechanism used for injection
                 kwargs[key] = value
         return kwargs
-
-    @abc.abstractproperty
-    def parameters(self):
-        """
-        Returns the parameters for this operation
-        """
-
-    @abc.abstractproperty
-    def responses(self):
-        """
-        Returns the responses for this operation
-        """
 
     @abc.abstractproperty
     def produces(self):
