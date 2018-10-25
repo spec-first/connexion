@@ -87,6 +87,20 @@ def get_apikeyinfo_func(security_definition):
     return None
 
 
+def get_bearerinfo_func(security_definition):
+    """
+    :type security_definition: dict
+    :rtype: function
+
+    >>> get_bearerinfo_func({'x-bearerInfoFunc': 'foo.bar'})
+    '<function foo.bar>'
+    """
+    func = (security_definition.get("x-bearerInfoFunc") or
+            os.environ.get('BEARERINFO_FUNC'))
+    if func:
+        return get_function_from_name(func)
+    return None
+
 def security_passthrough(function):
     """
     :type function: types.FunctionType
@@ -137,26 +151,34 @@ def validate_scope(required_scopes, token_scopes):
     return True
 
 
+def verify_authorization_token(request, token_info_func):
+    authorization = request.headers.get('Authorization')
+    if not authorization:
+        return None
+
+    try:
+        auth_type, token = authorization.split(None, 1)
+    except ValueError:
+        raise OAuthProblem(description='Invalid authorization header')
+
+    if auth_type.lower() != 'bearer':
+        return None
+
+    token_info = token_info_func(token)
+    if token_info is None:
+        raise OAuthResponseProblem(
+            description='Provided token is not valid',
+            token_response=None
+        )
+
+    return token_info
+
+
 def verify_oauth(token_info_func, scope_validate_func):
     def wrapper(request, required_scopes):
-        authorization = request.headers.get('Authorization')
-        if not authorization:
-            return None
-
-        try:
-            auth_type, token = authorization.split(None, 1)
-        except ValueError:
-            raise OAuthProblem(description='Invalid authorization header')
-
-        if auth_type.lower() != 'bearer':
-            return None
-
-        token_info = token_info_func(token)
+        token_info = verify_authorization_token(request, token_info_func)
         if token_info is None:
-            raise OAuthResponseProblem(
-                description='Provided oauth token is not valid',
-                token_response=None
-            )
+            return None
 
         # Fallback to 'scopes' for backward compability
         token_scopes = token_info.get('scope', token_info.get('scopes', ''))
@@ -219,6 +241,12 @@ def verify_apikey(apikey_info_func, loc, name):
                 token_response=None
             )
         return token_info
+    return wrapper
+
+
+def verify_bearer(bearer_info_func):
+    def wrapper(request, required_scopes):
+        return verify_authorization_token(request, bearer_info_func)
     return wrapper
 
 

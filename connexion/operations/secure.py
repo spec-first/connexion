@@ -7,7 +7,7 @@ from ..decorators.security import (get_apikeyinfo_func, get_basicinfo_func,
                                    get_scope_validate_func, get_tokeninfo_func,
                                    security_deny, security_passthrough,
                                    verify_apikey, verify_basic, verify_oauth,
-                                   verify_security)
+                                   verify_security, get_bearerinfo_func, verify_bearer)
 
 logger = logging.getLogger("connexion.operations.secure")
 
@@ -118,16 +118,30 @@ class SecureOperation(object):
                         continue
 
                     auth_funcs.append(verify_basic(basic_info_func))
+                elif scheme == 'bearer':
+                    bearer_info_func = get_bearerinfo_func(security_scheme)
+                    if not bearer_info_func:
+                        logger.warning("... x-bearerInfoFunc missing", extra=vars(self))
+                        continue
+                    auth_funcs.append(verify_bearer(bearer_info_func))
                 else:
                     logger.warning("... Unsupported http authorization scheme %s" % scheme, extra=vars(self))
 
             elif security_scheme['type'] == 'apiKey':
-                apikey_info_func = get_apikeyinfo_func(security_scheme)
-                if not apikey_info_func:
-                    logger.warning("... x-apikeyInfoFunc missing", extra=vars(self))
-                    continue
+                scheme = security_scheme.get('x-authentication-scheme','').lower()
+                if scheme == 'bearer':
+                    bearer_info_func = get_bearerinfo_func(security_scheme)
+                    if not bearer_info_func:
+                        logger.warning("... x-bearerInfoFunc missing", extra=vars(self))
+                        continue
+                    auth_funcs.append(verify_bearer(bearer_info_func))
+                else:
+                    apikey_info_func = get_apikeyinfo_func(security_scheme)
+                    if not apikey_info_func:
+                        logger.warning("... x-apikeyInfoFunc missing", extra=vars(self))
+                        continue
 
-                auth_funcs.append(verify_apikey(apikey_info_func, security_scheme['in'], security_scheme['name']))
+                    auth_funcs.append(verify_apikey(apikey_info_func, security_scheme['in'], security_scheme['name']))
 
             else:
                 logger.warning("... Unsupported security scheme type %s" % security_scheme['type'], extra=vars(self))
