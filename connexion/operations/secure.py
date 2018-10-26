@@ -4,10 +4,11 @@ import logging
 from ..decorators.decorator import (BeginOfRequestLifecycleDecorator,
                                     EndOfRequestLifecycleDecorator)
 from ..decorators.security import (get_apikeyinfo_func, get_basicinfo_func,
+                                   get_bearerinfo_func,
                                    get_scope_validate_func, get_tokeninfo_func,
                                    security_deny, security_passthrough,
-                                   verify_apikey, verify_basic, verify_oauth,
-                                   verify_security, get_bearerinfo_func, verify_bearer)
+                                   verify_apikey, verify_basic, verify_bearer,
+                                   verify_oauth, verify_security)
 
 logger = logging.getLogger("connexion.operations.secure")
 
@@ -128,7 +129,7 @@ class SecureOperation(object):
                     logger.warning("... Unsupported http authorization scheme %s" % scheme, extra=vars(self))
 
             elif security_scheme['type'] == 'apiKey':
-                scheme = security_scheme.get('x-authentication-scheme','').lower()
+                scheme = security_scheme.get('x-authentication-scheme', '').lower()
                 if scheme == 'bearer':
                     bearer_info_func = get_bearerinfo_func(security_scheme)
                     if not bearer_info_func:

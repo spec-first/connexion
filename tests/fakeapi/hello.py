@@ -507,7 +507,6 @@ def apikey_info(apikey, required_scopes=None):
     return None
 
 def jwt_info(token):
-    print(token)
     if token == '100':
         return {'sub': '100'}
     return None

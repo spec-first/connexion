@@ -101,6 +101,7 @@ def get_bearerinfo_func(security_definition):
         return get_function_from_name(func)
     return None
 
+
 def security_passthrough(function):
     """
     :type function: types.FunctionType
