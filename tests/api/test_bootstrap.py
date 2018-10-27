@@ -35,7 +35,7 @@ def test_app_with_resolver(simple_api_spec_dir, spec):
               specification_dir='..' / simple_api_spec_dir.relative_to(TEST_FOLDER),
               resolver=resolver)
     api = app.add_api(spec)
-    assert api.resolver == resolver
+    assert api.resolver is resolver
 
 
 @pytest.mark.parametrize("spec", SPECS)
