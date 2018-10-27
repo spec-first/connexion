@@ -98,7 +98,7 @@ class RestyResolver(Resolver):
         :type operation: connexion.operations.AbstractOperation
         """
         path_match = re.search(
-            '^/?(?P<resource_name>([\w\-](?<!/))*)(?P<trailing_slash>/*)(?P<extended_path>.*)$', operation.path
+            r'^/?(?P<resource_name>([\w\-](?<!/))*)(?P<trailing_slash>/*)(?P<extended_path>.*)$', operation.path
         )
 
         def get_controller_name():

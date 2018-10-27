@@ -172,7 +172,7 @@ class Jsonifier(object):
 
         try:
             return self.json.loads(data)
-        except Exception as error:
+        except Exception:
             if isinstance(data, six.string_types):
                 return data
 
