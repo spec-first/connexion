@@ -28,6 +28,17 @@ def test_app_with_relative_path(simple_api_spec_dir, spec):
 
 
 @pytest.mark.parametrize("spec", SPECS)
+def test_app_with_resolver(simple_api_spec_dir, spec):
+    from connexion.resolver import Resolver
+    resolver = Resolver()
+    app = App(__name__, port=5001,
+              specification_dir='..' / simple_api_spec_dir.relative_to(TEST_FOLDER),
+              resolver=resolver)
+    api = app.add_api(spec)
+    assert api.resolver == resolver
+
+
+@pytest.mark.parametrize("spec", SPECS)
 def test_app_with_different_server_option(simple_api_spec_dir, spec):
     # Create the app with a relative path and run the test_app testcase below.
     app = App(__name__, port=5001,

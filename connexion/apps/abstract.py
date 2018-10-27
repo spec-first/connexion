@@ -14,7 +14,7 @@ logger = logging.getLogger('connexion.app')
 class AbstractApp(object):
     def __init__(self, import_name, api_cls, port=None, specification_dir='',
                  host=None, server=None, arguments=None, auth_all_paths=False, debug=False,
-                 options=None):
+                 resolver=None, options=None):
         """
         :param import_name: the name of the application package
         :type import_name: str
@@ -32,10 +32,12 @@ class AbstractApp(object):
         :type auth_all_paths: bool
         :param debug: include debugging information
         :type debug: bool
+        :param resolver: Callable that maps operationID to a function
         """
         self.port = port
         self.host = host
         self.debug = debug
+        self.resolver = resolver
         self.import_name = import_name
         self.arguments = arguments or {}
         self.api_cls = api_cls
@@ -84,7 +86,7 @@ class AbstractApp(object):
 
     def add_api(self, specification, base_path=None, arguments=None,
                 auth_all_paths=None, validate_responses=False,
-                strict_validation=False, resolver=Resolver(), resolver_error=None,
+                strict_validation=False, resolver=None, resolver_error=None,
                 pythonic_params=False, pass_context_arg_name=None, options=None,
                 validator_map=None):
         """
@@ -123,6 +125,7 @@ class AbstractApp(object):
         if self.resolver_error is not None:
             resolver_error_handler = self._resolver_error_handler
 
+        resolver = resolver or self.resolver
         resolver = Resolver(resolver) if hasattr(resolver, '__call__') else resolver
 
         auth_all_paths = auth_all_paths if auth_all_paths is not None else self.auth_all_paths
