@@ -1,0 +1,33 @@
+openapi: 3.0.0
+info:
+  title: Basic Auth Example
+  version: '1.0'
+paths:
+  /secret:
+    get:
+      summary: Return secret string
+      operationId: app.get_secret
+      responses:
+        '200':
+          description: secret response
+          content:
+            '*/*':
+              schema:
+                type: string
+      security:
+        - oauth2: ['secret']
+        - basic: []
+components:
+  securitySchemes:
+    oauth2:
+      type: oauth2
+      x-tokenInfoFunc: app.dummy_func
+      flows:
+        implicit:
+          authorizationUrl: https://example.com/oauth2/dialog
+          scopes:
+            secret: Allow accessing secret
+    basic:
+      type: http
+      scheme: basic
+      x-basicInfoFunc: app.basic_auth

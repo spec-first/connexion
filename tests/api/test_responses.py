@@ -17,7 +17,7 @@ def test_app(simple_app):
     assert b"Swagger UI" in swagger_ui.data
 
     # test return Swagger UI static files
-    swagger_icon = app_client.get('/v1.0/ui/images/favicon.ico')  # type: flask.Response
+    swagger_icon = app_client.get('/v1.0/ui/swagger-ui.js')  # type: flask.Response
     assert swagger_icon.status_code == 200
 
     post_greeting_url = app_client.post('/v1.0/greeting/jsantos/the/third/of/his/name', data={})  # type: flask.Response

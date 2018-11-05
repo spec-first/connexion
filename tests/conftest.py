@@ -10,6 +10,7 @@ logging.basicConfig(level=logging.DEBUG)
 TEST_FOLDER = pathlib.Path(__file__).parent
 FIXTURES_FOLDER = TEST_FOLDER / 'fixtures'
 SPEC_FOLDER = TEST_FOLDER / "fakeapi"
+SPECS = ["swagger.yaml", "openapi.yaml"]
 
 
 class FakeResponse(object):
@@ -87,7 +88,12 @@ def default_param_error_spec_dir():
     return FIXTURES_FOLDER / 'default_param_error'
 
 
-def build_app_from_fixture(api_spec_folder, **kwargs):
+@pytest.fixture
+def json_validation_spec_dir():
+    return FIXTURES_FOLDER / 'json_validation'
+
+
+def build_app_from_fixture(api_spec_folder, spec_file='openapi.yaml', **kwargs):
     debug = True
     if 'debug' in kwargs:
         debug = kwargs['debug']
@@ -97,60 +103,73 @@ def build_app_from_fixture(api_spec_folder, **kwargs):
                   port=5001,
                   specification_dir=FIXTURES_FOLDER / api_spec_folder,
                   debug=debug)
-    cnx_app.add_api('swagger.yaml', **kwargs)
+
+    cnx_app.add_api(spec_file, **kwargs)
+    cnx_app._spec_file = spec_file
     return cnx_app
 
 
-@pytest.fixture(scope="session")
-def simple_app():
-    return build_app_from_fixture('simple', validate_responses=True)
+@pytest.fixture(scope="session", params=SPECS)
+def simple_app(request):
+    return build_app_from_fixture('simple', request.param, validate_responses=True)
 
 
-@pytest.fixture(scope="session")
-def snake_case_app():
-    return build_app_from_fixture('snake_case', validate_responses=True, pythonic_params=True)
+@pytest.fixture(scope="session", params=SPECS)
+def snake_case_app(request):
+    return build_app_from_fixture('snake_case', request.param,
+                                  validate_responses=True,
+                                  pythonic_params=True)
 
 
-@pytest.fixture(scope="session")
-def invalid_resp_allowed_app():
-    return build_app_from_fixture('simple', validate_responses=False)
+@pytest.fixture(scope="session", params=SPECS)
+def invalid_resp_allowed_app(request):
+    return build_app_from_fixture('simple', request.param,
+                                  validate_responses=False)
 
 
-@pytest.fixture(scope="session")
-def strict_app():
-    return build_app_from_fixture('simple', validate_responses=True, strict_validation=True)
+@pytest.fixture(scope="session", params=SPECS)
+def strict_app(request):
+    return build_app_from_fixture('simple', request.param,
+                                  validate_responses=True,
+                                  strict_validation=True)
 
 
-@pytest.fixture(scope="session")
-def problem_app():
-    return build_app_from_fixture('problem', validate_responses=True)
+@pytest.fixture(scope="session", params=SPECS)
+def problem_app(request):
+    return build_app_from_fixture('problem', request.param,
+                                  validate_responses=True)
 
 
-@pytest.fixture(scope="session")
-def schema_app():
-    return build_app_from_fixture('different_schemas', validate_responses=True)
+@pytest.fixture(scope="session", params=SPECS)
+def schema_app(request):
+    return build_app_from_fixture('different_schemas', request.param,
+                                  validate_responses=True)
 
 
-@pytest.fixture(scope="session")
-def secure_endpoint_app():
-    return build_app_from_fixture('secure_endpoint', validate_responses=True)
+@pytest.fixture(scope="session", params=SPECS)
+def secure_endpoint_app(request):
+    return build_app_from_fixture('secure_endpoint', request.param,
+                                  validate_responses=True, pass_context_arg_name='req_context')
 
 
-@pytest.fixture(scope="session")
-def secure_api_app():
-    return build_app_from_fixture('secure_api')
+@pytest.fixture(scope="session", params=SPECS)
+def secure_api_app(request):
+    options = {"swagger_ui": False}
+    return build_app_from_fixture('secure_api', request.param,
+                                  options=options, auth_all_paths=True)
 
 
-@pytest.fixture(scope="session")
-def unordered_definition_app():
-    return build_app_from_fixture('unordered_definition')
+@pytest.fixture(scope="session", params=SPECS)
+def unordered_definition_app(request):
+    return build_app_from_fixture('unordered_definition', request.param)
 
 
-@pytest.fixture(scope="session")
-def bad_operations_app():
-    return build_app_from_fixture('bad_operations', resolver_error=501)
+@pytest.fixture(scope="session", params=SPECS)
+def bad_operations_app(request):
+    return build_app_from_fixture('bad_operations', request.param,
+                                  resolver_error=501)
 
 
-@pytest.fixture(scope="session")
-def query_sanitazion():
-    return build_app_from_fixture('query_sanitazion')
+@pytest.fixture(scope="session", params=SPECS)
+def query_sanitazion(request):
+    return build_app_from_fixture('query_sanitazion', request.param)

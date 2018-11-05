@@ -3,13 +3,8 @@ import json
 from connexion import FlaskApp
 
 
-def test_security_over_inexistent_endpoints(oauth_requests, secure_api_spec_dir):
-    app1 = FlaskApp(__name__, port=5001, specification_dir=secure_api_spec_dir,
-                    swagger_ui=False, debug=True, auth_all_paths=True)
-    app1.add_api('swagger.yaml')
-    assert app1.port == 5001
-
-    app_client = app1.app.test_client()
+def test_security_over_nonexistent_endpoints(oauth_requests, secure_api_app):
+    app_client = secure_api_app.app.test_client()
     headers = {"Authorization": "Bearer 300"}
     get_inexistent_endpoint = app_client.get('/v1.0/does-not-exist-invalid-token',
                                              headers=headers)  # type: flask.Response
@@ -68,9 +63,11 @@ def test_security(oauth_requests, secure_endpoint_app):
     assert get_bye_bad_token_reponse['detail'] == "Provided oauth token is not valid"
 
     response = app_client.get('/v1.0/more-than-one-security-definition')  # type: flask.Response
-    assert response.status_code == 200
+    assert response.status_code == 401
 
-    response = app_client.get('/v1.0/user-handled-security')  # type: flask.Response
+    # also tests case-insensitivity
+    headers = {"X-AUTH": "mykey"}
+    response = app_client.get('/v1.0/more-than-one-security-definition', headers=headers)  # type: flask.Response
     assert response.status_code == 200
 
     headers = {"Authorization": "Bearer 100"}
