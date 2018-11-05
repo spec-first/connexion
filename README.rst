@@ -29,15 +29,12 @@ Connexion
    :target: https://github.com/zalando/connexion/blob/master/LICENSE
    :alt: License
 
-Connexion is a framework on top of Flask_ that automagically handles
-HTTP requests based on `OpenAPI 2.0 Specification`_ (formerly known as
-Swagger Spec) of your API described in `YAML format`_. Connexion
-allows you to write a Swagger specification, then maps the
-endpoints to your Python functions; this makes it unique, as many
-tools generate the specification based on your Python
-code. You can describe your REST API in as much detail as
-you want; then Connexion guarantees that it will work as
-you specified.
+Connexion is a framework that automagically handles HTTP requests based on `OpenAPI Specification`_
+(formerly known as Swagger Spec) of your API described in `YAML format`_. Connexion allows you to
+write an OpenAPI specification, then maps the endpoints to your Python functions; this makes it
+unique, as many tools generate the specification based on your Python code. You can describe your
+REST API in as much detail as you want; then Connexion guarantees that it will work as you
+specified.
 
 We built Connexion this way in order to:
 
@@ -474,7 +471,7 @@ installing connexion[swagger-ui], and can be enabled like this:
 Server Backend
 --------------
 
-Connexion uses the default Flask server. For asynchronous
+By default Connexion uses the Flask_ server. For asynchronous
 applications, you can also use Tornado_ as the HTTP server. To do
 this, set your server to ``tornado``:
 
@@ -570,7 +567,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 .. _Swagger: http://swagger.io/open-source-integrations/
 .. _Jinja2: http://jinja.pocoo.org/
 .. _rfc6750: https://tools.ietf.org/html/rfc6750
-.. _OpenAPI 2.0 Specification: https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md
+.. _OpenAPI Specification: https://www.openapis.org/
 .. _Operation Object: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#operation-object
 .. _swager.spec.security_definition: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-definitions-object
 .. _swager.spec.security_requirement: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-requirement-object
