@@ -268,8 +268,8 @@ function expects an argument named ``message`` and assigns the value
 of the endpoint parameter ``message`` to your view function.
 
 .. warning:: When you define a parameter at your endpoint as *not* required, and
-    this argument does not have default value in your Python view, you will get 
-    a "missing positional argument" exception whenever you call this endpoint 
+    this argument does not have default value in your Python view, you will get
+    a "missing positional argument" exception whenever you call this endpoint
     WITHOUT the parameter. Provide a default value for a named argument or use
     ``**kwargs`` dict.
 
@@ -319,22 +319,25 @@ You can implement your own URI parsing behavior by inheriting from
 ``connextion.decorators.uri_parsing.AbstractURIParser``.
 
 There are three URI parsers included with connection.
-1. AlwaysMultiURIParser (default)
-   This parser is backwards compatible, and joins together multiple instances
-   of the same query parameter.
-2. Swagger2URIParser
-   This parser adheres to the Swagger 2.0 spec, and will only join together
-   multiple instance of the same query parameter if the ``collectionFormat``
-   is set to ``multi``. Query parameters are parsed from left to right, so
-   if a query parameter is defined twice, then the right-most definition wins.
-   For example, if you provided a URI with the query string
-   ``?letters=a,b,c&letters=d,e,f``, and ``collectionFormat: csv``, then
-   connexion will set ``letters = ['d', 'e', 'f']``
-3. FirstValueURIParser
-   This parser behaves like the Swagger2URIParser, except that it prefers the
-   first defined value. For example, if you provided a URI with the query
-   string ``?letters=a,b,c&letters=d,e,f`` and ``collectionFormat: csv``
-   then connexion will set ``letters = ['a', 'b', 'c']``
+
++----------------------+---------------------------------------------------------------------------+
+| AlwaysMultiURIParser | This parser is backwards compatible, and joins together multiple instances|
+| (default)            | of the same query parameter.                                              |
++----------------------+---------------------------------------------------------------------------+
+| Swagger2URIParser    | This parser adheres to the Swagger 2.0 spec, and will only join together  |
+|                      | multiple instance of the same query parameter if the ``collectionFormat`` |
+|                      | is set to ``multi``. Query parameters are parsed from left to right, so   |
+|                      | if a query parameter is defined twice, then the right-most definition     |
+|                      | wins. For example, if you provided a URI with the query string            |
+|                      | ``?letters=a,b,c&letters=d,e,f``, and ``collectionFormat: csv``, then     |
+|                      | connexion will set ``letters = ['d', 'e', 'f']``                          |
++----------------------+---------------------------------------------------------------------------+
+| FirstValueURIParser  | This parser behaves like the Swagger2URIParser, except that it prefers    |
+|                      | the first defined value. For example, if you provided a URI with the query|
+|                      | string ``?letters=a,b,c&letters=d,e,f`` and ``collectionFormat: csv``     |
+|                      | hen connexion will set ``letters = ['a', 'b', 'c']``                      |
++----------------------+---------------------------------------------------------------------------+
+
 
 Parameter validation
 ^^^^^^^^^^^^^^^^^^^^
