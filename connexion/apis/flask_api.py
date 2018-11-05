@@ -3,6 +3,7 @@ import logging
 import flask
 import six
 import werkzeug.exceptions
+from werkzeug.local import LocalProxy
 
 from connexion.apis import flask_utils
 from connexion.apis.abstract import AbstractAPI
@@ -26,15 +27,17 @@ class FlaskApi(AbstractAPI):
         self.blueprint = flask.Blueprint(endpoint, __name__, url_prefix=self.base_path,
                                          template_folder=str(self.options.openapi_console_ui_from_dir))
 
-    def add_swagger_json(self):
+    def add_openapi_json(self):
         """
-        Adds swagger json to {base_path}/swagger.json
+        Adds spec json to {base_path}/swagger.json
+        or {base_path}/openapi.json (for oas3)
         """
-        logger.debug('Adding swagger.json: %s/swagger.json', self.base_path)
-        endpoint_name = "{name}_swagger_json".format(name=self.blueprint.name)
-        self.blueprint.add_url_rule('/swagger.json',
+        logger.debug('Adding spec json: %s/%s', self.base_path,
+                     self.options.openapi_spec_path)
+        endpoint_name = "{name}_openapi_json".format(name=self.blueprint.name)
+        self.blueprint.add_url_rule(self.options.openapi_spec_path,
                                     endpoint_name,
-                                    lambda: flask.jsonify(self.specification))
+                                    lambda: flask.jsonify(self.specification.raw))
 
     def add_swagger_ui(self):
         """
@@ -216,6 +219,8 @@ class FlaskApi(AbstractAPI):
 
         :rtype: ConnexionRequest
         """
+        context_dict = {}
+        setattr(flask._request_ctx_stack.top, 'connexion_context', context_dict)
         flask_request = flask.request
         request = ConnexionRequest(
             flask_request.url,
@@ -227,7 +232,7 @@ class FlaskApi(AbstractAPI):
             json_getter=lambda: flask_request.get_json(silent=True),
             files=flask_request.files,
             path_params=params,
-            context=FlaskRequestContextProxy()
+            context=context_dict
         )
         logger.debug('Getting data and status code',
                      extra={
@@ -245,23 +250,11 @@ class FlaskApi(AbstractAPI):
         cls.jsonifier = Jsonifier(flask.json)
 
 
-class FlaskRequestContextProxy(object):
-    """"Proxy assignments from `ConnexionRequest.context`
-    to `flask.request` instance.
-    """
+def _get_context():
+    return getattr(flask._request_ctx_stack.top, 'connexion_context')
 
-    def __init__(self):
-        self.values = {}
 
-    def __setitem__(self, key, value):
-        # type: (str, Any) -> None
-        logger.debug('Setting "%s" attribute in flask.request', key)
-        setattr(flask.request, key, value)
-        self.values[key] = value
-
-    def items(self):
-        # type: () -> list
-        return self.values.items()
+context = LocalProxy(_get_context)
 
 
 class InternalHandlers(object):
@@ -279,7 +272,10 @@ class InternalHandlers(object):
 
         :return:
         """
-        return flask.render_template('index.html', api_url=self.base_path)
+        return flask.render_template(
+            'index.j2',
+            openapi_spec_url=(self.base_path + self.options.openapi_spec_path)
+        )
 
     def console_ui_static_files(self, filename):
         """

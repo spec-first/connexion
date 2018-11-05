@@ -9,12 +9,19 @@ from .decorator import BaseDecorator
 
 logger = logging.getLogger('connexion.decorators.uri_parsing')
 
+QUERY_STRING_DELIMITERS = {
+    'spaceDelimited': ' ',
+    'pipeDelimited': '|',
+    'simple': ',',
+    'form': ','
+}
+
 
 @six.add_metaclass(abc.ABCMeta)
 class AbstractURIParser(BaseDecorator):
     parsable_parameters = ["query", "path"]
 
-    def __init__(self, param_defns):
+    def __init__(self, param_defns, body_defn):
         """
         a URI parser is initialized with parameter definitions.
         When called with a request object, it handles array types in the URI
@@ -28,6 +35,8 @@ class AbstractURIParser(BaseDecorator):
         self._param_defns = {p["name"]: p
                              for p in param_defns
                              if p["in"] in self.parsable_parameters}
+        self._body_schema = body_defn.get("schema", {})
+        self._body_encoding = body_defn.get("encoding", {})
 
     @abc.abstractproperty
     def param_defns(self):
@@ -45,7 +54,13 @@ class AbstractURIParser(BaseDecorator):
         """
         :rtype: str
         """
-        return "<{classname}>".format(classname=self.__class__.__name__)
+        return "<{classname}>".format(
+            classname=self.__class__.__name__)  # pragma: no cover
+
+    @abc.abstractmethod
+    def resolve_form(self, form_data):
+        """ Resolve cases where form parameters are provided multiple times.
+        """
 
     @abc.abstractmethod
     def _resolve_param_duplicates(self, values, param_defn):
@@ -112,12 +127,71 @@ class AbstractURIParser(BaseDecorator):
             form = coerce_dict(request.form)
 
             request.query = self.resolve_params(query, resolve_duplicates=True)
-            request.form = self.resolve_params(form, resolve_duplicates=True)
             request.path_params = self.resolve_params(path_params)
+            request.form = self.resolve_form(form)
             response = function(request)
             return response
 
         return wrapper
+
+
+class OpenAPIURIParser(AbstractURIParser):
+
+    @property
+    def param_defns(self):
+        return self._param_defns
+
+    @property
+    def form_defns(self):
+        return {k: v for k, v in self._body_schema.get('properties', {}).items()}
+
+    @property
+    def param_schemas(self):
+        return {k: v.get('schema', {}) for k, v in self.param_defns.items()}
+
+    def resolve_form(self, form_data):
+        if self._body_schema is None or self._body_schema.get('type') != 'object':
+            return form_data
+        for k in form_data:
+            encoding = self._body_encoding.get(k, {"style": "form"})
+            defn = self.form_defns.get(k, {})
+            # TODO support more form encoding styles
+            form_data[k] = \
+                self._resolve_param_duplicates(form_data[k], encoding)
+            if defn and defn["type"] == "array":
+                form_data[k] = self._split(form_data[k], encoding)
+        return form_data
+
+    @staticmethod
+    def _resolve_param_duplicates(values, param_defn):
+        """ Resolve cases where query parameters are provided multiple times.
+            The default behavior is to use the first-defined value.
+            For example, if the query string is '?a=1,2,3&a=4,5,6' the value of
+            `a` would be "4,5,6".
+            However, if 'explode' is 'True' then the duplicate values
+            are concatenated together and `a` would be "1,2,3,4,5,6".
+        """
+        try:
+            style = param_defn['style']
+            delimiter = QUERY_STRING_DELIMITERS.get(style, ',')
+            is_form = (style == 'form')
+            explode = param_defn.get('explode', is_form)
+            if explode:
+                return delimiter.join(values)
+        except KeyError:
+            pass
+
+        # default to last defined value
+        return values[-1]
+
+    @staticmethod
+    def _split(value, param_defn):
+        try:
+            style = param_defn['style']
+            delimiter = QUERY_STRING_DELIMITERS.get(style, ',')
+            return value.split(delimiter)
+        except KeyError:
+            return value.split(',')
 
 
 class Swagger2URIParser(AbstractURIParser):
@@ -134,6 +208,9 @@ class Swagger2URIParser(AbstractURIParser):
     @property
     def param_schemas(self):
         return self._param_defns  # swagger2 conflates defn and schema
+
+    def resolve_form(self, form_data):
+        return self.resolve_params(form_data, resolve_duplicates=True)
 
     @staticmethod
     def _resolve_param_duplicates(values, param_defn):

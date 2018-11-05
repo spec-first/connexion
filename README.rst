@@ -29,15 +29,12 @@ Connexion
    :target: https://github.com/zalando/connexion/blob/master/LICENSE
    :alt: License
 
-Connexion is a framework on top of Flask_ that automagically handles
-HTTP requests based on `OpenAPI 2.0 Specification`_ (formerly known as
-Swagger Spec) of your API described in `YAML format`_. Connexion
-allows you to write a Swagger specification, then maps the
-endpoints to your Python functions; this makes it unique, as many
-tools generate the specification based on your Python
-code. You can describe your REST API in as much detail as
-you want; then Connexion guarantees that it will work as
-you specified.
+Connexion is a framework that automagically handles HTTP requests based on `OpenAPI Specification`_
+(formerly known as Swagger Spec) of your API described in `YAML format`_. Connexion allows you to
+write an OpenAPI specification, then maps the endpoints to your Python functions; this makes it
+unique, as many tools generate the specification based on your Python code. You can describe your
+REST API in as much detail as you want; then Connexion guarantees that it will work as you
+specified.
 
 We built Connexion this way in order to:
 
@@ -76,6 +73,25 @@ Other Sources/Mentions
 - Zalando Tech blog post `API First`_
 - Connexion listed on Swagger_'s website
 - Blog post: `Crafting effective Microservices in Python`_
+
+New in Connexion 2.0:
+---------------------
+- App and Api options must be provided through the "options" argument (``old_style_options`` have been removed).
+- You must specify a form content-type in 'consumes' in order to consume form data.
+- The `Operation` interface has been formalized in the `AbstractOperation` class.
+- The `Operation` class has been renamed to `Swagger2Operation`.
+- Array parameter deserialization now follows the Swagger 2.0 spec more closely.
+  In situations when a query parameter is passed multiple times, and the collectionFormat is either csv or pipes, the right-most value will be used.
+  For example, `?q=1,2,3&q=4,5,6` will result in `q = [4, 5, 6]`.
+  The old behavior is available by setting the collectionFormat to `multi`, or by importing `decorators.uri_parsing.AlwaysMultiURIParser` and passing `parser_class=AlwaysMultiURIParser` to your Api.
+- The spec validator library has changed from `swagger-spec-validator` to `openapi-spec-validator`.
+- Errors that previously raised `SwaggerValidationError` now raise the `InvalidSpecification` exception.
+  All spec validation errors should be wrapped with `InvalidSpecification`.
+- Support for nullable/x-nullable, readOnly and writeOnly/x-writeOnly has been added to the standard json schema validator.
+- Custom validators can now be specified on api level (instead of app level).
+- Added support for basic authentication and apikey authentication
+- If unsupported security requirements are defined or ``x-tokenInfoFunc``/``x-tokenInfoUrl`` is missing, connexion now denies requests instead of allowing access without security-check.
+- Accessing ``connexion.request.user`` / ``flask.request.user`` is no longer supported, use ``connexion.context['user']`` instead
 
 How to Use
 ==========
@@ -160,8 +176,8 @@ identify which Python function should handle each URL.
 If you provide this path in your specification POST requests to
 ``http://MYHOST/hello_world``, it will be handled by the function
 ``hello_world`` in the ``myapp.api`` module. Optionally, you can include
-``x-swagger-router-controller`` in your operation definition, making
-``operationId`` relative:
+``x-swagger-router-controller`` (or ``x-openapi-router-controller``) in your
+operation definition, making ``operationId`` relative:
 
 .. code-block:: yaml
 
@@ -249,8 +265,8 @@ function expects an argument named ``message`` and assigns the value
 of the endpoint parameter ``message`` to your view function.
 
 .. warning:: When you define a parameter at your endpoint as *not* required, and
-    this argument does not have default value in your Python view, you will get 
-    a "missing positional argument" exception whenever you call this endpoint 
+    this argument does not have default value in your Python view, you will get
+    a "missing positional argument" exception whenever you call this endpoint
     WITHOUT the parameter. Provide a default value for a named argument or use
     ``**kwargs`` dict.
 
@@ -300,22 +316,25 @@ You can implement your own URI parsing behavior by inheriting from
 ``connextion.decorators.uri_parsing.AbstractURIParser``.
 
 There are three URI parsers included with connection.
-1. AlwaysMultiURIParser (default)
-   This parser is backwards compatible, and joins together multiple instances
-   of the same query parameter.
-2. Swagger2URIParser
-   This parser adheres to the Swagger 2.0 spec, and will only join together
-   multiple instance of the same query parameter if the ``collectionFormat``
-   is set to ``multi``. Query parameters are parsed from left to right, so
-   if a query parameter is defined twice, then the right-most definition wins.
-   For example, if you provided a URI with the query string
-   ``?letters=a,b,c&letters=d,e,f``, and ``collectionFormat: csv``, then
-   connexion will set ``letters = ['d', 'e', 'f']``
-3. FirstValueURIParser
-   This parser behaves like the Swagger2URIParser, except that it prefers the
-   first defined value. For example, if you provided a URI with the query
-   string ``?letters=a,b,c&letters=d,e,f`` and ``collectionFormat: csv``
-   then connexion will set ``letters = ['a', 'b', 'c']``
+
++----------------------+---------------------------------------------------------------------------+
+| AlwaysMultiURIParser | This parser is backwards compatible, and joins together multiple instances|
+| (default)            | of the same query parameter.                                              |
++----------------------+---------------------------------------------------------------------------+
+| Swagger2URIParser    | This parser adheres to the Swagger 2.0 spec, and will only join together  |
+|                      | multiple instance of the same query parameter if the ``collectionFormat`` |
+|                      | is set to ``multi``. Query parameters are parsed from left to right, so   |
+|                      | if a query parameter is defined twice, then the right-most definition     |
+|                      | wins. For example, if you provided a URI with the query string            |
+|                      | ``?letters=a,b,c&letters=d,e,f``, and ``collectionFormat: csv``, then     |
+|                      | connexion will set ``letters = ['d', 'e', 'f']``                          |
++----------------------+---------------------------------------------------------------------------+
+| FirstValueURIParser  | This parser behaves like the Swagger2URIParser, except that it prefers    |
+|                      | the first defined value. For example, if you provided a URI with the query|
+|                      | string ``?letters=a,b,c&letters=d,e,f`` and ``collectionFormat: csv``     |
+|                      | hen connexion will set ``letters = ['a', 'b', 'c']``                      |
++----------------------+---------------------------------------------------------------------------+
+
 
 Parameter validation
 ^^^^^^^^^^^^^^^^^^^^
@@ -400,15 +419,17 @@ parameters to the underlying `werkzeug`_ server.
 The Swagger UI Console
 ----------------------
 
-The Swagger UI for an API is available, by default, in
-``{base_path}/ui/`` where ``base_path`` is the base path of the API.
+The Swagger UI for an API is available through pip extras.
+You can install it with ``pip install connexion[swagger-ui]``.
+It will be served up at ``{base_path}/ui/`` where ``base_path`` is the
+base path of the API.
 
 You can disable the Swagger UI at the application level:
 
 .. code-block:: python
 
     app = connexion.App(__name__, specification_dir='swagger/',
-                        swagger_ui=False)
+                        options={"swagger_ui": False})
     app.add_api('my_api.yaml')
 
 
@@ -417,10 +438,10 @@ You can also disable it at the API level:
 .. code-block:: python
 
     app = connexion.App(__name__, specification_dir='swagger/')
-    app.add_api('my_api.yaml', swagger_ui=False)
+    app.add_api('my_api.yaml', options={"swagger_ui": False})
 
 If necessary, you can explicitly specify the path to the directory with
-swagger-ui to not use the connexion-embedded swagger-ui distro.
+swagger-ui to not use the connexion[swagger-ui] distro.
 In order to do this, you should specify the following option:
 
 .. code-block:: python
@@ -428,17 +449,29 @@ In order to do this, you should specify the following option:
    options = {'swagger_path': '/path/to/swagger_ui/'}
    app = connexion.App(__name__, specification_dir='swagger/', options=options)
 
-Make sure that ``swagger_ui/index.html`` loads by default local swagger json.
-You can use the ``api_url`` jinja variable for this purpose:
+If you wish to provide your own swagger-ui distro, note that connextion
+expects a jinja2 file called ``swagger_ui/index.j2`` in order to load the
+correct ``swagger.json`` by default. Your ``index.j2`` file can use the
+``openapi_spec_url`` jinja variable for this purpose:
 
 .. code-block::
 
-    const ui = SwaggerUIBundle({ url: "{{ api_url }}/swagger.json"})
+    const ui = SwaggerUIBundle({ url: "{{ openapi_spec_url }}"})
+
+Additionally, if you wish to use swagger-ui-3.x.x, it is also provided by
+installing connexion[swagger-ui], and can be enabled like this:
+
+.. code-block:: python
+
+   from swagger_ui_bundle import swagger_ui_3_path
+   options = {'swagger_path': swagger_ui_3_path}
+   app = connexion.App(__name__, specification_dir='swagger/', options=options)
+
 
 Server Backend
 --------------
 
-Connexion uses the default Flask server. For asynchronous
+By default Connexion uses the Flask_ server. For asynchronous
 applications, you can also use Tornado_ as the HTTP server. To do
 this, set your server to ``tornado``:
 
@@ -534,7 +567,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 .. _Swagger: http://swagger.io/open-source-integrations/
 .. _Jinja2: http://jinja.pocoo.org/
 .. _rfc6750: https://tools.ietf.org/html/rfc6750
-.. _OpenAPI 2.0 Specification: https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md
+.. _OpenAPI Specification: https://www.openapis.org/
 .. _Operation Object: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#operation-object
 .. _swager.spec.security_definition: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-definitions-object
 .. _swager.spec.security_requirement: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-requirement-object

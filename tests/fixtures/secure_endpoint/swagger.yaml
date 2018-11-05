@@ -18,8 +18,9 @@ securityDefinitions:
 
     api_key:
       type: apiKey
-      name: api_key
+      name: X-Auth
       in: header
+      x-apikeyInfoFunc: fakeapi.hello.apikey_info
 
 paths:
   /byesecure/{name}:
@@ -127,14 +128,3 @@ paths:
       responses:
         200:
           description: some response
-
-  /user-handled-security:
-    get:
-      summary: Some external call to API
-      description: External application call
-      operationId: fakeapi.hello.schema_map
-      security:
-        - api_key: []
-      responses:
-        200:
-          description: OK

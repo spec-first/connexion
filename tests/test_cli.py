@@ -36,10 +36,12 @@ def expected_arguments():
     Default values arguments used to call `connexion.App` by cli.
     """
     return {
-        "swagger_json": True,
-        "swagger_ui": True,
-        "swagger_path": None,
-        "swagger_url": None,
+        "options": {
+            "swagger_json": True,
+            "swagger_ui": True,
+            "swagger_path": None,
+            "swagger_url": None,
+        },
         "auth_all_paths": False,
         "debug": False
     }
@@ -100,7 +102,7 @@ def test_run_using_option_hide_spec(mock_app_run, expected_arguments,
     runner.invoke(main, ['run', spec_file, '--hide-spec'],
                   catch_exceptions=False)
 
-    expected_arguments['swagger_json'] = False
+    expected_arguments['options']['swagger_json'] = False
     mock_app_run.assert_called_with('connexion.cli', **expected_arguments)
 
 
@@ -110,7 +112,7 @@ def test_run_using_option_hide_console_ui(mock_app_run, expected_arguments,
     runner.invoke(main, ['run', spec_file, '--hide-console-ui'],
                   catch_exceptions=False)
 
-    expected_arguments['swagger_ui'] = False
+    expected_arguments['options']['swagger_ui'] = False
     mock_app_run.assert_called_with('connexion.cli', **expected_arguments)
 
 
@@ -121,7 +123,7 @@ def test_run_using_option_console_ui_from(mock_app_run, expected_arguments,
     runner.invoke(main, ['run', spec_file, '--console-ui-from', user_path],
                   catch_exceptions=False)
 
-    expected_arguments['swagger_path'] = user_path
+    expected_arguments['options']['swagger_path'] = user_path
     mock_app_run.assert_called_with('connexion.cli', **expected_arguments)
 
 
@@ -132,7 +134,7 @@ def test_run_using_option_console_ui_url(mock_app_run, expected_arguments,
     runner.invoke(main, ['run', spec_file, '--console-ui-url', user_url],
                   catch_exceptions=False)
 
-    expected_arguments['swagger_url'] = user_url
+    expected_arguments['options']['swagger_url'] = user_url
     mock_app_run.assert_called_with('connexion.cli', **expected_arguments)
 
 

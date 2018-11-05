@@ -1,3 +1,4 @@
+from jsonschema.exceptions import ValidationError
 from werkzeug.exceptions import Forbidden, Unauthorized
 
 from .problem import problem
@@ -47,19 +48,8 @@ class ResolverError(LookupError):
         return '<ResolverError: {}>'.format(self.reason)
 
 
-class InvalidSpecification(ConnexionException):
-    def __init__(self, reason='Unknown Reason'):
-        """
-        :param reason: Reason why the specification is invalid
-        :type reason: str
-        """
-        self.reason = reason
-
-    def __str__(self):  # pragma: no cover
-        return '<InvalidSpecification: {}>'.format(self.reason)
-
-    def __repr__(self):  # pragma: no cover
-        return '<InvalidSpecification: {}>'.format(self.reason)
+class InvalidSpecification(ConnexionException, ValidationError):
+    pass
 
 
 class NonConformingResponse(ConnexionException):
@@ -102,7 +92,6 @@ class OAuthScopeProblem(Forbidden):
     def __init__(self, token_scopes, required_scopes, **kwargs):
         self.required_scopes = required_scopes
         self.token_scopes = token_scopes
-        self.missing_scopes = required_scopes - token_scopes
 
         super(OAuthScopeProblem, self).__init__(**kwargs)
 
