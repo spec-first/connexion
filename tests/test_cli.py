@@ -37,7 +37,7 @@ def expected_arguments():
     """
     return {
         "options": {
-            "swagger_json": True,
+            "serve_spec": True,
             "swagger_ui": True,
             "swagger_path": None,
             "swagger_url": None,
@@ -102,7 +102,7 @@ def test_run_using_option_hide_spec(mock_app_run, expected_arguments,
     runner.invoke(main, ['run', spec_file, '--hide-spec'],
                   catch_exceptions=False)
 
-    expected_arguments['options']['swagger_json'] = False
+    expected_arguments['options']['serve_spec'] = False
     mock_app_run.assert_called_with('connexion.cli', **expected_arguments)
 
 
