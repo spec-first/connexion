@@ -154,9 +154,16 @@ class RequestBodyValidator(object):
 
                 if data:
                     props = self.schema.get("properties", {})
+                    errs = []
                     for k, param_defn in props.items():
                         if k in data:
-                            data[k] = coerce_type(param_defn, data[k], 'requestBody', k)
+                            try:
+                                data[k] = coerce_type(param_defn, data[k], 'requestBody', k)
+                            except TypeValidationError as e:
+                                errs += [str(e)]
+                                print(errs)
+                    if errs:
+                        return problem(400, 'Bad Request', errs)
 
                 error = self.validate_schema(data, request.url)
                 if error:
