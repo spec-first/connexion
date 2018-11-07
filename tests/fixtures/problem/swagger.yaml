@@ -101,3 +101,13 @@ paths:
       responses:
         200:
           description: Problem exception
+
+  /value_error:
+    get:
+      description: Simply raise a ValueError
+      operationId: fakeapi.hello.throw_value_error
+      produces:
+        - application/json
+      responses:
+        200:
+          description: ValueError

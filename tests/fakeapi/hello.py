@@ -410,6 +410,10 @@ def throw_problem_exception():
     )
 
 
+def throw_value_error():
+    raise ValueError('Something really wrong.')
+
+
 def unordered_params_response(first, path_param, second):
     return dict(first=int(first), path_param=str(path_param), second=int(second))
 

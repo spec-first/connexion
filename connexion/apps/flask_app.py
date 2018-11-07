@@ -57,7 +57,9 @@ class FlaskApp(AbstractApp):
 
     def add_error_handler(self, error_code, function):
         # type: (int, FunctionType) -> None
-        self.app.register_error_handler(error_code, function)
+        def wrapper(error):
+            return FlaskApi.get_response(function(error))
+        self.app.register_error_handler(error_code, wrapper)
 
     def run(self, port=None, server=None, debug=None, host=None, **options):  # pragma: no cover
         """

@@ -2,6 +2,10 @@ import json
 
 import flask
 
+import pytest
+from conftest import SPECS, TEST_FOLDER
+from connexion import App, problem
+
 
 def fix_data(data):
     return data.replace(b'\\"', b'"')
@@ -78,3 +82,24 @@ def test_errors(problem_app):
     problem_as_exception_body = json.loads(problem_as_exception.data.decode('utf-8', 'replace'))
     assert 'age' in problem_as_exception_body
     assert problem_as_exception_body['age'] == 30
+
+
+
+@pytest.mark.parametrize("spec", SPECS)
+def test_error_handler_returning_connexion_response(problem_api_spec_dir, spec):
+
+    app = App(__name__, port=5001,
+              specification_dir='..' / problem_api_spec_dir.relative_to(TEST_FOLDER),
+              debug=True)
+    app.add_api(spec)
+
+    def the_error_handler(error):
+        return problem(599, 'Problem', 'Something wrong.')
+    app.add_error_handler(ValueError, the_error_handler)
+
+    app_client = app.app.test_client()
+    resp = app_client.get('/v1.0/value_error')
+    assert resp.status_code == 599
+    resp_body = json.loads(resp.data.decode('utf-8', 'replace'))
+    assert resp_body['title'] == 'Problem'
+    assert resp_body['detail'] == 'Something wrong.'
