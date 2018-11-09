@@ -1,5 +1,6 @@
 import asyncio
 import sys
+import yaml
 
 import aiohttp.web
 import pytest
@@ -60,6 +61,11 @@ def test_swagger_json(aiohttp_api_spec_dir, test_client):
     assert swagger_json.status == 200
     assert api.specification.raw == json.loads(json_)
 
+    swagger_yaml = yield from app_client.get('/v1.0/swagger.yaml')
+    yml_ = yield from swagger_yaml.read()
+
+    assert swagger_yaml.status == 200
+    assert api.specification.raw == yaml.safe_load(yml_)
 
 @asyncio.coroutine
 def test_no_swagger_json(aiohttp_api_spec_dir, test_client):
@@ -72,9 +78,12 @@ def test_no_swagger_json(aiohttp_api_spec_dir, test_client):
     api = app.add_api('swagger_simple.yaml')
 
     app_client = yield from test_client(app.app)
+
     swagger_json = yield from app_client.get('/v1.0/swagger.json')  # type: flask.Response
     assert swagger_json.status == 404
 
+    swagger_yaml = yield from app_client.get('/v1.0/swagger.yaml')  # type: flask.Response
+    assert swagger_yaml.status == 404
 
 @asyncio.coroutine
 def test_swagger_ui(aiohttp_api_spec_dir, test_client):

@@ -3,6 +3,7 @@ import logging
 import flask
 import six
 import werkzeug.exceptions
+import yaml
 from werkzeug.local import LocalProxy
 
 from connexion.apis import flask_utils
@@ -34,10 +35,29 @@ class FlaskApi(AbstractAPI):
         """
         logger.debug('Adding spec json: %s/%s', self.base_path,
                      self.options.openapi_spec_path)
-        endpoint_name = "{name}_openapi_json".format(name=self.blueprint.name)
+        json_endpoint = "{name}_openapi_json".format(name=self.blueprint.name)
         self.blueprint.add_url_rule(self.options.openapi_spec_path,
-                                    endpoint_name,
+                                    json_endpoint,
                                     lambda: flask.jsonify(self.specification.raw))
+        if self.options.openapi_spec_path.endswith(".json"):
+            # also serve YAML
+            yaml_endpoint = "{name}_openapi_yaml".format(name=self.blueprint.name)
+            yaml_spec_path = \
+                self.options.openapi_spec_path[:-len("json")] + "yaml"
+
+            def yaml_dump():
+                return FlaskApi._build_flask_response(
+                    status_code=200,
+                    content_type="text/yaml",
+                    data=yaml.dump(self.specification.raw,
+                                   default_flow_style=False)
+                )
+
+            self.blueprint.add_url_rule(
+                yaml_spec_path,
+                yaml_endpoint,
+                yaml_dump
+            )
 
     def add_swagger_ui(self):
         """

@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import re
+import yaml
 from urllib.parse import parse_qs
 
 import jinja2
@@ -76,6 +77,16 @@ class AioHttpApi(AbstractAPI):
             self.options.openapi_spec_path,
             self._get_openapi_json
         )
+        if self.options.openapi_spec_path.endswith(".json"):
+            # also serve YAML
+            yaml_spec_path = \
+                self.options.openapi_spec_path[:-len("json")] + "yaml"
+
+            self.subapp.router.add_route(
+                'GET',
+                yaml_spec_path,
+                self._get_opepnapi_yaml
+            )
 
     @asyncio.coroutine
     def _get_openapi_json(self, req):
@@ -83,6 +94,15 @@ class AioHttpApi(AbstractAPI):
             status=200,
             content_type='application/json',
             body=self.jsonifier.dumps(self.specification.raw)
+        )
+
+    @asyncio.coroutine
+    def _get_openapi_yaml(self, req):
+        return web.Response(
+            status=200,
+            content_type='text/yaml',
+            body=yaml.dump(self.specification.raw,
+                           default_flow_style=False)
         )
 
     def add_swagger_ui(self):

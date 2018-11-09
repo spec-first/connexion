@@ -95,6 +95,11 @@ def test_swagger_json_app(simple_api_spec_dir, spec):
     app.add_api(spec)
     app_client = app.app.test_client()
     url = '/v1.0/{spec}'
+    # yaml
+    url = url.format(spec=spec)
+    spec_json = app_client.get(url)  # type: flask.Response
+    assert spec_json.status_code == 200
+    # json
     url = url.format(spec=spec.replace("yaml", "json"))
     spec_json = app_client.get(url)  # type: flask.Response
     assert spec_json.status_code == 200
@@ -110,6 +115,11 @@ def test_no_swagger_json_app(simple_api_spec_dir, spec):
 
     app_client = app.app.test_client()
     url = '/v1.0/{spec}'
+    # yaml
+    url = url.format(spec=spec)
+    spec_json = app_client.get(url)  # type: flask.Response
+    assert spec_json.status_code == 404
+    # json
     url = url.format(spec=spec.replace("yaml", "json"))
     spec_json = app_client.get(url)  # type: flask.Response
     assert spec_json.status_code == 404
