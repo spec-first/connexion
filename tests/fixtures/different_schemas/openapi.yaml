@@ -235,7 +235,7 @@ paths:
               format: email
         required: true
   /schema_int:
-    get:
+    post:
       description: test schema int
       operationId: fakeapi.hello.test_schema_int
       responses:
@@ -249,7 +249,7 @@ paths:
               type: integer
         required: true
   /schema_array:
-    get:
+    post:
       description: test schema array
       operationId: fakeapi.hello.test_schema_array
       responses:
