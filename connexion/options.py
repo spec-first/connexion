@@ -23,10 +23,10 @@ class ConnexionOptions(object):
         self._options = {}
         self.oas_version = oas_version
         if self.oas_version >= (3, 0, 0):
-            self.openapi_spec_name = '/openapi.{ext}'
+            self.openapi_spec_name = '/openapi.json'
             self.swagger_ui_local_path = swagger_ui_3_path
         else:
-            self.openapi_spec_name = '/swagger.{ext}'
+            self.openapi_spec_name = '/swagger.json'
             self.swagger_ui_local_path = swagger_ui_2_path
 
         if options:
@@ -81,16 +81,14 @@ class ConnexionOptions(object):
         return self._options.get('swagger_ui', True)
 
     @property
-    def openapi_spec_path(self, ext='json'):
+    def openapi_spec_path(self):
         # type: () -> str
         """
         Path to mount the OpenAPI Console UI and make it accessible via a browser.
 
         Default: /openapi.json for openapi3, otherwise /swagger.json
         """
-        return self._options.get(
-            'openapi_spec_path',
-            self.openapi_spec_name.format(ext=ext))
+        return self._options.get('openapi_spec_path', self.openapi_spec_name)
 
     @property
     def openapi_console_ui_path(self):
