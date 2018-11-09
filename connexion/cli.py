@@ -183,7 +183,7 @@ def run(spec_file,
     )
 
     options = {
-        "swagger_json": not hide_spec,
+        "serve_spec": not hide_spec,
         "swagger_path": console_ui_from or None,
         "swagger_ui": not hide_console_ui,
         "swagger_url": console_ui_url or None
