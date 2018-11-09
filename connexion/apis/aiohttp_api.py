@@ -1,10 +1,10 @@
 import asyncio
 import logging
 import re
-import yaml
 from urllib.parse import parse_qs
 
 import jinja2
+import yaml
 
 import aiohttp_jinja2
 from aiohttp import web
