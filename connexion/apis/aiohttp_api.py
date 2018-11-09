@@ -85,7 +85,7 @@ class AioHttpApi(AbstractAPI):
             self.subapp.router.add_route(
                 'GET',
                 yaml_spec_path,
-                self._get_opepnapi_yaml
+                self._get_openapi_yaml
             )
 
     @asyncio.coroutine
