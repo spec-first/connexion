@@ -101,7 +101,7 @@ class OpenAPIOperation(AbstractOperation):
             }
         }
 
-        self._request_body = operation.get('requestBody')
+        self._request_body = operation.get('requestBody', {})
 
         self._parameters = operation.get('parameters', [])
         if path_parameters:
@@ -112,13 +112,12 @@ class OpenAPIOperation(AbstractOperation):
         # TODO figure out how to support multiple mimetypes
         # NOTE we currently just combine all of the possible mimetypes,
         #      but we need to refactor to support mimetypes by response code
-        response_codes = operation.get('responses', {})
         response_content_types = []
-        for _, defn in response_codes.items():
+        for _, defn in self._responses.items():
             response_content_types += defn.get('content', {}).keys()
         self._produces = response_content_types or ['application/json']
 
-        request_content = operation.get('requestBody', {}).get('content', {})
+        request_content = self._request_body.get('content', {})
         self._consumes = list(request_content.keys()) or ['application/json']
 
         logger.debug('consumes: %s' % self.consumes)
@@ -148,20 +147,12 @@ class OpenAPIOperation(AbstractOperation):
         return self._parameters
 
     @property
-    def responses(self):
-        return self._responses
-
-    @property
     def consumes(self):
         return self._consumes
 
     @property
     def produces(self):
         return self._produces
-
-    @property
-    def _spec_definitions(self):
-        return self._definitions_map
 
     def with_definitions(self, schema):
         if self.components:

@@ -142,10 +142,6 @@ class Swagger2Operation(AbstractOperation):
         return self._parameters
 
     @property
-    def responses(self):
-        return self._responses
-
-    @property
     def consumes(self):
         return self._consumes
 
