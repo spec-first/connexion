@@ -422,10 +422,6 @@ def test_args_kwargs(*args, **kwargs):
     return kwargs
 
 
-def test_args_kwargs3(body=None, *args, **kwargs):
-    return kwargs
-
-
 def test_param_sanitization(query=None, form=None):
     result = {}
     if query:
