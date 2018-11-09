@@ -21,8 +21,7 @@ fi
 
 tox -e py27-pypi,py35-pypi,py36-pypi,isort-check,isort-check-examples,isort-check-tests,flake8 --skip-missing-interpreters
 
-python3 setup.py sdist bdist_wheel
-twine upload dist/*
+flit publish
 
 # revert version
 git checkout -- */__init__.py

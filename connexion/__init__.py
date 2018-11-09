@@ -1,3 +1,7 @@
+"""
+Connexion - API first applications with OpenAPI/Swagger
+"""
+
 import werkzeug.exceptions as exceptions  # NOQA
 from .apps import AbstractApp  # NOQA
 from .apis import AbstractAPI  # NOQA
