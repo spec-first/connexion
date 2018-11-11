@@ -153,6 +153,11 @@ def validate_scope(required_scopes, token_scopes):
 
 
 def verify_authorization_token(request, token_info_func):
+    """
+    :param request: ConnexionRequest
+    :param token_info_func: types.FunctionType
+    :rtype: dict
+    """
     authorization = request.headers.get('Authorization')
     if not authorization:
         return None
@@ -246,6 +251,10 @@ def verify_apikey(apikey_info_func, loc, name):
 
 
 def verify_bearer(bearer_info_func):
+    """
+    :param bearer_info_func: types.FunctionType
+    :rtype: types.FunctionType
+    """
     def wrapper(request, required_scopes):
         return verify_authorization_token(request, bearer_info_func)
     return wrapper
