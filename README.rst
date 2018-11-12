@@ -264,6 +264,12 @@ In this example, Connexion automatically recognizes that your view
 function expects an argument named ``message`` and assigns the value
 of the endpoint parameter ``message`` to your view function.
 
+.. note:: In the OpenAPI 3.x.x spec, the requestBody does not have a name.
+          By default it will be passed in as 'body'. You can optionally
+          provide the x-body-name parameter in your requestBody schema
+          to override the name of the parameter that will be passed to your
+          handler function.
+
 .. warning:: When you define a parameter at your endpoint as *not* required, and
     this argument does not have default value in your Python view, you will get
     a "missing positional argument" exception whenever you call this endpoint
@@ -278,7 +284,7 @@ do type casting to related Python native values. The current
 available type castings are:
 
 +--------------+-------------+
-| Swagger Type | Python Type |
+| OpenAPI Type | Python Type |
 +==============+=============+
 | integer      | int         |
 +--------------+-------------+
@@ -290,6 +296,8 @@ available type castings are:
 +--------------+-------------+
 | array        | list        |
 +--------------+-------------+
+| null         | None        |
++--------------+-------------+
 | object       | dict        |
 +--------------+-------------+
 
@@ -299,9 +307,9 @@ supports collection formats "pipes" and "csv". The default format is "csv".
 
 Connexion is opinionated about how the URI is parsed for ``array`` types.
 The default behavior for query parameters that have been defined multiple
-times is to join them all together. For example, if you provide a URI with
+times is to use the right-most value. For example, if you provide a URI with
 the the query string ``?letters=a,b,c&letters=d,e,f``, connexion will set
-``letters = ['a', 'b', 'c', 'd', 'e', 'f']``.
+``letters = ['d', 'e', 'f']``.
 
 You can override this behavior by specifying the URI parser in the app or
 api options.
@@ -309,20 +317,25 @@ api options.
 .. code-block:: python
 
    from connexion.decorators.uri_parsing import Swagger2URIParser
-   options = {'uri_parsing_class': Swagger2URIParser}
+   options = {'uri_parsing_class': AlwaysMultiURIParser}
    app = connexion.App(__name__, specification_dir='swagger/', options=options)
 
 You can implement your own URI parsing behavior by inheriting from
 ``connextion.decorators.uri_parsing.AbstractURIParser``.
 
-There are three URI parsers included with connection.
+There are a handful of URI parsers included with connection.
 
 +----------------------+---------------------------------------------------------------------------+
-| AlwaysMultiURIParser | This parser is backwards compatible, and joins together multiple instances|
-| (default)            | of the same query parameter.                                              |
+| OpenAPIURIParser     | This parser adheres to the OpenAPI 3.x.x spec, and uses the ``style``     |
+| default: OpenAPI 3.0 | parameter. Query parameters are parsed from left to right, so if a query  |
+|                      | parameter is defined twice, then the right-most definition will take      |
+|                      | precedence. For example, if you provided a URI with the query string      |
+|                      | ``?letters=a,b,c&letters=d,e,f``, and ``style: simple``, then connexion   |
+|                      | will set ``letters = ['d', 'e', 'f']``. For additional information see    |
+|                      | `OpenAPI 3.0 Style Values`_.                                              |
 +----------------------+---------------------------------------------------------------------------+
 | Swagger2URIParser    | This parser adheres to the Swagger 2.0 spec, and will only join together  |
-|                      | multiple instance of the same query parameter if the ``collectionFormat`` |
+| default: OpenAPI 2.0 | multiple instance of the same query parameter if the ``collectionFormat`` |
 |                      | is set to ``multi``. Query parameters are parsed from left to right, so   |
 |                      | if a query parameter is defined twice, then the right-most definition     |
 |                      | wins. For example, if you provided a URI with the query string            |
@@ -333,6 +346,9 @@ There are three URI parsers included with connection.
 |                      | the first defined value. For example, if you provided a URI with the query|
 |                      | string ``?letters=a,b,c&letters=d,e,f`` and ``collectionFormat: csv``     |
 |                      | hen connexion will set ``letters = ['a', 'b', 'c']``                      |
++----------------------+---------------------------------------------------------------------------+
+| AlwaysMultiURIParser | This parser is backwards compatible with Connexion 1.x. It joins together |
+|                      | multiple instances of the same query parameter.                           |
 +----------------------+---------------------------------------------------------------------------+
 
 
@@ -351,18 +367,33 @@ to your application:
 API Versioning and basePath
 ---------------------------
 
-You can also define a ``basePath`` on the top level of the API
-specification. This is useful for versioned APIs. To serve the
-previous endpoint from ``http://MYHOST/1.0/hello_world``, type:
+Setting a base path is useful for versioned APIs. An example of
+a base path would be the ``1.0`` in ``http://MYHOST/1.0/hello_world``.
+
+If you are using OpenAPI 3.x.x, you set your base URL path in the
+servers block of the specification. You can either specify a full
+URL, or just a relative path.
+
+.. code-block:: yaml
+
+    servers:
+      - url: https://MYHOST/1.0
+        description: full url example
+      - url: /1.0
+        description: relative path example
+
+    paths:
+      ...
+
+If you are using OpenAPI 2.0, you can define a ``basePath`` on the top level
+of your OpenAPI 2.0 specification.
 
 .. code-block:: yaml
 
     basePath: /1.0
 
     paths:
-      /hello_world:
-        post:
-          operationId: myapp.api.hello_world
+      ...
 
 If you don't want to include the base path in your specification, you
 can provide it when adding the API to your application:
@@ -374,22 +405,27 @@ can provide it when adding the API to your application:
 Swagger JSON
 ------------
 Connexion makes the OpenAPI/Swagger specification in JSON format
-available from ``swagger.json`` in the base path of the API.
+available from either ``swagger.json`` (for OpenAPI 2.0) or
+``openapi.json`` (for OpenAPI 3.x.x) at the base path of the API.
+For example, if your base path was ``1.0``, then your spec would be
+available at ``/1.0/openapi.json``.
 
-You can disable the Swagger JSON at the application level:
+You can disable serving the spec JSON at the application level:
 
 .. code-block:: python
 
-    app = connexion.App(__name__, specification_dir='swagger/',
-                        swagger_json=False)
+    options = {"serve_spec": False}
+    app = connexion.App(__name__, specification_dir='openapi/',
+                        options=options)
     app.add_api('my_api.yaml')
 
 You can also disable it at the API level:
 
 .. code-block:: python
 
-    app = connexion.App(__name__, specification_dir='swagger/')
-    app.add_api('my_api.yaml', swagger_json=False)
+    options = {"serve_spec": False}
+    app = connexion.App(__name__, specification_dir='openapi/')
+    app.add_api('my_api.yaml', options=options)
 
 HTTPS Support
 -------------
@@ -428,7 +464,7 @@ You can disable the Swagger UI at the application level:
 
 .. code-block:: python
 
-    app = connexion.App(__name__, specification_dir='swagger/',
+    app = connexion.App(__name__, specification_dir='openapi/',
                         options={"swagger_ui": False})
     app.add_api('my_api.yaml')
 
@@ -437,7 +473,7 @@ You can also disable it at the API level:
 
 .. code-block:: python
 
-    app = connexion.App(__name__, specification_dir='swagger/')
+    app = connexion.App(__name__, specification_dir='openapi/')
     app.add_api('my_api.yaml', options={"swagger_ui": False})
 
 If necessary, you can explicitly specify the path to the directory with
@@ -447,7 +483,7 @@ In order to do this, you should specify the following option:
 .. code-block:: python
 
    options = {'swagger_path': '/path/to/swagger_ui/'}
-   app = connexion.App(__name__, specification_dir='swagger/', options=options)
+   app = connexion.App(__name__, specification_dir='openapi/', options=options)
 
 If you wish to provide your own swagger-ui distro, note that connextion
 expects a jinja2 file called ``swagger_ui/index.j2`` in order to load the
@@ -568,6 +604,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 .. _Jinja2: http://jinja.pocoo.org/
 .. _rfc6750: https://tools.ietf.org/html/rfc6750
 .. _OpenAPI Specification: https://www.openapis.org/
+.. _OpenAPI 3.0 Style Values: https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#style-values
 .. _Operation Object: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#operation-object
 .. _swager.spec.security_definition: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-definitions-object
 .. _swager.spec.security_requirement: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-requirement-object
