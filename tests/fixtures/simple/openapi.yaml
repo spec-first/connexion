@@ -734,7 +734,7 @@ paths:
                 type: string
   /query-params-as-kwargs:
     get:
-      operationId: fakeapi.hello.test_args_kwargs3
+      operationId: fakeapi.hello.test_args_kwargs
       parameters:
         - name: foo
           description: Just a testing parameter.

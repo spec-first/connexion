@@ -8,6 +8,11 @@ from .resolver import Resolution, Resolver, RestyResolver  # NOQA
 
 import sys
 
+# add operation for backwards compatability
+from .operations import compat
+full_name = '{}.operation'.format(__package__)
+sys.modules[full_name] = sys.modules[compat.__name__]
+
 
 def not_installed_error():  # pragma: no cover
     import six

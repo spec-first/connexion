@@ -290,7 +290,7 @@ def test_formdata_missing_param():
     return ''
 
 
-def test_formdata_file_upload(formData):
+def test_formdata_file_upload(formData, **kwargs):
     filename = formData.filename
     contents = formData.read().decode('utf-8', 'replace')
     return {filename: contents}
@@ -421,10 +421,6 @@ def more_than_one_scope_defined(**kwargs):
 
 
 def test_args_kwargs(*args, **kwargs):
-    return kwargs
-
-
-def test_args_kwargs3(body=None, *args, **kwargs):
     return kwargs
 
 
