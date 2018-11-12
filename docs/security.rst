@@ -91,3 +91,4 @@ way to start a HTTPS server when using Connexion?
 .. _rfc7662: https://tools.ietf.org/html/rfc7662
 .. _minimal OAuth example application: https://github.com/zalando/connexion/tree/master/examples/swagger2/oauth2
 .. _minimal Basic Auth example application: https://github.com/zalando/connexion/tree/master/examples/swagger2/basicauth
+.. _minimal JWT example application: https://github.com/zalando/connexion/tree/master/examples/openapi3/jwt
