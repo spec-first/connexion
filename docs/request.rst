@@ -95,7 +95,7 @@ In the OpenAPI 2.0 specification, if the `array` type is used you can define the
 `collectionFormat` used to deserialize the input. Connexion currently
 supports collection formats "pipes" and "csv". The default format is "csv".
 
-.. note:: For more details about `collectionFormat`'s please check the
+.. note:: For more details about `collectionFormat`s please check the
           official `OpenAPI 2.0 Specification`_.
 
 
