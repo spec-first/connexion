@@ -82,7 +82,12 @@ class Specification(collections_abc.Mapping):
 
     @staticmethod
     def _load_spec_from_file(arguments, specification):
-        from openapi_spec_validator.loaders import ExtendedSafeLoader
+        """
+        Loads a YAML specification file, optionally rendering it with Jinja2.
+        Takes:
+          arguments - passed to Jinja2 renderer
+          specification - path to specification
+        """
         arguments = arguments or {}
 
         with specification.open(mode='rb') as openapi_yaml:
@@ -93,10 +98,13 @@ class Specification(collections_abc.Mapping):
                 openapi_template = contents.decode('utf-8', 'replace')
 
             openapi_string = jinja2.Template(openapi_template).render(**arguments)
-            return yaml.load(openapi_string, ExtendedSafeLoader)
+            return yaml.safe_load(openapi_string)
 
     @classmethod
     def from_file(cls, spec, arguments=None):
+        """
+        Takes in a path to a YAML file, and returns a Specification
+        """
         specification_path = pathlib.Path(spec)
         spec = cls._load_spec_from_file(arguments, specification_path)
         return cls.from_dict(spec)
@@ -120,6 +128,20 @@ class Specification(collections_abc.Mapping):
 
     @classmethod
     def from_dict(cls, spec):
+        """
+        Takes in a dictionary, and returns a Specification
+        """
+        def enforce_string_keys(obj):
+            # YAML supports integer keys, but JSON does not
+            if isinstance(obj, dict):
+                return {
+                    str(k): enforce_string_keys(v)
+                    for k, v
+                    in six.iteritems(obj)
+                }
+            return obj
+
+        spec = enforce_string_keys(spec)
         version = cls._get_spec_version(spec)
         if version < (3, 0, 0):
             return Swagger2Specification(spec)

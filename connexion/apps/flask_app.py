@@ -71,7 +71,6 @@ class FlaskApp(AbstractApp):
         :param debug: include debugging information
         :type debug: bool
         :param options: options to be forwarded to the underlying server
-        :type options: dict
         """
         # this functions is not covered in unit tests because we would effectively testing the mocks
 

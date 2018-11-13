@@ -60,7 +60,7 @@ def test_security(oauth_requests, secure_endpoint_app):
     assert get_bye_bad_token.content_type == 'application/problem+json'
     get_bye_bad_token_reponse = json.loads(get_bye_bad_token.data.decode('utf-8', 'replace'))  # type: dict
     assert get_bye_bad_token_reponse['title'] == 'Unauthorized'
-    assert get_bye_bad_token_reponse['detail'] == "Provided oauth token is not valid"
+    assert get_bye_bad_token_reponse['detail'] == "Provided token is not valid"
 
     response = app_client.get('/v1.0/more-than-one-security-definition')  # type: flask.Response
     assert response.status_code == 401
@@ -84,6 +84,9 @@ def test_security(oauth_requests, secure_endpoint_app):
     get_bye_from_connexion = app_client.get('/v1.0/byesecure-from-connexion', headers=headers)  # type: flask.Response
     assert get_bye_from_connexion.data == b'Goodbye test-user (Secure!)'
 
+    headers = {"Authorization": "Bearer 100"}
+    get_bye_from_connexion = app_client.get('/v1.0/byesecure-jwt/test-user', headers=headers)  # type: flask.Response
+    assert get_bye_from_connexion.data == b'Goodbye test-user (Secure: 100)'
 
 def test_checking_that_client_token_has_all_necessary_scopes(
         oauth_requests, secure_endpoint_app):
