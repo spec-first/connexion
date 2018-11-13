@@ -43,17 +43,19 @@ class Specification(collections_abc.Mapping):
 
     def __init__(self, raw_spec):
         self._raw_spec = copy.deepcopy(raw_spec)
+        self._set_defaults(raw_spec)
+        self._validate_spec(raw_spec)
         self._spec = resolve_refs(raw_spec)
-        self._set_defaults()
-        self._validate_spec()
 
+    @classmethod
     @abc.abstractmethod
-    def _set_defaults(self):
+    def _set_defaults(cls, spec):
         """ set some default values in the spec
         """
 
+    @classmethod
     @abc.abstractmethod
-    def _validate_spec(self):
+    def _validate_spec(cls, spec):
         """ validate spec against schema
         """
 
@@ -156,12 +158,13 @@ class Swagger2Specification(Specification):
     yaml_name = 'swagger.yaml'
     operation_cls = Swagger2Operation
 
-    def _set_defaults(self):
-        self._spec.setdefault('produces', [])
-        self._spec.setdefault('consumes', ['application/json'])  # type: List[str]
-        self._spec.setdefault('definitions', {})
-        self._spec.setdefault('parameters', {})
-        self._spec.setdefault('responses', {})
+    @classmethod
+    def _set_defaults(cls, spec):
+        spec.setdefault('produces', [])
+        spec.setdefault('consumes', ['application/json'])  # type: List[str]
+        spec.setdefault('definitions', {})
+        spec.setdefault('parameters', {})
+        spec.setdefault('responses', {})
 
     @property
     def produces(self):
@@ -197,10 +200,11 @@ class Swagger2Specification(Specification):
         self._raw_spec['basePath'] = base_path
         self._spec['basePath'] = base_path
 
-    def _validate_spec(self):
+    @classmethod
+    def _validate_spec(cls, spec):
         from openapi_spec_validator import validate_v2_spec as validate_spec
         try:
-            validate_spec(self._raw_spec)
+            validate_spec(spec)
         except OpenAPIValidationError as e:
             raise InvalidSpecification.create_from(e)
 
@@ -209,8 +213,9 @@ class OpenAPISpecification(Specification):
     yaml_name = 'openapi.yaml'
     operation_cls = OpenAPIOperation
 
-    def _set_defaults(self):
-        self._spec.setdefault('components', {})
+    @classmethod
+    def _set_defaults(cls, spec):
+        spec.setdefault('components', {})
 
     @property
     def security_definitions(self):
@@ -220,10 +225,11 @@ class OpenAPISpecification(Specification):
     def components(self):
         return self._spec['components']
 
-    def _validate_spec(self):
+    @classmethod
+    def _validate_spec(cls, spec):
         from openapi_spec_validator import validate_v3_spec as validate_spec
         try:
-            validate_spec(self._raw_spec)
+            validate_spec(spec)
         except OpenAPIValidationError as e:
             raise InvalidSpecification.create_from(e)
 
