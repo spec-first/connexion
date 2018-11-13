@@ -20,7 +20,7 @@ In your command line, type this:
 Running It
 ----------
 
-Put your API YAML inside a folder in the root path of your application (e.g ``openapi\``) and then do
+Put your API YAML inside a folder in the root path of your application (e.g ``openapi/``) and then do
 
 .. code-block:: python
 
