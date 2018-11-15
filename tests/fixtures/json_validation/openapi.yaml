@@ -1,0 +1,77 @@
+openapi: "3.0.0"
+
+info:
+  title: "{{title}}"
+  version: "1.0"
+
+servers:
+  - url: /v1.0
+
+components:
+  schemas:
+    User:
+      type: object
+      required:
+      - name
+      - user_id
+      - password
+      properties:
+        user_id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+        password:
+          type: string
+          writeOnly: true
+
+paths:
+  /minlength:
+    post:
+      operationId: fakeapi.hello.post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                foo:
+                  type: string
+      responses:
+        200:
+          description: Success
+
+  /user:
+    get:
+      operationId: fakeapi.hello.get_user
+      responses:
+        200:
+          description: User object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    post:
+      operationId: fakeapi.hello.post_user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        200:
+          description: User object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+  /user_with_password:
+    get:
+      operationId: fakeapi.hello.get_user_with_password
+      responses:
+        200:
+          description: User object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'

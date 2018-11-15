@@ -22,7 +22,7 @@ class BaseSerializer(BaseDecorator):
         """
         :rtype: str
         """
-        return '<BaseSerializer: {}>'.format(self.mimetype)
+        return '<BaseSerializer: {}>'.format(self.mimetype)  # pragma: no cover
 
 
 class Produces(BaseSerializer):
@@ -46,4 +46,4 @@ class Produces(BaseSerializer):
         """
         :rtype: str
         """
-        return '<Produces: {}>'.format(self.mimetype)
+        return '<Produces: {}>'.format(self.mimetype)  # pragma: no cover

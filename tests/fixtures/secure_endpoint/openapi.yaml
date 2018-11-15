@@ -77,6 +77,27 @@ paths:
           required: true
           schema:
             type: string
+  '/byesecure-jwt/{name}':
+    get:
+      summary: Generate goodbye
+      description: Generates a goodbye message.
+      operationId: fakeapi.hello.get_bye_secure_jwt
+      security:
+        - jwt: []
+      responses:
+        '200':
+          description: goodbye response
+          content:
+            text/plain:
+              schema:
+                type: string
+      parameters:
+        - name: name
+          in: path
+          description: Name of the person to say bye.
+          required: true
+          schema:
+            type: string
   /more-than-one-security-definition:
     get:
       summary: Some external call to API
@@ -103,16 +124,6 @@ paths:
       responses:
         '200':
           description: some response
-  /user-handled-security:
-    get:
-      summary: Some external call to API
-      description: External application call
-      operationId: fakeapi.hello.schema_map
-      security:
-        - api_key: []
-      responses:
-        '200':
-          description: OK
 servers:
   - url: /v1.0
 components:
@@ -128,5 +139,11 @@ components:
             otherscope: another scope
     api_key:
       type: apiKey
-      name: api_key
+      name: X-Auth
       in: header
+      x-apikeyInfoFunc: fakeapi.hello.apikey_info
+    jwt:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      x-bearerInfoFunc: fakeapi.hello.jwt_info

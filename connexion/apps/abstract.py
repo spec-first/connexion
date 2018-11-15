@@ -14,7 +14,7 @@ logger = logging.getLogger('connexion.app')
 class AbstractApp(object):
     def __init__(self, import_name, api_cls, port=None, specification_dir='',
                  host=None, server=None, arguments=None, auth_all_paths=False, debug=False,
-                 validator_map=None, options=None, **old_style_options):
+                 resolver=None, options=None):
         """
         :param import_name: the name of the application package
         :type import_name: str
@@ -32,12 +32,12 @@ class AbstractApp(object):
         :type auth_all_paths: bool
         :param debug: include debugging information
         :type debug: bool
-        :param validator_map: map of validators
-        :type validator_map: dict
+        :param resolver: Callable that maps operationID to a function
         """
         self.port = port
         self.host = host
         self.debug = debug
+        self.resolver = resolver
         self.import_name = import_name
         self.arguments = arguments or {}
         self.api_cls = api_cls
@@ -45,11 +45,8 @@ class AbstractApp(object):
 
         # Options
         self.auth_all_paths = auth_all_paths
-        self.validator_map = validator_map
 
-        self.options = ConnexionOptions(old_style_options)
-        # options is added last to preserve the highest priority
-        self.options = self.options.extend(options)  # type: ConnexionOptions
+        self.options = ConnexionOptions(options)
 
         self.app = self.create_app()
         self.server = server
@@ -89,8 +86,9 @@ class AbstractApp(object):
 
     def add_api(self, specification, base_path=None, arguments=None,
                 auth_all_paths=None, validate_responses=False,
-                strict_validation=False, resolver=Resolver(), resolver_error=None,
-                pythonic_params=False, options=None, pass_context_arg_name=None, **old_style_options):
+                strict_validation=False, resolver=None, resolver_error=None,
+                pythonic_params=False, pass_context_arg_name=None, options=None,
+                validator_map=None):
         """
         Adds an API to the application based on a swagger file or API dict
 
@@ -117,9 +115,8 @@ class AbstractApp(object):
         :type options: dict | None
         :param pass_context_arg_name: Name of argument in handler functions to pass request context to.
         :type pass_context_arg_name: str | None
-        :param old_style_options: Old style options support for backward compatibility. Preference is
-                                  what is defined in `options` parameter.
-        :type old_style_options: dict
+        :param validator_map: map of validators
+        :type validator_map: dict
         :rtype: AbstractAPI
         """
         # Turn the resolver_error code into a handler object
@@ -128,6 +125,7 @@ class AbstractApp(object):
         if self.resolver_error is not None:
             resolver_error_handler = self._resolver_error_handler
 
+        resolver = resolver or self.resolver
         resolver = Resolver(resolver) if hasattr(resolver, '__call__') else resolver
 
         auth_all_paths = auth_all_paths if auth_all_paths is not None else self.auth_all_paths
@@ -140,12 +138,7 @@ class AbstractApp(object):
         else:
             specification = self.specification_dir / specification
 
-        # Old style options have higher priority compared to the already
-        # defined options in the App class
-        api_options = self.options.extend(old_style_options)
-
-        # locally defined options are added last to preserve highest priority
-        api_options = api_options.extend(options)
+        api_options = self.options.extend(options)
 
         api = self.api_cls(specification,
                            base_path=base_path,
@@ -156,7 +149,7 @@ class AbstractApp(object):
                            strict_validation=strict_validation,
                            auth_all_paths=auth_all_paths,
                            debug=self.debug,
-                           validator_map=self.validator_map,
+                           validator_map=validator_map,
                            pythonic_params=pythonic_params,
                            pass_context_arg_name=pass_context_arg_name,
                            options=api_options.as_dict())
@@ -164,10 +157,6 @@ class AbstractApp(object):
 
     def _resolver_error_handler(self, *args, **kwargs):
         from connexion.handlers import ResolverErrorHandler
-        kwargs['operation'] = {
-            'operationId': 'connexion.handlers.ResolverErrorHandler',
-        }
-        kwargs.setdefault('app_consumes', ['application/json'])
         return ResolverErrorHandler(self.api_cls, self.resolver_error, *args, **kwargs)
 
     def add_url_rule(self, rule, endpoint=None, view_func=None, **options):
@@ -247,7 +236,6 @@ class AbstractApp(object):
         :param debug: include debugging information
         :type debug: bool
         :param options: options to be forwarded to the underlying server
-        :type options: dict
         """
 
     def __call__(self, environ, start_response):  # pragma: no cover

@@ -1,0 +1,4 @@
+connexion>=2.0.0rc3
+python-jose[cryptography]
+six>=1.9
+Flask>=0.10.1

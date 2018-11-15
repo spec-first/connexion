@@ -17,7 +17,8 @@ def aiohttp_app(aiohttp_api_spec_dir):
     app = AioHttpApp(__name__, port=5001,
                      specification_dir=aiohttp_api_spec_dir,
                      debug=True)
-    app.add_api('swagger_simple.yaml', validate_responses=True, pass_context_arg_name='request_ctx')
+    options = {"validate_responses": True}
+    app.add_api('swagger_simple.yaml', validate_responses=True, pass_context_arg_name='request_ctx', options=options)
     return app
 
 
@@ -57,15 +58,16 @@ def test_swagger_json(aiohttp_api_spec_dir, test_client):
     json_ = yield from swagger_json.read()
 
     assert swagger_json.status == 200
-    assert api.specification == json.loads(json_)
+    assert api.specification.raw == json.loads(json_)
 
 
 @asyncio.coroutine
 def test_no_swagger_json(aiohttp_api_spec_dir, test_client):
     """ Verify the swagger.json file is not returned when set to False when creating app. """
+    options = {"swagger_json": False}
     app = AioHttpApp(__name__, port=5001,
                      specification_dir=aiohttp_api_spec_dir,
-                     swagger_json=False,
+                     options=options,
                      debug=True)
     api = app.add_api('swagger_simple.yaml')
 
@@ -122,9 +124,10 @@ def test_swagger_ui_static(aiohttp_api_spec_dir, test_client):
 
 @asyncio.coroutine
 def test_no_swagger_ui(aiohttp_api_spec_dir, test_client):
+    options = {"swagger_ui": False}
     app = AioHttpApp(__name__, port=5001,
                      specification_dir=aiohttp_api_spec_dir,
-                     swagger_ui=False, debug=True)
+                     options=options, debug=True)
     app.add_api('swagger_simple.yaml')
 
     app_client = yield from test_client(app.app)
@@ -134,7 +137,8 @@ def test_no_swagger_ui(aiohttp_api_spec_dir, test_client):
     app2 = AioHttpApp(__name__, port=5001,
                       specification_dir=aiohttp_api_spec_dir,
                       debug=True)
-    app2.add_api('swagger_simple.yaml', swagger_ui=False)
+    options = {"swagger_ui": False}
+    app2.add_api('swagger_simple.yaml', options=options)
     app2_client = yield from test_client(app.app)
     swagger_ui2 = yield from app2_client.get('/v1.0/ui/')
     assert swagger_ui2.status == 404
@@ -152,9 +156,10 @@ def test_middlewares(aiohttp_api_spec_dir, test_client):
 
         return middleware_handler
 
+    options = {"middlewares": [middleware]}
     app = AioHttpApp(__name__, port=5001,
                      specification_dir=aiohttp_api_spec_dir,
-                     debug=True, middlewares=[middleware])
+                     debug=True, options=options)
     app.add_api('swagger_simple.yaml')
     app_client = yield from test_client(app.app)
     get_bye = yield from app_client.get('/v1.0/bye/jsantos')

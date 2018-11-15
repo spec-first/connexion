@@ -241,6 +241,53 @@ paths:
       responses:
         '200':
           description: OK
+
+  /test_array_csv_form_param:
+    post:
+      operationId: fakeapi.hello.test_array_csv_form_param3
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              default:
+                items: ["squash", "banana"]
+              x-body-name: items
+              properties:
+                items:
+                  type: array
+                  items:
+                    type: string
+            encoding:
+              items:
+                style: simple
+      responses:
+        200:
+          description: OK
+
+  /test_array_pipes_form_param:
+    post:
+      operationId: fakeapi.hello.test_array_pipes_form_param3
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              x-body-name: items
+              properties:
+                items:
+                  type: array
+                  items:
+                    type: integer
+              required:
+              - items
+            encoding:
+              items:
+                style: pipeDelimited
+      responses:
+        200:
+          description: OK
+
   /test_array_csv_query_param:
     get:
       operationId: fakeapi.hello.test_array_csv_query_param
@@ -248,7 +295,26 @@ paths:
         - name: items
           in: query
           description: An comma separated array of items
-          style: form
+          style: simple
+          schema:
+            type: array
+            default: ["squash", "banana"]
+            items:
+              type: string
+      responses:
+        '200':
+          description: OK
+
+
+  /test_array_multi_query_param:
+    get:
+      operationId: fakeapi.hello.test_array_multi_query_param
+      parameters:
+        - name: items
+          in: query
+          description: An comma separated array of items
+          style: csv
+          explode: true
           schema:
             type: array
             default: ["squash", "banana"]
@@ -497,7 +563,7 @@ paths:
       operationId: fakeapi.hello.post_goodday_no_header
       responses:
         '201':
-          description: gooday response
+          description: goodday response
           headers:
             Location:
               description: The URI of the created resource
@@ -524,6 +590,9 @@ paths:
             text/plain:
               schema:
                 type: string
+              examples:
+                justAnExample:
+                  $ref: '#/components/examples/justAnExample'
       parameters:
         - name: name
           in: path
@@ -588,6 +657,7 @@ paths:
           application/x-www-form-urlencoded:
             schema:
               type: object
+              nullable: true
               properties:
                 post_param:
                   description: Just a testing parameter.
@@ -816,6 +886,18 @@ paths:
                 type: array
                 items: {}
 servers:
+  - url: http://localhost:{port}/{basePath}
+    variables:
+      port:
+        enum:
+         - '4000'
+         - '5000'
+        default: '5000'
+      basePath:
+        enum:
+         - v1.0
+         - v1
+        default: v1.0
   - url: /v1.0
 components:
   requestBodies:
@@ -831,6 +913,10 @@ components:
                 type: string
       description: Just a testing parameter in the body
       required: true
+  examples:
+    justAnExample:
+      summary: a basic example.
+      value: Good evening, doctor.
   schemas:
     new_stack:
       type: object

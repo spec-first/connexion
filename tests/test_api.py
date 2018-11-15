@@ -3,13 +3,12 @@
 import pathlib
 import tempfile
 
-from swagger_spec_validator.common import SwaggerValidationError
 from yaml import YAMLError
 
 import pytest
 from connexion import FlaskApi
-from connexion.apis.abstract import canonical_base_path
 from connexion.exceptions import InvalidSpecification, ResolverError
+from connexion.spec import canonical_base_path
 from mock import MagicMock
 
 TEST_FOLDER = pathlib.Path(__file__).parent
@@ -30,6 +29,14 @@ def test_api():
     api2 = FlaskApi(TEST_FOLDER / "fixtures/simple/swagger.yaml")
     assert api2.blueprint.name == '/v1_0'
     assert api2.blueprint.url_prefix == '/v1.0'
+
+    api3 = FlaskApi(TEST_FOLDER / "fixtures/simple/openapi.yaml", base_path="/api/v1.0")
+    assert api3.blueprint.name == '/api/v1_0'
+    assert api3.blueprint.url_prefix == '/api/v1.0'
+
+    api4 = FlaskApi(TEST_FOLDER / "fixtures/simple/openapi.yaml")
+    assert api4.blueprint.name == '/v1_0'
+    assert api4.blueprint.url_prefix == '/v1.0'
 
 
 def test_api_base_path_slash():
@@ -86,13 +93,13 @@ def test_invalid_operation_does_not_stop_application_in_debug_mode():
 
 def test_other_errors_stop_application_to_setup():
     # Errors should still result exceptions!
-    with pytest.raises(SwaggerValidationError):
+    with pytest.raises(InvalidSpecification):
         FlaskApi(TEST_FOLDER / "fixtures/bad_specs/swagger.yaml",
                  base_path="/api/v1.0", arguments={'title': 'OK'})
 
 
 def test_invalid_schema_file_structure():
-    with pytest.raises(SwaggerValidationError):
+    with pytest.raises(InvalidSpecification):
         FlaskApi(TEST_FOLDER / "fixtures/invalid_schema/swagger.yaml",
                  base_path="/api/v1.0", arguments={'title': 'OK'}, debug=True)
 
@@ -111,12 +118,12 @@ def test_use_of_safe_load_for_yaml_swagger_specs():
             f.flush()
             try:
                 FlaskApi(pathlib.Path(f.name), base_path="/api/v1.0")
-            except SwaggerValidationError:
+            except InvalidSpecification:
                 pytest.fail("Could load invalid YAML file, use yaml.safe_load!")
 
 
 def test_validation_error_on_completely_invalid_swagger_spec():
-    with pytest.raises(SwaggerValidationError):
+    with pytest.raises(InvalidSpecification):
         with tempfile.NamedTemporaryFile() as f:
             f.write('[1]\n'.encode())
             f.flush()
@@ -128,9 +135,3 @@ def mock_api_logger(monkeypatch):
     mocked_logger = MagicMock(name='mocked_logger')
     monkeypatch.setattr('connexion.apis.abstract.logger', mocked_logger)
     return mocked_logger
-
-
-def test_warn_users_about_base_url_parameter_name_change(mock_api_logger):
-    FlaskApi(TEST_FOLDER / "fixtures/simple/swagger.yaml", base_url="/api/v1")
-    mock_api_logger.warning.assert_called_with(
-        'Parameter base_url should be no longer used. Use base_path instead.')

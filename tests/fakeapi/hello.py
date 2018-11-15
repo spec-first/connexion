@@ -2,8 +2,7 @@
 import flask
 from flask import jsonify, redirect
 
-import connexion
-from connexion import NoContent, ProblemException, problem
+from connexion import NoContent, ProblemException, context, problem
 
 
 class DummyClass(object):
@@ -35,6 +34,10 @@ def post():
 
 def post_greeting(name, **kwargs):
     data = {'greeting': 'Hello {name}'.format(name=name)}
+    return data
+
+def post_greeting3(body, **kwargs):
+    data = {'greeting': 'Hello {name}'.format(name=body["name"])}
     return data
 
 def post_greeting_url(name, remainder, **kwargs):
@@ -75,16 +78,18 @@ def get_bye_secure(name, user, token_info):
 
 
 def get_bye_secure_from_flask():
-    return 'Goodbye {user} (Secure!)'.format(user=flask.request.user)
+    return 'Goodbye {user} (Secure!)'.format(user=context['user'])
 
 
-def get_bye_secure_from_connexion():
-    return 'Goodbye {user} (Secure!)'.format(user=connexion.request.user)
+def get_bye_secure_from_connexion(req_context):
+    return 'Goodbye {user} (Secure!)'.format(user=req_context['user'])
 
 
 def get_bye_secure_ignoring_context(name):
     return 'Goodbye {name} (Secure!)'.format(name=name)
 
+def get_bye_secure_jwt(name, user, token_info):
+    return 'Goodbye {name} (Secure: {user})'.format(name=name, user=user)
 
 def with_problem():
     return problem(type='http://www.example.com/error',
@@ -210,11 +215,23 @@ def test_array_csv_query_param(items):
     return items
 
 
+def test_array_pipes_form_param3(items):
+    return items['items']
+
+
+def test_array_csv_form_param3(items):
+    return items['items']
+
+
 def test_array_pipes_form_param(items):
     return items
 
 
 def test_array_csv_form_param(items):
+    return items
+
+
+def test_array_multi_query_param(items):
     return items
 
 
@@ -261,6 +278,9 @@ def test_default_integer_body(stack_version):
 def test_falsy_param(falsy):
     return falsy
 
+def test_formdata_param3(body):
+    return body["formData"]
+
 
 def test_formdata_param(formData):
     return formData
@@ -270,7 +290,7 @@ def test_formdata_missing_param():
     return ''
 
 
-def test_formdata_file_upload(formData):
+def test_formdata_file_upload(formData, **kwargs):
     filename = formData.filename
     contents = formData.read().decode('utf-8', 'replace')
     return {filename: contents}
@@ -341,6 +361,14 @@ def test_nullable_param_post(post_param):
     return post_param
 
 
+def test_nullable_param_post3(body):
+    if body is None:
+        return 'it was None'
+    if body["post_param"] is None:
+        return 'it was None'
+    return body["post_param"]
+
+
 def test_nullable_param_put(contents):
     if contents is None:
         return 'it was None'
@@ -405,6 +433,15 @@ def test_param_sanitization(query=None, form=None):
     return result
 
 
+def test_param_sanitization3(query=None, body=None):
+    result = {}
+    if query:
+        result['query'] = query
+    if body:
+        result['form'] = body["form"]
+    return result
+
+
 def test_body_sanitization(body=None):
     return body
 
@@ -444,3 +481,28 @@ def get_httpstatus_response():
 
 def get_bad_default_response(response_code):
     return {}, response_code
+
+
+def get_user():
+    return {'user_id': 7, 'name': 'max'}
+
+
+def get_user_with_password():
+    return {'user_id': 7, 'name': 'max', 'password': '5678'}
+
+
+def post_user(body):
+    body['user_id'] = 8
+    body.pop('password', None)
+    return body
+
+
+def apikey_info(apikey, required_scopes=None):
+    if apikey == 'mykey':
+        return {'sub': 'admin'}
+    return None
+
+def jwt_info(token):
+    if token == '100':
+        return {'sub': '100'}
+    return None
