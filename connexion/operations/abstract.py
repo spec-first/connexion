@@ -99,6 +99,8 @@ class AbstractOperation(SecureOperation):
         self._resolution = resolver.resolve(self)
         self._operation_id = self._resolution.operation_id
 
+        self._responses = self._operation.get("responses", {})
+
         self._validator_map = dict(VALIDATOR_MAP)
         self._validator_map.update(validator_map or {})
 
@@ -115,6 +117,13 @@ class AbstractOperation(SecureOperation):
         The path of the operation, relative to the API base path
         """
         return self._path
+
+    @property
+    def responses(self):
+        """
+        Returns the responses for this operation
+        """
+        return self._responses
 
     @property
     def validator_map(self):
@@ -224,12 +233,6 @@ class AbstractOperation(SecureOperation):
     def parameters(self):
         """
         Returns the parameters for this operation
-        """
-
-    @abc.abstractproperty
-    def responses(self):
-        """
-        Returns the responses for this operation
         """
 
     @abc.abstractproperty
