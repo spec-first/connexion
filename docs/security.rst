@@ -68,6 +68,14 @@ parameters: apikey and required_scopes.
 
 You can find a `minimal Basic Auth example application`_ in Connexion's "examples" folder.
 
+Bearer Authentication (JWT)
+---------------------------
+
+With Connexion, the API security definition **must** include a
+``x-bearerInfoFunc`` or set ``BEARERINFO_FUNC`` env var. It uses the same
+semantics as for ``x-tokenInfoFunc``, but the function accepts one parameter: token.
+
+You can find a `minimal JWT example application`_ in Connexion's "examples/openapi3" folder.
 
 HTTPS Support
 -------------
@@ -83,3 +91,4 @@ way to start a HTTPS server when using Connexion?
 .. _rfc7662: https://tools.ietf.org/html/rfc7662
 .. _minimal OAuth example application: https://github.com/zalando/connexion/tree/master/examples/swagger2/oauth2
 .. _minimal Basic Auth example application: https://github.com/zalando/connexion/tree/master/examples/swagger2/basicauth
+.. _minimal JWT example application: https://github.com/zalando/connexion/tree/master/examples/openapi3/jwt

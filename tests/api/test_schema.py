@@ -205,8 +205,8 @@ def test_schema_array(schema_app):
     app_client = schema_app.app.test_client()
     headers = {'Content-type': 'application/json'}
 
-    array_request = app_client.get('/v1.0/schema_array', headers=headers,
-                                   data=json.dumps(['list', 'hello']))  # type: flask.Response
+    array_request = app_client.post('/v1.0/schema_array', headers=headers,
+                                    data=json.dumps(['list', 'hello']))  # type: flask.Response
     assert array_request.status_code == 200
     assert array_request.content_type == 'application/json'
     array_response = json.loads(array_request.data.decode('utf-8', 'replace'))  # type: list
@@ -217,8 +217,8 @@ def test_schema_int(schema_app):
     app_client = schema_app.app.test_client()
     headers = {'Content-type': 'application/json'}
 
-    array_request = app_client.get('/v1.0/schema_int', headers=headers,
-                                   data=json.dumps(42))  # type: flask.Response
+    array_request = app_client.post('/v1.0/schema_int', headers=headers,
+                                    data=json.dumps(42))  # type: flask.Response
     assert array_request.status_code == 200
     assert array_request.content_type == 'application/json'
     array_response = json.loads(array_request.data.decode('utf-8', 'replace'))  # type: list

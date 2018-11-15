@@ -99,6 +99,8 @@ class AbstractOperation(SecureOperation):
         self._resolution = resolver.resolve(self)
         self._operation_id = self._resolution.operation_id
 
+        self._responses = self._operation.get("responses", {})
+
         self._validator_map = dict(VALIDATOR_MAP)
         self._validator_map.update(validator_map or {})
 
@@ -115,6 +117,13 @@ class AbstractOperation(SecureOperation):
         The path of the operation, relative to the API base path
         """
         return self._path
+
+    @property
+    def responses(self):
+        """
+        Returns the responses for this operation
+        """
+        return self._responses
 
     @property
     def validator_map(self):
@@ -227,12 +236,6 @@ class AbstractOperation(SecureOperation):
         """
 
     @abc.abstractproperty
-    def responses(self):
-        """
-        Returns the responses for this operation
-        """
-
-    @abc.abstractproperty
     def produces(self):
         """
         Content-Types that the operation produces
@@ -266,9 +269,11 @@ class AbstractOperation(SecureOperation):
         ret.update(self._get_path_arguments(path_params, sanitize))
         ret.update(self._get_query_arguments(query_params, arguments,
                                              has_kwargs, sanitize))
-        ret.update(self._get_body_argument(body, arguments,
-                                           has_kwargs, sanitize))
-        ret.update(self._get_file_arguments(files, arguments, has_kwargs))
+
+        if self.method.upper() in ["PATCH", "POST", "PUT"]:
+            ret.update(self._get_body_argument(body, arguments,
+                                               has_kwargs, sanitize))
+            ret.update(self._get_file_arguments(files, arguments, has_kwargs))
         return ret
 
     def response_definition(self, status_code=None,

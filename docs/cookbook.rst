@@ -12,9 +12,9 @@ by the Connexion payload validation on request parameters and response
 payloads of your API.
 
 Let's say your API deals with Products and you want to define a field
-`price_label` that have a "money" format value. You can create a format
+`price_label` that has a "money" format value. You can create a format
 checker function and register that to be used to validate values of
-"money" format.
+the "money" format.
 
 Example of a possible schema of Product having an attribute with
 "money" format that would be defined in your OpenAPI specification:

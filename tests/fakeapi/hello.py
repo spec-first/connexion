@@ -88,6 +88,8 @@ def get_bye_secure_from_connexion(req_context):
 def get_bye_secure_ignoring_context(name):
     return 'Goodbye {name} (Secure!)'.format(name=name)
 
+def get_bye_secure_jwt(name, user, token_info):
+    return 'Goodbye {name} (Secure: {user})'.format(name=name, user=user)
 
 def with_problem():
     return problem(type='http://www.example.com/error',
@@ -422,10 +424,6 @@ def test_args_kwargs(*args, **kwargs):
     return kwargs
 
 
-def test_args_kwargs3(body=None, *args, **kwargs):
-    return kwargs
-
-
 def test_param_sanitization(query=None, form=None):
     result = {}
     if query:
@@ -502,4 +500,9 @@ def post_user(body):
 def apikey_info(apikey, required_scopes=None):
     if apikey == 'mykey':
         return {'sub': 'admin'}
+    return None
+
+def jwt_info(token):
+    if token == '100':
+        return {'sub': '100'}
     return None

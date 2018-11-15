@@ -101,7 +101,7 @@ class OpenAPIOperation(AbstractOperation):
             }
         }
 
-        self._request_body = operation.get('requestBody')
+        self._request_body = operation.get('requestBody', {})
 
         self._parameters = operation.get('parameters', [])
         if path_parameters:
@@ -112,17 +112,31 @@ class OpenAPIOperation(AbstractOperation):
         # TODO figure out how to support multiple mimetypes
         # NOTE we currently just combine all of the possible mimetypes,
         #      but we need to refactor to support mimetypes by response code
-        response_codes = operation.get('responses', {})
         response_content_types = []
-        for _, defn in response_codes.items():
+        for _, defn in self._responses.items():
             response_content_types += defn.get('content', {}).keys()
         self._produces = response_content_types or ['application/json']
 
-        request_content = operation.get('requestBody', {}).get('content', {})
+        request_content = self._request_body.get('content', {})
         self._consumes = list(request_content.keys()) or ['application/json']
 
         logger.debug('consumes: %s' % self.consumes)
         logger.debug('produces: %s' % self.produces)
+
+    @classmethod
+    def from_spec(cls, spec, api, path, method, resolver, *args, **kwargs):
+        return cls(
+            api,
+            method,
+            path,
+            spec.get_operation(path, method),
+            resolver=resolver,
+            path_parameters=spec.get_path_params(path),
+            app_security=spec.security,
+            components=spec.components,
+            *args,
+            **kwargs
+        )
 
     @property
     def request_body(self):
@@ -133,20 +147,12 @@ class OpenAPIOperation(AbstractOperation):
         return self._parameters
 
     @property
-    def responses(self):
-        return self._responses
-
-    @property
     def consumes(self):
         return self._consumes
 
     @property
     def produces(self):
         return self._produces
-
-    @property
-    def _spec_definitions(self):
-        return self._definitions_map
 
     def with_definitions(self, schema):
         if self.components:
@@ -238,7 +244,6 @@ class OpenAPIOperation(AbstractOperation):
         return {}
 
     def _get_body_argument(self, body, arguments, has_kwargs, sanitize):
-
         x_body_name = self.body_schema.get('x-body-name', 'body')
         if is_nullable(self.body_schema) and is_null(body):
             return {x_body_name: None}

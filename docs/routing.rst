@@ -30,7 +30,10 @@ If you provided this path in your specification POST requests to
           x-swagger-router-controller: myapp.api
           operationId: hello_world
 
-Keep in mind that Connexion follows how `HTTP methods work in Flask`_ and therefore HEAD requests will be handled by the ``operationId`` specified under GET in the specification. If both methods are supported, ``connexion.request.method`` can be used to determine which request was made.
+Keep in mind that Connexion follows how `HTTP methods work in Flask`_
+and therefore HEAD requests will be handled by the ``operationId`` specified
+under GET in the specification. If both methods are supported,
+``connexion.request.method`` can be used to determine which request was made.
 
 Automatic Routing
 -----------------
@@ -120,21 +123,36 @@ requests to include forward slashes in the ``name`` url variable.
 API Versioning and basePath
 ---------------------------
 
-You can also define a ``basePath`` on the top level of the API
-specification. This is useful for versioned APIs. To serve the
-previous endpoint from ``http://MYHOST/1.0/hello_world``, type:
+Setting a base path is useful for versioned APIs. An example of
+a base path would be the ``1.0`` in ``http://MYHOST/1.0/hello_world``.
+
+If you are using OpenAPI 3.x.x, you set your base URL path in the
+servers block of the specification. You can either specify a full
+URL, or just a relative path.
+
+.. code-block:: yaml
+
+    servers:
+      - url: https://MYHOST/1.0
+        description: full url example
+      - url: /1.0
+        description: relative path example
+
+    paths:
+      ...
+
+If you are using OpenAPI 2.0, you can define a ``basePath`` on the top level
+of your OpenAPI 2.0 specification.
 
 .. code-block:: yaml
 
     basePath: /1.0
 
     paths:
-      /hello_world:
-        post:
-          operationId: myapp.api.hello_world
+      ...
 
 If you don't want to include the base path in your specification, you
-can just provide it when adding the API to your application:
+can provide it when adding the API to your application:
 
 .. code-block:: python
 
