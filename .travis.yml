@@ -6,7 +6,7 @@ python:
   - "3.5"
   - "3.6"
 install:
-  - pip install --upgrade setuptools tox tox-travis coveralls flit
+  - pip install --upgrade setuptools tox tox-travis coveralls poetry
   - flit install --deps all  # TODO adapt what needs to be in python 2.7
 script:
   - tox

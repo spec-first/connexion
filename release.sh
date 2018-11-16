@@ -19,12 +19,18 @@ else
 	sed -i "s/__version__ = .*/__version__ = '${version}'/" */__init__.py
 fi
 
-tox -e py27-pypi,py35-pypi,py36-pypi,isort-check,isort-check-examples,isort-check-tests,flake8 --skip-missing-interpreters
+poetry version ${version}
 
-flit publish
+poetry lock
+poetry install -E dev
+#tox -e py27-pypi,py35-pypi,py36-pypi,isort-check,isort-check-examples,isort-check-tests,flake8 --skip-missing-interpreters
+poetry run
+
+poetry build # TODO publish
 
 # revert version
 git checkout -- */__init__.py
+poetry version 2018.dev
 
 git tag -s ${version} -m "${version}"
 git push --tags

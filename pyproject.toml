@@ -1,25 +1,17 @@
 [build-system]
-requires = ["flit"]
-build-backend = "flit.buildapi"
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
 
-[tool.flit.metadata]
-module = "connexion"
-author = "Zalando SE"
-author-email = "opensource@zalando.de"
-description-file = "README.rst"
-home-page = "https://github.com/zalando/connexion/"
-requires = [
-    "clickclick>=1.2",
-    "jsonschema>=2.5.1,<3.0.0",
-    "PyYAML>=3.11",
-    "requests>=2.9.1",
-    "six>=1.9",
-    "inflection>=0.3.1",
-    "pathlib>=1.0.1; python_version < '3.4'",
-    "typing>=3.6.1; python_version < '3.6'",
-    "openapi-spec-validator>=0.2.4",
-    "flask>=0.10.1"
-]
+[tool.poetry]
+name = "connexion"
+version = "2018.dev"
+description = "API First for python"
+authors = "Zalando SE <opensource@zalando.de>"
+license = "Apache-2.0"
+readme = "README.rst"
+homepage = "https://github.com/zalando/connexion/"
+repository = "https://github.com/zalando/connexion/"
+documentation = "https://connexion.readthedocs.io/en/latest/"
 classifiers=[
     "Programming Language :: Python",
     "Programming Language :: Python :: 2.7",
@@ -33,24 +25,39 @@ classifiers=[
     "Topic :: Software Development :: Libraries :: Application Frameworks"
 ]
 
-[tool.flit.metadata.requires-extra]
-aiohttp = [
-    "aiohttp>=2.3.10",
-    "aiohttp-jinja2>=0.14.0"
-]
-flask = ["flask>=0.10.1"]
-swagger-ui = ["swagger-ui-bundle>=0.0.2"]
-test = [
-    "decorator",
-    "mock",
-    "pytest",
-    "pytest-cov",
-    "testfixtures",
-    "flask>=0.10.1",
-    "swagger-ui-bundle>=0.0.2"
-]
-ujson = ["ujson>=1.35"]
+[tool.poetry.dependencies]
+python = ">=2.7, >=3.4"
+clickclick = ">=1.2"
+jsonschema = ">=2.5.1,<3.0.0"
+PyYAML = ">=3.11"
+requests = ">=2.9.1"
+six = ">=1.9"
+inflection = ">=0.3.1"
+pathlib = ">=1.0.1; python_version < '3.4'"
+typing = ">=3.6.1; python_version < '3.6'"
+openapi-spec-validator = ">=0.2.4"
+flask = ">=0.10.1"
+
+aiohttp = { version = ">=2.3.10",  python = ">=3.5.0", optional = true }
+aiohttp-jinja2 = { version = ">=0.14.0",  python = ">=3.5.0", optional = true }
+
+swagger-ui-bundle = { version = ">=0.0.2", optional = true }
+
+[tool.poetry.extras]
+aiohttp = ["aiohttp", "aiohttp-jinja2"]
+flask = ["flask"]
+swagger-ui = ["swagger-ui-bundle"]
+dev = ["aiohttp", "aiohttp-jinja2", "swagger-ui-bundle", "testfixtures"]
 
 
-[tool.flit.scripts]
+
+[tool.poetry.dev-dependencies]
+decorator = "*"
+mock = "*"
+pytest = "*"
+pytest-cov = "*"
+testfixtures = "*"
+ujson = "*"
+
+[tool.poetry.scripts]
 connexion = "connexion.cli:main"
