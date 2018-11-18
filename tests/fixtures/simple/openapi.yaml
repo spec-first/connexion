@@ -795,6 +795,52 @@ paths:
           description: OK
       requestBody:
         $ref: '#/components/requestBodies/fakeapi.hello.test_body_sanitization_body'
+  /body-sanitization-additional-properties:
+    post:
+      operationId: fakeapi.hello.test_body_sanitization_additional_properties
+      responses:
+        '200':
+          description: OK
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                body1:
+                  type: string
+              additionalProperties: true
+  /body-sanitization-additional-properties-defined:
+    post:
+      operationId: fakeapi.hello.test_body_sanitization_additional_properties_defined
+      responses:
+        '200':
+          description: OK
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                body1:
+                  type: string
+              additionalProperties:
+                type: string
+  /body-not-allowed-additional-properties:
+    post:
+      operationId: fakeapi.hello.test_body_not_allowed_additional_properties
+      responses:
+        '200':
+          description: OK
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                body1:
+                  type: string
+              additionalProperties: false
   /get_non_conforming_response:
     get:
       operationId: fakeapi.hello.get_empty_dict

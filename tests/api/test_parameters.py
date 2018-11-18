@@ -230,6 +230,17 @@ def test_formdata_file_upload_missing_param(simple_app):
     assert resp.status_code == 200
 
 
+def test_body_not_allowed_additional_properties(simple_app):
+    app_client = simple_app.app.test_client()
+    body = { 'body1': 'bodyString', 'additional_property': 'test1'}
+    resp = app_client.post(
+        '/v1.0/body-not-allowed-additional-properties',
+        json=body)
+    assert resp.status_code == 400
+
+    res = resp.get_json()
+    assert 'Additional properties are not allowed' in res['detail']
+
 def test_bool_as_default_param(simple_app):
     app_client = simple_app.app.test_client()
     resp = app_client.get('/v1.0/test-bool-param')
@@ -364,6 +375,19 @@ def test_param_sanitization(simple_app):
     assert resp.status_code == 200
     assert json.loads(resp.data.decode('utf-8', 'replace')) == body
 
+    body = { 'body1': 'bodyString', 'body2': 12, 'body3': {'a':'otherString' }}
+    resp = app_client.post(
+        '/v1.0/body-sanitization-additional-properties',
+        json=body)
+    assert resp.status_code == 200
+    assert resp.get_json() == body
+
+    body = { 'body1': 'bodyString', 'additional_property': 'test1', 'additional_property2': 'test2'}
+    resp = app_client.post(
+        '/v1.0/body-sanitization-additional-properties-defined',
+        json=body)
+    assert resp.status_code == 200
+    assert resp.get_json() == body
 
 def test_parameters_snake_case(snake_case_app):
     app_client = snake_case_app.app.test_client()
