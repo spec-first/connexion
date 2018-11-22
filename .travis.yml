@@ -1,12 +1,15 @@
 language: python
 python:
-  - "pypy"
+  - "pypy2.7-5.10.0"
   - "2.7"
   - "3.4"
   - "3.5"
   - "3.6"
+  - "3.7"
 install:
   - pip install --upgrade setuptools tox tox-travis coveralls
+dist:
+  - xenial
 script:
   - tox
 after_success:
