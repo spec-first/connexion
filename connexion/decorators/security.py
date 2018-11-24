@@ -12,6 +12,8 @@ from connexion.utils import get_function_from_name
 from ..exceptions import (ConnexionException, OAuthProblem,
                           OAuthResponseProblem, OAuthScopeProblem)
 
+from http.cookies import SimpleCookie
+
 logger = logging.getLogger('connexion.api.security')
 
 # use connection pool for OAuth tokeninfo
@@ -228,12 +230,29 @@ def verify_basic(basic_info_func):
     return wrapper
 
 
+def get_cookie_value(cookies, name):
+    '''
+    Returns cookie value by its name. None if no such value.
+    :param cookies: str: cookies raw data
+    :param name: str: cookies key
+    '''
+    cookie_parser = SimpleCookie()
+    cookie_parser.load(cookies)
+    if name in cookie_parser.keys():
+        return cookie_parser[name].value
+    return None
+
+
 def verify_apikey(apikey_info_func, loc, name):
+
     def wrapper(request, required_scopes):
         if loc == 'query':
             apikey = request.query.get(name)
         elif loc == 'header':
             apikey = request.headers.get(name)
+        elif loc == 'cookie':
+            cookieslist = request.headers.get('Cookie')
+            apikey = get_cookie_value(cookieslist, name)
         else:
             return None
 
