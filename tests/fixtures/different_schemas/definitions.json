@@ -1,0 +1,12 @@
+{
+  "new_stack": {
+    "type": "object",
+    "properties": {
+      "image_version": {
+        "type": "string",
+        "description": "Docker image version to deploy"
+      }
+    },
+    "required": ["image_version"]
+  }
+}

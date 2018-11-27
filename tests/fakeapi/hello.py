@@ -195,6 +195,10 @@ def schema_map():
     return ''
 
 
+def schema_relative_ref(image_version=None):
+    return {'image_version': image_version}
+
+
 def schema_recursive():
     return ''
 

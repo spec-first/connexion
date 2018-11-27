@@ -33,10 +33,10 @@ def canonical_base_path(base_path):
 
 class Specification(collections_abc.Mapping):
 
-    def __init__(self, raw_spec):
+    def __init__(self, raw_spec, spec_url):
         self._raw_spec = copy.deepcopy(raw_spec)
         self._set_defaults(raw_spec)
-        self._validate_spec(raw_spec)
+        self._validate_spec(raw_spec, spec_url)
         self._spec = resolve_refs(raw_spec)
 
     @classmethod
@@ -47,7 +47,7 @@ class Specification(collections_abc.Mapping):
 
     @classmethod
     @abc.abstractmethod
-    def _validate_spec(cls, spec):
+    def _validate_spec(cls, spec, spec_url):
         """ validate spec against schema
         """
 
@@ -105,7 +105,7 @@ class Specification(collections_abc.Mapping):
         """
         specification_path = pathlib.Path(spec)
         spec = cls._load_spec_from_file(arguments, specification_path)
-        return cls.from_dict(spec)
+        return cls._from_dict(spec, specification_path.resolve().as_uri())
 
     @staticmethod
     def _get_spec_version(spec):
@@ -129,6 +129,10 @@ class Specification(collections_abc.Mapping):
         """
         Takes in a dictionary, and returns a Specification
         """
+        return cls._from_dict(spec)
+
+    @classmethod
+    def _from_dict(cls, spec, spec_url=None):
         def enforce_string_keys(obj):
             # YAML supports integer keys, but JSON does not
             if isinstance(obj, dict):
@@ -142,8 +146,8 @@ class Specification(collections_abc.Mapping):
         spec = enforce_string_keys(spec)
         version = cls._get_spec_version(spec)
         if version < (3, 0, 0):
-            return Swagger2Specification(spec)
-        return OpenAPISpecification(spec)
+            return Swagger2Specification(spec, spec_url)
+        return OpenAPISpecification(spec, spec_url)
 
     @classmethod
     def load(cls, spec, arguments=None):
@@ -199,10 +203,10 @@ class Swagger2Specification(Specification):
         self._spec['basePath'] = base_path
 
     @classmethod
-    def _validate_spec(cls, spec):
+    def _validate_spec(cls, spec, spec_url):
         from openapi_spec_validator import validate_v2_spec as validate_spec
         try:
-            validate_spec(spec)
+            validate_spec(spec, spec_url)
         except OpenAPIValidationError as e:
             raise InvalidSpecification.create_from(e)
 
@@ -224,10 +228,10 @@ class OpenAPISpecification(Specification):
         return self._spec['components']
 
     @classmethod
-    def _validate_spec(cls, spec):
+    def _validate_spec(cls, spec, spec_url):
         from openapi_spec_validator import validate_v3_spec as validate_spec
         try:
-            validate_spec(spec)
+            validate_spec(spec, spec_url)
         except OpenAPIValidationError as e:
             raise InvalidSpecification.create_from(e)
 
