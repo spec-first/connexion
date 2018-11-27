@@ -33,11 +33,11 @@ def canonical_base_path(base_path):
 
 class Specification(collections_abc.Mapping):
 
-    def __init__(self, raw_spec, spec_url):
+    def __init__(self, raw_spec, spec_url=''):
         self._raw_spec = copy.deepcopy(raw_spec)
         self._set_defaults(raw_spec)
         self._validate_spec(raw_spec, spec_url)
-        self._spec = resolve_refs(raw_spec)
+        self._spec = resolve_refs(raw_spec, spec_url=spec_url)
 
     @classmethod
     @abc.abstractmethod
@@ -105,7 +105,8 @@ class Specification(collections_abc.Mapping):
         """
         specification_path = pathlib.Path(spec)
         spec = cls._load_spec_from_file(arguments, specification_path)
-        return cls._from_dict(spec, specification_path.resolve().as_uri())
+        spec_url = specification_path.resolve().as_uri()
+        return cls._from_dict(spec, spec_url)
 
     @staticmethod
     def _get_spec_version(spec):
@@ -132,7 +133,7 @@ class Specification(collections_abc.Mapping):
         return cls._from_dict(spec)
 
     @classmethod
-    def _from_dict(cls, spec, spec_url=None):
+    def _from_dict(cls, spec, spec_url=''):
         def enforce_string_keys(obj):
             # YAML supports integer keys, but JSON does not
             if isinstance(obj, dict):

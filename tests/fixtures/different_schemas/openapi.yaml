@@ -215,6 +215,24 @@ paths:
             schema:
               $ref: '#/components/schemas/simple_tree'
         required: true
+  /test_schema_relative_ref:
+    get:
+      summary: Returns the image version
+      description: Returns the image version
+      operationId: fakeapi.hello.schema_relative_ref
+      parameters:
+        - name: image_version
+          required: true
+          in: query
+          schema:
+            type: string
+      responses:
+        200:
+          description: goodbye response
+          content:
+            application/json:
+              schema:
+                $ref: 'definitions.json#/new_stack'
   /test_schema_format:
     post:
       summary: Returns empty response

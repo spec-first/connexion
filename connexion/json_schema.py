@@ -15,16 +15,17 @@ default_handlers = {
 }
 
 
-def resolve_refs(spec, store=None, handlers=None):
+def resolve_refs(spec, store=None, handlers=None, spec_url=''):
     """
     Resolve JSON references like {"$ref": <some URI>} in a spec.
     Optionally takes a store, which is a mapping from reference URLs to a
     dereferenced objects. Prepopulating the store can avoid network calls.
+    Passing a spec_url enables the use of references with relative URLs.
     """
     spec = deepcopy(spec)
     store = store or {}
     handlers = handlers or default_handlers
-    resolver = RefResolver('', spec, store, handlers=handlers)
+    resolver = RefResolver(spec_url, spec, store, handlers=handlers)
 
     def _do_resolve(node):
         if isinstance(node, collections.Mapping) and '$ref' in node:
