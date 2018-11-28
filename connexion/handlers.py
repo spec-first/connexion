@@ -85,4 +85,4 @@ class ResolverErrorHandler(SecureOperation):
         return RESOLVER_ERROR_ENDPOINT_RANDOM_DIGITS
 
     def get_path_parameter_types(self):
-        return []
+        return {}
