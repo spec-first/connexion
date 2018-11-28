@@ -7,10 +7,15 @@ info:
 basePath: '/na'
 
 paths:
-  /module-not-implemented:
+  /module-not-implemented/{some_path}:
     get:
       summary: Operation function does not exist.
       operationId: m.module_does_not_exist
+      parameters:
+        - name: some_path
+          in: path
+          required: true
+          type: string
       responses:
         200:
           description: OK

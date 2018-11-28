@@ -3,10 +3,15 @@ info:
   title: Not Exist API
   version: '1.0'
 paths:
-  /module-not-implemented:
+  /module-not-implemented/{some_path}:
     get:
       summary: Operation function does not exist.
       operationId: m.module_does_not_exist
+      parameters:
+      - in: path
+        name: some_path
+        schema:
+          type: string
       responses:
         '200':
           description: OK
