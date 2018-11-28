@@ -1,33 +1,19 @@
 import abc
-import copy
 import logging
 import pathlib
 import sys
-from typing import AnyStr, List  # NOQA
 
-import jinja2
 import six
-import yaml
-from openapi_spec_validator.exceptions import OpenAPIValidationError
-from six.moves.urllib.parse import urlsplit
 
-from ..exceptions import InvalidSpecification, ResolverError
-from ..json_schema import resolve_refs
-from ..operations import OpenAPIOperation, Swagger2Operation
+from ..exceptions import ResolverError
+from ..operations import make_operation
 from ..options import ConnexionOptions
 from ..resolver import Resolver
+from ..spec import Specification
 from ..utils import Jsonifier
-
-try:
-    import collections.abc as collections_abc  # python 3.3+
-except ImportError:
-    import collections as collections_abc
 
 MODULE_PATH = pathlib.Path(__file__).absolute().parent.parent
 SWAGGER_UI_URL = 'ui'
-NO_SPEC_VERSION_ERR_MSG = """Unable to get the spec version.
-You are missing either '"swagger": "2.0"' or '"openapi": "3.0.0"'
-from the top level of your spec."""
 
 logger = logging.getLogger('connexion.apis.abstract')
 
@@ -37,218 +23,6 @@ class AbstractAPIMeta(abc.ABCMeta):
     def __init__(cls, name, bases, attrs):
         abc.ABCMeta.__init__(cls, name, bases, attrs)
         cls._set_jsonifier()
-
-
-class Specification(collections_abc.Mapping):
-
-    def __init__(self, raw_spec):
-        self._raw_spec = copy.deepcopy(raw_spec)
-        self._spec = resolve_refs(raw_spec)
-        self._set_defaults()
-        self._validate_spec()
-
-    @abc.abstractmethod
-    def _set_defaults(self):
-        """ set some default values in the spec
-        """
-
-    @abc.abstractmethod
-    def _validate_spec(self):
-        """ validate spec against schema
-        """
-
-    @property
-    def raw(self):
-        return self._raw_spec
-
-    @property
-    def version(self):
-        return self._get_spec_version(self._spec)
-
-    @property
-    def security(self):
-        return self._spec.get('security')
-
-    def __getitem__(self, k):
-        return self._spec[k]
-
-    def __iter__(self):
-        return self._spec.__iter__()
-
-    def __len__(self):
-        return self._spec.__len__()
-
-    @staticmethod
-    def _load_spec_from_file(arguments, specification):
-        """
-        Loads a YAML specification file, optionally rendering it with Jinja2.
-        Takes:
-          arguments - passed to Jinja2 renderer
-          specification - path to specification
-        """
-        arguments = arguments or {}
-
-        with specification.open(mode='rb') as openapi_yaml:
-            contents = openapi_yaml.read()
-            try:
-                openapi_template = contents.decode()
-            except UnicodeDecodeError:
-                openapi_template = contents.decode('utf-8', 'replace')
-
-            openapi_string = jinja2.Template(openapi_template).render(**arguments)
-            return yaml.safe_load(openapi_string)
-
-    @classmethod
-    def from_file(cls, spec, arguments=None):
-        """
-        Takes in a path to a YAML file, and returns a Specification
-        """
-        specification_path = pathlib.Path(spec)
-        spec = cls._load_spec_from_file(arguments, specification_path)
-        return cls.from_dict(spec)
-
-    @staticmethod
-    def _get_spec_version(spec):
-        try:
-            version_string = spec.get('openapi') or spec.get('swagger')
-        except AttributeError:
-            raise InvalidSpecification(NO_SPEC_VERSION_ERR_MSG)
-        if version_string is None:
-            raise InvalidSpecification(NO_SPEC_VERSION_ERR_MSG)
-        try:
-            version_tuple = tuple(map(int, version_string.split(".")))
-        except TypeError:
-            err = ('Unable to convert version string to semantic version tuple: '
-                   '{version_string}.')
-            err = err.format(version_string=version_string)
-            raise InvalidSpecification(err)
-        return version_tuple
-
-    @classmethod
-    def from_dict(cls, spec):
-        """
-        Takes in a dictionary, and returns a Specification
-        """
-        def enforce_string_keys(obj):
-            # YAML supports integer keys, but JSON does not
-            if isinstance(obj, dict):
-                return {
-                    str(k): enforce_string_keys(v)
-                    for k, v
-                    in six.iteritems(obj)
-                }
-            return obj
-
-        spec = enforce_string_keys(spec)
-        version = cls._get_spec_version(spec)
-        if version < (3, 0, 0):
-            return Swagger2Specification(spec)
-        return OpenAPISpecification(spec)
-
-    @classmethod
-    def load(cls, spec, arguments=None):
-        if not isinstance(spec, dict):
-            return cls.from_file(spec, arguments=arguments)
-        return cls.from_dict(spec)
-
-
-class Swagger2Specification(Specification):
-    yaml_name = 'swagger.yaml'
-    operation_cls = Swagger2Operation
-
-    def _set_defaults(self):
-        self._spec.setdefault('produces', [])
-        self._spec.setdefault('consumes', ['application/json'])  # type: List[str]
-        self._spec.setdefault('definitions', {})
-        self._spec.setdefault('parameters', {})
-        self._spec.setdefault('responses', {})
-
-    @property
-    def produces(self):
-        return self._spec['produces']
-
-    @property
-    def consumes(self):
-        return self._spec['consumes']
-
-    @property
-    def definitions(self):
-        return self._spec['definitions']
-
-    @property
-    def parameter_definitions(self):
-        return self._spec['parameters']
-
-    @property
-    def response_definitions(self):
-        return self._spec['responses']
-
-    @property
-    def security_definitions(self):
-        return self._spec.get('securityDefinitions', {})
-
-    @property
-    def base_path(self):
-        return canonical_base_path(self._spec.get('basePath', ''))
-
-    @base_path.setter
-    def base_path(self, base_path):
-        base_path = canonical_base_path(base_path)
-        self._raw_spec['basePath'] = base_path
-        self._spec['basePath'] = base_path
-
-    def _validate_spec(self):
-        from openapi_spec_validator import validate_v2_spec as validate_spec
-        try:
-            validate_spec(self._raw_spec)
-        except OpenAPIValidationError as e:
-            raise InvalidSpecification.create_from(e)
-
-
-class OpenAPISpecification(Specification):
-    yaml_name = 'openapi.yaml'
-    operation_cls = OpenAPIOperation
-
-    def _set_defaults(self):
-        self._spec.setdefault('components', {})
-
-    @property
-    def security_definitions(self):
-        return self._spec['components'].get('securitySchemes', {})
-
-    @property
-    def components(self):
-        return self._spec['components']
-
-    def _validate_spec(self):
-        from openapi_spec_validator import validate_v3_spec as validate_spec
-        try:
-            validate_spec(self._raw_spec)
-        except OpenAPIValidationError as e:
-            raise InvalidSpecification.create_from(e)
-
-    @property
-    def base_path(self):
-        servers = self._spec.get('servers', [])
-        try:
-            # assume we're the first server in list
-            server = copy.deepcopy(servers[0])
-            server_vars = server.pop("variables", {})
-            server['url'] = server['url'].format(
-                **{k: v['default'] for k, v
-                   in six.iteritems(server_vars)}
-            )
-            base_path = urlsplit(server['url']).path
-        except IndexError:
-            base_path = ''
-        return canonical_base_path(base_path)
-
-    @base_path.setter
-    def base_path(self, base_path):
-        base_path = canonical_base_path(base_path)
-        user_servers = [{'url': base_path}]
-        self._raw_spec['servers'] = user_servers
-        self._spec['servers'] = user_servers
 
 
 @six.add_metaclass(AbstractAPIMeta)
@@ -365,7 +139,7 @@ class AbstractAPI(object):
         Adds a 404 error handler to authenticate and only expose the 404 status if the security validation pass.
         """
 
-    def add_operation(self, method, path, swagger_operation, path_parameters):
+    def add_operation(self, path, method):
         """
         Adds one operation to the api.
 
@@ -380,39 +154,20 @@ class AbstractAPI(object):
 
         :type method: str
         :type path: str
-        :type swagger_operation: dict
         """
-
-        shared_args = {
-            "method": method,
-            "path": path,
-            "path_parameters": path_parameters,
-            "operation": swagger_operation,
-            "app_security": self.specification.security,
-            "validate_responses": self.validate_responses,
-            "validator_map": self.validator_map,
-            "strict_validation": self.strict_validation,
-            "resolver": self.resolver,
-            "pythonic_params": self.pythonic_params,
-            "uri_parser_class": self.options.uri_parser_class,
-            "pass_context_arg_name": self.pass_context_arg_name
-        }
-
-        # TODO refactor into AbstractOperation.from_spec(Specification, method, path)
-        if self.specification.version < (3, 0, 0):
-            operation = Swagger2Operation(self,
-                                          app_produces=self.specification.produces,
-                                          app_consumes=self.specification.consumes,
-                                          security_definitions=self.specification.security_definitions,
-                                          definitions=self.specification.definitions,
-                                          parameter_definitions=self.specification.parameter_definitions,
-                                          response_definitions=self.specification.response_definitions,
-                                          **shared_args)
-        else:
-            operation = OpenAPIOperation(self,
-                                         components=self.specification.components,
-                                         **shared_args)
-
+        operation = make_operation(
+            self.specification,
+            self,
+            path,
+            method,
+            self.resolver,
+            validate_responses=self.validate_responses,
+            validator_map=self.validator_map,
+            strict_validation=self.strict_validation,
+            pythonic_params=self.pythonic_params,
+            uri_parser_class=self.options.uri_parser_class,
+            pass_context_arg_name=self.pass_context_arg_name
+        )
         self._add_operation_internal(method, path, operation)
 
     @abc.abstractmethod
@@ -443,15 +198,11 @@ class AbstractAPI(object):
         for path, methods in paths.items():
             logger.debug('Adding %s%s...', self.base_path, path)
 
-            # search for parameters definitions in the path level
-            # http://swagger.io/specification/#pathItemObject
-            path_parameters = methods.get('parameters', [])
-
-            for method, endpoint in methods.items():
+            for method in methods:
                 if method == 'parameters':
                     continue
                 try:
-                    self.add_operation(method, path, endpoint, path_parameters)
+                    self.add_operation(path, method)
                 except ResolverError as err:
                     # If we have an error handler for resolver errors, add it as an operation.
                     # Otherwise treat it as any other error.
@@ -509,10 +260,3 @@ class AbstractAPI(object):
     def _set_jsonifier(cls):
         import json
         cls.jsonifier = Jsonifier(json)
-
-
-def canonical_base_path(base_path):
-    """
-    Make given "basePath" a canonical base URL which can be prepended to paths starting with "/".
-    """
-    return base_path.rstrip('/')

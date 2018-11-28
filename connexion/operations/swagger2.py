@@ -117,13 +117,29 @@ class Swagger2Operation(AbstractOperation):
         logger.debug('consumes: %s', self.consumes)
         logger.debug('produces: %s', self.produces)
 
+    @classmethod
+    def from_spec(cls, spec, api, path, method, resolver, *args, **kwargs):
+        return cls(
+            api,
+            method,
+            path,
+            spec.get_operation(path, method),
+            resolver=resolver,
+            path_parameters=spec.get_path_params(path),
+            app_security=spec.security,
+            app_produces=spec.produces,
+            app_consumes=spec.consumes,
+            security_definitions=spec.security_definitions,
+            definitions=spec.definitions,
+            parameter_definitions=spec.parameter_definitions,
+            response_definitions=spec.response_definitions,
+            *args,
+            **kwargs
+        )
+
     @property
     def parameters(self):
         return self._parameters
-
-    @property
-    def responses(self):
-        return self._responses
 
     @property
     def consumes(self):

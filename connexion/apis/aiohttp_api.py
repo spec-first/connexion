@@ -228,8 +228,12 @@ class AioHttpApi(AbstractAPI):
         if isinstance(response, ConnexionResponse):
             response = cls._get_aiohttp_response_from_connexion(response, mimetype)
 
-        logger.debug('Got data and status code (%d)',
-                     response.status, extra={'data': response.body, 'url': url})
+        if isinstance(response, web.StreamResponse):
+            logger.debug('Got stream response with status code (%d)',
+                         response.status, extra={'url': url})
+        else:
+            logger.debug('Got data and status code (%d)',
+                         response.status, extra={'data': response.body, 'url': url})
 
         return response
 
