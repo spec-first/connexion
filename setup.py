@@ -23,7 +23,7 @@ version = read_version('connexion')
 install_requires = [
     'clickclick>=1.2',
     'jsonschema>=2.5.1,<3.0.0',
-    'PyYAML>=3.11',
+    'PyYAML>=3.13',
     'requests>=2.9.1',
     'six>=1.9',
     'inflection>=0.3.1',
@@ -121,6 +121,7 @@ setup(
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
         'Operating System :: OS Independent',
