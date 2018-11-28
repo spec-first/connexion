@@ -781,6 +781,73 @@ paths:
         200:
           description: OK
 
+  /body-sanitization-additional-properties:
+    post:
+      operationId: fakeapi.hello.test_body_sanitization_additional_properties
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: $body
+          description: Just a testing parameter in the body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              body1:
+                type: string
+            additionalProperties: true
+      responses:
+        200:
+          description: OK
+
+  /body-sanitization-additional-properties-defined:
+    post:
+      operationId: fakeapi.hello.test_body_sanitization_additional_properties_defined
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: $body
+          description: Just a testing parameter in the body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              body1:
+                type: string
+            additionalProperties:
+              type: string
+      responses:
+        200:
+          description: OK
+
+  /body-not-allowed-additional-properties:
+    post:
+      operationId: fakeapi.hello.test_body_not_allowed_additional_properties
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: $body
+          description: Just a testing parameter in the body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              body1:
+                type: string
+            additionalProperties: false
+      responses:
+        200:
+          description: OK
+
   /get_non_conforming_response:
     get:
       operationId: fakeapi.hello.get_empty_dict
