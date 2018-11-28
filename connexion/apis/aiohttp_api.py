@@ -173,7 +173,7 @@ class AioHttpApi(AbstractAPI):
         query = parse_qs(req.rel_url.query_string)
         headers = {k.decode(): v.decode() for k, v in req.raw_headers}
         body = None
-        if req.can_read_body:
+        if req.body_exists:
             body = yield from req.read()
 
         return ConnexionRequest(url=url,
