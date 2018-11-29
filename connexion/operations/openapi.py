@@ -252,6 +252,10 @@ class OpenAPIOperation(AbstractOperation):
         body_props = {sanitize(k): {"schema": v} for k, v
                       in self.body_schema.get("properties", {}).items()}
 
+        # by OpenAPI specification `additionalProperties` defaults to `true`
+        # see: https://github.com/OAI/OpenAPI-Specification/blame/3.0.2/versions/3.0.2.md#L2305
+        additional_props = self.body_schema.get("additionalProperties", True)
+
         body = body or default_body
 
         if self.body_schema.get("type") != "object":
@@ -263,17 +267,38 @@ class OpenAPIOperation(AbstractOperation):
         body_arg.update(body or {})
 
         res = {}
-        if body_props:
-            for key, value in body_arg.items():
-                key = sanitize(key)
-                try:
-                    prop_defn = body_props[key]
-                    res[key] = self._get_val_from_param(value, prop_defn)
-                except KeyError:  # pragma: no cover
-                    logger.error("Body property '{}' not defined in body schema".format(key))
+        if body_props or additional_props:
+            res = self._sanitize_body_argument(body_arg, body_props, additional_props, sanitize)
+
         if x_body_name in arguments or has_kwargs:
             return {x_body_name: res}
         return {}
+
+    def _sanitize_body_argument(self, body_arg, body_props, additional_props, sanitize):
+        """
+        :type body_arg: type dict
+        :type body_props: dict
+        :type additional_props: dict|bool
+        :type sanitize: types.FunctionType
+        :rtype: dict
+        """
+        additional_props_defn = {"schema": additional_props} if isinstance(additional_props, dict) else None
+        res = {}
+
+        for key, value in body_arg.items():
+            key = sanitize(key)
+            try:
+                prop_defn = body_props[key]
+                res[key] = self._get_val_from_param(value, prop_defn)
+            except KeyError:  # pragma: no cover
+                if not additional_props:
+                    logger.error("Body property '{}' not defined in body schema".format(key))
+                    continue
+                if additional_props_defn is not None:
+                    value = self._get_val_from_param(value, additional_props_defn)
+                res[key] = value
+
+        return res
 
     def _get_query_arguments(self, query, arguments, has_kwargs, sanitize):
         query_defns = {sanitize(p["name"]): p

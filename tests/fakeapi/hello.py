@@ -445,6 +445,14 @@ def test_param_sanitization3(query=None, body=None):
 def test_body_sanitization(body=None):
     return body
 
+def test_body_sanitization_additional_properties(body):
+    return body
+
+def test_body_sanitization_additional_properties_defined(body):
+    return body
+
+def test_body_not_allowed_additional_properties(body):
+    return body
 
 def post_wrong_content_type():
     return "NOT OK"
