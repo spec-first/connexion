@@ -12,7 +12,7 @@ from connexion.utils import get_function_from_name
 from ..exceptions import (ConnexionException, OAuthProblem,
                           OAuthResponseProblem, OAuthScopeProblem)
 
-from http.cookies import SimpleCookie
+from six.moves import http_cookies
 
 logger = logging.getLogger('connexion.api.security')
 
@@ -117,8 +117,10 @@ def security_deny(function):
     :type function: types.FunctionType
     :rtype: types.FunctionType
     """
+
     def deny(*args, **kwargs):
         raise ConnexionException("Error in security definitions")
+
     return deny
 
 
@@ -183,6 +185,7 @@ def verify_authorization_token(request, token_info_func):
 
 
 def verify_oauth(token_info_func, scope_validate_func):
+
     def wrapper(request, required_scopes):
         token_info = verify_authorization_token(request, token_info_func)
         if token_info is None:
@@ -198,10 +201,12 @@ def verify_oauth(token_info_func, scope_validate_func):
             )
 
         return token_info
+
     return wrapper
 
 
 def verify_basic(basic_info_func):
+
     def wrapper(request, required_scopes):
         authorization = request.headers.get('Authorization')
         if not authorization:
@@ -227,6 +232,7 @@ def verify_basic(basic_info_func):
                 token_response=None
             )
         return token_info
+
     return wrapper
 
 
@@ -236,11 +242,12 @@ def get_cookie_value(cookies, name):
     :param cookies: str: cookies raw data
     :param name: str: cookies key
     '''
-    cookie_parser = SimpleCookie()
-    cookie_parser.load(cookies)
-    if name in cookie_parser.keys():
+    cookie_parser = http_cookies.SimpleCookie()
+    cookie_parser.load(str(cookies))
+    try:
         return cookie_parser[name].value
-    return None
+    except KeyError:
+        return None
 
 
 def verify_apikey(apikey_info_func, loc, name):
@@ -266,6 +273,7 @@ def verify_apikey(apikey_info_func, loc, name):
                 token_response=None
             )
         return token_info
+
     return wrapper
 
 
@@ -274,12 +282,15 @@ def verify_bearer(bearer_info_func):
     :param bearer_info_func: types.FunctionType
     :rtype: types.FunctionType
     """
+
     def wrapper(request, required_scopes):
         return verify_authorization_token(request, bearer_info_func)
+
     return wrapper
 
 
 def verify_security(auth_funcs, required_scopes, function):
+
     @functools.wraps(function)
     def wrapper(request):
         token_info = get_authorization_info(auth_funcs, request, required_scopes)
@@ -288,6 +299,7 @@ def verify_security(auth_funcs, required_scopes, function):
         request.context['user'] = token_info.get('sub', token_info.get('uid'))
         request.context['token_info'] = token_info
         return function(request)
+
     return wrapper
 
 
