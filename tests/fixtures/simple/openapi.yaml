@@ -931,6 +931,41 @@ paths:
               schema:
                 type: array
                 items: {}
+  /add_operation_on_http_methods_only:
+    summary: this is a test
+    description: check if add_operation is called only on http methods field
+    x-test: True
+    servers:
+      - url: http://localhost
+    parameters:
+      - $ref: "#/components/parameters/OptionalName"
+    get:
+      operationId: fakeapi.hello.get_add_operation_on_http_methods_only
+      responses: {}
+    put:
+      operationId: fakeapi.hello.put_add_operation_on_http_methods_only
+      responses: {}
+    post:
+      operationId: fakeapi.hello.post_add_operation_on_http_methods_only
+      responses: {}
+    delete:
+      operationId: fakeapi.hello.delete_add_operation_on_http_methods_only
+      responses: {}
+    options:
+      operationId: fakeapi.hello.options_add_operation_on_http_methods_only
+      responses: {}
+    head:
+      operationId: fakeapi.hello.head_add_operation_on_http_methods_only
+      responses: {}
+    patch:
+      operationId: fakeapi.hello.patch_add_operation_on_http_methods_only
+      responses: {}
+    trace:
+      operationId: fakeapi.hello.trace_add_operation_on_http_methods_only
+      responses: {}
+    
+
+
 servers:
   - url: http://localhost:{port}/{basePath}
     variables:
@@ -972,3 +1007,11 @@ components:
           description: Docker image version to deploy
       required:
         - image_version
+  parameters:
+    OptionalName:
+      name: name
+      in: path
+      description: Name of the person to greet.
+      required: false
+      schema:
+        type: string

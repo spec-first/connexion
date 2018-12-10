@@ -236,3 +236,8 @@ def test_handle_add_operation_error(simple_api_spec_dir):
     app.api_cls.add_operation = mock.MagicMock(side_effect=Exception('operation error!'))
     with pytest.raises(Exception):
         app.add_api('swagger.yaml', resolver=lambda oid: (lambda foo: 'bar'))
+
+
+def test_using_all_fields_in_path_item(simple_api_spec_dir):
+    app = App(__name__, specification_dir=simple_api_spec_dir)
+    app.add_api('openapi.yaml')
