@@ -236,10 +236,9 @@ class Swagger2Operation(AbstractOperation):
     def _get_body_argument(self, body, arguments, has_kwargs, sanitize):
         kwargs = {}
         body_parameters = [p for p in self.parameters if p['in'] == 'body'] or [{}]
-        default_body = body_parameters[0].get('schema', {}).get('default')
+        if body is None:
+            body = deepcopy(body_parameters[0].get('schema', {}).get('default'))
         body_name = sanitize(body_parameters[0].get('name'))
-
-        body = body or default_body
 
         form_defns = {sanitize(p['name']): p
                       for p in self.parameters

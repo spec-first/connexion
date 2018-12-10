@@ -133,6 +133,17 @@ def test_default_object_body(simple_app):
     assert response == 1
 
 
+def test_empty_object_body(simple_app):
+    app_client = simple_app.app.test_client()
+    resp = app_client.post(
+        '/v1.0/test-empty-object-body',
+        data=json.dumps({}),
+        headers={'Content-Type': 'application/json'})
+    assert resp.status_code == 200
+    response = json.loads(resp.data.decode('utf-8', 'replace'))
+    assert response['stack'] == {}
+
+
 def test_custom_encoder(simple_app):
 
     class CustomEncoder(FlaskJSONEncoder):
