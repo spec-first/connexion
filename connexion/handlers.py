@@ -37,9 +37,8 @@ class AuthErrorHandler(SecureOperation):
         security_decorator = self.security_decorator
         logger.debug('... Adding security decorator (%r)', security_decorator, extra=vars(self))
         function = self.handle
-        function = self._request_begin_lifecycle_decorator(function)
         function = security_decorator(function)
-        function = self._request_end_lifecycle_decorator(function)
+        function = self._request_response_decorator(function)
         return function
 
     def handle(self, *args, **kwargs):
