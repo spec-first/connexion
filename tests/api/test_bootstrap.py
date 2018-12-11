@@ -242,7 +242,7 @@ def test_handle_add_operation_error(simple_api_spec_dir):
 def test_using_all_fields_in_path_item(simple_api_spec_dir):
     """Test that connexion will try to add an endpoint only on http methods.
 
-    test also that each http methods has its own endpoint. 
+    test also that each http methods has its own endpoint.
     """
     app = App(__name__, specification_dir=simple_api_spec_dir)
     app.add_api('openapi.yaml')
