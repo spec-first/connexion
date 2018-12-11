@@ -1,8 +1,7 @@
 import functools
 import logging
 
-from ..decorators.decorator import (BeginOfRequestLifecycleDecorator,
-                                    EndOfRequestLifecycleDecorator)
+from ..decorators.decorator import RequestResponseDecorator
 from ..decorators.security import (get_apikeyinfo_func, get_basicinfo_func,
                                    get_bearerinfo_func,
                                    get_scope_validate_func, get_tokeninfo_func,
@@ -153,18 +152,7 @@ class SecureOperation(object):
         return DEFAULT_MIMETYPE
 
     @property
-    def _request_begin_lifecycle_decorator(self):
-        """
-        Transforms the result of the operation handler in a internal
-        representation (connexion.lifecycle.ConnexionRequest) to be
-        used by internal Connexion decorators.
-
-        :rtype: types.FunctionType
-        """
-        return BeginOfRequestLifecycleDecorator(self.api, self.get_mimetype())
-
-    @property
-    def _request_end_lifecycle_decorator(self):
+    def _request_response_decorator(self):
         """
         Guarantees that instead of the internal representation of the
         operation handler response
@@ -172,4 +160,4 @@ class SecureOperation(object):
         object is returned.
         :rtype: types.FunctionType
         """
-        return EndOfRequestLifecycleDecorator(self.api, self.get_mimetype())
+        return RequestResponseDecorator(self.api, self.get_mimetype())

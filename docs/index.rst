@@ -7,9 +7,10 @@ Welcome to Connexion's documentation!
 =====================================
 
 Connexion is a framework on top of Flask_ that automagically handles
-HTTP requests based on either the `OpenAPI 2.0 Specification`_ (formerly known
-as Swagger Spec) or the `OpenAPI 3.0 Specification`_. Connexion
-allows you to write a Swagger specification and then maps the
+HTTP requests defined using `OpenAPI`_ (formerly known
+as Swagger), supporting both `v2.0`_ and `v3.0`_ of the specification. 
+
+Connexion allows you to write these specifications, then maps the
 endpoints to your Python functions. This is what makes it unique from
 other tools that generate the specification based on your Python
 code. You are free to describe your REST API with as much detail as
@@ -34,5 +35,6 @@ Contents:
    exceptions
 
 .. _Flask: http://flask.pocoo.org/
-.. _OpenAPI 2.0 Specification: https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md
-.. _OpenAPI 3.0 Specification: https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md
+.. _OpenAPI: https://openapis.org/
+.. _v2.0: https://spec.openapis.org/oas/v2.0.html
+.. _v3.0: https://spec.openapis.org/oas/v3.0.1.html
