@@ -22,32 +22,7 @@ class BaseDecorator(object):
         return '<BaseDecorator>'
 
 
-class BeginOfRequestLifecycleDecorator(BaseDecorator):
-    """Manages the lifecycle of the request internally in Connexion.
-
-    Transforms the operation handler response into a `ConnexionRequest`
-    that can be manipulated by the series of decorators during the
-    lifecycle of the request.
-    """
-
-    def __init__(self, api, mimetype):
-        self.api = api
-        self.mimetype = mimetype
-
-    def __call__(self, function):
-        """
-        :type function: types.FunctionType
-        :rtype: types.FunctionType
-        """
-        @functools.wraps(function)
-        def wrapper(request):
-            response = function(request)
-            return self.api.get_response(response, self.mimetype, request)
-
-        return wrapper
-
-
-class EndOfRequestLifecycleDecorator(BaseDecorator):
+class RequestResponseDecorator(BaseDecorator):
     """Manages the lifecycle of the request internally in Connexion.
     Filter the ConnexionRequest instance to return the corresponding
     framework specific object.
