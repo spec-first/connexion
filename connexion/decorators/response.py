@@ -88,7 +88,7 @@ class ResponseValidator(BaseDecorator):
         def _wrapper(request, response):
             try:
                 connexion_response = \
-                    self.operation.api.get_connexion_response(response)
+                    self.operation.api.get_connexion_response(response, self.mimetype)
                 self.validate_response(
                     connexion_response.body, connexion_response.status_code,
                     connexion_response.headers, request.url)

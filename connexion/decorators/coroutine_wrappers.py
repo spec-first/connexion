@@ -4,7 +4,7 @@ import functools
 
 def get_request_life_cycle_wrapper(function, api, mimetype):
     """
-    It is a wrapper used on `EndOfRequestLifecycleDecorator` class.
+    It is a wrapper used on `RequestResponseDecorator` class.
     This function is located in an extra module because python2.7 don't
     support the 'yield from' syntax. This function is used to await
     the coroutines to connexion does the proper validation of parameters
