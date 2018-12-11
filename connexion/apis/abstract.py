@@ -247,7 +247,7 @@ class AbstractAPI(object):
 
     @classmethod
     @abc.abstractmethod
-    def get_connexion_response(cls, response):
+    def get_connexion_response(cls, response, mimetype=None):
         """
         This method converts the user framework response to a ConnexionResponse.
         :param response: A response to cast.
