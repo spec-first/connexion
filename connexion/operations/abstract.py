@@ -350,7 +350,6 @@ class AbstractOperation(SecureOperation):
             self, self._resolution.function, self.pythonic_params,
             self._pass_context_arg_name
         )
-        function = self._request_begin_lifecycle_decorator(function)
 
         if self.validate_responses:
             logger.debug('... Response validation enabled.')
@@ -377,7 +376,7 @@ class AbstractOperation(SecureOperation):
             decorator = UWSGIMetricsCollector(self.path, self.method)
             function = decorator(function)
 
-        function = self._request_end_lifecycle_decorator(function)
+        function = self._request_response_decorator(function)
 
         return function
 

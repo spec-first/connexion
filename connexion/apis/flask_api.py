@@ -197,7 +197,13 @@ class FlaskApi(AbstractAPI):
             return cls._build_flask_response(mimetype=mimetype, data=response)
 
     @classmethod
-    def get_connexion_response(cls, response):
+    def get_connexion_response(cls, response, mimetype=None):
+        if isinstance(response, ConnexionResponse):
+            return response
+
+        if not isinstance(response, flask.current_app.response_class):
+            response = cls.get_response(response, mimetype)
+
         return ConnexionResponse(
             status_code=response.status_code,
             mimetype=response.mimetype,
