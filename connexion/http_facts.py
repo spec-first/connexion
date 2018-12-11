@@ -5,7 +5,7 @@ FORM_CONTENT_TYPES = [
 
 METHODS = set([
     "get",
-    "put"
+    "put",
     "post",
     "delete",
     "options",
