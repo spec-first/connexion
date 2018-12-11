@@ -13,7 +13,6 @@ from connexion.utils import get_function_from_name
 from ..exceptions import (ConnexionException, OAuthProblem,
                           OAuthResponseProblem, OAuthScopeProblem)
 
-
 logger = logging.getLogger('connexion.api.security')
 
 # use connection pool for OAuth tokeninfo
