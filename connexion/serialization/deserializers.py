@@ -108,7 +108,7 @@ class FormDataContentHandler(ContentHandler):
             for k, param_defn in props.items():
                 if k in data:
                     data[k] = coerce_type(param_defn, data[k], 'requestBody', k)
-
+            request.form = data
         return data
 
 
