@@ -34,6 +34,10 @@ def post():
     return ''
 
 
+def test_empty_object_body(stack):
+    return {"stack": stack}
+
+
 def post_greeting(name, **kwargs):
     data = {'greeting': 'Hello {name}'.format(name=name)}
     return data

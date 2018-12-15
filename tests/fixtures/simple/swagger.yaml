@@ -63,7 +63,18 @@ paths:
           description: Name of the person to greet.
           required: true
           type: string
-
+  /test-empty-object-body:
+    post:
+      summary: Test if empty object body param is passed to handler.
+      operationId: fakeapi.hello.test_empty_object_body
+      parameters:
+        - name: stack
+          in: body
+          schema:
+            type: object
+      responses:
+        200:
+          description: OK
   /bye/{name}:
     get:
       summary: Generate goodbye

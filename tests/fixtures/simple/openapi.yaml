@@ -770,6 +770,19 @@ paths:
                 type: array
                 items:
                   type: string
+  /test-empty-object-body:
+    post:
+      summary: Test if empty object body param is passed to handler.
+      operationId: fakeapi.hello.test_empty_object_body
+      responses:
+        '200':
+          description: OK
+      requestBody:
+        content:
+          application/json:
+            schema:
+              x-body-name: stack
+              type: object
   /nullable-parameters:
     post:
       operationId: fakeapi.hello.test_nullable_param_post3
