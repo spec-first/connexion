@@ -44,11 +44,11 @@ class ContentHandler(object):
                                message=exception.message,
                                error_path_msg=error_path_msg))
 
-    def _deser(self, request):
+    def deserialize(self, request):
         return request.body
 
     def validate(self, request):
-        data = self._deser(request)
+        data = self.deserialize(request)
         self.validate_schema(data, request.url)
 
 
@@ -65,7 +65,7 @@ class JSONContentHandler(ContentHandler):
     name = "application/json"
     regex = re.compile(r'^application\/json.*|^.*\+json$')
 
-    def _deser(self, request):
+    def deserialize(self, request):
         data = request.json
         empty_body = not(request.body or request.form or request.files)
         if data is None and not empty_body and not self.is_null_value_valid:
@@ -87,19 +87,19 @@ class FormDataContentHandler(ContentHandler):
         r'^application\/x-www-form-urlencoded.*'
     )
 
-    def validate_formdata_parameter_list(self, request):
+    def _validate_formdata_parameter_list(self, request):
         request_params = request.form.keys()
         spec_params = self.schema.get('properties', {}).keys()
         return validate_parameter_list(request_params, spec_params)
 
-    def _deser(self, request):
+    def deserialize(self, request):
         data = dict(request.form.items()) or \
                    (request.body if len(request.body) > 0 else {})
         data.update(dict.fromkeys(request.files, ''))  # validator expects string..
         logger.debug('%s validating schema...', request.url)
 
         if self.strict_validation:
-            formdata_errors = self.validate_formdata_parameter_list(request)
+            formdata_errors = self._validate_formdata_parameter_list(request)
             if formdata_errors:
                 raise ExtraParameterProblem(formdata_errors, [])
 
@@ -108,6 +108,7 @@ class FormDataContentHandler(ContentHandler):
             for k, param_defn in props.items():
                 if k in data:
                     data[k] = coerce_type(param_defn, data[k], 'requestBody', k)
+            # XXX it's surprising to hide this in validation
             request.form = data
         return data
 
