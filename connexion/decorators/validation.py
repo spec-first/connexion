@@ -60,7 +60,11 @@ class RequestBodyValidator(object):
         ]
 
     def register_content_handler(self, cv):
-        self._content_handlers += [cv]
+        deser = cv(self.validator,
+                   self.schema,
+                   self.strict_validation,
+                   self.is_null_value_valid)
+        self._content_handlers += [deser]
 
     def lookup_content_handler(self, request):
         matches = [
