@@ -11,14 +11,18 @@ from flask import json
 from ..apis.flask_api import FlaskApi
 from ..exceptions import ProblemException
 from ..problem import problem
+from ..tests import AbstractClient
 from .abstract import AbstractApp
 
 logger = logging.getLogger('connexion.app')
 
 
 class FlaskApp(AbstractApp):
+
+    api_cls = FlaskApi
+
     def __init__(self, import_name, server='flask', **kwargs):
-        super(FlaskApp, self).__init__(import_name, FlaskApi, server=server, **kwargs)
+        super(FlaskApp, self).__init__(import_name, self.api_cls, server=server, **kwargs)
 
     def create_app(self):
         app = flask.Flask(self.import_name)
@@ -114,6 +118,10 @@ class FlaskApp(AbstractApp):
         else:
             raise Exception('Server {} not recognized'.format(self.server))
 
+    def test_client(self):
+        """Return a test_client which use flask's test_client."""
+        return FlaskTestClient.from_app(self)
+
 
 class FlaskJSONEncoder(json.JSONEncoder):
     def default(self, o):
@@ -133,3 +141,13 @@ class FlaskJSONEncoder(json.JSONEncoder):
             return float(o)
 
         return json.JSONEncoder.default(self, o)
+
+
+class FlaskTestClient(AbstractClient):
+    """A specific test client for Flask framework."""
+
+    def _request(self, method, url, **kw):
+        kw["method"] = method.upper()
+        with self.app.app.app_context():
+            response = self.app.app.test_client().open(url, **kw)
+            return self.app.api_cls.get_connexion_response(response)

@@ -931,6 +931,32 @@ paths:
               schema:
                 type: array
                 items: {}
+  /test_test_client_support_all_http_methods:
+    get:
+      operationId: fakeapi.hello.get_200
+      responses:
+        "200":
+          description: OK
+    delete:
+      operationId: fakeapi.hello.delete_200
+      responses:
+        "200":
+          description: OK
+    patch:
+      operationId: fakeapi.hello.patch_200
+      responses:
+        "200":
+          description: OK
+    post:
+      operationId: fakeapi.hello.post_200
+      responses:
+        "200":
+          description: OK
+    put:
+      operationId: fakeapi.hello.put_200
+      responses:
+        "200":
+          description: OK
 servers:
   - url: http://localhost:{port}/{basePath}
     variables:

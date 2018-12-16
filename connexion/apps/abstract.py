@@ -246,3 +246,10 @@ class AbstractApp(object):
         class and protect it from unwanted modification.
         """
         return self.app(environ, start_response)
+
+    @abc.abstractmethod
+    def test_client(self):
+        """Return a synchronous client, compatible wit flask test_client.
+
+        An abstract is implemented in connexion.tests.AbstractClient.
+        """

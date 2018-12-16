@@ -13,6 +13,7 @@ class DummyClass(object):
     def test_method(self):
         return self.__class__.__name__
 
+
 class_instance = DummyClass()  # noqa
 
 
@@ -36,13 +37,16 @@ def post_greeting(name, **kwargs):
     data = {'greeting': 'Hello {name}'.format(name=name)}
     return data
 
+
 def post_greeting3(body, **kwargs):
     data = {'greeting': 'Hello {name}'.format(name=body["name"])}
     return data
 
+
 def post_greeting_url(name, remainder, **kwargs):
-    data = {'greeting': 'Hello {name} thanks for {remainder}'.format(name=name,remainder=remainder)}
+    data = {'greeting': 'Hello {name} thanks for {remainder}'.format(name=name, remainder=remainder)}
     return data
+
 
 def post_goodday(name):
     data = {'greeting': 'Hello {name}'.format(name=name)}
@@ -88,8 +92,10 @@ def get_bye_secure_from_connexion(req_context):
 def get_bye_secure_ignoring_context(name):
     return 'Goodbye {name} (Secure!)'.format(name=name)
 
+
 def get_bye_secure_jwt(name, user, token_info):
     return 'Goodbye {name} (Secure: {user})'.format(name=name, user=user)
+
 
 def with_problem():
     return problem(type='http://www.example.com/error',
@@ -278,6 +284,7 @@ def test_default_integer_body(stack_version):
 def test_falsy_param(falsy):
     return falsy
 
+
 def test_formdata_param3(body):
     return body["formData"]
 
@@ -445,14 +452,18 @@ def test_param_sanitization3(query=None, body=None):
 def test_body_sanitization(body=None):
     return body
 
+
 def test_body_sanitization_additional_properties(body):
     return body
+
 
 def test_body_sanitization_additional_properties_defined(body):
     return body
 
+
 def test_body_not_allowed_additional_properties(body):
     return body
+
 
 def post_wrong_content_type():
     return "NOT OK"
@@ -470,6 +481,7 @@ def get_unicode_data():
 def get_enum_response():
     try:
         from enum import Enum
+
         class HTTPStatus(Enum):
             OK = 200
     except ImportError:
@@ -510,7 +522,32 @@ def apikey_info(apikey, required_scopes=None):
         return {'sub': 'admin'}
     return None
 
+
 def jwt_info(token):
     if token == '100':
         return {'sub': '100'}
     return None
+
+
+def _200_method(method):
+    return {"method": method}, 200
+
+
+def get_200():
+    return _200_method("get")
+
+
+def delete_200():
+    return _200_method("delete")
+
+
+def patch_200():
+    return _200_method("patch")
+
+
+def post_200():
+    return _200_method("post")
+
+
+def put_200():
+    return _200_method("put")

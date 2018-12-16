@@ -9,6 +9,8 @@ import pytest
 from conftest import TEST_FOLDER, build_app_from_fixture, SPECS
 from connexion import App
 from connexion.exceptions import InvalidSpecification
+from connexion.lifecycle import ConnexionResponse
+from connexion.tests import AbstractClient
 
 
 @pytest.mark.parametrize("spec", SPECS)
@@ -234,3 +236,25 @@ def test_handle_add_operation_error(simple_api_spec_dir):
     app.api_cls.add_operation = mock.MagicMock(side_effect=Exception('operation error!'))
     with pytest.raises(Exception):
         app.add_api('swagger.yaml', resolver=lambda oid: (lambda foo: 'bar'))
+
+
+def test_test_client_type(simple_app):
+    client = simple_app.test_client()
+    assert isinstance(client, AbstractClient)
+
+
+@pytest.mark.parametrize("method", [
+    "get",
+    "delete",
+    "patch",
+    "post",
+    "put",
+])
+def test_test_client_support_all_http_methods(simple_app, method):
+    url = "/v1.0/test_test_client_support_all_http_methods"
+    client = simple_app.test_client()
+    response = getattr(client, method)(url)
+
+    assert isinstance(response, ConnexionResponse)
+    assert response.status_code == 200
+    assert response.json["method"] == method
