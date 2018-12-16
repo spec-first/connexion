@@ -145,11 +145,17 @@ class AioHttpApi(AbstractAPI):
         )
 
     @asyncio.coroutine
-    def _get_openapi_json(self, req):
+    def _get_openapi_json(self, request):
+        base_path = self.base_path
+        if not request.path.startswith(self.base_path):
+            prefix = request.path.split(self.base_path)[0]
+            base_path = prefix + base_path
+
+        spec = self.specification.with_base_path(base_path).raw
         return web.Response(
             status=200,
             content_type='application/json',
-            body=self.jsonifier.dumps(self.specification.raw)
+            body=self.jsonifier.dumps(spec)
         )
 
     @asyncio.coroutine
@@ -213,8 +219,13 @@ class AioHttpApi(AbstractAPI):
     @aiohttp_jinja2.template('index.j2')
     @asyncio.coroutine
     def _get_swagger_ui_home(self, req):
+        base_path = self.base_path
+        if not req.path.startswith(self.base_path):
+            prefix = req.path.split(self.base_path)[0]
+            base_path = prefix + base_path
+
         template_variables = {
-            'openapi_spec_url': (self.base_path + self.options.openapi_spec_path)
+            'openapi_spec_url': (base_path + self.options.openapi_spec_path)
         }
         if self.options.openapi_console_ui_config is not None:
             template_variables['configUrl'] = 'swagger-ui-config.json'
