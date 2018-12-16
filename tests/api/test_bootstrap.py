@@ -6,11 +6,9 @@ from openapi_spec_validator.loaders import ExtendedSafeLoader
 
 import mock
 import pytest
-from conftest import TEST_FOLDER, build_app_from_fixture
+from conftest import TEST_FOLDER, build_app_from_fixture, SPECS
 from connexion import App
 from connexion.exceptions import InvalidSpecification
-
-SPECS = ["swagger.yaml", "openapi.yaml"]
 
 
 @pytest.mark.parametrize("spec", SPECS)
