@@ -39,6 +39,7 @@ TYPE_MAP = {'integer': int,
             'boolean': boolean,
             'array': list,
             'object': dict}  # map of swagger types to python types
+ENCODINGS = ["utf-8", "latin1", "cp1250", "ascii"]
 
 
 def make_type(value, _type):
@@ -205,3 +206,32 @@ def has_coroutine(function, api=None):
     else:  # pragma: 3 no cover
         # there's no asyncio in python 2
         return False
+
+
+def decode(_string):
+    """decode a string, as a fallback will ignore decoding errors.
+
+    inspired from https://github.com/sdispater/poetry/blob/master/poetry/utils/_compat.py#L46.
+    """
+    if isinstance(_string, six.text_type):
+        return _string
+
+    for encoding in ENCODINGS:
+        try:
+            return _string.decode(encoding)
+        except (UnicodeEncodeError, UnicodeDecodeError):
+            pass
+    return _string.decode(ENCODINGS[0], errors="ignore")
+
+
+def encode(_string):
+    """Encode a string, as a fallback will ignore encoding errors."""
+    if isinstance(_string, six.binary_type):
+        return _string
+
+    for encoding in ENCODINGS:
+        try:
+            return _string.encode(encoding)
+        except (UnicodeEncodeError, UnicodeDecodeError):
+            pass
+    return _string.encode(ENCODINGS[0], errors="ignore")

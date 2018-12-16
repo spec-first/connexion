@@ -1,3 +1,7 @@
+import json
+
+from .utils import decode, encode
+
 
 class ConnexionRequest(object):
     def __init__(self,
@@ -34,8 +38,29 @@ class ConnexionResponse(object):
                  content_type=None,
                  body=None,
                  headers=None):
+        if not isinstance(status_code, int) or not (100 <= status_code <= 505):
+            raise ValueError("{} is not a valid status code".format(status_code))
         self.status_code = status_code
         self.mimetype = mimetype
         self.content_type = content_type
         self.body = body
         self.headers = headers or {}
+
+    @property
+    def text(self):
+        """return a decoded version of body."""
+        return decode(self.body)
+
+    @property
+    def json(self):
+        """Return JSON decoded body.
+
+        This method is naive, it will try to load JSON even
+        if the content_type is not JSON.
+        """
+        return json.loads(self.text)
+
+    @property
+    def data(self):
+        """return the encoded body."""
+        return encode(self.body)

@@ -2,8 +2,11 @@ import math
 
 import connexion.apps
 import pytest
+import six
 from connexion import utils
 from mock import MagicMock
+
+from .conftest import ENCODING_STRINGS
 
 
 def test_get_function_from_name():
@@ -50,3 +53,13 @@ def test_boolean():
 
     with pytest.raises(ValueError):
         utils.boolean(None)
+
+
+@pytest.mark.parametrize("data", ENCODING_STRINGS)
+def test_decode(data):
+    assert isinstance(utils.decode(data), six.text_type)
+
+
+@pytest.mark.parametrize("data", ENCODING_STRINGS)
+def test_encode(data):
+    assert isinstance(utils.encode(data), six.binary_type)

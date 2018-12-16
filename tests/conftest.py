@@ -4,6 +4,7 @@ import pathlib
 import sys
 
 import pytest
+import six
 from connexion import App
 
 logging.basicConfig(level=logging.DEBUG)
@@ -12,6 +13,12 @@ TEST_FOLDER = pathlib.Path(__file__).parent
 FIXTURES_FOLDER = TEST_FOLDER / 'fixtures'
 SPEC_FOLDER = TEST_FOLDER / "fakeapi"
 SPECS = ["swagger.yaml", "openapi.yaml"]
+ENCODING_STRINGS = [
+    six.b("test"),
+    six.u("test"),
+    "ą".encode("cp1250"),
+    "£".encode("latin1")
+]
 
 
 class FakeResponse(object):
