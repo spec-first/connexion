@@ -114,6 +114,26 @@ class AioHttpApi(AbstractAPI):
     def normalize_string(string):
         return re.sub(r'[^a-zA-Z0-9]', '_', string.strip('/'))
 
+    def _base_path_for_prefix(self, request):
+        """
+        returns a modified basePath which includes the incoming request's
+        path prefix.
+        """
+        base_path = self.base_path
+        if not request.path.startswith(self.base_path):
+            prefix = request.path.split(self.base_path)[0]
+            base_path = prefix + base_path
+        return base_path
+
+    def _spec_for_prefix(self, request):
+        """
+        returns a spec with a modified basePath / servers block
+        which corresponds to the incoming request path.
+        This is needed when behind a path-altering reverse proxy.
+        """
+        base_path = self._base_path_for_prefix(request)
+        return self.specification.with_base_path(base_path).raw
+
     def add_openapi_json(self):
         """
         Adds openapi json to {base_path}/openapi.json
@@ -135,7 +155,8 @@ class AioHttpApi(AbstractAPI):
         if not self.options.openapi_spec_path.endswith("json"):
             return
 
-        openapi_spec_path_yaml = self.options.openapi_spec_path[:-len("json")] + "yaml"
+        openapi_spec_path_yaml = \
+            self.options.openapi_spec_path[:-len("json")] + "yaml"
         logger.debug('Adding spec yaml: %s/%s', self.base_path,
                      openapi_spec_path_yaml)
         self.subapp.router.add_route(
@@ -146,24 +167,18 @@ class AioHttpApi(AbstractAPI):
 
     @asyncio.coroutine
     def _get_openapi_json(self, request):
-        base_path = self.base_path
-        if not request.path.startswith(self.base_path):
-            prefix = request.path.split(self.base_path)[0]
-            base_path = prefix + base_path
-
-        spec = self.specification.with_base_path(base_path).raw
         return web.Response(
             status=200,
             content_type='application/json',
-            body=self.jsonifier.dumps(spec)
+            body=self.jsonifier.dumps(self._spec_for_prefix(request))
         )
 
     @asyncio.coroutine
-    def _get_openapi_yaml(self, req):
+    def _get_openapi_yaml(self, request):
         return web.Response(
             status=200,
             content_type='text/yaml',
-            body=yamldumper(self.specification.raw)
+            body=yamldumper(self._spec_for_prefix(request))
         )
 
     def add_swagger_ui(self):
@@ -219,11 +234,7 @@ class AioHttpApi(AbstractAPI):
     @aiohttp_jinja2.template('index.j2')
     @asyncio.coroutine
     def _get_swagger_ui_home(self, req):
-        base_path = self.base_path
-        if not req.path.startswith(self.base_path):
-            prefix = req.path.split(self.base_path)[0]
-            base_path = prefix + base_path
-
+        base_path = self._base_path_for_prefix(req)
         template_variables = {
             'openapi_spec_url': (base_path + self.options.openapi_spec_path)
         }

@@ -27,6 +27,13 @@ class FlaskApi(AbstractAPI):
         self.blueprint = flask.Blueprint(endpoint, __name__, url_prefix=self.base_path,
                                          template_folder=str(self.options.openapi_console_ui_from_dir))
 
+    def _spec_for_prefix(self):
+        """ Modify base_path in the spec based on incoming url
+            This fixes problems with reverse proxies changing the path.
+        """
+        base_path = flask.url_for(flask.request.endpoint).rsplit("/", 1)[0]
+        return self.specification.with_base_path(base_path).raw
+
     def add_openapi_json(self):
         """
         Adds spec json to {base_path}/swagger.json
@@ -36,17 +43,12 @@ class FlaskApi(AbstractAPI):
                      self.options.openapi_spec_path)
         endpoint_name = "{name}_openapi_json".format(name=self.blueprint.name)
 
-        def spec_for_url():
-            """ Modify base_path in the spec based on incoming url
-                This fixes problems with reverse proxies changing the path.
-            """
-            openapi_json_route = ".".join([self.blueprint.name, endpoint_name])
-            base_path = flask.url_for(openapi_json_route).rsplit("/", 1)[0]
-            return flask.jsonify(self.specification.with_base_path(base_path).raw)
+        def get_json_spec():
+            return flask.jsonify(self._spec_for_prefix())
 
         self.blueprint.add_url_rule(self.options.openapi_spec_path,
                                     endpoint_name,
-                                    lambda: flask.jsonify(self.specification.raw))
+                                    get_json_spec)
 
     def add_openapi_yaml(self):
         """
@@ -56,7 +58,8 @@ class FlaskApi(AbstractAPI):
         if not self.options.openapi_spec_path.endswith("json"):
             return
 
-        openapi_spec_path_yaml = self.options.openapi_spec_path[:-len("json")] + "yaml"
+        openapi_spec_path_yaml = \
+            self.options.openapi_spec_path[:-len("json")] + "yaml"
         logger.debug('Adding spec yaml: %s/%s', self.base_path,
                      openapi_spec_path_yaml)
         endpoint_name = "{name}_openapi_yaml".format(name=self.blueprint.name)
@@ -66,7 +69,7 @@ class FlaskApi(AbstractAPI):
             lambda: FlaskApi._build_response(
                 status_code=200,
                 mimetype="text/yaml",
-                data=yamldumper(self.specification.raw)
+                data=yamldumper(self._spec_for_prefix())
             )
         )
 

@@ -145,11 +145,19 @@ class Specification(collections_abc.Mapping):
             return Swagger2Specification(spec)
         return OpenAPISpecification(spec)
 
+    def clone(self):
+        return type(self)(copy.deepcopy(self._raw_spec))
+
     @classmethod
     def load(cls, spec, arguments=None):
         if not isinstance(spec, dict):
             return cls.from_file(spec, arguments=arguments)
         return cls.from_dict(spec)
+
+    def with_base_path(self, base_path):
+        new_spec = self.clone()
+        new_spec.base_path = base_path
+        return new_spec
 
 
 class Swagger2Specification(Specification):
