@@ -103,6 +103,7 @@ def build_app_from_fixture(api_spec_folder, spec_file='openapi.yaml', **kwargs):
     cnx_app = App(__name__,
                   port=5001,
                   specification_dir=FIXTURES_FOLDER / api_spec_folder,
+                  options={'proxy_uri_prefix_header': 'X-Forwarded-Prefix'},
                   debug=debug)
 
     cnx_app.add_api(spec_file, **kwargs)

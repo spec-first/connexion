@@ -43,6 +43,27 @@ def test_app(simple_app):
     assert greeting_response['greeting'] == 'Hello jsantos'
 
 
+def test_openapi_json_behind_proxy(simple_app):
+    """ Verify the swagger.json file is returned with base_path updated according to X-Original-URI header. """
+    app_client = simple_app.app.test_client()
+    headers = {'X-Forwarded-Prefix': '/behind/proxy'}
+
+    swagger_ui = app_client.get('/v1.0/ui/', headers=headers)
+    assert swagger_ui.status_code == 200
+
+    swagger_json = app_client.get('/v1.0/' + simple_app._spec_file.replace('.yaml', '.json'), headers=headers)
+    assert swagger_json.status_code == 200
+    assert swagger_json.headers.get('Content-Type') == 'application/json'
+    json_ = json.loads(swagger_json.data.decode('utf-8'))
+
+    if simple_app._spec_file == 'openapi.yaml':
+        assert b'url: "/behind/proxy/v1.0/openapi.json"' in swagger_ui.data
+        assert json_.get('servers', [{}])[0].get('url') == '/behind/proxy/v1.0', "basePath should contains original URI"
+    else:
+        assert b'url = "/behind/proxy/v1.0/swagger.json"' in swagger_ui.data
+        assert json_.get('basePath') == '/behind/proxy/v1.0', "basePath should contains original URI"
+
+
 def test_produce_decorator(simple_app):
     app_client = simple_app.app.test_client()
 
@@ -264,13 +285,14 @@ def test_get_unicode_response(simple_app):
     app_client = simple_app.app.test_client()
     resp = app_client.get('/v1.0/get_unicode_response')
     actualJson = {u'currency': u'\xa3', u'key': u'leena'}
-    assert json.loads(resp.data.decode('utf-8','replace')) == actualJson
+    assert json.loads(resp.data.decode('utf-8', 'replace')) == actualJson
 
 
 def test_get_enum_response(simple_app):
     app_client = simple_app.app.test_client()
     resp = app_client.get('/v1.0/get_enum_response')
     assert resp.status_code == 200
+
 
 def test_get_httpstatus_response(simple_app):
     app_client = simple_app.app.test_client()

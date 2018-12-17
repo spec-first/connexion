@@ -69,6 +69,25 @@ class Specification(collections_abc.Mapping):
     def security(self):
         return self._spec.get('security')
 
+    @property
+    def base_path(self):
+        return self._get_base_path()
+
+    @base_path.setter
+    def base_path(self, base_path):
+        base_path = canonical_base_path(base_path)
+        self.set_base_path(self._raw_spec, base_path)
+        self.set_base_path(self._spec, base_path)
+
+    @abc.abstractmethod
+    def _get_base_path(self):
+        """ Return base path from specs """
+
+    @staticmethod
+    @abc.abstractmethod
+    def set_base_path(specs, base_path):
+        """ Set base path adapted to specification format """
+
     def __getitem__(self, k):
         return self._spec[k]
 
@@ -188,15 +207,12 @@ class Swagger2Specification(Specification):
     def security_definitions(self):
         return self._spec.get('securityDefinitions', {})
 
-    @property
-    def base_path(self):
+    def _get_base_path(self):
         return canonical_base_path(self._spec.get('basePath', ''))
 
-    @base_path.setter
-    def base_path(self, base_path):
-        base_path = canonical_base_path(base_path)
-        self._raw_spec['basePath'] = base_path
-        self._spec['basePath'] = base_path
+    @staticmethod
+    def set_base_path(specs, base_path):
+        specs['basePath'] = base_path
 
     @classmethod
     def _validate_spec(cls, spec):
@@ -231,8 +247,7 @@ class OpenAPISpecification(Specification):
         except OpenAPIValidationError as e:
             raise InvalidSpecification.create_from(e)
 
-    @property
-    def base_path(self):
+    def _get_base_path(self):
         servers = self._spec.get('servers', [])
         try:
             # assume we're the first server in list
@@ -247,9 +262,6 @@ class OpenAPISpecification(Specification):
             base_path = ''
         return canonical_base_path(base_path)
 
-    @base_path.setter
-    def base_path(self, base_path):
-        base_path = canonical_base_path(base_path)
-        user_servers = [{'url': base_path}]
-        self._raw_spec['servers'] = user_servers
-        self._spec['servers'] = user_servers
+    @staticmethod
+    def set_base_path(specs, base_path):
+        specs['servers'] = [{'url': base_path}]

@@ -79,10 +79,11 @@ class AioHttpApi(AbstractAPI):
 
     @asyncio.coroutine
     def _get_openapi_json(self, req):
+        specs = self._get_specs_behind_proxy(req.headers.get(self.options.proxy_uri_prefix_header))
         return web.Response(
             status=200,
             content_type='application/json',
-            body=self.jsonifier.dumps(self.specification.raw)
+            body=self.jsonifier.dumps(specs)
         )
 
     def add_swagger_ui(self):
@@ -114,7 +115,8 @@ class AioHttpApi(AbstractAPI):
     @aiohttp_jinja2.template('index.j2')
     @asyncio.coroutine
     def _get_swagger_ui_home(self, req):
-        return {'openapi_spec_url': (self.base_path +
+        base_path = req.headers.get(self.options.proxy_uri_prefix_header, '') + self.base_path
+        return {'openapi_spec_url': (base_path +
                                      self.options.openapi_spec_path)}
 
     def add_auth_on_not_found(self, security, security_definitions):

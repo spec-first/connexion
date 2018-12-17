@@ -88,10 +88,6 @@ def test_swagger_ui(aiohttp_api_spec_dir, aiohttp_client):
     assert swagger_ui.status == 200
     assert b'url = "/v1.0/swagger.json"' in (yield from swagger_ui.read())
 
-    swagger_ui = yield from app_client.get('/v1.0/ui/')
-    assert swagger_ui.status == 200
-    assert b'url = "/v1.0/swagger.json"' in (yield from swagger_ui.read())
-
 
 @asyncio.coroutine
 def test_swagger_ui_index(aiohttp_api_spec_dir, aiohttp_client):
@@ -142,6 +138,60 @@ def test_no_swagger_ui(aiohttp_api_spec_dir, aiohttp_client):
     app2_client = yield from aiohttp_client(app.app)
     swagger_ui2 = yield from app2_client.get('/v1.0/ui/')
     assert swagger_ui2.status == 404
+
+
+@asyncio.coroutine
+def test_swagger_json_behind_proxy(simple_api_spec_dir, aiohttp_client):
+    """ Verify the swagger.json file is returned with base_path updated according to X-Original-URI header. """
+    app = AioHttpApp(__name__, port=5001,
+                     specification_dir=simple_api_spec_dir,
+                     options={'proxy_uri_prefix_header': 'X-Forwarded-Prefix'},
+                     debug=True)
+    api = app.add_api('swagger.yaml')
+
+    app_client = yield from aiohttp_client(app.app)
+    headers = {'X-Forwarded-Prefix': '/behind/proxy'}
+
+    swagger_ui = yield from app_client.get('/v1.0/ui/', headers=headers)
+    assert swagger_ui.status == 200
+    assert b'url = "/behind/proxy/v1.0/swagger.json"' in (yield from swagger_ui.read())
+
+    swagger_json = yield from app_client.get('/v1.0/swagger.json', headers=headers)
+    assert swagger_json.status == 200
+    assert swagger_json.headers.get('Content-Type') == 'application/json'
+    json_ = yield from swagger_json.json()
+
+    assert api.specification.raw['basePath'] == '/v1.0', "Original specifications should not have been changed"
+    assert json_.get('basePath') == '/behind/proxy/v1.0', "basePath should contains original URI"
+    json_['basePath'] = api.specification.raw['basePath']
+    assert api.specification.raw == json_, "Only basePath should have been updated"
+
+
+@asyncio.coroutine
+def test_openapi_json_behind_proxy(simple_api_spec_dir, aiohttp_client):
+    """ Verify the swagger.json file is returned with base_path updated according to X-Original-URI header. """
+    app = AioHttpApp(__name__, port=5001,
+                     specification_dir=simple_api_spec_dir,
+                     options={'proxy_uri_prefix_header': 'My-URI-Header'},
+                     debug=True)
+    api = app.add_api('openapi.yaml')
+
+    app_client = yield from aiohttp_client(app.app)
+    headers = {'My-URI-Header': '/behind/proxy'}
+
+    swagger_ui = yield from app_client.get('/v1.0/ui/', headers=headers)
+    assert swagger_ui.status == 200
+    assert b'url: "/behind/proxy/v1.0/openapi.json"' in (yield from swagger_ui.read())
+
+    swagger_json = yield from app_client.get('/v1.0/openapi.json', headers=headers)
+    assert swagger_json.status == 200
+    assert swagger_json.headers.get('Content-Type') == 'application/json'
+    json_ = yield from swagger_json.json()
+
+    assert json_.get('servers', [{}])[0].get('url') == '/behind/proxy/v1.0', "basePath should contains original URI"
+    assert api.specification.raw.get('servers', [{}])[0].get('url') != '/behind/proxy/v1.0', "Original specifications should not have been changed"
+    json_['servers'] = api.specification.raw.get('servers')
+    assert api.specification.raw == json_, "Only basePath should have been updated"
 
 
 @asyncio.coroutine

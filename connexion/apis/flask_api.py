@@ -37,7 +37,12 @@ class FlaskApi(AbstractAPI):
         endpoint_name = "{name}_openapi_json".format(name=self.blueprint.name)
         self.blueprint.add_url_rule(self.options.openapi_spec_path,
                                     endpoint_name,
-                                    lambda: flask.jsonify(self.specification.raw))
+                                    lambda: flask.jsonify(
+                                        self._get_specs_behind_proxy(
+                                            flask.request.headers.get(self.options.proxy_uri_prefix_header)
+                                            )
+                                        )
+                                    )
 
     def add_swagger_ui(self):
         """
@@ -278,9 +283,10 @@ class InternalHandlers(object):
 
         :return:
         """
+        base_path = flask.request.headers.get(self.options.proxy_uri_prefix_header, '') + self.base_path
         return flask.render_template(
             'index.j2',
-            openapi_spec_url=(self.base_path + self.options.openapi_spec_path)
+            openapi_spec_url=(base_path + self.options.openapi_spec_path)
         )
 
     def console_ui_static_files(self, filename):

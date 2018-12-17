@@ -120,6 +120,16 @@ class ConnexionOptions(object):
         """
         return self._options.get('uri_parser_class', None)
 
+    @property
+    def proxy_uri_prefix_header(self):
+        # type: () -> str
+        """
+        The header to use to dynamically prefix specification base_path.
+        This is header need to be set by reverse proxy when there is a rewrite rule.
+        Default: ''
+        """
+        return self._options.get('proxy_uri_prefix_header', '')
+
 
 def filter_values(dictionary):
     # type: (dict) -> dict

@@ -1,4 +1,5 @@
 import abc
+import copy
 import logging
 import pathlib
 import sys
@@ -79,7 +80,9 @@ class AbstractAPI(object):
         logger.debug('Options Loaded',
                      extra={'swagger_ui': self.options.openapi_console_ui_available,
                             'swagger_path': self.options.openapi_console_ui_from_dir,
-                            'swagger_url': self.options.openapi_console_ui_path})
+                            'swagger_url': self.options.openapi_console_ui_path,
+                            'proxy_uri_prefix_header': self.options.proxy_uri_prefix_header
+                            })
 
         self._set_base_path(base_path)
 
@@ -113,7 +116,7 @@ class AbstractAPI(object):
                 self.specification.security_definitions
             )
 
-    def _set_base_path(self, base_path=None):
+    def _set_base_path(self, base_path):
         if base_path is not None:
             # update spec to include user-provided base_path
             self.specification.base_path = base_path
@@ -133,6 +136,19 @@ class AbstractAPI(object):
         """
         Adds swagger ui to {base_path}/ui/
         """
+
+    def _get_specs_behind_proxy(self, prefix_uri):
+        """
+        Update OpenAPI base path using specified original_uri. (from header set by the proxy).
+        :param prefix_uri: uri to use to prefix base_path
+        :return: Updated raw specifications
+        """
+
+        if not prefix_uri:
+            return self.specification.raw
+        specs = copy.copy(self.specification.raw)
+        self.specification.set_base_path(specs, prefix_uri + self.base_path)
+        return specs
 
     @abc.abstractmethod
     def add_auth_on_not_found(self, security, security_definitions):
