@@ -105,6 +105,14 @@ class AioHttpApi(AbstractAPI):
                 self._get_swagger_ui_home
             )
 
+        async def redirect(request):
+            raise web.HTTPMovedPermanently(location=self.base_path + console_ui_path + '/')
+        self.subapp.router.add_route(
+            'GET',
+            console_ui_path,
+            redirect
+        )
+
         self.subapp.router.add_static(
             console_ui_path + '/',
             path=str(self.options.openapi_console_ui_from_dir),
