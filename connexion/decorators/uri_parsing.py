@@ -63,7 +63,17 @@ class AbstractURIParser(BaseDecorator):
         """
 
     @abc.abstractmethod
-    def _resolve_param_duplicates(self, values, param_defn):
+    def resolve_query(self, query_data):
+        """ Resolve cases where query parameters are provided multiple times.
+        """
+
+    @abc.abstractmethod
+    def resolve_path(self, path):
+        """ Resolve cases where path parameters include lists
+        """
+
+    @abc.abstractmethod
+    def _resolve_param_duplicates(self, values, param_defn, _in):
         """ Resolve cases where query parameters are provided multiple times.
             For example, if the query string is '?a=1,2,3&a=4,5,6' the value of
             `a` could be "4,5,6", or "1,2,3" or "1,2,3,4,5,6" depending on the
@@ -71,14 +81,14 @@ class AbstractURIParser(BaseDecorator):
         """
 
     @abc.abstractmethod
-    def _split(self, value, param_defn):
+    def _split(self, value, param_defn, _in):
         """
-        takes a string, and a parameter definition, and returns
-        an array that has been constructed according to the parameter
-        definition.
+        takes a string, a parameter definition, and a parameter type
+        and returns an array that has been constructed according to
+        the parameter definition.
         """
 
-    def resolve_params(self, params, resolve_duplicates=False):
+    def resolve_params(self, params, _in):
         """
         takes a dict of parameters, and resolves the values into
         the correct array type handling duplicate values, and splitting
@@ -93,14 +103,15 @@ class AbstractURIParser(BaseDecorator):
                 resolved_param[k] = values
                 continue
 
-            if not resolve_duplicates:
+            if _in == 'path':
+                # multiple values in a path is impossible
                 values = [values]
 
             if (param_schema is not None and param_schema['type'] == 'array'):
                 # resolve variable re-assignment, handle explode
-                values = self._resolve_param_duplicates(values, param_defn)
+                values = self._resolve_param_duplicates(values, param_defn, _in)
                 # handle array styles
-                resolved_param[k] = self._split(values, param_defn)
+                resolved_param[k] = self._split(values, param_defn, _in)
             else:
                 resolved_param[k] = values[-1]
 
@@ -126,8 +137,8 @@ class AbstractURIParser(BaseDecorator):
             path_params = coerce_dict(request.path_params)
             form = coerce_dict(request.form)
 
-            request.query = self.resolve_params(query, resolve_duplicates=True)
-            request.path_params = self.resolve_params(path_params)
+            request.query = self.resolve_query(query)
+            request.path_params = self.resolve_path(path_params)
             request.form = self.resolve_form(form)
             response = function(request)
             return response
@@ -136,6 +147,9 @@ class AbstractURIParser(BaseDecorator):
 
 
 class OpenAPIURIParser(AbstractURIParser):
+    style_defaults = {"path": "simple", "header": "simple",
+                      "query": "form", "cookie": "form",
+                      "form": "form"}
 
     @property
     def param_defns(self):
@@ -157,13 +171,19 @@ class OpenAPIURIParser(AbstractURIParser):
             defn = self.form_defns.get(k, {})
             # TODO support more form encoding styles
             form_data[k] = \
-                self._resolve_param_duplicates(form_data[k], encoding)
+                self._resolve_param_duplicates(form_data[k], encoding, 'form')
             if defn and defn["type"] == "array":
-                form_data[k] = self._split(form_data[k], encoding)
+                form_data[k] = self._split(form_data[k], encoding, 'form')
         return form_data
 
+    def resolve_query(self, query_data):
+        return self.resolve_params(query_data, 'query')
+
+    def resolve_path(self, path_data):
+        return self.resolve_params(path_data, 'path')
+
     @staticmethod
-    def _resolve_param_duplicates(values, param_defn):
+    def _resolve_param_duplicates(values, param_defn, _in):
         """ Resolve cases where query parameters are provided multiple times.
             The default behavior is to use the first-defined value.
             For example, if the query string is '?a=1,2,3&a=4,5,6' the value of
@@ -171,27 +191,23 @@ class OpenAPIURIParser(AbstractURIParser):
             However, if 'explode' is 'True' then the duplicate values
             are concatenated together and `a` would be "1,2,3,4,5,6".
         """
-        try:
-            style = param_defn['style']
-            delimiter = QUERY_STRING_DELIMITERS.get(style, ',')
-            is_form = (style == 'form')
-            explode = param_defn.get('explode', is_form)
-            if explode:
-                return delimiter.join(values)
-        except KeyError:
-            pass
+        default_style = OpenAPIURIParser.style_defaults[_in]
+        style = param_defn.get('style', default_style)
+        delimiter = QUERY_STRING_DELIMITERS.get(style, ',')
+        is_form = (style == 'form')
+        explode = param_defn.get('explode', is_form)
+        if explode:
+            return delimiter.join(values)
 
         # default to last defined value
         return values[-1]
 
     @staticmethod
-    def _split(value, param_defn):
-        try:
-            style = param_defn['style']
-            delimiter = QUERY_STRING_DELIMITERS.get(style, ',')
-            return value.split(delimiter)
-        except KeyError:
-            return value.split(',')
+    def _split(value, param_defn, _in):
+        default_style = OpenAPIURIParser.style_defaults[_in]
+        style = param_defn.get('style', default_style)
+        delimiter = QUERY_STRING_DELIMITERS.get(style, ',')
+        return value.split(delimiter)
 
 
 class Swagger2URIParser(AbstractURIParser):
@@ -210,10 +226,16 @@ class Swagger2URIParser(AbstractURIParser):
         return self._param_defns  # swagger2 conflates defn and schema
 
     def resolve_form(self, form_data):
-        return self.resolve_params(form_data, resolve_duplicates=True)
+        return self.resolve_params(form_data, 'form')
+
+    def resolve_query(self, query_data):
+        return self.resolve_params(query_data, 'query')
+
+    def resolve_path(self, path_data):
+        return self.resolve_params(path_data, 'path')
 
     @staticmethod
-    def _resolve_param_duplicates(values, param_defn):
+    def _resolve_param_duplicates(values, param_defn, _in):
         """ Resolve cases where query parameters are provided multiple times.
             The default behavior is to use the first-defined value.
             For example, if the query string is '?a=1,2,3&a=4,5,6' the value of
@@ -227,7 +249,7 @@ class Swagger2URIParser(AbstractURIParser):
         return values[-1]
 
     @staticmethod
-    def _split(value, param_defn):
+    def _split(value, param_defn, _in):
         if param_defn.get("collectionFormat") == 'pipes':
             return value.split('|')
         return value.split(',')
@@ -240,7 +262,7 @@ class FirstValueURIParser(Swagger2URIParser):
     """
 
     @staticmethod
-    def _resolve_param_duplicates(values, param_defn):
+    def _resolve_param_duplicates(values, param_defn, _in):
         """ Resolve cases where query parameters are provided multiple times.
             The default behavior is to use the first-defined value.
             For example, if the query string is '?a=1,2,3&a=4,5,6' the value of
@@ -261,7 +283,7 @@ class AlwaysMultiURIParser(Swagger2URIParser):
     """
 
     @staticmethod
-    def _resolve_param_duplicates(values, param_defn):
+    def _resolve_param_duplicates(values, param_defn, _in):
         """ Resolve cases where query parameters are provided multiple times.
             The default behavior is to join all provided parameters together.
             For example, if the query string is '?a=1,2,3&a=4,5,6' the value of

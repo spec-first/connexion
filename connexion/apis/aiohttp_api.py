@@ -218,7 +218,12 @@ class AioHttpApi(AbstractAPI):
         return response
 
     @classmethod
-    def get_connexion_response(cls, response):
+    def get_connexion_response(cls, response, mimetype=None):
+        response.body = cls._cast_body(response.body, mimetype)
+
+        if isinstance(response, ConnexionResponse):
+            return response
+
         return ConnexionResponse(
             status_code=response.status,
             mimetype=response.content_type,
@@ -242,9 +247,9 @@ class AioHttpApi(AbstractAPI):
         )
 
     @classmethod
-    def _cast_body(cls, body, content_type):
+    def _cast_body(cls, body, content_type=None):
         if not isinstance(body, bytes):
-            if is_json_mimetype(content_type):
+            if content_type and is_json_mimetype(content_type):
                 return json.dumps(body).encode()
 
             elif isinstance(body, str):
