@@ -49,3 +49,28 @@ def test_secure_app(oauth_requests, aiohttp_api_spec_dir, aiohttp_client):
 
     assert post_hello.status == 200
     assert (yield from post_hello.read()) == b'{"greeting":"Hello jsantos"}'
+
+    headers = {'authorization': 'Bearer 100'}
+    post_hello = yield from app_client.post(
+        '/v1.0/greeting/jsantos',
+        headers=headers
+    )
+
+    assert post_hello.status == 200, "Authorization header in lower case should be accepted"
+    assert (yield from post_hello.read()) == b'{"greeting":"Hello jsantos"}'
+
+    headers = {'AUTHORIZATION': 'Bearer 100'}
+    post_hello = yield from app_client.post(
+        '/v1.0/greeting/jsantos',
+        headers=headers
+    )
+
+    assert post_hello.status == 200, "Authorization header in upper case should be accepted"
+    assert (yield from post_hello.read()) == b'{"greeting":"Hello jsantos"}'
+
+    no_authorization = yield from app_client.post(
+        '/v1.0/greeting/jsantos',
+    )
+
+    assert no_authorization.status == 401
+    assert no_authorization.content_type == 'application/problem+json'

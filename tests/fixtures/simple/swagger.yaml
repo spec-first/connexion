@@ -198,6 +198,19 @@ paths:
         200:
           description: OK
 
+  /test-empty-object-body:
+    post:
+      summary: Test if empty object body param is passed to handler.
+      operationId: fakeapi.hello.test_empty_object_body
+      parameters:
+        - name: stack
+          in: body
+          schema:
+            type: object
+      responses:
+        200:
+          description: OK
+
   /resolver-test/method:
     get:
       summary: Test class instance method

@@ -43,7 +43,7 @@ exception and render it in some sort of custom format. For example
         return Response(response=json.dumps({'error': 'There is an error in the oAuth token supplied'}), status=401, mimetype="application/json")
 
     app = connexion.FlaskApp(__name__, specification_dir='./../swagger/', debug=False, swagger_ui=False)
-    app = app.add_error_handler(OAuthResponseProblem, render_unauthorized)
+    app.add_error_handler(OAuthResponseProblem, render_unauthorized)
 
 Custom Exceptions
 -----------------
