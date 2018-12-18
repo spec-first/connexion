@@ -275,6 +275,10 @@ def test_default_integer_body(stack_version):
     return stack_version
 
 
+def test_empty_object_body(stack):
+    return {"stack": stack}
+
+
 def test_falsy_param(falsy):
     return falsy
 
