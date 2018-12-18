@@ -256,7 +256,8 @@ class OpenAPIOperation(AbstractOperation):
         # see: https://github.com/OAI/OpenAPI-Specification/blame/3.0.2/versions/3.0.2.md#L2305
         additional_props = self.body_schema.get("additionalProperties", True)
 
-        body = body or default_body
+        if body is None:
+            body = deepcopy(default_body)
 
         if self.body_schema.get("type") != "object":
             if x_body_name in arguments or has_kwargs:

@@ -179,7 +179,7 @@ class AioHttpApi(AbstractAPI):
                      extra={'has_body': req.has_body, 'url': url})
 
         query = parse_qs(req.rel_url.query_string)
-        headers = {k.decode(): v.decode() for k, v in req.raw_headers}
+        headers = req.headers
         body = None
         if req.body_exists:
             body = yield from req.read()

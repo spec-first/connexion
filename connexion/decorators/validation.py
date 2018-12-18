@@ -240,6 +240,7 @@ class ParameterValidator(object):
                 return str(e)
 
             param = copy.deepcopy(param)
+            param = param.get('schema', param)
             if 'required' in param:
                 del param['required']
             try:
