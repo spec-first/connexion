@@ -6,6 +6,7 @@ import sys
 import six
 
 from ..exceptions import ResolverError
+from ..http_facts import METHODS
 from ..operations import make_operation
 from ..options import ConnexionOptions
 from ..resolver import Resolver
@@ -199,7 +200,7 @@ class AbstractAPI(object):
             logger.debug('Adding %s%s...', self.base_path, path)
 
             for method in methods:
-                if method == 'parameters':
+                if method not in METHODS:
                     continue
                 try:
                     self.add_operation(path, method)

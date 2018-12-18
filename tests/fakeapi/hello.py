@@ -514,7 +514,40 @@ def apikey_info(apikey, required_scopes=None):
         return {'sub': 'admin'}
     return None
 
+
 def jwt_info(token):
     if token == '100':
         return {'sub': '100'}
     return None
+
+
+def get_add_operation_on_http_methods_only():
+    return ""
+
+
+def put_add_operation_on_http_methods_only():
+    return ""
+
+
+def post_add_operation_on_http_methods_only():
+    return ""
+
+
+def delete_add_operation_on_http_methods_only():
+    return ""
+
+
+def options_add_operation_on_http_methods_only():
+    return ""
+
+
+def head_add_operation_on_http_methods_only():
+    return ""
+
+
+def patch_add_operation_on_http_methods_only():
+    return ""
+
+
+def trace_add_operation_on_http_methods_only():
+    return ""
