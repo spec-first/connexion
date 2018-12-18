@@ -1,10 +1,8 @@
 import json
 
-from connexion import FlaskApp
-
 
 def test_security_over_nonexistent_endpoints(oauth_requests, secure_api_app):
-    app_client = secure_api_app.app.test_client()
+    app_client = secure_api_app.test_client()
     headers = {"Authorization": "Bearer 300"}
     get_inexistent_endpoint = app_client.get('/v1.0/does-not-exist-invalid-token',
                                              headers=headers)  # type: flask.Response
@@ -32,7 +30,7 @@ def test_security_over_nonexistent_endpoints(oauth_requests, secure_api_app):
 
 
 def test_security(oauth_requests, secure_endpoint_app):
-    app_client = secure_endpoint_app.app.test_client()
+    app_client = secure_endpoint_app.test_client()
 
     get_bye_no_auth = app_client.get('/v1.0/byesecure/jsantos')  # type: flask.Response
     assert get_bye_no_auth.status_code == 401
@@ -88,9 +86,10 @@ def test_security(oauth_requests, secure_endpoint_app):
     get_bye_from_connexion = app_client.get('/v1.0/byesecure-jwt/test-user', headers=headers)  # type: flask.Response
     assert get_bye_from_connexion.data == b'Goodbye test-user (Secure: 100)'
 
+
 def test_checking_that_client_token_has_all_necessary_scopes(
         oauth_requests, secure_endpoint_app):
-    app_client = secure_endpoint_app.app.test_client()
+    app_client = secure_endpoint_app.test_client()
 
     # has only one of the required scopes
     headers = {"Authorization": "Bearer has_myscope"}

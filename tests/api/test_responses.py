@@ -9,7 +9,7 @@ from connexion.apps.flask_app import FlaskJSONEncoder
 def test_app(simple_app):
     assert simple_app.port == 5001
 
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
 
     # by default the Swagger UI is enabled
     swagger_ui = app_client.get('/v1.0/ui/')  # type: flask.Response
@@ -44,14 +44,14 @@ def test_app(simple_app):
 
 
 def test_produce_decorator(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
 
     get_bye = app_client.get('/v1.0/bye/jsantos')  # type: flask.Response
     assert get_bye.content_type == 'text/plain; charset=utf-8'
 
 
 def test_returning_flask_response_tuple(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
 
     result = app_client.get('/v1.0/flask_response_tuple')  # type: flask.Response
     assert result.status_code == 201
@@ -61,7 +61,7 @@ def test_returning_flask_response_tuple(simple_app):
 
 
 def test_jsonifier(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
 
     post_greeting = app_client.post('/v1.0/greeting/jsantos', data={})  # type: flask.Response
     assert post_greeting.status_code == 200
@@ -86,22 +86,23 @@ def test_jsonifier(simple_app):
 
 
 def test_not_content_response(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
 
     get_no_content_response = app_client.get('/v1.0/test_no_content_response')
     assert get_no_content_response.status_code == 204
+    print("popo", get_no_content_response.headers)
     assert get_no_content_response.content_length == 0
 
 
 def test_pass_through(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
 
     response = app_client.get('/v1.0/multimime', data={})  # type: flask.Response
     assert response.status_code == 200
 
 
 def test_empty(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
 
     response = app_client.get('/v1.0/empty')  # type: flask.Response
     assert response.status_code == 204
@@ -109,19 +110,19 @@ def test_empty(simple_app):
 
 
 def test_redirect_endpoint(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.get('/v1.0/test-redirect-endpoint')
     assert resp.status_code == 302
 
 
 def test_redirect_response_endpoint(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.get('/v1.0/test-redirect-response-endpoint')
     assert resp.status_code == 302
 
 
 def test_default_object_body(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.post('/v1.0/test-default-object-body')
     assert resp.status_code == 200
     response = json.loads(resp.data.decode('utf-8', 'replace'))
@@ -152,7 +153,7 @@ def test_custom_encoder(simple_app):
 
 
 def test_content_type_not_json(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
 
     resp = app_client.get('/v1.0/blob-response')
     assert resp.status_code == 200
@@ -164,7 +165,7 @@ def test_content_type_not_json(simple_app):
 
 
 def test_maybe_blob_or_json(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
 
     resp = app_client.get('/v1.0/binary-response')
     assert resp.status_code == 200
@@ -177,7 +178,7 @@ def test_maybe_blob_or_json(simple_app):
 
 def test_bad_operations(bad_operations_app):
     # Bad operationIds in bad_operations_app should result in 501
-    app_client = bad_operations_app.app.test_client()
+    app_client = bad_operations_app.test_client()
 
     resp = app_client.get('/v1.0/welcome')
     assert resp.status_code == 501
@@ -190,20 +191,20 @@ def test_bad_operations(bad_operations_app):
 
 
 def test_text_request(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
 
     resp = app_client.post('/v1.0/text-request', data='text')
     assert resp.status_code == 200
 
 
 def test_operation_handler_returns_flask_object(invalid_resp_allowed_app):
-    app_client = invalid_resp_allowed_app.app.test_client()
+    app_client = invalid_resp_allowed_app.test_client()
     resp = app_client.get('/v1.0/get_non_conforming_response')
     assert resp.status_code == 200
 
 
 def test_post_wrong_content_type(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.post('/v1.0/post_wrong_content_type',
                            content_type="application/xml",
                            data=json.dumps({"some": "data"})
@@ -227,19 +228,22 @@ def test_post_wrong_content_type(simple_app):
     # (https://github.com/pallets/werkzeug/issues/1159)
     # so that content-type is added to every request, we remove it here manually for our test
     # this test can be removed once the werkzeug issue is addressed
-    builder = EnvironBuilder(path='/v1.0/post_wrong_content_type', method='POST',
-                             data=json.dumps({"some": "data"}))
-    try:
-        environ = builder.get_environ()
-    finally:
-        builder.close()
-    environ.pop('CONTENT_TYPE')
+    # builder = EnvironBuilder(path='/v1.0/post_wrong_content_type', method='POST',
+    #                          data=json.dumps({"some": "data"}))
+    # try:
+    #     environ = builder.get_environ()
+    # finally:
+    #     builder.close()
+    # environ.pop('CONTENT_TYPE')
     # we cannot just call app_client.open() since app_client is a flask.testing.FlaskClient
     # which overrides werkzeug.test.Client.open() but does not allow passing an environment
     # directly
-    resp = Client.open(app_client, environ)
-    assert resp.status_code == 415
+    # resp = Client.open(app_client, environ)
 
+    # building then environ is not necessary anymore, seems to work without it.
+    resp = app_client.post('/v1.0/post_wrong_content_type', data=json.dumps({"some": "data"}))
+
+    assert resp.status_code == 415
 
     resp = app_client.post('/v1.0/post_wrong_content_type',
                            content_type="application/json",
@@ -250,25 +254,26 @@ def test_post_wrong_content_type(simple_app):
 
 
 def test_get_unicode_response(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.get('/v1.0/get_unicode_response')
     actualJson = {u'currency': u'\xa3', u'key': u'leena'}
-    assert json.loads(resp.data.decode('utf-8','replace')) == actualJson
+    assert json.loads(resp.data.decode('utf-8', 'replace')) == actualJson
 
 
 def test_get_enum_response(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.get('/v1.0/get_enum_response')
     assert resp.status_code == 200
 
+
 def test_get_httpstatus_response(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.get('/v1.0/get_httpstatus_response')
     assert resp.status_code == 200
 
 
 def test_get_bad_default_response(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.get('/v1.0/get_bad_default_response/200')
     assert resp.status_code == 200
 

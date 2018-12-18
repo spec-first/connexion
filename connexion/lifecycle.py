@@ -42,9 +42,9 @@ class ConnexionResponse(object):
             raise ValueError("{} is not a valid status code".format(status_code))
         self.status_code = status_code
         self.mimetype = mimetype
-        self.content_type = content_type
         self.body = body
         self.headers = headers or {}
+        self.content_type = content_type or self.headers.get("Content-Type")
 
     @property
     def text(self):
@@ -57,6 +57,7 @@ class ConnexionResponse(object):
 
         This method is naive, it will try to load JSON even
         if the content_type is not JSON.
+        It will raise in case of a non JSON string
         """
         return json.loads(self.text)
 
@@ -64,3 +65,12 @@ class ConnexionResponse(object):
     def data(self):
         """return the encoded body."""
         return encode(self.body)
+
+    @property
+    def content_length(self):
+        """return the content length.
+
+        If Content-Length is not present in headers,
+        get the size of encoded body.
+        """
+        return int(self.headers.get("Content-Length", len(self.data)))

@@ -32,7 +32,7 @@ def test_validator_map(json_validation_spec_dir, spec):
 
     app = App(__name__, specification_dir=json_validation_spec_dir)
     app.add_api(spec, validate_responses=True, validator_map=validator_map)
-    app_client = app.app.test_client()
+    app_client = app.test_client()
 
     # type: flask.Response
     res = app_client.post('/v1.0/minlength', data=json.dumps({'foo': 'bar'}), content_type='application/json')
@@ -46,7 +46,7 @@ def test_validator_map(json_validation_spec_dir, spec):
 @pytest.mark.parametrize("spec", SPECS)
 def test_readonly(json_validation_spec_dir, spec):
     app = build_app_from_fixture(json_validation_spec_dir, spec, validate_responses=True)
-    app_client = app.app.test_client()
+    app_client = app.test_client()
 
     res = app_client.get('/v1.0/user')  # type: flask.Response
     assert res.status_code == 200
@@ -66,7 +66,7 @@ def test_readonly(json_validation_spec_dir, spec):
 @pytest.mark.parametrize("spec", SPECS)
 def test_writeonly(json_validation_spec_dir, spec):
     app = build_app_from_fixture(json_validation_spec_dir, spec, validate_responses=True)
-    app_client = app.app.test_client()
+    app_client = app.test_client()
 
     # type: flask.Response
     res = app_client.post(

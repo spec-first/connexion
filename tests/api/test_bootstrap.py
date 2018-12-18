@@ -21,7 +21,7 @@ def test_app_with_relative_path(simple_api_spec_dir, spec):
               debug=True)
     app.add_api(spec)
 
-    app_client = app.app.test_client()
+    app_client = app.test_client()
     get_bye = app_client.get('/v1.0/bye/jsantos')  # type: flask.Response
     assert get_bye.status_code == 200
     assert get_bye.data == b'Goodbye jsantos'
@@ -47,7 +47,7 @@ def test_app_with_different_server_option(simple_api_spec_dir, spec):
               debug=True)
     app.add_api(spec)
 
-    app_client = app.app.test_client()
+    app_client = app.test_client()
     get_bye = app_client.get('/v1.0/bye/jsantos')  # type: flask.Response
     assert get_bye.status_code == 200
     assert get_bye.data == b'Goodbye jsantos'
@@ -61,12 +61,12 @@ def test_app_with_different_uri_parser(simple_api_spec_dir):
               debug=True)
     app.add_api('swagger.yaml')
 
-    app_client = app.app.test_client()
+    app_client = app.test_client()
     resp = app_client.get(
         '/v1.0/test_array_csv_query_param?items=a,b,c&items=d,e,f'
     )  # type: flask.Response
     assert resp.status_code == 200
-    j = json.loads(resp.get_data(as_text=True))
+    j = resp.json
     assert j == ['a', 'b', 'c']
 
 
@@ -77,13 +77,13 @@ def test_no_swagger_ui(simple_api_spec_dir, spec):
               options=options, debug=True)
     app.add_api(spec)
 
-    app_client = app.app.test_client()
+    app_client = app.test_client()
     swagger_ui = app_client.get('/v1.0/ui/')  # type: flask.Response
     assert swagger_ui.status_code == 404
 
     app2 = App(__name__, port=5001, specification_dir=simple_api_spec_dir, debug=True)
     app2.add_api(spec, options={"swagger_ui": False})
-    app2_client = app2.app.test_client()
+    app2_client = app2.test_client()
     swagger_ui2 = app2_client.get('/v1.0/ui/')  # type: flask.Response
     assert swagger_ui2.status_code == 404
 
@@ -93,7 +93,7 @@ def test_swagger_json_app(simple_api_spec_dir, spec):
     """ Verify the spec json file is returned for default setting passed to app. """
     app = App(__name__, port=5001, specification_dir=simple_api_spec_dir, debug=True)
     app.add_api(spec)
-    app_client = app.app.test_client()
+    app_client = app.test_client()
     url = '/v1.0/{spec}'
     url = url.format(spec=spec.replace("yaml", "json"))
     spec_json = app_client.get(url)  # type: flask.Response
@@ -108,7 +108,7 @@ def test_no_swagger_json_app(simple_api_spec_dir, spec):
               options=options, debug=True)
     app.add_api(spec)
 
-    app_client = app.app.test_client()
+    app_client = app.test_client()
     url = '/v1.0/{spec}'
     url = url.format(spec=spec.replace("yaml", "json"))
     spec_json = app_client.get(url)  # type: flask.Response
@@ -132,7 +132,7 @@ def test_dict_as_yaml_path(simple_api_spec_dir, spec):
     app = App(__name__, port=5001, specification_dir=simple_api_spec_dir, debug=True)
     app.add_api(specification)
 
-    app_client = app.app.test_client()
+    app_client = app.test_client()
     url = '/v1.0/{spec}'.format(spec=spec.replace("yaml", "json"))
     swagger_json = app_client.get(url)  # type: flask.Response
     assert swagger_json.status_code == 200
@@ -144,7 +144,7 @@ def test_swagger_json_api(simple_api_spec_dir, spec):
     app = App(__name__, port=5001, specification_dir=simple_api_spec_dir, debug=True)
     app.add_api(spec)
 
-    app_client = app.app.test_client()
+    app_client = app.test_client()
     url = '/v1.0/{spec}'.format(spec=spec.replace("yaml", "json"))
     swagger_json = app_client.get(url)  # type: flask.Response
     assert swagger_json.status_code == 200
@@ -156,14 +156,14 @@ def test_no_swagger_json_api(simple_api_spec_dir, spec):
     app = App(__name__, port=5001, specification_dir=simple_api_spec_dir, debug=True)
     app.add_api(spec, options={"serve_spec": False})
 
-    app_client = app.app.test_client()
+    app_client = app.test_client()
     url = '/v1.0/{spec}'.format(spec=spec.replace("yaml", "json"))
     swagger_json = app_client.get(url)  # type: flask.Response
     assert swagger_json.status_code == 404
 
 
 def test_swagger_json_content_type(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     spec = simple_app._spec_file
     url = '/v1.0/{spec}'.format(spec=spec.replace("yaml", "json"))
     response = app_client.get(url)  # type: flask.Response
@@ -179,7 +179,7 @@ def test_single_route(simple_app):
     def route2():
         return 'single 2'
 
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
 
     simple_app.add_url_rule('/single1', 'single1', route1, methods=['GET'])
 
@@ -197,13 +197,13 @@ def test_single_route(simple_app):
 
 
 def test_resolve_method(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.get('/v1.0/resolver-test/method')  # type: flask.Response
     assert resp.data == b'"DummyClass"\n'
 
 
 def test_resolve_classmethod(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.get('/v1.0/resolver-test/classmethod')  # type: flask.Response
     assert resp.data.decode('utf-8', 'replace') == '"DummyClass"\n'
 

@@ -36,3 +36,18 @@ class TestConnexionResponse(object):
     ])
     def test_json(self, body):
         assert ConnexionResponse(body=body).json == json.loads(body)
+
+    @pytest.mark.parametrize("body,expected", [
+        ("test", 4),
+        ("", 0),
+        # Always count body as bytes, some unicode characters representation
+        # is composed of multiple bytes
+        ("€", 3)
+    ])
+    def test_content_length(self, body, expected):
+        assert ConnexionResponse(body=body).content_length == expected
+        response_with_headers = ConnexionResponse(
+            body=body,
+            headers={"Content-Length": str(len(body.encode("UTF-8")))},
+        )
+        assert response_with_headers.content_length == expected
