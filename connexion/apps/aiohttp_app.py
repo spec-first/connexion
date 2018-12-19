@@ -8,13 +8,39 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
 from ..apis.aiohttp_api import AioHttpApi
-from ..exceptions import ConnexionException
+from ..exceptions import ConnexionException, ProblemException
+from ..http_facts import HTTP_ERRORS
 from ..lifecycle import ConnexionResponse
+from ..problem import problem
 from ..tests import AbstractClient
-from ..utils import is_json_mimetype
 from .abstract import AbstractApp
 
 logger = logging.getLogger('connexion.aiohttp_app')
+
+
+@web.middleware
+@asyncio.coroutine
+def error_middleware(request, handler):
+    error_response = None
+    try:
+        return (yield from handler(request))
+    except web.HTTPException as ex:
+        if ex.status_code >= 400:
+            error_response = problem(
+                title=HTTP_ERRORS[ex.status_code]["title"],
+                detail=HTTP_ERRORS[ex.status_code]["detail"],
+                status=ex.status_code
+            )
+    except ProblemException as exception:
+        error_response = exception.to_problem()
+    except Exception:
+        error_response = problem(
+            title=HTTP_ERRORS[500]["title"],
+            detail=HTTP_ERRORS[500]["detail"],
+            status=500
+        )
+    if error_response:
+        return (yield from AioHttpApi.get_response(error_response))
 
 
 class AioHttpApp(AbstractApp):
@@ -27,7 +53,7 @@ class AioHttpApp(AbstractApp):
         self._api_added = False
 
     def create_app(self):
-        return web.Application(debug=self.debug)
+        return web.Application(debug=self.debug, middlewares=[error_middleware])
 
     def get_root_path(self):
         mod = sys.modules.get(self.import_name)
@@ -46,6 +72,7 @@ class AioHttpApp(AbstractApp):
         return os.path.dirname(os.path.abspath(filepath))
 
     def set_errors_handlers(self):
+        """error handlers are set in `create_app`."""
         pass
 
     def add_api(self, specification, **kwargs):
