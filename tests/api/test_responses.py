@@ -90,7 +90,6 @@ def test_not_content_response(simple_app):
 
     get_no_content_response = app_client.get('/v1.0/test_no_content_response')
     assert get_no_content_response.status_code == 204
-    print("popo", get_no_content_response.headers)
     assert get_no_content_response.content_length == 0
 
 

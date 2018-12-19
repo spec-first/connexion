@@ -161,7 +161,6 @@ class RequestBodyValidator(object):
                                 data[k] = coerce_type(param_defn, data[k], 'requestBody', k)
                             except TypeValidationError as e:
                                 errs += [str(e)]
-                                print(errs)
                     if errs:
                         return problem(400, 'Bad Request', errs)
 

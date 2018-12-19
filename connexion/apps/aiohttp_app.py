@@ -137,10 +137,6 @@ class AioHttpClient(AbstractClient):
             kwargs["params"] = kwargs.get("query_string")
             res = yield from client.request(method.upper(), url, **kwargs)
             body = yield from res.read()
-            print(res.content_type)
-            if is_json_mimetype(res.content_type):
-                body = body + b"\n"
-            print("test_client", body)
             return ConnexionResponse(
                 status_code=res.status,
                 headers=res.headers,

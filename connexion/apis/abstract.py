@@ -10,7 +10,7 @@ from ..operations import make_operation
 from ..options import ConnexionOptions
 from ..resolver import Resolver
 from ..spec import Specification
-from ..utils import Jsonifier
+from ..utils import Jsonifier, decode, is_json_mimetype, is_string
 
 MODULE_PATH = pathlib.Path(__file__).absolute().parent.parent
 SWAGGER_UI_URL = 'ui'
@@ -236,7 +236,11 @@ class AbstractAPI(object):
     @abc.abstractmethod
     def get_response(self, response, mimetype=None, request=None):
         """
-        This method converts the ConnexionResponse to a user framework response.
+        This method converts a response to a user framework response.
+
+        The response can be a ConnexionResponse or an operation handler
+        result. This type of result is handled by `cls._response_from_handler`
+
         :param response: A response to cast.
         :param mimetype: The response mimetype.
         :param request: The request associated with this response (the user framework request).
@@ -247,9 +251,53 @@ class AbstractAPI(object):
 
     @classmethod
     @abc.abstractmethod
+    def _response_from_handler(cls, response, mimetype):
+        # type: Union[Response, str, Tuple[str, int], Tuple[str, int, dict]] -> Response
+        """
+        Create a framework response from the operation handler data.
+
+        An operation handler can return:
+        - a framework response
+        - a body (str / binary / dict / list), a response will be created
+            with a status code 200 by default and empty headers.
+        - a tuple of (body: str, status_code: int)
+        - a tuple of (body: str, status_code: int, headers: dict)
+
+        :param response: A response from an operation handler.
+        :param mimetype: The response mimetype.
+
+        :return A framwork response.
+        """
+
+    @classmethod
+    def encode_body(cls, body, mimetype=None):
+        """Helper to appropriatly encode the body.
+
+        If JSON mimetype is given, serialize the body.
+        If an object other than a string is given, serialize it.
+        It is needed when user is expecting to play with a JSON
+        API without specifying the mimetype.
+        In other case return the body.
+
+        For strings the return value is bytes.
+        """
+        json_encode = mimetype and is_json_mimetype(mimetype)
+        if json_encode or not is_string(body):
+            if isinstance(body, six.binary_type):
+                body = decode(body)
+            body = cls.jsonifier.dumps(body)
+        if isinstance(body, six.text_type):
+            body = body.encode("UTF-8")
+        return body
+
+    @classmethod
+    @abc.abstractmethod
     def get_connexion_response(cls, response, mimetype=None):
         """
         This method converts the user framework response to a ConnexionResponse.
+
+        It is used after the user returned a response,
+        to give it to response validators.
         :param response: A response to cast.
         """
 

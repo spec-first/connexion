@@ -3,10 +3,9 @@ import math
 import connexion.apps
 import pytest
 import six
+from conftest import ENCODING_STRINGS
 from connexion import utils
 from mock import MagicMock
-
-from .conftest import ENCODING_STRINGS
 
 
 def test_get_function_from_name():
@@ -63,3 +62,32 @@ def test_decode(data):
 @pytest.mark.parametrize("data", ENCODING_STRINGS)
 def test_encode(data):
     assert isinstance(utils.encode(data), six.binary_type)
+
+
+@pytest.mark.parametrize("obj,length,expected", [
+    [(1,), 3, (1, None, None)],
+    [(1, 2), 2, (1, 2)]
+])
+def test_normalize_tuple(obj, length, expected):
+    assert utils.normalize_tuple(obj, length) == expected
+
+
+@pytest.mark.parametrize("obj,length", [
+    ["1", 1],
+    [(1, 2), 1]
+])
+@pytest.mark.xfail(raises=ValueError)
+def test_normalize_tuple_wrong_data(obj, length):
+    utils.normalize_tuple(obj, length)
+
+
+@pytest.mark.parametrize("obj,expected", [
+    ("test", True),
+    (b"test", True),
+    ({}, False),
+    (None, False),
+    ([], False),
+    (1, False)
+])
+def test_is_string(obj, expected):
+    assert utils.is_string(obj) is expected

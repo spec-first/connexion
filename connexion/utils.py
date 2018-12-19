@@ -154,6 +154,10 @@ def is_null(value):
     return False
 
 
+def is_string(value):
+    return isinstance(value, (six.text_type, six.binary_type))
+
+
 class Jsonifier(object):
     def __init__(self, json_):
         self.json = json_
@@ -235,3 +239,17 @@ def encode(_string):
         except (UnicodeEncodeError, UnicodeDecodeError):
             pass
     return _string.encode(ENCODINGS[0], errors="ignore")
+
+
+def normalize_tuple(obj, length):
+    """return a tuple of length `length`."""
+    if not isinstance(obj, tuple):
+        raise ValueError("expected tuple, got {}".format(type(obj)))
+    elif len(obj) > length:
+        raise ValueError("length expected is smaller than obj size.")
+
+    new_obj = [o for o in obj]
+    while len(new_obj) < length:
+        new_obj.append(None)
+
+    return tuple(new_obj)

@@ -10,7 +10,8 @@ from connexion.apis.abstract import AbstractAPI
 from connexion.decorators.produces import NoContent
 from connexion.handlers import AuthErrorHandler
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
-from connexion.utils import Jsonifier, is_json_mimetype
+from connexion.operations.validation import validate_operation_output
+from connexion.utils import Jsonifier
 
 logger = logging.getLogger('connexion.apis.flask_api')
 
@@ -115,7 +116,7 @@ class FlaskApi(AbstractAPI):
         if isinstance(response, ConnexionResponse):
             flask_response = cls._get_flask_response_from_connexion(response, mimetype)
         else:
-            flask_response = cls._get_flask_response(response, mimetype)
+            flask_response = cls._response_from_handler(response, mimetype)
 
         logger.debug('Got data and status code (%d)',
                      flask_response.status_code,
@@ -159,7 +160,7 @@ class FlaskApi(AbstractAPI):
             flask_response.status_code = status_code
 
         if data is not None and data is not NoContent:
-            data = cls._jsonify_data(data, mimetype)
+            data = cls.encode_body(data, mimetype)
             flask_response.set_data(data)
 
         elif data is NoContent:
@@ -168,33 +169,23 @@ class FlaskApi(AbstractAPI):
         return flask_response
 
     @classmethod
-    def _jsonify_data(cls, data, mimetype):
-        if (isinstance(mimetype, six.string_types) and is_json_mimetype(mimetype)) \
-                or not (isinstance(data, six.binary_type) or isinstance(data, six.text_type)):
-            return cls.jsonifier.dumps(data)
+    def _response_from_handler(cls, response, mimetype):
+        """Create a framework response from the operation handler data.
 
-        return data
-
-    @classmethod
-    def _get_flask_response(cls, response, mimetype):
+        Handle all cases describe in `AbstractApi.get_response`.
+        """
         if flask_utils.is_flask_response(response):
             return response
-
         elif isinstance(response, tuple) and flask_utils.is_flask_response(response[0]):
             return flask.current_app.make_response(response)
 
-        elif isinstance(response, tuple) and len(response) == 3:
-            data, status_code, headers = response
-            return cls._build_flask_response(mimetype, None,
-                                             headers, status_code, data)
-
-        elif isinstance(response, tuple) and len(response) == 2:
-            data, status_code = response
-            return cls._build_flask_response(mimetype, None, None,
-                                             status_code, data)
-
-        else:
-            return cls._build_flask_response(mimetype=mimetype, data=response)
+        body, status_code, headers = validate_operation_output(response)
+        return cls._build_flask_response(
+            mimetype=mimetype,
+            headers=headers,
+            status_code=status_code,
+            data=body
+        )
 
     @classmethod
     def get_connexion_response(cls, response, mimetype=None):

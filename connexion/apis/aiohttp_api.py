@@ -4,15 +4,20 @@ import re
 from urllib.parse import parse_qs
 
 import jinja2
+import six
 
 import aiohttp_jinja2
 from aiohttp import web
+from aiohttp.payload import Payload
 from aiohttp.web_exceptions import HTTPNotFound
 from connexion.apis.abstract import AbstractAPI
 from connexion.exceptions import OAuthProblem
 from connexion.handlers import AuthErrorHandler
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
-from connexion.utils import Jsonifier, is_json_mimetype
+from connexion.operations.validation import validate_operation_output
+from connexion.utils import (
+    Jsonifier
+)
 
 try:
     import ujson as json
@@ -205,8 +210,7 @@ class AioHttpApi(AbstractAPI):
                          'url': url
                      })
 
-        if isinstance(response, ConnexionResponse):
-            response = cls._get_aiohttp_response_from_connexion(response, mimetype)
+        response = cls._get_response(response, mimetype)
 
         if isinstance(response, web.StreamResponse):
             logger.debug('Got stream response with status code (%d)',
@@ -218,11 +222,38 @@ class AioHttpApi(AbstractAPI):
         return response
 
     @classmethod
-    def get_connexion_response(cls, response, mimetype=None):
-        response.body = cls._cast_body(response.body, mimetype)
+    def _get_response(cls, response, mimetype):
+        """Synchronous part of get_response method."""
+        if isinstance(response, ConnexionResponse):
+            response = cls._get_aiohttp_response_from_connexion(response, mimetype)
+        else:
+            response = cls._response_from_handler(response, mimetype)
+        return response
 
+    @classmethod
+    def _response_from_handler(cls, response, mimetype=None):
+        """Return a web.Response from operation handler."""
+        if isinstance(response, web.StreamResponse):
+            """this check handles web.StreamResponse and web.Response."""
+            return response
+        elif (
+            isinstance(response, tuple) and
+            isinstance(response[0], web.StreamResponse)
+        ):
+            return response[0]
+
+        body, status, headers = validate_operation_output(response)
+        body = cls.encode_body(body, mimetype)
+        return web.Response(
+            body=body, status=status, headers=headers
+        )
+
+    @classmethod
+    def get_connexion_response(cls, response, mimetype=None):
         if isinstance(response, ConnexionResponse):
             return response
+
+        response = cls._get_response(response, mimetype)
 
         return ConnexionResponse(
             status_code=response.status,
@@ -234,10 +265,8 @@ class AioHttpApi(AbstractAPI):
 
     @classmethod
     def _get_aiohttp_response_from_connexion(cls, response, mimetype):
-        content_type = response.content_type if response.content_type else \
-            response.mimetype if response.mimetype else mimetype
-
-        body = cls._cast_body(response.body, content_type)
+        content_type = response.content_type or response.mimetype or mimetype
+        body = cls.encode_body(response.body, content_type)
 
         return web.Response(
             status=response.status_code,
@@ -245,20 +274,6 @@ class AioHttpApi(AbstractAPI):
             headers=response.headers,
             body=body
         )
-
-    @classmethod
-    def _cast_body(cls, body, content_type=None):
-        if not isinstance(body, bytes):
-            if content_type and is_json_mimetype(content_type):
-                return json.dumps(body).encode()
-
-            elif isinstance(body, str):
-                return body.encode()
-
-            else:
-                return str(body).encode()
-        else:
-            return body
 
     @classmethod
     def _set_jsonifier(cls):
