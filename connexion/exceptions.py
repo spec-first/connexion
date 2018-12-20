@@ -82,13 +82,13 @@ class OAuthProblem(Unauthorized):
     pass
 
 
-class OAuthResponseProblem(Unauthorized):
+class OAuthResponseProblem(OAuthProblem):
     def __init__(self, token_response, **kwargs):
         self.token_response = token_response
         super(OAuthResponseProblem, self).__init__(**kwargs)
 
 
-class OAuthScopeProblem(Forbidden):
+class OAuthScopeProblem(OAuthProblem):
     def __init__(self, token_scopes, required_scopes, **kwargs):
         self.required_scopes = required_scopes
         self.token_scopes = token_scopes
