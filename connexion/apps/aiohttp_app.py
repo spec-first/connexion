@@ -161,7 +161,7 @@ class AioHttpClient(AbstractClient):
                 headers = kwargs.setdefault("headers", {})
                 if "Content-Type" not in headers:
                     headers["Content-Type"] = content_type
-            kwargs["params"] = kwargs.get("query_string")
+            kwargs["params"] = kwargs.pop("query_string", None)
             res = yield from client.request(method.upper(), url, **kwargs)
             body = yield from res.read()
             return ConnexionResponse(
