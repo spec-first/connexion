@@ -4,20 +4,16 @@ import re
 from urllib.parse import parse_qs
 
 import jinja2
-import six
 
 import aiohttp_jinja2
 from aiohttp import web
-from aiohttp.payload import Payload
 from aiohttp.web_exceptions import HTTPNotFound
 from connexion.apis.abstract import AbstractAPI
 from connexion.exceptions import OAuthProblem
 from connexion.handlers import AuthErrorHandler
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.operations.validation import validate_operation_output
-from connexion.utils import (
-    Jsonifier
-)
+from connexion.utils import Jsonifier
 
 try:
     import ujson as json

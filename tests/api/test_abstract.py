@@ -1,7 +1,6 @@
 import json
 
 import pytest
-
 from connexion.apis import AbstractAPI
 from connexion.utils import Jsonifier
 

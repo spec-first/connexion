@@ -1,9 +1,6 @@
 import pytest
-
-from connexion.operations.validation import (
-    BODY_TYPES,
-    validate_operation_output
-)
+from connexion.operations.validation import (BODY_TYPES,
+                                             validate_operation_output)
 
 
 @pytest.mark.parametrize("output", [

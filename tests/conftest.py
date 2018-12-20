@@ -3,9 +3,10 @@ import logging
 import pathlib
 import sys
 
-import pytest
 import six
-from connexion import App
+
+import pytest
+from connexion import AioHttpApp, App
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -13,12 +14,28 @@ TEST_FOLDER = pathlib.Path(__file__).parent
 FIXTURES_FOLDER = TEST_FOLDER / 'fixtures'
 SPEC_FOLDER = TEST_FOLDER / "fakeapi"
 SPECS = ["swagger.yaml", "openapi.yaml"]
+APPS = [App, AioHttpApp]
 ENCODING_STRINGS = [
     six.b("test"),
     six.u("test"),
     "ą".encode("cp1250"),
     "£".encode("latin1")
 ]
+
+
+def get_apps_specs():
+    apps = [App]
+    if sys.version_info[0:2] >= (3, 5):
+        apps.append(AioHttpApp)
+
+    apps_specs = []
+    for app in apps:
+        for spec in SPECS:
+            apps_specs.append({"app_cls": app, "spec_file": spec})
+    return apps_specs
+
+
+APPS_SPECS = get_apps_specs()
 
 
 class FakeResponse(object):
@@ -101,86 +118,103 @@ def json_validation_spec_dir():
     return FIXTURES_FOLDER / 'json_validation'
 
 
-def build_app_from_fixture(api_spec_folder, spec_file='openapi.yaml', **kwargs):
+def build_app_from_fixture(
+    api_spec_folder,
+    app_cls=App,
+    spec_file='openapi.yaml',
+    **kwargs
+):
     debug = True
     if 'debug' in kwargs:
         debug = kwargs['debug']
         del (kwargs['debug'])
 
-    cnx_app = App(__name__,
-                  port=5001,
-                  specification_dir=FIXTURES_FOLDER / api_spec_folder,
-                  debug=debug)
+    cnx_app = app_cls(__name__,
+                      port=5001,
+                      specification_dir=FIXTURES_FOLDER / api_spec_folder,
+                      debug=debug)
 
     cnx_app.add_api(spec_file, **kwargs)
     cnx_app._spec_file = spec_file
     return cnx_app
 
 
-@pytest.fixture(scope="session", params=SPECS)
+@pytest.fixture(scope="session", params=APPS_SPECS)
 def simple_app(request):
-    return build_app_from_fixture('simple', request.param, validate_responses=True)
+    return build_app_from_fixture('simple',
+                                  validate_responses=True,
+                                  **request.param)
 
 
-@pytest.fixture(scope="session", params=SPECS)
+@pytest.fixture(scope="session", params=APPS_SPECS)
 def snake_case_app(request):
-    return build_app_from_fixture('snake_case', request.param,
+    return build_app_from_fixture('snake_case',
                                   validate_responses=True,
-                                  pythonic_params=True)
+                                  pythonic_params=True,
+                                  **request.param)
 
 
-@pytest.fixture(scope="session", params=SPECS)
+@pytest.fixture(scope="session", params=APPS_SPECS)
 def invalid_resp_allowed_app(request):
-    return build_app_from_fixture('simple', request.param,
-                                  validate_responses=False)
+    return build_app_from_fixture('simple',
+                                  validate_responses=False,
+                                  **request.param)
 
 
-@pytest.fixture(scope="session", params=SPECS)
+@pytest.fixture(scope="session", params=APPS_SPECS)
 def strict_app(request):
-    return build_app_from_fixture('simple', request.param,
+    return build_app_from_fixture('simple',
                                   validate_responses=True,
-                                  strict_validation=True)
+                                  strict_validation=True,
+                                  **request.param)
 
 
-@pytest.fixture(scope="session", params=SPECS)
+@pytest.fixture(scope="session", params=APPS_SPECS)
 def problem_app(request):
-    return build_app_from_fixture('problem', request.param,
-                                  validate_responses=True)
+    return build_app_from_fixture('problem',
+                                  validate_responses=True,
+                                  **request.param)
 
 
-@pytest.fixture(scope="session", params=SPECS)
+@pytest.fixture(scope="session", params=APPS_SPECS)
 def schema_app(request):
-    return build_app_from_fixture('different_schemas', request.param,
-                                  validate_responses=True)
+    return build_app_from_fixture('different_schemas',
+                                  validate_responses=True,
+                                  **request.param)
 
 
-@pytest.fixture(scope="session", params=SPECS)
+@pytest.fixture(scope="session", params=APPS_SPECS)
 def secure_endpoint_app(request):
-    return build_app_from_fixture('secure_endpoint', request.param,
-                                  validate_responses=True, pass_context_arg_name='req_context')
+    return build_app_from_fixture('secure_endpoint',
+                                  validate_responses=True,
+                                  pass_context_arg_name='req_context',
+                                  **request.param)
 
 
-@pytest.fixture(scope="session", params=SPECS)
+@pytest.fixture(scope="session", params=APPS_SPECS)
 def secure_api_app(request):
     options = {"swagger_ui": False}
-    return build_app_from_fixture('secure_api', request.param,
-                                  options=options, auth_all_paths=True)
+    return build_app_from_fixture('secure_api',
+                                  options=options,
+                                  auth_all_paths=True,
+                                  **request.param)
 
 
-@pytest.fixture(scope="session", params=SPECS)
+@pytest.fixture(scope="session", params=APPS_SPECS)
 def unordered_definition_app(request):
-    return build_app_from_fixture('unordered_definition', request.param)
+    return build_app_from_fixture('unordered_definition', **request.param)
 
 
-@pytest.fixture(scope="session", params=SPECS)
+@pytest.fixture(scope="session", params=APPS_SPECS)
 def bad_operations_app(request):
-    return build_app_from_fixture('bad_operations', request.param,
-                                  resolver_error=501)
+    return build_app_from_fixture('bad_operations',
+                                  resolver_error=501,
+                                  **request.param)
 
 
-@pytest.fixture(scope="session", params=SPECS)
+@pytest.fixture(scope="session", params=APPS_SPECS)
 def query_sanitazion(request):
-    return build_app_from_fixture('query_sanitazion', request.param)
+    return build_app_from_fixture('query_sanitazion', **request.param)
 
 
 if sys.version_info < (3, 5, 3) and sys.version_info[0] == 3:

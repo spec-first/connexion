@@ -3,7 +3,7 @@ import json
 from jsonschema.validators import _utils, extend
 
 import pytest
-from conftest import build_app_from_fixture, SPECS
+from conftest import SPECS, build_app_from_fixture
 from connexion import App
 from connexion.decorators.validation import RequestBodyValidator
 from connexion.json_schema import Draft4RequestValidator

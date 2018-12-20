@@ -1,8 +1,9 @@
 import math
 
+import six
+
 import connexion.apps
 import pytest
-import six
 from conftest import ENCODING_STRINGS
 from connexion import utils
 from mock import MagicMock

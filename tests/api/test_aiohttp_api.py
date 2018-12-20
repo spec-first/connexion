@@ -1,5 +1,4 @@
 import pytest
-
 from aiohttp.web import Response, StreamResponse
 from connexion.apis.aiohttp_api import AioHttpApi
 from connexion.lifecycle import ConnexionResponse

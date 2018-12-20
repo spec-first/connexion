@@ -1,12 +1,10 @@
-import json
-
 import jinja2
 import yaml
 from openapi_spec_validator.loaders import ExtendedSafeLoader
 
 import mock
 import pytest
-from conftest import TEST_FOLDER, build_app_from_fixture, SPECS
+from conftest import SPECS, TEST_FOLDER, build_app_from_fixture
 from connexion import App
 from connexion.exceptions import InvalidSpecification
 from connexion.lifecycle import ConnexionResponse

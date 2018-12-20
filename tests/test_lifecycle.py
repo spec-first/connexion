@@ -1,8 +1,8 @@
 import json
 
-import pytest
 import six
 
+import pytest
 from connexion.lifecycle import ConnexionResponse
 
 
