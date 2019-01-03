@@ -12,6 +12,7 @@ from connexion.utils import Jsonifier
     (b"test", "text/plain", b"test"),
     ("test", "application/json", b'"test"\n'),
     (b"test", "application/json", b'"test"\n'),
+    ("", "application/json", b"{}\n")
 ])
 def test_encode_body(body, mimetype, expected):
     """Test the body encoding.

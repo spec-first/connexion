@@ -7,7 +7,6 @@ from werkzeug.local import LocalProxy
 
 from connexion.apis import flask_utils
 from connexion.apis.abstract import AbstractAPI
-from connexion.decorators.produces import NoContent
 from connexion.handlers import AuthErrorHandler
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.operations.validation import validate_operation_output
@@ -159,12 +158,8 @@ class FlaskApi(AbstractAPI):
 
             flask_response.status_code = status_code
 
-        if data is not None and data is not NoContent:
-            data = cls.encode_body(data, mimetype)
-            flask_response.set_data(data)
-
-        elif data is NoContent:
-            flask_response.set_data('')
+        data = cls.encode_body(data, mimetype)
+        flask_response.set_data(data)
 
         return flask_response
 
@@ -180,6 +175,7 @@ class FlaskApi(AbstractAPI):
             return flask.current_app.make_response(response)
 
         body, status_code, headers = validate_operation_output(response)
+
         return cls._build_flask_response(
             mimetype=mimetype,
             headers=headers,

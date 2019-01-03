@@ -285,6 +285,9 @@ class AbstractAPI(object):
         if json_encode or not is_string(body):
             if isinstance(body, six.binary_type):
                 body = decode(body)
+            """if body is empty transform it to object."""
+            if body == "":
+                body = {}
             body = cls.jsonifier.dumps(body)
         if isinstance(body, six.text_type):
             body = body.encode("UTF-8")
