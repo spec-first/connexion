@@ -44,7 +44,10 @@ class ConnexionResponse(object):
         self.mimetype = mimetype
         self.body = body
         self.headers = headers or {}
-        self.content_type = content_type or self.headers.get("Content-Type")
+        self.content_type = (
+            content_type or
+            self.headers.get("Content-Type", self.mimetype)
+        )
 
     @property
     def text(self):
