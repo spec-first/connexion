@@ -1,12 +1,20 @@
 import json
 
+from six.moves.urllib.parse import urlparse
+
 
 def test_headers_jsonifier(simple_app):
+    """Don't check on localhost to make this test works for aiohttp.
+
+    aiohttp returns 127.0.0.1 with its port instead of localhost.
+    """
     app_client = simple_app.test_client()
 
     response = app_client.post('/v1.0/goodday/dan', data={})  # type: flask.Response
+
     assert response.status_code == 201
-    assert response.headers["Location"] == "http://localhost/my/uri"
+    location = urlparse(response.headers["Location"])
+    assert location.path == "/my/uri"
 
 
 def test_headers_produces(simple_app):
@@ -14,7 +22,8 @@ def test_headers_produces(simple_app):
 
     response = app_client.post('/v1.0/goodevening/dan', data={})  # type: flask.Response
     assert response.status_code == 201
-    assert response.headers["Location"] == "http://localhost/my/uri"
+    location = urlparse(response.headers["Location"])
+    assert location.path == "/my/uri"
 
 
 def test_header_not_returned(simple_app):
