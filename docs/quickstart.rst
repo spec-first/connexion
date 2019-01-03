@@ -28,6 +28,7 @@ Put your API YAML inside a folder in the root path of your application (e.g ``op
 
     app = connexion.FlaskApp(__name__, specification_dir='openapi/')
     app.add_api('my_api.yaml')
+    application = app.app
     app.run(port=8080)
 
 
