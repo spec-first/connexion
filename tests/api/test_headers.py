@@ -42,3 +42,26 @@ def test_no_content_object_and_have_headers(simple_app):
     resp = app_client.get('/v1.0/test-204-with-headers-nocontent-obj')
     assert resp.status_code == 204
     assert 'X-Something' in resp.headers
+
+
+def test_binary_content_response(simple_app):
+    app_client = simple_app.app.test_client()
+    resp = app_client.get('/v1.0/binary-response')
+    assert resp.status_code == 200
+    assert resp.content_type == 'application/octet-stream'
+    assert resp.data == b'cool\x00\x08'
+
+
+def test_bye_response(simple_app):
+    app_client = simple_app.app.test_client()
+    resp = app_client.get('/v1.0/bye/dan')
+    assert resp.status_code == 200
+    assert resp.content_type.startswith('text/plain') == True
+    assert resp.data == b'Goodbye dan'
+
+
+def test_non_json_response(simple_app):
+    app_client = simple_app.app.test_client()
+    resp = app_client.get('/v1.0/html-page')
+    assert resp.status_code == 200
+    #assert resp.content_type.startswith('text/html') == True

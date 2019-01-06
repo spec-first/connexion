@@ -88,6 +88,23 @@ paths:
           required: true
           schema:
             type: string
+  /html-page:
+    get:
+      summary: Tests Content-Type headers in non-json responses
+      operationId: fakeapi.hello.get_non_json_response
+      responses:
+        '200':
+          description: Return html content
+          content:
+            text/html:
+              schema:
+                type: string
+        default:
+          description: Unexpected error
+          content:
+            text/plain:
+              schema:
+                type: string
   /flask_response_tuple:
     get:
       summary: Return flask response tuple

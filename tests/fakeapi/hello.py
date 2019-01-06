@@ -395,6 +395,10 @@ def get_data_as_text(post_param):
     return ''
 
 
+def get_non_json_response():
+    return '<H1>content</H1>', 200, {'Content-Type': 'text/html'}
+
+
 def get_invalid_response():
     return {"simple": object()}
 
