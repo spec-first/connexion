@@ -21,7 +21,12 @@ def validate_operation_output(response):
                 BODY_TYPES, type(body)
             )
         )
+
     status = status or 200
+    if hasattr(status, "value"):
+        """Handle Enum and http.HTTPStatus status. see #504"""
+        status = status.value
+
     if headers is not None and not isinstance(headers, dict):
         raise ValueError(
             "Type of 3rd return value is dict, got {}".format(
