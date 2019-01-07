@@ -34,6 +34,7 @@ def error_middleware(request, handler):
     except ProblemException as exception:
         error_response = exception.to_problem()
     except Exception:
+        logger.exception("aiohttp error")
         error_response = problem(
             title=HTTP_ERRORS[500]["title"],
             detail=HTTP_ERRORS[500]["detail"],
@@ -156,7 +157,7 @@ class AioHttpClient(AbstractClient):
         @asyncio.coroutine
         def _async_request():
             nonlocal client
-            content_type = kwargs.get("content_type")
+            content_type = kwargs.pop("content_type", None)
             if content_type:
                 headers = kwargs.setdefault("headers", {})
                 if "Content-Type" not in headers:
