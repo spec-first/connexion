@@ -1,8 +1,10 @@
 import json
 from struct import unpack
 
+import pytest
 from werkzeug.test import Client, EnvironBuilder
 
+from connexion import FlaskApp
 from connexion.apps.flask_app import FlaskJSONEncoder
 
 
@@ -134,6 +136,8 @@ def test_default_object_body(simple_app):
 
 
 def test_custom_encoder(simple_app):
+    if not isinstance(simple_app, FlaskApp):
+        pytest.skip("flask test only")
 
     class CustomEncoder(FlaskJSONEncoder):
         def default(self, o):
@@ -141,9 +145,8 @@ def test_custom_encoder(simple_app):
                 return "cool result"
             return FlaskJSONEncoder.default(self, o)
 
-    flask_app = simple_app.app
-    flask_app.json_encoder = CustomEncoder
-    app_client = flask_app.test_client()
+    simple_app.app.json_encoder = CustomEncoder
+    app_client = simple_app.test_client()
 
     resp = app_client.get('/v1.0/custom-json-response')
     assert resp.status_code == 200
