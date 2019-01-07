@@ -102,6 +102,18 @@ def test_swagger_json_app(simple_api_spec_dir, spec):
 
 
 @pytest.mark.parametrize("spec", SPECS)
+def test_swagger_yaml_app(simple_api_spec_dir, spec):
+    """ Verify the spec yaml file is returned for default setting passed to app. """
+    app = App(__name__, port=5001, specification_dir=simple_api_spec_dir, debug=True)
+    app.add_api(spec)
+    app_client = app.app.test_client()
+    url = '/v1.0/{spec}'
+    url = url.format(spec=spec)
+    spec_response = app_client.get(url)  # type: flask.Response
+    assert spec_response.status_code == 200
+
+
+@pytest.mark.parametrize("spec", SPECS)
 def test_no_swagger_json_app(simple_api_spec_dir, spec):
     """ Verify the spec json file is not returned when set to False when creating app. """
     options = {"serve_spec": False}

@@ -2,6 +2,7 @@ import functools
 import importlib
 
 import six
+import yaml
 
 # Python 2/3 compatibility:
 try:
@@ -205,3 +206,40 @@ def has_coroutine(function, api=None):
     else:  # pragma: 3 no cover
         # there's no asyncio in python 2
         return False
+
+
+def yamldumper(openapi):
+    """
+    Returns a nicely-formatted yaml spec.
+    :param openapi: a spec dictionary.
+    :return: a nicely-formatted, serialized yaml spec.
+    """
+    def should_use_block(value):
+        for c in u"\u000a\u000d\u001c\u001d\u001e\u0085\u2028\u2029":
+            if c in value:
+                return True
+        return False
+
+    def my_represent_scalar(self, tag, value, style=None):
+        if should_use_block(value):
+            style = '|'
+        else:
+            style = self.default_style
+
+        node = yaml.representer.ScalarNode(tag, value, style=style)
+        if self.alias_key is not None:
+            self.represented_objects[self.alias_key] = node
+        return node
+
+    class NoAnchorDumper(yaml.dumper.SafeDumper):
+        """A yaml Dumper that does not replace duplicate entries
+           with yaml anchors.
+        """
+
+        def ignore_aliases(self, *args):
+            return True
+
+    # Dump long lines as "|".
+    yaml.representer.SafeRepresenter.represent_scalar = my_represent_scalar
+
+    return yaml.dump(openapi, default_flow_style=False, allow_unicode=True, Dumper=NoAnchorDumper)
