@@ -283,7 +283,7 @@ def test_validate_responses(aiohttp_app, aiohttp_client):
     app_client = yield from aiohttp_client(aiohttp_app.app)
     get_bye = yield from app_client.get('/v1.0/aiohttp_validate_responses')
     assert get_bye.status == 200
-    assert (yield from get_bye.read()) == b'{"validate": true}'
+    assert (yield from get_bye.read()) == b'{"validate":true}'
 
 
 @asyncio.coroutine

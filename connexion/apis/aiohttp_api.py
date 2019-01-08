@@ -318,22 +318,26 @@ class AioHttpApi(AbstractAPI):
 
         if isinstance(response, ConnexionResponse):
             response = cls._get_aiohttp_response_from_connexion(response, mimetype)
-
-        if isinstance(response, web.StreamResponse):
-            logger.debug('Got stream response with status code (%d)',
-                         response.status, extra={'url': url})
         else:
-            logger.debug('Got data and status code (%d)',
-                         response.status, extra={'data': response.body, 'url': url})
+            response = cls._get_aiohttp_response(response, mimetype)
+
+        logger.debug('Got stream response with status code (%d)',
+                     response.status, extra={'url': url})
 
         return response
 
     @classmethod
     def get_connexion_response(cls, response, mimetype=None):
-        response.body = cls._cast_body(response.body, mimetype)
-
         if isinstance(response, ConnexionResponse):
-            return response
+            # If body in ConnexionResponse is not byte, it may not pass schema validation.
+            # In this case, rebuild response with aiohttp to have consistency
+            if response.body is None or isinstance(response.body, bytes):
+                return response
+            else:
+                response = cls._get_aiohttp_response_from_connexion(response, mimetype)
+
+        if not isinstance(response, web.StreamResponse):
+            response = cls._get_aiohttp_response(response, mimetype)
 
         return ConnexionResponse(
             status_code=response.status,
@@ -345,31 +349,56 @@ class AioHttpApi(AbstractAPI):
 
     @classmethod
     def _get_aiohttp_response_from_connexion(cls, response, mimetype):
-        content_type = response.content_type if response.content_type else \
-            response.mimetype if response.mimetype else mimetype
+        content_type = response.content_type or response.mimetype or mimetype
 
-        body = cls._cast_body(response.body, content_type)
-
-        return web.Response(
-            status=response.status_code,
+        return cls._build_aiohttp_response(
+            status_code=response.status_code,
             content_type=content_type,
             headers=response.headers,
-            body=body
+            data=response.body
         )
 
     @classmethod
-    def _cast_body(cls, body, content_type=None):
-        if not isinstance(body, bytes):
-            if content_type and is_json_mimetype(content_type):
-                return cls.jsonifier.dumps(body).encode()
+    def _get_aiohttp_response(cls, response, mimetype):
+        if isinstance(response, web.StreamResponse):
+            return response
 
-            elif isinstance(body, str):
-                return body.encode()
+        elif isinstance(response, tuple) and len(response) == 3:
+            data, status_code, headers = response
+            return cls._build_aiohttp_response(content_type=mimetype, status_code=status_code, data=data, headers=headers)
 
-            else:
-                return str(body).encode()
+        elif isinstance(response, tuple) and len(response) == 2:
+            data, status_code = response
+            return cls._build_aiohttp_response(content_type=mimetype, status_code=status_code, data=data)
+
         else:
-            return body
+            return cls._build_aiohttp_response(content_type=mimetype, data=response)
+
+    @classmethod
+    def _build_aiohttp_response(cls, data, content_type, headers=None, status_code=None):
+        if status_code is None:
+            if data is None:
+                status_code = 204
+                content_type = None
+            else:
+                status_code = 200
+        elif hasattr(status_code, "value"):
+            # If we got an enum instead of an int, extract the value.
+            status_code = status_code.value
+
+        if data is not None and not isinstance(data, bytes):
+            if content_type and is_json_mimetype(content_type):
+                text = cls.jsonifier.dumps(data)
+            elif isinstance(data, str):
+                text = data
+            else:
+                text = str(data)
+            body = None
+        else:
+            text = None
+            body = data
+
+        return web.Response(body=body, text=text, headers=headers, status=status_code, content_type=content_type)
 
     @classmethod
     def _set_jsonifier(cls):
