@@ -88,7 +88,7 @@ class OAuthResponseProblem(OAuthProblem):
         super(OAuthResponseProblem, self).__init__(**kwargs)
 
 
-class OAuthScopeProblem(Forbidden, OAuthProblem):
+class OAuthScopeProblem(Forbidden):
     def __init__(self, token_scopes, required_scopes, **kwargs):
         self.required_scopes = required_scopes
         self.token_scopes = token_scopes
