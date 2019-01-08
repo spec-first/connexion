@@ -119,7 +119,6 @@ class AioHttpApi(AbstractAPI):
                      console_ui_path)
 
         for path in (
-            console_ui_path,
             console_ui_path + '/',
             console_ui_path + '/index.html',
         ):
@@ -128,6 +127,14 @@ class AioHttpApi(AbstractAPI):
                 path,
                 self._get_swagger_ui_home
             )
+
+        async def redirect(request):
+            raise web.HTTPMovedPermanently(location=self.base_path + console_ui_path + '/')
+        self.subapp.router.add_route(
+            'GET',
+            console_ui_path,
+            redirect
+        )
 
         self.subapp.router.add_static(
             console_ui_path + '/',
