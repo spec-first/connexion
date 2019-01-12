@@ -127,3 +127,46 @@ class RestyResolver(Resolver):
             return self.collection_endpoint_name if is_collection_endpoint else method.lower()
 
         return '{}.{}'.format(get_controller_name(), get_function_name())
+
+
+class MethodViewResolver(RestyResolver):
+    """
+    Resolves endpoint functions based on Flask's MethodView semantics, e.g. ::
+
+            paths:
+                /foo_bar:
+                    get:
+                        # Implied function call: api.FooBarView().get
+
+            class FooBarView(MethodView):
+                def get(self):
+                    return ...
+                def post(self):
+                    return ...
+    """
+
+    def __init__(self, default_module_name, collection_endpoint_name='search'):
+        """
+        :param default_module_name: Default module name for operations
+        :type default_module_name: str
+        """
+        RestyResolver.__init__(self, default_module_name, collection_endpoint_name)
+
+    def resolve_function_from_operation_id(self, operation_id):
+        """
+        Invokes the function_resolver
+
+        :type operation_id: str
+        """
+        try:
+            module, path, meth = operation_id.rsplit('.', 2)
+            cls_path = "{}.{}View".format(module, path.title())
+            cls = self.function_resolver(cls_path)
+            cls_instance = cls()
+            func = getattr(cls_instance, meth)
+            return func
+        except ImportError as e:
+            msg = 'Cannot resolve operationId "{}"! Import error was "{}"'.format(operation_id, str(e))
+            raise ResolverError(msg, sys.exc_info())
+        except (AttributeError, ValueError) as e:
+            raise ResolverError(str(e), sys.exc_info())
