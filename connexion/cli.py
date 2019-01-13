@@ -181,13 +181,18 @@ def run(spec_file,
     app_cls = connexion.utils.get_function_from_name(
       AVAILABLE_APPS[app_framework]
     )
+
+    options = {
+        "serve_spec": not hide_spec,
+        "swagger_path": console_ui_from or None,
+        "swagger_ui": not hide_console_ui,
+        "swagger_url": console_ui_url or None
+    }
+
     app = app_cls(__name__,
-                  swagger_json=not hide_spec,
-                  swagger_ui=not hide_console_ui,
-                  swagger_path=console_ui_from or None,
-                  swagger_url=console_ui_url or None,
+                  debug=debug,
                   auth_all_paths=auth_all_paths,
-                  debug=debug)
+                  options=options)
 
     app.add_api(spec_file_full_path,
                 base_path=base_path,

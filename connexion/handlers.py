@@ -1,9 +1,11 @@
 import logging
 
-from .operation import Operation, SecureOperation
+from .operations.secure import SecureOperation
 from .problem import problem
 
 logger = logging.getLogger('connexion.handlers')
+
+RESOLVER_ERROR_ENDPOINT_RANDOM_DIGITS = 6
 
 
 class AuthErrorHandler(SecureOperation):
@@ -25,7 +27,7 @@ class AuthErrorHandler(SecureOperation):
         :type security_definitions: dict
         """
         self.exception = exception
-        SecureOperation.__init__(self, api, security, security_definitions)
+        super(AuthErrorHandler, self).__init__(api, security, security_definitions)
 
     @property
     def function(self):
@@ -35,9 +37,8 @@ class AuthErrorHandler(SecureOperation):
         security_decorator = self.security_decorator
         logger.debug('... Adding security decorator (%r)', security_decorator, extra=vars(self))
         function = self.handle
-        function = self._request_begin_lifecycle_decorator(function)
         function = security_decorator(function)
-        function = self._request_end_lifecycle_decorator(function)
+        function = self._request_response_decorator(function)
         return function
 
     def handle(self, *args, **kwargs):
@@ -52,15 +53,15 @@ class AuthErrorHandler(SecureOperation):
         return self.api.get_response(response)
 
 
-class ResolverErrorHandler(Operation):
+class ResolverErrorHandler(SecureOperation):
     """
     Handler for responding to ResolverError.
     """
 
-    def __init__(self, api, status_code, exception, *args, **kwargs):
+    def __init__(self, api, status_code, exception, security, security_definitions):
         self.status_code = status_code
         self.exception = exception
-        Operation.__init__(self, api, *args, **kwargs)
+        super(ResolverErrorHandler, self).__init__(api, security, security_definitions)
 
     @property
     def function(self):
@@ -73,3 +74,14 @@ class ResolverErrorHandler(Operation):
             status=self.status_code
         )
         return self.api.get_response(response)
+
+    @property
+    def operation_id(self):
+        return "noop"
+
+    @property
+    def randomize_endpoint(self):
+        return RESOLVER_ERROR_ENDPOINT_RANDOM_DIGITS
+
+    def get_path_parameter_types(self):
+        return {}

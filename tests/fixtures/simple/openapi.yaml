@@ -195,6 +195,19 @@ paths:
               format: int32
               example: 1
               default: 1
+  /test-empty-object-body:
+    post:
+      summary: Test if empty object body param is passed to handler.
+      operationId: fakeapi.hello.test_empty_object_body
+      responses:
+        '200':
+          description: OK
+      requestBody:
+        content:
+          application/json:
+            schema:
+              x-body-name: stack
+              type: object
   /resolver-test/method:
     get:
       summary: Test class instance method
@@ -241,6 +254,53 @@ paths:
       responses:
         '200':
           description: OK
+
+  /test_array_csv_form_param:
+    post:
+      operationId: fakeapi.hello.test_array_csv_form_param3
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              default:
+                items: ["squash", "banana"]
+              x-body-name: items
+              properties:
+                items:
+                  type: array
+                  items:
+                    type: string
+            encoding:
+              items:
+                style: simple
+      responses:
+        200:
+          description: OK
+
+  /test_array_pipes_form_param:
+    post:
+      operationId: fakeapi.hello.test_array_pipes_form_param3
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              x-body-name: items
+              properties:
+                items:
+                  type: array
+                  items:
+                    type: integer
+              required:
+              - items
+            encoding:
+              items:
+                style: pipeDelimited
+      responses:
+        200:
+          description: OK
+
   /test_array_csv_query_param:
     get:
       operationId: fakeapi.hello.test_array_csv_query_param
@@ -248,7 +308,26 @@ paths:
         - name: items
           in: query
           description: An comma separated array of items
-          style: form
+          style: simple
+          schema:
+            type: array
+            default: ["squash", "banana"]
+            items:
+              type: string
+      responses:
+        '200':
+          description: OK
+
+
+  /test_array_multi_query_param:
+    get:
+      operationId: fakeapi.hello.test_array_multi_query_param
+      parameters:
+        - name: items
+          in: query
+          description: An comma separated array of items
+          style: csv
+          explode: true
           schema:
             type: array
             default: ["squash", "banana"]
@@ -497,7 +576,7 @@ paths:
       operationId: fakeapi.hello.post_goodday_no_header
       responses:
         '201':
-          description: gooday response
+          description: goodday response
           headers:
             Location:
               description: The URI of the created resource
@@ -524,6 +603,9 @@ paths:
             text/plain:
               schema:
                 type: string
+              examples:
+                justAnExample:
+                  $ref: '#/components/examples/justAnExample'
       parameters:
         - name: name
           in: path
@@ -588,6 +670,7 @@ paths:
           application/x-www-form-urlencoded:
             schema:
               type: object
+              nullable: true
               properties:
                 post_param:
                   description: Just a testing parameter.
@@ -725,6 +808,52 @@ paths:
           description: OK
       requestBody:
         $ref: '#/components/requestBodies/fakeapi.hello.test_body_sanitization_body'
+  /body-sanitization-additional-properties:
+    post:
+      operationId: fakeapi.hello.test_body_sanitization_additional_properties
+      responses:
+        '200':
+          description: OK
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                body1:
+                  type: string
+              additionalProperties: true
+  /body-sanitization-additional-properties-defined:
+    post:
+      operationId: fakeapi.hello.test_body_sanitization_additional_properties_defined
+      responses:
+        '200':
+          description: OK
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                body1:
+                  type: string
+              additionalProperties:
+                type: string
+  /body-not-allowed-additional-properties:
+    post:
+      operationId: fakeapi.hello.test_body_not_allowed_additional_properties
+      responses:
+        '200':
+          description: OK
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                body1:
+                  type: string
+              additionalProperties: false
   /get_non_conforming_response:
     get:
       operationId: fakeapi.hello.get_empty_dict
@@ -815,7 +944,54 @@ paths:
               schema:
                 type: array
                 items: {}
+  /add_operation_on_http_methods_only:
+    summary: this is a test
+    description: check if add_operation is called only on http methods field
+    x-test: True
+    servers:
+      - url: http://localhost
+    parameters:
+      - $ref: "#/components/parameters/OptionalName"
+    get:
+      operationId: fakeapi.hello.get_add_operation_on_http_methods_only
+      responses: {}
+    put:
+      operationId: fakeapi.hello.put_add_operation_on_http_methods_only
+      responses: {}
+    post:
+      operationId: fakeapi.hello.post_add_operation_on_http_methods_only
+      responses: {}
+    delete:
+      operationId: fakeapi.hello.delete_add_operation_on_http_methods_only
+      responses: {}
+    options:
+      operationId: fakeapi.hello.options_add_operation_on_http_methods_only
+      responses: {}
+    head:
+      operationId: fakeapi.hello.head_add_operation_on_http_methods_only
+      responses: {}
+    patch:
+      operationId: fakeapi.hello.patch_add_operation_on_http_methods_only
+      responses: {}
+    trace:
+      operationId: fakeapi.hello.trace_add_operation_on_http_methods_only
+      responses: {}
+    
+
+
 servers:
+  - url: http://localhost:{port}/{basePath}
+    variables:
+      port:
+        enum:
+         - '4000'
+         - '5000'
+        default: '5000'
+      basePath:
+        enum:
+         - v1.0
+         - v1
+        default: v1.0
   - url: /v1.0
 components:
   requestBodies:
@@ -831,6 +1007,10 @@ components:
                 type: string
       description: Just a testing parameter in the body
       required: true
+  examples:
+    justAnExample:
+      summary: a basic example.
+      value: Good evening, doctor.
   schemas:
     new_stack:
       type: object
@@ -840,3 +1020,11 @@ components:
           description: Docker image version to deploy
       required:
         - image_version
+  parameters:
+    OptionalName:
+      name: name
+      in: path
+      description: Name of the person to greet.
+      required: false
+      schema:
+        type: string

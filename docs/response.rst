@@ -79,7 +79,8 @@ the validation, you can override the default class with:
     validator_map = {
         'response': CustomResponseValidator
     }
-    app = connexion.FlaskApp(__name__, ..., validator_map=validator_map)
+    app = connexion.FlaskApp(__name__)
+    app.add_api('api.yaml', ..., validator_map=validator_map)
 
 
 Error Handling

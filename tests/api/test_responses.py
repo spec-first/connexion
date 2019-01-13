@@ -17,7 +17,7 @@ def test_app(simple_app):
     assert b"Swagger UI" in swagger_ui.data
 
     # test return Swagger UI static files
-    swagger_icon = app_client.get('/v1.0/ui/images/favicon.ico')  # type: flask.Response
+    swagger_icon = app_client.get('/v1.0/ui/swagger-ui.js')  # type: flask.Response
     assert swagger_icon.status_code == 200
 
     post_greeting_url = app_client.post('/v1.0/greeting/jsantos/the/third/of/his/name', data={})  # type: flask.Response
@@ -131,6 +131,17 @@ def test_default_object_body(simple_app):
     assert resp.status_code == 200
     response = json.loads(resp.data.decode('utf-8', 'replace'))
     assert response == 1
+
+
+def test_empty_object_body(simple_app):
+    app_client = simple_app.app.test_client()
+    resp = app_client.post(
+        '/v1.0/test-empty-object-body',
+        data=json.dumps({}),
+        headers={'Content-Type': 'application/json'})
+    assert resp.status_code == 200
+    response = json.loads(resp.data.decode('utf-8', 'replace'))
+    assert response['stack'] == {}
 
 
 def test_custom_encoder(simple_app):

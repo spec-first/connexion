@@ -198,6 +198,19 @@ paths:
         200:
           description: OK
 
+  /test-empty-object-body:
+    post:
+      summary: Test if empty object body param is passed to handler.
+      operationId: fakeapi.hello.test_empty_object_body
+      parameters:
+        - name: stack
+          in: body
+          schema:
+            type: object
+      responses:
+        200:
+          description: OK
+
   /resolver-test/method:
     get:
       summary: Test class instance method
@@ -247,6 +260,8 @@ paths:
   /test_array_csv_form_param:
     post:
       operationId: fakeapi.hello.test_array_csv_form_param
+      consumes:
+        - application/x-www-form-urlencoded
       parameters:
         - name: items
           in: formData
@@ -263,6 +278,8 @@ paths:
   /test_array_pipes_form_param:
     post:
       operationId: fakeapi.hello.test_array_pipes_form_param
+      consumes:
+        - application/x-www-form-urlencoded
       parameters:
         - name: items
           in: formData
@@ -287,6 +304,21 @@ paths:
             type: string
           collectionFormat: csv
           default: ["squash", "banana"]
+      responses:
+        200:
+          description: OK
+
+  /test_array_multi_query_param:
+    get:
+      operationId: fakeapi.hello.test_array_multi_query_param
+      parameters:
+        - name: items
+          in: query
+          description: An comma separated array of items
+          type: array
+          items:
+            type: string
+          collectionFormat: multi
       responses:
         200:
           description: OK
@@ -377,6 +409,8 @@ paths:
 
   /test-formData-param:
     post:
+      consumes:
+        - application/x-www-form-urlencoded
       summary: Test formData parameter
       operationId: fakeapi.hello.test_formdata_param
       parameters:
@@ -596,6 +630,8 @@ paths:
   /nullable-parameters:
     post:
       operationId: fakeapi.hello.test_nullable_param_post
+      consumes:
+        - application/x-www-form-urlencoded
       produces:
         - application/json
       parameters:
@@ -754,6 +790,73 @@ paths:
                 type: string
               body2:
                 type: string
+      responses:
+        200:
+          description: OK
+
+  /body-sanitization-additional-properties:
+    post:
+      operationId: fakeapi.hello.test_body_sanitization_additional_properties
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: $body
+          description: Just a testing parameter in the body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              body1:
+                type: string
+            additionalProperties: true
+      responses:
+        200:
+          description: OK
+
+  /body-sanitization-additional-properties-defined:
+    post:
+      operationId: fakeapi.hello.test_body_sanitization_additional_properties_defined
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: $body
+          description: Just a testing parameter in the body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              body1:
+                type: string
+            additionalProperties:
+              type: string
+      responses:
+        200:
+          description: OK
+
+  /body-not-allowed-additional-properties:
+    post:
+      operationId: fakeapi.hello.test_body_not_allowed_additional_properties
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: $body
+          description: Just a testing parameter in the body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              body1:
+                type: string
+            additionalProperties: false
       responses:
         200:
           description: OK

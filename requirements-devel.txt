@@ -1,7 +1,6 @@
--e git+https://github.com/Julian/jsonschema.git#egg=jsonschema
+-e git+https://github.com/Julian/jsonschema.git@v2.6.0#egg=jsonschema
 -e git+https://github.com/pallets/flask.git#egg=flask
 -e git+https://github.com/kennethreitz/requests#egg=requests
--e git+https://github.com/Yelp/swagger_spec_validator.git#egg=swagger-spec-validator
 -e git+https://github.com/zalando/python-clickclick.git#egg=clickclick
 inflection
 mock

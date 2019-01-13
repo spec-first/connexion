@@ -1,13 +1,34 @@
+import logging
 import pathlib
 from typing import Optional  # NOQA
 
+try:
+    from swagger_ui_bundle import (swagger_ui_2_path,
+                                   swagger_ui_3_path)
+except ImportError:
+    swagger_ui_2_path = swagger_ui_3_path = None
+
 MODULE_PATH = pathlib.Path(__file__).absolute().parent
-INTERNAL_CONSOLE_UI_PATH = MODULE_PATH / 'vendor' / 'swagger-ui'
+NO_UI_MSG = """The swagger_ui directory could not be found.
+    Please install connexion with extra install: pip install connexion[swagger-ui]
+    or provide the path to your local installation by passing swagger_path=<your path>
+"""
+
+logger = logging.getLogger("connexion.options")
 
 
 class ConnexionOptions(object):
-    def __init__(self, options=None):
+
+    def __init__(self, options=None, oas_version=(2,)):
         self._options = {}
+        self.oas_version = oas_version
+        if self.oas_version >= (3, 0, 0):
+            self.openapi_spec_name = '/openapi.json'
+            self.swagger_ui_local_path = swagger_ui_3_path
+        else:
+            self.openapi_spec_name = '/swagger.json'
+            self.swagger_ui_local_path = swagger_ui_2_path
+
         if options:
             self._options.update(filter_values(options))
 
@@ -22,7 +43,7 @@ class ConnexionOptions(object):
 
         options = dict(self._options)
         options.update(filter_values(new_values))
-        return ConnexionOptions(options)
+        return ConnexionOptions(options, self.oas_version)
 
     def as_dict(self):
         return self._options
@@ -32,25 +53,42 @@ class ConnexionOptions(object):
         # type: () -> bool
         """
         Whether to make available the OpenAPI Specification under
-        `openapi_console_ui_path`/swagger.json path.
+        `openapi_spec_path`.
 
         Default: True
         """
-        # NOTE: Under OpenAPI v3 this should change to "/openapi.json"
-        return self._options.get('swagger_json', True)
+        deprecated_option = self._options.get('swagger_json', True)
+        serve_spec = self._options.get('serve_spec', deprecated_option)
+        if 'swagger_json' in self._options:
+            deprecation_warning = ("The 'swagger_json' option is deprecated. "
+                                   "Please use 'serve_spec' instead")
+            logger.warning(deprecation_warning)
+        return serve_spec
 
     @property
     def openapi_console_ui_available(self):
         # type: () -> bool
         """
         Whether to make the OpenAPI Console UI available under the path
-        defined in `openapi_console_ui_path` option. Note that if enabled,
-        this overrides the `openapi_spec_available` option since the specification
-        is required to be available via a HTTP endpoint to display the console UI.
+        defined in `openapi_console_ui_path` option.
 
         Default: True
         """
+        if (self._options.get('swagger_ui', True) and
+                self.openapi_console_ui_from_dir is None):
+            logger.warning(NO_UI_MSG)
+            return False
         return self._options.get('swagger_ui', True)
+
+    @property
+    def openapi_spec_path(self):
+        # type: () -> str
+        """
+        Path to mount the OpenAPI Console UI and make it accessible via a browser.
+
+        Default: /openapi.json for openapi3, otherwise /swagger.json
+        """
+        return self._options.get('openapi_spec_path', self.openapi_spec_name)
 
     @property
     def openapi_console_ui_path(self):
@@ -71,11 +109,11 @@ class ConnexionOptions(object):
 
         Default: Connexion's vendored version of the OpenAPI Console UI.
         """
-        return self._options.get('swagger_path', INTERNAL_CONSOLE_UI_PATH)
+        return self._options.get('swagger_path', self.swagger_ui_local_path)
 
     @property
     def uri_parser_class(self):
-        # type: () -> str
+        # type: () -> AbstractURIParser
         """
         The class to use for parsing URIs into path and query parameters.
         Default: None

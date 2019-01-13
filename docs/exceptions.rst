@@ -43,7 +43,7 @@ exception and render it in some sort of custom format. For example
         return Response(response=json.dumps({'error': 'There is an error in the oAuth token supplied'}), status=401, mimetype="application/json")
 
     app = connexion.FlaskApp(__name__, specification_dir='./../swagger/', debug=False, swagger_ui=False)
-    app = app.add_error_handler(OAuthResponseProblem, render_unauthorized)
+    app.add_error_handler(OAuthResponseProblem, render_unauthorized)
 
 Custom Exceptions
 -----------------
@@ -65,6 +65,5 @@ This scope indicates the OAuth 2 Server did not generate a token with all the sc
 contains 3 properties
 - ``required_scopes`` - The scopes that were required for this endpoint
 - ``token_scopes`` - The scopes that were granted for this endpoint
-- ``missing_scopes`` - The scopes that were not given by the OAuth 2 server that are required to access this endpoint
 
 

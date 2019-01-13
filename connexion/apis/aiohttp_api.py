@@ -64,23 +64,25 @@ class AioHttpApi(AbstractAPI):
     def normalize_string(string):
         return re.sub(r'[^a-zA-Z0-9]', '_', string.strip('/'))
 
-    def add_swagger_json(self):
+    def add_openapi_json(self):
         """
-        Adds swagger json to {base_path}/swagger.json
+        Adds openapi json to {base_path}/openapi.json
+             (or {base_path}/swagger.json for swagger2)
         """
-        logger.debug('Adding swagger.json: %s/swagger.json', self.base_path)
+        logger.debug('Adding spec json: %s/%s', self.base_path,
+                     self.options.openapi_spec_path)
         self.subapp.router.add_route(
             'GET',
-            '/swagger.json',
-            self._get_swagger_json
+            self.options.openapi_spec_path,
+            self._get_openapi_json
         )
 
     @asyncio.coroutine
-    def _get_swagger_json(self, req):
+    def _get_openapi_json(self, req):
         return web.Response(
             status=200,
             content_type='application/json',
-            body=self.jsonifier.dumps(self.specification)
+            body=self.jsonifier.dumps(self.specification.raw)
         )
 
     def add_swagger_ui(self):
@@ -109,10 +111,11 @@ class AioHttpApi(AbstractAPI):
             name='swagger_ui_static'
         )
 
-    @aiohttp_jinja2.template('index.html')
+    @aiohttp_jinja2.template('index.j2')
     @asyncio.coroutine
     def _get_swagger_ui_home(self, req):
-        return {'api_url': self.base_path}
+        return {'openapi_spec_url': (self.base_path +
+                                     self.options.openapi_spec_path)}
 
     def add_auth_on_not_found(self, security, security_definitions):
         """
@@ -168,9 +171,9 @@ class AioHttpApi(AbstractAPI):
                      extra={'has_body': req.has_body, 'url': url})
 
         query = parse_qs(req.rel_url.query_string)
-        headers = {k.decode(): v.decode() for k, v in req.raw_headers}
+        headers = req.headers
         body = None
-        if req.can_read_body:
+        if req.body_exists:
             body = yield from req.read()
 
         return ConnexionRequest(url=url,
@@ -205,13 +208,22 @@ class AioHttpApi(AbstractAPI):
         if isinstance(response, ConnexionResponse):
             response = cls._get_aiohttp_response_from_connexion(response, mimetype)
 
-        logger.debug('Got data and status code (%d)',
-                     response.status, extra={'data': response.body, 'url': url})
+        if isinstance(response, web.StreamResponse):
+            logger.debug('Got stream response with status code (%d)',
+                         response.status, extra={'url': url})
+        else:
+            logger.debug('Got data and status code (%d)',
+                         response.status, extra={'data': response.body, 'url': url})
 
         return response
 
     @classmethod
-    def get_connexion_response(cls, response):
+    def get_connexion_response(cls, response, mimetype=None):
+        response.body = cls._cast_body(response.body, mimetype)
+
+        if isinstance(response, ConnexionResponse):
+            return response
+
         return ConnexionResponse(
             status_code=response.status,
             mimetype=response.content_type,
@@ -235,9 +247,9 @@ class AioHttpApi(AbstractAPI):
         )
 
     @classmethod
-    def _cast_body(cls, body, content_type):
+    def _cast_body(cls, body, content_type=None):
         if not isinstance(body, bytes):
-            if is_json_mimetype(content_type):
+            if content_type and is_json_mimetype(content_type):
                 return json.dumps(body).encode()
 
             elif isinstance(body, str):
