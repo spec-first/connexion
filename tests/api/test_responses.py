@@ -1,6 +1,7 @@
 import json
 from struct import unpack
 
+import yaml
 from werkzeug.test import Client, EnvironBuilder
 
 from connexion.apps.flask_app import FlaskJSONEncoder
@@ -41,6 +42,36 @@ def test_app(simple_app):
     assert post_greeting.content_type == 'application/json'
     greeting_response = json.loads(post_greeting.data.decode('utf-8'))
     assert greeting_response['greeting'] == 'Hello jsantos'
+
+
+def test_openapi_yaml_behind_proxy(reverse_proxied_app):
+    """ Verify the swagger.json file is returned with base_path updated
+        according to X-Original-URI header.
+    """
+    app_client = reverse_proxied_app.app.test_client()
+
+    headers = {'X-Forwarded-Path': '/behind/proxy'}
+
+    swagger_ui = app_client.get('/v1.0/ui/', headers=headers)
+    assert swagger_ui.status_code == 200
+
+    openapi_yaml = app_client.get(
+        '/v1.0/' + reverse_proxied_app._spec_file,
+        headers=headers
+    )
+    assert openapi_yaml.status_code == 200
+    assert openapi_yaml.headers.get('Content-Type') == 'text/yaml'
+    spec = yaml.load(openapi_yaml.data.decode('utf-8'))
+
+    if reverse_proxied_app._spec_file == 'swagger.yaml':
+        assert b'url = "/behind/proxy/v1.0/swagger.json"' in swagger_ui.data
+        assert spec.get('basePath') == '/behind/proxy/v1.0', \
+            "basePath should contains original URI"
+    else:
+        assert b'url: "/behind/proxy/v1.0/openapi.json"' in swagger_ui.data
+        url = spec.get('servers', [{}])[0].get('url')
+        assert url == '/behind/proxy/v1.0', \
+            "basePath should contains original URI"
 
 
 def test_produce_decorator(simple_app):

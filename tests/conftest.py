@@ -129,6 +129,44 @@ def simple_openapi_app(request):
 
 
 @pytest.fixture(scope="session", params=SPECS)
+def reverse_proxied_app(request):
+
+    # adapted from http://flask.pocoo.org/snippets/35/
+    class ReverseProxied(object):
+
+        def __init__(self, app, script_name=None, scheme=None, server=None):
+            self.app = app
+            self.script_name = script_name
+            self.scheme = scheme
+            self.server = server
+
+        def __call__(self, environ, start_response):
+            script_name = environ.get('HTTP_X_FORWARDED_PATH', '') or self.script_name
+            if script_name:
+                environ['SCRIPT_NAME'] = "/" + script_name.lstrip("/")
+                path_info = environ['PATH_INFO']
+                if path_info.startswith(script_name):
+                    environ['PATH_INFO_OLD'] = path_info
+                    environ['PATH_INFO'] = path_info[len(script_name):]
+            scheme = environ.get('HTTP_X_SCHEME', '') or self.scheme
+            if scheme:
+                environ['wsgi.url_scheme'] = scheme
+            server = environ.get('HTTP_X_FORWARDED_SERVER', '') or self.server
+            if server:
+                environ['HTTP_HOST'] = server
+            return self.app(environ, start_response)
+
+    app = build_app_from_fixture('simple', request.param, validate_responses=True)
+    flask_app = app.app
+    proxied = ReverseProxied(
+        flask_app.wsgi_app,
+        script_name='/reverse_proxied/'
+    )
+    flask_app.wsgi_app = proxied
+    return app
+
+
+@pytest.fixture(scope="session", params=SPECS)
 def snake_case_app(request):
     return build_app_from_fixture('snake_case', request.param,
                                   validate_responses=True,

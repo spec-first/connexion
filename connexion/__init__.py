@@ -37,7 +37,7 @@ except ImportError:  # pragma: no cover
 App = FlaskApp
 Api = FlaskApi
 
-if sys.version_info[0] >= 3:  # pragma: no cover
+if sys.version_info >= (3, 5, 3):  # pragma: no cover
     try:
         from .apis.aiohttp_api import AioHttpApi
         from .apps.aiohttp_app import AioHttpApp
