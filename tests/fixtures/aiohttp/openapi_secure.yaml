@@ -7,6 +7,7 @@ info:
 security:
   - oauth:
       - myscope
+  - basic: []
 paths:
   '/greeting/{name}':
     post:
@@ -37,3 +38,7 @@ components:
           tokenUrl: 'https://oauth.example/token'
           scopes:
             myscope: can do stuff
+    basic:
+      type: http
+      scheme: basic
+      x-basicInfoFunc: fakeapi.auth.fake_basic_auth

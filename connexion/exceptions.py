@@ -82,7 +82,7 @@ class OAuthProblem(Unauthorized):
     pass
 
 
-class OAuthResponseProblem(Unauthorized):
+class OAuthResponseProblem(OAuthProblem):
     def __init__(self, token_response, **kwargs):
         self.token_response = token_response
         super(OAuthResponseProblem, self).__init__(**kwargs)
