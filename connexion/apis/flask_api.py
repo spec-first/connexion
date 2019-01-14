@@ -146,7 +146,7 @@ class FlaskApi(AbstractAPI):
         if isinstance(response, ConnexionResponse):
             flask_response = cls._get_flask_response_from_connexion(response, mimetype)
         else:
-            flask_response = cls._get_flask_response(response, mimetype)
+            flask_response = cls._response_from_handler(response, mimetype)
 
         logger.debug('Got data and status code (%d)',
                      flask_response.status_code,
@@ -207,7 +207,7 @@ class FlaskApi(AbstractAPI):
         return data
 
     @classmethod
-    def _get_flask_response(cls, response, mimetype):
+    def _response_from_handler(cls, response, mimetype):
         if flask_utils.is_flask_response(response):
             return response
 

@@ -319,7 +319,7 @@ class AioHttpApi(AbstractAPI):
         if isinstance(response, ConnexionResponse):
             response = cls._get_aiohttp_response_from_connexion(response, mimetype)
         else:
-            response = cls._get_aiohttp_response(response, mimetype)
+            response = cls._response_from_handler(response, mimetype)
 
         logger.debug('Got stream response with status code (%d)',
                      response.status, extra={'url': url})
@@ -337,7 +337,7 @@ class AioHttpApi(AbstractAPI):
                 response = cls._get_aiohttp_response_from_connexion(response, mimetype)
 
         if not isinstance(response, web.StreamResponse):
-            response = cls._get_aiohttp_response(response, mimetype)
+            response = cls._response_from_handler(response, mimetype)
 
         return ConnexionResponse(
             status_code=response.status,
@@ -359,9 +359,11 @@ class AioHttpApi(AbstractAPI):
         )
 
     @classmethod
-    def _get_aiohttp_response(cls, response, mimetype):
+    def _response_from_handler(cls, response, mimetype):
         if isinstance(response, web.StreamResponse):
             return response
+        elif isinstance(response, tuple) and isinstance(response[0], web.StreamResponse):
+            raise RuntimeError("Cannot return web.StreamResponse in tuple. Only raw data can be returned in tuple.")
 
         elif isinstance(response, tuple) and len(response) == 3:
             data, status_code, headers = response

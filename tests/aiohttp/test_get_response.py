@@ -61,6 +61,13 @@ def test_get_response_from_string_status_headers(api):
 
 
 @asyncio.coroutine
+def test_get_response_from_tuple_error(api):
+    with pytest.raises(RuntimeError) as e:
+        yield from api.get_response((web.Response(text='foo', status=201, headers={'X-header': 'value'}), 200))
+    assert str(e.value) == "Cannot return web.StreamResponse in tuple. Only raw data can be returned in tuple."
+
+
+@asyncio.coroutine
 def test_get_response_from_dict(api):
     response = yield from api.get_response({'foo': 'bar'})
     assert isinstance(response, web.Response)

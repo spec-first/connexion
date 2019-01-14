@@ -238,7 +238,9 @@ class AbstractAPI(object):
     @abc.abstractmethod
     def get_response(self, response, mimetype=None, request=None):
         """
-        This method converts the ConnexionResponse to a user framework response.
+        This method converts a handler response to a framework response.
+        The response can be a ConnexionResponse, an operation handler, a framework response or a tuple.
+        Other type than ConnexionResponse are handled by `cls._response_from_handler`
         :param response: A response to cast.
         :param mimetype: The response mimetype.
         :param request: The request associated with this response (the user framework request).
@@ -249,10 +251,31 @@ class AbstractAPI(object):
 
     @classmethod
     @abc.abstractmethod
+    def _response_from_handler(cls, response, mimetype):
+        """
+        Create a framework response from the operation handler data.
+        An operation handler can return:
+        - a framework response
+        - a body (str / binary / dict / list), a response will be created
+            with a status code 200 by default and empty headers.
+        - a tuple of (body: str, status_code: int)
+        - a tuple of (body: str, status_code: int, headers: dict)
+        :param response: A response from an operation handler.
+        :type response Union[Response, str, Tuple[str, int], Tuple[str, int, dict]]
+        :param mimetype: The response mimetype.
+        :type mimetype: str
+        :return A framwork response.
+        :rtype Response
+        """
+
+    @classmethod
+    @abc.abstractmethod
     def get_connexion_response(cls, response, mimetype=None):
         """
         This method converts the user framework response to a ConnexionResponse.
+        It is used after the user returned a response to give it to response validators.
         :param response: A response to cast.
+        :param mimetype: The response mimetype.
         """
 
     def json_loads(self, data):
