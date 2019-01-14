@@ -152,18 +152,46 @@ class MethodViewResolver(RestyResolver):
         """
         RestyResolver.__init__(self, default_module_name, collection_endpoint_name)
 
-    def resolve_function_from_operation_id(self, operation_id):
+    def resolve(self, operation):
+        """
+        Default operation resolver
+
+        :type operation: connexion.operations.AbstractOperation
+        """
+        operation_id = self.resolve_operation_id(operation)
+        return Resolution(self.resolve_function_from_operation_id(operation, operation_id), operation_id)
+
+    def resolve_operation_id(self, operation):
+        """
+        Resolves the operationId using REST semantics unless explicitly configured in the spec
+
+        :type operation: connexion.operations.AbstractOperation
+        """
+        if operation.operation_id:
+            return RestyResolver.resolve_operation_id(self, operation)
+
+        operation_id = self.resolve_operation_id_using_rest_semantics(operation)
+        module, path, meth = operation_id.rsplit('.', 2)
+        path = path[0].upper() + path[1:]
+        view = "{}.{}View".format(module, path)
+
+        return "{}.{}".format(view, meth)
+
+    def resolve_function_from_operation_id(self, operation, operation_id):
         """
         Invokes the function_resolver
 
         :type operation_id: str
         """
+        logging.debug(operation_id)
         try:
-            module, path, meth = operation_id.rsplit('.', 2)
-            cls_path = "{}.{}View".format(module, path.title())
-            cls = self.function_resolver(cls_path)
-            cls_instance = cls()
-            func = getattr(cls_instance, meth)
+            module_name, view_name, meth_name = operation_id.rsplit('.', 2)
+            if operation.operation_id and not view_name.endswith('View'):
+                return self.function_resolver(operation_id)
+            mod = __import__(module_name, fromlist=[view_name])
+            view_cls = getattr(mod, view_name)
+            view = view_cls()
+            func = getattr(view, meth_name)
             return func
         except ImportError as e:
             msg = 'Cannot resolve operationId "{}"! Import error was "{}"'.format(operation_id, str(e))
