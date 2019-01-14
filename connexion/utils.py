@@ -215,7 +215,17 @@ def yamldumper(openapi):
     :return: a nicely-formatted, serialized yaml spec.
     """
     def should_use_block(value):
-        for c in u"\u000a\u000d\u001c\u001d\u001e\u0085\u2028\u2029":
+        char_list = (
+          u"\u000a"  # line feed
+          u"\u000d"  # carriage return
+          u"\u001c"  # file separator
+          u"\u001d"  # group separator
+          u"\u001e"  # record separator
+          u"\u0085"  # next line
+          u"\u2028"  # line separator
+          u"\u2029"  # paragraph separator
+        )
+        for c in char_list:
             if c in value:
                 return True
         return False
