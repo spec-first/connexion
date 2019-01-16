@@ -90,7 +90,7 @@ def test_not_content_response(simple_app):
 
     get_no_content_response = app_client.get('/v1.0/test_no_content_response')
     assert get_no_content_response.status_code == 204
-    assert get_no_content_response.content_length in [0, None]
+    assert get_no_content_response.content_length is None
 
 
 def test_pass_through(simple_app):
@@ -310,6 +310,7 @@ def test_get_enum_response(simple_app):
     app_client = simple_app.app.test_client()
     resp = app_client.get('/v1.0/get_enum_response')
     assert resp.status_code == 200
+
 
 def test_get_httpstatus_response(simple_app):
     app_client = simple_app.app.test_client()

@@ -1,6 +1,7 @@
 import asyncio
 from aiohttp import web
 import pytest
+import json
 from connexion.apis.aiohttp_api import AioHttpApi
 from connexion.lifecycle import ConnexionResponse
 
@@ -62,7 +63,7 @@ def test_get_response_from_string_status_headers(api):
 
 @asyncio.coroutine
 def test_get_response_from_tuple_error(api):
-    with pytest.raises(RuntimeError) as e:
+    with pytest.raises(TypeError) as e:
         yield from api.get_response((web.Response(text='foo', status=201, headers={'X-header': 'value'}), 200))
     assert str(e.value) == "Cannot return web.StreamResponse in tuple. Only raw data can be returned in tuple."
 
@@ -82,7 +83,7 @@ def test_get_response_from_dict_json(api):
     response = yield from api.get_response({'foo': 'bar'}, mimetype='application/json')
     assert isinstance(response, web.Response)
     assert response.status == 200
-    assert response.body == b'{"foo":"bar"}'
+    assert json.loads(response.body) == {"foo": "bar"}
     assert response.content_type == 'application/json'
     assert dict(response.headers) == {'Content-Type': 'application/json; charset=utf-8'}
 
@@ -93,8 +94,8 @@ def test_get_response_no_data(api):
     assert isinstance(response, web.Response)
     assert response.status == 204
     assert response.body is None
-    assert response.content_type == 'application/octet-stream'
-    assert dict(response.headers) == {}
+    assert response.content_type == 'application/json'
+    assert dict(response.headers) == {'Content-Type': 'application/json'}
 
 
 @asyncio.coroutine
@@ -102,7 +103,7 @@ def test_get_response_binary_json(api):
     response = yield from api.get_response(b'{"foo":"bar"}', mimetype='application/json')
     assert isinstance(response, web.Response)
     assert response.status == 200
-    assert response.body == b'{"foo":"bar"}'
+    assert json.loads(response.body) == {"foo": "bar"}
     assert response.content_type == 'application/json'
     assert dict(response.headers) == {'Content-Type': 'application/json'}
 

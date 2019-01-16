@@ -310,96 +310,56 @@ class AioHttpApi(AbstractAPI):
 
         url = str(request.url) if request else ''
 
-        logger.debug('Getting data and status code',
-                     extra={
-                         'data': response,
-                         'url': url
-                     })
+        response = cls._get_response(response, mimetype=mimetype, url=url)
 
-        if isinstance(response, ConnexionResponse):
-            response = cls._get_aiohttp_response_from_connexion(response, mimetype)
-        else:
-            response = cls._response_from_handler(response, mimetype)
-
+        # TODO: I let this log here for full compatibility. But if we can modify it, it can go to _get_response()
         logger.debug('Got stream response with status code (%d)',
                      response.status, extra={'url': url})
 
         return response
 
     @classmethod
-    def get_connexion_response(cls, response, mimetype=None):
-        if isinstance(response, ConnexionResponse):
-            # If body in ConnexionResponse is not byte, it may not pass schema validation.
-            # In this case, rebuild response with aiohttp to have consistency
-            if response.body is None or isinstance(response.body, bytes):
-                return response
-            else:
-                response = cls._get_aiohttp_response_from_connexion(response, mimetype)
+    def _is_framework_response(cls, response):
+        """ Return True if `response` is a framework response class """
+        return isinstance(response, web.StreamResponse)
 
-        if not isinstance(response, web.StreamResponse):
-            response = cls._response_from_handler(response, mimetype)
-
+    @classmethod
+    def _framework_to_connexion_response(cls, response, mimetype):
+        """ Cast framework response class to ConnexionResponse used for schema validation """
         return ConnexionResponse(
             status_code=response.status,
-            mimetype=response.content_type,
+            mimetype=mimetype,
             content_type=response.content_type,
             headers=response.headers,
             body=response.body
         )
 
     @classmethod
-    def _get_aiohttp_response_from_connexion(cls, response, mimetype):
-        content_type = response.content_type or response.mimetype or mimetype
-
-        return cls._build_aiohttp_response(
+    def _connexion_to_framework_response(cls, response, mimetype):
+        """ Cast ConnexionResponse to framework response class """
+        return cls._build_response(
+            mimetype=response.mimetype or mimetype,
             status_code=response.status_code,
-            content_type=content_type,
+            content_type=response.content_type,
             headers=response.headers,
             data=response.body
         )
 
     @classmethod
-    def _response_from_handler(cls, response, mimetype):
-        if isinstance(response, web.StreamResponse):
-            return response
-        elif isinstance(response, tuple) and isinstance(response[0], web.StreamResponse):
-            raise RuntimeError("Cannot return web.StreamResponse in tuple. Only raw data can be returned in tuple.")
+    def _build_response(cls, data, mimetype, content_type=None, headers=None, status_code=None):
+        if isinstance(data, web.StreamResponse):
+            raise TypeError("Cannot return web.StreamResponse in tuple. Only raw data can be returned in tuple.")
 
-        elif isinstance(response, tuple) and len(response) == 3:
-            data, status_code, headers = response
-            return cls._build_aiohttp_response(content_type=mimetype, status_code=status_code, data=data, headers=headers)
+        data, status_code = cls._prepare_body_and_status_code(data=data, mimetype=mimetype, status_code=status_code)
 
-        elif isinstance(response, tuple) and len(response) == 2:
-            data, status_code = response
-            return cls._build_aiohttp_response(content_type=mimetype, status_code=status_code, data=data)
-
-        else:
-            return cls._build_aiohttp_response(content_type=mimetype, data=response)
-
-    @classmethod
-    def _build_aiohttp_response(cls, data, content_type, headers=None, status_code=None):
-        if status_code is None:
-            if data is None:
-                status_code = 204
-                content_type = None
-            else:
-                status_code = 200
-        elif hasattr(status_code, "value"):
-            # If we got an enum instead of an int, extract the value.
-            status_code = status_code.value
-
-        if data is not None and not isinstance(data, bytes):
-            if content_type and is_json_mimetype(content_type):
-                text = cls.jsonifier.dumps(data)
-            elif isinstance(data, str):
-                text = data
-            else:
-                text = str(data)
+        if isinstance(data, str):
+            text = data
             body = None
         else:
             text = None
             body = data
 
+        content_type = content_type or mimetype
         return web.Response(body=body, text=text, headers=headers, status=status_code, content_type=content_type)
 
     @classmethod

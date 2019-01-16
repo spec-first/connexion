@@ -4,14 +4,18 @@ import pathlib
 import sys
 
 import six
+from enum import Enum
 
+from ..decorators.produces import NoContent
 from ..exceptions import ResolverError
 from ..http_facts import METHODS
 from ..jsonifier import Jsonifier
+from ..lifecycle import ConnexionResponse
 from ..operations import make_operation
 from ..options import ConnexionOptions
 from ..resolver import Resolver
 from ..spec import Specification
+from ..utils import is_json_mimetype
 
 MODULE_PATH = pathlib.Path(__file__).absolute().parent.parent
 SWAGGER_UI_URL = 'ui'
@@ -239,18 +243,43 @@ class AbstractAPI(object):
     def get_response(self, response, mimetype=None, request=None):
         """
         This method converts a handler response to a framework response.
-        The response can be a ConnexionResponse, an operation handler, a framework response or a tuple.
-        Other type than ConnexionResponse are handled by `cls._response_from_handler`
+        This method should just retrieve response from handler then call `cls._get_response`.
+        It is mainly here to handle AioHttp async handler.
         :param response: A response to cast.
         :param mimetype: The response mimetype.
         :param request: The request associated with this response (the user framework request).
 
-        :type response: ConnexionResponse
+        :type response: Framework Response
         :type mimetype: str
         """
 
     @classmethod
-    @abc.abstractmethod
+    def _get_response(cls, response, mimetype=None, url=None):
+        """
+        This method converts a handler response to a framework response.
+        The response can be a ConnexionResponse, an operation handler, a framework response or a tuple.
+        Other type than ConnexionResponse are handled by `cls._response_from_handler`
+        :param response: A response to cast.
+        :param mimetype: The response mimetype.
+        :param url: The url to write in logs
+
+        :type response: Framework Response
+        :type mimetype: str
+        """
+        logger.debug('Getting data and status code',
+                     extra={
+                         'data': response,
+                         'data_type': type(response),
+                         'url': url
+                     })
+
+        if isinstance(response, ConnexionResponse):
+            framework_response = cls._connexion_to_framework_response(response, mimetype)
+        else:
+            framework_response = cls._response_from_handler(response, mimetype)
+        return framework_response
+
+    @classmethod
     def _response_from_handler(cls, response, mimetype):
         """
         Create a framework response from the operation handler data.
@@ -264,19 +293,118 @@ class AbstractAPI(object):
         :type response Union[Response, str, Tuple[str, int], Tuple[str, int, dict]]
         :param mimetype: The response mimetype.
         :type mimetype: str
-        :return A framwork response.
+        :return A framework response.
+        :rtype Response
+        """
+        if cls._is_framework_response(response):
+            return response
+
+        if isinstance(response, tuple):
+            len_response = len(response)
+            if len_response == 2:
+                if isinstance(response[1], (int, Enum)):
+                    data, status_code = response
+                    return cls._build_response(mimetype=mimetype, data=data, status_code=status_code)
+                else:
+                    data, headers = response
+                return cls._build_response(mimetype=mimetype, data=data, headers=headers)
+            elif len_response == 3:
+                data, status_code, headers = response
+                return cls._build_response(mimetype=mimetype, data=data, status_code=status_code, headers=headers)
+            else:
+                raise TypeError(
+                    'The view function did not return a valid response tuple.'
+                    ' The tuple must have the form (body), (body, status, headers),'
+                    ' (body, status), or (body, headers).'
+                )
+        else:
+            return cls._build_response(mimetype=mimetype, data=response)
+
+    @classmethod
+    def get_connexion_response(cls, response, mimetype=None):
+        """ Cast framework dependent response to ConnexionResponse used for schema validation """
+        if isinstance(response, ConnexionResponse):
+            # If body in ConnexionResponse is not byte, it may not pass schema validation.
+            # In this case, rebuild response with aiohttp to have consistency
+            if response.body is None or isinstance(response.body, six.binary_type):
+                return response
+            else:
+                response = cls._build_response(
+                    data=response.body,
+                    mimetype=mimetype,
+                    content_type=response.content_type,
+                    headers=response.headers,
+                    status_code=response.status_code
+                )
+
+        if not cls._is_framework_response(response):
+            response = cls._response_from_handler(response, mimetype)
+        return cls._framework_to_connexion_response(response=response, mimetype=mimetype)
+
+    @classmethod
+    @abc.abstractmethod
+    def _is_framework_response(cls, response):
+        """ Return True if `response` is a framework response class """
+
+    @classmethod
+    @abc.abstractmethod
+    def _framework_to_connexion_response(cls, response, mimetype):
+        """ Cast framework response class to ConnexionResponse used for schema validation """
+
+    @classmethod
+    @abc.abstractmethod
+    def _connexion_to_framework_response(cls, response, mimetype):
+        """ Cast ConnexionResponse to framework response class """
+
+    @classmethod
+    @abc.abstractmethod
+    def _build_response(cls, data, mimetype, content_type=None, status_code=None, headers=None):
+        """
+        Create a framework response from the provided arguments.
+        :param data: Body data.
+        :param content_type: The response mimetype.
+        :type content_type: str
+        :param content_type: The response status code.
+        :type status_code: int
+        :param headers: The response status code.
+        :type headers: Union[Iterable[Tuple[str, str]], Dict[str, str]]
+        :return A framework response.
         :rtype Response
         """
 
     @classmethod
-    @abc.abstractmethod
-    def get_connexion_response(cls, response, mimetype=None):
-        """
-        This method converts the user framework response to a ConnexionResponse.
-        It is used after the user returned a response to give it to response validators.
-        :param response: A response to cast.
-        :param mimetype: The response mimetype.
-        """
+    def _prepare_body_and_status_code(cls, data, mimetype, status_code=None):
+        if data is NoContent:
+            data = None
+
+        if status_code is None:
+            if data is None:
+                status_code = 204
+                mimetype = None
+            else:
+                status_code = 200
+        elif hasattr(status_code, "value"):
+            # If we got an enum instead of an int, extract the value.
+            status_code = status_code.value
+
+        if data is not None:
+            body = cls._jsonify_data(data, mimetype)
+        else:
+            body = data
+        return body, status_code
+
+    @classmethod
+    def _jsonify_data(cls, data, mimetype):
+        if not isinstance(data, six.binary_type):
+            if isinstance(mimetype, six.string_types) and is_json_mimetype(mimetype):
+                body = cls.jsonifier.dumps(data)
+            elif isinstance(data, six.text_type):
+                body = data
+            else:
+                body = str(data)
+        else:
+            body = data
+        return body
 
     def json_loads(self, data):
         return self.jsonifier.loads(data)
