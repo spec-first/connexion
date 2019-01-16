@@ -64,4 +64,4 @@ def test_non_json_response(simple_app):
     app_client = simple_app.app.test_client()
     resp = app_client.get('/v1.0/html-page')
     assert resp.status_code == 200
-    #assert resp.content_type.startswith('text/html') == True
+    assert resp.content_type.startswith('text/html') == True
