@@ -1,5 +1,6 @@
 from flask.views import MethodView
 
+
 class Example_methodView(MethodView):
     def get(self):
       return "yeah"
