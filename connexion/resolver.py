@@ -148,13 +148,14 @@ class MethodViewResolver(RestyResolver):
     def resolve_operation_id(self, operation):
         """
         Resolves the operationId using REST semantics unless explicitly configured in the spec
-        Once resolved with REST semantics the view_name is capitalised and has 'View' added to it so it now matches the Class names of the MethodView
+        Once resolved with REST semantics the view_name is capitalised and has 'View' added
+        to it so it now matches the Class names of the MethodView
 
         :type operation: connexion.operations.AbstractOperation
         """
         if operation.operation_id:
-          # If operation_id is defined then use the higher level API to resolve
-          return RestyResolver.resolve_operation_id(self, operation)
+            # If operation_id is defined then use the higher level API to resolve
+            return RestyResolver.resolve_operation_id(self, operation)
 
         # Use RestyResolver to get operation_id for us (follow their naming conventions/structure)
         operation_id = self.resolve_operation_id_using_rest_semantics(operation)
