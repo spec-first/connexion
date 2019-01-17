@@ -29,12 +29,12 @@ class PetsView(MethodView):
       name = body["name"]
       tag = body.get("tag")
       id_ = int(petId)
-      pet = self.pets.get(petId, {"id": petId})
+      pet = self.pets.get(petId, {"id": id_})
       pet["name"] = name
       pet["tag"] = tag
       pet['last_updated'] = datetime.datetime.now()
-      self.pets[petId] = pet
-      return self.pets[petId], 201
+      self.pets[id_] = pet
+      return self.pets[id_], 201
 
     def delete(self, petId):
       id_ = int(petId)
