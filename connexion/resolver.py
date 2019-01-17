@@ -145,56 +145,47 @@ class MethodViewResolver(RestyResolver):
                     return ...
     """
 
-    def __init__(self, default_module_name, collection_endpoint_name='search'):
-        """
-        :param default_module_name: Default module name for operations
-        :type default_module_name: str
-        """
-        RestyResolver.__init__(self, default_module_name, collection_endpoint_name)
-
-    def resolve(self, operation):
-        """
-        Default operation resolver
-
-        :type operation: connexion.operations.AbstractOperation
-        """
-        operation_id = self.resolve_operation_id(operation)
-        return Resolution(self.resolve_function_from_operation_id(operation, operation_id), operation_id)
-
     def resolve_operation_id(self, operation):
         """
         Resolves the operationId using REST semantics unless explicitly configured in the spec
+        Once resolved with REST semantics the view_name is capitalised and has 'View' added to it so it now matches the Class names of the MethodView
 
         :type operation: connexion.operations.AbstractOperation
         """
         if operation.operation_id:
-            return RestyResolver.resolve_operation_id(self, operation)
+          # If operation_id is defined then use the higher level API to resolve
+          return RestyResolver.resolve_operation_id(self, operation)
 
+        # Use RestyResolver to get operation_id for us (follow their naming conventions/structure)
         operation_id = self.resolve_operation_id_using_rest_semantics(operation)
-        module, path, meth = operation_id.rsplit('.', 2)
-        path = path[0].upper() + path[1:]
-        view = "{}.{}View".format(module, path)
+        module_name, view_base, meth_name = operation_id.rsplit('.', 2)
+        view_name = view_base[0].upper() + view_base[1:] + 'View'
 
-        return "{}.{}".format(view, meth)
+        return "{}.{}.{}".format(module_name, view_name, meth_name)
 
-    def resolve_function_from_operation_id(self, operation, operation_id):
+    def resolve_function_from_operation_id(self, operation_id):
         """
         Invokes the function_resolver
 
         :type operation_id: str
         """
-        logging.debug(operation_id)
+
         try:
             module_name, view_name, meth_name = operation_id.rsplit('.', 2)
-            if operation.operation_id and not view_name.endswith('View'):
+            if operation_id and not view_name.endswith('View'):
+                # If operation_id is not a view then assume it is a standard function
                 return self.function_resolver(operation_id)
+
             mod = __import__(module_name, fromlist=[view_name])
             view_cls = getattr(mod, view_name)
+            # Find the class and instantiate it
             view = view_cls()
             func = getattr(view, meth_name)
+            # Return the method function of the class
             return func
         except ImportError as e:
-            msg = 'Cannot resolve operationId "{}"! Import error was "{}"'.format(operation_id, str(e))
+            msg = 'Cannot resolve operationId "{}"! Import error was "{}"'.format(
+                operation_id, str(e))
             raise ResolverError(msg, sys.exc_info())
         except (AttributeError, ValueError) as e:
             raise ResolverError(str(e), sys.exc_info())
