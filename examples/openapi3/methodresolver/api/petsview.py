@@ -1,7 +1,10 @@
-from flask.views import MethodView
-from flask import request
-from connexion import NoContent
 import datetime
+
+from flask import request
+from flask.views import MethodView
+
+from connexion import NoContent
+
 
 class PetsView(MethodView):
     """ Create Pets service
@@ -34,7 +37,7 @@ class PetsView(MethodView):
       pet["tag"] = tag
       pet['last_updated'] = datetime.datetime.now()
       self.pets[petId] = pet
-      return self.pets[petId]
+      return self.pets[petId], 201
 
     def delete(self, petId):
       id_ = int(petId)
