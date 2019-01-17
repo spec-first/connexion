@@ -1,4 +1,3 @@
-import pytest
 from connexion.operations import OpenAPIOperation
 from connexion.resolver import MethodViewResolver, Resolver
 
@@ -108,7 +107,6 @@ def test_methodview_resolve_with_default_module_name_will_translate_dashes_in_re
     assert operation.operation_id == 'fakeapi.Example_methodView.search'
 
 
-# @pytest.mark.skip(reason="Does not work in first iteration")
 def test_methodview_resolve_with_default_module_name_can_resolve_api_root():
     operation = OpenAPIOperation(
         api=None,

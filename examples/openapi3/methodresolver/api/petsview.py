@@ -26,10 +26,8 @@ class PetsView(MethodView):
 
     def put(self, petId):
       body = request.json
-      # id_ = body["id"]
       name = body["name"]
       tag = body.get("tag")
-      print(type(petId))
       id_ = int(petId)
       pet = self.pets.get(petId, {"id": petId})
       pet["name"] = name
@@ -40,9 +38,9 @@ class PetsView(MethodView):
 
     def delete(self, petId):
       id_ = int(petId)
-      if self.pets.get(petId) is None:
+      if self.pets.get(id_) is None:
           return NoContent, 404
-      del self.pets[petId]
+      del self.pets[id_]
       return NoContent, 204
 
     def get(self, petId):

@@ -2,13 +2,14 @@ from flask.views import MethodView
 
 
 class Example_methodView(MethodView):
+    mycontent="demonstrate return from MethodView class"
     def get(self):
-      return "yeah"
+      return self.mycontent
     def search(self):
-      return ""
+      return self.mycontent
     def api_list(self):
-      return ""
+      return self.mycontent
     def post_greeting(self):
-      return ""
+      return self.mycontent
     def post(self):
-      return ""
+      return self.mycontent
