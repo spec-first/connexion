@@ -57,8 +57,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
-
-  /pets/{petId}:
+  '/pets/{petId}':
     get:
       summary: Info for a specific pet
       tags:
@@ -100,11 +99,7 @@ paths:
         content:
           application/json:
             schema:
-              allOf:
-              - $ref: "#/components/schemas/Pet"
-              example:
-                name: chester
-                tag: sleepy
+              $ref: "#/components/schemas/Pet"
       responses:
         '201':
           description: Pet record interpreted by backend
@@ -145,25 +140,27 @@ components:
       required:
         - name
       properties:
-        id:
-          readOnly: true
-          type: integer
-          format: int64
-        last_updated:
-          type: string
         name:
           type: string
+          example: fluffy
         tag:
           type: string
-      example:
-        id: 1
-        last_updated: "2019-01-14T21:19:28.414356Z"
-        name: chester
-        tag: fluffy
+          example: red
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+          example: 1
+        last_updated:
+          type: string
+          readOnly: true
+          example: 2019-01-16T23:52:54.309102Z
+
     Pets:
       type: array
       items:
         $ref: "#/components/schemas/Pet"
+
     Error:
       required:
         - code
