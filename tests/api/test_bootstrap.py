@@ -9,6 +9,7 @@ import pytest
 from conftest import TEST_FOLDER, build_app_from_fixture
 from connexion import App
 from connexion.exceptions import InvalidSpecification
+from connexion.http_facts import METHODS
 
 SPECS = ["swagger.yaml", "openapi.yaml"]
 
@@ -236,3 +237,19 @@ def test_handle_add_operation_error(simple_api_spec_dir):
     app.api_cls.add_operation = mock.MagicMock(side_effect=Exception('operation error!'))
     with pytest.raises(Exception):
         app.add_api('swagger.yaml', resolver=lambda oid: (lambda foo: 'bar'))
+
+
+def test_using_all_fields_in_path_item(simple_api_spec_dir):
+    """Test that connexion will try to add an endpoint only on http methods.
+
+    test also that each http methods has its own endpoint.
+    """
+    app = App(__name__, specification_dir=simple_api_spec_dir)
+    app.add_api('openapi.yaml')
+
+    test_methods = set()
+    for rule in app.app.url_map.iter_rules():
+        if rule.rule != "/v1.0/add_operation_on_http_methods_only":
+            continue
+        test_methods.update({method.lower() for method in rule.methods})
+    assert set(test_methods) == METHODS

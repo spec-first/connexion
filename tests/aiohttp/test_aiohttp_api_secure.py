@@ -1,4 +1,5 @@
 import asyncio
+import base64
 
 import ujson
 from conftest import TEST_FOLDER
@@ -49,3 +50,61 @@ def test_secure_app(oauth_requests, aiohttp_api_spec_dir, aiohttp_client):
 
     assert post_hello.status == 200
     assert (yield from post_hello.read()) == b'{"greeting":"Hello jsantos"}'
+
+    headers = {'authorization': 'Bearer 100'}
+    post_hello = yield from app_client.post(
+        '/v1.0/greeting/jsantos',
+        headers=headers
+    )
+
+    assert post_hello.status == 200, "Authorization header in lower case should be accepted"
+    assert (yield from post_hello.read()) == b'{"greeting":"Hello jsantos"}'
+
+    headers = {'AUTHORIZATION': 'Bearer 100'}
+    post_hello = yield from app_client.post(
+        '/v1.0/greeting/jsantos',
+        headers=headers
+    )
+
+    assert post_hello.status == 200, "Authorization header in upper case should be accepted"
+    assert (yield from post_hello.read()) == b'{"greeting":"Hello jsantos"}'
+
+    no_authorization = yield from app_client.post(
+        '/v1.0/greeting/jsantos',
+    )
+
+    assert no_authorization.status == 401
+    assert no_authorization.content_type == 'application/problem+json'
+
+
+@asyncio.coroutine
+def test_basic_auth_secure(oauth_requests, aiohttp_api_spec_dir, aiohttp_client):
+    # Create the app and run the test_app testcase below.
+    app = AioHttpApp(__name__, port=5001,
+                     specification_dir=aiohttp_api_spec_dir,
+                     debug=True)
+    app.add_api('openapi_secure.yaml')
+    app_client = yield from aiohttp_client(app.app)
+
+    post_hello = yield from app_client.post('/v1.0/greeting/jsantos')
+    assert post_hello.status == 401
+
+    username= 'username'
+    password = username  # check fake_basic_auth
+    basic_header = 'Basic ' + base64.b64encode((username + ':' + password).encode('ascii')).decode('ascii')
+    headers = {'Authorization': basic_header}
+    post_hello = yield from app_client.post(
+        '/v1.0/greeting/jsantos',
+        headers=headers
+    )
+
+    assert (yield from post_hello.read()) == b"{'greeting': 'Hello jsantos'}"
+
+    broken_header = 'Basic ' + base64.b64encode((username + ':' + password[:-1]).encode('ascii')).decode('ascii')
+    headers = {'Authorization': broken_header}
+    no_auth = yield from app_client.post(
+        '/v1.0/greeting/jsantos',
+        headers=headers
+    )
+    assert no_auth.status == 401, "Wrong header should result into Unauthorized"
+    assert no_auth.content_type == 'application/problem+json'

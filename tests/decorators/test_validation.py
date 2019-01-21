@@ -18,15 +18,28 @@ def test_get_valid_parameter_with_required_attr():
     assert result is None
 
 
+def test_get_valid_path_parameter():
+    param = {'required': True, 'schema': {'type': 'number'}, 'name': 'foobar'}
+    result = ParameterValidator.validate_parameter('path', 20, param)
+    assert result is None
+
+
 def test_get_missing_required_parameter():
     param = {'type': 'number', 'required': True, 'name': 'foo'}
     result = ParameterValidator.validate_parameter('formdata', None, param)
     assert result == "Missing formdata parameter 'foo'"
 
 
-def test_get_nullable_parameter():
+def test_get_x_nullable_parameter():
     param = {'type': 'number', 'required': True, 'name': 'foo', 'x-nullable': True}
     result = ParameterValidator.validate_parameter('formdata', 'None', param)
+    assert result is None
+
+
+def test_get_nullable_parameter():
+    param = {'schema': {'type': 'number', 'nullable': True},
+             'required': True, 'name': 'foo'}
+    result = ParameterValidator.validate_parameter('query', 'null', param)
     assert result is None
 
 
@@ -51,6 +64,17 @@ def test_invalid_type_value_error(monkeypatch):
     value = {'test': 1, 'second': 2}
     result = ParameterValidator.validate_parameter('formdata', value, {'type': 'boolean', 'name': 'foo'})
     assert result == "Wrong type, expected 'boolean' for formdata parameter 'foo'"
+
+
+def test_enum_error(monkeypatch):
+    logger = MagicMock()
+    monkeypatch.setattr('connexion.decorators.validation.logger', logger)
+    value = 'INVALID'
+    param = {'schema': {'type': 'string', 'enum': ['valid']},
+             'name': 'test_path_param'}
+    result = ParameterValidator.validate_parameter('path', value, param)
+    assert result.startswith("'INVALID' is not one of ['valid']")
+
 
 def test_support_nullable_properties():
     schema = {
