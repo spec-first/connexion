@@ -42,7 +42,6 @@ def oauth_problem_middleware(request, handler):
 class AioHttpApi(AbstractAPI):
     def __init__(self, *args, **kwargs):
         self.subapp = web.Application(
-            debug=kwargs.get('debug', False),
             middlewares=[oauth_problem_middleware]
         )
         AbstractAPI.__init__(self, *args, **kwargs)
