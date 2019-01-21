@@ -38,7 +38,6 @@ aiohttp_require = [
     'aiohttp>=2.3.10,<3.5.2',
     'aiohttp-jinja2>=0.14.0'
 ]
-ujson_require = 'ujson>=1.35'
 
 tests_require = [
     'decorator',
@@ -52,7 +51,6 @@ tests_require = [
 
 if sys.version_info[0] >= 3:
     tests_require.extend(aiohttp_require)
-    tests_require.append(ujson_require)
     tests_require.append('pytest-aiohttp')
 
 
@@ -110,8 +108,7 @@ setup(
         'tests': tests_require,
         'flask': flask_require,
         'swagger-ui': swagger_ui_require,
-        'aiohttp': aiohttp_require,
-        'ujson': ujson_require
+        'aiohttp': aiohttp_require
     },
     cmdclass={'test': PyTest},
     test_suite='tests',
