@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 import asyncio
+import datetime
+import uuid
 
 import aiohttp
 from aiohttp.web import Request
@@ -80,3 +82,18 @@ def aiohttp_users_post(user):
     user['id'] = len(USERS) + 1
     USERS.append(user)
     return aiohttp.web.json_response(data=USERS[-1], status=201)
+
+
+@asyncio.coroutine
+def get_datetime():
+    return ConnexionResponse(body={'value': datetime.datetime(2000, 1, 2, 3, 4, 5, 6)})
+
+
+@asyncio.coroutine
+def get_date():
+    return ConnexionResponse(body={'value': datetime.date(2000, 1, 2)})
+
+
+@asyncio.coroutine
+def get_uuid():
+    return ConnexionResponse(body={'value': uuid.UUID(hex='e7ff66d0-3ec2-4c4e-bed0-6e4723c24c51')})

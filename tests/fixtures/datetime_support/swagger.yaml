@@ -1,0 +1,52 @@
+swagger: "2.0"
+
+info:
+  title: "{{title}}"
+  version: "1.0"
+
+basePath: /v1.0
+
+paths:
+  /datetime:
+    get:
+      operationId: fakeapi.hello.get_datetime
+      responses:
+        200:
+          description: date time example
+          schema:
+            type: object
+            properties:
+              value:
+                type: string
+                format: date-time
+            example:
+              value: 2000-01-23T04:56:07.000008+00:00
+  /date:
+    get:
+      operationId: fakeapi.hello.get_date
+      responses:
+        200:
+          description: date example
+          schema:
+            type: object
+            properties:
+              value:
+                type: string
+                format: date
+            example:
+              value: 2000-01-23
+  /uuid:
+    get:
+      summary: Generate data with uuid
+      operationId: fakeapi.hello.get_uuid
+      responses:
+        200:
+          description: uuid example
+          schema:
+            type: object
+            properties:
+              value:
+                type: string
+                format: uuid
+            example:
+              value: 'a7b8869c-5f24-4ce0-a5d1-3e44c3663aa9'

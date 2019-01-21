@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-import flask
+import datetime
+import uuid
+
 from flask import jsonify, redirect
 
 from connexion import NoContent, ProblemException, context, problem
@@ -551,3 +553,15 @@ def patch_add_operation_on_http_methods_only():
 
 def trace_add_operation_on_http_methods_only():
     return ""
+
+
+def get_datetime():
+    return {'value': datetime.datetime(2000, 1, 2, 3, 4, 5, 6)}
+
+
+def get_date():
+    return {'value': datetime.date(2000, 1, 2)}
+
+
+def get_uuid():
+    return {'value': uuid.UUID(hex='e7ff66d0-3ec2-4c4e-bed0-6e4723c24c51')}

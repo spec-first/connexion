@@ -57,10 +57,10 @@ def test_swagger_json(aiohttp_api_spec_dir, aiohttp_client):
 
     app_client = yield from aiohttp_client(app.app)
     swagger_json = yield from app_client.get('/v1.0/swagger.json')
-    json_ = yield from swagger_json.read()
 
     assert swagger_json.status == 200
-    assert api.specification.raw == json.loads(json_)
+    json_ = yield from swagger_json.json()
+    assert api.specification.raw == json_
 
 
 @asyncio.coroutine

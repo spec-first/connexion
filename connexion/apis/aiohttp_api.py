@@ -11,16 +11,9 @@ from aiohttp.web_middlewares import normalize_path_middleware
 from connexion.apis.abstract import AbstractAPI
 from connexion.exceptions import OAuthProblem, OAuthScopeProblem
 from connexion.handlers import AuthErrorHandler
+from connexion.jsonifier import JSONEncoder, Jsonifier
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
-from connexion.utils import Jsonifier, is_json_mimetype, yamldumper
-
-try:
-    import ujson as json
-    from functools import partial
-    json.dumps = partial(json.dumps, escape_forward_slashes=True)
-
-except ImportError:  # pragma: no cover
-    import json
+from connexion.utils import is_json_mimetype, yamldumper
 
 logger = logging.getLogger('connexion.apis.aiohttp_api')
 
@@ -33,7 +26,7 @@ def oauth_problem_middleware(request, handler):
     except (OAuthProblem, OAuthScopeProblem) as oauth_error:
         return web.Response(
             status=oauth_error.code,
-            body=json.dumps(oauth_error.description).encode(),
+            body=AioHttpApi.jsonifier.dumps(oauth_error.description).encode(),
             content_type='application/problem+json'
         )
     return response
@@ -302,7 +295,7 @@ class AioHttpApi(AbstractAPI):
     def _cast_body(cls, body, content_type=None):
         if not isinstance(body, bytes):
             if content_type and is_json_mimetype(content_type):
-                return json.dumps(body).encode()
+                return cls.jsonifier.dumps(body).encode()
 
             elif isinstance(body, str):
                 return body.encode()
@@ -314,7 +307,7 @@ class AioHttpApi(AbstractAPI):
 
     @classmethod
     def _set_jsonifier(cls):
-        cls.jsonifier = Jsonifier(json)
+        cls.jsonifier = Jsonifier(cls=JSONEncoder)
 
 
 class _HttpNotFoundError(HTTPNotFound):
