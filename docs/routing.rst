@@ -175,7 +175,7 @@ In the above yaml the necessary MethodView implementation is as follows:
         # NOTE: we need to wrap it with list for Python 3 as dict_values is not JSON serializable
         return list(self.pets.values())[0:limit]
 
-and a __init__.py file:
+and a __init__.py file to make the Class visible in the api directory.
 
 .. code-block:: Python
 
