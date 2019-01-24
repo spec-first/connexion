@@ -12,7 +12,7 @@ from connexion.apis.abstract import AbstractAPI
 from connexion.exceptions import OAuthProblem, OAuthScopeProblem
 from connexion.handlers import AuthErrorHandler
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
-from connexion.utils import Jsonifier, is_json_mimetype
+from connexion.utils import Jsonifier, is_json_mimetype, yamldumper
 
 try:
     import ujson as json
@@ -76,12 +76,37 @@ class AioHttpApi(AbstractAPI):
             self._get_openapi_json
         )
 
+    def add_openapi_yaml(self):
+        """
+        Adds openapi json to {base_path}/openapi.json
+             (or {base_path}/swagger.json for swagger2)
+        """
+        if not self.options.openapi_spec_path.endswith("json"):
+            return
+
+        openapi_spec_path_yaml = self.options.openapi_spec_path[:-len("json")] + "yaml"
+        logger.debug('Adding spec yaml: %s/%s', self.base_path,
+                     openapi_spec_path_yaml)
+        self.subapp.router.add_route(
+            'GET',
+            openapi_spec_path_yaml,
+            self._get_openapi_yaml
+        )
+
     @asyncio.coroutine
     def _get_openapi_json(self, req):
         return web.Response(
             status=200,
             content_type='application/json',
             body=self.jsonifier.dumps(self.specification.raw)
+        )
+
+    @asyncio.coroutine
+    def _get_openapi_yaml(self, req):
+        return web.Response(
+            status=200,
+            content_type='text/yaml',
+            body=yamldumper(self.specification.raw)
         )
 
     def add_swagger_ui(self):
