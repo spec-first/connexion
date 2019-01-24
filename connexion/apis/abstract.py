@@ -101,6 +101,7 @@ class AbstractAPI(object):
 
         if self.options.openapi_spec_available:
             self.add_openapi_json()
+            self.add_openapi_yaml()
 
         if self.options.openapi_console_ui_available:
             self.add_swagger_ui()
