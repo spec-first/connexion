@@ -87,7 +87,7 @@ def test_no_swagger_json(aiohttp_api_spec_dir, aiohttp_client):
                      specification_dir=aiohttp_api_spec_dir,
                      options=options,
                      debug=True)
-    api = app.add_api('swagger_simple.yaml')
+    app.add_api('swagger_simple.yaml')
 
     app_client = yield from aiohttp_client(app.app)
     swagger_json = yield from app_client.get('/v1.0/swagger.json')  # type: flask.Response
@@ -102,7 +102,7 @@ def test_no_swagger_yaml(aiohttp_api_spec_dir, aiohttp_client):
                      specification_dir=aiohttp_api_spec_dir,
                      options=options,
                      debug=True)
-    api = app.add_api('swagger_simple.yaml')
+    app.add_api('swagger_simple.yaml')
 
     app_client = yield from aiohttp_client(app.app)
     spec_response = yield from app_client.get('/v1.0/swagger.yaml')  # type: flask.Response
@@ -119,6 +119,7 @@ def test_swagger_ui(aiohttp_api_spec_dir, aiohttp_client):
     app_client = yield from aiohttp_client(app.app)
     swagger_ui = yield from app_client.get('/v1.0/ui')
     assert swagger_ui.status == 200
+    assert swagger_ui.url.path == '/v1.0/ui/'
     assert b'url = "/v1.0/swagger.json"' in (yield from swagger_ui.read())
 
     swagger_ui = yield from app_client.get('/v1.0/ui/')
@@ -240,6 +241,7 @@ def test_validate_responses(aiohttp_app, aiohttp_client):
 def test_get_users(aiohttp_client, aiohttp_app):
     app_client = yield from aiohttp_client(aiohttp_app.app)
     resp = yield from app_client.get('/v1.0/users')
+    assert resp.url.path == '/v1.0/users/'  # followed redirect
     assert resp.status == 200
 
     json_data = yield from resp.json()
@@ -258,7 +260,7 @@ def test_create_user(aiohttp_client, aiohttp_app):
 @asyncio.coroutine
 def test_access_request_context(aiohttp_client, aiohttp_app):
     app_client = yield from aiohttp_client(aiohttp_app.app)
-    resp = yield from app_client.post('/v1.0/aiohttp_access_request_context')
+    resp = yield from app_client.post('/v1.0/aiohttp_access_request_context/')
     assert resp.status == 204
 
 
