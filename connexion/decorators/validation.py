@@ -13,7 +13,7 @@ from werkzeug.datastructures import FileStorage
 from ..exceptions import ExtraParameterProblem, BadRequestProblem, UnsupportedMediaTypeProblem
 from ..http_facts import FORM_CONTENT_TYPES
 from ..json_schema import Draft4RequestValidator, Draft4ResponseValidator
-from ..serialization.deserializers import DEFAULT_DESERIALIZERS
+from ..content_types import KNOWN_CONTENT_TYPES
 from ..types import TypeValidationError, coerce_type
 from ..utils import all_json, boolean, is_json_mimetype, is_null, is_nullable
 
@@ -56,7 +56,7 @@ class RequestBodyValidator(object):
             de(self.validator,
                self.schema,
                self.strict_validation,
-               self.is_null_value_valid) for de in DEFAULT_DESERIALIZERS
+               self.is_null_value_valid) for de in KNOWN_CONTENT_TYPES
         ]
 
     def register_content_handler(self, cv):
@@ -69,7 +69,8 @@ class RequestBodyValidator(object):
     def lookup_content_handler(self, request):
         matches = [
             v for v in self._content_handlers
-            if v.regex.match(request.content_type)
+            if request.content_type is not None and
+               v.regex.match(request.content_type)
         ]
         if len(matches) > 1:
             logger.warning("Content could be handled by multiple validators")
@@ -85,7 +86,10 @@ class RequestBodyValidator(object):
         @functools.wraps(function)
         def wrapper(request):
             content_handler = self.lookup_content_handler(request)
-            exact_match = request.content_type in self.consumes
+            exact_match = (
+                request.content_type is not None and
+                request.content_type in self.consumes
+            )
             partial_match = content_handler and content_handler.name in self.consumes
             if not (exact_match or partial_match):
                 raise UnsupportedMediaTypeProblem(
