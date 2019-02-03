@@ -20,7 +20,10 @@ class ConnexionRequest(object):
         self.json_getter = json_getter
         self.files = files
         self.context = context if context is not None else {}
-        self.content_type = self.headers.get("Content-Type", "")
+
+    @property
+    def content_type(self):
+        return self.headers.get("Content-Type")
 
     @property
     def json(self):

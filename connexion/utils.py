@@ -118,7 +118,7 @@ def is_form_mimetype(mimetype):
     try:
         mimetype = mimetype.split(";")[0]
         maintype, subtype = mimetype.split('/')  # type: str, str
-    except ValueError:
+    except (ValueError, AttributeError):
         return False
 
     multipart = maintype == 'multipart' and subtype.startswith("form-data")
@@ -133,7 +133,7 @@ def is_json_mimetype(mimetype):
     """
     try:
         maintype, subtype = mimetype.split('/')  # type: str, str
-    except ValueError:
+    except (ValueError, AttributeError):
         return False
     return maintype == 'application' and (subtype == 'json' or subtype.endswith('+json'))
 
