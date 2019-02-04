@@ -2,6 +2,7 @@ import functools
 import inspect
 import logging
 import re
+from typing import Any  # NOQA
 
 import inflection
 import six

@@ -1,4 +1,5 @@
 import logging
+from typing import Any  # NOQA
 
 import flask
 import six

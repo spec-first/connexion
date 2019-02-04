@@ -6,11 +6,13 @@ import sys
 
 import six
 from jsonschema import Draft4Validator, ValidationError, draft4_format_checker
+from typing import (Any, AnyStr, Union)   # NOQA
 from werkzeug import FileStorage
 
 from ..exceptions import ExtraParameterProblem
 from ..http_facts import FORM_CONTENT_TYPES
 from ..json_schema import Draft4RequestValidator, Draft4ResponseValidator
+from ..lifecycle import ConnexionResponse # NOQA (for type hints)
 from ..problem import problem
 from ..utils import all_json, boolean, is_json_mimetype, is_null, is_nullable
 

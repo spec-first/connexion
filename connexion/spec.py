@@ -1,6 +1,7 @@
 import abc
 import copy
 import pathlib
+from typing import List  # NOQA
 
 import jinja2
 import six
