@@ -1,7 +1,9 @@
 import asyncio
-from aiohttp import web
-import pytest
 import json
+
+import pytest
+
+from aiohttp import web
 from connexion.apis.aiohttp_api import AioHttpApi
 from connexion.lifecycle import ConnexionResponse
 
@@ -83,7 +85,7 @@ def test_get_response_from_dict_json(api):
     response = yield from api.get_response({'foo': 'bar'}, mimetype='application/json')
     assert isinstance(response, web.Response)
     assert response.status == 200
-    assert json.loads(response.body) == {"foo": "bar"}
+    assert json.loads(response.body.decode()) == {"foo": "bar"}
     assert response.content_type == 'application/json'
     assert dict(response.headers) == {'Content-Type': 'application/json; charset=utf-8'}
 
@@ -103,7 +105,7 @@ def test_get_response_binary_json(api):
     response = yield from api.get_response(b'{"foo":"bar"}', mimetype='application/json')
     assert isinstance(response, web.Response)
     assert response.status == 200
-    assert json.loads(response.body) == {"foo": "bar"}
+    assert json.loads(response.body.decode()) == {"foo": "bar"}
     assert response.content_type == 'application/json'
     assert dict(response.headers) == {'Content-Type': 'application/json'}
 
@@ -146,5 +148,3 @@ def test_get_connexion_response_from_tuple(api):
     assert response.body == b'foo'
     assert response.content_type == 'text/plain'
     assert dict(response.headers) == {'Content-Type': 'text/plain; charset=utf-8', 'X-header': 'value'}
-
-

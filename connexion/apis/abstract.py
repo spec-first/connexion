@@ -2,9 +2,9 @@ import abc
 import logging
 import pathlib
 import sys
+from enum import Enum
 
 import six
-from enum import Enum
 
 from ..decorators.produces import NoContent
 from ..exceptions import ResolverError
