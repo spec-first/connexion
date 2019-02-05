@@ -7,8 +7,7 @@ from unittest import mock
 import pytest
 
 from connexion.apis.flask_api import Jsonifier
-from connexion.decorators.security import (get_tokeninfo_remote,
-                                           validate_scope, verify_security)
+from connexion.decorators.security import SecurityHandlerFactory
 from connexion.exceptions import InvalidSpecification
 from connexion.json_schema import resolve_refs
 from connexion.operations import Swagger2Operation
@@ -248,7 +247,7 @@ def make_operation(op, definitions=True, parameters=True):
 def test_operation(api, monkeypatch):
     dummy = object()
     verify_oauth = mock.MagicMock(return_value=dummy)
-    monkeypatch.setattr('connexion.operations.secure.verify_oauth', verify_oauth)
+    monkeypatch.setattr('connexion.operations.secure.SecurityHandlerFactory.verify_oauth', verify_oauth)
 
     op_spec = make_operation(OPERATION1)
     operation = Swagger2Operation(api=api,
@@ -266,14 +265,14 @@ def test_operation(api, monkeypatch):
     assert isinstance(operation.function, types.FunctionType)
 
     security_decorator = operation.security_decorator
-    assert security_decorator.func is verify_security
+    #assert security_decorator.func is SecurityHandlerFactory.verify_security
     assert len(security_decorator.args[0]) == 1
     assert security_decorator.args[0][0] is dummy
     assert security_decorator.args[1] == ['uid']
     call_args = verify_oauth.call_args[0]
-    assert call_args[0].func is get_tokeninfo_remote
+    assert call_args[0].func is SecurityHandlerFactory.get_token_info_remote
     assert call_args[0].args == ('https://oauth.example/token_info',)
-    assert call_args[1] is validate_scope
+    assert call_args[1] is SecurityHandlerFactory.validate_scope
 
     assert operation.method == 'GET'
     assert operation.produces == ['application/json']
@@ -341,7 +340,7 @@ def test_operation_composed_definition(api):
 def test_operation_local_security_oauth2(api, monkeypatch):
     dummy = object()
     verify_oauth = mock.MagicMock(return_value=dummy)
-    monkeypatch.setattr('connexion.operations.secure.verify_oauth', verify_oauth)
+    monkeypatch.setattr('connexion.operations.secure.SecurityHandlerFactory.verify_oauth', verify_oauth)
 
     op_spec = make_operation(OPERATION8)
     operation = Swagger2Operation(api=api,
@@ -358,13 +357,13 @@ def test_operation_local_security_oauth2(api, monkeypatch):
                                   resolver=Resolver())
     assert isinstance(operation.function, types.FunctionType)
     security_decorator = operation.security_decorator
-    assert security_decorator.func is verify_security
+    # assert security_decorator.func is SecurityHandlerFactory.verify_security
     assert len(security_decorator.args[0]) == 1
     assert security_decorator.args[0][0] is dummy
     assert security_decorator.args[1] == ['uid']
     call_args = verify_oauth.call_args[0]
     assert call_args[0] is math.ceil
-    assert call_args[1] is validate_scope
+    assert call_args[1] is SecurityHandlerFactory.validate_scope
 
     assert operation.method == 'GET'
     assert operation.produces == ['application/json']
@@ -378,7 +377,7 @@ def test_operation_local_security_oauth2(api, monkeypatch):
 def test_operation_local_security_duplicate_token_info(api, monkeypatch):
     dummy = object()
     verify_oauth = mock.MagicMock(return_value=dummy)
-    monkeypatch.setattr('connexion.operations.secure.verify_oauth', verify_oauth)
+    monkeypatch.setattr('connexion.operations.secure.SecurityHandlerFactory.verify_oauth', verify_oauth)
 
     op_spec = make_operation(OPERATION8)
     operation = Swagger2Operation(api=api,
@@ -396,13 +395,13 @@ def test_operation_local_security_duplicate_token_info(api, monkeypatch):
     assert isinstance(operation.function, types.FunctionType)
 
     security_decorator = operation.security_decorator
-    assert security_decorator.func is verify_security
+    # assert security_decorator.func is SecurityHandlerFactory.verify_security
     assert len(security_decorator.args[0]) == 1
     assert security_decorator.args[0][0] is dummy
     assert security_decorator.args[1] == ['uid']
     call_args = verify_oauth.call_args[0]
     assert call_args[0] is math.ceil
-    assert call_args[1] is validate_scope
+    assert call_args[1] is SecurityHandlerFactory.validate_scope
 
     assert operation.method == 'GET'
     assert operation.produces == ['application/json']
@@ -452,7 +451,7 @@ def test_no_token_info(api):
     assert isinstance(operation.function, types.FunctionType)
 
     security_decorator = operation.security_decorator
-    assert security_decorator.func is verify_security
+    # assert security_decorator.func is SecurityHandlerFactory.verify_security
     assert len(security_decorator.args[0]) == 0
 
     assert operation.method == 'GET'

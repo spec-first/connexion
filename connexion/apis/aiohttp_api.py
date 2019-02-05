@@ -269,6 +269,7 @@ class AioHttpApi(AbstractAPI):
         logger.debug('... Adding %s -> %s', method, operation_id,
                      extra=vars(operation))
 
+        # TODO: Framework dependent factory
         handler = operation.function
         endpoint_name = '{}_{}_{}'.format(
             self._api_name,
