@@ -34,7 +34,6 @@ class SecureOperation(object):
     def security_schemes(self):
         return self._security_schemes
 
-    # TODO: Framework dependent factory
     @property
     def security_decorator(self):
         """
@@ -69,26 +68,26 @@ class SecureOperation(object):
         """
         logger.debug('... Security: %s', self.security, extra=vars(self))
         if not self.security:
-            return SecurityHandlerFactory.security_passthrough
+            return self._api.security_handler_factory.security_passthrough
 
         auth_funcs = []
         required_scopes = None
         for security_req in self.security:
             if not security_req:
-                auth_funcs.append(SecurityHandlerFactory.verify_none())
+                auth_funcs.append(self._api.security_handler_factory.verify_none())
                 continue
             elif len(security_req) > 1:
                 logger.warning("... More than one security scheme in security requirement defined. "
                                "**DENYING ALL REQUESTS**", extra=vars(self))
-                return SecurityHandlerFactory.security_deny
+                return self._api.security_handler_factory.security_deny
 
             scheme_name, scopes = next(iter(security_req.items()))
             security_scheme = self.security_schemes[scheme_name]
 
             if security_scheme['type'] == 'oauth2':
                 required_scopes = scopes
-                token_info_func = SecurityHandlerFactory.get_tokeninfo_func(security_scheme)
-                scope_validate_func = SecurityHandlerFactory.get_scope_validate_func(security_scheme)
+                token_info_func = self._api.security_handler_factory.get_tokeninfo_func(security_scheme)
+                scope_validate_func = self._api.security_handler_factory.get_scope_validate_func(security_scheme)
                 if not token_info_func:
                     logger.warning("... x-tokenInfoFunc missing", extra=vars(self))
                     continue
@@ -97,7 +96,7 @@ class SecureOperation(object):
 
             # Swagger 2.0
             elif security_scheme['type'] == 'basic':
-                basic_info_func = SecurityHandlerFactory.get_basicinfo_func(security_scheme)
+                basic_info_func = self._api.security_handler_factory.get_basicinfo_func(security_scheme)
                 if not basic_info_func:
                     logger.warning("... x-basicInfoFunc missing", extra=vars(self))
                     continue
@@ -108,14 +107,14 @@ class SecureOperation(object):
             elif security_scheme['type'] == 'http':
                 scheme = security_scheme['scheme'].lower()
                 if scheme == 'basic':
-                    basic_info_func = SecurityHandlerFactory.get_basicinfo_func(security_scheme)
+                    basic_info_func = self._api.security_handler_factory.get_basicinfo_func(security_scheme)
                     if not basic_info_func:
                         logger.warning("... x-basicInfoFunc missing", extra=vars(self))
                         continue
 
                     auth_funcs.append(self._api.security_handler_factory.verify_basic(basic_info_func))
                 elif scheme == 'bearer':
-                    bearer_info_func = SecurityHandlerFactory.get_bearerinfo_func(security_scheme)
+                    bearer_info_func = self._api.security_handler_factory.get_bearerinfo_func(security_scheme)
                     if not bearer_info_func:
                         logger.warning("... x-bearerInfoFunc missing", extra=vars(self))
                         continue
@@ -126,13 +125,13 @@ class SecureOperation(object):
             elif security_scheme['type'] == 'apiKey':
                 scheme = security_scheme.get('x-authentication-scheme', '').lower()
                 if scheme == 'bearer':
-                    bearer_info_func = SecurityHandlerFactory.get_bearerinfo_func(security_scheme)
+                    bearer_info_func = self._api.security_handler_factory.get_bearerinfo_func(security_scheme)
                     if not bearer_info_func:
                         logger.warning("... x-bearerInfoFunc missing", extra=vars(self))
                         continue
                     auth_funcs.append(self._api.security_handler_factory.verify_bearer(bearer_info_func))
                 else:
-                    apikey_info_func = SecurityHandlerFactory.get_apikeyinfo_func(security_scheme)
+                    apikey_info_func = self._api.security_handler_factory.get_apikeyinfo_func(security_scheme)
                     if not apikey_info_func:
                         logger.warning("... x-apikeyInfoFunc missing", extra=vars(self))
                         continue

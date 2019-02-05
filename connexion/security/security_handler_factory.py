@@ -1,22 +1,16 @@
+import abc
 import base64
 import functools
 import logging
 import os
 import textwrap
 
-import requests
 import http.cookies
 
 from ..exceptions import ConnexionException, OAuthProblem, OAuthResponseProblem, OAuthScopeProblem
 from ..utils import get_function_from_name
 
 logger = logging.getLogger('connexion.api.security')
-
-# use connection pool for OAuth tokeninfo
-adapter = requests.adapters.HTTPAdapter(pool_connections=100, pool_maxsize=100)
-session = requests.Session()
-session.mount('http://', adapter)
-session.mount('https://', adapter)
 
 
 class SecurityHandlerFactory:
@@ -48,7 +42,7 @@ class SecurityHandlerFactory:
         token_info_url = (security_definition.get('x-tokenInfoUrl') or
                           os.environ.get('TOKENINFO_URL'))
         if token_info_url:
-            return functools.partial(cls.get_token_info_remote, token_info_url)
+            return self.get_token_info_remote(token_info_url)
 
         return None
 
@@ -242,7 +236,7 @@ class SecurityHandlerFactory:
     @classmethod
     def verify_bearer(cls, token_info_func):
         """
-        :param check_bearer_func: types.FunctionType
+        :param token_info_func: types.FunctionType
         :rtype: types.FunctionType
         """
         check_bearer_func = cls.check_bearer_token(token_info_func)
@@ -266,18 +260,10 @@ class SecurityHandlerFactory:
 
         return wrapper
 
-    # ================================================================
-    # Will be overwritten for AioHttp with commented asyncio parts
-    # ================================================================
-
-    """ Provide framework dependent security check wrappers """
     @classmethod
     def check_bearer_token(cls, token_info_func):
-        # @asyncio.coroutine
         def wrapper(request, token, required_scopes):
             token_info = token_info_func(token)
-            # while asyncio.iscoroutine(token_info):
-            #     token_info = yield from token_info
             if token_info is cls.no_value:
                 return cls.no_value
             if token_info is None:
@@ -291,11 +277,8 @@ class SecurityHandlerFactory:
 
     @classmethod
     def check_basic_auth(cls, basic_info_func):
-        # @asyncio.coroutine
         def wrapper(request, username, password, required_scopes):
             token_info = basic_info_func(username, password, required_scopes=required_scopes)
-            # while asyncio.iscoroutine(token_info):
-            #     token_info = yield from token_info
             if token_info is cls.no_value:
                 return cls.no_value
             if token_info is None:
@@ -309,11 +292,8 @@ class SecurityHandlerFactory:
 
     @classmethod
     def check_api_key(cls, api_key_info_func):
-        # @asyncio.coroutine
         def wrapper(request, api_key, required_scopes):
             token_info = api_key_info_func(api_key, required_scopes=required_scopes)
-            # while asyncio.iscoroutine(token_info):
-            #     token_info = yield from token_info
             if token_info is cls.no_value:
                 return cls.no_value
             if token_info is None:
@@ -326,12 +306,9 @@ class SecurityHandlerFactory:
 
     @classmethod
     def check_oauth_func(cls, token_info_func, scope_validate_func):
-        # @asyncio.coroutine
         def wrapper(request, token, required_scopes):
 
             token_info = token_info_func(token)
-            # while asyncio.iscoroutine(token_info):
-            #     token_info = yield from token_info
             if token_info is cls.no_value:
                 return cls.no_value
             if token_info is None:
@@ -344,8 +321,6 @@ class SecurityHandlerFactory:
             token_scopes = token_info.get('scope', token_info.get('scopes', ''))
 
             validation = scope_validate_func(required_scopes, token_scopes)
-            # while asyncio.iscoroutine(validation):
-            #     validation = yield from validation
             if not validation:
                 raise OAuthScopeProblem(
                     description='Provided token doesn\'t have the required scope',
@@ -358,14 +333,11 @@ class SecurityHandlerFactory:
 
     @classmethod
     def verify_security(cls, auth_funcs, required_scopes, function):
-        # @asyncio.coroutine
         @functools.wraps(function)
         def wrapper(request):
             token_info = None
             for func in auth_funcs:
                 token_info = func(request, required_scopes)
-                # while asyncio.iscoroutine(token_info):
-                #     token_info = yield from token_info
                 if token_info is not cls.no_value:
                     break
 
@@ -380,18 +352,15 @@ class SecurityHandlerFactory:
 
         return wrapper
 
-    @staticmethod
-    # @asyncio.coroutine
-    def get_token_info_remote(token_info_url, token):
+    @abc.abstractmethod
+    def get_token_info_remote(self, token_info_url):
         """
-        Retrieve oauth token_info remotely using HTTP
+        Return a function which will call `token_info_url` to retrieve token info.
+
+        Returned function must accept oauth token in parameter.
+        It must return a token_info dict in case of success, None otherwise.
+
         :param token_info_url: Url to get information about the token
         :type token_info_url: str
-        :param token: oauth token from authorization header
-        :type token: str
-        :rtype: dict
+        :rtype: types.FunctionType
         """
-        token_request = session.get(token_info_url, headers={'Authorization': 'Bearer {}'.format(token)}, timeout=5)
-        if not token_request.ok:
-            return None
-        return token_request.json()

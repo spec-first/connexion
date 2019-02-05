@@ -10,11 +10,16 @@ from connexion.jsonifier import Jsonifier
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.utils import is_json_mimetype, yamldumper
 from werkzeug.local import LocalProxy
+from connexion.security.flask_security_handler_factory import FlaskSecurityHandlerFactory
 
 logger = logging.getLogger('connexion.apis.flask_api')
 
 
 class FlaskApi(AbstractAPI):
+
+    def default_security_handler_factory(self):
+        """ Create default SecurityHandlerFactory to create all security check handlers """
+        return FlaskSecurityHandlerFactory()
 
     def _set_base_path(self, base_path):
         super(FlaskApi, self)._set_base_path(base_path)

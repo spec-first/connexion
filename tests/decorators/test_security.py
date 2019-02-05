@@ -6,26 +6,30 @@ from unittest.mock import MagicMock
 
 from connexion.exceptions import (OAuthResponseProblem, OAuthScopeProblem)
 from connexion.security import SecurityHandlerFactory
+from connexion.security.flask_security_handler_factory import FlaskSecurityHandlerFactory
 
 
 def test_get_tokeninfo_url(monkeypatch):
+    factory = SecurityHandlerFactory()
+    factory.get_token_info_remote = MagicMock(return_value='get_token_info_remote_result')
     env = {}
     monkeypatch.setattr('os.environ', env)
     logger = MagicMock()
     monkeypatch.setattr('connexion.security.security_handler_factory.logger', logger)
+
     security_def = {}
-    assert SecurityHandlerFactory.get_tokeninfo_func(security_def) is None
+    assert factory.get_tokeninfo_func(security_def) is None
     logger.warn.assert_not_called()
+
     env['TOKENINFO_URL'] = 'issue-146'
-    func = SecurityHandlerFactory.get_tokeninfo_func(security_def)
-    assert func.func is SecurityHandlerFactory.get_token_info_remote
-    assert func.args == ('issue-146',)
+    assert factory.get_tokeninfo_func(security_def) == 'get_token_info_remote_result'
+    factory.get_token_info_remote.assert_called_with('issue-146')
     logger.warn.assert_not_called()
     logger.warn.reset_mock()
+
     security_def = {'x-tokenInfoUrl': 'bar'}
-    func = SecurityHandlerFactory.get_tokeninfo_func(security_def)
-    assert func.func is SecurityHandlerFactory.get_token_info_remote
-    assert func.args == ('bar',)
+    assert factory.get_tokeninfo_func(security_def) == 'get_token_info_remote_result'
+    factory.get_token_info_remote.assert_called_with('bar')
     logger.warn.assert_not_called()
 
 
@@ -42,6 +46,7 @@ def test_verify_oauth_missing_auth_header():
 
 
 def test_verify_oauth_scopes_remote(monkeypatch):
+    factory = FlaskSecurityHandlerFactory()
     tokeninfo = dict(uid="foo", scope="scope1 scope2")
 
     def get_tokeninfo_response(*args, **kwargs):
@@ -50,15 +55,15 @@ def test_verify_oauth_scopes_remote(monkeypatch):
         tokeninfo_response._content = json.dumps(tokeninfo).encode()
         return tokeninfo_response
 
-    token_info_func = SecurityHandlerFactory.get_tokeninfo_func({'x-tokenInfoUrl': 'https://example.org/tokeninfo'})
-    wrapped_func = SecurityHandlerFactory.verify_oauth(token_info_func, SecurityHandlerFactory.validate_scope)
+    token_info_func = factory.get_tokeninfo_func({'x-tokenInfoUrl': 'https://example.org/tokeninfo'})
+    wrapped_func = factory.verify_oauth(token_info_func, factory.validate_scope)
 
     request = MagicMock()
     request.headers = {"Authorization": "Bearer 123"}
 
     session = MagicMock()
     session.get = get_tokeninfo_response
-    monkeypatch.setattr('connexion.security.security_handler_factory.session', session)
+    monkeypatch.setattr('connexion.security.flask_security_handler_factory.session', session)
 
     with pytest.raises(OAuthScopeProblem, match="Provided token doesn't have the required scope"):
         wrapped_func(request, ['admin'])
