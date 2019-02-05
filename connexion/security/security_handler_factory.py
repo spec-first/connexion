@@ -1,4 +1,3 @@
-# Authentication and authorization related decorators
 import base64
 import functools
 import logging
@@ -6,11 +5,10 @@ import os
 import textwrap
 
 import requests
-from connexion.utils import get_function_from_name
 import http.cookies
 
-from ..exceptions import (ConnexionException, OAuthProblem,
-                          OAuthResponseProblem, OAuthScopeProblem)
+from ..exceptions import ConnexionException, OAuthProblem, OAuthResponseProblem, OAuthScopeProblem
+from ..utils import get_function_from_name
 
 logger = logging.getLogger('connexion.api.security')
 
@@ -24,8 +22,17 @@ session.mount('https://', adapter)
 class SecurityHandlerFactory:
     no_value = object()
 
-    @classmethod
-    def get_tokeninfo_func(cls, security_definition):
+    @staticmethod
+    def _get_function(security_definition, security_definition_key, environ_key, default=None):
+        """
+        Return function by getting its name from security_definition or environment variable
+        """
+        func = security_definition.get(security_definition_key) or os.environ.get(environ_key)
+        if func:
+            return get_function_from_name(func)
+        return default
+
+    def get_tokeninfo_func(self, security_definition):
         """
         :type security_definition: dict
         :param get_token_info_remote_func Function executed to download token info from x-tokenInfoUrl
@@ -34,10 +41,9 @@ class SecurityHandlerFactory:
         >>> get_tokeninfo_url({'x-tokenInfoFunc': 'foo.bar'})
         '<function foo.bar>'
         """
-        token_info_func = (security_definition.get("x-tokenInfoFunc") or
-                           os.environ.get('TOKENINFO_FUNC'))
+        token_info_func = self._get_function(security_definition, "x-tokenInfoFunc", 'TOKENINFO_FUNC')
         if token_info_func:
-            return get_function_from_name(token_info_func)
+            return token_info_func
 
         token_info_url = (security_definition.get('x-tokenInfoUrl') or
                           os.environ.get('TOKENINFO_URL'))
@@ -55,14 +61,10 @@ class SecurityHandlerFactory:
         >>> get_scope_validate_func({'x-scopeValidateFunc': 'foo.bar'})
         '<function foo.bar>'
         """
-        func = (security_definition.get("x-scopeValidateFunc") or
-                os.environ.get('SCOPEVALIDATE_FUNC'))
-        if func:
-            return get_function_from_name(func)
-        return cls.validate_scope
+        return cls._get_function(security_definition, "x-scopeValidateFunc", 'SCOPEVALIDATE_FUNC', cls.validate_scope)
 
-    @staticmethod
-    def get_basicinfo_func(security_definition):
+    @classmethod
+    def get_basicinfo_func(cls, security_definition):
         """
         :type security_definition: dict
         :rtype: function
@@ -70,14 +72,10 @@ class SecurityHandlerFactory:
         >>> get_basicinfo_func({'x-basicInfoFunc': 'foo.bar'})
         '<function foo.bar>'
         """
-        func = (security_definition.get("x-basicInfoFunc") or
-                os.environ.get('BASICINFO_FUNC'))
-        if func:
-            return get_function_from_name(func)
-        return None
+        return cls._get_function(security_definition, "x-basicInfoFunc", 'BASICINFO_FUNC')
 
-    @staticmethod
-    def get_apikeyinfo_func(security_definition):
+    @classmethod
+    def get_apikeyinfo_func(cls, security_definition):
         """
         :type security_definition: dict
         :rtype: function
@@ -85,14 +83,10 @@ class SecurityHandlerFactory:
         >>> get_apikeyinfo_func({'x-apikeyInfoFunc': 'foo.bar'})
         '<function foo.bar>'
         """
-        func = (security_definition.get("x-apikeyInfoFunc") or
-                os.environ.get('APIKEYINFO_FUNC'))
-        if func:
-            return get_function_from_name(func)
-        return None
+        return cls._get_function(security_definition, "x-apikeyInfoFunc", 'APIKEYINFO_FUNC')
 
-    @staticmethod
-    def get_bearerinfo_func(security_definition):
+    @classmethod
+    def get_bearerinfo_func(cls, security_definition):
         """
         :type security_definition: dict
         :rtype: function
@@ -100,11 +94,7 @@ class SecurityHandlerFactory:
         >>> get_bearerinfo_func({'x-bearerInfoFunc': 'foo.bar'})
         '<function foo.bar>'
         """
-        func = (security_definition.get("x-bearerInfoFunc") or
-                os.environ.get('BEARERINFO_FUNC'))
-        if func:
-            return get_function_from_name(func)
-        return None
+        return cls._get_function(security_definition, "x-bearerInfoFunc", 'BEARERINFO_FUNC')
 
     @staticmethod
     def security_passthrough(function):

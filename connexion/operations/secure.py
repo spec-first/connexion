@@ -2,7 +2,6 @@ import functools
 import logging
 
 from ..decorators.decorator import RequestResponseDecorator
-from ..decorators.security import SecurityHandlerFactory
 
 logger = logging.getLogger("connexion.operations.secure")
 
@@ -94,7 +93,7 @@ class SecureOperation(object):
                     logger.warning("... x-tokenInfoFunc missing", extra=vars(self))
                     continue
 
-                auth_funcs.append(SecurityHandlerFactory.verify_oauth(token_info_func, scope_validate_func))
+                auth_funcs.append(self._api.security_handler_factory.verify_oauth(token_info_func, scope_validate_func))
 
             # Swagger 2.0
             elif security_scheme['type'] == 'basic':
@@ -103,7 +102,7 @@ class SecureOperation(object):
                     logger.warning("... x-basicInfoFunc missing", extra=vars(self))
                     continue
 
-                auth_funcs.append(SecurityHandlerFactory.verify_basic(basic_info_func))
+                auth_funcs.append(self._api.security_handler_factory.verify_basic(basic_info_func))
 
             # OpenAPI 3.0.0
             elif security_scheme['type'] == 'http':
@@ -114,13 +113,13 @@ class SecureOperation(object):
                         logger.warning("... x-basicInfoFunc missing", extra=vars(self))
                         continue
 
-                    auth_funcs.append(SecurityHandlerFactory.verify_basic(basic_info_func))
+                    auth_funcs.append(self._api.security_handler_factory.verify_basic(basic_info_func))
                 elif scheme == 'bearer':
                     bearer_info_func = SecurityHandlerFactory.get_bearerinfo_func(security_scheme)
                     if not bearer_info_func:
                         logger.warning("... x-bearerInfoFunc missing", extra=vars(self))
                         continue
-                    auth_funcs.append(SecurityHandlerFactory.verify_bearer(bearer_info_func))
+                    auth_funcs.append(self._api.security_handler_factory.verify_bearer(bearer_info_func))
                 else:
                     logger.warning("... Unsupported http authorization scheme %s" % scheme, extra=vars(self))
 
@@ -131,21 +130,21 @@ class SecureOperation(object):
                     if not bearer_info_func:
                         logger.warning("... x-bearerInfoFunc missing", extra=vars(self))
                         continue
-                    auth_funcs.append(SecurityHandlerFactory.verify_bearer(bearer_info_func))
+                    auth_funcs.append(self._api.security_handler_factory.verify_bearer(bearer_info_func))
                 else:
                     apikey_info_func = SecurityHandlerFactory.get_apikeyinfo_func(security_scheme)
                     if not apikey_info_func:
                         logger.warning("... x-apikeyInfoFunc missing", extra=vars(self))
                         continue
 
-                    auth_funcs.append(SecurityHandlerFactory.verify_api_key(
+                    auth_funcs.append(self._api.security_handler_factory.verify_api_key(
                         apikey_info_func, security_scheme['in'], security_scheme['name']
                         ))
 
             else:
                 logger.warning("... Unsupported security scheme type %s" % security_scheme['type'], extra=vars(self))
 
-        return functools.partial(SecurityHandlerFactory.verify_security, auth_funcs, required_scopes)
+        return functools.partial(self._api.security_handler_factory.verify_security, auth_funcs, required_scopes)
 
     def get_mimetype(self):
         return DEFAULT_MIMETYPE
