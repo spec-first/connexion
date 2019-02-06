@@ -9,8 +9,9 @@ from connexion.handlers import AuthErrorHandler
 from connexion.jsonifier import Jsonifier
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.utils import is_json_mimetype, yamldumper
+from connexion.security.flask_security_handler_factory import \
+    FlaskSecurityHandlerFactory
 from werkzeug.local import LocalProxy
-from connexion.security.flask_security_handler_factory import FlaskSecurityHandlerFactory
 
 logger = logging.getLogger('connexion.apis.flask_api')
 

@@ -1,7 +1,8 @@
 import asyncio
-import aiohttp
 import functools
 import logging
+
+import aiohttp
 
 from ..exceptions import OAuthProblem, OAuthResponseProblem, OAuthScopeProblem
 from .security_handler_factory import SecurityHandlerFactory
@@ -23,7 +24,7 @@ class AioHttpSecurityHandlerFactory(SecurityHandlerFactory):
             if need_to_add_context:
                 kwargs[self.pass_context_arg_name] = request.context
             if need_to_add_required_scopes:
-                kwargs['required_scopes'] = required_scopes
+                kwargs[self.required_scopes_kw] = required_scopes
             token_info = func(*args, **kwargs)
             while asyncio.iscoroutine(token_info):
                 token_info = yield from token_info

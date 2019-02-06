@@ -2,8 +2,9 @@ import asyncio
 import base64
 
 import pytest
-from connexion import AioHttpApp
 from mock import MagicMock
+
+from connexion import AioHttpApp
 
 
 class FakeAioHttpClientResponse(object):
