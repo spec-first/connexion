@@ -10,6 +10,8 @@ session.mount('https://', adapter)
 
 
 class FlaskSecurityHandlerFactory(SecurityHandlerFactory):
+    def __init__(self, pass_context_arg_name):
+        SecurityHandlerFactory.__init__(self, pass_context_arg_name)
 
     def get_token_info_remote(self, token_info_url):
         """

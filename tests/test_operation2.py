@@ -11,7 +11,6 @@ from connexion.exceptions import InvalidSpecification
 from connexion.json_schema import resolve_refs
 from connexion.operations import Swagger2Operation
 from connexion.resolver import Resolver
-from connexion.security.flask_security_handler_factory import FlaskSecurityHandlerFactory
 
 TEST_FOLDER = pathlib.Path(__file__).parent
 
@@ -225,12 +224,6 @@ SECURITY_DEFINITIONS_BOTH = {'oauth': {'type': 'oauth2',
 SECURITY_DEFINITIONS_WO_INFO = {'oauth': {'type': 'oauth2',
                                           'flow': 'password',
                                           'scopes': {'myscope': 'can do stuff'}}}
-
-
-@pytest.fixture
-def security_handler_factory():
-    security_handler_factory = FlaskSecurityHandlerFactory()
-    yield security_handler_factory
 
 
 @pytest.fixture

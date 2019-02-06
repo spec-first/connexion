@@ -106,9 +106,10 @@ class AioHttpApi(AbstractAPI):
         middlewares = self.options.as_dict().get('middlewares', [])
         self.subapp.middlewares.extend(middlewares)
 
-    def default_security_handler_factory(self):
+    @staticmethod
+    def make_security_handler_factory(pass_context_arg_name):
         """ Create default SecurityHandlerFactory to create all security check handlers """
-        return AioHttpSecurityHandlerFactory()
+        return AioHttpSecurityHandlerFactory(pass_context_arg_name)
 
     def _set_base_path(self, base_path):
         AbstractAPI._set_base_path(self, base_path)

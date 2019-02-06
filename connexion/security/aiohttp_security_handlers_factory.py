@@ -10,82 +10,46 @@ logger = logging.getLogger('connexion.api.security')
 
 
 class AioHttpSecurityHandlerFactory(SecurityHandlerFactory):
-    def __init__(self):
+    def __init__(self, pass_context_arg_name):
+        SecurityHandlerFactory.__init__(self, pass_context_arg_name)
         self.client_session = None
 
-    @classmethod
-    def check_bearer_token(cls, token_info_func):
+    def _generic_check(self, func, exception_msg):
+        need_to_add_context, need_to_add_required_scopes = self._need_to_add_context_or_scopes(func)
+
+        @asyncio.coroutine
+        def wrapper(request, *args, required_scopes=None):
+            kwargs = {}
+            if need_to_add_context:
+                kwargs[self.pass_context_arg_name] = request.context
+            if need_to_add_required_scopes:
+                kwargs['required_scopes'] = required_scopes
+            token_info = func(*args, **kwargs)
+            while asyncio.iscoroutine(token_info):
+                token_info = yield from token_info
+            if token_info is self.no_value:
+                return self.no_value
+            if token_info is None:
+                raise OAuthResponseProblem(description=exception_msg, token_response=None)
+            return token_info
+
+        return wrapper
+
+    def check_oauth_func(self, token_info_func, scope_validate_func):
+        get_token_info = self._generic_check(token_info_func, 'Provided token is not valid')
+        need_to_add_context, _ = self._need_to_add_context_or_scopes(scope_validate_func)
+
         @asyncio.coroutine
         def wrapper(request, token, required_scopes):
-            token_info = token_info_func(token)
-            while asyncio.iscoroutine(token_info):
-                token_info = yield from token_info
-            if token_info is cls.no_value:
-                return cls.no_value
-            if token_info is None:
-                raise OAuthResponseProblem(
-                    description='Provided token is not valid',
-                    token_response=None
-                )
-
-            return token_info
-        return wrapper
-
-    @classmethod
-    def check_basic_auth(cls, basic_info_func):
-        @asyncio.coroutine
-        def wrapper(request, username, password, required_scopes):
-            token_info = basic_info_func(username, password, required_scopes=required_scopes)
-            while asyncio.iscoroutine(token_info):
-                token_info = yield from token_info
-            if token_info is cls.no_value:
-                return cls.no_value
-            if token_info is None:
-                raise OAuthResponseProblem(
-                    description='Provided authorization is not valid',
-                    token_response=None
-                )
-
-            return token_info
-        return wrapper
-
-    @classmethod
-    def check_api_key(cls, api_key_info_func):
-        @asyncio.coroutine
-        def wrapper(request, api_key, required_scopes):
-            token_info = api_key_info_func(api_key, required_scopes=required_scopes)
-            while asyncio.iscoroutine(token_info):
-                token_info = yield from token_info
-            if token_info is cls.no_value:
-                return cls.no_value
-            if token_info is None:
-                raise OAuthResponseProblem(
-                    description='Provided apikey is not valid',
-                    token_response=None
-                )
-            return token_info
-        return wrapper
-
-    @classmethod
-    def check_oauth_func(cls, token_info_func, scope_validate_func):
-        @asyncio.coroutine
-        def wrapper(request, token, required_scopes):
-
-            token_info = token_info_func(token)
-            while asyncio.iscoroutine(token_info):
-                token_info = yield from token_info
-            if token_info is cls.no_value:
-                return cls.no_value
-            if token_info is None:
-                raise OAuthResponseProblem(
-                    description='Provided token is not valid',
-                    token_response=None
-                )
+            token_info = yield from get_token_info(request, token, required_scopes=required_scopes)
 
             # Fallback to 'scopes' for backward compatibility
             token_scopes = token_info.get('scope', token_info.get('scopes', ''))
 
-            validation = scope_validate_func(required_scopes, token_scopes)
+            kwargs = {}
+            if need_to_add_context:
+                kwargs[self.pass_context_arg_name] = request.context
+            validation = scope_validate_func(required_scopes, token_scopes, **kwargs)
             while asyncio.iscoroutine(validation):
                 validation = yield from validation
             if not validation:

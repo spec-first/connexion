@@ -7,6 +7,7 @@ import textwrap
 
 import http.cookies
 
+from ..decorators.parameter import inspect_function_arguments
 from ..exceptions import ConnexionException, OAuthProblem, OAuthResponseProblem, OAuthScopeProblem
 from ..utils import get_function_from_name
 
@@ -15,6 +16,9 @@ logger = logging.getLogger('connexion.api.security')
 
 class SecurityHandlerFactory:
     no_value = object()
+
+    def __init__(self, pass_context_arg_name):
+        self.pass_context_arg_name = pass_context_arg_name
 
     @staticmethod
     def _get_function(security_definition, security_definition_key, environ_key, default=None):
@@ -149,27 +153,25 @@ class SecurityHandlerFactory:
             raise OAuthProblem(description='Invalid authorization header')
         return auth_type.lower(), value
 
-    @classmethod
-    def verify_oauth(cls, token_info_func, scope_validate_func):
-        check_oauth_func = cls.check_oauth_func(token_info_func, scope_validate_func)
+    def verify_oauth(self, token_info_func, scope_validate_func):
+        check_oauth_func = self.check_oauth_func(token_info_func, scope_validate_func)
 
         def wrapper(request, required_scopes):
-            auth_type, token = cls.get_auth_header_value(request)
+            auth_type, token = self.get_auth_header_value(request)
             if auth_type != 'bearer':
-                return cls.no_value
+                return self.no_value
 
-            return check_oauth_func(request, token, required_scopes)
+            return check_oauth_func(request, token, required_scopes=required_scopes)
 
         return wrapper
 
-    @classmethod
-    def verify_basic(cls, basic_info_func):
-        check_basic_info_func = cls.check_basic_auth(basic_info_func)
+    def verify_basic(self, basic_info_func):
+        check_basic_info_func = self.check_basic_auth(basic_info_func)
 
         def wrapper(request, required_scopes):
-            auth_type, user_pass = cls.get_auth_header_value(request)
+            auth_type, user_pass = self.get_auth_header_value(request)
             if auth_type != 'basic':
-                return cls.no_value
+                return self.no_value
 
             try:
                 username, password = base64.b64decode(user_pass).decode('latin1').split(':', 1)
@@ -194,9 +196,8 @@ class SecurityHandlerFactory:
         except KeyError:
             return None
 
-    @classmethod
-    def verify_api_key(cls, api_key_info_func, loc, name):
-        check_api_key_func = cls.check_api_key(api_key_info_func)
+    def verify_api_key(self, api_key_info_func, loc, name):
+        check_api_key_func = self.check_api_key(api_key_info_func)
 
         def wrapper(request, required_scopes):
 
@@ -222,30 +223,29 @@ class SecurityHandlerFactory:
                 api_key = request.headers.get(name)
             elif loc == 'cookie':
                 cookie_list = request.headers.get('Cookie')
-                api_key = cls.get_cookie_value(cookie_list, name)
+                api_key = self.get_cookie_value(cookie_list, name)
             else:
-                return cls.no_value
+                return self.no_value
 
             if api_key is None:
-                return cls.no_value
+                return self.no_value
 
             return check_api_key_func(request, api_key, required_scopes=required_scopes)
 
         return wrapper
 
-    @classmethod
-    def verify_bearer(cls, token_info_func):
+    def verify_bearer(self, token_info_func):
         """
         :param token_info_func: types.FunctionType
         :rtype: types.FunctionType
         """
-        check_bearer_func = cls.check_bearer_token(token_info_func)
+        check_bearer_func = self.check_bearer_token(token_info_func)
 
         def wrapper(request, required_scopes):
-            auth_type, token = cls.get_auth_header_value(request)
+            auth_type, token = self.get_auth_header_value(request)
             if auth_type != 'bearer':
-                return cls.no_value
-            return check_bearer_func(request, token, required_scopes)
+                return self.no_value
+            return check_bearer_func(request, token, required_scopes=required_scopes)
 
         return wrapper
 
@@ -260,67 +260,53 @@ class SecurityHandlerFactory:
 
         return wrapper
 
-    @classmethod
-    def check_bearer_token(cls, token_info_func):
+    def _need_to_add_context_or_scopes(self, func):
+        arguments, has_kwargs = inspect_function_arguments(func)
+        need_context = self.pass_context_arg_name and (has_kwargs or self.pass_context_arg_name in arguments)
+        need_required_scopes = has_kwargs or 'required_scopes' in arguments
+        return need_context, need_required_scopes
+
+    def _generic_check(self, func, exception_msg):
+        need_to_add_context, need_to_add_required_scopes = self._need_to_add_context_or_scopes(func)
+
+        def wrapper(request, *args, required_scopes=None):
+            kwargs = {}
+            if need_to_add_context:
+                kwargs[self.pass_context_arg_name] = request.context
+            if need_to_add_required_scopes:
+                kwargs['required_scopes'] = required_scopes
+            token_info = func(*args, **kwargs)
+            if token_info is self.no_value:
+                return self.no_value
+            if token_info is None:
+                raise OAuthResponseProblem(description=exception_msg, token_response=None)
+            return token_info
+
+        return wrapper
+
+    def check_bearer_token(self, token_info_func):
+        return self._generic_check(token_info_func, 'Provided token is not valid')
+
+    def check_basic_auth(self, basic_info_func):
+        return self._generic_check(basic_info_func, 'Provided authorization is not valid')
+
+    def check_api_key(self, api_key_info_func):
+        return self._generic_check(api_key_info_func, 'Provided apikey is not valid')
+
+    def check_oauth_func(self, token_info_func, scope_validate_func):
+        get_token_info = self._generic_check(token_info_func, 'Provided token is not valid')
+        need_to_add_context, _ = self._need_to_add_context_or_scopes(scope_validate_func)
+
         def wrapper(request, token, required_scopes):
-            token_info = token_info_func(token)
-            if token_info is cls.no_value:
-                return cls.no_value
-            if token_info is None:
-                raise OAuthResponseProblem(
-                    description='Provided token is not valid',
-                    token_response=None
-                )
-
-            return token_info
-        return wrapper
-
-    @classmethod
-    def check_basic_auth(cls, basic_info_func):
-        def wrapper(request, username, password, required_scopes):
-            token_info = basic_info_func(username, password, required_scopes=required_scopes)
-            if token_info is cls.no_value:
-                return cls.no_value
-            if token_info is None:
-                raise OAuthResponseProblem(
-                    description='Provided authorization is not valid',
-                    token_response=None
-                )
-
-            return token_info
-        return wrapper
-
-    @classmethod
-    def check_api_key(cls, api_key_info_func):
-        def wrapper(request, api_key, required_scopes):
-            token_info = api_key_info_func(api_key, required_scopes=required_scopes)
-            if token_info is cls.no_value:
-                return cls.no_value
-            if token_info is None:
-                raise OAuthResponseProblem(
-                    description='Provided apikey is not valid',
-                    token_response=None
-                )
-            return token_info
-        return wrapper
-
-    @classmethod
-    def check_oauth_func(cls, token_info_func, scope_validate_func):
-        def wrapper(request, token, required_scopes):
-
-            token_info = token_info_func(token)
-            if token_info is cls.no_value:
-                return cls.no_value
-            if token_info is None:
-                raise OAuthResponseProblem(
-                    description='Provided token is not valid',
-                    token_response=None
-                )
+            token_info = get_token_info(request, token, required_scopes=required_scopes)
 
             # Fallback to 'scopes' for backward compatibility
             token_scopes = token_info.get('scope', token_info.get('scopes', ''))
 
-            validation = scope_validate_func(required_scopes, token_scopes)
+            kwargs = {}
+            if need_to_add_context:
+                kwargs[self.pass_context_arg_name] = request.context
+            validation = scope_validate_func(required_scopes, token_scopes, **kwargs)
             if not validation:
                 raise OAuthScopeProblem(
                     description='Provided token doesn\'t have the required scope',

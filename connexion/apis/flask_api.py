@@ -17,9 +17,10 @@ logger = logging.getLogger('connexion.apis.flask_api')
 
 class FlaskApi(AbstractAPI):
 
-    def default_security_handler_factory(self):
+    @staticmethod
+    def make_security_handler_factory(pass_context_arg_name):
         """ Create default SecurityHandlerFactory to create all security check handlers """
-        return FlaskSecurityHandlerFactory()
+        return FlaskSecurityHandlerFactory(pass_context_arg_name)
 
     def _set_base_path(self, base_path):
         super(FlaskApi, self)._set_base_path(base_path)
