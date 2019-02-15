@@ -9,7 +9,7 @@ import aiohttp_jinja2
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPNotFound
 from connexion.apis.abstract import AbstractAPI
-from connexion.exceptions import OAuthProblem, OAuthScopeProblem
+from connexion.exceptions import OAuthProblem, OAuthScopeProblem, OAuthResponseProblem
 from connexion.handlers import AuthErrorHandler
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.utils import Jsonifier, is_json_mimetype, yamldumper
@@ -30,7 +30,7 @@ logger = logging.getLogger('connexion.apis.aiohttp_api')
 def oauth_problem_middleware(request, handler):
     try:
         response = yield from handler(request)
-    except (OAuthProblem, OAuthScopeProblem) as oauth_error:
+    except (OAuthProblem, OAuthScopeProblem, OAuthResponseProblem) as oauth_error:
         return web.Response(
             status=oauth_error.code,
             body=json.dumps(oauth_error.description).encode(),
