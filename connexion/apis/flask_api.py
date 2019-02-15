@@ -165,6 +165,9 @@ class FlaskApi(AbstractAPI):
     @classmethod
     def _build_flask_response(cls, mimetype=None, content_type=None,
                               headers=None, status_code=None, data=None):
+        # use content type specified in headers, if set
+        content_type = headers.get("Content-Type", content_type) if headers else None
+        mimetype = content_type.rsplit(";", 1)[0] if content_type else mimetype
         kwargs = {
             'mimetype': mimetype,
             'content_type': content_type,
