@@ -26,7 +26,7 @@ def test_app_run(web_run_app_mock, aiohttp_api_spec_dir):
     app.run(use_default_access_log=True)
     logger = logging.getLogger('connexion.aiohttp_app')
     assert web_run_app_mock.call_args_list == [
-        mock.call(app.app, port=5001, host='0.0.0.0', access_log=logger)
+        mock.call(app.app, port=5001, host='0.0.0.0', access_log=logger, use_default_access_log=True)
     ]
 
 
