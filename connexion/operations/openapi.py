@@ -1,10 +1,11 @@
+import json
 import logging
 from copy import deepcopy
 
 from connexion.operations.abstract import AbstractOperation
 
 from ..decorators.uri_parsing import OpenAPIURIParser
-from ..utils import deep_get, is_null, is_nullable, make_type
+from ..utils import Jsonifier, deep_get, is_null, is_nullable, make_type
 
 logger = logging.getLogger("connexion.operations.openapi3")
 
@@ -258,6 +259,11 @@ class OpenAPIOperation(AbstractOperation):
 
         if body is None:
             body = deepcopy(default_body)
+
+        # Convert if the body is still a string
+        # See: https://github.com/zalando/connexion/issues/892
+        if isinstance(body, bytes):
+            body = Jsonifier(json).loads(body)
 
         if self.body_schema.get("type") != "object":
             if x_body_name in arguments or has_kwargs:
