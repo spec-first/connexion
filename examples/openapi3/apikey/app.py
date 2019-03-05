@@ -4,28 +4,20 @@ Basic example of a resource server
 '''
 
 import connexion
-from connexion.decorators.security import validate_scope
-from connexion.exceptions import OAuthScopeProblem
+from connexion.exceptions import OAuthProblem
 
 TOKEN_DB = {
     'asdf1234567890': {
-        'uid': 100,
-        'scope': ['secret'],
+        'uid': 100
     }
 }
 
 
 def apikey_auth(token, required_scopes):
-    info = TOKEN_DB.get(token, {})
+    info = TOKEN_DB.get(token, None)
 
-    # TODO: openapi spec doesn't support scopes for `apiKey` securitySchemes
-    # https://swagger.io/docs/specification/authentication/#scopes
-    if required_scopes is not None and not validate_scope(required_scopes, info.get('scope', [])):
-        raise OAuthScopeProblem(
-                description='Provided user doesn\'t have the required access rights',
-                required_scopes=required_scopes,
-                token_scopes=info['scope']
-            )
+    if not info:
+        raise OAuthProblem('Invalid token')
 
     return info
 
