@@ -73,7 +73,7 @@ def main():
               help='Returns status code 501, and `Not Implemented Yet` payload, for '
               'the endpoints which handlers are not found.',
               is_flag=True, default=False)
-@click.option('--mock', metavar='MOCKMODE', type=click.Choice(['all', 'notimplemented']),
+@click.option('--mock', type=click.Choice(['all', 'notimplemented']),
               help='Returns example data for all endpoints or for which handlers are not found.')
 @click.option('--hide-spec',
               help='Hides the API spec in JSON format which is by default available at `/swagger.json`.',
