@@ -58,6 +58,8 @@ taken from there, otherwise it's None. This allows authorizing individual
 operations with oauth scope while using basic authentication for
 authentication.
 
+You can find a `minimal Basic Auth example application`_ in Connexion's "examples" folder.
+
 ApiKey Authentication
 ---------------------
 
@@ -66,7 +68,7 @@ With Connexion, the API security definition **must** include a
 semantics as for ``x-basicInfoFunc``, but the function accepts two
 parameters: apikey and required_scopes.
 
-You can find a `minimal Basic Auth example application`_ in Connexion's "examples" folder.
+You can find a `minimal API Key example application`_ in Connexion's "examples" folder.
 
 Bearer Authentication (JWT)
 ---------------------------
@@ -91,4 +93,5 @@ way to start a HTTPS server when using Connexion?
 .. _rfc7662: https://tools.ietf.org/html/rfc7662
 .. _minimal OAuth example application: https://github.com/zalando/connexion/tree/master/examples/swagger2/oauth2
 .. _minimal Basic Auth example application: https://github.com/zalando/connexion/tree/master/examples/swagger2/basicauth
+.. _minimal API Key example application: https://github.com/zalando/connexion/tree/master/examples/oauth2/apikey
 .. _minimal JWT example application: https://github.com/zalando/connexion/tree/master/examples/openapi3/jwt
