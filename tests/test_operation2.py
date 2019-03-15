@@ -5,6 +5,7 @@ import types
 
 import mock
 import pytest
+
 from connexion.apis.flask_api import Jsonifier
 from connexion.decorators.security import (get_tokeninfo_remote,
                                            validate_scope, verify_security)

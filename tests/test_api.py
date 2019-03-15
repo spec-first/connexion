@@ -3,13 +3,13 @@
 import pathlib
 import tempfile
 
+import pytest
+from mock import MagicMock
 from yaml import YAMLError
 
-import pytest
 from connexion import FlaskApi
 from connexion.exceptions import InvalidSpecification, ResolverError
 from connexion.spec import canonical_base_path
-from mock import MagicMock
 
 TEST_FOLDER = pathlib.Path(__file__).parent
 
