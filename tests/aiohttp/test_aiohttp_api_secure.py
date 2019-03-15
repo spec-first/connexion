@@ -2,6 +2,7 @@ import asyncio
 import base64
 
 import ujson
+
 from conftest import TEST_FOLDER
 from connexion import AioHttpApp
 

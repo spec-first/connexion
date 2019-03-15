@@ -1,15 +1,16 @@
-import werkzeug.exceptions as exceptions  # NOQA
-from .apps import AbstractApp  # NOQA
-from .apis import AbstractAPI  # NOQA
-from .exceptions import ProblemException  # NOQA
-from .problem import problem  # NOQA
-from .decorators.produces import NoContent  # NOQA
-from .resolver import Resolution, Resolver, RestyResolver  # NOQA
-
 import sys
 
+import werkzeug.exceptions as exceptions  # NOQA
+
+from .apis import AbstractAPI  # NOQA
+from .apps import AbstractApp  # NOQA
+from .decorators.produces import NoContent  # NOQA
+from .exceptions import ProblemException  # NOQA
 # add operation for backwards compatability
 from .operations import compat
+from .problem import problem  # NOQA
+from .resolver import Resolution, Resolver, RestyResolver  # NOQA
+
 full_name = '{}.operation'.format(__package__)
 sys.modules[full_name] = sys.modules[compat.__name__]
 

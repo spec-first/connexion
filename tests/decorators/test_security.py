@@ -1,15 +1,15 @@
 import json
 
-import requests
-
 import pytest
+import requests
+from mock import MagicMock
+
 from connexion.decorators.security import (get_tokeninfo_func,
                                            get_tokeninfo_remote,
                                            validate_scope, verify_apikey,
                                            verify_basic, verify_oauth)
 from connexion.exceptions import (OAuthProblem, OAuthResponseProblem,
                                   OAuthScopeProblem)
-from mock import MagicMock
 
 
 def test_get_tokeninfo_url(monkeypatch):
