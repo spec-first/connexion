@@ -1,6 +1,7 @@
-from connexion.decorators.parameter import parameter_to_arg
 # we are using "mock" module here for Py 2.7 support
 from mock import MagicMock
+
+from connexion.decorators.parameter import parameter_to_arg
 
 
 def test_injection():

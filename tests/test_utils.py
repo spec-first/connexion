@@ -1,9 +1,10 @@
 import math
 
-import connexion.apps
 import pytest
-from connexion import utils
 from mock import MagicMock
+
+import connexion.apps
+from connexion import utils
 
 
 def test_get_function_from_name():
