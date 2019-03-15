@@ -1,8 +1,8 @@
 import json
 
+import pytest
 from jsonschema.validators import _utils, extend
 
-import pytest
 from conftest import build_app_from_fixture
 from connexion import App
 from connexion.decorators.validation import RequestBodyValidator

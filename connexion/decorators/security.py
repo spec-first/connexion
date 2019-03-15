@@ -6,9 +6,8 @@ import os
 import textwrap
 
 import requests
-from six.moves import http_cookies
-
 from connexion.utils import get_function_from_name
+from six.moves import http_cookies
 
 from ..exceptions import (ConnexionException, OAuthProblem,
                           OAuthResponseProblem, OAuthScopeProblem)

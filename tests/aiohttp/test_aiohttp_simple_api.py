@@ -1,10 +1,10 @@
 import asyncio
 import sys
 
+import pytest
 import yaml
 
 import aiohttp.web
-import pytest
 from conftest import TEST_FOLDER
 from connexion import AioHttpApp
 
