@@ -90,7 +90,7 @@ class AbstractAPI(object):
         logger.debug('Validate Responses: %s', str(validate_responses))
         self.validate_responses = validate_responses
 
-        logger.debug('Strict Request Validation: %s', str(validate_responses))
+        logger.debug('Strict Request Validation: %s', str(strict_validation))
         self.strict_validation = strict_validation
 
         logger.debug('Pythonic params: %s', str(pythonic_params))
