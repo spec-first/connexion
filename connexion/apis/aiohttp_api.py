@@ -3,9 +3,8 @@ import logging
 import re
 from urllib.parse import parse_qs
 
-import jinja2
-
 import aiohttp_jinja2
+import jinja2
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPNotFound, HTTPPermanentRedirect
 from aiohttp.web_middlewares import normalize_path_middleware

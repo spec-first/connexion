@@ -252,4 +252,4 @@ def yamldumper(openapi):
     # Dump long lines as "|".
     yaml.representer.SafeRepresenter.represent_scalar = my_represent_scalar
 
-    return yaml.dump(openapi, default_flow_style=False, allow_unicode=True, Dumper=NoAnchorDumper)
+    return yaml.dump(openapi, allow_unicode=True, Dumper=NoAnchorDumper)
