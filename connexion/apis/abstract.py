@@ -90,7 +90,7 @@ class AbstractAPI(object):
         logger.debug('Validate Responses: %s', str(validate_responses))
         self.validate_responses = validate_responses
 
-        logger.debug('Strict Request Validation: %s', str(validate_responses))
+        logger.debug('Strict Request Validation: %s', str(strict_validation))
         self.strict_validation = strict_validation
 
         logger.debug('Pythonic params: %s', str(pythonic_params))
@@ -101,6 +101,7 @@ class AbstractAPI(object):
 
         if self.options.openapi_spec_available:
             self.add_openapi_json()
+            self.add_openapi_yaml()
 
         if self.options.openapi_console_ui_available:
             self.add_swagger_ui()

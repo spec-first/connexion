@@ -3,14 +3,13 @@ import logging
 import flask
 import six
 import werkzeug.exceptions
-from werkzeug.local import LocalProxy
-
 from connexion.apis import flask_utils
 from connexion.apis.abstract import AbstractAPI
 from connexion.decorators.produces import NoContent
 from connexion.handlers import AuthErrorHandler
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
-from connexion.utils import Jsonifier, is_json_mimetype
+from connexion.utils import Jsonifier, is_json_mimetype, yamldumper
+from werkzeug.local import LocalProxy
 
 logger = logging.getLogger('connexion.apis.flask_api')
 
@@ -38,6 +37,28 @@ class FlaskApi(AbstractAPI):
         self.blueprint.add_url_rule(self.options.openapi_spec_path,
                                     endpoint_name,
                                     lambda: flask.jsonify(self.specification.raw))
+
+    def add_openapi_yaml(self):
+        """
+        Adds spec yaml to {base_path}/swagger.yaml
+        or {base_path}/openapi.yaml (for oas3)
+        """
+        if not self.options.openapi_spec_path.endswith("json"):
+            return
+
+        openapi_spec_path_yaml = self.options.openapi_spec_path[:-len("json")] + "yaml"
+        logger.debug('Adding spec yaml: %s/%s', self.base_path,
+                     openapi_spec_path_yaml)
+        endpoint_name = "{name}_openapi_yaml".format(name=self.blueprint.name)
+        self.blueprint.add_url_rule(
+            openapi_spec_path_yaml,
+            endpoint_name,
+            lambda: FlaskApi._build_flask_response(
+                status_code=200,
+                content_type="text/yaml",
+                data=yamldumper(self.specification.raw)
+            )
+        )
 
     def add_swagger_ui(self):
         """

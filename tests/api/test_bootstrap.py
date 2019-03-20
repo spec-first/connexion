@@ -1,11 +1,11 @@
 import json
 
 import jinja2
+import mock
+import pytest
 import yaml
 from openapi_spec_validator.loaders import ExtendedSafeLoader
 
-import mock
-import pytest
 from conftest import TEST_FOLDER, build_app_from_fixture
 from connexion import App
 from connexion.exceptions import InvalidSpecification
@@ -99,6 +99,18 @@ def test_swagger_json_app(simple_api_spec_dir, spec):
     url = url.format(spec=spec.replace("yaml", "json"))
     spec_json = app_client.get(url)  # type: flask.Response
     assert spec_json.status_code == 200
+
+
+@pytest.mark.parametrize("spec", SPECS)
+def test_swagger_yaml_app(simple_api_spec_dir, spec):
+    """ Verify the spec yaml file is returned for default setting passed to app. """
+    app = App(__name__, port=5001, specification_dir=simple_api_spec_dir, debug=True)
+    app.add_api(spec)
+    app_client = app.app.test_client()
+    url = '/v1.0/{spec}'
+    url = url.format(spec=spec)
+    spec_response = app_client.get(url)  # type: flask.Response
+    assert spec_response.status_code == 200
 
 
 @pytest.mark.parametrize("spec", SPECS)

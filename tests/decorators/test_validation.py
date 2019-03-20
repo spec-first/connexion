@@ -1,10 +1,10 @@
-from jsonschema import ValidationError
-
 import pytest
+from jsonschema import ValidationError
+from mock import MagicMock
+
 from connexion.decorators.validation import ParameterValidator
 from connexion.json_schema import (Draft4RequestValidator,
                                    Draft4ResponseValidator)
-from mock import MagicMock
 
 
 def test_get_valid_parameter():

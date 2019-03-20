@@ -2,7 +2,6 @@ import abc
 import logging
 
 import six
-
 from connexion.operations.secure import SecureOperation
 
 from ..decorators.metrics import UWSGIMetricsCollector

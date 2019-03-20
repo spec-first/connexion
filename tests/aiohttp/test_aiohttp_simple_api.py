@@ -1,8 +1,10 @@
 import asyncio
 import sys
 
-import aiohttp.web
 import pytest
+import yaml
+
+import aiohttp.web
 from conftest import TEST_FOLDER
 from connexion import AioHttpApp
 
@@ -62,6 +64,22 @@ def test_swagger_json(aiohttp_api_spec_dir, aiohttp_client):
 
 
 @asyncio.coroutine
+def test_swagger_yaml(aiohttp_api_spec_dir, aiohttp_client):
+    """ Verify the swagger.yaml file is returned for default setting passed to app. """
+    app = AioHttpApp(__name__, port=5001,
+                     specification_dir=aiohttp_api_spec_dir,
+                     debug=True)
+    api = app.add_api('swagger_simple.yaml')
+
+    app_client = yield from aiohttp_client(app.app)
+    spec_response = yield from app_client.get('/v1.0/swagger.yaml')
+    data_ = yield from spec_response.read()
+
+    assert spec_response.status == 200
+    assert api.specification.raw == yaml.load(data_)
+
+
+@asyncio.coroutine
 def test_no_swagger_json(aiohttp_api_spec_dir, aiohttp_client):
     """ Verify the swagger.json file is not returned when set to False when creating app. """
     options = {"swagger_json": False}
@@ -74,6 +92,21 @@ def test_no_swagger_json(aiohttp_api_spec_dir, aiohttp_client):
     app_client = yield from aiohttp_client(app.app)
     swagger_json = yield from app_client.get('/v1.0/swagger.json')  # type: flask.Response
     assert swagger_json.status == 404
+
+
+@asyncio.coroutine
+def test_no_swagger_yaml(aiohttp_api_spec_dir, aiohttp_client):
+    """ Verify the swagger.json file is not returned when set to False when creating app. """
+    options = {"swagger_json": False}
+    app = AioHttpApp(__name__, port=5001,
+                     specification_dir=aiohttp_api_spec_dir,
+                     options=options,
+                     debug=True)
+    api = app.add_api('swagger_simple.yaml')
+
+    app_client = yield from aiohttp_client(app.app)
+    spec_response = yield from app_client.get('/v1.0/swagger.yaml')  # type: flask.Response
+    assert spec_response.status == 404
 
 
 @asyncio.coroutine

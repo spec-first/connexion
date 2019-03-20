@@ -2,6 +2,7 @@ import functools
 import importlib
 
 import six
+import yaml
 
 # Python 2/3 compatibility:
 try:
@@ -205,3 +206,50 @@ def has_coroutine(function, api=None):
     else:  # pragma: 3 no cover
         # there's no asyncio in python 2
         return False
+
+
+def yamldumper(openapi):
+    """
+    Returns a nicely-formatted yaml spec.
+    :param openapi: a spec dictionary.
+    :return: a nicely-formatted, serialized yaml spec.
+    """
+    def should_use_block(value):
+        char_list = (
+          u"\u000a"  # line feed
+          u"\u000d"  # carriage return
+          u"\u001c"  # file separator
+          u"\u001d"  # group separator
+          u"\u001e"  # record separator
+          u"\u0085"  # next line
+          u"\u2028"  # line separator
+          u"\u2029"  # paragraph separator
+        )
+        for c in char_list:
+            if c in value:
+                return True
+        return False
+
+    def my_represent_scalar(self, tag, value, style=None):
+        if should_use_block(value):
+            style = '|'
+        else:
+            style = self.default_style
+
+        node = yaml.representer.ScalarNode(tag, value, style=style)
+        if self.alias_key is not None:
+            self.represented_objects[self.alias_key] = node
+        return node
+
+    class NoAnchorDumper(yaml.dumper.SafeDumper):
+        """A yaml Dumper that does not replace duplicate entries
+           with yaml anchors.
+        """
+
+        def ignore_aliases(self, *args):
+            return True
+
+    # Dump long lines as "|".
+    yaml.representer.SafeRepresenter.represent_scalar = my_represent_scalar
+
+    return yaml.dump(openapi, allow_unicode=True, Dumper=NoAnchorDumper)
