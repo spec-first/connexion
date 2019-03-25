@@ -85,7 +85,7 @@ paths:
         204:
           description: success no content.
 
-  /users:
+  /users/:
     get:
       summary: Test get users
       description: Get test users list

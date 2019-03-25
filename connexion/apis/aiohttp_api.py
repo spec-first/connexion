@@ -6,7 +6,8 @@ from urllib.parse import parse_qs
 import aiohttp_jinja2
 import jinja2
 from aiohttp import web
-from aiohttp.web_exceptions import HTTPNotFound
+from aiohttp.web_exceptions import HTTPNotFound, HTTPPermanentRedirect
+from aiohttp.web_middlewares import normalize_path_middleware
 from connexion.apis.abstract import AbstractAPI
 from connexion.exceptions import OAuthProblem, OAuthScopeProblem
 from connexion.handlers import AuthErrorHandler
@@ -40,8 +41,19 @@ def oauth_problem_middleware(request, handler):
 
 class AioHttpApi(AbstractAPI):
     def __init__(self, *args, **kwargs):
+        # NOTE we use HTTPPermanentRedirect (308) because
+        # clients sometimes turn POST requests into GET requests
+        # on 301, 302, or 303
+        # see https://tools.ietf.org/html/rfc7538
+        trailing_slash_redirect = normalize_path_middleware(
+            append_slash=True,
+            redirect_class=HTTPPermanentRedirect
+        )
         self.subapp = web.Application(
-            middlewares=[oauth_problem_middleware]
+            middlewares=[
+                oauth_problem_middleware,
+                trailing_slash_redirect
+            ]
         )
         AbstractAPI.__init__(self, *args, **kwargs)
 
@@ -118,7 +130,6 @@ class AioHttpApi(AbstractAPI):
                      console_ui_path)
 
         for path in (
-            console_ui_path,
             console_ui_path + '/',
             console_ui_path + '/index.html',
         ):
@@ -128,8 +139,26 @@ class AioHttpApi(AbstractAPI):
                 self._get_swagger_ui_home
             )
 
+        # we have to add an explicit redirect instead of relying on the
+        # normalize_path_middleware because we also serve static files
+        # from this dir (below)
+
+        @asyncio.coroutine
+        def redirect(request):
+            raise web.HTTPMovedPermanently(
+                location=self.base_path + console_ui_path + '/'
+            )
+
+        self.subapp.router.add_route(
+            'GET',
+            console_ui_path,
+            redirect
+        )
+
+        # this route will match and get a permission error when trying to
+        # serve index.html, so we add the redirect above.
         self.subapp.router.add_static(
-            console_ui_path + '/',
+            console_ui_path,
             path=str(self.options.openapi_console_ui_from_dir),
             name='swagger_ui_static'
         )
