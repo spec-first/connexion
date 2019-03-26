@@ -178,7 +178,7 @@ def run(spec_file,
         api_extra_args['resolver'] = resolver
 
     app_cls = connexion.utils.get_function_from_name(
-      AVAILABLE_APPS[app_framework]
+        AVAILABLE_APPS[app_framework]
     )
 
     options = {
@@ -205,7 +205,7 @@ def run(spec_file,
             server=server,
             debug=debug)
 
-    
+
 @main.command()
 @click.argument('spec_file')
 @click.argument('base_module_path', required=False)
@@ -301,6 +301,6 @@ def test(spec_file,
                 strict_validation=strict_validation,
                 **api_extra_args)
 
-    
+
 if __name__ == '__main__':  # pragma: no cover
     main()
