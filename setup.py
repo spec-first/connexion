@@ -33,7 +33,7 @@ install_requires = [
 ]
 
 swagger_ui_require = 'swagger-ui-bundle>=0.0.2'
-flask_require = 'flask>=0.10.1'
+flask_require = 'flask>=0.12.3'
 aiohttp_require = [
     'aiohttp>=2.3.10,<3.5.2',
     'aiohttp-jinja2>=0.14.0'
