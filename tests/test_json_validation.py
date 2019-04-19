@@ -64,6 +64,10 @@ def test_writeonly(json_validation_spec_dir, spec):
     app = build_app_from_fixture(json_validation_spec_dir, spec, validate_responses=True)
     app_client = app.app.test_client()
 
+
+    res = app_client.post('/v1.0/user', data='', content_type='application/json') # type: flask.Response
+    assert res.status_code == 400
+
     res = app_client.post('/v1.0/user', data=json.dumps({'name': 'max', 'password': '1234'}), content_type='application/json') # type: flask.Response
     assert res.status_code == 200
     assert 'password' not in json.loads(res.data.decode())

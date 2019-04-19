@@ -424,9 +424,14 @@ class AbstractOperation(SecureOperation):
                                      self.api,
                                      strict_validation=self.strict_validation)
         if self.body_schema:
+            try:
+                body_required = self.request_body['required']
+            except (AttributeError, KeyError):
+                body_required = False
             yield RequestBodyValidator(self.body_schema, self.consumes, self.api,
                                        is_nullable(self.body_definition),
-                                       strict_validation=self.strict_validation)
+                                       strict_validation=self.strict_validation,
+                                       body_required=body_required)
 
     @property
     def __response_validation_decorator(self):

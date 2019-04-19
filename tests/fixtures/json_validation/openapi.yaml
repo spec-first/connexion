@@ -54,6 +54,7 @@ paths:
     post:
       operationId: fakeapi.hello.post_user
       requestBody:
+        required: true
         content:
           application/json:
             schema:

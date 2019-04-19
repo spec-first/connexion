@@ -82,7 +82,7 @@ def validate_parameter_list(request_params, spec_params):
 class RequestBodyValidator(object):
 
     def __init__(self, schema, consumes, api, is_null_value_valid=False, validator=None,
-                 strict_validation=False):
+                 strict_validation=False, body_required=False):
         """
         :param schema: The schema of the request body
         :param consumes: The list of content types the operation consumes
@@ -91,6 +91,7 @@ class RequestBodyValidator(object):
                           against API schema. Default is jsonschema.Draft4Validator.
         :type validator: jsonschema.IValidator
         :param strict_validation: Flag indicating if parameters not in spec are allowed
+        :param body_required: Flag indicating if `requestBody.required` is set.
         """
         self.consumes = consumes
         self.schema = schema
@@ -100,6 +101,7 @@ class RequestBodyValidator(object):
         self.validator = validatorClass(schema, format_checker=draft4_format_checker)
         self.api = api
         self.strict_validation = strict_validation
+        self.body_required = body_required
 
     def validate_formdata_parameter_list(self, request):
         request_params = request.form.keys()
@@ -118,6 +120,11 @@ class RequestBodyValidator(object):
                 data = request.json
 
                 empty_body = not(request.body or request.form or request.files)
+                if self.body_required and empty_body:
+                    return problem(400,
+                                   "Bad Request",
+                                   "Request body is required"
+                                   )
                 if data is None and not empty_body and not self.is_null_value_valid:
                     try:
                         ctype_is_json = is_json_mimetype(request.headers.get("Content-Type", ""))
