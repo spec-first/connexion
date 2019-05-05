@@ -321,7 +321,7 @@ class _HttpNotFoundError(HTTPNotFound):
     def __init__(self):
         self.name = 'Not Found'
         self.description = (
-            'The requested URL was not found on the server.  '
+            'The requested URL was not found on the server. '
             'If you entered the URL manually please check your spelling and '
             'try again.'
         )

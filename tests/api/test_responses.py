@@ -90,7 +90,7 @@ def test_not_content_response(simple_app):
 
     get_no_content_response = app_client.get('/v1.0/test_no_content_response')
     assert get_no_content_response.status_code == 204
-    assert get_no_content_response.content_length == 0
+    assert get_no_content_response.content_length in [0, None]
 
 
 def test_pass_through(simple_app):
@@ -244,7 +244,10 @@ def test_post_wrong_content_type(simple_app):
         environ = builder.get_environ()
     finally:
         builder.close()
-    environ.pop('CONTENT_TYPE')
+
+    content_type = 'CONTENT_TYPE'
+    if content_type in environ:
+        environ.pop('CONTENT_TYPE')
     # we cannot just call app_client.open() since app_client is a flask.testing.FlaskClient
     # which overrides werkzeug.test.Client.open() but does not allow passing an environment
     # directly
