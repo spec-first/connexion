@@ -217,7 +217,7 @@ class Swagger2Specification(Specification):
         try:
             jsonschema.validate(spec, cls.openapi_schema)
         except jsonschema.exceptions.ValidationError as e:
-            return InvalidSpecification.create_from(e)
+            raise InvalidSpecification.create_from(e)
 
 
 class OpenAPISpecification(Specification):
@@ -246,7 +246,7 @@ class OpenAPISpecification(Specification):
         try:
             jsonschema.validate(spec, cls.openapi_schema)
         except jsonschema.exceptions.ValidationError as e:
-            return InvalidSpecification.create_from(e)
+            raise InvalidSpecification.create_from(e)
 
     @property
     def base_path(self):
