@@ -4,6 +4,7 @@ example of aiohttp connexion running behind a path-altering reverse-proxy
 '''
 
 import json
+import logging
 
 import connexion
 
@@ -28,6 +29,11 @@ class XPathForwarded(XForwardedBase):
 
     @web.middleware
     async def middleware(self, request, handler):
+        logging.warn(
+            "this demo is not secure by default!! "
+            "You'll want to make sure these headers are coming from your proxy, "
+            "and not directly from users on the web!"
+            )
         try:
             overrides = {}
             headers = request.headers
