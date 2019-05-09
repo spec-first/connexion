@@ -8,10 +8,10 @@ import json
 import pathlib
 from collections.abc import Mapping
 from urllib.parse import urlsplit
+import pkg_resources
 
 import jinja2
 import jsonschema
-import requests
 import yaml
 from openapi_spec_validator.exceptions import OpenAPIValidationError
 
@@ -167,8 +167,8 @@ class Swagger2Specification(Specification):
     yaml_name = 'swagger.yaml'
     operation_cls = Swagger2Operation
 
-    response = requests.get('https://raw.githubusercontent.com/OAI/OpenAPI-Specification/6d17b631fff35186c495b9e7d340222e19d60a71/schemas/v2.0/schema.json')
-    openapi_schema = json.loads(response.text)
+    schema_string = pkg_resources.resource_string('connexion', 'resources/schemas/v2.0/schema.json')
+    openapi_schema = json.loads(schema_string.decode('utf-8'))
 
     @classmethod
     def _set_defaults(cls, spec):
@@ -226,8 +226,8 @@ class OpenAPISpecification(Specification):
     yaml_name = 'openapi.yaml'
     operation_cls = OpenAPIOperation
 
-    response = requests.get('https://raw.githubusercontent.com/OAI/OpenAPI-Specification/6d17b631fff35186c495b9e7d340222e19d60a71/schemas/v3.0/schema.json')
-    openapi_schema = json.loads(response.text)
+    schema_string = pkg_resources.resource_string('connexion', 'resources/schemas/v3.0/schema.json')
+    openapi_schema = json.loads(schema_string.decode('utf-8'))
 
     @classmethod
     def _set_defaults(cls, spec):
