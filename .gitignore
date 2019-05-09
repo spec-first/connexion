@@ -12,5 +12,5 @@ htmlcov/
 .tox/
 .idea/
 .vscode/
-src/
 venv/
+src/
