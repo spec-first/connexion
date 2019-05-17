@@ -72,6 +72,18 @@ You can also disable it at the API level:
     app = connexion.FlaskApp(__name__, specification_dir='openapi/')
     app.add_api('my_api.yaml', options=options)
 
+You can pass custom Swagger UI `Configuration Parameters`_ like e.g.
+`displayOperationId` through the `swagger_ui_config` option:
+
+.. code-block:: python
+
+    options = {"swagger_ui_config": {"displayOperationId": True}}
+    app = connexion.FlaskApp(__name__, specification_dir='openapi/',
+                        options=options)
+
+
+.. _Configuration Parameters: https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/#parameters
+
 Server Backend
 --------------
 By default connexion uses the default flask server but you can also use Tornado_ or gevent_ as the HTTP server, to do so set server
