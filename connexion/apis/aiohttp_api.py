@@ -84,7 +84,7 @@ def error_to_problem_middleware(request, handler):
         response = _generic_problem(HTTPStatus.INTERNAL_SERVER_ERROR, exc)
 
     if isinstance(response, ConnexionResponse):
-        response = await AioHttpApi.get_response(response)
+        response = yield from AioHttpApi.get_response(response)
     return response
 
 
