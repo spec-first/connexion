@@ -52,12 +52,13 @@ class InvalidSpecification(ConnexionException, ValidationError):
     pass
 
 
-class NonConformingResponse(ConnexionException):
+class NonConformingResponse(ProblemException):
     def __init__(self, reason='Unknown Reason', message=None):
         """
         :param reason: Reason why the response did not conform to the specification
         :type reason: str
         """
+        super(NonConformingResponse, self).__init__(status=500, title=reason, detail=message)
         self.reason = reason
         self.message = message
 
@@ -66,6 +67,18 @@ class NonConformingResponse(ConnexionException):
 
     def __repr__(self):  # pragma: no cover
         return '<NonConformingResponse: {}>'.format(self.reason)
+
+
+class BadRequestProblem(ProblemException):
+
+    def __init__(self, title='Bad Request', detail=None):
+        super(BadRequestProblem, self).__init__(status=400, title=title, detail=detail)
+
+
+class UnsupportedMediaTypeProblem(ProblemException):
+
+    def __init__(self, title="Unsupported Media Type", detail=None):
+        super(UnsupportedMediaTypeProblem, self).__init__(status=415, title=title, detail=detail)
 
 
 class NonConformingResponseBody(NonConformingResponse):

@@ -8,10 +8,9 @@ import six
 from jsonschema import Draft4Validator, ValidationError, draft4_format_checker
 from werkzeug import FileStorage
 
-from ..exceptions import ExtraParameterProblem
+from ..exceptions import ExtraParameterProblem, BadRequestProblem, UnsupportedMediaTypeProblem
 from ..http_facts import FORM_CONTENT_TYPES
 from ..json_schema import Draft4RequestValidator, Draft4ResponseValidator
-from ..problem import problem
 from ..utils import all_json, boolean, is_json_mimetype, is_null, is_nullable
 
 logger = logging.getLogger('connexion.decorators.validation')
@@ -126,14 +125,10 @@ class RequestBodyValidator(object):
 
                     if ctype_is_json:
                         # Content-Type is json but actual body was not parsed
-                        return problem(400,
-                                       "Bad Request",
-                                       "Request body is not valid JSON"
-                                       )
+                        raise BadRequestProblem(detail="Request body is not valid JSON")
                     else:
                         # the body has contents that were not parsed as JSON
-                        return problem(415,
-                                       "Unsupported Media Type",
+                        raise UnsupportedMediaTypeProblem(
                                        "Invalid Content-type ({content_type}), expected JSON data".format(
                                            content_type=request.headers.get("Content-Type", "")
                                        ))
@@ -163,7 +158,7 @@ class RequestBodyValidator(object):
                                 errs += [str(e)]
                                 print(errs)
                     if errs:
-                        return problem(400, 'Bad Request', errs)
+                        raise BadRequestProblem(detail=errs)
 
                 error = self.validate_schema(data, request.url)
                 if error:
@@ -185,7 +180,7 @@ class RequestBodyValidator(object):
             logger.error("{url} validation error: {error}".format(url=url,
                                                                   error=exception.message),
                          extra={'validator': 'body'})
-            return problem(400, 'Bad Request', str(exception.message))
+            raise BadRequestProblem(detail=str(exception.message))
 
         return None
 
@@ -323,26 +318,22 @@ class ParameterValidator(object):
             for param in self.parameters.get('query', []):
                 error = self.validate_query_parameter(param, request)
                 if error:
-                    response = problem(400, 'Bad Request', error)
-                    return self.api.get_response(response)
+                    raise BadRequestProblem(detail=error)
 
             for param in self.parameters.get('path', []):
                 error = self.validate_path_parameter(param, request)
                 if error:
-                    response = problem(400, 'Bad Request', error)
-                    return self.api.get_response(response)
+                    raise BadRequestProblem(detail=error)
 
             for param in self.parameters.get('header', []):
                 error = self.validate_header_parameter(param, request)
                 if error:
-                    response = problem(400, 'Bad Request', error)
-                    return self.api.get_response(response)
+                    raise BadRequestProblem(detail=error)
 
             for param in self.parameters.get('formData', []):
                 error = self.validate_formdata_parameter(param["name"], param, request)
                 if error:
-                    response = problem(400, 'Bad Request', error)
-                    return self.api.get_response(response)
+                    raise BadRequestProblem(detail=error)
 
             return function(request)
 
