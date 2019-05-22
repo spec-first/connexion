@@ -1,8 +1,6 @@
 from jsonschema.exceptions import ValidationError
 from werkzeug.exceptions import Forbidden, Unauthorized
 
-from .problem import problem
-
 
 class ConnexionException(Exception):
     pass
@@ -22,12 +20,6 @@ class ProblemException(ConnexionException):
         self.instance = instance
         self.headers = headers
         self.ext = ext
-
-    def to_problem(self):
-        return problem(status=self.status, title=self.title, detail=self.detail,
-                       type=self.type, instance=self.instance, headers=self.headers,
-                       ext=self.ext)
-
 
 class ResolverError(LookupError):
     def __init__(self, reason='Unknown reason', exc_info=None):
@@ -67,6 +59,18 @@ class NonConformingResponse(ProblemException):
 
     def __repr__(self):  # pragma: no cover
         return '<NonConformingResponse: {}>'.format(self.reason)
+
+
+class AuthenticationProblem(ProblemException):
+
+    def __init__(self, status, title, detail):
+        super(AuthenticationProblem, self).__init__(status=status, title=title, detail=detail)
+
+
+class ResolverProblem(ProblemException):
+
+    def __init__(self, status, title, detail):
+        super(ResolverProblem, self).__init__(status=status, title=title, detail=detail)
 
 
 class BadRequestProblem(ProblemException):
