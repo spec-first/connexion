@@ -14,7 +14,7 @@ logger = logging.getLogger('connexion.app')
 class AbstractApp(object):
     def __init__(self, import_name, api_cls, port=None, specification_dir='',
                  host=None, server=None, arguments=None, auth_all_paths=False, debug=False,
-                 resolver=None, options=None):
+                 resolver=None, options=None, skip_error_handlers=False):
         """
         :param import_name: the name of the application package
         :type import_name: str
@@ -63,8 +63,9 @@ class AbstractApp(object):
 
         logger.debug('Specification directory: %s', self.specification_dir)
 
-        logger.debug('Setting error handlers')
-        self.set_errors_handlers()
+        if not skip_error_handlers:
+            logger.debug('Setting error handlers')
+            self.set_errors_handlers()
 
     @abc.abstractmethod
     def create_app(self):
