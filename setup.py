@@ -35,7 +35,7 @@ install_requires = [
 swagger_ui_require = 'swagger-ui-bundle>=0.0.2'
 flask_require = 'flask>=0.10.1'
 aiohttp_require = [
-    'aiohttp>=2.3.10,<3.5.2',
+    'aiohttp>=2.3.10',
     'aiohttp-jinja2>=0.14.0'
 ]
 ujson_require = 'ujson>=1.35'
