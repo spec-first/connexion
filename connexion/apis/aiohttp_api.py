@@ -56,7 +56,7 @@ def _generic_problem(http_status: HTTPStatus, exc: Exception = None):
 
     return problem(
         status=http_status.value,
-        title=f"{http_status.value} {http_status.phrase}",
+        title="{0.value} {0.phrase}".format(http_status),
         detail=http_status.description,
         ext=extra,
     )
