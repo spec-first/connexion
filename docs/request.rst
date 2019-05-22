@@ -91,16 +91,12 @@ available type castings are:
 | object       | dict        |
 +--------------+-------------+
 
-In the OpenAPI 2.0 specification, if the `array` type is used you can define the
-`collectionFormat` used to deserialize the input. Connexion currently
-supports collection formats "pipes" and "csv". The default format is "csv".
-
 .. note:: For more details about `collectionFormat`s please check the
           official `OpenAPI 2.0 Specification`_.
 
 
 In the `OpenAPI 2.0 Specification`_ if you use the ``array`` type,
-you can define the ``collectionFormat`` do set the deserialization behavior.
+you can define the ``collectionFormat`` to set the deserialization behavior.
 Connexion currently supports "pipes" and "csv" as collection formats.
 The default format is "csv".
 
