@@ -156,19 +156,6 @@ def test_redirect_response_endpoint(simple_app):
     assert resp.status_code == 302
 
 
-def test_default_object_body(simple_app):
-    app_client = simple_app.app.test_client()
-    resp = app_client.post('/v1.0/test-default-object-body')
-    assert resp.status_code == 200
-    response = json.loads(resp.data.decode('utf-8', 'replace'))
-    assert response['stack'] == {'image_version': 'default_image'}
-
-    resp = app_client.post('/v1.0/test-default-integer-body')
-    assert resp.status_code == 200
-    response = json.loads(resp.data.decode('utf-8', 'replace'))
-    assert response == 1
-
-
 def test_empty_object_body(simple_app):
     app_client = simple_app.app.test_client()
     resp = app_client.post(
