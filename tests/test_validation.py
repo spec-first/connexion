@@ -6,8 +6,8 @@ import pytest
 from mock import MagicMock
 
 from connexion.apis.flask_api import FlaskApi
-from connexion.exceptions import BadRequestProblem
 from connexion.decorators.validation import ParameterValidator
+from connexion.exceptions import BadRequestProblem
 
 
 def test_parameter_validator(monkeypatch):

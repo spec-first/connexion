@@ -21,6 +21,7 @@ class ProblemException(ConnexionException):
         self.headers = headers
         self.ext = ext
 
+
 class ResolverError(LookupError):
     def __init__(self, reason='Unknown reason', exc_info=None):
         """

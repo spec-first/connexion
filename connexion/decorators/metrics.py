@@ -2,8 +2,9 @@ import functools
 import os
 import time
 
-from werkzeug.exceptions import HTTPException
 from connexion.exceptions import ProblemException
+from werkzeug.exceptions import HTTPException
+
 try:
     import uwsgi_metrics
     HAS_UWSGI_METRICS = True  # pragma: no cover

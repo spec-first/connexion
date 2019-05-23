@@ -5,8 +5,8 @@ import pytest
 from mock import MagicMock
 
 import connexion
-from connexion.exceptions import ProblemException
 from connexion.decorators.metrics import UWSGIMetricsCollector
+from connexion.exceptions import ProblemException
 
 
 def test_timer(monkeypatch):
