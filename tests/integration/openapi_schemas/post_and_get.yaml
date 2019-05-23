@@ -17,9 +17,19 @@ paths:
     post:
       summary: Create a pet
       operationId: tests.integration.flask_setup.post_trans_record
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Transaction"
       responses:
         '201':
-          description: Null response
+          description: Transaction object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
   /transactions/{transactionId}:
     get:
       summary: A specific Transaction

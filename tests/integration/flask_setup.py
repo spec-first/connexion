@@ -1,9 +1,11 @@
 from __future__ import absolute_import
 
-import connexion
-from collections import OrderedDict
-import flask
 import uuid
+from collections import OrderedDict
+
+import flask
+
+import connexion
 
 API_APP = None
 
@@ -28,6 +30,8 @@ def get_trans_list():
 def post_trans_record():
     request_obj = flask.request.json
     request_obj['transaction']['id'] = uuid.uuid4()
+    request_obj['transaction'].pop('password')
+    request_obj['transaction']['status'] = 'new'
     _INTERNAL_CACHE[request_obj['transaction']['id']] = request_obj
     return flask.jsonify(request_obj), 201
 
