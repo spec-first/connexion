@@ -11,8 +11,7 @@ from aiohttp import web
 from aiohttp.web_exceptions import HTTPNotFound, HTTPPermanentRedirect
 from aiohttp.web_middlewares import normalize_path_middleware
 from connexion.apis.abstract import AbstractAPI
-from connexion.exceptions import (OAuthProblem, OAuthScopeProblem,
-                                  ProblemException)
+from connexion.exceptions import ProblemException
 from connexion.handlers import AuthErrorHandler
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.problem import problem
@@ -36,20 +35,6 @@ except ImportError:  # pragma: no cover
 logger = logging.getLogger('connexion.apis.aiohttp_api')
 
 
-@web.middleware
-@asyncio.coroutine
-def oauth_problem_middleware(request, handler):
-    try:
-        response = yield from handler(request)
-    except (OAuthProblem, OAuthScopeProblem) as oauth_error:
-        return web.Response(
-            status=oauth_error.code,
-            body=json.dumps(oauth_error.description).encode(),
-            content_type='application/problem+json'
-        )
-    return response
-
-
 def _generic_problem(http_status: HTTPStatus, exc: Exception = None):
     extra = None
     if exc is not None:
@@ -71,7 +56,7 @@ def _generic_problem(http_status: HTTPStatus, exc: Exception = None):
 
 @web.middleware
 @asyncio.coroutine
-def error_to_problem_middleware(request, handler):
+def problems_middleware(request, handler):
     try:
         response = yield from handler(request)
     except ProblemException as exc:
@@ -112,8 +97,7 @@ class AioHttpApi(AbstractAPI):
         )
         self.subapp = web.Application(
             middlewares=[
-                oauth_problem_middleware,
-                error_to_problem_middleware,
+                problems_middleware,
                 trailing_slash_redirect
             ]
         )
