@@ -10,7 +10,7 @@ from flask import json
 
 from ..apis.flask_api import FlaskApi
 from ..exceptions import ProblemException
-from ..problem import problem
+from ..problem import problem, problem_from_object
 from .abstract import AbstractApp
 
 logger = logging.getLogger('connexion.app')
@@ -40,10 +40,7 @@ class FlaskApp(AbstractApp):
         :type exception: Exception
         """
         if isinstance(exception, ProblemException):
-            response = problem(
-                status=exception.status, title=exception.title, detail=exception.detail,
-                type=exception.type, instance=exception.instance, headers=exception.headers,
-                ext=exception.ext)
+            response = problem_from_object(exception)
         else:
             if not isinstance(exception, werkzeug.exceptions.HTTPException):
                 exception = werkzeug.exceptions.InternalServerError()

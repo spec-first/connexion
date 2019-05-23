@@ -9,7 +9,7 @@ from urllib.parse import parse_qs
 import aiohttp_jinja2
 import jinja2
 from aiohttp import web
-from aiohttp.web_exceptions import HTTPNotFound, HTTPPermanentRedirect
+from aiohttp.web_exceptions import HTTPNotFound, HTTPPermanentRedirect, ProblemException
 from aiohttp.web_middlewares import normalize_path_middleware
 from connexion.apis.abstract import AbstractAPI
 from connexion.exceptions import ProblemException
@@ -17,7 +17,7 @@ from connexion.handlers import AuthErrorHandler
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.problem import problem
 from connexion.utils import Jsonifier, is_json_mimetype, yamldumper
-from werkzeug.exceptions import HTTPException as werkzeug_HTTPException
+from connexion.problem import problem_from_object
 
 try:
     import ujson as json
@@ -51,36 +51,22 @@ def _generic_problem(http_status: HTTPStatus, exc: Exception = None):
 
 @web.middleware
 @asyncio.coroutine
-def problems_middleware(request, handler):
+def generic_problem_middleware(request, handler):
     try:
         response = yield from handler(request)
-    except ProblemException as exc:
-        response = exc.to_problem()
-    except (werkzeug_HTTPException, _HttpNotFoundError) as exc:
-        response = problem(status=exc.code, title=exc.name, detail=exc.description)
-    except web.HTTPError as exc:
-        if exc.text == "{}: {}".format(exc.status, exc.reason):
-            detail = HTTPStatus(exc.status).description
-        else:
-            detail = exc.text
-        response = problem(status=exc.status, title=exc.reason, detail=detail)
-    except (
-        web.HTTPException,  # eg raised HTTPRedirection or HTTPSuccessful
-        asyncio.CancelledError,  # skipped in default web_protocol
-    ):
-        # leave this to default handling in aiohttp.web_protocol.RequestHandler.start()
-        raise
-    except asyncio.TimeoutError as exc:
-        # overrides 504 from aiohttp.web_protocol.RequestHandler.start()
-        logger.debug('Request handler timed out.', exc_info=exc)
-        response = _generic_problem(HTTPStatus.GATEWAY_TIMEOUT, exc)
-    except Exception as exc:
-        # overrides 500 from aiohttp.web_protocol.RequestHandler.start()
-        logger.exception('Error handling request', exc_info=exc)
-        response = _generic_problem(HTTPStatus.INTERNAL_SERVER_ERROR, exc)
-
-    if isinstance(response, ConnexionResponse):
-        response = yield from AioHttpApi.get_response(response)
+    except (OAuthProblem, OAuthScopeProblem) as oauth_error:
+        return web.Response(
+            status=oauth_error.code,
+            body=json.dumps(oauth_error.description).encode(),
+            content_type='application/problem+json'
+        )
+    except ProblemException as prob_error:
+        problem_response = problem_from_object(prob_error)
+        return web.Response(
+            status=problem_response.status_code,
+            body=json.dumps(problem_response.body).encode(),
+            content_type=problem_response.content_type
+        )
     return response
 
 
@@ -96,7 +82,7 @@ class AioHttpApi(AbstractAPI):
         )
         self.subapp = web.Application(
             middlewares=[
-                problems_middleware,
+                generic_problem_middleware,
                 trailing_slash_redirect
             ]
         )

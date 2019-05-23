@@ -40,3 +40,10 @@ def problem(status, title, detail, type=None, instance=None, headers=None, ext=N
     return ConnexionResponse(status, mimetype, content_type,
                              body=problem_response,
                              headers=headers)
+
+
+def problem_from_object(exception):
+    return problem(
+        status=exception.status, title=exception.title, detail=exception.detail,
+        type=exception.type, instance=exception.instance, headers=exception.headers,
+        ext=exception.ext)
