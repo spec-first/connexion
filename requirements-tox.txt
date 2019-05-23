@@ -1,0 +1,10 @@
+-r requirements.txt
+decorator
+mock
+pytest
+pytest-cov
+testfixtures
+flask>=0.10.1
+swagger-ui-bundle>=0.0.2
+pytest-xdist
+requests-mock

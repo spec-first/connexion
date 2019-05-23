@@ -1,0 +1,82 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: Post and Get example
+paths:
+  /transactions:
+    get:
+      summary: List all Transactions that took place
+      operationId: tests.integration.flask_setup.get_trans_list
+      responses:
+        '200':
+          description: A list of Transactions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transactions"
+    post:
+      summary: Create a pet
+      operationId: tests.integration.flask_setup.post_trans_record
+      responses:
+        '201':
+          description: Null response
+  /transactions/{transactionId}:
+    get:
+      summary: A specific Transaction
+      operationId: tests.integration.flask_setup.get_trans_record
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          description: The UUID of the Transaction
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+components:
+  schemas:
+    Transaction:
+      type: object
+      required:
+        - transaction
+      additionalProperties: false
+      properties:
+        transaction:
+          type: object
+          required:
+            - id
+            - name
+            - username
+            - password
+          additionalProperties: false
+          properties:
+            id:
+              readOnly: true
+              type: string
+              format: uuid
+            name:
+              type: string
+            username:
+              type: string
+            password:
+              writeOnly: true
+              type: string
+              format: password
+            status:
+              readOnly: true
+              type: string
+    Transactions:
+      type: object
+      required:
+        - transactions
+      additionalProperties: false
+      properties:
+        transactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Transaction"
