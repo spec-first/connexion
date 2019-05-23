@@ -3,8 +3,13 @@ import logging
 import re
 import traceback
 from contextlib import suppress
-from http import HTTPStatus
 from urllib.parse import parse_qs
+
+try:
+    from http import HTTPStatus
+except ImportError:
+    # httpstatus35 backport for python 3.4
+    from httpstatus import HTTPStatus
 
 import aiohttp_jinja2
 import jinja2
