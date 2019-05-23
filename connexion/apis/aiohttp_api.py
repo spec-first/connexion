@@ -5,23 +5,24 @@ import traceback
 from contextlib import suppress
 from urllib.parse import parse_qs
 
-try:
-    from http import HTTPStatus
-except ImportError:
-    # httpstatus35 backport for python 3.4
-    from httpstatus import HTTPStatus
-
 import aiohttp_jinja2
 import jinja2
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPNotFound, HTTPPermanentRedirect
 from aiohttp.web_middlewares import normalize_path_middleware
 from connexion.apis.abstract import AbstractAPI
-from connexion.exceptions import OAuthProblem, OAuthScopeProblem, ProblemException
+from connexion.exceptions import (OAuthProblem, OAuthScopeProblem,
+                                  ProblemException)
 from connexion.handlers import AuthErrorHandler
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.problem import problem
 from connexion.utils import Jsonifier, is_json_mimetype, yamldumper
+
+try:
+    from http import HTTPStatus
+except ImportError:  # pragma: no cover
+    # httpstatus35 backport for python 3.4
+    from httpstatus import HTTPStatus
 
 try:
     import ujson as json
