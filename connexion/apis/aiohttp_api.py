@@ -9,10 +9,10 @@ from urllib.parse import parse_qs
 import aiohttp_jinja2
 import jinja2
 from aiohttp import web
-from aiohttp.web_exceptions import HTTPNotFound, HTTPPermanentRedirect, ProblemException
+from aiohttp.web_exceptions import HTTPNotFound, HTTPPermanentRedirect
 from aiohttp.web_middlewares import normalize_path_middleware
 from connexion.apis.abstract import AbstractAPI
-from connexion.exceptions import ProblemException
+from connexion.exceptions import OAuthProblem, OAuthScopeProblem, ProblemException
 from connexion.handlers import AuthErrorHandler
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.problem import problem
