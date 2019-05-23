@@ -71,7 +71,10 @@ def error_to_problem_middleware(request, handler):
         response = exc.to_problem()
     except web.HTTPError as exc:
         response = problem(status=exc.status, title=exc.reason, detail=exc.text)
-    except asyncio.CancelledError:
+    except (
+        web.HTTPException,  # eg raised HTTPRedirection or HTTPSuccessful
+        asyncio.CancelledError,  # skipped in default web_protocol
+    ):
         # leave this to default handling in aiohttp.web_protocol.RequestHandler.start()
         raise
     except asyncio.TimeoutError as exc:
