@@ -17,6 +17,7 @@ from connexion.handlers import AuthErrorHandler
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.problem import problem
 from connexion.utils import Jsonifier, is_json_mimetype, yamldumper
+from werkzeug.exceptions import HTTPException as werkzeug_HTTPException
 
 try:
     from http import HTTPStatus
@@ -77,6 +78,8 @@ def error_to_problem_middleware(request, handler):
         response = exc.to_problem()
     except web.HTTPError as exc:
         response = problem(status=exc.status, title=exc.reason, detail=exc.text)
+    except werkzeug_HTTPException as exc:
+        response = problem(status=exc.code, title=exc.name, detail=exc.description)
     except (
         web.HTTPException,  # eg raised HTTPRedirection or HTTPSuccessful
         asyncio.CancelledError,  # skipped in default web_protocol
@@ -109,8 +112,8 @@ class AioHttpApi(AbstractAPI):
         )
         self.subapp = web.Application(
             middlewares=[
-                error_to_problem_middleware,
                 oauth_problem_middleware,
+                error_to_problem_middleware,
                 trailing_slash_redirect
             ]
         )
