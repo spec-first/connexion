@@ -48,7 +48,7 @@ def _generic_problem(http_status: HTTPStatus, exc: Exception = None):
 
     return problem(
         status=http_status.value,
-        title="{0.value} {0.phrase}".format(http_status),
+        title=http_status.phrase,
         detail=http_status.description,
         ext=extra,
     )
@@ -61,10 +61,14 @@ def problems_middleware(request, handler):
         response = yield from handler(request)
     except ProblemException as exc:
         response = exc.to_problem()
-    except web.HTTPError as exc:
-        response = problem(status=exc.status, title=exc.reason, detail=exc.text)
-    except werkzeug_HTTPException as exc:
+    except (werkzeug_HTTPException, _HttpNotFoundError) as exc:
         response = problem(status=exc.code, title=exc.name, detail=exc.description)
+    except web.HTTPError as exc:
+        if exc.text == "{}: {}".format(exc.status, exc.reason):
+            detail = HTTPStatus(exc.status).description
+        else:
+            detail = exc.text
+        response = problem(status=exc.status, title=exc.reason, detail=detail)
     except (
         web.HTTPException,  # eg raised HTTPRedirection or HTTPSuccessful
         asyncio.CancelledError,  # skipped in default web_protocol
