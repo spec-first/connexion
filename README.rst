@@ -316,7 +316,7 @@ api options.
 
 .. code-block:: python
 
-   from connexion.decorators.uri_parsing import Swagger2URIParser
+   from connexion.decorators.uri_parsing import AlwaysMultiURIParser
    options = {'uri_parsing_class': AlwaysMultiURIParser}
    app = connexion.App(__name__, specification_dir='swagger/', options=options)
 
