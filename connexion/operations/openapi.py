@@ -324,3 +324,21 @@ class OpenAPIOperation(AbstractOperation):
             return [make_type(part, query_schema["items"]["type"]) for part in value]
         else:
             return make_type(value, query_schema["type"])
+
+    def _get_val_from_object_param(self, value, query_defn):
+        query_schema = query_defn["schema"]
+
+        if is_nullable(query_schema) and is_null(value):
+            return None
+
+        if query_schema["type"] == "object" and 'properties' in query_schema:
+            for prop_key in query_schema['properties'].keys():
+                for val_key in value.keys():
+                    if prop_key == val_key:
+                        try:
+                            if type(value[val_key]) == list and len(value[val_key]) == 1:
+                                return {val_key: make_type(value[val_key][0], query_schema['properties'][prop_key]['type'])}
+                            else:
+                                return {val_key: make_type(value[val_key], query_schema['properties'][prop_key]['type'])}
+                        except (KeyError, TypeError):
+                            return value

@@ -108,6 +108,15 @@ def test_empty(simple_app):
     assert not response.data
 
 
+def test_exploded_deep_object_param_endpoint(simple_app):
+    app_client = simple_app.app.test_client()
+
+    response = app_client.get('/v1.0/exploded-deep-object-param?id[foo]=bar&id[foofoo]=barbar')  # type: flask.Response
+    assert response.status_code == 200
+    response_data = json.loads(response.data.decode('utf-8', 'replace'))
+    assert response_data == {'foo': 'bar', 'foofoo': 'barbar'}
+
+
 def test_redirect_endpoint(simple_app):
     app_client = simple_app.app.test_client()
     resp = app_client.get('/v1.0/test-redirect-endpoint')

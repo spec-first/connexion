@@ -150,6 +150,34 @@ paths:
       responses:
         '204':
           description: empty
+  /exploded-deep-object-param:
+    get:
+      summary: Returns empty response
+      description: Returns empty response
+      operationId: fakeapi.hello.test_exploded_deep_object_param
+      parameters:
+        - name: id
+          required: true
+          in: query
+          style: deepObject
+          explode: true
+          schema:
+            type: object
+            properties:
+              foo:
+                type: string
+              foofoo:
+                type: string
+      responses:
+        '200':
+          description: object response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  foo:
+                    type: string
   /test-redirect-endpoint:
     get:
       summary: Tests handlers returning flask.Response objects

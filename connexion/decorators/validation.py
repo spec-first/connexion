@@ -3,6 +3,7 @@ import copy
 import functools
 import logging
 import sys
+import re
 
 import six
 from jsonschema import Draft4Validator, ValidationError, draft4_format_checker
@@ -19,8 +20,28 @@ logger = logging.getLogger('connexion.decorators.validation')
 TYPE_MAP = {
     'integer': int,
     'number': float,
-    'boolean': boolean
+    'boolean': boolean,
+    'string': str,
+    'object': dict
 }
+
+
+class PropertyValidationError(Exception):
+    def __init__(self, parameter_child, parameter_parent):
+        """
+        Exception raise when property validation fails
+
+        :type schema_type: str
+        :type parameter_type: str
+        :type parameter_name: str
+        :return:
+        """
+        self.parameter_child = parameter_child
+        self.parameter_parent = parameter_parent
+
+    def __str__(self):
+        msg = "Unexpected property '{parameter_child}' in parameter '{parameter_parent}'"
+        return msg.format(**vars(self))
 
 
 class TypeValidationError(Exception):
@@ -46,6 +67,8 @@ def coerce_type(param, value, parameter_type, parameter_name=None):
 
     def make_type(value, type_literal):
         type_func = TYPE_MAP.get(type_literal)
+        if type(value) == list and len(value) == 1 and type_literal != 'array':
+            return type_func(value[0])
         return type_func(value)
 
     param_schema = param.get("schema", param)
@@ -63,6 +86,20 @@ def coerce_type(param, value, parameter_type, parameter_name=None):
                 converted = v
             converted_params.append(converted)
         return converted_params
+    elif param_type == 'object':
+        converted_params = {}
+        if param_schema['properties']:
+            for k, v in value.items():
+                try:
+                    converted_params[k] = make_type(v, param_schema['properties'][k]['type'])
+                except (ValueError, TypeError):
+                    converted_params[k] = v
+                except KeyError:
+                    if 'additionalProperties' not in param_schema or not param_schema['additionalProperties']:
+                        raise PropertyValidationError(k, parameter_name)
+            return converted_params
+        else:
+            return value
     else:
         try:
             return make_type(value, param_type)
@@ -159,7 +196,7 @@ class RequestBodyValidator(object):
                         if k in data:
                             try:
                                 data[k] = coerce_type(param_defn, data[k], 'requestBody', k)
-                            except TypeValidationError as e:
+                            except (TypeValidationError, PropertyValidationError) as e:
                                 errs += [str(e)]
                                 print(errs)
                     if errs:
@@ -236,7 +273,7 @@ class ParameterValidator(object):
 
             try:
                 converted_value = coerce_type(param, value, parameter_type, param_name)
-            except TypeValidationError as e:
+            except (TypeValidationError, PropertyValidationError) as e:
                 return str(e)
 
             param = copy.deepcopy(param)
@@ -284,7 +321,14 @@ class ParameterValidator(object):
         :type param: dict
         :rtype: str
         """
-        val = request.query.get(param['name'])
+        if 'schema' in param and param['schema']['type'] == 'object' and param['style'] == 'deepObject' and param['explode'] == True:
+            val = {}
+            for k in request.query.keys():
+                groups = re.fullmatch(r'^(\w+)\[{1}(\w+)\]{1}$', k)
+                if groups and groups.group(1) == param['name']:
+                    val[groups.group(2)] = request.query.get(k)
+        else:
+            val = request.query.get(param['name'])
         return self.validate_parameter('query', val, param)
 
     def validate_path_parameter(self, param, request):

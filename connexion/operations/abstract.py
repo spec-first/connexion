@@ -1,5 +1,6 @@
 import abc
 import logging
+import re
 
 import six
 from connexion.operations.secure import SecureOperation
@@ -184,10 +185,20 @@ class AbstractOperation(SecureOperation):
         Convert input parameters into the correct type
         """
 
+    @abc.abstractmethod
+    def _get_val_from_object_param(self, value, query_defn):
+        """
+        Convert object input parameters into the correct type
+        """
+
     def _query_args_helper(self, query_defns, query_arguments,
                            function_arguments, has_kwargs, sanitize):
         res = {}
         for key, value in query_arguments.items():
+            groups = re.fullmatch(r'^(\w+)\[{1}(\w+)\]{1}$', key)
+            if groups and groups.group(1) in function_arguments:
+                value = {groups.group(2): value}
+                key = groups.group(1)
             key = sanitize(key)
             if not has_kwargs and key not in function_arguments:
                 logger.debug("Query Parameter '%s' not in function arguments", key)
@@ -199,7 +210,12 @@ class AbstractOperation(SecureOperation):
                     logger.error("Function argument '{}' not defined in specification".format(key))
                 else:
                     logger.debug('%s is a %s', key, query_defn)
-                    res[key] = self._get_val_from_param(value, query_defn)
+                    if type(value) == dict:
+                        if key not in res:
+                            res[key] = {}
+                        res[key].update(self._get_val_from_object_param(value, query_defn))
+                    else:
+                        res[key] = self._get_val_from_param(value, query_defn)
         return res
 
     @abc.abstractmethod

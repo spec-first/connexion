@@ -139,6 +139,26 @@ paths:
           description: goodbye response
           schema:
             type: string
+  /exploded-deep-object-param:
+    get:
+      summary: Returns empty response
+      description: Returns empty response
+      operationId: fakeapi.hello.test_exploded_deep_object_param
+      parameters:
+        - name: "id[foo]"
+          required: true
+          in: query
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: object response
+          schema:
+            type: object
+            properties:
+              id:
+                type: string
 
   /empty:
     get:
