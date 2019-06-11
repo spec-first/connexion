@@ -21,7 +21,6 @@ TYPE_MAP = {
     'integer': int,
     'number': float,
     'boolean': boolean,
-    'string': str,
     'object': dict
 }
 
@@ -68,6 +67,8 @@ def coerce_type(param, value, parameter_type, parameter_name=None):
     def make_type(value, type_literal):
         type_func = TYPE_MAP.get(type_literal)
         if isinstance(value, list) and len(value) == 1 and type_literal != 'array':
+            if type_literal == 'string':
+                return str(value[0])
             return type_func(value[0])
         return type_func(value)
 
@@ -88,7 +89,7 @@ def coerce_type(param, value, parameter_type, parameter_name=None):
         return converted_params
     elif param_type == 'object':
         converted_params = {}
-        if param_schema['properties']:
+        if 'properties' in param_schema and param_schema['properties']:
             for k, v in value.items():
                 try:
                     converted_params[k] = make_type(v, param_schema['properties'][k]['type'])

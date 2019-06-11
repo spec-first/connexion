@@ -253,3 +253,13 @@ def yamldumper(openapi):
     yaml.representer.SafeRepresenter.represent_scalar = my_represent_scalar
 
     return yaml.dump(openapi, allow_unicode=True, Dumper=NoAnchorDumper)
+
+
+def parse_query_string_into_dict(query_string: str):
+    """
+    parse style: deepObject and explode: true query_string into dict
+    :param query_string: the query string to parse.
+    :return: a dict which contains all the passed values.
+    """
+    return_dict = {}
+    return return_dict
