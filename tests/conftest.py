@@ -122,6 +122,12 @@ def snake_case_app(request):
                                   validate_responses=True,
                                   pythonic_params=True)
 
+@pytest.fixture(scope="session", params=SPECS)
+def unsanitized_app(request):
+    return build_app_from_fixture('unsanitized', request.param,
+                                  validate_responses=True,
+                                  sanitized_params=False)
+
 
 @pytest.fixture(scope="session", params=SPECS)
 def invalid_resp_allowed_app(request):

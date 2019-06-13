@@ -58,7 +58,7 @@ def snake_and_shadow(name):
     return snake
 
 
-def parameter_to_arg(operation, function, pythonic_params=False,
+def parameter_to_arg(operation, function, pythonic_params=False, sanitized_params=True,
                      pass_context_arg_name=None):
     """
     Pass query and body parameters as keyword arguments to handler function.
@@ -69,6 +69,8 @@ def parameter_to_arg(operation, function, pythonic_params=False,
     :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended to
     any shadowed built-ins
     :type pythonic_params: bool
+    :param sanitized_params: When True convert parameter names into sanitized Python safe variable names
+    :type sanitized_params: bool
     :param pass_context_arg_name: If not None URL and function has an argument matching this name, the framework's
     request context will be passed as that argument.
     :type pass_context_arg_name: str|None
@@ -82,7 +84,10 @@ def parameter_to_arg(operation, function, pythonic_params=False,
         name = name and snake_and_shadow(name)
         return sanitized(name)
 
-    sanitize = pythonic if pythonic_params else sanitized
+    def unsanitized(name):
+        return name
+
+    sanitize = pythonic if pythonic_params else sanitized if sanitized_params else unsanitized
     arguments, has_kwargs = inspect_function_arguments(function)
 
     @functools.wraps(function)

@@ -35,7 +35,8 @@ class AbstractAPI(object):
     def __init__(self, specification, base_path=None, arguments=None,
                  validate_responses=False, strict_validation=False, resolver=None,
                  auth_all_paths=False, debug=False, resolver_error_handler=None,
-                 validator_map=None, pythonic_params=False, pass_context_arg_name=None, options=None):
+                 validator_map=None, pythonic_params=False, sanitized_params=True,
+                 pass_context_arg_name=None, options=None):
         """
         :type specification: pathlib.Path | dict
         :type base_path: str | None
@@ -53,6 +54,8 @@ class AbstractAPI(object):
         :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended
         to any shadowed built-ins
         :type pythonic_params: bool
+        :param sanitized_params: When True convert parameter names into sanitized Python safe variable names
+        :type sanitized_params: bool
         :param options: New style options dictionary.
         :type options: dict | None
         :param pass_context_arg_name: If not None URL request handling functions with an argument matching this name
@@ -95,6 +98,9 @@ class AbstractAPI(object):
 
         logger.debug('Pythonic params: %s', str(pythonic_params))
         self.pythonic_params = pythonic_params
+
+        logger.debug('Sanitized params: %s', str(sanitized_params))
+        self.sanitized_params = sanitized_params
 
         logger.debug('pass_context_arg_name: %s', pass_context_arg_name)
         self.pass_context_arg_name = pass_context_arg_name
@@ -167,6 +173,7 @@ class AbstractAPI(object):
             validator_map=self.validator_map,
             strict_validation=self.strict_validation,
             pythonic_params=self.pythonic_params,
+            sanitized_params=self.sanitized_params,
             uri_parser_class=self.options.uri_parser_class,
             pass_context_arg_name=self.pass_context_arg_name
         )

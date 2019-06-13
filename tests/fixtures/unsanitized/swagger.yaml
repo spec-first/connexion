@@ -1,0 +1,29 @@
+swagger: "2.0"
+info:
+  title: "{{title}}"
+  version: "1.0"
+basePath: /v1.0
+paths:
+  /test-post-body-unsanitized:
+    post:
+      summary: Test unsanitized body
+      description: Test unsanitized body
+      operationId: fakeapi.unsanitized.post_body_unsanitized
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Success response
+          schema:
+            type: object
+      parameters:
+        - name: body
+          in: body
+          description: body parameter
+          required: true
+          schema:
+            type: object
+            additionalProperties:
+              type: array
+              items:
+                type: string

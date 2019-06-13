@@ -18,7 +18,8 @@ class OpenAPIOperation(AbstractOperation):
     def __init__(self, api, method, path, operation, resolver, path_parameters=None,
                  app_security=None, components=None, validate_responses=False,
                  strict_validation=False, randomize_endpoint=None, validator_map=None,
-                 pythonic_params=False, uri_parser_class=None, pass_context_arg_name=None):
+                 pythonic_params=False, sanitized_params=True, uri_parser_class=None,
+                 pass_context_arg_name=None):
         """
         This class uses the OperationID identify the module and function that will handle the operation
 
@@ -54,6 +55,8 @@ class OpenAPIOperation(AbstractOperation):
         :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended
         to any shadowed built-ins
         :type pythonic_params: bool
+        :param sanitized_params: When True convert parameter names into sanitized Python safe variable names
+        :type sanitized_params: bool
         :param uri_parser_class: class to use for uri parseing
         :type uri_parser_class: AbstractURIParser
         :param pass_context_arg_name: If not None will try to inject the request context to the function using this
@@ -85,6 +88,7 @@ class OpenAPIOperation(AbstractOperation):
             randomize_endpoint=randomize_endpoint,
             validator_map=validator_map,
             pythonic_params=pythonic_params,
+            sanitized_params=sanitized_params,
             uri_parser_class=uri_parser_class,
             pass_context_arg_name=pass_context_arg_name
         )

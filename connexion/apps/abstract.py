@@ -87,8 +87,8 @@ class AbstractApp(object):
     def add_api(self, specification, base_path=None, arguments=None,
                 auth_all_paths=None, validate_responses=False,
                 strict_validation=False, resolver=None, resolver_error=None,
-                pythonic_params=False, pass_context_arg_name=None, options=None,
-                validator_map=None):
+                pythonic_params=False, sanitized_params=True, pass_context_arg_name=None,
+                options=None, validator_map=None):
         """
         Adds an API to the application based on a swagger file or API dict
 
@@ -111,6 +111,8 @@ class AbstractApp(object):
         :type resolver_error: int | None
         :param pythonic_params: When True CamelCase parameters are converted to snake_case
         :type pythonic_params: bool
+        :param sanitized_params: When True convert parameter names into sanitized Python safe variable names
+        :type sanitized_params: bool
         :param options: New style options dictionary.
         :type options: dict | None
         :param pass_context_arg_name: Name of argument in handler functions to pass request context to.
@@ -151,6 +153,7 @@ class AbstractApp(object):
                            debug=self.debug,
                            validator_map=validator_map,
                            pythonic_params=pythonic_params,
+                           sanitized_params=sanitized_params,
                            pass_context_arg_name=pass_context_arg_name,
                            options=api_options.as_dict())
         return api

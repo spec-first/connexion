@@ -412,6 +412,29 @@ def test_parameters_snake_case(snake_case_app):
     resp = app_client.get('/v1.0/test-get-query-shadow?list=123')
     assert resp.status_code == 200
 
+def test_parameters_unsanitized(unsanitized_app):
+    app_client = unsanitized_app.app.test_client()
+    headers = {'Content-type': 'application/json'}
+
+    data = {'my_key': ['test']}
+    resp = app_client.post('/v1.0/test-post-body-unsanitized', headers=headers, data=json.dumps(data))
+    assert resp.status_code == 200
+    assert json.loads(resp.data.decode('utf-8', 'replace')) == data
+
+    data = {'my-key': ['test']}
+    resp = app_client.post('/v1.0/test-post-body-unsanitized', headers=headers, data=json.dumps(data))
+    assert resp.status_code == 200
+    assert json.loads(resp.data.decode('utf-8', 'replace')) == data
+
+    data = {'myKey': ['test']}
+    resp = app_client.post('/v1.0/test-post-body-unsanitized', headers=headers, data=json.dumps(data))
+    assert resp.status_code == 200
+    assert json.loads(resp.data.decode('utf-8', 'replace')) == data
+
+    data = {'$id': ['test']}
+    resp = app_client.post('/v1.0/test-post-body-unsanitized', headers=headers, data=json.dumps(data))
+    assert resp.status_code == 200
+    assert json.loads(resp.data.decode('utf-8', 'replace')) == data
 
 def test_get_unicode_request(simple_app):
     """Regression test for Python 2 UnicodeEncodeError bug during parameter parsing."""
