@@ -10,6 +10,7 @@ import jinja2
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPNotFound, HTTPPermanentRedirect
 from aiohttp.web_middlewares import normalize_path_middleware
+from aiohttp.web_request import FileField
 from connexion.apis.abstract import AbstractAPI
 from connexion.exceptions import ProblemException
 from connexion.handlers import AuthErrorHandler
@@ -278,6 +279,9 @@ class AioHttpApi(AbstractAPI):
         if req.body_exists:
             body = yield from req.read()
 
+        data = yield from req.post()
+        files = {k: v for k, v in data.items() if isinstance(v, FileField)}
+
         return ConnexionRequest(url=url,
                                 method=req.method.lower(),
                                 path_params=dict(req.match_info),
@@ -285,7 +289,7 @@ class AioHttpApi(AbstractAPI):
                                 headers=headers,
                                 body=body,
                                 json_getter=lambda: cls.jsonifier.loads(body),
-                                files={},
+                                files=files,
                                 context=req)
 
     @classmethod
