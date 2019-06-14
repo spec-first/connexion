@@ -51,6 +51,8 @@ tests_require = [
 ]
 
 if sys.version_info[0] >= 3:
+    if sys.version_info[1] <= 4:
+        aiohttp_require.append('httpstatus35')
     tests_require.extend(aiohttp_require)
     tests_require.append(ujson_require)
     tests_require.append('pytest-aiohttp')
