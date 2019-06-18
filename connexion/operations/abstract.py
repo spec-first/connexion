@@ -1,6 +1,5 @@
 import abc
 import logging
-import re
 
 import six
 from connexion.operations.secure import SecureOperation
