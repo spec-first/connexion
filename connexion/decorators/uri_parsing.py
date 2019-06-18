@@ -5,8 +5,8 @@ import logging
 
 import six
 
-from .decorator import BaseDecorator
 from ..utils import fullmatch
+from .decorator import BaseDecorator
 
 logger = logging.getLogger('connexion.decorators.uri_parsing')
 
