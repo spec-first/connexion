@@ -2,11 +2,11 @@
 import abc
 import functools
 import logging
-import re
 
 import six
 
 from .decorator import BaseDecorator
+from ..utils import fullmatch
 
 logger = logging.getLogger('connexion.decorators.uri_parsing')
 
@@ -97,7 +97,7 @@ class AbstractURIParser(BaseDecorator):
         """
         resolved_param = {}
         for k, values in params.items():
-            groups = re.fullmatch(r'^(\w+)\[{1}(\w+)\]{1}$', k)
+            groups = fullmatch(r'^(\w+)\[{1}(\w+)\]{1}$', k)
             if groups:
                 possible_key = groups.group(1)
                 param_defn = self.param_defns.get(possible_key)
