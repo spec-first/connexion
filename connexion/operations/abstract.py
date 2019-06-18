@@ -195,10 +195,6 @@ class AbstractOperation(SecureOperation):
                            function_arguments, has_kwargs, sanitize):
         res = {}
         for key, value in query_arguments.items():
-            groups = re.fullmatch(r'^(\w+)\[{1}(\w+)\]{1}$', key)
-            if groups and groups.group(1) in function_arguments:
-                value = {groups.group(2): value}
-                key = groups.group(1)
             key = sanitize(key)
             if not has_kwargs and key not in function_arguments:
                 logger.debug("Query Parameter '%s' not in function arguments", key)

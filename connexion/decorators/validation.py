@@ -322,14 +322,7 @@ class ParameterValidator(object):
         :type param: dict
         :rtype: str
         """
-        if 'schema' in param and param['schema']['type'] == 'object' and param['style'] == 'deepObject' and param['explode'] == True:
-            val = {}
-            for k in request.query.keys():
-                groups = re.fullmatch(r'^(\w+)\[{1}(\w+)\]{1}$', k)
-                if groups and groups.group(1) == param['name']:
-                    val[groups.group(2)] = request.query.get(k)
-        else:
-            val = request.query.get(param['name'])
+        val = request.query.get(param['name'])
         return self.validate_parameter('query', val, param)
 
     def validate_path_parameter(self, param, request):

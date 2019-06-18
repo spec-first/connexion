@@ -332,13 +332,17 @@ class OpenAPIOperation(AbstractOperation):
             return None
 
         if query_schema["type"] == "object" and 'properties' in query_schema:
+            return_dict = {}
             for prop_key in query_schema['properties'].keys():
                 for val_key in value.keys():
                     if prop_key == val_key:
                         try:
                             if type(value[val_key]) == list and len(value[val_key]) == 1:
-                                return {val_key: make_type(value[val_key][0], query_schema['properties'][prop_key]['type'])}
+                                return_dict[val_key] = make_type(value[val_key][0], query_schema['properties'][prop_key]['type'])
                             else:
-                                return {val_key: make_type(value[val_key], query_schema['properties'][prop_key]['type'])}
+                                return_dict[val_key] = make_type(value[val_key], query_schema['properties'][prop_key]['type'])
                         except (KeyError, TypeError):
                             return value
+            return return_dict
+        else:
+            return value

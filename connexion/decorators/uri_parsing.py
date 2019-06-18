@@ -2,6 +2,7 @@
 import abc
 import functools
 import logging
+import re
 
 import six
 
@@ -96,8 +97,21 @@ class AbstractURIParser(BaseDecorator):
         """
         resolved_param = {}
         for k, values in params.items():
-            param_defn = self.param_defns.get(k)
-            param_schema = self.param_schemas.get(k)
+            groups = re.fullmatch(r'^(\w+)\[{1}(\w+)\]{1}$', k)
+            possible_key = groups.group(1)
+            param_defn = self.param_defns.get(possible_key)
+            if groups and param_defn \
+                    and param_defn.get('style', None) == 'deepObject' and param_defn.get('explode', False):
+                value = {groups.group(2): values}
+                key = possible_key
+                if key not in resolved_param:
+                    resolved_param[key] = {}
+                resolved_param[key].update(value)
+                continue
+            else:
+                param_defn = self.param_defns.get(k)
+                param_schema = self.param_schemas.get(k)
+
             if not (param_defn or param_schema):
                 # rely on validation
                 resolved_param[k] = values
