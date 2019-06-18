@@ -13,6 +13,7 @@ TEST_FOLDER = pathlib.Path(__file__).parent
 FIXTURES_FOLDER = TEST_FOLDER / 'fixtures'
 SPEC_FOLDER = TEST_FOLDER / "fakeapi"
 SPECS = ["swagger.yaml", "openapi.yaml"]
+OPENAPI_SPEC_ONLY = ["openapi.yaml"]
 
 
 class FakeResponse(object):
@@ -113,6 +114,11 @@ def build_app_from_fixture(api_spec_folder, spec_file='openapi.yaml', **kwargs):
 
 @pytest.fixture(scope="session", params=SPECS)
 def simple_app(request):
+    return build_app_from_fixture('simple', request.param, validate_responses=True)
+
+
+@pytest.fixture(scope="session", params=OPENAPI_SPEC_ONLY)
+def simple_openapi_app(request):
     return build_app_from_fixture('simple', request.param, validate_responses=True)
 
 

@@ -108,8 +108,8 @@ def test_empty(simple_app):
     assert not response.data
 
 
-def test_exploded_deep_object_param_endpoint(simple_app):
-    app_client = simple_app.app.test_client()
+def test_exploded_deep_object_param_endpoint_openapi(simple_openapi_app):
+    app_client = simple_openapi_app.app.test_client()
 
     response = app_client.get('/v1.0/exploded-deep-object-param?id[foo]=bar&id[foofoo]=barbar')  # type: flask.Response
     assert response.status_code == 200
