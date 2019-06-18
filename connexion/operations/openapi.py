@@ -338,9 +338,11 @@ class OpenAPIOperation(AbstractOperation):
                     if prop_key == val_key:
                         try:
                             if type(value[val_key]) == list and len(value[val_key]) == 1:
-                                return_dict[val_key] = make_type(value[val_key][0], query_schema['properties'][prop_key]['type'])
+                                return_dict[val_key] = make_type(value[val_key][0],
+                                                                 query_schema['properties'][prop_key]['type'])
                             else:
-                                return_dict[val_key] = make_type(value[val_key], query_schema['properties'][prop_key]['type'])
+                                return_dict[val_key] = make_type(value[val_key],
+                                                                 query_schema['properties'][prop_key]['type'])
                         except (KeyError, TypeError):
                             return value
             return return_dict

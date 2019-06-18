@@ -102,7 +102,7 @@ class AbstractURIParser(BaseDecorator):
                 possible_key = groups.group(1)
                 param_defn = self.param_defns.get(possible_key)
                 if param_defn \
-                    and param_defn.get('style', None) == 'deepObject' and param_defn.get('explode', False):
+                        and param_defn.get('style', None) == 'deepObject' and param_defn.get('explode', False):
                     value = {groups.group(2): values}
                     key = possible_key
                     if key not in resolved_param:
