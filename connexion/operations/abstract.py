@@ -184,12 +184,6 @@ class AbstractOperation(SecureOperation):
         Convert input parameters into the correct type
         """
 
-    @abc.abstractmethod
-    def _get_val_from_object_param(self, value, query_defn):
-        """
-        Convert object input parameters into the correct type
-        """
-
     def _query_args_helper(self, query_defns, query_arguments,
                            function_arguments, has_kwargs, sanitize):
         res = {}

@@ -283,7 +283,3 @@ class Swagger2Operation(AbstractOperation):
             return [make_type(part, query_defn["items"]["type"]) for part in value]
         else:
             return make_type(value, query_defn["type"])
-
-    def _get_val_from_object_param(self, value, query_defn):
-        """not possible on swagger2"""
-        pass
