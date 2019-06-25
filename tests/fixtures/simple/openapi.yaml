@@ -152,8 +152,8 @@ paths:
           description: empty
   /exploded-deep-object-param:
     get:
-      summary: Returns empty response
-      description: Returns empty response
+      summary: Returns dict response
+      description: Returns dict response
       operationId: fakeapi.hello.test_exploded_deep_object_param
       parameters:
         - name: id

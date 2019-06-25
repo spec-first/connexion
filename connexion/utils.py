@@ -257,5 +257,5 @@ def yamldumper(openapi):
 
 
 def fullmatch(regex, string, flags=0):
-    """Emulate python-3.4 re.fullmatch()."""
+    """Backport of re.fullmatch() for python version below 3.4."""
     return re.match("(?:" + regex + r")\Z", string, flags=flags)

@@ -95,7 +95,7 @@ def coerce_type(param, value, parameter_type, parameter_name=None):
                 except (ValueError, TypeError):
                     converted_params[k] = v
                 except KeyError:
-                    if 'additionalProperties' not in param_schema or not param_schema['additionalProperties']:
+                    if not param_schema.get("additionalProperties", True):
                         raise PropertyValidationError(k, parameter_name)
             return converted_params
         else:
