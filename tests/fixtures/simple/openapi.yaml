@@ -178,6 +178,40 @@ paths:
                 properties:
                   foo:
                     type: string
+  /nested-exploded-deep-object-param:
+    get:
+      summary: Returns nested dict response
+      description: Returns nested dict response
+      operationId: fakeapi.hello.test_nested_exploded_deep_object_param
+      parameters:
+        - name: id
+          required: true
+          in: query
+          style: deepObject
+          explode: true
+          schema:
+            type: object
+            properties:
+              foo:
+                type: object
+                properties:
+                  foo2:
+                    type: string
+              foofoo:
+                type: string
+      responses:
+        '200':
+          description: object response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  foo:
+                    type: object
+                    properties:
+                      foo2:
+                        type: string
   /test-redirect-endpoint:
     get:
       summary: Tests handlers returning flask.Response objects

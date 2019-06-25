@@ -5,6 +5,7 @@ import logging
 
 import six
 
+from connexion.utils import create_empty_dict_from_list
 from ..utils import fullmatch
 from .decorator import BaseDecorator
 
@@ -97,7 +98,7 @@ class AbstractURIParser(BaseDecorator):
         """
         resolved_param = {}
         for k, values in params.items():
-            groups = fullmatch(r'^(\w+)\[{1}(\w+)\]{1}$', k)
+            groups = fullmatch(r'^(\w+)((?:\[{1}\w+\]{1})+)$', k)
             if groups:
                 possible_key = groups.group(1)
                 param_defn = self.param_defns.get(possible_key)
@@ -106,10 +107,12 @@ class AbstractURIParser(BaseDecorator):
                     param_schema = self.param_schemas.get(possible_key)
                     if isinstance(values, list) and len(values) == 1 and param_schema['type'] != 'array':
                         values = values[0]
-                    dict_value = {groups.group(2): values}
+                    dict_keys = groups.group(2)
+                    dict_keys = [x[:-1] for x in dict_keys.split('[')]
+                    dict_keys.pop(0)
                     key = possible_key
                     resolved_param.setdefault(key, {})
-                    resolved_param[key].update(dict_value)
+                    resolved_param[key].update(create_empty_dict_from_list(dict_keys, {}, values))
                     continue
 
             param_defn = self.param_defns.get(k)
