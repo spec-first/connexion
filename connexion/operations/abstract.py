@@ -206,9 +206,8 @@ class AbstractOperation(SecureOperation):
                 else:
                     logger.debug('%s is a %s', key, query_defn)
                     if isinstance(value, dict):
-                        if key not in res:
-                            res[key] = {}
-                        res[key].update(self._get_val_from_object_param(value, query_defn))
+                        res.setdefault(key, {})
+                        res[key].update(self._get_val_from_param(value, query_defn))
                     else:
                         res[key] = self._get_val_from_param(value, query_defn)
         return res

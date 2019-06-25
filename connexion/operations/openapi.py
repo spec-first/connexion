@@ -322,29 +322,20 @@ class OpenAPIOperation(AbstractOperation):
 
         if query_schema["type"] == "array":
             return [make_type(part, query_schema["items"]["type"]) for part in value]
-        else:
-            return make_type(value, query_schema["type"])
-
-    def _get_val_from_object_param(self, value, query_defn):
-        query_schema = query_defn["schema"]
-
-        if is_nullable(query_schema) and is_null(value):
-            return None
-
-        if query_schema["type"] == "object" and 'properties' in query_schema:
+        elif query_schema["type"] == "object" and 'properties' in query_schema:
             return_dict = {}
             for prop_key in query_schema['properties'].keys():
-                for val_key in value.keys():
-                    if prop_key == val_key:
-                        try:
-                            if type(value[val_key]) == list and len(value[val_key]) == 1:
-                                return_dict[val_key] = make_type(value[val_key][0],
-                                                                 query_schema['properties'][prop_key]['type'])
-                            else:
-                                return_dict[val_key] = make_type(value[val_key],
-                                                                 query_schema['properties'][prop_key]['type'])
-                        except (KeyError, TypeError):
-                            return value
+                prop_value = value.get(prop_key, None)
+                if prop_value:
+                    try:
+                        if type(value[prop_key]) == list and len(value[prop_key]) == 1:
+                            return_dict[prop_key] = make_type(value[prop_key][0],
+                                                             query_schema['properties'][prop_key]['type'])
+                        else:
+                            return_dict[prop_key] = make_type(value[prop_key],
+                                                             query_schema['properties'][prop_key]['type'])
+                    except (KeyError, TypeError):
+                        return value
             return return_dict
         else:
-            return value
+            return make_type(value, query_schema["type"])
