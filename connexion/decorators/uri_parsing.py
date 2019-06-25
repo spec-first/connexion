@@ -5,8 +5,7 @@ import logging
 
 import six
 
-from connexion.utils import create_empty_dict_from_list
-from ..utils import fullmatch
+from ..utils import fullmatch, create_empty_dict_from_list
 from .decorator import BaseDecorator
 
 logger = logging.getLogger('connexion.decorators.uri_parsing')
