@@ -103,10 +103,13 @@ class AbstractURIParser(BaseDecorator):
                 param_defn = self.param_defns.get(possible_key)
                 if param_defn \
                         and param_defn.get('style', None) == 'deepObject' and param_defn.get('explode', False):
-                    value = {groups.group(2): values}
+                    param_schema = self.param_schemas.get(possible_key)
+                    if isinstance(values, list) and len(values) == 1 and param_schema['type'] != 'array':
+                        values = values[0]
+                    dict_value = {groups.group(2): values}
                     key = possible_key
                     resolved_param.setdefault(key, {})
-                    resolved_param[key].update(value)
+                    resolved_param[key].update(dict_value)
                     continue
 
             param_defn = self.param_defns.get(k)

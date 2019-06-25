@@ -65,10 +65,6 @@ def coerce_type(param, value, parameter_type, parameter_name=None):
 
     def make_type(value, type_literal):
         type_func = TYPE_MAP.get(type_literal)
-        if isinstance(value, list) and len(value) == 1 and type_literal != 'array':
-            if type_literal == 'string':
-                return str(value[0])
-            return type_func(value[0])
         return type_func(value)
 
     param_schema = param.get("schema", param)

@@ -328,12 +328,8 @@ class OpenAPIOperation(AbstractOperation):
                 prop_value = value.get(prop_key, None)
                 if prop_value:
                     try:
-                        if type(value[prop_key]) == list and len(value[prop_key]) == 1:
-                            return_dict[prop_key] = make_type(value[prop_key][0],
-                                                             query_schema['properties'][prop_key]['type'])
-                        else:
-                            return_dict[prop_key] = make_type(value[prop_key],
-                                                             query_schema['properties'][prop_key]['type'])
+                        return_dict[prop_key] = make_type(value[prop_key],
+                                                          query_schema['properties'][prop_key]['type'])
                     except (KeyError, TypeError):
                         return value
             return return_dict
