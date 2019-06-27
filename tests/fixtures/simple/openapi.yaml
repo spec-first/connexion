@@ -166,8 +166,10 @@ paths:
             properties:
               foo:
                 type: string
-              foofoo:
-                type: string
+              fooint:
+                type: integer
+              fooboo:
+                type: boolean
       responses:
         '200':
           description: object response

@@ -114,7 +114,12 @@ def test_exploded_deep_object_param_endpoint_openapi(simple_openapi_app):
     response = app_client.get('/v1.0/exploded-deep-object-param?id[foo]=bar&id[foofoo]=barbar')  # type: flask.Response
     assert response.status_code == 200
     response_data = json.loads(response.data.decode('utf-8', 'replace'))
-    assert response_data == {'foo': 'bar', 'foofoo': 'barbar'}
+    assert response_data == {'foo': 'bar'}
+
+    response = app_client.get('/v1.0/exploded-deep-object-param?id[foo]=bar&id[fooint]=2&id[fooboo]=false')  # type: flask.Response
+    assert response.status_code == 200
+    response_data = json.loads(response.data.decode('utf-8', 'replace'))
+    assert response_data == {'foo': 'bar', 'fooint': 2, 'fooboo': False}
 
 
 def test_nested_exploded_deep_object_param_endpoint_openapi(simple_openapi_app):
