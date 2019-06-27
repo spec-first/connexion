@@ -148,7 +148,6 @@ class AbstractURIParser(BaseDecorator):
                 _dict[p_id] = self.set_default_values(_dict[p_id], property['properties'])
         return _dict
 
-
     def __call__(self, function):
         """
         :type function: types.FunctionType
