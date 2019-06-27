@@ -133,7 +133,21 @@ class AbstractURIParser(BaseDecorator):
             else:
                 resolved_param[k] = values[-1]
 
+        # set defaults if values have not been set yet
+        resolved_param = self.set_default_values(resolved_param, self.param_schemas)
+
         return resolved_param
+
+    def set_default_values(self, _dict, _properties):
+        """set recursively default values in objects/dicts"""
+        for p_id, property in _properties.items():
+            if 'default' in property and p_id not in _dict:
+                _dict[p_id] = property['default']
+            elif property.get('type', False) == 'object' and 'properties' in property:
+                _dict.setdefault(p_id, {})
+                _dict[p_id] = self.set_default_values(_dict[p_id], property['properties'])
+        return _dict
+
 
     def __call__(self, function):
         """

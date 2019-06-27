@@ -170,6 +170,9 @@ paths:
                 type: integer
               fooboo:
                 type: boolean
+              foo4:
+                type: string
+                default: blubb
       responses:
         '200':
           description: object response
@@ -223,6 +226,9 @@ paths:
                 properties:
                   foo2:
                     type: string
+                  foo3:
+                    type: string
+                    default: blubb
               foofoo:
                 type: string
       responses:
