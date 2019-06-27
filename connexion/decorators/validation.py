@@ -69,7 +69,7 @@ def coerce_type(param, value, parameter_type, parameter_name=None):
         if 'properties' in param_schema and param_schema['properties']:
             for k, v in value.items():
                 try:
-                    converted_params[k] = make_type(v, param_schema['properties'][k]['type'])
+                    converted_params[k] = make_type(v, param_schema['properties'].get(k, {'type': None})['type'])
                 except (ValueError, TypeError):
                     converted_params[k] = v
             return converted_params
