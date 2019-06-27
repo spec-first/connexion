@@ -170,6 +170,14 @@ paths:
                 type: integer
               fooboo:
                 type: boolean
+        - name: id2
+          required: false
+          in: query
+          style: deepObject
+          explode: true
+          schema:
+            type: object
+            additionalProperties: true
       responses:
         '200':
           description: object response

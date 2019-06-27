@@ -108,7 +108,7 @@ def test_empty(simple_app):
     assert not response.data
 
 
-def test_exploded_deep_object_param_endpoint_openapi(simple_openapi_app):
+def test_exploded_deep_object_param_endpoint_openapi_simple(simple_openapi_app):
     app_client = simple_openapi_app.app.test_client()
 
     response = app_client.get('/v1.0/exploded-deep-object-param?id[foo]=bar&id[foofoo]=barbar')  # type: flask.Response
@@ -116,7 +116,19 @@ def test_exploded_deep_object_param_endpoint_openapi(simple_openapi_app):
     response_data = json.loads(response.data.decode('utf-8', 'replace'))
     assert response_data == {'foo': 'bar'}
 
+def test_exploded_deep_object_param_endpoint_openapi_multiple_data_types(simple_openapi_app):
+    app_client = simple_openapi_app.app.test_client()
+
     response = app_client.get('/v1.0/exploded-deep-object-param?id[foo]=bar&id[fooint]=2&id[fooboo]=false')  # type: flask.Response
+    assert response.status_code == 200
+    response_data = json.loads(response.data.decode('utf-8', 'replace'))
+    assert response_data == {'foo': 'bar', 'fooint': 2, 'fooboo': False}
+
+
+def test_exploded_deep_object_param_endpoint_openapi_additionalProperties(simple_openapi_app):
+    app_client = simple_openapi_app.app.test_client()
+
+    response = app_client.get('/v1.0/exploded-deep-object-param?id[foo]=bar&id2[fooint]=2')  # type: flask.Response
     assert response.status_code == 200
     response_data = json.loads(response.data.decode('utf-8', 'replace'))
     assert response_data == {'foo': 'bar', 'fooint': 2, 'fooboo': False}
