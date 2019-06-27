@@ -183,6 +183,8 @@ paths:
                 properties:
                   foo:
                     type: string
+                  foo4:
+                    type: string
   /exploded-deep-object-param-additional-properties:
     get:
       summary: Returns dict response with flexible properties
@@ -243,6 +245,8 @@ paths:
                     type: object
                     properties:
                       foo2:
+                        type: string
+                      foo3:
                         type: string
   /test-redirect-endpoint:
     get:
