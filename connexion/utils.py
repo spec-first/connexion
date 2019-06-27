@@ -262,8 +262,8 @@ def fullmatch(regex, string, flags=0):
 
 
 def create_empty_dict_from_list(_list, _dict, _end_value):
-    current_key = _list[0]
-    _list.pop(0)
+    """create from ['foo', 'bar'] a dict like {'foo': {'bar': {}}} recursively. needed for converting query params"""
+    current_key = _list.pop(0)
     if _list:
         return {current_key: create_empty_dict_from_list(_list, _dict, _end_value)}
     else:
