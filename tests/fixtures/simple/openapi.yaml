@@ -170,14 +170,6 @@ paths:
                 type: integer
               fooboo:
                 type: boolean
-        - name: id2
-          required: false
-          in: query
-          style: deepObject
-          explode: true
-          schema:
-            type: object
-            additionalProperties: true
       responses:
         '200':
           description: object response
@@ -188,6 +180,30 @@ paths:
                 properties:
                   foo:
                     type: string
+  /exploded-deep-object-param-additional-properties:
+    get:
+      summary: Returns dict response with flexible properties
+      description: Returns dict response with flexible properties
+      operationId: fakeapi.hello.test_exploded_deep_object_param_additional_properties
+      parameters:
+        - name: id
+          required: false
+          in: query
+          style: deepObject
+          explode: true
+          schema:
+            type: object
+            additionalProperties:
+              type: string
+      responses:
+        '200':
+          description: object response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
   /nested-exploded-deep-object-param:
     get:
       summary: Returns nested dict response

@@ -116,6 +116,7 @@ def test_exploded_deep_object_param_endpoint_openapi_simple(simple_openapi_app):
     response_data = json.loads(response.data.decode('utf-8', 'replace'))
     assert response_data == {'foo': 'bar'}
 
+
 def test_exploded_deep_object_param_endpoint_openapi_multiple_data_types(simple_openapi_app):
     app_client = simple_openapi_app.app.test_client()
 
@@ -125,13 +126,13 @@ def test_exploded_deep_object_param_endpoint_openapi_multiple_data_types(simple_
     assert response_data == {'foo': 'bar', 'fooint': 2, 'fooboo': False}
 
 
-def test_exploded_deep_object_param_endpoint_openapi_additionalProperties(simple_openapi_app):
+def test_exploded_deep_object_param_endpoint_openapi_additional_properties(simple_openapi_app):
     app_client = simple_openapi_app.app.test_client()
 
-    response = app_client.get('/v1.0/exploded-deep-object-param?id[foo]=bar&id2[fooint]=2')  # type: flask.Response
+    response = app_client.get('/v1.0/exploded-deep-object-param-additional-properties?id[foo]=bar&id[fooint]=2')  # type: flask.Response
     assert response.status_code == 200
     response_data = json.loads(response.data.decode('utf-8', 'replace'))
-    assert response_data == {'foo': 'bar', 'fooint': 2, 'fooboo': False}
+    assert response_data == {'foo': 'bar', 'fooint': '2'}
 
 
 def test_nested_exploded_deep_object_param_endpoint_openapi(simple_openapi_app):

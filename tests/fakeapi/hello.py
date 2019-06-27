@@ -326,6 +326,10 @@ def test_nested_exploded_deep_object_param(id):
     return id
 
 
+def test_exploded_deep_object_param_additional_properties(id):
+    return id
+
+
 def test_redirect_endpoint():
     headers = {'Location': 'http://www.google.com/'}
     return '', 302, headers
