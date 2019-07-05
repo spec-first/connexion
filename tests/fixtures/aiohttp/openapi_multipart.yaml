@@ -10,7 +10,7 @@ paths:
     post:
       summary: Reads multipart data
       description: Handles multipart data reading
-      operationId: fakeapi.aiohttp_handlers.aiohttp_multipart
+      operationId: fakeapi.aiohttp_handlers.aiohttp_multipart_mixed
       responses:
         "200":
           description: OK response
@@ -19,40 +19,42 @@ paths:
       requestBody:
         required: true
         content:
-          mulipart/mixed:
+          multipart/form-data:
             schema:
               type: object
               properties:
-                login:
+                dir:
                   type: string
-                  required: true
-                password:
-                  type: string
-                  required: true
-                number:
+                testCount:
                   type: number
-                  required: true
-                required:
-                  type: bool
-                  required: true
-                revisions:
+                isRequired:
+                  type: boolean
+                files:
                   type: array
                   items:
-                    type: number
+                    type: string
+                    format: binary
   "/upload_file":
     post:
       summary: Uploads single file
       description: Handles multipart file upload.
-      operationId: fakeapi.aiohttp_handlers.aiohttp_multipart
+      operationId: fakeapi.aiohttp_handlers.aiohttp_multipart_single_file
       responses:
         "200":
           description: OK response
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  fileName:
+                    type: string
         default:
           description: unexpected error
       requestBody:
         required: true
         content:
-          mulipart/mixed:
+          multipart/form-data:
             schema:
               type: object
               properties:
@@ -63,16 +65,23 @@ paths:
     post:
       summary: Uploads many files
       description: Handles multipart file upload.
-      operationId: fakeapi.aiohttp_handlers.aiohttp_multipart
+      operationId: fakeapi.aiohttp_handlers.aiohttp_multipart_many_files
       responses:
         "200":
           description: OK response
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  filesCount:
+                    type: number
         default:
           description: unexpected error
       requestBody:
         required: true
         content:
-          mulipart/mixed:
+          multipart/form-data:
             schema:
               type: object
               properties:

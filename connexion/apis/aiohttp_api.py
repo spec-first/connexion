@@ -285,17 +285,25 @@ class AioHttpApi(AbstractAPI):
         headers = req.headers
         body = None
 
-        if content_type in http_facts.FORM_CONTENT_TYPES:
+        # if request is not multipart, `data` will be empty dict
+        post_data = yield from req.post()
+        files = {}
+        form = {}
+        if post_data:
             logger.debug('Reading multipart data from request')
-            data = yield from req.post()
-
-            files = {k: v for k, v in data.items() if isinstance(v, web.FileField)}
-            form = {k: v for k, v in data.items() if isinstance(v, (str, bytes))}
+            for k, v in post_data.items():
+                if isinstance(v, web.FileField) and k not in files:
+                    files[k] = v
+                elif isinstance(v, web.FileField) and k in files:
+                    try:
+                        files[k].append(v)
+                    except AttributeError:
+                        files[k] = [files[k], v]
+                elif not isinstance(v, web.FileField):
+                    form[k] = v
             body = b''
         else:
             logger.debug('Reading data from request')
-            files = {}
-            form = {}
             body = yield from req.read()
 
         return ConnexionRequest(url=url,

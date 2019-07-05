@@ -77,7 +77,7 @@ class PyTest(TestCommand):
         TestCommand.finalize_options(self)
         if self.cov_html:
             self.pytest_args.extend(['--cov-report', 'html'])
-        self.pytest_args.extend(['tests'])
+        self.pytest_args.extend(['tests/aiohttp'])
 
     def run_tests(self):
         import pytest

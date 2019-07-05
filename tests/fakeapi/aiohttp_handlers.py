@@ -83,5 +83,19 @@ def aiohttp_users_post(user):
 
 
 @asyncio.coroutine
-def aiohttp_multipart(*args, **kwargs):
-    return AioHttpResponse()
+def aiohttp_multipart_single_file(funky_funky):
+    return aiohttp.web.json_response(
+        data={'fileName': funky_funky.filename},
+    )
+
+
+@asyncio.coroutine
+def aiohttp_multipart_many_files(files):
+    return aiohttp.web.json_response(
+        data={'filesCount': len(files)},
+    )
+
+
+@asyncio.coroutine
+def aiohttp_multipart_mixed(*args, **kwargs):
+    print(args, kwargs)
