@@ -212,8 +212,9 @@ class AioHttpApi(AbstractAPI):
     @aiohttp_jinja2.template('index.j2')
     @asyncio.coroutine
     def _get_swagger_ui_home(self, req):
-        return {'openapi_spec_url': (self.base_path +
-                                     self.options.openapi_spec_path)}
+        return {'openapi_spec_url': (
+            self.base_path + self.options.openapi_spec_path,
+        )}
 
     def add_auth_on_not_found(self, security, security_definitions):
         """
@@ -257,7 +258,7 @@ class AioHttpApi(AbstractAPI):
 
     @classmethod
     @asyncio.coroutine
-    def get_request(cls, req: web.Request):
+    def get_request(cls, req):
         """Convert aiohttp request to connexion
 
         :param req: instance of aiohttp.web.Request
@@ -265,7 +266,7 @@ class AioHttpApi(AbstractAPI):
         :rtype: ConnexionRequest
         """
         url = str(req.url)
-        content_type: str = req.content_type
+        content_type = req.content_type
 
         logger.debug(
             'Getting data and status code',
