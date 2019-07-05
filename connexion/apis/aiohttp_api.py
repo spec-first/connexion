@@ -11,6 +11,7 @@ import jinja2
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPNotFound, HTTPPermanentRedirect
 from aiohttp.web_middlewares import normalize_path_middleware
+from connexion import http_facts
 from connexion.apis.abstract import AbstractAPI
 from connexion.exceptions import ProblemException
 from connexion.handlers import AuthErrorHandler
@@ -256,7 +257,7 @@ class AioHttpApi(AbstractAPI):
 
     @classmethod
     @asyncio.coroutine
-    def get_request(cls, req):
+    def get_request(cls, req: web.Request):
         """Convert aiohttp request to connexion
 
         :param req: instance of aiohttp.web.Request
@@ -264,13 +265,36 @@ class AioHttpApi(AbstractAPI):
         :rtype: ConnexionRequest
         """
         url = str(req.url)
-        logger.debug('Getting data and status code',
-                     extra={'has_body': req.has_body, 'url': url})
+        content_type: str = req.content_type
+
+        logger.debug(
+            'Getting data and status code',
+            extra={
+                # has_body | can_raed_body report if
+                # body has been read or not
+                # body_exists refers to underlying stream of data
+                'has_body': req.body_exists,
+                'can_ready_body': req.can_read_body,
+                'content_type': content_type,
+                'url': url,
+            },
+        )
 
         query = parse_qs(req.rel_url.query_string)
         headers = req.headers
         body = None
-        if req.body_exists:
+
+        if content_type in http_facts.FORM_CONTENT_TYPES:
+            logger.debug('Reading multipart data from request')
+            data = yield from req.post()
+
+            files = {k: v for k, v in data.items() if isinstance(v, web.FileField)}
+            form = {k: v for k, v in data.items() if isinstance(v, (str, bytes))}
+            body = b''
+        else:
+            logger.debug('Reading data from request')
+            files = {}
+            form = {}
             body = yield from req.read()
 
         return ConnexionRequest(url=url,
@@ -280,7 +304,8 @@ class AioHttpApi(AbstractAPI):
                                 headers=headers,
                                 body=body,
                                 json_getter=lambda: cls.jsonifier.loads(body),
-                                files={},
+                                form=form,
+                                files=files,
                                 context=req)
 
     @classmethod

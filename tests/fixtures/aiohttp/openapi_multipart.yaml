@@ -1,0 +1,49 @@
+openapi: 3.0.0
+servers:
+  - url: /v1.0
+info:
+  title: '{{title}}'
+  version: '1.0'
+paths:
+  '/upload_file':
+    post:
+      summary: Uploads single file
+      description: Handles multipart file upload.
+      operationId: fakeapi.aiohttp_handlers.aiohttp_file_upload
+      responses:
+        '200':
+          description: OK response
+        default:
+          description: unexpected error
+      requestBody:
+        required: true
+        content:
+          mulipart/mixed:
+            schema:
+              type: object
+              properties:
+                funky_funky:
+                  type: string
+                  format: binary
+  '/upload_many_files':
+    post:
+      summary: Uploads many files
+      description: Handles multipart file upload.
+      operationId: fakeapi.aiohttp_handlers.aiohttp_file_upload
+      responses:
+        '200':
+          description: OK response
+        default:
+          description: unexpected error
+      requestBody:
+        required: true
+        content:
+          mulipart/mixed:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: array
+                  items:
+                    type: string
+                    format: binary

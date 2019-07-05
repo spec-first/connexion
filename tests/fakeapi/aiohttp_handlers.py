@@ -80,3 +80,8 @@ def aiohttp_users_post(user):
     user['id'] = len(USERS) + 1
     USERS.append(user)
     return aiohttp.web.json_response(data=USERS[-1], status=201)
+
+
+@asyncio.coroutine
+def aiohttp_file_upload(*args, **kwargs):
+    return AioHttpResponse()
