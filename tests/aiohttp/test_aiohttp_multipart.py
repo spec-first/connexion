@@ -66,7 +66,6 @@ def test_mixed_multipart(aiohttp_app, aiohttp_client):
     form_data = aiohttp.FormData(fields=files_field)
     form_data.add_field('dir', os.path.dirname(__file__))
     form_data.add_field('testCount', str(len(files_field)))
-    form_data.add_field('isRequired', 'True')
 
     resp = yield from app_client.post(
         '/v1.0/mixed',
@@ -76,4 +75,6 @@ def test_mixed_multipart(aiohttp_app, aiohttp_client):
     data = yield from resp.json()
 
     assert resp.status == 200
+    assert data['dir'] == os.path.dirname(__file__)
+    assert data['testCount'] == len(files_field)
     assert data['filesCount'] == len(files_field)

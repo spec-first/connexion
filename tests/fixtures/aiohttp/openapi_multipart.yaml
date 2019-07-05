@@ -14,6 +14,17 @@ paths:
       responses:
         "200":
           description: OK response
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  dir:
+                    type: string
+                  testCount:
+                    type: number
+                  filesCount:
+                    type: number
         default:
           description: unexpected error
       requestBody:
@@ -27,8 +38,6 @@ paths:
                   type: string
                 testCount:
                   type: number
-                isRequired:
-                  type: boolean
                 files:
                   type: array
                   items:
