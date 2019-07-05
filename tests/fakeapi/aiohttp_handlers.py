@@ -83,5 +83,5 @@ def aiohttp_users_post(user):
 
 
 @asyncio.coroutine
-def aiohttp_file_upload(*args, **kwargs):
+def aiohttp_multipart(*args, **kwargs):
     return AioHttpResponse()
