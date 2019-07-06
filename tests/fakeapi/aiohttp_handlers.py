@@ -97,11 +97,21 @@ def aiohttp_multipart_many_files(files):
 
 
 @asyncio.coroutine
-def aiohttp_multipart_mixed(dir, test_count, files):
+def aiohttp_multipart_mixed_single_file(dir_name, funky_funky):
+    return aiohttp.web.json_response(
+        data={
+            'dirName': dir_name,
+            'fileName': funky_funky.filename,
+        },
+    )
+
+
+@asyncio.coroutine
+def aiohttp_multipart_mixed_many_files(dir_name, test_count, files):
     return aiohttp.web.json_response(
         data={
             'filesCount': len(files),
-            'dir': dir,
+            'dirName': dir_name,
             'testCount': test_count,
         },
     )

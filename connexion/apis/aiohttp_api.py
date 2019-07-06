@@ -300,7 +300,11 @@ class AioHttpApi(AbstractAPI):
                     except AttributeError:
                         files[k] = [files[k], v]
                 elif not isinstance(v, web.FileField):
-                    form[k] = v
+                    # why do I have to return non file fields as an array?
+                    # If I don't everything goes off the clock in
+                    # connexion.decorators.uri_parsing.OpenAPIURIParser#resolve_form
+                    # string values like 'test' are becoming 't,e,s,t'
+                    form[k] = [v]
             body = b''
         else:
             logger.debug('Reading data from request')
