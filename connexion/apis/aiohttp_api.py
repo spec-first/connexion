@@ -16,13 +16,8 @@ from connexion.handlers import AuthErrorHandler
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.problem import problem
 from connexion.utils import Jsonifier, is_json_mimetype, yamldumper
+from http import HTTPStatus
 from werkzeug.exceptions import HTTPException as werkzeug_HTTPException
-
-try:
-    from http import HTTPStatus
-except ImportError:  # pragma: no cover
-    # httpstatus35 backport for python 3.4
-    from httpstatus import HTTPStatus
 
 try:
     import ujson as json
