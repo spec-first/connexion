@@ -3,6 +3,7 @@ import logging
 import re
 import traceback
 from contextlib import suppress
+from http import HTTPStatus
 from urllib.parse import parse_qs
 
 import aiohttp_jinja2
@@ -16,7 +17,6 @@ from connexion.handlers import AuthErrorHandler
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.problem import problem
 from connexion.utils import Jsonifier, is_json_mimetype, yamldumper
-from http import HTTPStatus
 from werkzeug.exceptions import HTTPException as werkzeug_HTTPException
 
 try:
