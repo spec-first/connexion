@@ -275,7 +275,7 @@ class AioHttpApi(AbstractAPI):
                 # body has been read or not
                 # body_exists refers to underlying stream of data
                 'body_exists': req.body_exists,
-                'can_ready_body': req.can_read_body,
+                'can_read_body': req.can_read_body,
                 'content_type': content_type,
                 'url': url,
             },
