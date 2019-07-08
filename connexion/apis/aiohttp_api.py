@@ -271,10 +271,10 @@ class AioHttpApi(AbstractAPI):
         logger.debug(
             'Getting data and status code',
             extra={
-                # has_body | can_raed_body report if
+                # has_body | can_read_body report if
                 # body has been read or not
                 # body_exists refers to underlying stream of data
-                'has_body': req.body_exists,
+                'body_exists': req.body_exists,
                 'can_ready_body': req.can_read_body,
                 'content_type': content_type,
                 'url': url,
@@ -286,9 +286,13 @@ class AioHttpApi(AbstractAPI):
         body = None
 
         # if request is not multipart, `data` will be empty dict
+        # and stream will not be consumed
         post_data = yield from req.post()
+
+        # set those up beforehand, they are needed anyway
         files = {}
         form = {}
+
         if post_data:
             logger.debug('Reading multipart data from request')
             for k, v in post_data.items():
@@ -300,10 +304,8 @@ class AioHttpApi(AbstractAPI):
                     except AttributeError:
                         files[k] = [files[k], v]
                 elif not isinstance(v, web.FileField):
-                    # why do I have to return non file fields as an array?
-                    # If I don't everything goes off the clock in
-                    # connexion.decorators.uri_parsing.OpenAPIURIParser#resolve_form
-                    # string values like 'test' are becoming 't,e,s,t'
+                    # put normal fields as an array, that's how werkzeug does that for Flask
+                    # and that's what Connexion expects in its processing functions
                     form[k] = [v]
             body = b''
         else:
