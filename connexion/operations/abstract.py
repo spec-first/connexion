@@ -199,11 +199,7 @@ class AbstractOperation(SecureOperation):
                     logger.error("Function argument '{}' not defined in specification".format(key))
                 else:
                     logger.debug('%s is a %s', key, query_defn)
-                    if isinstance(value, dict):
-                        res.setdefault(key, {})
-                        res[key].update(self._get_val_from_param(value, query_defn))
-                    else:
-                        res[key] = self._get_val_from_param(value, query_defn)
+                    res.update({key: self._get_val_from_param(value, query_defn)})
         return res
 
     @abc.abstractmethod

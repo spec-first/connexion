@@ -256,11 +256,6 @@ def yamldumper(openapi):
     return yaml.dump(openapi, allow_unicode=True, Dumper=NoAnchorDumper)
 
 
-def fullmatch(regex, string, flags=0):
-    """Backport of re.fullmatch() for python version below 3.4."""
-    return re.match("(?:" + regex + r")\Z", string, flags=flags)
-
-
 def create_empty_dict_from_list(_list, _dict, _end_value):
     """create from ['foo', 'bar'] a dict like {'foo': {'bar': {}}} recursively. needed for converting query params"""
     current_key = _list.pop(0)

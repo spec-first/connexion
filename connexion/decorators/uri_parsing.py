@@ -2,10 +2,11 @@
 import abc
 import functools
 import logging
+import re
 
 import six
 
-from ..utils import create_empty_dict_from_list, fullmatch
+from ..utils import create_empty_dict_from_list
 from .decorator import BaseDecorator
 
 logger = logging.getLogger('connexion.decorators.uri_parsing')
@@ -97,20 +98,16 @@ class AbstractURIParser(BaseDecorator):
         """
         resolved_param = {}
         for k, values in params.items():
-            groups = fullmatch(r'^(\w+)((?:\[{1}\w+\]{1})+)$', k)
-            if groups:
-                possible_key = groups.group(1)
-                param_defn = self.param_defns.get(possible_key)
+            dict_keys = re.findall(r'\[(\w+)\]', k)
+            if dict_keys:
+                k = k.split("[", 1)[0]
+                param_defn = self.param_defns.get(k)
                 if param_defn and param_defn.get('style', None) == 'deepObject' and param_defn.get('explode', False):
-                    param_schema = self.param_schemas.get(possible_key)
+                    param_schema = self.param_schemas.get(k)
                     if isinstance(values, list) and len(values) == 1 and param_schema['type'] != 'array':
                         values = values[0]
-                    dict_keys = groups.group(2)
-                    dict_keys = [x[:-1] for x in dict_keys.split('[')]
-                    dict_keys.pop(0)
-                    key = possible_key
-                    resolved_param.setdefault(key, {})
-                    resolved_param[key].update(create_empty_dict_from_list(dict_keys, {}, values))
+                    resolved_param.setdefault(k, {})
+                    resolved_param[k].update(create_empty_dict_from_list(dict_keys, {}, values))
                     continue
 
             param_defn = self.param_defns.get(k)

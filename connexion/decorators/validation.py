@@ -65,16 +65,16 @@ def coerce_type(param, value, parameter_type, parameter_name=None):
             converted_params.append(converted)
         return converted_params
     elif param_type == 'object':
-        converted_params = {}
-        if 'properties' in param_schema and param_schema['properties']:
-            for k, v in value.items():
-                try:
-                    converted_params[k] = make_type(v, param_schema['properties'].get(k, {'type': None})['type'])
-                except (ValueError, TypeError):
-                    converted_params[k] = v
-            return converted_params
-        else:
-            return value
+        if param_schema.get('properties'):
+            def cast_leaves(d, schema):
+                if type(d) is not dict:
+                    return make_type(d, schema['type'])
+                for k, v in d.items():
+                    d[k] = cast_leaves(v, schema['properties'][k])
+                return d
+
+            return cast_leaves(value, param_schema)
+        return value
     else:
         try:
             return make_type(value, param_type)
