@@ -11,7 +11,6 @@ import jinja2
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPNotFound, HTTPPermanentRedirect
 from aiohttp.web_middlewares import normalize_path_middleware
-from connexion import http_facts
 from connexion.apis.abstract import AbstractAPI
 from connexion.exceptions import ProblemException
 from connexion.handlers import AuthErrorHandler
