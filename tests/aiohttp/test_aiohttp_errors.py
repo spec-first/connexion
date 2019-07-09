@@ -1,7 +1,4 @@
-# coding: utf-8
-
 import asyncio
-import sys
 
 import pytest
 
@@ -24,11 +21,6 @@ def aiohttp_app(problem_api_spec_dir):
     return app
 
 
-@pytest.mark.skipif(sys.version_info < (3, 5), reason="In python3.4, aiohttp.ClientResponse.json() requires "
-                                                      "an exact content_type match in the content_types header, "
-                                                      "but, application/problem+json is not in there. "
-                                                      "Newer versions use a re.match to see if the content_type is "
-                                                      "json or not.")
 @asyncio.coroutine
 def test_aiohttp_problems(aiohttp_app, aiohttp_client):
     # TODO: This is a based on test_errors.test_errors(). That should be refactored

@@ -51,8 +51,6 @@ tests_require = [
 ]
 
 if sys.version_info[0] >= 3:
-    if sys.version_info[1] <= 4:
-        aiohttp_require.append('httpstatus35')
     tests_require.extend(aiohttp_require)
     tests_require.append(ujson_require)
     tests_require.append('pytest-aiohttp')
@@ -120,7 +118,6 @@ setup(
     classifiers=[
         'Programming Language :: Python',
         'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
