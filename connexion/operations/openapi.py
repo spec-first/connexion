@@ -4,7 +4,6 @@ from copy import deepcopy
 from connexion.operations.abstract import AbstractOperation
 
 from ..decorators.uri_parsing import OpenAPIURIParser
-from .. import http_facts
 from ..utils import deep_get, is_null, is_nullable, make_type
 
 logger = logging.getLogger("connexion.operations.openapi3")
