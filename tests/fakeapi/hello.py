@@ -151,7 +151,7 @@ def schema_response_integer(valid):
     if valid == "valid":
         return 3
     else:
-        return 3.0
+        return 3.14
 
 
 def schema_response_number(valid):

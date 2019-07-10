@@ -56,9 +56,9 @@ draft4 format checker decorator.
 
 .. code-block:: python
 
-    from jsonschema import draft4_format_checker
+    from jsonschema import draft7_format_checker
 
-    @draft4_format_checker.checks('money')
+    @draft7_format_checker.checks('money')
     def is_money(val):
         ...
 

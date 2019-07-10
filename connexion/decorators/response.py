@@ -20,7 +20,7 @@ class ResponseValidator(BaseDecorator):
         :type operation: Operation
         :type mimetype: str
         :param validator: Validator class that should be used to validate passed data
-                          against API schema. Default is jsonschema.Draft4Validator.
+                          against API schema. Default is jsonschema.Draft7Validator.
         :type validator: jsonschema.IValidator
         """
         self.operation = operation

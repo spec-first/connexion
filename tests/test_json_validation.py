@@ -6,7 +6,7 @@ from jsonschema.validators import _utils, extend
 from conftest import build_app_from_fixture
 from connexion import App
 from connexion.decorators.validation import RequestBodyValidator
-from connexion.json_schema import Draft4RequestValidator
+from connexion.json_schema import Draft7RequestValidator
 
 SPECS = ["swagger.yaml", "openapi.yaml"]
 
@@ -14,16 +14,16 @@ SPECS = ["swagger.yaml", "openapi.yaml"]
 def test_validator_map(json_validation_spec_dir, spec):
     def validate_type(validator, types, instance, schema):
         types = _utils.ensure_list(types)
-        errors = Draft4RequestValidator.VALIDATORS['type'](validator, types, instance, schema)
+        errors = Draft7RequestValidator.VALIDATORS['type'](validator, types, instance, schema)
         for e in errors:
             yield e
 
         if 'string' in types and 'minLength' not in schema:
-            errors = Draft4RequestValidator.VALIDATORS['minLength'](validator, 1, instance, schema)
+            errors = Draft7RequestValidator.VALIDATORS['minLength'](validator, 1, instance, schema)
             for e in errors:
                 yield e
 
-    MinLengthRequestValidator = extend(Draft4RequestValidator, {'type': validate_type})
+    MinLengthRequestValidator = extend(Draft7RequestValidator, {'type': validate_type})
 
     class MyRequestBodyValidator(RequestBodyValidator):
         def __init__(self, *args, **kwargs):

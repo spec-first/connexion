@@ -1,7 +1,8 @@
 import collections
 from copy import deepcopy
 
-from jsonschema import Draft4Validator, RefResolver, _utils
+from jsonschema import (Draft4Validator, Draft6Validator, Draft7Validator,
+                        RefResolver, _utils)
 from jsonschema.exceptions import RefResolutionError, ValidationError  # noqa
 from jsonschema.validators import extend
 from openapi_spec_validator.handlers import UrlHandler
@@ -102,6 +103,34 @@ Draft4RequestValidator = extend(Draft4Validator, {
                                 'readOnly': validate_readOnly})
 
 Draft4ResponseValidator = extend(Draft4Validator, {
+                                 'type': validate_type,
+                                 'enum': validate_enum,
+                                 'required': validate_required,
+                                 'writeOnly': validate_writeOnly,
+                                 'x-writeOnly': validate_writeOnly})
+
+
+Draft6RequestValidator = extend(Draft6Validator, {
+                                'type': validate_type,
+                                'enum': validate_enum,
+                                'required': validate_required,
+                                'readOnly': validate_readOnly})
+
+Draft6ResponseValidator = extend(Draft6Validator, {
+                                 'type': validate_type,
+                                 'enum': validate_enum,
+                                 'required': validate_required,
+                                 'writeOnly': validate_writeOnly,
+                                 'x-writeOnly': validate_writeOnly})
+
+
+Draft7RequestValidator = extend(Draft7Validator, {
+                                'type': validate_type,
+                                'enum': validate_enum,
+                                'required': validate_required,
+                                'readOnly': validate_readOnly})
+
+Draft7ResponseValidator = extend(Draft7Validator, {
                                  'type': validate_type,
                                  'enum': validate_enum,
                                  'required': validate_required,

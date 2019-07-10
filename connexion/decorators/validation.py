@@ -5,12 +5,12 @@ import logging
 import sys
 
 import six
-from jsonschema import Draft4Validator, ValidationError, draft4_format_checker
+from jsonschema import Draft7Validator, ValidationError, draft7_format_checker
 from werkzeug import FileStorage
 
 from ..exceptions import ExtraParameterProblem
 from ..http_facts import FORM_CONTENT_TYPES
-from ..json_schema import Draft4RequestValidator, Draft4ResponseValidator
+from ..json_schema import Draft7RequestValidator, Draft7ResponseValidator
 from ..problem import problem
 from ..utils import all_json, boolean, is_json_mimetype, is_null, is_nullable
 
@@ -88,7 +88,7 @@ class RequestBodyValidator(object):
         :param consumes: The list of content types the operation consumes
         :param is_null_value_valid: Flag to indicate if null is accepted as valid value.
         :param validator: Validator class that should be used to validate passed data
-                          against API schema. Default is jsonschema.Draft4Validator.
+                          against API schema. Default is jsonschema.Draft7Validator.
         :type validator: jsonschema.IValidator
         :param strict_validation: Flag indicating if parameters not in spec are allowed
         """
@@ -96,8 +96,8 @@ class RequestBodyValidator(object):
         self.schema = schema
         self.has_default = schema.get('default', False)
         self.is_null_value_valid = is_null_value_valid
-        validatorClass = validator or Draft4RequestValidator
-        self.validator = validatorClass(schema, format_checker=draft4_format_checker)
+        validatorClass = validator or Draft7RequestValidator
+        self.validator = validatorClass(schema, format_checker=draft7_format_checker)
         self.api = api
         self.strict_validation = strict_validation
 
@@ -195,11 +195,11 @@ class ResponseBodyValidator(object):
         """
         :param schema: The schema of the response body
         :param validator: Validator class that should be used to validate passed data
-                          against API schema. Default is jsonschema.Draft4Validator.
+                          against API schema. Default is jsonschema.Draft7Validator.
         :type validator: jsonschema.IValidator
         """
-        ValidatorClass = validator or Draft4ResponseValidator
-        self.validator = ValidatorClass(schema, format_checker=draft4_format_checker)
+        ValidatorClass = validator or Draft7ResponseValidator
+        self.validator = ValidatorClass(schema, format_checker=draft7_format_checker)
 
     def validate_schema(self, data, url):
         # type: (dict, AnyStr) -> Union[ConnexionResponse, None]
@@ -245,13 +245,13 @@ class ParameterValidator(object):
                 del param['required']
             try:
                 if parameter_type == 'formdata' and param.get('type') == 'file':
-                    Draft4Validator(
+                    Draft7Validator(
                         param,
-                        format_checker=draft4_format_checker,
+                        format_checker=draft7_format_checker,
                         types={'file': FileStorage}).validate(converted_value)
                 else:
-                    Draft4Validator(
-                        param, format_checker=draft4_format_checker).validate(converted_value)
+                    Draft7Validator(
+                        param, format_checker=draft7_format_checker).validate(converted_value)
             except ValidationError as exception:
                 debug_msg = 'Error while converting value {converted_value} from param ' \
                             '{type_converted_value} of type real type {param_type} to the declared type {param}'

@@ -4,7 +4,7 @@ import connexion
 import jsonschema
 import six
 from connexion.decorators.validation import RequestBodyValidator
-from connexion.json_schema import Draft4RequestValidator
+from connexion.json_schema import Draft7RequestValidator
 
 
 def echo(data):
@@ -27,13 +27,13 @@ def extend_with_set_default(validator_class):
     return jsonschema.validators.extend(
         validator_class, {'properties': set_defaults})
 
-DefaultsEnforcingDraft4Validator = extend_with_set_default(Draft4RequestValidator)
+DefaultsEnforcingDraft7Validator = extend_with_set_default(Draft7RequestValidator)
 
 
 class DefaultsEnforcingRequestBodyValidator(RequestBodyValidator):
     def __init__(self, *args, **kwargs):
         super(DefaultsEnforcingRequestBodyValidator, self).__init__(
-            *args, validator=DefaultsEnforcingDraft4Validator, **kwargs)
+            *args, validator=DefaultsEnforcingDraft7Validator, **kwargs)
 
 
 validator_map = {
