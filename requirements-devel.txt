@@ -1,4 +1,4 @@
--e git+https://github.com/Julian/jsonschema.git@v2.6.0#egg=jsonschema
+-e git+https://github.com/Julian/jsonschema.git@v3.0.1#egg=jsonschema
 -e git+https://github.com/pallets/flask.git#egg=flask
 -e git+https://github.com/kennethreitz/requests#egg=requests
 -e git+https://github.com/zalando/python-clickclick.git#egg=clickclick
