@@ -295,6 +295,10 @@ class ParameterValidator(object):
         val = request.headers.get(param['name'])
         return self.validate_parameter('header', val, param)
 
+    def validate_cookie_parameter(self, param, request):
+        val = request.cookies.get(param['name'])
+        return self.validate_parameter('cookie', val, param)
+
     def validate_formdata_parameter(self, param_name, param, request):
         if param.get('type') == 'file' or param.get('format') == 'binary':
             val = request.files.get(param_name)
@@ -334,6 +338,12 @@ class ParameterValidator(object):
 
             for param in self.parameters.get('header', []):
                 error = self.validate_header_parameter(param, request)
+                if error:
+                    response = problem(400, 'Bad Request', error)
+                    return self.api.get_response(response)
+
+            for param in self.parameters.get('cookie', []):
+                error = self.validate_cookie_parameter(param, request)
                 if error:
                     response = problem(400, 'Bad Request', error)
                     return self.api.get_response(response)
