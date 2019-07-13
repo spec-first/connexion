@@ -12,6 +12,7 @@ def test_parameter_validator(monkeypatch):
     request = MagicMock(name='request')
     request.args = {}
     request.headers = {}
+    request.cookies = {}
     request.params = {}
     app = MagicMock(name='app')
 
@@ -24,13 +25,14 @@ def test_parameter_validator(monkeypatch):
 
     params = [{'name': 'p1', 'in': 'path', 'type': 'integer', 'required': True},
               {'name': 'h1', 'in': 'header', 'type': 'string', 'enum': ['a', 'b']},
+              {'name': 'c1', 'in': 'cookie', 'type': 'string', 'enum': ['a', 'b']},
               {'name': 'q1', 'in': 'query', 'type': 'integer', 'maximum': 3},
               {'name': 'a1', 'in': 'query', 'type': 'array', 'minItems': 2, 'maxItems': 3,
                'items': {'type': 'integer', 'minimum': 0}}]
     validator = ParameterValidator(params, FlaskApi)
     handler = validator(orig_handler)
 
-    kwargs = {'query': {}, 'headers': {}}
+    kwargs = {'query': {}, 'headers': {}, 'cookies': {}}
     request = MagicMock(path_params={}, **kwargs)
     assert json.loads(handler(request).data.decode())['detail'] == "Missing path parameter 'p1'"
     request = MagicMock(path_params={'p1': '123'}, **kwargs)
@@ -42,24 +44,30 @@ def test_parameter_validator(monkeypatch):
     request = MagicMock(path_params={'p1': '1.2'}, **kwargs)
     assert json.loads(handler(request).data.decode())['detail'] == "Wrong type, expected 'integer' for path parameter 'p1'"
 
-    request = MagicMock(path_params={'p1': 1}, query={'q1': '4'}, headers={})
+    request = MagicMock(path_params={'p1': 1}, query={'q1': '4'}, headers={}, cookies={})
     assert json.loads(handler(request).data.decode())['detail'].startswith('4 is greater than the maximum of 3')
-    request = MagicMock(path_params={'p1': 1}, query={'q1': '3'}, headers={})
+    request = MagicMock(path_params={'p1': 1}, query={'q1': '3'}, headers={}, cookies={})
     assert handler(request) == 'OK'
 
-    request = MagicMock(path_params={'p1': 1}, query={'a1': ['1', '2']}, headers={})
+    request = MagicMock(path_params={'p1': 1}, query={'a1': ['1', '2']}, headers={}, cookies={})
     assert handler(request) == "OK"
-    request = MagicMock(path_params={'p1': 1}, query={'a1': ['1', 'a']}, headers={})
+    request = MagicMock(path_params={'p1': 1}, query={'a1': ['1', 'a']}, headers={}, cookies={})
     assert json.loads(handler(request).data.decode())['detail'].startswith("'a' is not of type 'integer'")
-    request = MagicMock(path_params={'p1': 1}, query={'a1': ['1', '-1']}, headers={})
+    request = MagicMock(path_params={'p1': 1}, query={'a1': ['1', '-1']}, headers={}, cookies={})
     assert json.loads(handler(request).data.decode())['detail'].startswith("-1 is less than the minimum of 0")
-    request = MagicMock(path_params={'p1': 1}, query={'a1': ['1']}, headers={})
+    request = MagicMock(path_params={'p1': 1}, query={'a1': ['1']}, headers={}, cookies={})
     assert json.loads(handler(request).data.decode())['detail'].startswith("[1] is too short")
-    request = MagicMock(path_params={'p1': 1}, query={'a1': ['1', '2', '3', '4']}, headers={})
+    request = MagicMock(path_params={'p1': 1}, query={'a1': ['1', '2', '3', '4']}, headers={}, cookies={})
     assert json.loads(handler(request).data.decode())['detail'].startswith("[1, 2, 3, 4] is too long")
 
-    request = MagicMock(path_params={'p1': '123'}, query={}, headers={'h1': 'a'})
+    request = MagicMock(path_params={'p1': '123'}, query={}, headers={'h1': 'a'}, cookies={})
     assert handler(request) == 'OK'
 
-    request = MagicMock(path_params={'p1': '123'}, query={}, headers={'h1': 'x'})
+    request = MagicMock(path_params={'p1': '123'}, query={}, headers={'h1': 'x'}, cookies={})
+    assert json.loads(handler(request).data.decode())['detail'].startswith("'x' is not one of ['a', 'b']")
+
+    request = MagicMock(path_params={'p1': '123'}, query={}, headers={}, cookies={'c1': 'b'})
+    assert handler(request) == 'OK'
+
+    request = MagicMock(path_params={'p1': '123'}, query={}, headers={}, cookies={'c1': 'x'})
     assert json.loads(handler(request).data.decode())['detail'].startswith("'x' is not one of ['a', 'b']")
