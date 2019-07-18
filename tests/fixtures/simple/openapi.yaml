@@ -1054,28 +1054,44 @@ paths:
       - $ref: "#/components/parameters/OptionalName"
     get:
       operationId: fakeapi.hello.get_add_operation_on_http_methods_only
-      responses: {}
+      responses:
+        default:
+          description: ''
     put:
       operationId: fakeapi.hello.put_add_operation_on_http_methods_only
-      responses: {}
+      responses:
+        default:
+          description: ''
     post:
       operationId: fakeapi.hello.post_add_operation_on_http_methods_only
-      responses: {}
+      responses:
+        default:
+          description: ''
     delete:
       operationId: fakeapi.hello.delete_add_operation_on_http_methods_only
-      responses: {}
+      responses:
+        default:
+          description: ''
     options:
       operationId: fakeapi.hello.options_add_operation_on_http_methods_only
-      responses: {}
+      responses:
+        default:
+          description: ''
     head:
       operationId: fakeapi.hello.head_add_operation_on_http_methods_only
-      responses: {}
+      responses:
+        default:
+          description: ''
     patch:
       operationId: fakeapi.hello.patch_add_operation_on_http_methods_only
-      responses: {}
+      responses:
+        default:
+          description: ''
     trace:
       operationId: fakeapi.hello.trace_add_operation_on_http_methods_only
-      responses: {}
+      responses:
+        default:
+          description: ''
   /forward:
     post:
       operationId: fakeapi.hello.forward
