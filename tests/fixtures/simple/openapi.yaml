@@ -371,7 +371,8 @@ paths:
                     type: string
             encoding:
               items:
-                style: simple
+                style: form
+                explode: false
       responses:
         200:
           description: OK
