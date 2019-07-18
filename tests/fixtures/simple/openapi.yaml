@@ -406,7 +406,8 @@ paths:
         - name: items
           in: query
           description: An comma separated array of items
-          style: simple
+          style: form
+          explode: false
           schema:
             type: array
             default: ["squash", "banana"]
