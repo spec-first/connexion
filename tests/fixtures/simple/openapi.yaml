@@ -424,7 +424,7 @@ paths:
         - name: items
           in: query
           description: An comma separated array of items
-          style: csv
+          style: form
           explode: true
           schema:
             type: array
