@@ -54,6 +54,9 @@ def validate_type(validator, types, instance, schema):
     if instance is None and (schema.get('x-nullable') is True or schema.get('nullable')):
         return
 
+    if types == "file":
+        types = "string"
+
     types = _utils.ensure_list(types)
 
     if not any(validator.is_type(instance, type) for type in types):

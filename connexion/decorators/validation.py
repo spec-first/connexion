@@ -144,7 +144,7 @@ class RequestBodyValidator(object):
                     return error
             elif self.consumes[0] in FORM_CONTENT_TYPES:
                 data = dict(request.form.items()) or (request.body if len(request.body) > 0 else {})
-                data.update(dict.fromkeys(request.files, ''))  # validator expects string..
+                data.update({k: "" for k, v in request.files.items() if v})
                 logger.debug('%s validating schema...', request.url)
 
                 if self.strict_validation:
