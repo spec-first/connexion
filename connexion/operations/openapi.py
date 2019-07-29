@@ -244,12 +244,12 @@ class OpenAPIOperation(AbstractOperation):
         return {}
 
     def _get_body_argument(self, body, arguments, has_kwargs, sanitize):
-        x_body_name = self.body_schema.get('x-body-name', 'body')
+        x_body_name = sanitize(self.body_schema.get('x-body-name', 'body'))
         if is_nullable(self.body_schema) and is_null(body):
             return {x_body_name: None}
 
         default_body = self.body_schema.get('default', {})
-        body_props = {sanitize(k): {"schema": v} for k, v
+        body_props = {k: {"schema": v} for k, v
                       in self.body_schema.get("properties", {}).items()}
 
         # by OpenAPI specification `additionalProperties` defaults to `true`
@@ -269,25 +269,27 @@ class OpenAPIOperation(AbstractOperation):
 
         res = {}
         if body_props or additional_props:
-            res = self._sanitize_body_argument(body_arg, body_props, additional_props, sanitize)
+            res = self._get_typed_body_values(body_arg, body_props, additional_props)
 
         if x_body_name in arguments or has_kwargs:
             return {x_body_name: res}
         return {}
 
-    def _sanitize_body_argument(self, body_arg, body_props, additional_props, sanitize):
+    def _get_typed_body_values(self, body_arg, body_props, additional_props):
         """
+        Return a copy of the provided body_arg dictionary
+        whose values will have the appropriate types
+        as defined in the provided schemas.
+
         :type body_arg: type dict
         :type body_props: dict
         :type additional_props: dict|bool
-        :type sanitize: types.FunctionType
         :rtype: dict
         """
         additional_props_defn = {"schema": additional_props} if isinstance(additional_props, dict) else None
         res = {}
 
         for key, value in body_arg.items():
-            key = sanitize(key)
             try:
                 prop_defn = body_props[key]
                 res[key] = self._get_val_from_param(value, prop_defn)
