@@ -964,6 +964,26 @@ paths:
             items:
               type: integer
 
+  /forward:
+    post:
+      operationId: fakeapi.hello.forward
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+      responses:
+        200:
+          description: >
+            The response containing the same data as were present in request body.
+          schema:
+            type: object
+
 definitions:
   new_stack:
     type: object

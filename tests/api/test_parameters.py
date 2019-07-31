@@ -392,6 +392,22 @@ def test_param_sanitization(simple_app):
     assert resp.status_code == 200
     assert json.loads(resp.data.decode('utf-8', 'replace')) == body
 
+def test_no_sanitization_in_request_body(simple_app):
+    app_client = simple_app.app.test_client()
+    data = {
+        'name': 'John',
+        '$surname': 'Doe',
+        '1337': True,
+        '!#/bin/sh': False,
+        '(1/0)': 'division by zero',
+        's/$/EOL/': 'regular expression',
+        '@8am': 'time',
+    }
+    response = app_client.post('/v1.0/forward', json=data)
+
+    assert response.status_code == 200
+    assert response.json == data
+
 def test_parameters_snake_case(snake_case_app):
     app_client = snake_case_app.app.test_client()
     headers = {'Content-type': 'application/json'}

@@ -131,6 +131,11 @@ def schema(new_stack):
     return new_stack
 
 
+def forward(body):
+    """Return a response with the same payload as in the request body."""
+    return body
+
+
 def schema_response_object(valid):
     if valid == "invalid_requirements":
         return {"docker_version": 1.0}
