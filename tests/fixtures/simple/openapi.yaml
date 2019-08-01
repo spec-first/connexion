@@ -1051,7 +1051,7 @@ paths:
     servers:
       - url: http://localhost
     parameters:
-      - $ref: "#/components/parameters/OptionalName"
+      - $ref: "#/components/parameters/Name"
     get:
       operationId: fakeapi.hello.get_add_operation_on_http_methods_only
       responses:
@@ -1151,10 +1151,10 @@ components:
       required:
         - image_version
   parameters:
-    OptionalName:
+    Name:
       name: name
       in: path
       description: Name of the person to greet.
-      required: false
+      required: true
       schema:
         type: string
