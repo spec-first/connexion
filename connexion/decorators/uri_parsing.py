@@ -175,7 +175,7 @@ class OpenAPIURIParser(AbstractURIParser):
                 self._resolve_param_duplicates(form_data[k], encoding, 'form')
             if defn and defn["type"] == "array":
                 form_data[k] = self._split(form_data[k], encoding, 'form')
-            elif encoding.get('contentType', None) == 'application/json':
+            elif 'contentType' in encoding && utils.all_json([encoding.get['contentType'])]:
                 form_data[k] = json.loads(form_data[k])
         return form_data
 
