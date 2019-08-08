@@ -73,7 +73,8 @@ def coerce_type(param, value, parameter_type, parameter_name=None):
                     except (ValueError, TypeError):
                         return d
                 for k, v in d.items():
-                    d[k] = cast_leaves(v, schema['properties'][k])
+                    if k in schema['properties']:
+                        d[k] = cast_leaves(v, schema['properties'][k])
                 return d
 
             return cast_leaves(value, param_schema)
