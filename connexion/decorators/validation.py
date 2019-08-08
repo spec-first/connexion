@@ -68,7 +68,10 @@ def coerce_type(param, value, parameter_type, parameter_name=None):
         if param_schema.get('properties'):
             def cast_leaves(d, schema):
                 if type(d) is not dict:
-                    return make_type(d, schema['type'])
+                    try:
+                        return make_type(d, schema['type'])
+                    except (ValueError, TypeError):
+                        return d
                 for k, v in d.items():
                     d[k] = cast_leaves(v, schema['properties'][k])
                 return d
