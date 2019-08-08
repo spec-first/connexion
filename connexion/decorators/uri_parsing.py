@@ -2,7 +2,7 @@
 import abc
 import functools
 import logging
-import json
+from .. import utils
 
 import six
 
