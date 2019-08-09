@@ -326,7 +326,7 @@ class OpenAPIOperation(AbstractOperation):
             return_dict = {}
             for prop_key in query_schema['properties'].keys():
                 prop_value = value.get(prop_key, None)
-                if prop_value:
+                if prop_value is not None:  # False is a valid value for boolean values
                     try:
                         return_dict[prop_key] = make_type(value[prop_key],
                                                           query_schema['properties'][prop_key]['type'])
