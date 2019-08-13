@@ -8,7 +8,7 @@ import six
 from jsonschema import Draft4Validator, ValidationError, draft4_format_checker
 from werkzeug import FileStorage
 
-from ..exceptions import ExtraParameterProblem
+from ..exceptions import ExtraParameterProblem, ProblemException
 from ..http_facts import FORM_CONTENT_TYPES
 from ..json_schema import Draft4RequestValidator, Draft4ResponseValidator
 from ..problem import problem
@@ -126,22 +126,22 @@ class RequestBodyValidator(object):
 
                     if ctype_is_json:
                         # Content-Type is json but actual body was not parsed
-                        return problem(400,
-                                       "Bad Request",
-                                       "Request body is not valid JSON"
-                                       )
+                        raise ProblemException(400,
+                                               "Bad Request",
+                                               "Request body is not valid JSON"
+                                               )
                     else:
                         # the body has contents that were not parsed as JSON
-                        return problem(415,
-                                       "Unsupported Media Type",
-                                       "Invalid Content-type ({content_type}), expected JSON data".format(
-                                           content_type=request.headers.get("Content-Type", "")
-                                       ))
+                        raise ProblemException(415,
+                                               "Unsupported Media Type",
+                                               "Invalid Content-type ({content_type}), expected JSON data".format(
+                                                   content_type=request.headers.get("Content-Type", "")
+                                               ))
 
                 logger.debug("%s validating schema...", request.url)
                 error = self.validate_schema(data, request.url)
                 if error and not self.has_default:
-                    return error
+                    raise error
             elif self.consumes[0] in FORM_CONTENT_TYPES:
                 data = dict(request.form.items()) or (request.body if len(request.body) > 0 else {})
                 data.update(dict.fromkeys(request.files, ''))  # validator expects string..
@@ -163,11 +163,11 @@ class RequestBodyValidator(object):
                                 errs += [str(e)]
                                 print(errs)
                     if errs:
-                        return problem(400, 'Bad Request', errs)
+                        raise ProblemException(400, 'Validation error', ', '.join(errs))
 
                 error = self.validate_schema(data, request.url)
                 if error:
-                    return error
+                    raise error
 
             response = function(request)
             return response
@@ -185,7 +185,7 @@ class RequestBodyValidator(object):
             logger.error("{url} validation error: {error}".format(url=url,
                                                                   error=exception.message),
                          extra={'validator': 'body'})
-            return problem(400, 'Bad Request', str(exception.message))
+            return ProblemException(400, 'Validation error', str(exception.message))
 
         return None
 

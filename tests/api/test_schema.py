@@ -9,7 +9,7 @@ def test_schema(schema_app):
     assert empty_request.status_code == 400
     assert empty_request.content_type == 'application/problem+json'
     empty_request_response = json.loads(empty_request.data.decode('utf-8', 'replace'))  # type: dict
-    assert empty_request_response['title'] == 'Bad Request'
+    assert empty_request_response['title'] == 'Validation error'
     assert empty_request_response['detail'].startswith("'image_version' is a required property")
 
     bad_type = app_client.post('/v1.0/test_schema', headers=headers,
@@ -17,7 +17,7 @@ def test_schema(schema_app):
     assert bad_type.status_code == 400
     assert bad_type.content_type == 'application/problem+json'
     bad_type_response = json.loads(bad_type.data.decode('utf-8', 'replace'))  # type: dict
-    assert bad_type_response['title'] == 'Bad Request'
+    assert bad_type_response['title'] == 'Validation error'
     assert bad_type_response['detail'].startswith("22 is not of type 'string'")
 
     good_request = app_client.post('/v1.0/test_schema', headers=headers,
@@ -37,7 +37,7 @@ def test_schema(schema_app):
     assert wrong_type.status_code == 400
     assert wrong_type.content_type == 'application/problem+json'
     wrong_type_response = json.loads(wrong_type.data.decode('utf-8', 'replace'))  # type: dict
-    assert wrong_type_response['title'] == 'Bad Request'
+    assert wrong_type_response['title'] == 'Validation error'
     assert wrong_type_response['detail'].startswith("42 is not of type 'object'")
 
 
@@ -100,7 +100,7 @@ def test_schema_list(schema_app):
     assert wrong_type.status_code == 400
     assert wrong_type.content_type == 'application/problem+json'
     wrong_type_response = json.loads(wrong_type.data.decode('utf-8', 'replace'))  # type: dict
-    assert wrong_type_response['title'] == 'Bad Request'
+    assert wrong_type_response['title'] == 'Validation error'
     assert wrong_type_response['detail'].startswith("42 is not of type 'array'")
 
     wrong_items = app_client.post('/v1.0/test_schema_list', headers=headers,
@@ -108,7 +108,7 @@ def test_schema_list(schema_app):
     assert wrong_items.status_code == 400
     assert wrong_items.content_type == 'application/problem+json'
     wrong_items_response = json.loads(wrong_items.data.decode('utf-8', 'replace'))  # type: dict
-    assert wrong_items_response['title'] == 'Bad Request'
+    assert wrong_items_response['title'] == 'Validation error'
     assert wrong_items_response['detail'].startswith("42 is not of type 'string'")
 
 
@@ -133,7 +133,7 @@ def test_schema_map(schema_app):
     assert wrong_type.status_code == 400
     assert wrong_type.content_type == 'application/problem+json'
     wrong_type_response = json.loads(wrong_type.data.decode('utf-8', 'replace'))  # type: dict
-    assert wrong_type_response['title'] == 'Bad Request'
+    assert wrong_type_response['title'] == 'Validation error'
     assert wrong_type_response['detail'].startswith("42 is not of type 'object'")
 
     wrong_items = app_client.post('/v1.0/test_schema_map', headers=headers,
@@ -141,7 +141,7 @@ def test_schema_map(schema_app):
     assert wrong_items.status_code == 400
     assert wrong_items.content_type == 'application/problem+json'
     wrong_items_response = json.loads(wrong_items.data.decode('utf-8', 'replace'))  # type: dict
-    assert wrong_items_response['title'] == 'Bad Request'
+    assert wrong_items_response['title'] == 'Validation error'
     assert wrong_items_response['detail'].startswith("42 is not of type 'object'")
 
     right_type = app_client.post('/v1.0/test_schema_map', headers=headers,
@@ -172,7 +172,7 @@ def test_schema_recursive(schema_app):
     assert wrong_type.status_code == 400
     assert wrong_type.content_type == 'application/problem+json'
     wrong_type_response = json.loads(wrong_type.data.decode('utf-8'))  # type: dict
-    assert wrong_type_response['title'] == 'Bad Request'
+    assert wrong_type_response['title'] == 'Validation error'
     assert wrong_type_response['detail'].startswith("42 is not of type 'object'")
 
     wrong_items = app_client.post('/v1.0/test_schema_recursive', headers=headers,
@@ -180,7 +180,7 @@ def test_schema_recursive(schema_app):
     assert wrong_items.status_code == 400
     assert wrong_items.content_type == 'application/problem+json'
     wrong_items_response = json.loads(wrong_items.data.decode('utf-8'))  # type: dict
-    assert wrong_items_response['title'] == 'Bad Request'
+    assert wrong_items_response['title'] == 'Validation error'
     assert wrong_items_response['detail'].startswith("42 is not of type 'object'")
 
     right_type = app_client.post('/v1.0/test_schema_recursive', headers=headers,
@@ -197,7 +197,7 @@ def test_schema_format(schema_app):
     assert wrong_type.status_code == 400
     assert wrong_type.content_type == 'application/problem+json'
     wrong_type_response = json.loads(wrong_type.data.decode('utf-8', 'replace'))  # type: dict
-    assert wrong_type_response['title'] == 'Bad Request'
+    assert wrong_type_response['title'] == 'Validation error'
     assert "'xy' is not a 'email'" in wrong_type_response['detail']
 
 
