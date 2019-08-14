@@ -473,6 +473,28 @@ paths:
                   format: binary
               required:
                 - formData
+  /test-formData-file-upload-and-string:
+    post:
+      summary: 'Test formData with file type, with additional string parameters'
+      operationId: fakeapi.hello.test_formdata_file_upload_and_string
+      responses:
+        '200':
+          description: OK
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              x-body-name: formData
+              type: object
+              properties:
+                stringData:
+                  type: string
+                formData:
+                  type: string
+                  format: binary
+              required:
+                - stringData
+                - formData
   /test-formData-file-upload-missing-param:
     post:
       summary: 'Test formData with file type, missing parameter in handler'

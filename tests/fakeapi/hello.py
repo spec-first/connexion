@@ -300,6 +300,15 @@ def test_formdata_file_upload(formData, **kwargs):
     return {filename: contents}
 
 
+def test_formdata_file_upload_and_string(stringData, formData):
+    filename = formData.filename
+    contents = formData.read().decode('utf-8', 'replace')
+    return {
+        'stringData': stringData,
+        filename: contents
+    }
+
+
 def test_formdata_file_upload_missing_param():
     return ''
 
