@@ -33,7 +33,7 @@ install_requires = [
 ]
 
 swagger_ui_require = 'swagger-ui-bundle>=0.0.2'
-flask_require = 'flask>=0.10.1'
+flask_require = 'flask>=1.0.4'
 aiohttp_require = [
     'aiohttp>=2.3.10,<3.5.2',
     'aiohttp-jinja2>=0.14.0'
@@ -118,7 +118,6 @@ setup(
     classifiers=[
         'Programming Language :: Python',
         'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',

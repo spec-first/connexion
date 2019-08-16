@@ -16,7 +16,7 @@ def test_errors(problem_app):
     error404 = flask.json.loads(fix_data(greeting404.data))
     assert error404['type'] == 'about:blank'
     assert error404['title'] == 'Not Found'
-    assert error404['detail'] == 'The requested URL was not found on the server.  ' \
+    assert error404['detail'] == 'The requested URL was not found on the server. ' \
                                  'If you entered the URL manually please check your spelling and try again.'
     assert error404['status'] == 404
     assert 'instance' not in error404
@@ -37,7 +37,7 @@ def test_errors(problem_app):
     error500 = json.loads(get500.data.decode('utf-8', 'replace'))
     assert error500['type'] == 'about:blank'
     assert error500['title'] == 'Internal Server Error'
-    assert error500['detail'] == 'The server encountered an internal error and was unable to complete your request.  ' \
+    assert error500['detail'] == 'The server encountered an internal error and was unable to complete your request. ' \
                                  'Either the server is overloaded or there is an error in the application.'
     assert error500['status'] == 500
     assert 'instance' not in error500

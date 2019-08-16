@@ -371,11 +371,11 @@ class AbstractOperation(SecureOperation):
         logger.debug('... Adding security decorator (%r)', security_decorator)
         function = security_decorator(function)
 
+        function = self._request_response_decorator(function)
+
         if UWSGIMetricsCollector.is_available():  # pragma: no cover
             decorator = UWSGIMetricsCollector(self.path, self.method)
             function = decorator(function)
-
-        function = self._request_response_decorator(function)
 
         return function
 
