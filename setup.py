@@ -27,7 +27,7 @@ install_requires = [
     'requests>=2.22.0',
     'six>=1.12.0',
     'inflection>=0.3.1',
-    'pathlib2>=2.3.4; python_version < "3.4"',
+    'pathlib>=1.0.1; python_version < "3.4"',
     'typing>=3.7.4.1; python_version < "3.6"',
     'openapi-spec-validator>=0.2.8',
 ]
