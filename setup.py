@@ -21,22 +21,22 @@ def read_version(package):
 version = read_version('connexion')
 
 install_requires = [
-    'clickclick>=1.2',
+    'clickclick>=1.2.2',
     'jsonschema>=2.5.1,<3.0.0',
-    'PyYAML>=5.1',
-    'requests>=2.9.1',
+    'PyYAML>=5.1.2',
+    'requests>=2.22.0',
     'six>=1.12.0',
     'inflection>=0.3.1',
-    'pathlib>=1.0.1; python_version < "3.4"',
-    'typing>=3.6.1; python_version < "3.6"',
-    'openapi-spec-validator>=0.2.4',
+    'pathlib2>=2.3.4; python_version < "3.4"',
+    'typing>=3.7.4.1; python_version < "3.6"',
+    'openapi-spec-validator>=0.2.8',
 ]
 
-swagger_ui_require = 'swagger-ui-bundle>=0.0.2'
-flask_require = 'flask>=1.0.4'
+swagger_ui_require = 'swagger-ui-bundle>=0.0.5'
+flask_require = 'flask>=1.1.1'
 aiohttp_require = [
     'aiohttp>=2.3.10,<3.5.2',
-    'aiohttp-jinja2>=0.14.0'
+    'aiohttp-jinja2>=1.1.2'
 ]
 ujson_require = 'ujson>=1.35'
 
