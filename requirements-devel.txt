@@ -1,9 +1,10 @@
 -e git+https://github.com/Julian/jsonschema.git@v2.6.0#egg=jsonschema
 -e git+https://github.com/pallets/flask.git#egg=flask
--e git+https://github.com/kennethreitz/requests#egg=requests
+-e git+https://github.com/psf/requests#egg=requests
 -e git+https://github.com/zalando/python-clickclick.git#egg=clickclick
 inflection
 mock
+pathlib2
 pytest
 testfixtures>=5.3.0
 # This repo doesn't have the latest version released on PyPI
