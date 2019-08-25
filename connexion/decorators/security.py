@@ -16,7 +16,9 @@ logger = logging.getLogger('connexion.api.security')
 
 # use connection pool for OAuth tokeninfo
 adapter = requests.adapters.HTTPAdapter(pool_connections=100, pool_maxsize=100)
+print(requests.__version__)
 session = requests.Session()
+print(session)
 session.mount('http://', adapter)
 session.mount('https://', adapter)
 
