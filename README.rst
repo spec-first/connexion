@@ -317,11 +317,11 @@ api options.
 .. code-block:: python
 
    from connexion.decorators.uri_parsing import AlwaysMultiURIParser
-   options = {'uri_parsing_class': AlwaysMultiURIParser}
+   options = {'uri_parser_class': AlwaysMultiURIParser}
    app = connexion.App(__name__, specification_dir='swagger/', options=options)
 
 You can implement your own URI parsing behavior by inheriting from
-``connextion.decorators.uri_parsing.AbstractURIParser``.
+``connexion.decorators.uri_parsing.AbstractURIParser``.
 
 There are a handful of URI parsers included with connection.
 
