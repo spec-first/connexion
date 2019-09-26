@@ -98,6 +98,8 @@ class AbstractURIParser(BaseDecorator):
         """
         resolved_param = {}
         for k, values in params.items():
+            # extract the dict keys if specified with style: deepObject and explode: true
+            # according to https://swagger.io/docs/specification/serialization/#query
             dict_keys = re.findall(r'\[(\w+)\]', k)
             if dict_keys:
                 k = k.split("[", 1)[0]
