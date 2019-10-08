@@ -75,3 +75,14 @@ def test_writeonly(json_validation_spec_dir, spec):
     res = app_client.get('/v1.0/user_with_password') # type: flask.Response
     assert res.status_code == 500
     assert json.loads(res.data.decode())['title'] == 'Response body does not conform to specification'
+
+
+@pytest.mark.parametrize("spec", ["openapi.yaml"])
+def test_multipart_form_json(json_validation_spec_dir, spec):
+    app = build_app_from_fixture(json_validation_spec_dir, spec, validate_responses=True)
+    app_client = app.app.test_client()
+
+    res = app_client.post('/v1.0/multipart_form_json', data={'x': json.dumps({"name": "joe", "age": 20})}, content_type='multipart/form-data')
+    assert res.status_code == 200
+    assert json.loads(res.data.decode())['name'] == "joe-reply"
+    assert json.loads(res.data.decode())['age'] == 30
