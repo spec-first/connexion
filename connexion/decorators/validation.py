@@ -4,8 +4,10 @@ import functools
 import logging
 import sys
 
+import pkg_resources
 import six
 from jsonschema import Draft4Validator, ValidationError, draft4_format_checker
+from jsonschema.validators import extend
 from werkzeug.datastructures import FileStorage
 
 from ..exceptions import ExtraParameterProblem
@@ -13,6 +15,10 @@ from ..http_facts import FORM_CONTENT_TYPES
 from ..json_schema import Draft4RequestValidator, Draft4ResponseValidator
 from ..problem import problem
 from ..utils import all_json, boolean, is_json_mimetype, is_null, is_nullable
+
+_jsonschema_3_or_newer = pkg_resources.parse_version(
+        pkg_resources.get_distribution("jsonschema").version) >= \
+    pkg_resources.parse_version("3.0.0")
 
 logger = logging.getLogger('connexion.decorators.validation')
 
@@ -245,10 +251,19 @@ class ParameterValidator(object):
                 del param['required']
             try:
                 if parameter_type == 'formdata' and param.get('type') == 'file':
-                    Draft4Validator(
-                        param,
-                        format_checker=draft4_format_checker,
-                        types={'file': FileStorage}).validate(converted_value)
+                    if _jsonschema_3_or_newer:
+                        extend(
+                            Draft4Validator,
+                            type_checker=Draft4Validator.TYPE_CHECKER.redefine(
+                                "file",
+                                lambda checker, instance: isinstance(instance, FileStorage)
+                            )
+                        )(param, format_checker=draft4_format_checker).validate(converted_value)
+                    else:
+                        Draft4Validator(
+                            param,
+                            format_checker=draft4_format_checker,
+                            types={'file': FileStorage}).validate(converted_value)
                 else:
                     Draft4Validator(
                         param, format_checker=draft4_format_checker).validate(converted_value)
