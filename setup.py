@@ -22,7 +22,7 @@ version = read_version('connexion')
 
 install_requires = [
     'clickclick>=1.2',
-    'jsonschema>=2.5.1,<3.0.0',
+    'jsonschema>=2.5.1',
     'PyYAML>=5.1',
     'requests>=2.9.1',
     'six>=1.9',
