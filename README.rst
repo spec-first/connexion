@@ -485,7 +485,7 @@ In order to do this, you should specify the following option:
    options = {'swagger_path': '/path/to/swagger_ui/'}
    app = connexion.App(__name__, specification_dir='openapi/', options=options)
 
-If you wish to provide your own swagger-ui distro, note that connextion
+If you wish to provide your own swagger-ui distro, note that connexion
 expects a jinja2 file called ``swagger_ui/index.j2`` in order to load the
 correct ``swagger.json`` by default. Your ``index.j2`` file can use the
 ``openapi_spec_url`` jinja variable for this purpose:
