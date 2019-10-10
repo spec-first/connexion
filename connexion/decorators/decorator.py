@@ -64,7 +64,7 @@ class RequestResponseDecorator(BaseDecorator):
 
         # if jaeger and a span are configured, finish it now.
         if jaeger and span:
-            span.log_kv({"response": wrapper.response}
+            span.log_kv({"response": wrapper.response})
             span.finish()
             
         return wrapper
