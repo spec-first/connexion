@@ -10,6 +10,8 @@ try:
 except NameError:  # pragma: no cover
     py_string = str  # pragma: no cover
 
+# for global use only
+jaeger = None
 
 def boolean(s):
     '''
