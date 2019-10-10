@@ -32,6 +32,8 @@ install_requires = [
     'openapi-spec-validator>=0.2.4',
 ]
 
+jaeger_client_require = 'jaeger-client>=4.1.0'
+
 swagger_ui_require = 'swagger-ui-bundle>=0.0.2'
 flask_require = 'flask>=1.0.4'
 aiohttp_require = [
@@ -110,6 +112,7 @@ setup(
         'tests': tests_require,
         'flask': flask_require,
         'swagger-ui': swagger_ui_require,
+        'jaeger-client': jaeger_client_require,
         'aiohttp': aiohttp_require,
         'ujson': ujson_require
     },
