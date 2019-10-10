@@ -49,7 +49,7 @@ class RequestResponseDecorator(BaseDecorator):
             span_tags = {tags.SPAN_KIND: tags.SPAN_KIND_RPC_SERVER}
             
             span = tracer.start_active_span('RequestResponseDecorator', child_of=span_ctx, tags=span_tags)
-            span.log_kv({"request": request}
+            span.log_kv({"request": request})
                                         
         if has_coroutine(function, self.api):  # pragma: 2.7 no cover
             from .coroutine_wrappers import get_request_life_cycle_wrapper
