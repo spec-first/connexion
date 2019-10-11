@@ -26,6 +26,9 @@ class ConnexionRequest(object):
     def json(self):
         return self.json_getter()
 
+    def __str__(self):
+        return str(vars(self))
+
 
 class ConnexionResponse(object):
     def __init__(self,
@@ -39,3 +42,6 @@ class ConnexionResponse(object):
         self.content_type = content_type
         self.body = body
         self.headers = headers or {}
+
+    def __str__(self):
+        return str(vars(self))
