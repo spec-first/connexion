@@ -550,12 +550,39 @@ See the `uWSGI documentation`_ for more information.
 .. _uWSGI documentation: https://uwsgi-docs.readthedocs.org/
 .. _examples: https://docs.aiohttp.org/en/stable/web.html#handler
 
+Opentracing
+-----------
+
+If you want to use the opentracing specification to track your application, you can use it with the following snippet: (Example inspired by [https://github.com/jaegertracing/jaeger-client-python](jaeger-client-python))
+
+.. code-block:: python
+    from jaeger_client import Config
+
+    config = jConfig(
+        config={  # usually read from some yaml config
+            'sampler': {
+                'type': 'const',
+                'param': 1,
+            },
+            'logging': True,
+        },
+        service_name='Test-Service',
+        validate=True,
+    )
+
+    tracer = config.initialize_tracer()
+    app.add_api('openapi.yaml', resolver=RestyResolver('api'), use_tracer=tracer)
+
+Currently you can install an opentracing implementation with `pip install connexion[jaeger-client]`, which installs the python-implementation of jaeger.
 
 Documentation
+
 =============
+
 Additional information is available at `Connexion's Documentation Page`_.
 
 Changes
+
 =======
 
 A full changelog is maintained on the `GitHub releases page`_.
