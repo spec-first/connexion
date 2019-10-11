@@ -9,7 +9,7 @@ def TracerDecorator(func):
         tracer = get_tracer()
 
         # if tracer is configured, then start a span now
-        if tracer:
+        if tracer is not None:
             from opentracing.ext import tags
             from opentracing.propagation import Format
 
@@ -30,9 +30,7 @@ def TracerDecorator(func):
 
             resp = func(cls, response, mimetype, request)
 
-            # if jaeger and a span are configured, finish it now.
             scope.log_kv({"response": response})
-
             scope.finish()
         else:
             resp = func(cls, response, mimetype, request)
