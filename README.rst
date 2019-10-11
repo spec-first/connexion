@@ -553,9 +553,10 @@ See the `uWSGI documentation`_ for more information.
 Opentracing
 -----------
 
-If you want to use the opentracing specification to track your application, you can use it with the following snippet: (Example inspired by [https://github.com/jaegertracing/jaeger-client-python](jaeger-client-python))
+If you want to use the opentracing specification to track your application, you can use it with the following snippet: (Example inspired by `jaeger-client-python`_)
 
 .. code-block:: python
+
     from jaeger_client import Config
 
     config = jConfig(
@@ -574,15 +575,16 @@ If you want to use the opentracing specification to track your application, you 
     app.add_api('openapi.yaml', resolver=RestyResolver('api'), use_tracer=tracer)
 
 Currently you can install an opentracing implementation with `pip install connexion[jaeger-client]`, which installs the python-implementation of jaeger.
+In combination with `resolver=RestyResolver('api')`, this is a fast way to specify and implement a microservice via openapi.
+
+.. _jaeger-client-python: https://github.com/jaegertracing/jaeger-client-python
 
 Documentation
-
 =============
 
 Additional information is available at `Connexion's Documentation Page`_.
 
 Changes
-
 =======
 
 A full changelog is maintained on the `GitHub releases page`_.
