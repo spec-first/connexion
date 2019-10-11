@@ -572,7 +572,7 @@ If you want to use the opentracing specification to track your application, you 
     )
 
     tracer = config.initialize_tracer()
-    app.add_api('openapi.yaml', resolver=RestyResolver('api'), use_tracer=tracer)
+    app.add_api('openapi.yaml', use_tracer=tracer)
 
 Currently you can install an opentracing implementation with `pip install connexion[jaeger-client]`, which installs the python-implementation of jaeger.
 In combination with `resolver=RestyResolver('api')`, this is a fast way to specify and implement a microservice via openapi.
