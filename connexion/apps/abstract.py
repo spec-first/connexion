@@ -6,6 +6,7 @@ import six
 
 from ..options import ConnexionOptions
 from ..resolver import Resolver
+from ..utils import set_tracer
 
 logger = logging.getLogger('connexion.app')
 
@@ -88,7 +89,7 @@ class AbstractApp(object):
                 auth_all_paths=None, validate_responses=False,
                 strict_validation=False, resolver=None, resolver_error=None,
                 pythonic_params=False, pass_context_arg_name=None, options=None,
-                validator_map=None):
+                validator_map=None, use_tracer=None):
         """
         Adds an API to the application based on a swagger file or API dict
 
@@ -117,6 +118,8 @@ class AbstractApp(object):
         :type pass_context_arg_name: str | None
         :param validator_map: map of validators
         :type validator_map: dict
+        :param use_tracer: object, which implements the opentracing spec
+        :type use_tracer: opentracing
         :rtype: AbstractAPI
         """
         # Turn the resolver_error code into a handler object
@@ -124,6 +127,11 @@ class AbstractApp(object):
         resolver_error_handler = None
         if self.resolver_error is not None:
             resolver_error_handler = self._resolver_error_handler
+
+        # use jaeger
+        if use_tracer is not None:
+            logger.debug("Got a tracer and will use it to report.")
+            set_tracer(use_tracer)
 
         resolver = resolver or self.resolver
         resolver = Resolver(resolver) if hasattr(resolver, '__call__') else resolver

@@ -81,6 +81,7 @@ class AbstractAPI(object):
                             'swagger_path': self.options.openapi_console_ui_from_dir,
                             'swagger_url': self.options.openapi_console_ui_path})
 
+
         self._set_base_path(base_path)
 
         logger.debug('Security Definitions: %s', self.specification.security_definitions)

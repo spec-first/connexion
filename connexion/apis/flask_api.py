@@ -11,6 +11,8 @@ from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.utils import Jsonifier, is_json_mimetype, yamldumper
 from werkzeug.local import LocalProxy
 
+from ..decorators.TracerDecorator import TracerDecorator
+
 logger = logging.getLogger('connexion.apis.flask_api')
 
 
@@ -114,6 +116,7 @@ class FlaskApi(AbstractAPI):
         return self._internal_handlers
 
     @classmethod
+    @TracerDecorator
     def get_response(cls, response, mimetype=None, request=None):
         """Gets ConnexionResponse instance for the operation handler
         result. Status Code and Headers for response.  If only body

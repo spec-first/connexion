@@ -11,7 +11,15 @@ except NameError:  # pragma: no cover
     py_string = str  # pragma: no cover
 
 # for global use only
-jaeger = None
+tracer = None
+
+def set_tracer(tracer_obj):
+    global tracer
+    tracer = tracer_obj
+
+def get_tracer():
+    global tracer
+    return tracer
 
 def boolean(s):
     '''
