@@ -1,5 +1,6 @@
 import functools
 import importlib
+import re
 
 import six
 import yaml
@@ -253,3 +254,12 @@ def yamldumper(openapi):
     yaml.representer.SafeRepresenter.represent_scalar = my_represent_scalar
 
     return yaml.dump(openapi, allow_unicode=True, Dumper=NoAnchorDumper)
+
+
+def create_empty_dict_from_list(_list, _dict, _end_value):
+    """create from ['foo', 'bar'] a dict like {'foo': {'bar': {}}} recursively. needed for converting query params"""
+    current_key = _list.pop(0)
+    if _list:
+        return {current_key: create_empty_dict_from_list(_list, _dict, _end_value)}
+    else:
+        return {current_key: _end_value}

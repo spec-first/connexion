@@ -19,7 +19,8 @@ logger = logging.getLogger('connexion.decorators.validation')
 TYPE_MAP = {
     'integer': int,
     'number': float,
-    'boolean': boolean
+    'boolean': boolean,
+    'object': dict
 }
 
 
@@ -63,6 +64,21 @@ def coerce_type(param, value, parameter_type, parameter_name=None):
                 converted = v
             converted_params.append(converted)
         return converted_params
+    elif param_type == 'object':
+        if param_schema.get('properties'):
+            def cast_leaves(d, schema):
+                if type(d) is not dict:
+                    try:
+                        return make_type(d, schema['type'])
+                    except (ValueError, TypeError):
+                        return d
+                for k, v in d.items():
+                    if k in schema['properties']:
+                        d[k] = cast_leaves(v, schema['properties'][k])
+                return d
+
+            return cast_leaves(value, param_schema)
+        return value
     else:
         try:
             return make_type(value, param_type)
