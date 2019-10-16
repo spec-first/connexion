@@ -354,8 +354,7 @@ class ParameterValidator(object):
             for param in self.parameters.get('cookie', []):
                 error = self.validate_cookie_parameter(param, request)
                 if error:
-                    response = problem(400, 'Bad Request', error)
-                    return self.api.get_response(response)
+                    raise BadRequestProblem(detail=error)
 
             for param in self.parameters.get('formData', []):
                 error = self.validate_formdata_parameter(param["name"], param, request)
