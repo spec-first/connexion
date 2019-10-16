@@ -60,10 +60,20 @@ def deep_getattr(obj, attr):
 def deep_get(obj, keys):
     """
     Recurses through a nested object get a leaf value.
+
+    There are cases where the use of inheritance or polymorphism-- the use of allOf or
+    oneOf keywords-- will cause the obj to be a list. In this case the keys will
+    contain one or more strings containing integers.
+
+    :type obj: list or dict
+    :type keys: list of strings
     """
     if not keys:
         return obj
-    return deep_get(obj[keys[0]], keys[1:])
+    try:
+        return deep_get(obj[int(keys[0])], keys[1:])
+    except ValueError:
+        return deep_get(obj[keys[0]], keys[1:])
 
 
 def get_function_from_name(function_name):
