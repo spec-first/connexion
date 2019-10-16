@@ -63,7 +63,10 @@ def deep_get(obj, keys):
     """
     if not keys:
         return obj
-    return deep_get(obj[keys[0]], keys[1:])
+    try:
+        return deep_get(obj[int(keys[0])], keys[1:])
+    except ValueError:
+        return deep_get(obj[keys[0]], keys[1:])
 
 
 def get_function_from_name(function_name):
