@@ -1,6 +1,5 @@
 language: python
 python:
-  - "pypy2.7-5.10.0"
   - "2.7"
   - "3.6"
   - "3.7"
