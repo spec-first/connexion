@@ -31,11 +31,11 @@ class UWSGIMetricsCollector(object):
         """
 
         @functools.wraps(function)
-        def wrapper(request):
+        def wrapper(*args, **kwargs):
             status = 500
             start_time_s = time.time()
             try:
-                response = function(request)
+                response = function(*args, **kwargs)
                 status = response.status_code
             except HTTPException as http_e:
                 status = http_e.code

@@ -199,7 +199,7 @@ class AbstractOperation(SecureOperation):
                     logger.error("Function argument '{}' not defined in specification".format(key))
                 else:
                     logger.debug('%s is a %s', key, query_defn)
-                    res[key] = self._get_val_from_param(value, query_defn)
+                    res.update({key: self._get_val_from_param(value, query_defn)})
         return res
 
     @abc.abstractmethod
@@ -371,11 +371,11 @@ class AbstractOperation(SecureOperation):
         logger.debug('... Adding security decorator (%r)', security_decorator)
         function = security_decorator(function)
 
+        function = self._request_response_decorator(function)
+
         if UWSGIMetricsCollector.is_available():  # pragma: no cover
             decorator = UWSGIMetricsCollector(self.path, self.method)
             function = decorator(function)
-
-        function = self._request_response_decorator(function)
 
         return function
 

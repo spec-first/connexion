@@ -14,6 +14,7 @@ def test_parameter_validator(monkeypatch):
     request = MagicMock(name='request')
     request.args = {}
     request.headers = {}
+    request.cookies = {}
     request.params = {}
     app = MagicMock(name='app')
 
@@ -26,13 +27,14 @@ def test_parameter_validator(monkeypatch):
 
     params = [{'name': 'p1', 'in': 'path', 'type': 'integer', 'required': True},
               {'name': 'h1', 'in': 'header', 'type': 'string', 'enum': ['a', 'b']},
+              {'name': 'c1', 'in': 'cookie', 'type': 'string', 'enum': ['a', 'b']},
               {'name': 'q1', 'in': 'query', 'type': 'integer', 'maximum': 3},
               {'name': 'a1', 'in': 'query', 'type': 'array', 'minItems': 2, 'maxItems': 3,
                'items': {'type': 'integer', 'minimum': 0}}]
     validator = ParameterValidator(params, FlaskApi)
     handler = validator(orig_handler)
 
-    kwargs = {'query': {}, 'headers': {}}
+    kwargs = {'query': {}, 'headers': {}, 'cookies': {}}
     request = MagicMock(path_params={}, **kwargs)
     with pytest.raises(BadRequestProblem) as exc:
         handler(request)
@@ -59,7 +61,7 @@ def test_parameter_validator(monkeypatch):
     request = MagicMock(path_params={'p1': 1}, query={'q1': '3'}, headers={})
     assert handler(request) == 'OK'
 
-    request = MagicMock(path_params={'p1': 1}, query={'a1': ['1', '2']}, headers={})
+    request = MagicMock(path_params={'p1': 1}, query={'a1': ['1', '2']}, headers={}, cookies={})
     assert handler(request) == "OK"
     request = MagicMock(path_params={'p1': 1}, query={'a1': ['1', 'a']}, headers={})
     with pytest.raises(BadRequestProblem) as exc:
@@ -78,7 +80,7 @@ def test_parameter_validator(monkeypatch):
         handler(request)
     assert exc.value.detail.startswith("[1, 2, 3, 4] is too long")
 
-    request = MagicMock(path_params={'p1': '123'}, query={}, headers={'h1': 'a'})
+    request = MagicMock(path_params={'p1': '123'}, query={}, headers={'h1': 'a'}, cookies={})
     assert handler(request) == 'OK'
 
     request = MagicMock(path_params={'p1': '123'}, query={}, headers={'h1': 'x'})

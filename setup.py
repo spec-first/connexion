@@ -22,7 +22,7 @@ version = read_version('connexion')
 
 install_requires = [
     'clickclick>=1.2',
-    'jsonschema>=2.5.1,<3.0.0',
+    'jsonschema>=2.5.1',
     'PyYAML>=5.1',
     'requests>=2.9.1',
     'six>=1.9',
@@ -33,9 +33,9 @@ install_requires = [
 ]
 
 swagger_ui_require = 'swagger-ui-bundle>=0.0.2'
-flask_require = 'flask>=0.10.1'
+flask_require = 'flask>=1.0.4'
 aiohttp_require = [
-    'aiohttp>=2.3.10,<3.5.2',
+    'aiohttp>=2.3.10',
     'aiohttp-jinja2>=0.14.0'
 ]
 ujson_require = 'ujson>=1.35'
@@ -118,10 +118,9 @@ setup(
     classifiers=[
         'Programming Language :: Python',
         'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
         'Operating System :: OS Independent',

@@ -150,6 +150,104 @@ paths:
       responses:
         '204':
           description: empty
+  /exploded-deep-object-param:
+    get:
+      summary: Returns dict response
+      description: Returns dict response
+      operationId: fakeapi.hello.test_exploded_deep_object_param
+      parameters:
+        - name: id
+          required: true
+          in: query
+          style: deepObject
+          explode: true
+          schema:
+            type: object
+            properties:
+              foo:
+                type: string
+              fooint:
+                type: integer
+              fooboo:
+                type: boolean
+              foo4:
+                type: string
+                default: blubb
+      responses:
+        '200':
+          description: object response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  foo:
+                    type: string
+                  foo4:
+                    type: string
+  /exploded-deep-object-param-additional-properties:
+    get:
+      summary: Returns dict response with flexible properties
+      description: Returns dict response with flexible properties
+      operationId: fakeapi.hello.test_exploded_deep_object_param_additional_properties
+      parameters:
+        - name: id
+          required: false
+          in: query
+          style: deepObject
+          explode: true
+          schema:
+            type: object
+            additionalProperties:
+              type: string
+      responses:
+        '200':
+          description: object response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+  /nested-exploded-deep-object-param:
+    get:
+      summary: Returns nested dict response
+      description: Returns nested dict response
+      operationId: fakeapi.hello.test_nested_exploded_deep_object_param
+      parameters:
+        - name: id
+          required: true
+          in: query
+          style: deepObject
+          explode: true
+          schema:
+            type: object
+            properties:
+              foo:
+                type: object
+                properties:
+                  foo2:
+                    type: string
+                  foo3:
+                    type: string
+                    default: blubb
+              foofoo:
+                type: string
+      responses:
+        '200':
+          description: object response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  foo:
+                    type: object
+                    properties:
+                      foo2:
+                        type: string
+                      foo3:
+                        type: string
   /test-redirect-endpoint:
     get:
       summary: Tests handlers returning flask.Response objects

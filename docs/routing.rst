@@ -267,6 +267,18 @@ can provide it when adding the API to your application:
 
     app.add_api('my_api.yaml', base_path='/1.0')
 
+Swagger UI path
+---------------
+
+Swagger UI is available at ``/ui/`` by default.
+
+You can choose another path through options:
+
+.. code-block:: python
+
+    options = {'swagger_url': '/'}
+    app = connexion.App(__name__, options=options)
+
 Swagger JSON
 ------------
 Connexion makes the OpenAPI/Swagger specification in JSON format

@@ -54,6 +54,38 @@ of the endpoint parameter `message` to your view function.
 
 Connexion will also use default values if they are provided.
 
+If you want to use a parameter name that collides with a Python built-in,
+you can enable the `pythonic_params` option:
+
+.. code-block:: python
+    app = connexion.FlaskApp(__name__)
+    app.add_api('api.yaml', ..., pythonic_params=True)
+
+With this option enabled, Connexion firstly converts *CamelCase* names
+to *snake_case*. Secondly it looks to see if the name matches a known built-in
+and if it does it appends an underscore to the name.
+
+As example you have an endpoint specified as:
+
+.. code-block:: yaml
+    paths:
+      /foo:
+        get:
+          operationId: api.foo_get
+          parameters:
+            - name: filter
+              description: Some filter.
+              in: query
+              type: string
+              required: true
+And the view function:
+
+.. code-block:: python
+    # api.py file
+    def foo_get(filter_):
+        # do something
+        return 'You send the filter: {}'.format(filter_), 200
+
 .. note:: In the OpenAPI 3.x.x spec, the requestBody does not have a name.
           By default it will be passed in as 'body'. You can optionally
           provide the x-body-name parameter in your requestBody schema
@@ -91,16 +123,12 @@ available type castings are:
 | object       | dict        |
 +--------------+-------------+
 
-In the OpenAPI 2.0 specification, if the `array` type is used you can define the
-`collectionFormat` used to deserialize the input. Connexion currently
-supports collection formats "pipes" and "csv". The default format is "csv".
-
 .. note:: For more details about `collectionFormat`s please check the
           official `OpenAPI 2.0 Specification`_.
 
 
 In the `OpenAPI 2.0 Specification`_ if you use the ``array`` type,
-you can define the ``collectionFormat`` do set the deserialization behavior.
+you can define the ``collectionFormat`` to set the deserialization behavior.
 Connexion currently supports "pipes" and "csv" as collection formats.
 The default format is "csv".
 
@@ -120,7 +148,7 @@ api options.
    app = connexion.App(__name__, specification_dir='swagger/', options=options)
 
 You can implement your own URI parsing behavior by inheriting from
-``connextion.decorators.uri_parsing.AbstractURIParser``.
+``connexion.decorators.uri_parsing.AbstractURIParser``.
 
 There are a handful of URI parsers included with connection.
 

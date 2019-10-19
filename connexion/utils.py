@@ -1,5 +1,6 @@
 import functools
 import importlib
+import re
 
 import six
 import yaml
@@ -59,10 +60,20 @@ def deep_getattr(obj, attr):
 def deep_get(obj, keys):
     """
     Recurses through a nested object get a leaf value.
+
+    There are cases where the use of inheritance or polymorphism-- the use of allOf or
+    oneOf keywords-- will cause the obj to be a list. In this case the keys will
+    contain one or more strings containing integers.
+
+    :type obj: list or dict
+    :type keys: list of strings
     """
     if not keys:
         return obj
-    return deep_get(obj[keys[0]], keys[1:])
+    try:
+        return deep_get(obj[int(keys[0])], keys[1:])
+    except ValueError:
+        return deep_get(obj[keys[0]], keys[1:])
 
 
 def get_function_from_name(function_name):
@@ -253,3 +264,12 @@ def yamldumper(openapi):
     yaml.representer.SafeRepresenter.represent_scalar = my_represent_scalar
 
     return yaml.dump(openapi, allow_unicode=True, Dumper=NoAnchorDumper)
+
+
+def create_empty_dict_from_list(_list, _dict, _end_value):
+    """create from ['foo', 'bar'] a dict like {'foo': {'bar': {}}} recursively. needed for converting query params"""
+    current_key = _list.pop(0)
+    if _list:
+        return {current_key: create_empty_dict_from_list(_list, _dict, _end_value)}
+    else:
+        return {current_key: _end_value}
