@@ -58,7 +58,7 @@ def test_parameter_validator(monkeypatch):
     with pytest.raises(BadRequestProblem) as exc:
         handler(request)
     assert exc.value.detail.startswith('4 is greater than the maximum of 3')
-    request = MagicMock(path_params={'p1': 1}, query={'q1': '3'}, headers={})
+    request = MagicMock(path_params={'p1': 1}, query={'q1': '3'}, headers={}, cookies={})
     assert handler(request) == 'OK'
 
     request = MagicMock(path_params={'p1': 1}, query={'a1': ['1', '2']}, headers={}, cookies={})

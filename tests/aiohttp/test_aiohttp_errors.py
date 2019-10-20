@@ -22,7 +22,7 @@ def aiohttp_app(problem_api_spec_dir):
 
 
 @asyncio.coroutine
-def test_aiohttp_problems(aiohttp_app, aiohttp_client):
+def test_aiohttp_problems_404(aiohttp_app, aiohttp_client):
     # TODO: This is a based on test_errors.test_errors(). That should be refactored
     #       so that it is parameterized for all web frameworks.
     app_client = yield from aiohttp_client(aiohttp_app.app)  # type: aiohttp.test_utils.TestClient
@@ -38,6 +38,12 @@ def test_aiohttp_problems(aiohttp_app, aiohttp_client):
     assert error404['status'] == 404
     assert 'instance' not in error404
 
+@asyncio.coroutine
+def test_aiohttp_problems_405(aiohttp_app, aiohttp_client):
+    # TODO: This is a based on test_errors.test_errors(). That should be refactored
+    #       so that it is parameterized for all web frameworks.
+    app_client = yield from aiohttp_client(aiohttp_app.app)  # type: aiohttp.test_utils.TestClient
+
     get_greeting = yield from app_client.get('/v1.0/greeting/jsantos')  # type: aiohttp.ClientResponse
     assert get_greeting.content_type == 'application/problem+json'
     assert get_greeting.status == 405
@@ -48,6 +54,12 @@ def test_aiohttp_problems(aiohttp_app, aiohttp_client):
     assert error405['detail'] == HTTPStatus(405).description
     assert error405['status'] == 405
     assert 'instance' not in error405
+
+@asyncio.coroutine
+def test_aiohttp_problems_500(aiohttp_app, aiohttp_client):
+    # TODO: This is a based on test_errors.test_errors(). That should be refactored
+    #       so that it is parameterized for all web frameworks.
+    app_client = yield from aiohttp_client(aiohttp_app.app)  # type: aiohttp.test_utils.TestClient
 
     get500 = yield from app_client.get('/v1.0/except')  # type: aiohttp.ClientResponse
     assert get500.content_type == 'application/problem+json'
@@ -60,6 +72,12 @@ def test_aiohttp_problems(aiohttp_app, aiohttp_client):
     assert error500['status'] == 500
     assert 'instance' not in error500
 
+@asyncio.coroutine
+def test_aiohttp_problems_418(aiohttp_app, aiohttp_client):
+    # TODO: This is a based on test_errors.test_errors(). That should be refactored
+    #       so that it is parameterized for all web frameworks.
+    app_client = yield from aiohttp_client(aiohttp_app.app)  # type: aiohttp.test_utils.TestClient
+
     get_problem = yield from app_client.get('/v1.0/problem')  # type: aiohttp.ClientResponse
     assert get_problem.content_type == 'application/problem+json'
     assert get_problem.status == 418
@@ -71,6 +89,12 @@ def test_aiohttp_problems(aiohttp_app, aiohttp_client):
     assert error_problem['detail'] == 'Something went wrong somewhere'
     assert error_problem['status'] == 418
     assert error_problem['instance'] == 'instance1'
+
+@asyncio.coroutine
+def test_aiohttp_problems_misc(aiohttp_app, aiohttp_client):
+    # TODO: This is a based on test_errors.test_errors(). That should be refactored
+    #       so that it is parameterized for all web frameworks.
+    app_client = yield from aiohttp_client(aiohttp_app.app)  # type: aiohttp.test_utils.TestClient
 
     problematic_json = yield from app_client.get(
         '/v1.0/json_response_with_undefined_value_to_serialize')  # type: aiohttp.ClientResponse
