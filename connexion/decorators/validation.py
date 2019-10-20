@@ -156,9 +156,8 @@ class RequestBodyValidator(object):
                                        ))
 
                 logger.debug("%s validating schema...", request.url)
-                error = self.validate_schema(data, request.url)
-                if error and not self.has_default:
-                    return error
+                if data is not None or not self.has_default:
+                    self.validate_schema(data, request.url)
             elif self.consumes[0] in FORM_CONTENT_TYPES:
                 data = dict(request.form.items()) or (request.body if len(request.body) > 0 else {})
                 data.update(dict.fromkeys(request.files, ''))  # validator expects string..
@@ -182,9 +181,7 @@ class RequestBodyValidator(object):
                     if errs:
                         raise BadRequestProblem(detail=errs)
 
-                error = self.validate_schema(data, request.url)
-                if error:
-                    return error
+                self.validate_schema(data, request.url)
 
             response = function(request)
             return response
