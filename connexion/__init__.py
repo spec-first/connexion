@@ -8,6 +8,7 @@ from .decorators.produces import NoContent  # NOQA
 from .exceptions import ProblemException  # NOQA
 # add operation for backwards compatability
 from .operations import compat
+from .problem import problem  # NOQA
 from .resolver import Resolution, Resolver, RestyResolver  # NOQA
 
 full_name = '{}.operation'.format(__package__)
