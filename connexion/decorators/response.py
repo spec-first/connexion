@@ -99,7 +99,7 @@ class ResponseValidator(BaseDecorator):
 
             return response
 
-        if has_coroutine(function):  # pragma: 2.7 no cover
+        if has_coroutine(function):
             from .coroutine_wrappers import get_response_validator_wrapper
             wrapper = get_response_validator_wrapper(function, _wrapper)
 

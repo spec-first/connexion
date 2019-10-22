@@ -5,17 +5,6 @@ from connexion.resolver import Resolution, Resolver, ResolverError
 logger = logging.getLogger(__name__)
 
 
-def partial(func, **frozen):
-    """
-    Replacement for functools.partial as functools.partial does not work with inspect.py on Python 2.7
-    """
-    def wrapper(*args, **kwargs):
-        for k, v in frozen.items():
-            kwargs[k] = v
-        return func(*args, **kwargs)
-    return wrapper
-
-
 class MockResolver(Resolver):
 
     def __init__(self, mock_all):
