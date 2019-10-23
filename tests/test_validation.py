@@ -67,6 +67,13 @@ def test_parameter_validator(monkeypatch):
     with pytest.raises(BadRequestProblem) as exc:
         handler(request)
     assert exc.value.detail.startswith("'a' is not of type 'integer'")
+    request = MagicMock(path_params={'p1': '123'}, query={}, headers={}, cookies={'c1': 'b'})
+    assert handler(request) == 'OK'
+
+    request = MagicMock(path_params={'p1': '123'}, query={}, headers={}, cookies={'c1': 'x'})
+    with pytest.raises(BadRequestProblem) as exc:
+        assert handler(request)
+    assert exc.value.detail.startswith("'x' is not one of ['a', 'b']")
     request = MagicMock(path_params={'p1': 1}, query={'a1': ['1', '-1']}, headers={})
     with pytest.raises(BadRequestProblem) as exc:
         handler(request)

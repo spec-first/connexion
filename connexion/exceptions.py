@@ -1,5 +1,8 @@
+import warnings
 from jsonschema.exceptions import ValidationError
 from werkzeug.exceptions import Forbidden, Unauthorized
+
+from .problem import problem
 
 
 class ConnexionException(Exception):
@@ -20,6 +23,14 @@ class ProblemException(ConnexionException):
         self.instance = instance
         self.headers = headers
         self.ext = ext
+
+    def to_problem(self):
+        warnings.warn(
+            "'to_problem' is planned to be removed in a future release. "
+            "Call connexion.problem.problem(..) instead to maintain the existing error response.", DeprecationWarning)
+        return problem(status=self.status, title=self.title, detail=self.detail,
+                       type=self.type, instance=self.instance, headers=self.headers,
+                       ext=self.ext)
 
 
 class ResolverError(LookupError):
