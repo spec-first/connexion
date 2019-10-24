@@ -1,10 +1,12 @@
 import json
 
 import flask
+import pytest
 # we are using "mock" module here for Py 2.7 support
 from mock import MagicMock
 
 from connexion.apis.flask_api import FlaskApi
+from connexion.exceptions import BadRequestProblem
 from connexion.decorators.validation import ParameterValidator
 
 
@@ -34,40 +36,61 @@ def test_parameter_validator(monkeypatch):
 
     kwargs = {'query': {}, 'headers': {}, 'cookies': {}}
     request = MagicMock(path_params={}, **kwargs)
-    assert json.loads(handler(request).data.decode())['detail'] == "Missing path parameter 'p1'"
+    with pytest.raises(BadRequestProblem) as exc:
+        handler(request)
+    assert exc.value.detail == "Missing path parameter 'p1'"
     request = MagicMock(path_params={'p1': '123'}, **kwargs)
     assert handler(request) == 'OK'
     request = MagicMock(path_params={'p1': ''}, **kwargs)
-    assert json.loads(handler(request).data.decode())['detail'] == "Wrong type, expected 'integer' for path parameter 'p1'"
+    with pytest.raises(BadRequestProblem) as exc:
+        handler(request)
+    assert exc.value.detail == "Wrong type, expected 'integer' for path parameter 'p1'"
     request = MagicMock(path_params={'p1': 'foo'}, **kwargs)
-    assert json.loads(handler(request).data.decode())['detail'] == "Wrong type, expected 'integer' for path parameter 'p1'"
+    with pytest.raises(BadRequestProblem) as exc:
+        handler(request)
+    assert exc.value.detail == "Wrong type, expected 'integer' for path parameter 'p1'"
     request = MagicMock(path_params={'p1': '1.2'}, **kwargs)
-    assert json.loads(handler(request).data.decode())['detail'] == "Wrong type, expected 'integer' for path parameter 'p1'"
+    with pytest.raises(BadRequestProblem) as exc:
+        handler(request)
+    assert exc.value.detail == "Wrong type, expected 'integer' for path parameter 'p1'"
 
-    request = MagicMock(path_params={'p1': 1}, query={'q1': '4'}, headers={}, cookies={})
-    assert json.loads(handler(request).data.decode())['detail'].startswith('4 is greater than the maximum of 3')
+    request = MagicMock(path_params={'p1': 1}, query={'q1': '4'}, headers={})
+    with pytest.raises(BadRequestProblem) as exc:
+        handler(request)
+    assert exc.value.detail.startswith('4 is greater than the maximum of 3')
     request = MagicMock(path_params={'p1': 1}, query={'q1': '3'}, headers={}, cookies={})
     assert handler(request) == 'OK'
 
     request = MagicMock(path_params={'p1': 1}, query={'a1': ['1', '2']}, headers={}, cookies={})
     assert handler(request) == "OK"
-    request = MagicMock(path_params={'p1': 1}, query={'a1': ['1', 'a']}, headers={}, cookies={})
-    assert json.loads(handler(request).data.decode())['detail'].startswith("'a' is not of type 'integer'")
-    request = MagicMock(path_params={'p1': 1}, query={'a1': ['1', '-1']}, headers={}, cookies={})
-    assert json.loads(handler(request).data.decode())['detail'].startswith("-1 is less than the minimum of 0")
-    request = MagicMock(path_params={'p1': 1}, query={'a1': ['1']}, headers={}, cookies={})
-    assert json.loads(handler(request).data.decode())['detail'].startswith("[1] is too short")
-    request = MagicMock(path_params={'p1': 1}, query={'a1': ['1', '2', '3', '4']}, headers={}, cookies={})
-    assert json.loads(handler(request).data.decode())['detail'].startswith("[1, 2, 3, 4] is too long")
-
-    request = MagicMock(path_params={'p1': '123'}, query={}, headers={'h1': 'a'}, cookies={})
-    assert handler(request) == 'OK'
-
-    request = MagicMock(path_params={'p1': '123'}, query={}, headers={'h1': 'x'}, cookies={})
-    assert json.loads(handler(request).data.decode())['detail'].startswith("'x' is not one of ['a', 'b']")
-
+    request = MagicMock(path_params={'p1': 1}, query={'a1': ['1', 'a']}, headers={})
+    with pytest.raises(BadRequestProblem) as exc:
+        handler(request)
+    assert exc.value.detail.startswith("'a' is not of type 'integer'")
     request = MagicMock(path_params={'p1': '123'}, query={}, headers={}, cookies={'c1': 'b'})
     assert handler(request) == 'OK'
 
     request = MagicMock(path_params={'p1': '123'}, query={}, headers={}, cookies={'c1': 'x'})
-    assert json.loads(handler(request).data.decode())['detail'].startswith("'x' is not one of ['a', 'b']")
+    with pytest.raises(BadRequestProblem) as exc:
+        assert handler(request)
+    assert exc.value.detail.startswith("'x' is not one of ['a', 'b']")
+    request = MagicMock(path_params={'p1': 1}, query={'a1': ['1', '-1']}, headers={})
+    with pytest.raises(BadRequestProblem) as exc:
+        handler(request)
+    assert exc.value.detail.startswith("-1 is less than the minimum of 0")
+    request = MagicMock(path_params={'p1': 1}, query={'a1': ['1']}, headers={})
+    with pytest.raises(BadRequestProblem) as exc:
+        handler(request)
+    assert exc.value.detail.startswith("[1] is too short")
+    request = MagicMock(path_params={'p1': 1}, query={'a1': ['1', '2', '3', '4']}, headers={})
+    with pytest.raises(BadRequestProblem) as exc:
+        handler(request)
+    assert exc.value.detail.startswith("[1, 2, 3, 4] is too long")
+
+    request = MagicMock(path_params={'p1': '123'}, query={}, headers={'h1': 'a'}, cookies={})
+    assert handler(request) == 'OK'
+
+    request = MagicMock(path_params={'p1': '123'}, query={}, headers={'h1': 'x'})
+    with pytest.raises(BadRequestProblem) as exc:
+        handler(request)
+    assert exc.value.detail.startswith("'x' is not one of ['a', 'b']")

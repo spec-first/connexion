@@ -1,6 +1,5 @@
 import functools
 import importlib
-import re
 
 import six
 import yaml

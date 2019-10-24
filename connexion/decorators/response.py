@@ -6,7 +6,6 @@ from jsonschema import ValidationError
 
 from ..exceptions import (NonConformingResponseBody,
                           NonConformingResponseHeaders)
-from ..problem import problem
 from ..utils import all_json, has_coroutine
 from .decorator import BaseDecorator
 from .validation import ResponseBodyValidator
@@ -86,16 +85,11 @@ class ResponseValidator(BaseDecorator):
         """
 
         def _wrapper(request, response):
-            try:
-                connexion_response = \
-                    self.operation.api.get_connexion_response(response, self.mimetype)
-                self.validate_response(
-                    connexion_response.body, connexion_response.status_code,
-                    connexion_response.headers, request.url)
-
-            except (NonConformingResponseBody, NonConformingResponseHeaders) as e:
-                response = problem(500, e.reason, e.message)
-                return self.operation.api.get_response(response)
+            connexion_response = \
+                self.operation.api.get_connexion_response(response, self.mimetype)
+            self.validate_response(
+                connexion_response.body, connexion_response.status_code,
+                connexion_response.headers, request.url)
 
             return response
 
