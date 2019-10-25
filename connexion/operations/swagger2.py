@@ -180,6 +180,8 @@ class Swagger2Operation(AbstractOperation):
         status_code = status_code or sorted(self._responses.keys())[0]
         examples_path = [str(status_code), 'examples']
         schema_example_path = [str(status_code), 'schema', 'example']
+        schema_path = [str(status_code), 'schema']
+
         try:
             status_code = int(status_code)
         except ValueError:
@@ -195,7 +197,30 @@ class Swagger2Operation(AbstractOperation):
             return (deep_get(self._responses, schema_example_path),
                     status_code)
         except KeyError:
+            pass
+
+        try:
+            return (self._nested_example(deep_get(self._responses, schema_path)),
+                    status_code)
+        except KeyError:
             return (None, status_code)
+
+    def _nested_example(self, schema):
+        try:
+            return schema["example"]
+        except KeyError:
+            pass
+        try:
+            # Recurse if schema is an object
+            return {key: self._nested_example(value)
+                    for (key, value) in schema["properties"].items()}
+        except KeyError:
+            pass
+        try:
+            # Recurse if schema is an array
+            return [self._nested_example(schema["items"])]
+        except KeyError:
+            raise
 
     @property
     def body_schema(self):
