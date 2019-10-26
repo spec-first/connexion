@@ -20,6 +20,14 @@ def test_schema(schema_app):
     assert bad_type_response['title'] == 'Bad Request'
     assert bad_type_response['detail'].startswith("22 is not of type 'string'")
 
+    bad_type_path = app_client.post('/v1.0/test_schema', headers=headers,
+                                         data=json.dumps({'image_version': 22}))  # type: flask.Response
+    assert bad_type_path.status_code == 400
+    assert bad_type_path.content_type == 'application/problem+json'
+    bad_type_path_response = json.loads(bad_type.data.decode('utf-8', 'replace'))  # type: dict
+    assert bad_type_path_response['title'] == 'Bad Request'
+    assert bad_type_path_response['detail'].endswith(" - 'image_version'")
+
     good_request = app_client.post('/v1.0/test_schema', headers=headers,
                                    data=json.dumps({'image_version': 'version'}))  # type: flask.Response
     assert good_request.status_code == 200
