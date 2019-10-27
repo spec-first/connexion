@@ -1,3 +1,4 @@
+import functools
 import logging
 
 from connexion.resolver import Resolution, Resolver, ResolverError
@@ -24,7 +25,7 @@ class MockResolver(Resolver):
             operation_id = 'mock-{}'.format(self._operation_id_counter)
             self._operation_id_counter += 1
 
-        mock_func = partial(self.mock_operation, operation=operation)
+        mock_func = functools.partial(self.mock_operation, operation=operation)
         if self.mock_all:
             func = mock_func
         else:
