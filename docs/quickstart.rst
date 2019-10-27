@@ -5,7 +5,7 @@ Quickstart
 Prerequisites
 -------------
 
-Python 2.7 or Python 3.5+
+Python 3.6+
 
 Installing It
 -------------

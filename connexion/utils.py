@@ -194,28 +194,24 @@ def has_coroutine(function, api=None):
     If ``function`` is a decorator (has a ``__wrapped__`` attribute)
     this function will also look at the wrapped function.
     """
-    if six.PY3:  # pragma: 2.7 no cover
-        import asyncio
+    import asyncio
 
-        def iscorofunc(func):
+    def iscorofunc(func):
+        iscorofunc = asyncio.iscoroutinefunction(func)
+        while not iscorofunc and hasattr(func, '__wrapped__'):
+            func = func.__wrapped__
             iscorofunc = asyncio.iscoroutinefunction(func)
-            while not iscorofunc and hasattr(func, '__wrapped__'):
-                func = func.__wrapped__
-                iscorofunc = asyncio.iscoroutinefunction(func)
-            return iscorofunc
+        return iscorofunc
 
-        if api is None:
-            return iscorofunc(function)
+    if api is None:
+        return iscorofunc(function)
 
-        else:
-            return any(
-                iscorofunc(func) for func in (
-                    function, api.get_request, api.get_response
-                )
+    else:
+        return any(
+            iscorofunc(func) for func in (
+                function, api.get_request, api.get_response
             )
-    else:  # pragma: 3 no cover
-        # there's no asyncio in python 2
-        return False
+        )
 
 
 def yamldumper(openapi):
