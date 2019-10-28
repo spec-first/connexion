@@ -5,7 +5,7 @@ logger = logging.getLogger('')
 
 
 def TracerDecorator(func):
-    def wrapper(cls, response, mimetype=None, request=None):
+    def wrapper(response, mimetype=None, request=None):
         tracer = get_tracer()
 
         # if tracer is configured, then start a span now
@@ -28,12 +28,12 @@ def TracerDecorator(func):
             else:
                 scope = tracer.start_span("TracerDecorator")
 
-            resp = func(cls, response, mimetype, request)
+            resp = func(response, mimetype, request)
 
             scope.log_kv({"response": response})
             scope.finish()
         else:
-            resp = func(cls, response, mimetype, request)
+            resp = func(response, mimetype, request)
 
         return resp
 

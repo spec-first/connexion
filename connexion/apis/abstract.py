@@ -13,6 +13,8 @@ from ..resolver import Resolver
 from ..spec import Specification
 from ..utils import Jsonifier
 
+from ..decorators.TracerDecorator import TracerDecorator
+
 MODULE_PATH = pathlib.Path(__file__).absolute().parent.parent
 SWAGGER_UI_URL = 'ui'
 
@@ -99,6 +101,9 @@ class AbstractAPI(object):
 
         logger.debug('pass_context_arg_name: %s', pass_context_arg_name)
         self.pass_context_arg_name = pass_context_arg_name
+
+        # add TracerDecorator to get_response here manually, because it's an abstract method
+        self.get_response = TracerDecorator(self.get_response)
 
         if self.options.openapi_spec_available:
             self.add_openapi_json()
