@@ -11,7 +11,7 @@ from ..operations import make_operation
 from ..options import ConnexionOptions
 from ..resolver import Resolver
 from ..spec import Specification
-from ..utils import Jsonifier
+from ..utils import Jsonifier, get_tracer
 
 from ..decorators.TracerDecorator import TracerDecorator
 
@@ -102,8 +102,11 @@ class AbstractAPI(object):
         logger.debug('pass_context_arg_name: %s', pass_context_arg_name)
         self.pass_context_arg_name = pass_context_arg_name
 
-        # add TracerDecorator to get_response here manually, because it's an abstract method
-        self.get_response = TracerDecorator(self.get_response)
+        # check if a tracer is set, otherwise ignore the decorator
+        if get_tracer() is not None:
+            logger.debug('Find a configured tracer: %s', get_tracer())
+            # add TracerDecorator to get_response here manually, because it's an abstract method
+            self.get_response = TracerDecorator(self.get_response)
 
         if self.options.openapi_spec_available:
             self.add_openapi_json()
