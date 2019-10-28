@@ -6,4 +6,3 @@ omit = connexion/apis/aiohttp_api.py
 [report]
 exclude_lines =
     pragma: no cover
-    pragma: 2.7 no cover

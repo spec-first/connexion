@@ -55,7 +55,8 @@ def problems_middleware(request, handler):
     try:
         response = yield from handler(request)
     except ProblemException as exc:
-        response = exc.to_problem()
+        response = problem(status=exc.status, detail=exc.detail, title=exc.title,
+                           type=exc.type, instance=exc.instance, headers=exc.headers, ext=exc.ext)
     except (werkzeug_HTTPException, _HttpNotFoundError) as exc:
         response = problem(status=exc.code, title=exc.name, detail=exc.description)
     except web.HTTPError as exc:

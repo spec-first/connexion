@@ -37,8 +37,7 @@ class RequestResponseDecorator(BaseDecorator):
         :type function: types.FunctionType
         :rtype: types.FunctionType
         """
-        
-        if has_coroutine(function, self.api):  # pragma: 2.7 no cover
+        if has_coroutine(function, self.api):
             from .coroutine_wrappers import get_request_life_cycle_wrapper
             wrapper = get_request_life_cycle_wrapper(function, self.api, self.mimetype)
 

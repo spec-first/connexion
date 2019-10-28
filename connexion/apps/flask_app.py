@@ -40,7 +40,10 @@ class FlaskApp(AbstractApp):
         :type exception: Exception
         """
         if isinstance(exception, ProblemException):
-            response = exception.to_problem()
+            response = problem(
+                status=exception.status, title=exception.title, detail=exception.detail,
+                type=exception.type, instance=exception.instance, headers=exception.headers,
+                ext=exception.ext)
         else:
             if not isinstance(exception, werkzeug.exceptions.HTTPException):
                 exception = werkzeug.exceptions.InternalServerError()
