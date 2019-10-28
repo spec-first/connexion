@@ -23,10 +23,10 @@ def TracerDecorator(func):
                 from urllib.parse import urlparse
                 path = urlparse(request.url).path
 
-                scope = tracer.start_span(path + "_" + request.method, child_of=span_ctx, tags=span_tags)
+                scope = tracer.start_span(request.method + "_" + path, child_of=span_ctx, tags=span_tags)
                 scope.log_kv({"request": request})
             else:
-                scope = tracer.start_span("TracerDecorator")
+                scope = tracer.start_span("NO_REQUEST_CONTEXT")
 
             resp = func(response, mimetype, request)
 
