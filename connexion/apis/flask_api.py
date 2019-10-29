@@ -220,6 +220,7 @@ class FlaskApi(AbstractAPI):
     @classmethod
     def get_connexion_response(cls, response, mimetype=None):
         if isinstance(response, ConnexionResponse):
+            response.body = cls._jsonify_data(response.body, mimetype)
             return response
 
         if not isinstance(response, flask.current_app.response_class):
