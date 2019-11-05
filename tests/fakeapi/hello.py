@@ -295,9 +295,10 @@ def test_formdata_missing_param():
 
 
 def test_formdata_file_upload(formData, **kwargs):
-    filename = formData.filename
-    contents = formData.read().decode('utf-8', 'replace')
-    return {filename: contents}
+    if len(formData) == 1:
+        return {x.filename: x.read().decode('utf-8', 'replace') for x in formData}
+
+    return [{x.filename: x.read().decode('utf-8', 'replace')} for x in formData]
 
 
 def test_formdata_file_upload_missing_param():
