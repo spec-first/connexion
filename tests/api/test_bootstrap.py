@@ -72,6 +72,33 @@ def test_app_with_different_uri_parser(simple_api_spec_dir):
 
 
 @pytest.mark.parametrize("spec", SPECS)
+def test_swagger_ui(simple_api_spec_dir, spec):
+    app = App(__name__, port=5001, specification_dir=simple_api_spec_dir, debug=True)
+    app.add_api(spec)
+    app_client = app.app.test_client()
+    swagger_ui = app_client.get('/v1.0/ui/')  # type: flask.Response
+    assert swagger_ui.status_code == 200
+    spec_json_filename = '/v1.0/{spec}'.format(spec=spec.replace("yaml", "json"))
+    assert spec_json_filename.encode() in swagger_ui.data
+    if "openapi" in spec:
+        assert b'swagger-ui-config.json' not in swagger_ui.data
+
+
+@pytest.mark.parametrize("spec", SPECS)
+def test_swagger_ui_with_config(simple_api_spec_dir, spec):
+    swagger_ui_config = {"displayOperationId": True}
+    options = {"swagger_ui_config": swagger_ui_config}
+    app = App(__name__, port=5001, specification_dir=simple_api_spec_dir,
+              options=options, debug=True)
+    app.add_api(spec)
+    app_client = app.app.test_client()
+    swagger_ui = app_client.get('/v1.0/ui/')  # type: flask.Response
+    assert swagger_ui.status_code == 200
+    if "openapi" in spec:
+        assert b'configUrl: "swagger-ui-config.json"' in swagger_ui.data
+
+
+@pytest.mark.parametrize("spec", SPECS)
 def test_no_swagger_ui(simple_api_spec_dir, spec):
     options = {"swagger_ui": False}
     app = App(__name__, port=5001, specification_dir=simple_api_spec_dir,
@@ -87,6 +114,32 @@ def test_no_swagger_ui(simple_api_spec_dir, spec):
     app2_client = app2.app.test_client()
     swagger_ui2 = app2_client.get('/v1.0/ui/')  # type: flask.Response
     assert swagger_ui2.status_code == 404
+
+
+@pytest.mark.parametrize("spec", SPECS)
+def test_swagger_ui_config_json(simple_api_spec_dir, spec):
+    """ Verify the swagger-ui-config.json file is returned for swagger_ui_config option passed to app. """
+    swagger_ui_config = {"displayOperationId": True}
+    options = {"swagger_ui_config": swagger_ui_config}
+    app = App(__name__, port=5001, specification_dir=simple_api_spec_dir,
+              options=options, debug=True)
+    app.add_api(spec)
+    app_client = app.app.test_client()
+    url = '/v1.0/ui/swagger-ui-config.json'
+    swagger_ui_config_json = app_client.get(url)  # type: flask.Response
+    assert swagger_ui_config_json.status_code == 200
+    assert swagger_ui_config == json.loads(swagger_ui_config_json.get_data(as_text=True))
+
+
+@pytest.mark.parametrize("spec", SPECS)
+def test_no_swagger_ui_config_json(simple_api_spec_dir, spec):
+    """ Verify the swagger-ui-config.json file is not returned when the swagger_ui_config option not passed to app. """
+    app = App(__name__, port=5001, specification_dir=simple_api_spec_dir, debug=True)
+    app.add_api(spec)
+    app_client = app.app.test_client()
+    url = '/v1.0/ui/swagger-ui-config.json'
+    swagger_ui_config_json = app_client.get(url)  # type: flask.Response
+    assert swagger_ui_config_json.status_code == 404
 
 
 @pytest.mark.parametrize("spec", SPECS)

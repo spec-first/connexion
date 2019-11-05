@@ -185,6 +185,13 @@ class AioHttpApi(AbstractAPI):
                 self._get_swagger_ui_home
             )
 
+        if self.options.openapi_console_ui_config is not None:
+            self.subapp.router.add_route(
+                'GET',
+                console_ui_path + '/swagger-ui-config.json',
+                self._get_swagger_ui_config
+            )
+
         # we have to add an explicit redirect instead of relying on the
         # normalize_path_middleware because we also serve static files
         # from this dir (below)
@@ -212,8 +219,20 @@ class AioHttpApi(AbstractAPI):
     @aiohttp_jinja2.template('index.j2')
     @asyncio.coroutine
     def _get_swagger_ui_home(self, req):
-        return {'openapi_spec_url': (self.base_path +
-                                     self.options.openapi_spec_path)}
+        template_variables = {
+            'openapi_spec_url': (self.base_path + self.options.openapi_spec_path)
+        }
+        if self.options.openapi_console_ui_config is not None:
+            template_variables['configUrl'] = 'swagger-ui-config.json'
+        return template_variables
+
+    @asyncio.coroutine
+    def _get_swagger_ui_config(self, req):
+        return web.Response(
+            status=200,
+            content_type='text/json',
+            body=self.jsonifier.dumps(self.options.openapi_console_ui_config)
+        )
 
     def add_auth_on_not_found(self, security, security_definitions):
         """
