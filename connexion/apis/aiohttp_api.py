@@ -17,7 +17,7 @@ from connexion.handlers import AuthErrorHandler
 from connexion.jsonifier import JSONEncoder, Jsonifier
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.problem import problem
-from connexion.utils import Jsonifier, is_json_mimetype, yamldumper
+from connexion.utils import is_json_mimetype, yamldumper
 from werkzeug.exceptions import HTTPException as werkzeug_HTTPException
 
 try:
