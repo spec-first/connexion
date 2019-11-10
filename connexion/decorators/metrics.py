@@ -3,7 +3,7 @@ import os
 import time
 
 from werkzeug.exceptions import HTTPException
-
+from connexion.exceptions import ProblemException
 try:
     import uwsgi_metrics
     HAS_UWSGI_METRICS = True  # pragma: no cover
@@ -31,15 +31,18 @@ class UWSGIMetricsCollector(object):
         """
 
         @functools.wraps(function)
-        def wrapper(request):
+        def wrapper(*args, **kwargs):
             status = 500
             start_time_s = time.time()
             try:
-                response = function(request)
+                response = function(*args, **kwargs)
                 status = response.status_code
             except HTTPException as http_e:
                 status = http_e.code
                 raise http_e
+            except ProblemException as prob_e:
+                status = prob_e.status
+                raise prob_e
             finally:
                 end_time_s = time.time()
                 delta_s = end_time_s - start_time_s

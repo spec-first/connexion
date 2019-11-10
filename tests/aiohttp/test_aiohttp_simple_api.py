@@ -128,16 +128,65 @@ def test_swagger_ui(aiohttp_api_spec_dir, aiohttp_client):
 
 
 @asyncio.coroutine
-def test_swagger_ui_index(aiohttp_api_spec_dir, aiohttp_client):
+def test_swagger_ui_config_json(aiohttp_api_spec_dir, aiohttp_client):
+    """ Verify the swagger-ui-config.json file is returned for swagger_ui_config option passed to app. """
+    swagger_ui_config = {"displayOperationId": True}
+    options = {"swagger_ui_config": swagger_ui_config}
+    app = AioHttpApp(__name__, port=5001,
+                     specification_dir=aiohttp_api_spec_dir,
+                     options=options,
+                     debug=True)
+    api = app.add_api('swagger_simple.yaml')
+
+    app_client = yield from aiohttp_client(app.app)
+    swagger_ui_config_json = yield from app_client.get('/v1.0/ui/swagger-ui-config.json')
+    json_ = yield from swagger_ui_config_json.read()
+
+    assert swagger_ui_config_json.status == 200
+    assert swagger_ui_config == json.loads(json_)
+
+
+@asyncio.coroutine
+def test_no_swagger_ui_config_json(aiohttp_api_spec_dir, aiohttp_client):
+    """ Verify the swagger-ui-config.json file is not returned when the swagger_ui_config option not passed to app. """
     app = AioHttpApp(__name__, port=5001,
                      specification_dir=aiohttp_api_spec_dir,
                      debug=True)
     app.add_api('swagger_simple.yaml')
 
     app_client = yield from aiohttp_client(app.app)
+    swagger_ui_config_json = yield from app_client.get('/v1.0/ui/swagger-ui-config.json')
+    assert swagger_ui_config_json.status == 404
+
+
+@asyncio.coroutine
+def test_swagger_ui_index(aiohttp_api_spec_dir, aiohttp_client):
+    app = AioHttpApp(__name__, port=5001,
+                     specification_dir=aiohttp_api_spec_dir,
+                     debug=True)
+    app.add_api('openapi_secure.yaml')
+
+    app_client = yield from aiohttp_client(app.app)
     swagger_ui = yield from app_client.get('/v1.0/ui/index.html')
     assert swagger_ui.status == 200
-    assert b'url = "/v1.0/swagger.json"' in (yield from swagger_ui.read())
+    assert b'url: "/v1.0/openapi.json"' in (yield from swagger_ui.read())
+    assert b'swagger-ui-config.json' not in (yield from swagger_ui.read())
+
+
+@asyncio.coroutine
+def test_swagger_ui_index_with_config(aiohttp_api_spec_dir, aiohttp_client):
+    swagger_ui_config = {"displayOperationId": True}
+    options = {"swagger_ui_config": swagger_ui_config}
+    app = AioHttpApp(__name__, port=5001,
+                     specification_dir=aiohttp_api_spec_dir,
+                     options=options,
+                     debug=True)
+    app.add_api('openapi_secure.yaml')
+
+    app_client = yield from aiohttp_client(app.app)
+    swagger_ui = yield from app_client.get('/v1.0/ui/index.html')
+    assert swagger_ui.status == 200
+    assert b'configUrl: "swagger-ui-config.json"' in (yield from swagger_ui.read())
 
 
 @asyncio.coroutine

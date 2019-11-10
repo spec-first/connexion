@@ -11,6 +11,4 @@ htmlcov/
 *.swp
 .tox/
 .idea/
-.vscode/
 venv/
-src/

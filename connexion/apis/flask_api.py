@@ -70,6 +70,15 @@ class FlaskApi(AbstractAPI):
                      self.base_path,
                      console_ui_path)
 
+        if self.options.openapi_console_ui_config is not None:
+            config_endpoint_name = "{name}_swagger_ui_config".format(name=self.blueprint.name)
+            config_file_url = '/{console_ui_path}/swagger-ui-config.json'.format(
+                console_ui_path=console_ui_path)
+
+            self.blueprint.add_url_rule(config_file_url,
+                                        config_endpoint_name,
+                                        lambda: flask.jsonify(self.options.openapi_console_ui_config))
+
         static_endpoint_name = "{name}_swagger_ui_static".format(name=self.blueprint.name)
         static_files_url = '/{console_ui_path}/<path:filename>'.format(
             console_ui_path=console_ui_path)
@@ -79,8 +88,8 @@ class FlaskApi(AbstractAPI):
                                     self._handlers.console_ui_static_files)
 
         index_endpoint_name = "{name}_swagger_ui_index".format(name=self.blueprint.name)
-        console_ui_url = '/{swagger_url}/'.format(
-            swagger_url=self.options.openapi_console_ui_path.strip('/'))
+        console_ui_url = '/{console_ui_path}/'.format(
+            console_ui_path=console_ui_path)
 
         self.blueprint.add_url_rule(console_ui_url,
                                     index_endpoint_name,
@@ -300,10 +309,12 @@ class InternalHandlers(object):
 
         :return:
         """
-        return flask.render_template(
-            'index.j2',
-            openapi_spec_url=(self.base_path + self.options.openapi_spec_path)
-        )
+        template_variables = {
+            'openapi_spec_url': (self.base_path + self.options.openapi_spec_path)
+        }
+        if self.options.openapi_console_ui_config is not None:
+            template_variables['configUrl'] = 'swagger-ui-config.json'
+        return flask.render_template('index.j2', **template_variables)
 
     def console_ui_static_files(self, filename):
         """

@@ -1,6 +1,9 @@
 import asyncio
 import logging
 import re
+import traceback
+from contextlib import suppress
+from http import HTTPStatus
 from urllib.parse import parse_qs
 
 import aiohttp_jinja2
@@ -9,26 +12,77 @@ from aiohttp import web
 from aiohttp.web_exceptions import HTTPNotFound, HTTPPermanentRedirect
 from aiohttp.web_middlewares import normalize_path_middleware
 from connexion.apis.abstract import AbstractAPI
-from connexion.exceptions import OAuthProblem, OAuthScopeProblem
+from connexion.exceptions import ProblemException
 from connexion.handlers import AuthErrorHandler
 from connexion.jsonifier import JSONEncoder, Jsonifier
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
-from connexion.utils import is_json_mimetype, yamldumper
+from connexion.problem import problem
+from connexion.utils import Jsonifier, is_json_mimetype, yamldumper
+from werkzeug.exceptions import HTTPException as werkzeug_HTTPException
+
+try:
+    import ujson as json
+    from functools import partial
+    json.dumps = partial(json.dumps, escape_forward_slashes=True)
+
+except ImportError:  # pragma: no cover
+    import json
 
 logger = logging.getLogger('connexion.apis.aiohttp_api')
 
 
+def _generic_problem(http_status: HTTPStatus, exc: Exception = None):
+    extra = None
+    if exc is not None:
+        loop = asyncio.get_event_loop()
+        if loop.get_debug():
+            tb = None
+            with suppress(Exception):
+                tb = traceback.format_exc()
+            if tb:
+                extra = {"traceback": tb}
+
+    return problem(
+        status=http_status.value,
+        title=http_status.phrase,
+        detail=http_status.description,
+        ext=extra,
+    )
+
+
 @web.middleware
 @asyncio.coroutine
-def oauth_problem_middleware(request, handler):
+def problems_middleware(request, handler):
     try:
         response = yield from handler(request)
-    except (OAuthProblem, OAuthScopeProblem) as oauth_error:
-        return web.Response(
-            status=oauth_error.code,
-            body=AioHttpApi.jsonifier.dumps(oauth_error.description).encode(),
-            content_type='application/problem+json'
-        )
+    except ProblemException as exc:
+        response = problem(status=exc.status, detail=exc.detail, title=exc.title,
+                           type=exc.type, instance=exc.instance, headers=exc.headers, ext=exc.ext)
+    except (werkzeug_HTTPException, _HttpNotFoundError) as exc:
+        response = problem(status=exc.code, title=exc.name, detail=exc.description)
+    except web.HTTPError as exc:
+        if exc.text == "{}: {}".format(exc.status, exc.reason):
+            detail = HTTPStatus(exc.status).description
+        else:
+            detail = exc.text
+        response = problem(status=exc.status, title=exc.reason, detail=detail)
+    except (
+        web.HTTPException,  # eg raised HTTPRedirection or HTTPSuccessful
+        asyncio.CancelledError,  # skipped in default web_protocol
+    ):
+        # leave this to default handling in aiohttp.web_protocol.RequestHandler.start()
+        raise
+    except asyncio.TimeoutError as exc:
+        # overrides 504 from aiohttp.web_protocol.RequestHandler.start()
+        logger.debug('Request handler timed out.', exc_info=exc)
+        response = _generic_problem(HTTPStatus.GATEWAY_TIMEOUT, exc)
+    except Exception as exc:
+        # overrides 500 from aiohttp.web_protocol.RequestHandler.start()
+        logger.exception('Error handling request', exc_info=exc)
+        response = _generic_problem(HTTPStatus.INTERNAL_SERVER_ERROR, exc)
+
+    if isinstance(response, ConnexionResponse):
+        response = yield from AioHttpApi.get_response(response)
     return response
 
 
@@ -44,7 +98,7 @@ class AioHttpApi(AbstractAPI):
         )
         self.subapp = web.Application(
             middlewares=[
-                oauth_problem_middleware,
+                problems_middleware,
                 trailing_slash_redirect
             ]
         )
@@ -132,6 +186,13 @@ class AioHttpApi(AbstractAPI):
                 self._get_swagger_ui_home
             )
 
+        if self.options.openapi_console_ui_config is not None:
+            self.subapp.router.add_route(
+                'GET',
+                console_ui_path + '/swagger-ui-config.json',
+                self._get_swagger_ui_config
+            )
+
         # we have to add an explicit redirect instead of relying on the
         # normalize_path_middleware because we also serve static files
         # from this dir (below)
@@ -159,8 +220,20 @@ class AioHttpApi(AbstractAPI):
     @aiohttp_jinja2.template('index.j2')
     @asyncio.coroutine
     def _get_swagger_ui_home(self, req):
-        return {'openapi_spec_url': (self.base_path +
-                                     self.options.openapi_spec_path)}
+        template_variables = {
+            'openapi_spec_url': (self.base_path + self.options.openapi_spec_path)
+        }
+        if self.options.openapi_console_ui_config is not None:
+            template_variables['configUrl'] = 'swagger-ui-config.json'
+        return template_variables
+
+    @asyncio.coroutine
+    def _get_swagger_ui_config(self, req):
+        return web.Response(
+            status=200,
+            content_type='text/json',
+            body=self.jsonifier.dumps(self.options.openapi_console_ui_config)
+        )
 
     def add_auth_on_not_found(self, security, security_definitions):
         """

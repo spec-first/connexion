@@ -1,13 +1,5 @@
-from connexion.mock import MockResolver, partial
+from connexion.mock import MockResolver
 from connexion.operations import Swagger2Operation
-
-
-def test_partial():
-    def func(a, b):
-        return a + b
-
-    add_three = partial(func, a=3)
-    assert add_three(b=1) == 4
 
 
 def test_mock_resolver():

@@ -99,7 +99,7 @@ How to Use
 Prerequisites
 -------------
 
-Python 2.7 or Python 3.4+
+Python 3.6+
 
 Installing It
 -------------
@@ -316,12 +316,12 @@ api options.
 
 .. code-block:: python
 
-   from connexion.decorators.uri_parsing import Swagger2URIParser
-   options = {'uri_parsing_class': AlwaysMultiURIParser}
+   from connexion.decorators.uri_parsing import AlwaysMultiURIParser
+   options = {'uri_parser_class': AlwaysMultiURIParser}
    app = connexion.App(__name__, specification_dir='swagger/', options=options)
 
 You can implement your own URI parsing behavior by inheriting from
-``connextion.decorators.uri_parsing.AbstractURIParser``.
+``connexion.decorators.uri_parsing.AbstractURIParser``.
 
 There are a handful of URI parsers included with connection.
 
@@ -485,7 +485,7 @@ In order to do this, you should specify the following option:
    options = {'swagger_path': '/path/to/swagger_ui/'}
    app = connexion.App(__name__, specification_dir='openapi/', options=options)
 
-If you wish to provide your own swagger-ui distro, note that connextion
+If you wish to provide your own swagger-ui distro, note that connexion
 expects a jinja2 file called ``swagger_ui/index.j2`` in order to load the
 correct ``swagger.json`` by default. Your ``index.j2`` file can use the
 ``openapi_spec_url`` jinja variable for this purpose:
