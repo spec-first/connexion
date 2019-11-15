@@ -59,10 +59,20 @@ def deep_getattr(obj, attr):
 def deep_get(obj, keys):
     """
     Recurses through a nested object get a leaf value.
+
+    There are cases where the use of inheritance or polymorphism-- the use of allOf or
+    oneOf keywords-- will cause the obj to be a list. In this case the keys will
+    contain one or more strings containing integers.
+
+    :type obj: list or dict
+    :type keys: list of strings
     """
     if not keys:
         return obj
-    return deep_get(obj[keys[0]], keys[1:])
+    try:
+        return deep_get(obj[int(keys[0])], keys[1:])
+    except ValueError:
+        return deep_get(obj[keys[0]], keys[1:])
 
 
 def get_function_from_name(function_name):
@@ -184,28 +194,24 @@ def has_coroutine(function, api=None):
     If ``function`` is a decorator (has a ``__wrapped__`` attribute)
     this function will also look at the wrapped function.
     """
-    if six.PY3:  # pragma: 2.7 no cover
-        import asyncio
+    import asyncio
 
-        def iscorofunc(func):
+    def iscorofunc(func):
+        iscorofunc = asyncio.iscoroutinefunction(func)
+        while not iscorofunc and hasattr(func, '__wrapped__'):
+            func = func.__wrapped__
             iscorofunc = asyncio.iscoroutinefunction(func)
-            while not iscorofunc and hasattr(func, '__wrapped__'):
-                func = func.__wrapped__
-                iscorofunc = asyncio.iscoroutinefunction(func)
-            return iscorofunc
+        return iscorofunc
 
-        if api is None:
-            return iscorofunc(function)
+    if api is None:
+        return iscorofunc(function)
 
-        else:
-            return any(
-                iscorofunc(func) for func in (
-                    function, api.get_request, api.get_response
-                )
+    else:
+        return any(
+            iscorofunc(func) for func in (
+                function, api.get_request, api.get_response
             )
-    else:  # pragma: 3 no cover
-        # there's no asyncio in python 2
-        return False
+        )
 
 
 def yamldumper(openapi):
@@ -253,3 +259,12 @@ def yamldumper(openapi):
     yaml.representer.SafeRepresenter.represent_scalar = my_represent_scalar
 
     return yaml.dump(openapi, allow_unicode=True, Dumper=NoAnchorDumper)
+
+
+def create_empty_dict_from_list(_list, _dict, _end_value):
+    """create from ['foo', 'bar'] a dict like {'foo': {'bar': {}}} recursively. needed for converting query params"""
+    current_key = _list.pop(0)
+    if _list:
+        return {current_key: create_empty_dict_from_list(_list, _dict, _end_value)}
+    else:
+        return {current_key: _end_value}

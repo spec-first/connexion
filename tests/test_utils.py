@@ -51,3 +51,13 @@ def test_boolean():
 
     with pytest.raises(ValueError):
         utils.boolean(None)
+
+
+def test_deep_get_dict():
+    obj = {'type': 'object', 'properties': {'id': {'type': 'string'}}}
+    assert utils.deep_get(obj, ['properties', 'id']) == {'type': 'string'}
+
+
+def test_deep_get_list():
+    obj = [{'type': 'object', 'properties': {'id': {'type': 'string'}}}]
+    assert utils.deep_get(obj, ['0', 'properties', 'id']) == {'type': 'string'}

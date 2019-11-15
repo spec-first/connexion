@@ -262,6 +262,7 @@ def test_run_with_wsgi_containers(mock_app_run, spec_file):
 def test_run_with_aiohttp_not_installed(mock_app_run, spec_file):
     import sys
     aiohttp_bkp = sys.modules.pop('aiohttp', None)
+    sys.modules['aiohttp'] = None
 
     runner = CliRunner()
 

@@ -2,7 +2,7 @@
 import flask
 from flask import jsonify, redirect
 
-from connexion import NoContent, ProblemException, context, problem
+from connexion import NoContent, ProblemException, context
 
 
 class DummyClass(object):
@@ -92,19 +92,19 @@ def get_bye_secure_jwt(name, user, token_info):
     return 'Goodbye {name} (Secure: {user})'.format(name=name, user=user)
 
 def with_problem():
-    return problem(type='http://www.example.com/error',
-                   title='Some Error',
-                   detail='Something went wrong somewhere',
-                   status=418,
-                   instance='instance1',
-                   headers={'x-Test-Header': 'In Test'})
+    raise ProblemException(type='http://www.example.com/error',
+                           title='Some Error',
+                           detail='Something went wrong somewhere',
+                           status=418,
+                           instance='instance1',
+                           headers={'x-Test-Header': 'In Test'})
 
 
 def with_problem_txt():
-    return problem(title='Some Error',
-                   detail='Something went wrong somewhere',
-                   status=418,
-                   instance='instance1')
+    raise ProblemException(title='Some Error',
+                           detail='Something went wrong somewhere',
+                           status=418,
+                           instance='instance1')
 
 
 def internal_error():
@@ -295,9 +295,10 @@ def test_formdata_missing_param():
 
 
 def test_formdata_file_upload(formData, **kwargs):
-    filename = formData.filename
-    contents = formData.read().decode('utf-8', 'replace')
-    return {filename: contents}
+    if len(formData) == 1:
+        return {x.filename: x.read().decode('utf-8', 'replace') for x in formData}
+
+    return [{x.filename: x.read().decode('utf-8', 'replace')} for x in formData]
 
 
 def test_formdata_file_upload_missing_param():
@@ -316,6 +317,18 @@ def test_bool_array_param(thruthiness=None):
 
 def test_required_param(simple):
     return simple
+
+
+def test_exploded_deep_object_param(id):
+    return id
+
+
+def test_nested_exploded_deep_object_param(id):
+    return id
+
+
+def test_exploded_deep_object_param_additional_properties(id):
+    return id
 
 
 def test_redirect_endpoint():
@@ -404,8 +417,8 @@ def get_empty_dict():
 
 
 def get_custom_problem_response():
-    return problem(403, "You need to pay", "Missing amount",
-                   ext={'amount': 23.0})
+    raise ProblemException(403, "You need to pay", "Missing amount",
+                           ext={'amount': 23.0})
 
 
 def throw_problem_exception():

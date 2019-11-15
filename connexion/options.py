@@ -112,6 +112,16 @@ class ConnexionOptions(object):
         return self._options.get('swagger_path', self.swagger_ui_local_path)
 
     @property
+    def openapi_console_ui_config(self):
+        # type: () -> dict
+        """
+        Custom OpenAPI Console UI config.
+
+        Default: None
+        """
+        return self._options.get('swagger_ui_config', None)
+
+    @property
     def uri_parser_class(self):
         # type: () -> AbstractURIParser
         """

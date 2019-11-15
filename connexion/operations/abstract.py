@@ -176,7 +176,7 @@ class AbstractOperation(SecureOperation):
 
     @staticmethod
     def _get_file_arguments(files, arguments, has_kwargs=False):
-        return {k: v for k, v in files.items() if k in arguments or has_kwargs}
+        return {k: files.getlist(k) for k in files.keys() if k in arguments or has_kwargs}
 
     @abc.abstractmethod
     def _get_val_from_param(self, value, query_defn):
@@ -199,7 +199,7 @@ class AbstractOperation(SecureOperation):
                     logger.error("Function argument '{}' not defined in specification".format(key))
                 else:
                     logger.debug('%s is a %s', key, query_defn)
-                    res[key] = self._get_val_from_param(value, query_defn)
+                    res.update({key: self._get_val_from_param(value, query_defn)})
         return res
 
     @abc.abstractmethod

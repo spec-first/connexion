@@ -43,6 +43,13 @@ def test_get_nullable_parameter():
     assert result is None
 
 
+def test_get_explodable_object_parameter():
+    param = {'schema': {'type': 'object', 'additionalProperties': True},
+             'required': True, 'name': 'foo', 'style': 'deepObject', 'explode': True}
+    result = ParameterValidator.validate_parameter('query', {'bar': 1}, param)
+    assert result is None
+
+
 def test_invalid_type(monkeypatch):
     logger = MagicMock()
     monkeypatch.setattr('connexion.decorators.validation.logger', logger)

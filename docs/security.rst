@@ -79,6 +79,16 @@ semantics as for ``x-tokenInfoFunc``, but the function accepts one parameter: to
 
 You can find a `minimal JWT example application`_ in Connexion's "examples/openapi3" folder.
 
+Deploying Authentication
+------------------------
+
+Some production hosting environments, such as Apache with modwsgi, do not by default pass 
+authentication headers to WSGI applications.  Therefore, to allow connexion to handle
+authentication, you will need to enable passthrough.  
+
+Instructions for `enabling authentication passthrough in modwsgi`_ are available as
+part of the `modwsgi documentation`_.
+
 HTTPS Support
 -------------
 
@@ -95,3 +105,5 @@ way to start a HTTPS server when using Connexion?
 .. _minimal Basic Auth example application: https://github.com/zalando/connexion/tree/master/examples/swagger2/basicauth
 .. _minimal API Key example application: https://github.com/zalando/connexion/tree/master/examples/oauth2/apikey
 .. _minimal JWT example application: https://github.com/zalando/connexion/tree/master/examples/openapi3/jwt
+.. _enabling authentication passthrough in modwsgi: https://modwsgi.readthedocs.io/en/develop/configuration-directives/WSGIPassAuthorization.html
+.. _modwsgi documentation: https://modwsgi.readthedocs.io/en/develop/index.html

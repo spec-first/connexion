@@ -1,3 +1,4 @@
+import warnings
 from jsonschema.exceptions import ValidationError
 from werkzeug.exceptions import Forbidden, Unauthorized
 
@@ -24,6 +25,9 @@ class ProblemException(ConnexionException):
         self.ext = ext
 
     def to_problem(self):
+        warnings.warn(
+            "'to_problem' is planned to be removed in a future release. "
+            "Call connexion.problem.problem(..) instead to maintain the existing error response.", DeprecationWarning)
         return problem(status=self.status, title=self.title, detail=self.detail,
                        type=self.type, instance=self.instance, headers=self.headers,
                        ext=self.ext)
@@ -52,12 +56,13 @@ class InvalidSpecification(ConnexionException, ValidationError):
     pass
 
 
-class NonConformingResponse(ConnexionException):
+class NonConformingResponse(ProblemException):
     def __init__(self, reason='Unknown Reason', message=None):
         """
         :param reason: Reason why the response did not conform to the specification
         :type reason: str
         """
+        super(NonConformingResponse, self).__init__(status=500, title=reason, detail=message)
         self.reason = reason
         self.message = message
 
@@ -66,6 +71,30 @@ class NonConformingResponse(ConnexionException):
 
     def __repr__(self):  # pragma: no cover
         return '<NonConformingResponse: {}>'.format(self.reason)
+
+
+class AuthenticationProblem(ProblemException):
+
+    def __init__(self, status, title, detail):
+        super(AuthenticationProblem, self).__init__(status=status, title=title, detail=detail)
+
+
+class ResolverProblem(ProblemException):
+
+    def __init__(self, status, title, detail):
+        super(ResolverProblem, self).__init__(status=status, title=title, detail=detail)
+
+
+class BadRequestProblem(ProblemException):
+
+    def __init__(self, title='Bad Request', detail=None):
+        super(BadRequestProblem, self).__init__(status=400, title=title, detail=detail)
+
+
+class UnsupportedMediaTypeProblem(ProblemException):
+
+    def __init__(self, title="Unsupported Media Type", detail=None):
+        super(UnsupportedMediaTypeProblem, self).__init__(status=415, title=title, detail=detail)
 
 
 class NonConformingResponseBody(NonConformingResponse):

@@ -3,6 +3,7 @@ import logging
 import re
 import traceback
 from contextlib import suppress
+from http import HTTPStatus
 from urllib.parse import parse_qs
 
 import aiohttp_jinja2
@@ -17,12 +18,6 @@ from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.problem import problem
 from connexion.utils import Jsonifier, is_json_mimetype, yamldumper
 from werkzeug.exceptions import HTTPException as werkzeug_HTTPException
-
-try:
-    from http import HTTPStatus
-except ImportError:  # pragma: no cover
-    # httpstatus35 backport for python 3.4
-    from httpstatus import HTTPStatus
 
 try:
     import ujson as json
@@ -60,7 +55,8 @@ def problems_middleware(request, handler):
     try:
         response = yield from handler(request)
     except ProblemException as exc:
-        response = exc.to_problem()
+        response = problem(status=exc.status, detail=exc.detail, title=exc.title,
+                           type=exc.type, instance=exc.instance, headers=exc.headers, ext=exc.ext)
     except (werkzeug_HTTPException, _HttpNotFoundError) as exc:
         response = problem(status=exc.code, title=exc.name, detail=exc.description)
     except web.HTTPError as exc:
@@ -189,6 +185,13 @@ class AioHttpApi(AbstractAPI):
                 self._get_swagger_ui_home
             )
 
+        if self.options.openapi_console_ui_config is not None:
+            self.subapp.router.add_route(
+                'GET',
+                console_ui_path + '/swagger-ui-config.json',
+                self._get_swagger_ui_config
+            )
+
         # we have to add an explicit redirect instead of relying on the
         # normalize_path_middleware because we also serve static files
         # from this dir (below)
@@ -216,8 +219,20 @@ class AioHttpApi(AbstractAPI):
     @aiohttp_jinja2.template('index.j2')
     @asyncio.coroutine
     def _get_swagger_ui_home(self, req):
-        return {'openapi_spec_url': (self.base_path +
-                                     self.options.openapi_spec_path)}
+        template_variables = {
+            'openapi_spec_url': (self.base_path + self.options.openapi_spec_path)
+        }
+        if self.options.openapi_console_ui_config is not None:
+            template_variables['configUrl'] = 'swagger-ui-config.json'
+        return template_variables
+
+    @asyncio.coroutine
+    def _get_swagger_ui_config(self, req):
+        return web.Response(
+            status=200,
+            content_type='text/json',
+            body=self.jsonifier.dumps(self.options.openapi_console_ui_config)
+        )
 
     def add_auth_on_not_found(self, security, security_definitions):
         """

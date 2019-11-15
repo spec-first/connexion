@@ -4,22 +4,28 @@ import functools
 import logging
 import sys
 
+import pkg_resources
 import six
 from jsonschema import Draft4Validator, ValidationError, draft4_format_checker
-from werkzeug import FileStorage
+from jsonschema.validators import extend
+from werkzeug.datastructures import FileStorage
 
-from ..exceptions import ExtraParameterProblem
+from ..exceptions import ExtraParameterProblem, BadRequestProblem, UnsupportedMediaTypeProblem
 from ..http_facts import FORM_CONTENT_TYPES
 from ..json_schema import Draft4RequestValidator, Draft4ResponseValidator
-from ..problem import problem
 from ..utils import all_json, boolean, is_json_mimetype, is_null, is_nullable
+
+_jsonschema_3_or_newer = pkg_resources.parse_version(
+        pkg_resources.get_distribution("jsonschema").version) >= \
+    pkg_resources.parse_version("3.0.0")
 
 logger = logging.getLogger('connexion.decorators.validation')
 
 TYPE_MAP = {
     'integer': int,
     'number': float,
-    'boolean': boolean
+    'boolean': boolean,
+    'object': dict
 }
 
 
@@ -63,6 +69,21 @@ def coerce_type(param, value, parameter_type, parameter_name=None):
                 converted = v
             converted_params.append(converted)
         return converted_params
+    elif param_type == 'object':
+        if param_schema.get('properties'):
+            def cast_leaves(d, schema):
+                if type(d) is not dict:
+                    try:
+                        return make_type(d, schema['type'])
+                    except (ValueError, TypeError):
+                        return d
+                for k, v in d.items():
+                    if k in schema['properties']:
+                        d[k] = cast_leaves(v, schema['properties'][k])
+                return d
+
+            return cast_leaves(value, param_schema)
+        return value
     else:
         try:
             return make_type(value, param_type)
@@ -126,22 +147,17 @@ class RequestBodyValidator(object):
 
                     if ctype_is_json:
                         # Content-Type is json but actual body was not parsed
-                        return problem(400,
-                                       "Bad Request",
-                                       "Request body is not valid JSON"
-                                       )
+                        raise BadRequestProblem(detail="Request body is not valid JSON")
                     else:
                         # the body has contents that were not parsed as JSON
-                        return problem(415,
-                                       "Unsupported Media Type",
+                        raise UnsupportedMediaTypeProblem(
                                        "Invalid Content-type ({content_type}), expected JSON data".format(
                                            content_type=request.headers.get("Content-Type", "")
                                        ))
 
                 logger.debug("%s validating schema...", request.url)
-                error = self.validate_schema(data, request.url)
-                if error and not self.has_default:
-                    return error
+                if data is not None or not self.has_default:
+                    self.validate_schema(data, request.url)
             elif self.consumes[0] in FORM_CONTENT_TYPES:
                 data = dict(request.form.items()) or (request.body if len(request.body) > 0 else {})
                 data.update(dict.fromkeys(request.files, ''))  # validator expects string..
@@ -163,11 +179,9 @@ class RequestBodyValidator(object):
                                 errs += [str(e)]
                                 print(errs)
                     if errs:
-                        return problem(400, 'Bad Request', errs)
+                        raise BadRequestProblem(detail=errs)
 
-                error = self.validate_schema(data, request.url)
-                if error:
-                    return error
+                self.validate_schema(data, request.url)
 
             response = function(request)
             return response
@@ -182,10 +196,17 @@ class RequestBodyValidator(object):
         try:
             self.validator.validate(data)
         except ValidationError as exception:
-            logger.error("{url} validation error: {error}".format(url=url,
-                                                                  error=exception.message),
-                         extra={'validator': 'body'})
-            return problem(400, 'Bad Request', str(exception.message))
+            error_path = '.'.join(str(item) for item in exception.path)
+            error_path_msg = " - '{path}'".format(path=error_path) \
+                if error_path else ""
+            logger.error(
+                "{url} validation error: {error}{error_path_msg}".format(
+                    url=url, error=exception.message,
+                    error_path_msg=error_path_msg),
+                extra={'validator': 'body'})
+            raise BadRequestProblem(detail="{message}{error_path_msg}".format(
+                               message=exception.message,
+                               error_path_msg=error_path_msg))
 
         return None
 
@@ -245,10 +266,19 @@ class ParameterValidator(object):
                 del param['required']
             try:
                 if parameter_type == 'formdata' and param.get('type') == 'file':
-                    Draft4Validator(
-                        param,
-                        format_checker=draft4_format_checker,
-                        types={'file': FileStorage}).validate(converted_value)
+                    if _jsonschema_3_or_newer:
+                        extend(
+                            Draft4Validator,
+                            type_checker=Draft4Validator.TYPE_CHECKER.redefine(
+                                "file",
+                                lambda checker, instance: isinstance(instance, FileStorage)
+                            )
+                        )(param, format_checker=draft4_format_checker).validate(converted_value)
+                    else:
+                        Draft4Validator(
+                            param,
+                            format_checker=draft4_format_checker,
+                            types={'file': FileStorage}).validate(converted_value)
                 else:
                     Draft4Validator(
                         param, format_checker=draft4_format_checker).validate(converted_value)
@@ -295,6 +325,10 @@ class ParameterValidator(object):
         val = request.headers.get(param['name'])
         return self.validate_parameter('header', val, param)
 
+    def validate_cookie_parameter(self, param, request):
+        val = request.cookies.get(param['name'])
+        return self.validate_parameter('cookie', val, param)
+
     def validate_formdata_parameter(self, param_name, param, request):
         if param.get('type') == 'file' or param.get('format') == 'binary':
             val = request.files.get(param_name)
@@ -323,26 +357,27 @@ class ParameterValidator(object):
             for param in self.parameters.get('query', []):
                 error = self.validate_query_parameter(param, request)
                 if error:
-                    response = problem(400, 'Bad Request', error)
-                    return self.api.get_response(response)
+                    raise BadRequestProblem(detail=error)
 
             for param in self.parameters.get('path', []):
                 error = self.validate_path_parameter(param, request)
                 if error:
-                    response = problem(400, 'Bad Request', error)
-                    return self.api.get_response(response)
+                    raise BadRequestProblem(detail=error)
 
             for param in self.parameters.get('header', []):
                 error = self.validate_header_parameter(param, request)
                 if error:
-                    response = problem(400, 'Bad Request', error)
-                    return self.api.get_response(response)
+                    raise BadRequestProblem(detail=error)
+
+            for param in self.parameters.get('cookie', []):
+                error = self.validate_cookie_parameter(param, request)
+                if error:
+                    raise BadRequestProblem(detail=error)
 
             for param in self.parameters.get('formData', []):
                 error = self.validate_formdata_parameter(param["name"], param, request)
                 if error:
-                    response = problem(400, 'Bad Request', error)
-                    return self.api.get_response(response)
+                    raise BadRequestProblem(detail=error)
 
             return function(request)
 
