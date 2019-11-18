@@ -20,13 +20,6 @@ from connexion.problem import problem
 from connexion.utils import is_json_mimetype, yamldumper
 from werkzeug.exceptions import HTTPException as werkzeug_HTTPException
 
-try:
-    import ujson as json
-    from functools import partial
-    json.dumps = partial(json.dumps, escape_forward_slashes=True)
-
-except ImportError:  # pragma: no cover
-    import json
 
 logger = logging.getLogger('connexion.apis.aiohttp_api')
 
