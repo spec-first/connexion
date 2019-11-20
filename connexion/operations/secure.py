@@ -7,7 +7,7 @@ from ..decorators.security import (get_apikeyinfo_func, get_basicinfo_func,
                                    get_scope_validate_func, get_tokeninfo_func,
                                    security_deny, security_passthrough,
                                    verify_apikey, verify_basic, verify_bearer,
-                                   verify_oauth, verify_security)
+                                   verify_none, verify_oauth, verify_security)
 
 logger = logging.getLogger("connexion.operations.secure")
 
@@ -80,6 +80,7 @@ class SecureOperation(object):
         required_scopes = None
         for security_req in self.security:
             if not security_req:
+                auth_funcs.append(verify_none())
                 continue
             elif len(security_req) > 1:
                 logger.warning("... More than one security scheme in security requirement defined. "

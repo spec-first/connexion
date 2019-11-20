@@ -124,6 +124,20 @@ paths:
       responses:
         '200':
           description: some response
+  /optional-auth:
+    get:
+      summary: Test empty security definition
+      description: |
+        Test that connexion handles an empty security definition correctly.
+        In case an empty definition is provided, the user is required to
+        apply proper authentication and authorization techniques.
+      operationId: fakeapi.hello.optional_auth
+      security:
+        - api_key: []
+        - {}
+      responses:
+        '200':
+          description: some response
 servers:
   - url: /v1.0
 components:

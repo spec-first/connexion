@@ -2,7 +2,7 @@
 import flask
 from flask import jsonify, redirect
 
-from connexion import NoContent, ProblemException, context
+from connexion import NoContent, ProblemException, context, request
 
 
 class DummyClass(object):
@@ -435,6 +435,14 @@ def unordered_params_response(first, path_param, second):
 
 def more_than_one_scope_defined(**kwargs):
     return "OK"
+
+
+def optional_auth(**kwargs):
+    key = apikey_info(request.headers.get('X-AUTH'))
+    if key is None:
+        return "Unauthenticated"
+    else:
+        return "Authenticated"
 
 
 def test_args_kwargs(*args, **kwargs):
