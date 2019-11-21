@@ -53,8 +53,10 @@ class FlaskApp(AbstractApp):
 
         return FlaskApi.get_response(response)
 
-    def add_api(self, specification, **kwargs):
+    def add_api(self, specification, name: str = '' **kwargs):
         api = super(FlaskApp, self).add_api(specification, **kwargs)
+        if name != '':
+            api.blueprint.name = name
         self.app.register_blueprint(api.blueprint)
         return api
 
