@@ -56,6 +56,10 @@ def test_boolean():
 def test_deep_get_dict():
     obj = {'type': 'object', 'properties': {'id': {'type': 'string'}}}
     assert utils.deep_get(obj, ['properties', 'id']) == {'type': 'string'}
+    obj = {200: {'content': {'text/html': {'schema': {'type': 'object', 'properties': {'id': {'type': 'string'}}}}}}}
+    assert utils.deep_get(obj, ['200', 'content', 'text/html']) == {'schema': {'type': 'object', 'properties': {'id': {'type': 'string'}}}}
+    obj = {'200': {'content': {'text/html': {'schema': {'type': 'object', 'properties': {'id': {'type': 'string'}}}}}}}
+    assert utils.deep_get(obj, ['200', 'content', 'text/html']) == {'schema': {'type': 'object', 'properties': {'id': {'type': 'string'}}}}
 
 
 def test_deep_get_list():

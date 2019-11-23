@@ -71,7 +71,7 @@ def deep_get(obj, keys):
         return obj
     try:
         return deep_get(obj[int(keys[0])], keys[1:])
-    except ValueError:
+    except (KeyError, ValueError):
         return deep_get(obj[keys[0]], keys[1:])
 
 
