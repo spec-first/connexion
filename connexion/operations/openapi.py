@@ -160,6 +160,8 @@ class OpenAPIOperation(AbstractOperation):
         return schema
 
     def response_schema(self, status_code=None, content_type=None):
+        content_type = content_type or self.get_mimetype()
+        status_code = status_code or sorted(self._responses.keys())[0]
         response_definition = self.response_definition(
             status_code, content_type
         )
