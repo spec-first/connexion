@@ -13,7 +13,7 @@ logger = logging.getLogger('connexion.app')
 @six.add_metaclass(abc.ABCMeta)
 class AbstractApp(object):
     def __init__(self, import_name, api_cls, port=None, specification_dir='',
-                 host=None, server=None, arguments=None, auth_all_paths=False, debug=False,
+                 host=None, server=None, arguments=None, auth_all_paths=False, debug=None,
                  resolver=None, options=None, skip_error_handlers=False):
         """
         :param import_name: the name of the application package
