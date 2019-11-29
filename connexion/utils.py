@@ -69,9 +69,10 @@ def deep_get(obj, keys):
     """
     if not keys:
         return obj
-    try:
+
+    if isinstance(obj, list):
         return deep_get(obj[int(keys[0])], keys[1:])
-    except ValueError:
+    else:
         return deep_get(obj[keys[0]], keys[1:])
 
 
