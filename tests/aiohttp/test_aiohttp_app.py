@@ -1,4 +1,5 @@
 import logging
+import os
 from unittest import mock
 
 import pytest
@@ -74,13 +75,13 @@ def test_app_run_server_error(web_run_app_mock, aiohttp_api_spec_dir):
 def test_app_get_root_path(aiohttp_api_spec_dir):
     app = AioHttpApp(__name__, port=5001,
                      specification_dir=aiohttp_api_spec_dir)
-    assert app.get_root_path().endswith('connexion/tests/aiohttp') == True
+    assert app.get_root_path().endswith(os.path.join('connexion', 'tests', 'aiohttp')) == True
 
 
 def test_app_get_root_path_not_in_sys_modules(sys_modules_mock, aiohttp_api_spec_dir):
     app = AioHttpApp('connexion', port=5001,
                      specification_dir=aiohttp_api_spec_dir)
-    assert app.get_root_path().endswith('/connexion') == True
+    assert app.get_root_path().endswith(os.sep + 'connexion') == True
 
 
 def test_app_get_root_path_invalid(sys_modules_mock, aiohttp_api_spec_dir):
