@@ -2,11 +2,44 @@ from connexion.mock import MockResolver
 from connexion.operations import Swagger2Operation
 
 
-def test_mock_resolver():
+def test_mock_resolver_default():
     resolver = MockResolver(mock_all=True)
 
     responses = {
         'default': {
+            'examples': {
+                'application/json': {
+                    'foo': 'bar'
+                }
+            }
+        }
+    }
+
+    operation = Swagger2Operation(api=None,
+                                  method='GET',
+                                  path='endpoint',
+                                  path_parameters=[],
+                                  operation={
+                                      'responses': responses
+                                  },
+                                  app_produces=['application/json'],
+                                  app_consumes=['application/json'],
+                                  app_security=[],
+                                  security_definitions={},
+                                  definitions={},
+                                  parameter_definitions={},
+                                  resolver=resolver)
+    assert operation.operation_id == 'mock-1'
+
+    response, status_code = resolver.mock_operation(operation)
+    assert status_code == 200
+    assert response == {'foo': 'bar'}
+
+def test_mock_resolver_numeric():
+    resolver = MockResolver(mock_all=True)
+
+    responses = {
+        '200': {
             'examples': {
                 'application/json': {
                     'foo': 'bar'
