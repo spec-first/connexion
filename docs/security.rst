@@ -103,7 +103,7 @@ way to start a HTTPS server when using Connexion?
 .. _rfc7662: https://tools.ietf.org/html/rfc7662
 .. _minimal OAuth example application: https://github.com/zalando/connexion/tree/master/examples/swagger2/oauth2
 .. _minimal Basic Auth example application: https://github.com/zalando/connexion/tree/master/examples/swagger2/basicauth
-.. _minimal API Key example application: https://github.com/zalando/connexion/tree/master/examples/oauth2/apikey
+.. _minimal API Key example application: https://github.com/zalando/connexion/blob/master/examples/openapi3/apikey/app.py
 .. _minimal JWT example application: https://github.com/zalando/connexion/tree/master/examples/openapi3/jwt
 .. _enabling authentication passthrough in modwsgi: https://modwsgi.readthedocs.io/en/develop/configuration-directives/WSGIPassAuthorization.html
 .. _modwsgi documentation: https://modwsgi.readthedocs.io/en/develop/index.html
