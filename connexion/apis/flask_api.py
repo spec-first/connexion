@@ -133,7 +133,7 @@ class FlaskApi(AbstractAPI):
         pass the information needed to recreate it.
 
         :type operation_handler_result: flask.Response | (flask.Response, int) | (flask.Response, int, dict)
-        :rtype: ConnexionRequest
+        :rtype: ConnexionResponse
         """
         logger.debug('Getting data and status code',
                      extra={
