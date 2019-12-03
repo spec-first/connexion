@@ -190,7 +190,7 @@ class OpenAPIOperation(AbstractOperation):
         try:
             # TODO also use example header?
             return (
-                list(deep_get(self._responses, examples_path).values())[0],
+                list(deep_get(self._responses, examples_path).values())[0]['value'],
                 status_code
             )
         except (KeyError, IndexError):
