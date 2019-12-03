@@ -526,6 +526,12 @@ def post_user(body):
     body.pop('password', None)
     return body
 
+def post_multipart_form(body):
+    x = body['x']
+    x['name'] += "-reply"
+    x['age'] += 10
+    return x
+
 
 def apikey_info(apikey, required_scopes=None):
     if apikey == 'mykey':

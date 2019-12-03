@@ -24,6 +24,13 @@ components:
         password:
           type: string
           writeOnly: true
+    X:
+      type: object
+      properties:
+        name:
+          type: string
+        age:
+          type: integer
 
 paths:
   /minlength:
@@ -75,3 +82,26 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
+
+  /multipart_form_json:
+    post:
+      operationId: fakeapi.hello.post_multipart_form
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                x:
+                  $ref: "#/components/schemas/X"
+            encoding:
+              x:
+                contentType: "application/json"
+      responses:
+        200:
+          description: Modified Echo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/X"
