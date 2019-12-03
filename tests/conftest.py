@@ -179,11 +179,6 @@ def bad_operations_app(request):
                                   resolver_error=501)
 
 
-@pytest.fixture(scope="session", params=SPECS)
-def query_sanitazion(request):
-    return build_app_from_fixture('query_sanitazion', request.param)
-
-
 if sys.version_info < (3, 5, 3) and sys.version_info[0] == 3:
     @pytest.fixture
     def aiohttp_client(test_client):

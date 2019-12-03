@@ -1074,8 +1074,22 @@ paths:
     trace:
       operationId: fakeapi.hello.trace_add_operation_on_http_methods_only
       responses: {}
-    
-
+  /forward:
+    post:
+      operationId: fakeapi.hello.forward
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: >
+            The response containing the same data as were present in request body.
+          content:
+            application/json:
+              schema:
+                type: object
 
 servers:
   - url: http://localhost:{port}/{basePath}
