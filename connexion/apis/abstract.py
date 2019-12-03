@@ -7,11 +7,11 @@ import six
 
 from ..exceptions import ResolverError
 from ..http_facts import METHODS
+from ..jsonifier import Jsonifier
 from ..operations import make_operation
 from ..options import ConnexionOptions
 from ..resolver import Resolver
 from ..spec import Specification
-from ..utils import Jsonifier
 
 MODULE_PATH = pathlib.Path(__file__).absolute().parent.parent
 SWAGGER_UI_URL = 'ui'
@@ -260,5 +260,4 @@ class AbstractAPI(object):
 
     @classmethod
     def _set_jsonifier(cls):
-        import json
-        cls.jsonifier = Jsonifier(json)
+        cls.jsonifier = Jsonifier()

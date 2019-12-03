@@ -165,30 +165,6 @@ def is_null(value):
     return False
 
 
-class Jsonifier(object):
-    def __init__(self, json_):
-        self.json = json_
-
-    def dumps(self, data):
-        """ Central point where JSON serialization happens inside
-        Connexion.
-        """
-        return "{}\n".format(self.json.dumps(data, indent=2))
-
-    def loads(self, data):
-        """ Central point where JSON serialization happens inside
-        Connexion.
-        """
-        if isinstance(data, six.binary_type):
-            data = data.decode()
-
-        try:
-            return self.json.loads(data)
-        except Exception:
-            if isinstance(data, six.string_types):
-                return data
-
-
 def has_coroutine(function, api=None):
     """
     Checks if function is a coroutine.

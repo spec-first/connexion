@@ -97,6 +97,11 @@ def json_validation_spec_dir():
     return FIXTURES_FOLDER / 'json_validation'
 
 
+@pytest.fixture(scope='session')
+def json_datetime_dir():
+    return FIXTURES_FOLDER / 'datetime_support'
+
+
 def build_app_from_fixture(api_spec_folder, spec_file='openapi.yaml', **kwargs):
     debug = True
     if 'debug' in kwargs:

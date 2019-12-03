@@ -1,0 +1,60 @@
+openapi: "3.0.1"
+
+info:
+  title: "{{title}}"
+  version: "1.0"
+servers:
+  - url: http://localhost:8080/v1.0
+
+paths:
+  /datetime:
+    get:
+      summary: Generate data with date time
+      operationId: fakeapi.hello.get_datetime
+      responses:
+        200:
+          description: date time example
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: string
+                    format: date-time
+                example:
+                  value: 2000-01-23T04:56:07.000008+00:00
+  /date:
+    get:
+      summary: Generate data with date
+      operationId: fakeapi.hello.get_date
+      responses:
+        200:
+          description: date example
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: string
+                    format: date
+                example:
+                  value: 2000-01-23
+  /uuid:
+    get:
+      summary: Generate data with uuid
+      operationId: fakeapi.hello.get_uuid
+      responses:
+        200:
+          description: uuid example
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: string
+                    format: uuid
+                example:
+                  value: 'a7b8869c-5f24-4ce0-a5d1-3e44c3663aa9'
