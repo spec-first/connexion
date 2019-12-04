@@ -135,17 +135,7 @@ class FlaskApi(AbstractAPI):
         :type operation_handler_result: flask.Response | (flask.Response, int) | (flask.Response, int, dict)
         :rtype: ConnexionResponse
         """
-        flask_response = cls._get_response(response, mimetype=mimetype, url=flask.request.url)
-
-        # TODO: I let this log here for full compatibility. But if we can modify it, it can go to _get_response()
-        logger.debug('Got data and status code (%d)',
-                     flask_response.status_code,
-                     extra={
-                         'data': response,
-                         'url': flask.request.url
-                     })
-
-        return flask_response
+        return cls._get_response(response, mimetype=mimetype, extra_context={"url": flask.request.url})
 
     @classmethod
     def _is_framework_response(cls, response):
@@ -164,24 +154,25 @@ class FlaskApi(AbstractAPI):
         )
 
     @classmethod
-    def _connexion_to_framework_response(cls, response, mimetype):
+    def _connexion_to_framework_response(cls, response, mimetype, extra_context=None):
         """ Cast ConnexionResponse to framework response class """
         flask_response = cls._build_response(
             mimetype=response.mimetype or mimetype,
             content_type=response.content_type,
             headers=response.headers,
             status_code=response.status_code,
-            data=response.body
+            data=response.body,
+            extra_context=extra_context,
             )
 
         return flask_response
 
     @classmethod
-    def _build_response(cls, mimetype, content_type=None, headers=None, status_code=None, data=None):
+    def _build_response(cls, mimetype, content_type=None, headers=None, status_code=None, data=None, extra_context=None):
         if flask_utils.is_flask_response(data):
             return flask.current_app.make_response((data, status_code, headers))
 
-        data, status_code = cls._prepare_body_and_status_code(data=data, mimetype=mimetype, status_code=status_code)
+        data, status_code = cls._prepare_body_and_status_code(data=data, mimetype=mimetype, status_code=status_code, extra_context=extra_context)
 
         kwargs = {
             'mimetype': mimetype,

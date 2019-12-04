@@ -310,13 +310,7 @@ class AioHttpApi(AbstractAPI):
 
         url = str(request.url) if request else ''
 
-        response = cls._get_response(response, mimetype=mimetype, url=url)
-
-        # TODO: I let this log here for full compatibility. But if we can modify it, it can go to _get_response()
-        logger.debug('Got stream response with status code (%d)',
-                     response.status, extra={'url': url})
-
-        return response
+        return cls._get_response(response, mimetype=mimetype, extra_context={"url": url})
 
     @classmethod
     def _is_framework_response(cls, response):
@@ -335,22 +329,23 @@ class AioHttpApi(AbstractAPI):
         )
 
     @classmethod
-    def _connexion_to_framework_response(cls, response, mimetype):
+    def _connexion_to_framework_response(cls, response, mimetype, extra_context=None):
         """ Cast ConnexionResponse to framework response class """
         return cls._build_response(
             mimetype=response.mimetype or mimetype,
             status_code=response.status_code,
             content_type=response.content_type,
             headers=response.headers,
-            data=response.body
+            data=response.body,
+            extra_context=extra_context,
         )
 
     @classmethod
-    def _build_response(cls, data, mimetype, content_type=None, headers=None, status_code=None):
+    def _build_response(cls, data, mimetype, content_type=None, headers=None, status_code=None, extra_context=None):
         if isinstance(data, web.StreamResponse):
             raise TypeError("Cannot return web.StreamResponse in tuple. Only raw data can be returned in tuple.")
 
-        data, status_code = cls._prepare_body_and_status_code(data=data, mimetype=mimetype, status_code=status_code)
+        data, status_code = cls._prepare_body_and_status_code(data=data, mimetype=mimetype, status_code=status_code, extra_context=extra_context)
 
         if isinstance(data, str):
             text = data
