@@ -245,12 +245,10 @@ class AbstractAPI(object):
         This method converts a handler response to a framework response.
         This method should just retrieve response from handler then call `cls._get_response`.
         It is mainly here to handle AioHttp async handler.
-        :param response: A response to cast.
+        :param response: A response to cast (tuple, framework response, etc).
         :param mimetype: The response mimetype.
+        :type mimetype: Union[None, str]
         :param request: The request associated with this response (the user framework request).
-
-        :type response: Framework Response
-        :type mimetype: str
         """
 
     @classmethod
@@ -259,12 +257,11 @@ class AbstractAPI(object):
         This method converts a handler response to a framework response.
         The response can be a ConnexionResponse, an operation handler, a framework response or a tuple.
         Other type than ConnexionResponse are handled by `cls._response_from_handler`
-        :param response: A response to cast.
+        :param response: A response to cast (tuple, framework response, etc).
         :param mimetype: The response mimetype.
+        :type mimetype: Union[None, str]
         :param extra_context: dict of extra details, like url, to include in logs
-
-        :type response: Framework Response
-        :type mimetype: str
+        :type extra_context: Union[None, dict]
         """
         if extra_context is None:
             extra_context = {}
@@ -299,7 +296,7 @@ class AbstractAPI(object):
         - a tuple of (body: str, status_code: int)
         - a tuple of (body: str, status_code: int, headers: dict)
         :param response: A response from an operation handler.
-        :type response Union[Response, str, Tuple[str, int], Tuple[str, int, dict]]
+        :type response Union[Response, str, Tuple[str,], Tuple[str, int], Tuple[str, int, dict]]
         :param mimetype: The response mimetype.
         :type mimetype: str
         :param extra_context: dict of extra details, like url, to include in logs

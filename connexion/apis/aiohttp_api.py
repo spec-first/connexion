@@ -303,6 +303,7 @@ class AioHttpApi(AbstractAPI):
         """Get response.
         This method is used in the lifecycle decorators
 
+        :type response: aiohttp.web.StreamResponse | (Any,) | (Any, int) | (Any, dict) | (Any, int, dict)
         :rtype: aiohttp.web.Response
         """
         while asyncio.iscoroutine(response):

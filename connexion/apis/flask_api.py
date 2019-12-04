@@ -132,7 +132,7 @@ class FlaskApi(AbstractAPI):
         If the returned object is a flask.Response then it will just
         pass the information needed to recreate it.
 
-        :type operation_handler_result: flask.Response | (flask.Response, int) | (flask.Response, int, dict)
+        :type response: flask.Response | (flask.Response,) | (flask.Response, int) | (flask.Response, dict) | (flask.Response, int, dict)
         :rtype: ConnexionResponse
         """
         return cls._get_response(response, mimetype=mimetype, extra_context={"url": flask.request.url})
