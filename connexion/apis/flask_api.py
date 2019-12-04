@@ -169,7 +169,7 @@ class FlaskApi(AbstractAPI):
 
     @classmethod
     def _build_response(cls, mimetype, content_type=None, headers=None, status_code=None, data=None, extra_context=None):
-        if flask_utils.is_flask_response(data):
+        if cls._is_framework_response(data):
             return flask.current_app.make_response((data, status_code, headers))
 
         data, status_code = cls._prepare_body_and_status_code(data=data, mimetype=mimetype, status_code=status_code, extra_context=extra_context)

@@ -312,6 +312,9 @@ class AbstractAPI(object):
 
         if isinstance(response, tuple):
             len_response = len(response)
+            if len_response == 1:
+                data, = response
+                return cls._build_response(mimetype=mimetype, data=data, extra_context=extra_context)
             if len_response == 2:
                 if isinstance(response[1], (int, Enum)):
                     data, status_code = response

@@ -342,7 +342,7 @@ class AioHttpApi(AbstractAPI):
 
     @classmethod
     def _build_response(cls, data, mimetype, content_type=None, headers=None, status_code=None, extra_context=None):
-        if isinstance(data, web.StreamResponse):
+        if cls._is_framework_response(data):
             raise TypeError("Cannot return web.StreamResponse in tuple. Only raw data can be returned in tuple.")
 
         data, status_code = cls._prepare_body_and_status_code(data=data, mimetype=mimetype, status_code=status_code, extra_context=extra_context)
