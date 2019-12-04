@@ -196,8 +196,8 @@ class FlaskApi(AbstractAPI):
     @classmethod
     def _jsonify_data(cls, data, mimetype):
         # TODO: to discuss: Using jsonifier for all type of data, even when mimetype is not json is strange. Why ?
-        if (isinstance(mimetype, six.string_types) and is_json_mimetype(mimetype)) \
-                or not (isinstance(data, six.binary_type) or isinstance(data, six.text_type)):
+        if (isinstance(mimetype, str) and is_json_mimetype(mimetype)) \
+                or not (isinstance(data, bytes) or isinstance(data, str)):
             return cls.jsonifier.dumps(data)
 
         return data

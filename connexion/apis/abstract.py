@@ -326,7 +326,7 @@ class AbstractAPI(object):
         if isinstance(response, ConnexionResponse):
             # If body in ConnexionResponse is not byte, it may not pass schema validation.
             # In this case, rebuild response with aiohttp to have consistency
-            if response.body is None or isinstance(response.body, six.binary_type):
+            if response.body is None or isinstance(response.body, bytes):
                 return response
             else:
                 response = cls._build_response(
@@ -395,10 +395,10 @@ class AbstractAPI(object):
 
     @classmethod
     def _jsonify_data(cls, data, mimetype):
-        if not isinstance(data, six.binary_type):
-            if isinstance(mimetype, six.string_types) and is_json_mimetype(mimetype):
+        if not isinstance(data, bytes):
+            if isinstance(mimetype, str) and is_json_mimetype(mimetype):
                 body = cls.jsonifier.dumps(data)
-            elif isinstance(data, six.text_type):
+            elif isinstance(data, str):
                 body = data
             else:
                 body = str(data)
