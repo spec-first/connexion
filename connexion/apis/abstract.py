@@ -447,9 +447,11 @@ class AbstractAPI(object):
                 except TypeError:
                     # or let objects self-serialize
                     body = str(data)
+                    logger.debug('_serialize_data mimetype=None and str()')
                 else:
                     mimetype = DEFAULT_MIMETYPE
             else:
+                logger.debug('_serialize_data mimetype={} and str()'.format(mimetype))
                 body = str(data)
         else:
             body = data

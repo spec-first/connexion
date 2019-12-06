@@ -97,9 +97,8 @@ def test_get_response_from_dict(api):
     assert isinstance(response, web.Response)
     assert response.status == 200
     assert json.loads(response.body.decode()) == {"foo": "bar"}
-    # get_response does not modify the mimetype or content_type magically. It only simplifies serialization.
-    assert response.content_type == 'text/plain'
-    assert dict(response.headers) == {'Content-Type': 'text/plain; charset=utf-8'}
+    assert response.content_type == 'application/json'
+    assert dict(response.headers) == {'Content-Type': 'application/json; charset=utf-8'}
 
 
 @asyncio.coroutine
