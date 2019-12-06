@@ -440,14 +440,14 @@ class AbstractAPI(object):
                 body = cls.jsonifier.dumps(data)
             elif isinstance(data, str):
                 body = data
-            elif mimetype is None:
+            elif mimetype in [None, "text/plain"]:
                 try:
                     # try as json by default
                     body = cls.jsonifier.dumps(data)
                 except TypeError:
                     # or let objects self-serialize
                     body = str(data)
-                    logger.debug('_serialize_data mimetype=None and str()')
+                    logger.debug('_serialize_data mimetype={} and jsonify failed and str()'.format(mimetype))
                 else:
                     mimetype = DEFAULT_MIMETYPE
             else:
