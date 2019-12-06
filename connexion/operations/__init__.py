@@ -2,6 +2,7 @@ from .abstract import AbstractOperation  # noqa
 from .openapi import OpenAPIOperation  # noqa
 from .secure import SecureOperation  # noqa
 from .swagger2 import Swagger2Operation  # noqa
+from .mimetype import DEFAULT_MIMETYPE  # noqa
 
 
 def make_operation(spec, *args, **kwargs):

@@ -4,6 +4,7 @@ import logging
 import six
 from connexion.operations.secure import SecureOperation
 
+from .mimetype import DEFAULT_MIMETYPE
 from ..decorators.metrics import UWSGIMetricsCollector
 from ..decorators.parameter import parameter_to_arg
 from ..decorators.produces import BaseSerializer, Produces
@@ -12,8 +13,6 @@ from ..decorators.validation import ParameterValidator, RequestBodyValidator
 from ..utils import all_json, is_nullable
 
 logger = logging.getLogger('connexion.operations.abstract')
-
-DEFAULT_MIMETYPE = 'application/json'
 
 VALIDATOR_MAP = {
     'parameter': ParameterValidator,

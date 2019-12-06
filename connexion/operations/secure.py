@@ -1,6 +1,7 @@
 import functools
 import logging
 
+from .mimetype import DEFAULT_MIMETYPE
 from ..decorators.decorator import RequestResponseDecorator
 from ..decorators.security import (get_apikeyinfo_func, get_basicinfo_func,
                                    get_bearerinfo_func,
@@ -10,8 +11,6 @@ from ..decorators.security import (get_apikeyinfo_func, get_basicinfo_func,
                                    verify_oauth, verify_security)
 
 logger = logging.getLogger("connexion.operations.secure")
-
-DEFAULT_MIMETYPE = 'application/json'
 
 
 class SecureOperation(object):
