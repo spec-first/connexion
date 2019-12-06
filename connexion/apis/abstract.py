@@ -11,7 +11,7 @@ from ..exceptions import ResolverError
 from ..http_facts import METHODS
 from ..jsonifier import Jsonifier
 from ..lifecycle import ConnexionResponse
-from ..operations import make_operation
+from ..operations import make_operation, DEFAULT_MIMETYPE
 from ..options import ConnexionOptions
 from ..resolver import Resolver
 from ..spec import Specification
@@ -418,14 +418,37 @@ class AbstractAPI(object):
 
     @classmethod
     def _serialize_data(cls, data, mimetype):
-        # TODO: Harmonize with flask_api. Currently this is the backwards compatible with aiohttp_api._cast_body.
+        """ Serialize data (aka: _jsonify_data or _cast_body).
+
+        The old aiohttp_api._cast_body did not jsonify when mimetype was None.
+        The old flask_api._jsonify_data jsonified data, or raised a TypeError if the
+        data could not be jsonified, even with non-JSON or None mimetypes.
+
+        This unifies the behavior so that only JSON or None mimetypes can trigger
+        jsonification, and only JSON mimetypes will raise a TypeError if the data
+        is not jsonifiable. Non-JSON mimetypes and non-jsonifiable data with None
+        mimetype are stringified.
+
+        This means that the data can serialize itself when
+          - mimetype is None and data is not jsonifiable, or
+          - mimetype is not a JSON mimetype
+
+        mimetype, in general, is only None when the spec did not define `produces`.
+        """
         if not isinstance(data, bytes):
-            # assume mimetype is json if mimetype is None and it looks like json
-            if (mimetype is None and isinstance(data, (dict, list, tuple))) \
-                    or (isinstance(mimetype, str) and is_json_mimetype(mimetype)):
+            if isinstance(mimetype, str) and is_json_mimetype(mimetype):
                 body = cls.jsonifier.dumps(data)
             elif isinstance(data, str):
                 body = data
+            elif mimetype is None:
+                try:
+                    # try as json by default
+                    body = cls.jsonifier.dumps(data)
+                except TypeError:
+                    # or let objects self-serialize
+                    body = str(data)
+                else:
+                    mimetype = DEFAULT_MIMETYPE
             else:
                 body = str(data)
         else:

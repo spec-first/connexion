@@ -185,16 +185,6 @@ class FlaskApi(AbstractAPI):
         return flask.current_app.response_class(**kwargs)  # type: flask.Response
 
     @classmethod
-    def _serialize_data(cls, data, mimetype):
-        # TODO: harmonize flask and aiohttp serialization when mimetype=None or mimetype is not JSON
-        #       (cases where it might not make sense to jsonify the data)
-        if (isinstance(mimetype, str) and is_json_mimetype(mimetype)) \
-                or not (isinstance(data, bytes) or isinstance(data, str)):
-            return cls.jsonifier.dumps(data), mimetype
-
-        return data, mimetype
-
-    @classmethod
     def get_request(cls, *args, **params):
         # type: (*Any, **Any) -> ConnexionRequest
         """Gets ConnexionRequest instance for the operation handler
