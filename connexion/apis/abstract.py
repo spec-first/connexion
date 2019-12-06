@@ -420,7 +420,9 @@ class AbstractAPI(object):
     def _serialize_data(cls, data, mimetype):
         # TODO: Harmonize with flask_api. Currently this is the backwards compatible with aiohttp_api._cast_body.
         if not isinstance(data, bytes):
-            if isinstance(mimetype, str) and is_json_mimetype(mimetype):
+            # assume mimetype is json if mimetype is None and it looks like json
+            if (mimetype is None and isinstance(data, (dict, list, tuple))) \
+                    or (isinstance(mimetype, str) and is_json_mimetype(mimetype)):
                 body = cls.jsonifier.dumps(data)
             elif isinstance(data, str):
                 body = data

@@ -92,12 +92,12 @@ def test_get_response_from_tuple_error(api):
 
 @asyncio.coroutine
 def test_get_response_from_dict(api):
+    # mimetype=None => assume json
     response = yield from api.get_response({'foo': 'bar'})
     assert isinstance(response, web.Response)
     assert response.status == 200
-    # odd, yes. but backwards compatible. see test_response_with_non_str_and_non_json_body in tests/aiohttp/test_aiohttp_simple_api.py
-    # TODO: This should be made into JSON when aiohttp and flask serialization can be harmonized.
-    assert response.body == b"{'foo': 'bar'}"
+    assert json.loads(response.body.decode()) == {"foo": "bar"}
+    # get_response does not modify the mimetype or content_type magically. It only simplifies serialization.
     assert response.content_type == 'text/plain'
     assert dict(response.headers) == {'Content-Type': 'text/plain; charset=utf-8'}
 
