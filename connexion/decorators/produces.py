@@ -12,7 +12,8 @@ NoContent = object()
 
 
 class BaseSerializer(BaseDecorator):
-    def __init__(self, mimetype='text/plain'):
+    #def __init__(self, mimetype='text/plain'):
+    def __init__(self, mimetype='application/json'):
         """
         :type mimetype: str
         """
