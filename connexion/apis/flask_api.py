@@ -1,4 +1,5 @@
 import logging
+import warnings
 
 import flask
 import six
@@ -188,11 +189,23 @@ class FlaskApi(AbstractAPI):
     def _serialize_data(cls, data, mimetype):
         # TODO: harmonize flask and aiohttp serialization when mimetype=None or mimetype is not JSON
         #       (cases where it might not make sense to jsonify the data)
-        if (isinstance(mimetype, str) and is_json_mimetype(mimetype)) \
-                or not (isinstance(data, bytes) or isinstance(data, str)):
-            return cls.jsonifier.dumps(data), mimetype
+        if (isinstance(mimetype, str) and is_json_mimetype(mimetype)):
+            body = cls.jsonifier.dumps(data)
+        elif not (isinstance(data, bytes) or isinstance(data, str)):
+            warnings.warn(
+                "Implicit (flask) JSON serialization will change in the next major version. "
+                "This is triggered because a response body is being serialized as JSON "
+                "even though the mimetype is not a JSON type. "
+                "This will be replaced by something that is mimetype-specific and may "
+                "raise an error instead of silently converting everything to JSON. "
+                "Please make sure to specify media/mime types in your specs.",
+                FutureWarning  # a Deprecation targeted at application users.
+            )
+            body = cls.jsonifier.dumps(data)
+        else:
+            body = data
 
-        return data, mimetype
+        return body, mimetype
 
     @classmethod
     def get_request(cls, *args, **params):

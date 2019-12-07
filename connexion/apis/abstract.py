@@ -2,6 +2,7 @@ import abc
 import logging
 import pathlib
 import sys
+import warnings
 from enum import Enum
 
 import six
@@ -425,6 +426,15 @@ class AbstractAPI(object):
             elif isinstance(data, str):
                 body = data
             else:
+                warnings.warn(
+                    "Implicit (aiohttp) serialization with str() will change in the next major version. "
+                    "This is triggered because a non-JSON response body is being stringified. "
+                    "This will be replaced by something that is mimetype-specific and may "
+                    "serialize some things as JSON or throw an error instead of silently "
+                    "stringifying unknown response bodies. "
+                    "Please make sure to specify media/mime types in your specs.",
+                    FutureWarning  # a Deprecation targeted at application users.
+                )
                 body = str(data)
         else:
             body = data
