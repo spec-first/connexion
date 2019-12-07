@@ -265,7 +265,9 @@ def test_response_with_non_str_and_non_json_body(aiohttp_app, aiohttp_client):
         '/v1.0/aiohttp_non_str_non_json_response'
     )
     assert get_bye.status == 200
-    assert (yield from get_bye.read()) == b'1234'
+    # \n comes from jsonifier.dumps. text/plain gets serialized as json if possible
+    # as that json representation should generally be more useful then python literals.
+    assert (yield from get_bye.read()) == b'1234\n'
 
 
 @asyncio.coroutine
