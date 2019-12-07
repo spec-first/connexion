@@ -44,6 +44,16 @@ def test_get_response_from_string(api):
 
 
 @asyncio.coroutine
+def test_get_response_from_string_tuple(api):
+    response = yield from api.get_response(('foo',))
+    assert isinstance(response, web.Response)
+    assert response.status == 200
+    assert response.body == b'foo'
+    assert response.content_type == 'text/plain'
+    assert dict(response.headers) == {'Content-Type': 'text/plain; charset=utf-8'}
+
+
+@asyncio.coroutine
 def test_get_response_from_string_status(api):
     response = yield from api.get_response(('foo', 201))
     assert isinstance(response, web.Response)
@@ -51,6 +61,16 @@ def test_get_response_from_string_status(api):
     assert response.body == b'foo'
     assert response.content_type == 'text/plain'
     assert dict(response.headers) == {'Content-Type': 'text/plain; charset=utf-8'}
+
+
+@asyncio.coroutine
+def test_get_response_from_string_headers(api):
+    response = yield from api.get_response(('foo', {'X-header': 'value'}))
+    assert isinstance(response, web.Response)
+    assert response.status == 200
+    assert response.body == b'foo'
+    assert response.content_type == 'text/plain'
+    assert dict(response.headers) == {'Content-Type': 'text/plain; charset=utf-8', 'X-header': 'value'}
 
 
 @asyncio.coroutine
@@ -75,6 +95,8 @@ def test_get_response_from_dict(api):
     response = yield from api.get_response({'foo': 'bar'})
     assert isinstance(response, web.Response)
     assert response.status == 200
+    # odd, yes. but backwards compatible. see test_response_with_non_str_and_non_json_body in tests/aiohttp/test_aiohttp_simple_api.py
+    # TODO: This should be made into JSON when aiohttp and flask serialization can be harmonized.
     assert response.body == b"{'foo': 'bar'}"
     assert response.content_type == 'text/plain'
     assert dict(response.headers) == {'Content-Type': 'text/plain; charset=utf-8'}
