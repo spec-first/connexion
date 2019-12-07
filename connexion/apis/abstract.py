@@ -401,7 +401,7 @@ class AbstractAPI(object):
             status_code = status_code.value
 
         if data is not None:
-            body = cls._jsonify_data(data, mimetype)
+            body, mimetype = cls._serialize_data(data, mimetype)
         else:
             body = data
 
@@ -414,10 +414,11 @@ class AbstractAPI(object):
                          **extra_context
                      })
 
-        return body, status_code
+        return body, status_code, mimetype
 
     @classmethod
-    def _jsonify_data(cls, data, mimetype):
+    def _serialize_data(cls, data, mimetype):
+        # TODO: Harmonize with flask_api. Currently this is the backwards compatible with aiohttp_api._cast_body.
         if not isinstance(data, bytes):
             if isinstance(mimetype, str) and is_json_mimetype(mimetype):
                 body = cls.jsonifier.dumps(data)
@@ -427,7 +428,7 @@ class AbstractAPI(object):
                 body = str(data)
         else:
             body = data
-        return body
+        return body, mimetype
 
     def json_loads(self, data):
         return self.jsonifier.loads(data)

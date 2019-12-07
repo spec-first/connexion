@@ -172,10 +172,10 @@ class FlaskApi(AbstractAPI):
         if cls._is_framework_response(data):
             return flask.current_app.make_response((data, status_code, headers))
 
-        data, status_code = cls._prepare_body_and_status_code(data=data, mimetype=mimetype, status_code=status_code, extra_context=extra_context)
+        data, status_code, serialized_mimetype = cls._prepare_body_and_status_code(data=data, mimetype=mimetype, status_code=status_code, extra_context=extra_context)
 
         kwargs = {
-            'mimetype': mimetype,
+            'mimetype': mimetype or serialized_mimetype,
             'content_type': content_type,
             'headers': headers,
             'response': data,
@@ -185,13 +185,14 @@ class FlaskApi(AbstractAPI):
         return flask.current_app.response_class(**kwargs)  # type: flask.Response
 
     @classmethod
-    def _jsonify_data(cls, data, mimetype):
-        # TODO: to discuss: Using jsonifier for all type of data, even when mimetype is not json is strange. Why ?
+    def _serialize_data(cls, data, mimetype):
+        # TODO: harmonize flask and aiohttp serialization when mimetype=None or mimetype is not JSON
+        #       (cases where it might not make sense to jsonify the data)
         if (isinstance(mimetype, str) and is_json_mimetype(mimetype)) \
                 or not (isinstance(data, bytes) or isinstance(data, str)):
-            return cls.jsonifier.dumps(data)
+            return cls.jsonifier.dumps(data), mimetype
 
-        return data
+        return data, mimetype
 
     @classmethod
     def get_request(cls, *args, **params):
