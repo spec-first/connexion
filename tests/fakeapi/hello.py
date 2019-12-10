@@ -218,6 +218,10 @@ def test_required_query_param():
     return ''
 
 
+def test_apikey_query_parameter_validation():
+    return ''
+
+
 def test_array_csv_query_param(items):
     return items
 

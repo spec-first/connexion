@@ -251,8 +251,25 @@ def get_cookie_value(cookies, name):
 def verify_apikey(apikey_info_func, loc, name):
 
     def wrapper(request, required_scopes):
+
+        def _immutable_pop(_dict, key):
+            """
+            Pops the key from an immutable dict and returns the value that was popped,
+            and a new immutable dict without the popped key.
+            """
+            cls = type(_dict)
+            try:
+                _dict = _dict.to_dict(flat=False)
+                return _dict.pop(key)[0], cls(_dict)
+            except AttributeError:
+                _dict = dict(_dict.items())
+                return _dict.pop(key), cls(_dict)
+
         if loc == 'query':
-            apikey = request.query.get(name)
+            try:
+                apikey, request.query = _immutable_pop(request.query, name)
+            except KeyError:
+                apikey = None
         elif loc == 'header':
             apikey = request.headers.get(name)
         elif loc == 'cookie':
