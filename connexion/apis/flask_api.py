@@ -1,11 +1,11 @@
 import logging
+import warnings
 
 import flask
 import six
 import werkzeug.exceptions
 from connexion.apis import flask_utils
 from connexion.apis.abstract import AbstractAPI
-from connexion.decorators.produces import NoContent
 from connexion.handlers import AuthErrorHandler
 from connexion.jsonifier import Jsonifier
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
@@ -54,9 +54,9 @@ class FlaskApi(AbstractAPI):
         self.blueprint.add_url_rule(
             openapi_spec_path_yaml,
             endpoint_name,
-            lambda: FlaskApi._build_flask_response(
+            lambda: FlaskApi._build_response(
                 status_code=200,
-                content_type="text/yaml",
+                mimetype="text/yaml",
                 data=yamldumper(self.specification.raw)
             )
         )
@@ -133,108 +133,19 @@ class FlaskApi(AbstractAPI):
         If the returned object is a flask.Response then it will just
         pass the information needed to recreate it.
 
-        :type operation_handler_result: flask.Response | (flask.Response, int) | (flask.Response, int, dict)
+        :type response: flask.Response | (flask.Response,) | (flask.Response, int) | (flask.Response, dict) | (flask.Response, int, dict)
         :rtype: ConnexionResponse
         """
-        logger.debug('Getting data and status code',
-                     extra={
-                         'data': response,
-                         'data_type': type(response),
-                         'url': flask.request.url
-                     })
-
-        if isinstance(response, ConnexionResponse):
-            flask_response = cls._get_flask_response_from_connexion(response, mimetype)
-        else:
-            flask_response = cls._get_flask_response(response, mimetype)
-
-        logger.debug('Got data and status code (%d)',
-                     flask_response.status_code,
-                     extra={
-                         'data': response,
-                         'datatype': type(response),
-                         'url': flask.request.url
-                     })
-
-        return flask_response
+        return cls._get_response(response, mimetype=mimetype, extra_context={"url": flask.request.url})
 
     @classmethod
-    def _get_flask_response_from_connexion(cls, response, mimetype):
-        data = response.body
-        status_code = response.status_code
-        mimetype = response.mimetype or mimetype
-        content_type = response.content_type or mimetype
-        headers = response.headers
-
-        flask_response = cls._build_flask_response(mimetype, content_type,
-                                                   headers, status_code, data)
-
-        return flask_response
+    def _is_framework_response(cls, response):
+        """ Return True if provided response is a framework type """
+        return flask_utils.is_flask_response(response)
 
     @classmethod
-    def _build_flask_response(cls, mimetype=None, content_type=None,
-                              headers=None, status_code=None, data=None):
-        kwargs = {
-            'mimetype': mimetype,
-            'content_type': content_type,
-            'headers': headers
-        }
-        kwargs = {k: v for k, v in six.iteritems(kwargs) if v is not None}
-        flask_response = flask.current_app.response_class(**kwargs)  # type: flask.Response
-
-        if status_code is not None:
-            # If we got an enum instead of an int, extract the value.
-            if hasattr(status_code, "value"):
-                status_code = status_code.value
-
-            flask_response.status_code = status_code
-
-        if data is not None and data is not NoContent:
-            data = cls._jsonify_data(data, mimetype)
-            flask_response.set_data(data)
-
-        elif data is NoContent:
-            flask_response.set_data('')
-
-        return flask_response
-
-    @classmethod
-    def _jsonify_data(cls, data, mimetype):
-        if (isinstance(mimetype, six.string_types) and is_json_mimetype(mimetype)) \
-                or not (isinstance(data, six.binary_type) or isinstance(data, six.text_type)):
-            return cls.jsonifier.dumps(data)
-
-        return data
-
-    @classmethod
-    def _get_flask_response(cls, response, mimetype):
-        if flask_utils.is_flask_response(response):
-            return response
-
-        elif isinstance(response, tuple) and flask_utils.is_flask_response(response[0]):
-            return flask.current_app.make_response(response)
-
-        elif isinstance(response, tuple) and len(response) == 3:
-            data, status_code, headers = response
-            return cls._build_flask_response(mimetype, None,
-                                             headers, status_code, data)
-
-        elif isinstance(response, tuple) and len(response) == 2:
-            data, status_code = response
-            return cls._build_flask_response(mimetype, None, None,
-                                             status_code, data)
-
-        else:
-            return cls._build_flask_response(mimetype=mimetype, data=response)
-
-    @classmethod
-    def get_connexion_response(cls, response, mimetype=None):
-        if isinstance(response, ConnexionResponse):
-            return response
-
-        if not isinstance(response, flask.current_app.response_class):
-            response = cls.get_response(response, mimetype)
-
+    def _framework_to_connexion_response(cls, response, mimetype):
+        """ Cast framework response class to ConnexionResponse used for schema validation """
         return ConnexionResponse(
             status_code=response.status_code,
             mimetype=response.mimetype,
@@ -242,6 +153,59 @@ class FlaskApi(AbstractAPI):
             headers=response.headers,
             body=response.get_data(),
         )
+
+    @classmethod
+    def _connexion_to_framework_response(cls, response, mimetype, extra_context=None):
+        """ Cast ConnexionResponse to framework response class """
+        flask_response = cls._build_response(
+            mimetype=response.mimetype or mimetype,
+            content_type=response.content_type,
+            headers=response.headers,
+            status_code=response.status_code,
+            data=response.body,
+            extra_context=extra_context,
+            )
+
+        return flask_response
+
+    @classmethod
+    def _build_response(cls, mimetype, content_type=None, headers=None, status_code=None, data=None, extra_context=None):
+        if cls._is_framework_response(data):
+            return flask.current_app.make_response((data, status_code, headers))
+
+        data, status_code, serialized_mimetype = cls._prepare_body_and_status_code(data=data, mimetype=mimetype, status_code=status_code, extra_context=extra_context)
+
+        kwargs = {
+            'mimetype': mimetype or serialized_mimetype,
+            'content_type': content_type,
+            'headers': headers,
+            'response': data,
+            'status': status_code
+        }
+        kwargs = {k: v for k, v in six.iteritems(kwargs) if v is not None}
+        return flask.current_app.response_class(**kwargs)  # type: flask.Response
+
+    @classmethod
+    def _serialize_data(cls, data, mimetype):
+        # TODO: harmonize flask and aiohttp serialization when mimetype=None or mimetype is not JSON
+        #       (cases where it might not make sense to jsonify the data)
+        if (isinstance(mimetype, str) and is_json_mimetype(mimetype)):
+            body = cls.jsonifier.dumps(data)
+        elif not (isinstance(data, bytes) or isinstance(data, str)):
+            warnings.warn(
+                "Implicit (flask) JSON serialization will change in the next major version. "
+                "This is triggered because a response body is being serialized as JSON "
+                "even though the mimetype is not a JSON type. "
+                "This will be replaced by something that is mimetype-specific and may "
+                "raise an error instead of silently converting everything to JSON. "
+                "Please make sure to specify media/mime types in your specs.",
+                FutureWarning  # a Deprecation targeted at application users.
+            )
+            body = cls.jsonifier.dumps(data)
+        else:
+            body = data
+
+        return body, mimetype
 
     @classmethod
     def get_request(cls, *args, **params):

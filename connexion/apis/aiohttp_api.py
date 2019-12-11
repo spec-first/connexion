@@ -17,7 +17,7 @@ from connexion.handlers import AuthErrorHandler
 from connexion.jsonifier import JSONEncoder, Jsonifier
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.problem import problem
-from connexion.utils import is_json_mimetype, yamldumper
+from connexion.utils import yamldumper
 from werkzeug.exceptions import HTTPException as werkzeug_HTTPException
 
 
@@ -303,6 +303,7 @@ class AioHttpApi(AbstractAPI):
         """Get response.
         This method is used in the lifecycle decorators
 
+        :type response: aiohttp.web.StreamResponse | (Any,) | (Any, int) | (Any, dict) | (Any, int, dict)
         :rtype: aiohttp.web.Response
         """
         while asyncio.iscoroutine(response):
@@ -310,66 +311,52 @@ class AioHttpApi(AbstractAPI):
 
         url = str(request.url) if request else ''
 
-        logger.debug('Getting data and status code',
-                     extra={
-                         'data': response,
-                         'url': url
-                     })
-
-        if isinstance(response, ConnexionResponse):
-            response = cls._get_aiohttp_response_from_connexion(response, mimetype)
-
-        if isinstance(response, web.StreamResponse):
-            logger.debug('Got stream response with status code (%d)',
-                         response.status, extra={'url': url})
-        else:
-            logger.debug('Got data and status code (%d)',
-                         response.status, extra={'data': response.body, 'url': url})
-
-        return response
+        return cls._get_response(response, mimetype=mimetype, extra_context={"url": url})
 
     @classmethod
-    def get_connexion_response(cls, response, mimetype=None):
-        response.body = cls._cast_body(response.body, mimetype)
+    def _is_framework_response(cls, response):
+        """ Return True if `response` is a framework response class """
+        return isinstance(response, web.StreamResponse)
 
-        if isinstance(response, ConnexionResponse):
-            return response
-
+    @classmethod
+    def _framework_to_connexion_response(cls, response, mimetype):
+        """ Cast framework response class to ConnexionResponse used for schema validation """
         return ConnexionResponse(
             status_code=response.status,
-            mimetype=response.content_type,
+            mimetype=mimetype,
             content_type=response.content_type,
             headers=response.headers,
             body=response.body
         )
 
     @classmethod
-    def _get_aiohttp_response_from_connexion(cls, response, mimetype):
-        content_type = response.content_type if response.content_type else \
-            response.mimetype if response.mimetype else mimetype
-
-        body = cls._cast_body(response.body, content_type)
-
-        return web.Response(
-            status=response.status_code,
-            content_type=content_type,
+    def _connexion_to_framework_response(cls, response, mimetype, extra_context=None):
+        """ Cast ConnexionResponse to framework response class """
+        return cls._build_response(
+            mimetype=response.mimetype or mimetype,
+            status_code=response.status_code,
+            content_type=response.content_type,
             headers=response.headers,
-            body=body
+            data=response.body,
+            extra_context=extra_context,
         )
 
     @classmethod
-    def _cast_body(cls, body, content_type=None):
-        if not isinstance(body, bytes):
-            if content_type and is_json_mimetype(content_type):
-                return cls.jsonifier.dumps(body).encode()
+    def _build_response(cls, data, mimetype, content_type=None, headers=None, status_code=None, extra_context=None):
+        if cls._is_framework_response(data):
+            raise TypeError("Cannot return web.StreamResponse in tuple. Only raw data can be returned in tuple.")
 
-            elif isinstance(body, str):
-                return body.encode()
+        data, status_code, serialized_mimetype = cls._prepare_body_and_status_code(data=data, mimetype=mimetype, status_code=status_code, extra_context=extra_context)
 
-            else:
-                return str(body).encode()
+        if isinstance(data, str):
+            text = data
+            body = None
         else:
-            return body
+            text = None
+            body = data
+
+        content_type = content_type or mimetype or serialized_mimetype
+        return web.Response(body=body, text=text, headers=headers, status=status_code, content_type=content_type)
 
     @classmethod
     def _set_jsonifier(cls):
