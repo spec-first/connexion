@@ -340,6 +340,19 @@ paths:
       responses:
         '200':
           description: OK
+  /test_apikey_query_parameter_validation:
+    get:
+      operationId: fakeapi.hello.test_apikey_query_parameter_validation
+      parameters:
+        - name: name
+          in: query
+          schema:
+            type: string
+      security:
+        - api_key: []
+      responses:
+        '200':
+          description: OK
   /test_required_query_param:
     get:
       operationId: fakeapi.hello.test_required_query_param
@@ -1140,3 +1153,9 @@ components:
       required: false
       schema:
         type: string
+  securitySchemes:
+    api_key:
+      type: apiKey
+      name: apikey
+      in: query
+      x-apikeyInfoFunc: fakeapi.hello.apikey_info
