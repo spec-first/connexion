@@ -6,12 +6,12 @@ import logging
 import aiohttp
 
 from ..exceptions import OAuthProblem, OAuthResponseProblem, OAuthScopeProblem
-from .security_handler_factory import SecurityHandlerFactory
+from .security_handler_factory import AbstractSecurityHandlerFactory
 
 logger = logging.getLogger('connexion.api.security')
 
 
-class AsyncSecurityHandlerFactory(SecurityHandlerFactory):
+class AbstractAsyncSecurityHandlerFactory(AbstractSecurityHandlerFactory):
     def _generic_check(self, func, exception_msg):
         need_to_add_context, need_to_add_required_scopes = self._need_to_add_context_or_scopes(func)
 

@@ -15,7 +15,7 @@ from ..utils import get_function_from_name
 logger = logging.getLogger('connexion.api.security')
 
 
-class SecurityHandlerFactory:
+class AbstractSecurityHandlerFactory(abc.ABC):
     no_value = object()
     required_scopes_kw = 'required_scopes'
 

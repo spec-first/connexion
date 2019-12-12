@@ -18,8 +18,7 @@ from connexion.jsonifier import JSONEncoder, Jsonifier
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.problem import problem
 from connexion.utils import yamldumper
-from connexion.security.aiohttp_security_handlers_factory import \
-    AioHttpSecurityHandlerFactory
+from connexion.security import AioHttpSecurityHandlerFactory
 from werkzeug.exceptions import HTTPException as werkzeug_HTTPException
 
 

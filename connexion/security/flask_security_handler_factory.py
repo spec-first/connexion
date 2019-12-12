@@ -1,6 +1,6 @@
 import requests
 
-from .security_handler_factory import SecurityHandlerFactory
+from .security_handler_factory import AbstractSecurityHandlerFactory
 
 # use connection pool for OAuth tokeninfo
 adapter = requests.adapters.HTTPAdapter(pool_connections=100, pool_maxsize=100)
@@ -9,10 +9,7 @@ session.mount('http://', adapter)
 session.mount('https://', adapter)
 
 
-class FlaskSecurityHandlerFactory(SecurityHandlerFactory):
-    def __init__(self, pass_context_arg_name):
-        SecurityHandlerFactory.__init__(self, pass_context_arg_name)
-
+class FlaskSecurityHandlerFactory(AbstractSecurityHandlerFactory):
     def get_token_info_remote(self, token_info_url):
         """
         Return a function which will call `token_info_url` to retrieve token info.

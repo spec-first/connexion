@@ -3,14 +3,14 @@ import logging
 
 import aiohttp
 
-from .async_security_handler_factory import AsyncSecurityHandlerFactory
+from .async_security_handler_factory import AbstractAsyncSecurityHandlerFactory
 
 logger = logging.getLogger('connexion.api.security')
 
 
-class AioHttpSecurityHandlerFactory(AsyncSecurityHandlerFactory):
+class AioHttpSecurityHandlerFactory(AbstractAsyncSecurityHandlerFactory):
     def __init__(self, pass_context_arg_name):
-        AioHttpSecurityHandlerFactory.__init__(self, pass_context_arg_name)
+        super(AioHttpSecurityHandlerFactory, self).__init__(pass_context_arg_name=pass_context_arg_name)
         self.client_session = None
 
     def get_token_info_remote(self, token_info_url):
