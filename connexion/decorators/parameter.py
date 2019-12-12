@@ -6,9 +6,8 @@ import re
 import inflection
 import six
 
-from ..http_facts import FORM_CONTENT_TYPES
 from ..lifecycle import ConnexionRequest  # NOQA
-from ..utils import all_json
+from ..utils import is_form_mimetype, is_json_mimetype
 
 try:
     import builtins
@@ -73,7 +72,6 @@ def parameter_to_arg(operation, function, pythonic_params=False,
     request context will be passed as that argument.
     :type pass_context_arg_name: str|None
     """
-    consumes = operation.consumes
 
     def sanitized(name):
         return name and re.sub('^[^a-zA-Z_]+', '', re.sub('[^0-9a-zA-Z_]', '', name))
@@ -91,9 +89,9 @@ def parameter_to_arg(operation, function, pythonic_params=False,
         logger.debug('Function Arguments: %s', arguments)
         kwargs = {}
 
-        if all_json(consumes):
+        if is_json_mimetype(request.content_type):
             request_body = request.json
-        elif consumes[0] in FORM_CONTENT_TYPES:
+        elif is_form_mimetype(request.content_type):
             request_body = {sanitize(k): v for k, v in request.form.items()}
         else:
             request_body = request.body

@@ -301,7 +301,7 @@ def test_get_users(aiohttp_client, aiohttp_app):
 def test_create_user(aiohttp_client, aiohttp_app):
     app_client = yield from aiohttp_client(aiohttp_app.app)
     user = {'name': 'Maksim'}
-    resp = yield from app_client.post('/v1.0/users', json=user, headers={'Content-type': 'application/json'})
+    resp = yield from app_client.post('/v1.0/users', json=user)
     assert resp.status == 201
 
 

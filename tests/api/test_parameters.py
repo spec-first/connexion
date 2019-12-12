@@ -159,9 +159,11 @@ def test_falsy_param(simple_app):
 
 
 def test_formdata_param(simple_app):
+    headers = {'Content-Type': 'multipart/form-data'}
     app_client = simple_app.app.test_client()
     resp = app_client.post('/v1.0/test-formData-param',
-                           data={'formData': 'test'})
+                           data={'formData': 'test'},
+                           headers=headers)
     assert resp.status_code == 200
     response = json.loads(resp.data.decode('utf-8', 'replace'))
     assert response == 'test'
@@ -169,7 +171,8 @@ def test_formdata_param(simple_app):
 
 def test_formdata_bad_request(simple_app):
     app_client = simple_app.app.test_client()
-    resp = app_client.post('/v1.0/test-formData-param')
+    headers = {'Content-Type': 'multipart/form-data'}
+    resp = app_client.post('/v1.0/test-formData-param', headers=headers)
     assert resp.status_code == 400
     response = json.loads(resp.data.decode('utf-8', 'replace'))
     assert response['detail'] in [
@@ -187,17 +190,21 @@ def test_formdata_missing_param(simple_app):
 
 def test_formdata_extra_param(simple_app):
     app_client = simple_app.app.test_client()
+    headers = {'content-type': 'multipart/form-data'}
     resp = app_client.post('/v1.0/test-formData-param',
                            data={'formData': 'test',
-                                 'extra_formData': 'test'})
+                                 'extra_formData': 'test'},
+                           headers=headers)
     assert resp.status_code == 200
 
 
 def test_strict_formdata_extra_param(strict_app):
     app_client = strict_app.app.test_client()
+    headers = {'content-type': 'multipart/form-data'}
     resp = app_client.post('/v1.0/test-formData-param',
                            data={'formData': 'test',
-                                 'extra_formData': 'test'})
+                                 'extra_formData': 'test'},
+                           headers=headers)
     assert resp.status_code == 400
     response = json.loads(resp.data.decode('utf-8', 'replace'))
     assert response['detail'] == "Extra formData parameter(s) extra_formData not in spec"
@@ -225,7 +232,8 @@ def test_formdata_multiple_file_upload(simple_app):
 
 def test_formdata_file_upload_bad_request(simple_app):
     app_client = simple_app.app.test_client()
-    resp = app_client.post('/v1.0/test-formData-file-upload')
+    headers = {'Content-Type': 'multipart/form-data'}
+    resp = app_client.post('/v1.0/test-formData-file-upload', headers=headers)
     assert resp.status_code == 400
     response = json.loads(resp.data.decode('utf-8', 'replace'))
     assert response['detail'] in [
@@ -367,19 +375,21 @@ def test_args_kwargs(simple_app):
 
 def test_param_sanitization(simple_app):
     app_client = simple_app.app.test_client()
-    resp = app_client.post('/v1.0/param-sanitization')
+    headers = {'content-type': 'multipart/form-data'}
+    resp = app_client.post('/v1.0/param-sanitization', headers=headers)
     assert resp.status_code == 200
     assert json.loads(resp.data.decode('utf-8', 'replace')) == {}
 
+    headers = {'content-type': 'application/x-www-form-urlencoded'}
     resp = app_client.post('/v1.0/param-sanitization?$query=queryString',
-            data={'$form': 'formString'})
+                           data={'$form': 'formString'}, headers=headers)
     assert resp.status_code == 200
     assert json.loads(resp.data.decode('utf-8', 'replace')) == {
             'query': 'queryString',
             'form': 'formString',
             }
 
-    body = { 'body1': 'bodyString', 'body2': 'otherString' }
+    body = {'body1': 'bodyString', 'body2': 'otherString'}
     resp = app_client.post(
         '/v1.0/body-sanitization',
         data=json.dumps(body),

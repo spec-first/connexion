@@ -114,12 +114,27 @@ def get_function_from_name(function_name):
     return function
 
 
+def is_form_mimetype(mimetype):
+    try:
+        mimetype = mimetype.split(";")[0]
+        maintype, subtype = mimetype.split('/')  # type: str, str
+    except ValueError:
+        return False
+
+    multipart = maintype == 'multipart' and subtype.startswith("form-data")
+    urlenc = maintype == 'application' and subtype.startswith("x-www-form-urlencoded")
+    return multipart or urlenc
+
+
 def is_json_mimetype(mimetype):
     """
     :type mimetype: str
     :rtype: bool
     """
-    maintype, subtype = mimetype.split('/')  # type: str, str
+    try:
+        maintype, subtype = mimetype.split('/')  # type: str, str
+    except ValueError:
+        return False
     return maintype == 'application' and (subtype == 'json' or subtype.endswith('+json'))
 
 

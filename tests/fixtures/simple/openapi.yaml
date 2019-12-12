@@ -540,7 +540,7 @@ paths:
           description: OK
       requestBody:
         content:
-          application/x-www-form-urlencoded:
+          multipart/form-data:
             schema:
               type: object
               properties:
@@ -904,6 +904,20 @@ paths:
                 type: object
       requestBody:
         content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                'form$':
+                  description: Just a testing parameter in the form data
+                  type: string
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                'form$':
+                  description: Just a testing parameter in the form data
+                  type: string
           multipart/form-data:
             schema:
               type: object
