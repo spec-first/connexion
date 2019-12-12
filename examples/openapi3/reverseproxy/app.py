@@ -42,7 +42,7 @@ class ReverseProxied(object):
         self.server = server
 
     def __call__(self, environ, start_response):
-        logging.warn(
+        logging.warning(
             "this demo is not secure by default!! "
             "You'll want to make sure these headers are coming from your proxy, "
             "and not directly from users on the web!"
