@@ -13,7 +13,7 @@ from werkzeug.datastructures import FileStorage
 from ..exceptions import ExtraParameterProblem, BadRequestProblem, UnsupportedMediaTypeProblem
 from ..http_facts import FORM_CONTENT_TYPES
 from ..json_schema import Draft4RequestValidator, Draft4ResponseValidator
-from ..content_types import KNOWN_CONTENT_TYPES
+from ..content_types import ContentHandlerFactory
 from ..types import TypeValidationError, coerce_type
 from ..utils import all_json, boolean, is_json_mimetype, is_null, is_nullable
 
@@ -52,30 +52,13 @@ class RequestBodyValidator(object):
         self.validator = validatorClass(schema, format_checker=draft4_format_checker)
         self.api = api
         self.strict_validation = strict_validation
-        self._content_handlers = [
-            de(self.validator,
-               self.schema,
-               self.strict_validation,
-               self.is_null_value_valid) for de in KNOWN_CONTENT_TYPES
-        ]
-
-    def register_content_handler(self, cv):
-        deser = cv(self.validator,
-                   self.schema,
-                   self.strict_validation,
-                   self.is_null_value_valid)
-        self._content_handlers += [deser]
-
-    def lookup_content_handler(self, request):
-        matches = [
-            v for v in self._content_handlers
-            if request.content_type is not None and
-               v.regex.match(request.content_type)
-        ]
-        if len(matches) > 1:
-            logger.warning("Content could be handled by multiple validators")
-        if matches:
-            return matches[0]
+        self.content_handler_factory = ContentHandlerFactory(
+            self.validator,
+            self.schema,
+            self.strict_validation,
+            self.is_null_value_valid,
+            self.consumes
+        )
 
     def __call__(self, function):
         """
@@ -85,26 +68,14 @@ class RequestBodyValidator(object):
 
         @functools.wraps(function)
         def wrapper(request):
-            content_handler = self.lookup_content_handler(request)
-            exact_match = (
-                request.content_type is not None and
-                request.content_type in self.consumes
-            )
-            partial_match = content_handler and content_handler.name in self.consumes
-            if not (exact_match or partial_match):
+            content_handler = self.content_handler_factory.get_handler(request.content_type)
+            if content_handler is None:
                 raise UnsupportedMediaTypeProblem(
-                    "Invalid Content-type ({content_type}), expected JSON data".format(
+                    "Unsupported Content-type ({content_type})".format(
                         content_type=request.headers.get("Content-Type", "")
                     ))
 
-            if content_handler:
-                error = content_handler.validate(request)
-                if error:
-                    return error
-
-            elif self.strict_validation:
-                logger.warning("No handler for ({content_type})".format(
-                    content_type=request.content_type))
+            content_handler.validate_request(request)
 
             response = function(request)
             return response

@@ -7,7 +7,53 @@ from .exceptions import ExtraParameterProblem, BadRequestProblem
 from .types import coerce_type
 from .utils import is_null
 
-logger = logging.getLogger('connexion.content_types')
+logger = logging.getLogger(__name__)
+
+
+class ContentHandlerFactory(object):
+
+    def __init__(self, validator, schema, strict_validation,
+                 is_null_value_valid, consumes):
+        self.validator = validator
+        self.schema = schema
+        self.strict_validation = strict_validation
+        self.is_null_value_valid = is_null_value_valid
+        self.consumes = consumes
+        self._content_handlers = self._discover()
+
+    def _discover(self):
+        content_handlers = ContentHandler.discover_subclasses()
+        return {
+            name: cls(self.validator, self.schema,
+                      self.strict_validation, self.is_null_value_valid)
+            for name, cls in content_handlers.items()
+        }
+
+    def get_handler(self, content_type):
+        match = None
+
+        if content_type is None:
+            return match
+
+        media_type = content_type.split(";", 1)[0]
+        if media_type not in self.consumes:
+            return None
+
+        try:
+            return self._content_handlers[media_type]
+        except KeyError:
+            pass
+
+        matches = [
+            (name, handler) for name, handler in self._content_handlers.items()
+            if handler.regex.match(content_type)
+        ]
+        if len(matches) > 1:
+            logger.warning(f"Content could be handled by multiple validators: {matches}")
+
+        if matches:
+            name, handler = matches[0]
+            return handler
 
 
 class ContentHandler(object):
@@ -23,7 +69,7 @@ class ContentHandler(object):
         # type: (dict, AnyStr) -> Union[ConnexionResponse, None]
         if is_null(data):
             if self.default:
-                # XXX do we need to do this? If the spec is valid, this will pass
+                # TODO do we need to do this? If the spec is valid, this will pass
                 data = self.default
             elif self.is_null_value_valid:
                 return
@@ -46,16 +92,32 @@ class ContentHandler(object):
     def deserialize(self, request):
         return request.body
 
-    def validate(self, request):
+    def validate_request(self, request):
         data = self.deserialize(request)
         self.validate_schema(data, request.url)
+
+    @classmethod
+    def discover_subclasses(cls):
+        subclasses = {c.name: c for c in cls.__subclasses__()}
+        for s in cls.__subclasses__():
+            subclasses.update(s.discover_subclasses())
+        return subclasses
 
 
 class StreamingContentHandler(ContentHandler):
     name = "application/octet-stream"
     regex = re.compile(r'^application\/octet-stream.*')
 
-    def validate(self, request):
+    def validate_request(self, request):
+        # Don't validate, leave stream for user to read
+        pass
+
+
+class TextPlainContentHandler(ContentHandler):
+    name = "text/plain"
+    regex = re.compile(r'^text\/plain.*')
+
+    def validate_request(self, request):
         # Don't validate, leave stream for user to read
         pass
 
@@ -117,11 +179,3 @@ class MultiPartFormDataContentHandler(FormDataContentHandler):
     regex = re.compile(
         r'^multipart\/form-data.*'
     )
-
-
-KNOWN_CONTENT_TYPES = (
-    StreamingContentHandler,
-    JSONContentHandler,
-    FormDataContentHandler,
-    MultiPartFormDataContentHandler
-)
