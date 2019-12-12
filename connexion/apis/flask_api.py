@@ -300,11 +300,7 @@ class InternalHandlers(object):
         return flask.jsonify(self._spec_for_prefix())
 
     def get_yaml_spec(self):
-        lambda: FlaskApi._build_response(
-            status_code=200,
-            mimetype="text/yaml",
-            data=yamldumper(self._spec_for_prefix())
-        )
+        return yamldumper(self._spec_for_prefix()), 200, {"Content-Type": "text/yaml"}
 
     def _spec_for_prefix(self):
         """
