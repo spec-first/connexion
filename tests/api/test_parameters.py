@@ -354,10 +354,10 @@ def test_nullable_parameter(simple_app):
     resp = app_client.get('/v1.0/nullable-parameters?time_start=None')
     assert json.loads(resp.data.decode('utf-8', 'replace')) == 'it was None'
 
-    #time_start = 1010
-    #resp = app_client.get(
-    #    '/v1.0/nullable-parameters?time_start={}'.format(time_start))
-    #assert json.loads(resp.data.decode('utf-8', 'replace')) == time_start
+    time_start = 1010
+    resp = app_client.get(
+        '/v1.0/nullable-parameters?time_start={}'.format(time_start))
+    assert json.loads(resp.data.decode('utf-8', 'replace')) == time_start
 
     resp = app_client.post('/v1.0/nullable-parameters', data={"post_param": 'None'})
     assert json.loads(resp.data.decode('utf-8', 'replace')) == 'it was None'
