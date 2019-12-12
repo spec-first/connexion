@@ -3,7 +3,7 @@ import re
 
 from jsonschema import ValidationError
 
-from ..exceptions import ExtraParameterProblem
+from ..exceptions import ExtraParameterProblem, BadRequestProblem
 from ..problem import problem
 from ..types import coerce_type
 from ..utils import is_null
@@ -18,31 +18,38 @@ class ContentHandler(object):
         self.strict_validation = strict
         self.is_null_value_valid = is_null_value_valid
         self.validator = validator
-        self.has_default = schema.get('default', False)
+        self.default = schema.get('default')
 
     def validate_schema(self, data, url):
         # type: (dict, AnyStr) -> Union[ConnexionResponse, None]
-        if self.is_null_value_valid and is_null(data):
-            return None
+        if is_null(data):
+            if self.default:
+                # XXX do we need to do this? If the spec is valid, this will pass
+                data = self.default
+            elif self.is_null_value_valid:
+                return
 
         try:
             self.validator.validate(data)
         except ValidationError as exception:
-            logger.error("{url} validation error: {error}".format(url=url,
-                                                                  error=exception.message),
-                         extra={'validator': 'body'})
-            return problem(400, 'Bad Request', str(exception.message))
-
-        return None
+            error_path = '.'.join(str(item) for item in exception.path)
+            error_path_msg = " - '{path}'".format(path=error_path) \
+                if error_path else ""
+            logger.error(
+                "{url} validation error: {error}{error_path_msg}".format(
+                    url=url, error=exception.message,
+                    error_path_msg=error_path_msg),
+                extra={'validator': 'body'})
+            raise BadRequestProblem(detail="{message}{error_path_msg}".format(
+                               message=exception.message,
+                               error_path_msg=error_path_msg))
 
     def _deser(self, request):
         return request.body
 
     def validate(self, request):
         data = self._deser(request)
-        errors = self.validate_schema(data, request.url)
-        if errors and not self.has_default:
-            return errors
+        self.validate_schema(data, request.url)
 
 
 class StreamingContentHandler(ContentHandler):
@@ -63,10 +70,7 @@ class JSONContentHandler(ContentHandler):
         empty_body = not(request.body or request.form or request.files)
         if data is None and not empty_body and not self.is_null_value_valid:
             # Content-Type is json but actual body was not parsed
-            return problem(400,
-                           "Bad Request",
-                           "Request body is not valid JSON"
-                           )
+            raise BadRequestProblem(detail="Request body is not valid JSON")
         return data
 
 
@@ -115,9 +119,9 @@ class MultiPartFormDataContentHandler(FormDataContentHandler):
     )
 
 
-DEFAULT_DESERIALIZERS = [
+DEFAULT_DESERIALIZERS = (
     StreamingContentHandler,
     JSONContentHandler,
     FormDataContentHandler,
     MultiPartFormDataContentHandler
-]
+)
