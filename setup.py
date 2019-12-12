@@ -47,10 +47,9 @@ tests_require = [
     swagger_ui_require
 ]
 
-if sys.version_info >= (3, 5, 3):
-    tests_require.extend(aiohttp_require)
-    tests_require.append('pytest-aiohttp')
-    tests_require.append('aiohttp-remotes')
+tests_require.extend(aiohttp_require)
+tests_require.append('pytest-aiohttp')
+tests_require.append('aiohttp-remotes')
 
 
 class PyTest(TestCommand):
@@ -60,14 +59,8 @@ class PyTest(TestCommand):
     def initialize_options(self):
         TestCommand.initialize_options(self)
         self.cov = None
-        self.pytest_args = ['--cov', 'connexion', '--cov-report', 'term-missing', '-v']
-
-        if sys.version_info < (3, 5, 3):
-            self.pytest_args.append('--cov-config=py2-coveragerc')
-            self.pytest_args.append('--ignore=tests/aiohttp')
-        else:
-            self.pytest_args.append('--cov-config=py3-coveragerc')
-
+        self.pytest_args = ['--cov', 'connexion', '--cov-report', 'term-missing',
+                            '--cov-config=py3-coveragerc', '-v']
         self.cov_html = False
 
     def finalize_options(self):
