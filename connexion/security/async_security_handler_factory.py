@@ -1,3 +1,4 @@
+import abc
 import asyncio
 import functools
 import logging
@@ -10,11 +11,7 @@ from .security_handler_factory import SecurityHandlerFactory
 logger = logging.getLogger('connexion.api.security')
 
 
-class AioHttpSecurityHandlerFactory(SecurityHandlerFactory):
-    def __init__(self, pass_context_arg_name):
-        SecurityHandlerFactory.__init__(self, pass_context_arg_name)
-        self.client_session = None
-
+class AsyncSecurityHandlerFactory(SecurityHandlerFactory):
     def _generic_check(self, func, exception_msg):
         need_to_add_context, need_to_add_required_scopes = self._need_to_add_context_or_scopes(func)
 
@@ -87,6 +84,7 @@ class AioHttpSecurityHandlerFactory(SecurityHandlerFactory):
 
         return wrapper
 
+    @abc.abstractmethod
     def get_token_info_remote(self, token_info_url):
         """
         Return a function which will call `token_info_url` to retrieve token info.
@@ -98,14 +96,3 @@ class AioHttpSecurityHandlerFactory(SecurityHandlerFactory):
         :type token_info_url: str
         :rtype: types.FunctionType
         """
-        @asyncio.coroutine
-        def wrapper(token):
-            if not self.client_session:
-                # Must be created in a coroutine
-                self.client_session = aiohttp.ClientSession()
-            headers = {'Authorization': 'Bearer {}'.format(token)}
-            token_request = yield from self.client_session.get(token_info_url, headers=headers, timeout=5)
-            if token_request.status != 200:
-                return None
-            return token_request.json()
-        return wrapper
