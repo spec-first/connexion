@@ -16,6 +16,18 @@ logger = logging.getLogger('connexion.api.security')
 
 
 class AbstractSecurityHandlerFactory(abc.ABC):
+    """
+    get_*_func -> _get_function -> get_function_from_name (name=security function defined in spec)
+        (if url defined instead of a function -> get_token_info_remote)
+
+    std security functions: security_{passthrough,deny}
+
+    verify_* -> returns a security wrapper around the security function
+        check_* -> returns a function tasked with doing auth for use inside the verify wrapper
+            check helpers (used outside wrappers): _need_to_add_context_or_scopes
+            the security function
+        verify helpers (used inside wrappers): get_auth_header_value, get_cookie_value
+    """
     no_value = object()
     required_scopes_kw = 'required_scopes'
 
@@ -141,6 +153,8 @@ class AbstractSecurityHandlerFactory(abc.ABC):
     @staticmethod
     def get_auth_header_value(request):
         """
+        Called inside security wrapper functions
+
         Return Authorization type and value if any.
         If not Authorization, return (None, None)
         Raise OAuthProblem for invalid Authorization header
@@ -187,6 +201,8 @@ class AbstractSecurityHandlerFactory(abc.ABC):
     @staticmethod
     def get_cookie_value(cookies, name):
         '''
+        Called inside security wrapper functions
+
         Returns cookie value by its name. None if no such value.
         :param cookies: str: cookies raw data
         :param name: str: cookies key
