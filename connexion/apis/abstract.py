@@ -29,7 +29,7 @@ class AbstractAPIMeta(abc.ABCMeta):
         cls._set_jsonifier()
 
 
-class AbstractAPI(object, metaclass=AbstractAPIMeta):
+class AbstractAPI(metaclass=AbstractAPIMeta):
     """
     Defines an abstract interface for a Swagger API
     """
