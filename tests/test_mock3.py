@@ -11,7 +11,9 @@ def test_mock_resolver_default():
                 'application/json': {
                     'examples': {
                         "super_cool_example": {
-                            'foo': 'bar'
+                            "value": {
+                                'foo': 'bar'
+                            }
                         }
                     }
                 }
@@ -46,7 +48,9 @@ def test_mock_resolver_numeric():
                 'application/json': {
                     'examples': {
                         "super_cool_example": {
-                            'foo': 'bar'
+                            "value": {
+                                'foo': 'bar'
+                            }
                         }
                     }
                 }

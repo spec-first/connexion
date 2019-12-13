@@ -72,7 +72,7 @@ def simple_api_spec_dir():
     return FIXTURES_FOLDER / 'simple'
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def aiohttp_api_spec_dir():
     return FIXTURES_FOLDER / 'aiohttp'
 

@@ -49,11 +49,11 @@ class Jsonifier(object):
         """ Central point where JSON deserialization happens inside
         Connexion.
         """
-        if isinstance(data, six.binary_type):
+        if isinstance(data, bytes):
             data = data.decode()
 
         try:
             return self.json.loads(data)
         except Exception:
-            if isinstance(data, six.string_types):
+            if isinstance(data, str):
                 return data
