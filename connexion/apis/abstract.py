@@ -227,7 +227,8 @@ class AbstractAPI(metaclass=AbstractAPIMeta):
             logger.exception(error_msg)
         else:
             logger.error(error_msg)
-            six.reraise(*exc_info)
+            _type, value, traceback = exc_info
+            raise value.with_traceback(traceback)
 
     @classmethod
     @abc.abstractmethod
