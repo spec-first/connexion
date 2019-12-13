@@ -211,17 +211,6 @@ def test_formdata_file_upload(simple_app):
     response = json.loads(resp.data.decode('utf-8', 'replace'))
     assert response == {'filename.txt': 'file contents'}
 
-def test_formdata_multiple_file_upload(simple_app):
-    app_client = simple_app.app.test_client()
-    resp = app_client.post('/v1.0/test-formData-file-upload',
-                           data={'formData': [(BytesIO(b'file contents'), 'filename.txt'),
-                                              (BytesIO(b'file contents 2'), 'filename2.txt')]
-                                              })
-    assert resp.status_code == 200
-    response = json.loads(resp.data.decode('utf-8', 'replace'))
-    assert response == [{'filename.txt': 'file contents'},
-                        {'filename2.txt': 'file contents 2'}]
-
 
 def test_formdata_file_upload_bad_request(simple_app):
     app_client = simple_app.app.test_client()
