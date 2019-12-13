@@ -6,8 +6,6 @@ import re
 import json
 from .. import utils
 
-import six
-
 from ..utils import create_empty_dict_from_list
 from .decorator import BaseDecorator
 
@@ -21,8 +19,7 @@ QUERY_STRING_DELIMITERS = {
 }
 
 
-@six.add_metaclass(abc.ABCMeta)
-class AbstractURIParser(BaseDecorator):
+class AbstractURIParser(BaseDecorator, metaclass=abc.ABCMeta):
     parsable_parameters = ["query", "path"]
 
     def __init__(self, param_defns, body_defn):

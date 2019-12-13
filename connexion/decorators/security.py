@@ -7,7 +7,7 @@ import textwrap
 
 import requests
 from connexion.utils import get_function_from_name
-from six.moves import http_cookies
+import http.cookies
 
 from ..exceptions import (ConnexionException, OAuthProblem,
                           OAuthResponseProblem, OAuthScopeProblem)
@@ -240,7 +240,7 @@ def get_cookie_value(cookies, name):
     :param cookies: str: cookies raw data
     :param name: str: cookies key
     '''
-    cookie_parser = http_cookies.SimpleCookie()
+    cookie_parser = http.cookies.SimpleCookie()
     cookie_parser.load(str(cookies))
     try:
         return cookie_parser[name].value

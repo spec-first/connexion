@@ -25,7 +25,6 @@ install_requires = [
     'jsonschema>=2.5.1',
     'PyYAML>=5.1',
     'requests>=2.9.1',
-    'six>=1.9',
     'inflection>=0.3.1',
     'openapi-spec-validator>=0.2.4',
 ]

@@ -1,7 +1,6 @@
 import abc
 import logging
 
-import six
 from connexion.operations.secure import SecureOperation
 
 from ..decorators.metrics import UWSGIMetricsCollector
@@ -22,8 +21,7 @@ VALIDATOR_MAP = {
 }
 
 
-@six.add_metaclass(abc.ABCMeta)
-class AbstractOperation(SecureOperation):
+class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
 
     """
     An API routes requests to an Operation by a (path, method) pair.

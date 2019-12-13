@@ -15,36 +15,34 @@ full_name = '{}.operation'.format(__package__)
 sys.modules[full_name] = sys.modules[compat.__name__]
 
 
-def not_installed_error():  # pragma: no cover
-    import six
+def not_installed_error(exc):  # pragma: no cover
     import functools
 
-    def _required_lib(exec_info, *args, **kwargs):
-        six.reraise(*exec_info)
+    def _required_lib(exc, *args, **kwargs):
+        raise exc
 
-    return functools.partial(_required_lib, sys.exc_info())
+    return functools.partial(_required_lib, exc)
 
 
 try:
     from .apis.flask_api import FlaskApi, context  # NOQA
     from .apps.flask_app import FlaskApp
     from flask import request  # NOQA
-except ImportError:  # pragma: no cover
-    _flask_not_installed_error = not_installed_error()
+except ImportError as e:  # pragma: no cover
+    _flask_not_installed_error = not_installed_error(e)
     FlaskApi = _flask_not_installed_error
     FlaskApp = _flask_not_installed_error
 
 App = FlaskApp
 Api = FlaskApi
 
-if sys.version_info[0] >= 3:  # pragma: no cover
-    try:
-        from .apis.aiohttp_api import AioHttpApi
-        from .apps.aiohttp_app import AioHttpApp
-    except ImportError:  # pragma: no cover
-        _aiohttp_not_installed_error = not_installed_error()
-        AioHttpApi = _aiohttp_not_installed_error
-        AioHttpApp = _aiohttp_not_installed_error
+try:
+    from .apis.aiohttp_api import AioHttpApi
+    from .apps.aiohttp_app import AioHttpApp
+except ImportError as e:  # pragma: no cover
+    _aiohttp_not_installed_error = not_installed_error(e)
+    AioHttpApi = _aiohttp_not_installed_error
+    AioHttpApp = _aiohttp_not_installed_error
 
 # This version is replaced during release process.
 __version__ = '2018.0.dev1'
