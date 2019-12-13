@@ -384,7 +384,8 @@ paths:
                     type: string
             encoding:
               items:
-                style: simple
+                style: form
+                explode: false
       responses:
         200:
           description: OK
@@ -419,7 +420,8 @@ paths:
         - name: items
           in: query
           description: An comma separated array of items
-          style: simple
+          style: form
+          explode: false
           schema:
             type: array
             default: ["squash", "banana"]
@@ -437,7 +439,7 @@ paths:
         - name: items
           in: query
           description: An comma separated array of items
-          style: csv
+          style: form
           explode: true
           schema:
             type: array
@@ -1062,31 +1064,47 @@ paths:
     servers:
       - url: http://localhost
     parameters:
-      - $ref: "#/components/parameters/OptionalName"
+      - $ref: "#/components/parameters/Name"
     get:
       operationId: fakeapi.hello.get_add_operation_on_http_methods_only
-      responses: {}
+      responses:
+        default:
+          description: ''
     put:
       operationId: fakeapi.hello.put_add_operation_on_http_methods_only
-      responses: {}
+      responses:
+        default:
+          description: ''
     post:
       operationId: fakeapi.hello.post_add_operation_on_http_methods_only
-      responses: {}
+      responses:
+        default:
+          description: ''
     delete:
       operationId: fakeapi.hello.delete_add_operation_on_http_methods_only
-      responses: {}
+      responses:
+        default:
+          description: ''
     options:
       operationId: fakeapi.hello.options_add_operation_on_http_methods_only
-      responses: {}
+      responses:
+        default:
+          description: ''
     head:
       operationId: fakeapi.hello.head_add_operation_on_http_methods_only
-      responses: {}
+      responses:
+        default:
+          description: ''
     patch:
       operationId: fakeapi.hello.patch_add_operation_on_http_methods_only
-      responses: {}
+      responses:
+        default:
+          description: ''
     trace:
       operationId: fakeapi.hello.trace_add_operation_on_http_methods_only
-      responses: {}
+      responses:
+        default:
+          description: ''
   /forward:
     post:
       operationId: fakeapi.hello.forward
@@ -1146,11 +1164,11 @@ components:
       required:
         - image_version
   parameters:
-    OptionalName:
+    Name:
       name: name
       in: path
       description: Name of the person to greet.
-      required: false
+      required: true
       schema:
         type: string
   securitySchemes:
