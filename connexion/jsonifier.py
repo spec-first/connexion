@@ -2,8 +2,6 @@ import datetime
 import json
 import uuid
 
-import six
-
 
 class JSONEncoder(json.JSONEncoder):
     def default(self, o):
@@ -41,7 +39,7 @@ class Jsonifier(object):
         """ Central point where JSON serialization happens inside
         Connexion.
         """
-        for k, v in six.iteritems(self.dumps_args):
+        for k, v in self.dumps_args.items():
             kwargs.setdefault(k, v)
         return self.json.dumps(data, **kwargs) + '\n'
 

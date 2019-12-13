@@ -10,5 +10,3 @@ testfixtures>=5.3.0
 # -e hg+https://bitbucket.org/pitrou/pathlib#egg=pathlib
 # PyYAML is not that easy to build manually, it may fail.
 #-e svn+http://svn.pyyaml.org/pyyaml/trunk#egg=PyYAML
-# six is causing errors during the tests
-#-e git+https://github.com/benjaminp/six.git#egg=six

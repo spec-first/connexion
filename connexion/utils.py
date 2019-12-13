@@ -1,14 +1,7 @@
 import functools
 import importlib
 
-import six
 import yaml
-
-# Python 2/3 compatibility:
-try:
-    py_string = unicode
-except NameError:  # pragma: no cover
-    py_string = str  # pragma: no cover
 
 
 def boolean(s):
@@ -36,7 +29,7 @@ def boolean(s):
 # https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#data-types
 TYPE_MAP = {'integer': int,
             'number': float,
-            'string': py_string,
+            'string': str,
             'boolean': boolean,
             'array': list,
             'object': dict}  # map of swagger types to python types
