@@ -2,7 +2,6 @@ import collections
 import copy
 import functools
 import logging
-import sys
 
 import pkg_resources
 from jsonschema import Draft4Validator, ValidationError, draft4_format_checker

@@ -34,7 +34,7 @@ def inspect_function_arguments(function):  # pragma: no cover
     """
     parameters = inspect.signature(function).parameters
     bound_arguments = [name for name, p in parameters.items()
-                        if p.kind not in (p.VAR_POSITIONAL, p.VAR_KEYWORD)]
+                       if p.kind not in (p.VAR_POSITIONAL, p.VAR_KEYWORD)]
     has_kwargs = any(p.kind == p.VAR_KEYWORD for p in parameters.values())
     return list(bound_arguments), has_kwargs
 
