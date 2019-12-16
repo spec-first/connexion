@@ -28,5 +28,5 @@ twine upload dist/*
 # revert version
 git checkout -- */__init__.py
 
-git tag -s ${version} -m "${version}"
+git tag "${version}"
 git push --tags
