@@ -34,9 +34,10 @@ class FlaskApi(AbstractAPI):
         logger.debug('Adding spec json: %s/%s', self.base_path,
                      self.options.openapi_spec_path)
         endpoint_name = "{name}_openapi_json".format(name=self.blueprint.name)
+
         self.blueprint.add_url_rule(self.options.openapi_spec_path,
                                     endpoint_name,
-                                    lambda: flask.jsonify(self.specification.raw))
+                                    self._handlers.get_json_spec)
 
     def add_openapi_yaml(self):
         """
@@ -46,18 +47,15 @@ class FlaskApi(AbstractAPI):
         if not self.options.openapi_spec_path.endswith("json"):
             return
 
-        openapi_spec_path_yaml = self.options.openapi_spec_path[:-len("json")] + "yaml"
+        openapi_spec_path_yaml = \
+            self.options.openapi_spec_path[:-len("json")] + "yaml"
         logger.debug('Adding spec yaml: %s/%s', self.base_path,
                      openapi_spec_path_yaml)
         endpoint_name = "{name}_openapi_yaml".format(name=self.blueprint.name)
         self.blueprint.add_url_rule(
             openapi_spec_path_yaml,
             endpoint_name,
-            lambda: FlaskApi._build_response(
-                status_code=200,
-                mimetype="text/yaml",
-                data=yamldumper(self.specification.raw)
-            )
+            self._handlers.get_yaml_spec
         )
 
     def add_swagger_ui(self):
@@ -119,7 +117,7 @@ class FlaskApi(AbstractAPI):
     def _handlers(self):
         # type: () -> InternalHandlers
         if not hasattr(self, '_internal_handlers'):
-            self._internal_handlers = InternalHandlers(self.base_path, self.options)
+            self._internal_handlers = InternalHandlers(self.base_path, self.options, self.specification)
         return self._internal_handlers
 
     @classmethod
@@ -262,9 +260,10 @@ class InternalHandlers(object):
     Flask handlers for internally registered endpoints.
     """
 
-    def __init__(self, base_path, options):
+    def __init__(self, base_path, options, specification):
         self.base_path = base_path
         self.options = options
+        self.specification = specification
 
     def console_ui_home(self):
         """
@@ -272,8 +271,14 @@ class InternalHandlers(object):
 
         :return:
         """
+        openapi_json_route_name = "{blueprint}.{prefix}_openapi_json"
+        escaped = flask_utils.flaskify_endpoint(self.base_path)
+        openapi_json_route_name = openapi_json_route_name.format(
+            blueprint=escaped,
+            prefix=escaped
+        )
         template_variables = {
-            'openapi_spec_url': (self.base_path + self.options.openapi_spec_path)
+            'openapi_spec_url': flask.url_for(openapi_json_route_name)
         }
         if self.options.openapi_console_ui_config is not None:
             template_variables['configUrl'] = 'swagger-ui-config.json'
@@ -289,3 +294,17 @@ class InternalHandlers(object):
         # convert PosixPath to str
         static_dir = str(self.options.openapi_console_ui_from_dir)
         return flask.send_from_directory(static_dir, filename)
+
+    def get_json_spec(self):
+        return flask.jsonify(self._spec_for_prefix())
+
+    def get_yaml_spec(self):
+        return yamldumper(self._spec_for_prefix()), 200, {"Content-Type": "text/yaml"}
+
+    def _spec_for_prefix(self):
+        """
+        Modify base_path in the spec based on incoming url
+        This fixes problems with reverse proxies changing the path.
+        """
+        base_path = flask.url_for(flask.request.endpoint).rsplit("/", 1)[0]
+        return self.specification.with_base_path(base_path).raw
