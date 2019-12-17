@@ -2,10 +2,8 @@ import collections
 import copy
 import functools
 import logging
-import sys
 
 import pkg_resources
-import six
 from jsonschema import Draft4Validator, ValidationError, draft4_format_checker
 from jsonschema.validators import extend
 from werkzeug.datastructures import FileStorage
@@ -230,7 +228,7 @@ class ResponseBodyValidator(object):
             logger.error("{url} validation error: {error}".format(url=url,
                                                                   error=exception),
                          extra={'validator': 'response'})
-            six.reraise(*sys.exc_info())
+            raise exception
 
         return None
 

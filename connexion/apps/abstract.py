@@ -2,16 +2,13 @@ import abc
 import logging
 import pathlib
 
-import six
-
 from ..options import ConnexionOptions
 from ..resolver import Resolver
 
 logger = logging.getLogger('connexion.app')
 
 
-@six.add_metaclass(abc.ABCMeta)
-class AbstractApp(object):
+class AbstractApp(metaclass=abc.ABCMeta):
     def __init__(self, import_name, api_cls, port=None, specification_dir='',
                  host=None, server=None, arguments=None, auth_all_paths=False, debug=None,
                  resolver=None, options=None, skip_error_handlers=False):

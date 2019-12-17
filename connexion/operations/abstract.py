@@ -1,7 +1,6 @@
 import abc
 import logging
 
-import six
 from connexion.operations.secure import SecureOperation
 
 from ..decorators.metrics import UWSGIMetricsCollector
@@ -22,8 +21,7 @@ VALIDATOR_MAP = {
 }
 
 
-@six.add_metaclass(abc.ABCMeta)
-class AbstractOperation(SecureOperation):
+class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
 
     """
     An API routes requests to an Operation by a (path, method) pair.
@@ -176,7 +174,7 @@ class AbstractOperation(SecureOperation):
 
     @staticmethod
     def _get_file_arguments(files, arguments, has_kwargs=False):
-        return {k: files.getlist(k) for k in files.keys() if k in arguments or has_kwargs}
+        return {k: v for k, v in files.items() if k in arguments or has_kwargs}
 
     @abc.abstractmethod
     def _get_val_from_param(self, value, query_defn):

@@ -4,7 +4,6 @@ import logging
 import re
 
 import inflection
-import six
 
 from ..http_facts import FORM_CONTENT_TYPES
 from ..lifecycle import ConnexionRequest  # NOQA
@@ -33,15 +32,11 @@ def inspect_function_arguments(function):  # pragma: no cover
     :type function: Callable
     :rtype: tuple[list[str], bool]
     """
-    if six.PY3:
-        parameters = inspect.signature(function).parameters
-        bound_arguments = [name for name, p in parameters.items()
-                           if p.kind not in (p.VAR_POSITIONAL, p.VAR_KEYWORD)]
-        has_kwargs = any(p.kind == p.VAR_KEYWORD for p in parameters.values())
-        return list(bound_arguments), has_kwargs
-    else:
-        argspec = inspect.getargspec(function)
-        return argspec.args, bool(argspec.keywords)
+    parameters = inspect.signature(function).parameters
+    bound_arguments = [name for name, p in parameters.items()
+                       if p.kind not in (p.VAR_POSITIONAL, p.VAR_KEYWORD)]
+    has_kwargs = any(p.kind == p.VAR_KEYWORD for p in parameters.values())
+    return list(bound_arguments), has_kwargs
 
 
 def snake_and_shadow(name):

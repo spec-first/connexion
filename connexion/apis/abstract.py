@@ -5,8 +5,6 @@ import sys
 import warnings
 from enum import Enum
 
-import six
-
 from ..decorators.produces import NoContent
 from ..exceptions import ResolverError
 from ..http_facts import METHODS
@@ -31,8 +29,7 @@ class AbstractAPIMeta(abc.ABCMeta):
         cls._set_jsonifier()
 
 
-@six.add_metaclass(AbstractAPIMeta)
-class AbstractAPI(object):
+class AbstractAPI(metaclass=AbstractAPIMeta):
     """
     Defines an abstract interface for a Swagger API
     """
@@ -230,7 +227,8 @@ class AbstractAPI(object):
             logger.exception(error_msg)
         else:
             logger.error(error_msg)
-            six.reraise(*exc_info)
+            _type, value, traceback = exc_info
+            raise value.with_traceback(traceback)
 
     @classmethod
     @abc.abstractmethod

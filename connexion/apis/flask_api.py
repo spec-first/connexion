@@ -2,7 +2,6 @@ import logging
 import warnings
 
 import flask
-import six
 import werkzeug.exceptions
 from connexion.apis import flask_utils
 from connexion.apis.abstract import AbstractAPI
@@ -180,7 +179,7 @@ class FlaskApi(AbstractAPI):
             'response': data,
             'status': status_code
         }
-        kwargs = {k: v for k, v in six.iteritems(kwargs) if v is not None}
+        kwargs = {k: v for k, v in kwargs.items() if v is not None}
         return flask.current_app.response_class(**kwargs)  # type: flask.Response
 
     @classmethod
