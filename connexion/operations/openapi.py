@@ -4,7 +4,7 @@ from copy import deepcopy
 from connexion.operations.abstract import AbstractOperation
 
 from ..decorators.uri_parsing import OpenAPIURIParser
-from ..utils import deep_get, is_null, is_nullable, make_type
+from ..utils import deep_get, deep_merge, is_null, is_nullable, make_type
 
 logger = logging.getLogger("connexion.operations.openapi3")
 
@@ -303,16 +303,37 @@ class OpenAPIOperation(AbstractOperation):
 
         return res
 
+    def _build_default_obj(self, _properties, res={}):
+        """ takes disparate and nested default keys, and builds up a default object
+        """
+        for key, prop in _properties.items():
+            if 'default' in prop and key not in res:
+                res[key] = prop['default']
+            elif prop.get('type') == 'object' and 'properties' in prop:
+                res.setdefault(key, {})
+                res[key] = self._build_default_obj(prop['properties'], res[key])
+        return res
+
+    def _get_query_defaults(self, query_defns):
+        defaults = {}
+        for k, v in query_defns.items():
+            try:
+                if v["schema"]["type"] == "object":
+                    defaults[k] = self._build_default_obj(v["schema"]["properties"])
+                else:
+                    defaults[k] = v["schema"]["default"]
+            except KeyError:
+                pass
+        return defaults
+
     def _get_query_arguments(self, query, arguments, has_kwargs, sanitize):
         query_defns = {sanitize(p["name"]): p
                        for p in self.parameters
                        if p["in"] == "query"}
-        default_query_params = {k: v["schema"]['default']
-                                for k, v in query_defns.items()
-                                if 'default' in v["schema"]}
+        default_query_params = self._get_query_defaults(query_defns)
 
         query_arguments = deepcopy(default_query_params)
-        query_arguments.update(query)
+        query_arguments = deep_merge(query_arguments, query)
         return self._query_args_helper(query_defns, query_arguments,
                                        arguments, has_kwargs, sanitize)
 

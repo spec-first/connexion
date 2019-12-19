@@ -40,6 +40,24 @@ def make_type(value, _type):
     return type_func(value)
 
 
+def deep_merge(a, b):
+    """ merges b into a
+        in case of conflict the value from b is used
+    """
+    for key in b:
+        if key in a:
+            if isinstance(a[key], dict) and isinstance(b[key], dict):
+                deep_merge(a[key], b[key])
+            elif a[key] == b[key]:
+                pass
+            else:
+                # b overwrites a
+                a[key] = b[key]
+        else:
+            a[key] = b[key]
+    return a
+
+
 def deep_getattr(obj, attr):
     """
     Recurses through an attribute chain to get the ultimate value.
@@ -229,12 +247,3 @@ def yamldumper(openapi):
     yaml.representer.SafeRepresenter.represent_scalar = my_represent_scalar
 
     return yaml.dump(openapi, allow_unicode=True, Dumper=NoAnchorDumper)
-
-
-def create_empty_dict_from_list(_list, _dict, _end_value):
-    """create from ['foo', 'bar'] a dict like {'foo': {'bar': {}}} recursively. needed for converting query params"""
-    current_key = _list.pop(0)
-    if _list:
-        return {current_key: create_empty_dict_from_list(_list, _dict, _end_value)}
-    else:
-        return {current_key: _end_value}
