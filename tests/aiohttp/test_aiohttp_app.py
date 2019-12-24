@@ -62,6 +62,17 @@ def test_app_run_debug(web_run_app_mock, aiohttp_api_spec_dir):
     ]
 
 
+def test_app_run_access_log(web_run_app_mock, aiohttp_api_spec_dir):
+    app = AioHttpApp(__name__, port=5001,
+                     specification_dir=aiohttp_api_spec_dir,
+                     debug=True)
+    logger = logging.getLogger('connexion.aiohttp_app')
+    app.run(access_log=logger)
+    assert web_run_app_mock.call_args_list == [
+        mock.call(app.app, port=5001, host='0.0.0.0', access_log=logger)
+    ]
+
+
 def test_app_run_server_error(web_run_app_mock, aiohttp_api_spec_dir):
     app = AioHttpApp(__name__, port=5001,
                      specification_dir=aiohttp_api_spec_dir)
