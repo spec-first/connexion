@@ -85,7 +85,7 @@ class AioHttpApp(AbstractApp):
         if self.server == 'aiohttp':
             logger.info('Listening on %s:%s..', self.host, self.port)
 
-            access_log = options.get('access_log')
+            access_log = options.pop('access_log', None)
 
             if options.pop('use_default_access_log', None):
                 access_log = logger
