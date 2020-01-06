@@ -304,6 +304,17 @@ def verify_bearer(bearer_info_func):
     return wrapper
 
 
+def verify_none():
+    """
+    :rtype: types.FunctionType
+    """
+
+    def wrapper(request, required_scopes):
+        return {}
+
+    return wrapper
+
+
 def verify_security(auth_funcs, required_scopes, function):
 
     @functools.wraps(function)
