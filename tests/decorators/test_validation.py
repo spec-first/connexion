@@ -4,6 +4,7 @@ import pytest
 from connexion.decorators.validation import (Draft4ValidatorSupportNullable,
                                              ParameterValidator)
 from mock import MagicMock
+from mock import patch
 
 
 def test_get_valid_parameter():
@@ -61,7 +62,6 @@ def test_support_nullable_properties():
     except ValidationError:
         pytest.fail("Shouldn't raise ValidationError")
 
-
 def test_support_nullable_properties_raises_validation_error():
     schema = {
         "type": "object",
@@ -79,3 +79,17 @@ def test_support_nullable_properties_not_iterable():
     }
     with pytest.raises(ValidationError):
         Draft4ValidatorSupportNullable(schema).validate(12345)
+
+
+def test_support_nullable_properties_with_ref():
+    schema = {
+        "type": "object",
+        "properties": {"data": {'$ref': '#/definitions/foo'}},
+    }
+
+    patch("jsonschema.validators.RefResolver.resolve", return_value=('#/definitions/foo', {'type': 'string', 'x-nullable': True}))
+    
+    try:
+        Draft4ValidatorSupportNullable(schema).validate({"data": None})
+    except ValidationError:
+        pytest.fail("Shouldn't raise ValidationError")

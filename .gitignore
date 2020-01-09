@@ -13,3 +13,4 @@ htmlcov/
 .idea/
 .history/
 .vscode/
+.venv
