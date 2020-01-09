@@ -87,9 +87,9 @@ def test_support_nullable_properties_with_ref():
         "properties": {"data": {'$ref': '#/definitions/foo'}},
     }
 
-    patch("jsonschema.validators.RefResolver.resolve", return_value=('#/definitions/foo', {'type': 'string', 'x-nullable': True}))
-    
-    try:
-        Draft4ValidatorSupportNullable(schema).validate({"data": None})
-    except ValidationError:
-        pytest.fail("Shouldn't raise ValidationError")
+    with patch("jsonschema.validators.RefResolver") as m:
+        m.return_value.resolve.return_value = ('#/definitions/foo', {'type': 'string', 'x-nullable': True})
+        try:
+            Draft4ValidatorSupportNullable(schema).validate({"data": None})
+        except ValidationError:
+            pytest.fail("Shouldn't raise ValidationError")
