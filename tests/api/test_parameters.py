@@ -117,6 +117,16 @@ def test_strict_extra_query_param(strict_app):
     assert response['detail'] == "Extra query parameter(s) extra_parameter not in spec"
 
 
+def test_strict_formdata_param(strict_app):
+    app_client = strict_app.app.test_client()
+    headers = {'Content-type': 'application/x-www-form-urlencoded'}
+    url = '/v1.0/test_array_csv_form_param'
+    resp = app_client.post(url, headers=headers, data={"items":"mango"})
+    response = json.loads(resp.data.decode('utf-8', 'replace'))
+    assert response == ['mango']
+    assert resp.status_code == 200
+
+
 def test_path_parameter_someint(simple_app):
     app_client = simple_app.app.test_client()
     resp = app_client.get('/v1.0/test-int-path/123')  # type: flask.Response
