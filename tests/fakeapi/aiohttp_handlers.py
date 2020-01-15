@@ -39,6 +39,10 @@ def aiohttp_post_greeting(name, **kwargs):
     data = {'greeting': 'Hello {name}'.format(name=name)}
     return data
 
+@asyncio.coroutine
+def aiohttp_echo(**kwargs):
+    return aiohttp.web.json_response(data=kwargs, status=200)
+
 
 @asyncio.coroutine
 def aiohttp_access_request_context(request_ctx):

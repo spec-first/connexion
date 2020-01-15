@@ -219,11 +219,11 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
         kwargs = {}
         path_defns = {p["name"]: p for p in self.parameters if p["in"] == "path"}
         for key, value in path_params.items():
-            key = sanitize(key)
+            sanitized_key = sanitize(key)
             if key in path_defns:
-                kwargs[key] = self._get_val_from_param(value, path_defns[key])
+                kwargs[sanitized_key] = self._get_val_from_param(value, path_defns[key])
             else:  # Assume path params mechanism used for injection
-                kwargs[key] = value
+                kwargs[sanitized_key] = value
         return kwargs
 
     @abc.abstractproperty
