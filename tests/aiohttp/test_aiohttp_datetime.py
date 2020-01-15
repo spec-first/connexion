@@ -27,7 +27,10 @@ def test_swagger_json(aiohttp_api_spec_dir, aiohttp_client):
         return data
 
     example = get_value(spec_data, 'paths./datetime.get.responses.200.content.application/json.schema.example.value')
-    assert example == '2000-01-23T04:56:07.000008Z'
+    assert example in [
+        '2000-01-23T04:56:07.000008+00:00',  # PyYAML 5.3
+        '2000-01-23T04:56:07.000008Z'
+    ]
     example = get_value(spec_data, 'paths./date.get.responses.200.content.application/json.schema.example.value')
     assert example == '2000-01-23'
     example = get_value(spec_data, 'paths./uuid.get.responses.200.content.application/json.schema.example.value')
