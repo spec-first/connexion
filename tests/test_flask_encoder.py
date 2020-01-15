@@ -63,7 +63,10 @@ def test_readonly(json_datetime_dir, spec):
         return data
 
     example = get_value(spec_data, 'paths./datetime.get.{}.example.value'.format(response_path))
-    assert example == '2000-01-23T04:56:07.000008Z'
+    assert example in [
+        '2000-01-23T04:56:07.000008+00:00',  # PyYAML 5.3+
+        '2000-01-23T04:56:07.000008Z'
+    ]
     example = get_value(spec_data, 'paths./date.get.{}.example.value'.format(response_path))
     assert example == '2000-01-23'
     example = get_value(spec_data, 'paths./uuid.get.{}.example.value'.format(response_path))
