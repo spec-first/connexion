@@ -189,6 +189,20 @@ def test_swagger_ui_index_with_config(aiohttp_api_spec_dir, aiohttp_client):
 
 
 @asyncio.coroutine
+def test_pythonic_path_param(aiohttp_api_spec_dir, aiohttp_client):
+    app = AioHttpApp(__name__, port=5001,
+                     specification_dir=aiohttp_api_spec_dir,
+                     debug=True)
+    app.add_api('openapi_simple.yaml', pythonic_params=True)
+
+    app_client = yield from aiohttp_client(app.app)
+    pythonic = yield from app_client.get('/v1.0/pythonic/100')
+    assert pythonic.status == 200
+    j = yield from pythonic.json()
+    assert j['id_'] == 100
+
+
+@asyncio.coroutine
 def test_swagger_ui_static(aiohttp_api_spec_dir, aiohttp_client):
     app = AioHttpApp(__name__, port=5001,
                      specification_dir=aiohttp_api_spec_dir,
