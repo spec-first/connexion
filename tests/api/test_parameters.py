@@ -137,8 +137,8 @@ def test_path_parameter_somefloat(simple_app):
     assert resp.status_code == 404
 
 
-def test_default_param(simple_app):
-    app_client = simple_app.app.test_client()
+def test_default_param(strict_app):
+    app_client = strict_app.app.test_client()
     resp = app_client.get('/v1.0/test-default-query-parameter')
     assert resp.status_code == 200
     response = json.loads(resp.data.decode('utf-8', 'replace'))
