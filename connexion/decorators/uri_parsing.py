@@ -188,7 +188,7 @@ class OpenAPIURIParser(AbstractURIParser):
         root_key = k.split("[", 1)[0]
         if k == root_key:
             return (k, v, False)
-        key_path = re.findall(r'\[(\S[^\[\]]+)\]', k)
+        key_path = re.findall(r'\[(\S[^\[\]]*)\]', k)
         root = prev = node = {}
         for k in key_path:
             node[k] = {}
