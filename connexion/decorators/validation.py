@@ -302,7 +302,11 @@ class ParameterValidator(object):
 
     def validate_formdata_parameter_list(self, request):
         request_params = request.form.keys()
-        spec_params = [x['name'] for x in self.parameters.get('formData', [])]
+        try:
+            spec_params = [x['name'] for x in self.parameters['formData']]
+        except KeyError:
+            # OAS 3
+            return set()
         return validate_parameter_list(request_params, spec_params)
 
     def validate_query_parameter(self, param, request):
