@@ -6,7 +6,6 @@ import re
 import json
 from .. import utils
 
-from ..utils import deep_merge
 from .decorator import BaseDecorator
 
 logger = logging.getLogger('connexion.decorators.uri_parsing')
