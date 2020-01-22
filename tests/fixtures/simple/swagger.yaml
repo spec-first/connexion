@@ -1025,6 +1025,9 @@ definitions:
       creation_day:
         type: string
         format: date
+      creation_time:
+        type: string
+        format: date-time
 
 securityDefinitions:
     api_key:

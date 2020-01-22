@@ -1182,6 +1182,10 @@ components:
         creation_day:
           type: string
           format: date
+        creation_time:
+          type: string
+          format: date-time
+
   parameters:
     Name:
       name: name

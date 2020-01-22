@@ -482,7 +482,7 @@ def test_custom_format_converters_body(spec):
     app_client = simple_app_with_custom_format_converters(spec).app.test_client()
 
     res = app_client.post('/v1.0/test-custom-format-converter',
-                          data=json.dumps({'creation_day': '2020-01-01'}),
+                          data=json.dumps({'creation_day': '2020-01-01', 'creation_time': 'ignored'}),
                           content_type='application/json') # type: flask.Response
 
     assert res.status_code == 200
