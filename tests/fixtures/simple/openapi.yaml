@@ -277,6 +277,19 @@ paths:
               $ref: '#/components/schemas/new_stack'
               default:
                 image_version: default_image
+  /test-custom-format-converter:
+    post:
+      summary: Test that body parameters can be converted based on the format
+      operationId: fakeapi.hello.test_custom_format_converter
+      responses:
+        '200':
+          description: OK
+      requestBody:
+        content:
+          application/json:
+            schema:
+              x-body-name: body
+              $ref: '#/components/schemas/with_date_property'
   /test-default-integer-body:
     post:
       summary: Test if default integer body param is passed to handler.
@@ -1163,6 +1176,12 @@ components:
           description: Docker image version to deploy
       required:
         - image_version
+    with_date_property:
+      type: object
+      properties:
+        creation_day:
+          type: string
+          format: date
   parameters:
     Name:
       name: name

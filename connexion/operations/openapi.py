@@ -4,7 +4,7 @@ from copy import deepcopy
 from connexion.operations.abstract import AbstractOperation
 
 from ..decorators.uri_parsing import OpenAPIURIParser
-from ..utils import deep_get, deep_merge, is_null, is_nullable, make_type
+from ..utils import deep_get, deep_merge, is_null, is_nullable
 
 logger = logging.getLogger("connexion.operations.openapi3")
 
@@ -18,7 +18,8 @@ class OpenAPIOperation(AbstractOperation):
     def __init__(self, api, method, path, operation, resolver, path_parameters=None,
                  app_security=None, components=None, validate_responses=False,
                  strict_validation=False, randomize_endpoint=None, validator_map=None,
-                 pythonic_params=False, uri_parser_class=None, pass_context_arg_name=None):
+                 format_converters=None, pythonic_params=False, uri_parser_class=None,
+                 pass_context_arg_name=None):
         """
         This class uses the OperationID identify the module and function that will handle the operation
 
@@ -51,6 +52,8 @@ class OpenAPIOperation(AbstractOperation):
         :type randomize_endpoint: integer
         :param validator_map: Custom validators for the types "parameter", "body" and "response".
         :type validator_map: dict
+        :param format_converters: Custom value converters based on the schema format of properties.
+        :type format_converters: dict
         :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended
         to any shadowed built-ins
         :type pythonic_params: bool
@@ -86,7 +89,8 @@ class OpenAPIOperation(AbstractOperation):
             validator_map=validator_map,
             pythonic_params=pythonic_params,
             uri_parser_class=uri_parser_class,
-            pass_context_arg_name=pass_context_arg_name
+            pass_context_arg_name=pass_context_arg_name,
+            format_converters=format_converters
         )
 
         self._definitions_map = {
@@ -344,17 +348,19 @@ class OpenAPIOperation(AbstractOperation):
             return None
 
         if query_schema["type"] == "array":
-            return [make_type(part, query_schema["items"]["type"]) for part in value]
+            return [self.convert_type(part, query_schema["items"]["type"], query_schema["items"].get("format")) for part in value]
         elif query_schema["type"] == "object" and 'properties' in query_schema:
             return_dict = {}
             for prop_key in query_schema['properties'].keys():
                 prop_value = value.get(prop_key, None)
                 if prop_value is not None:  # False is a valid value for boolean values
                     try:
-                        return_dict[prop_key] = make_type(value[prop_key],
-                                                          query_schema['properties'][prop_key]['type'])
+                        prop = query_schema['properties'][prop_key]
+                        return_dict[prop_key] = self.convert_type(value[prop_key],
+                                                          prop['type'],
+                                                          prop.get("format"))
                     except (KeyError, TypeError):
                         return value
             return return_dict
         else:
-            return make_type(value, query_schema["type"])
+            return self.convert_type(value, query_schema["type"], query_schema.get("format"))

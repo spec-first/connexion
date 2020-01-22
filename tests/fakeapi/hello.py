@@ -210,8 +210,8 @@ def schema_format():
     return ''
 
 
-def test_parameter_validation():
-    return ''
+def test_parameter_validation(date=None):
+    return type(date).__name__ if date else ''
 
 
 def test_required_query_param():
@@ -538,6 +538,14 @@ def post_user(body):
     body['user_id'] = 8
     body.pop('password', None)
     return body
+
+
+def test_custom_format_converter(body):
+    creation_day = body.get('creation_day')
+    if creation_day:
+        body['creation_day_type'] = type(creation_day).__name__
+    return body
+
 
 def post_multipart_form(body):
     x = body['x']

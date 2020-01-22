@@ -3,6 +3,10 @@ from __future__ import unicode_literals
 
 import json
 from io import BytesIO
+from datetime import datetime
+import pytest
+
+from conftest import build_app_from_fixture, SPECS
 
 
 def test_parameter_validation(simple_app):
@@ -445,3 +449,46 @@ def test_get_unicode_request(simple_app):
     resp = app_client.get('/v1.0/get_unicode_request?price=%C2%A319.99')  # £19.99
     assert resp.status_code == 200
     assert json.loads(resp.data.decode('utf-8'))['price'] == '£19.99'
+
+
+def simple_app_with_custom_format_converters(schema_file):
+
+    def date_converter(_type, _format, value):
+        assert _type == 'string'
+        assert _format == 'date'
+        return datetime.strptime('2011-01-21', '%Y-%m-%d').date()
+
+    return build_app_from_fixture('simple', schema_file,
+                                  validate_responses=True,
+                                  format_converters={
+                                      'string': {
+                                          'date': date_converter
+                                      }
+                                  })
+
+
+@pytest.mark.parametrize("spec", SPECS)
+def test_custom_format_converters_query_parameters(spec):
+    app_client = simple_app_with_custom_format_converters(spec).app.test_client(spec)
+    url = '/v1.0/test_parameter_validation'
+
+    resp = app_client.get(url, query_string={'date': '2015-08-26'})  # type: flask.Response
+    assert resp.status_code == 200
+    assert json.loads(resp.data.decode('utf-8', 'replace')) == 'date'
+
+
+@pytest.mark.parametrize("spec", SPECS)
+def test_custom_format_converters_body(spec):
+    app_client = simple_app_with_custom_format_converters(spec).app.test_client()
+
+    res = app_client.post('/v1.0/test-custom-format-converter',
+                          data=json.dumps({'creation_day': '2020-01-01'}),
+                          content_type='application/json') # type: flask.Response
+
+    assert res.status_code == 200
+    resp_dict = json.loads(res.data.decode())
+    if spec == "openapi.yaml":
+        assert resp_dict.get('creation_day_type') == 'date'
+    else:
+        # Not implemented for swagger
+        assert resp_dict.get('creation_day_type') == 'str'

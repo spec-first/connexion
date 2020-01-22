@@ -20,6 +20,9 @@ definitions:
       password:
         type: string
         x-writeOnly: true
+      creation_day:
+        type: string
+        format: date
 
 paths:
   /minlength:

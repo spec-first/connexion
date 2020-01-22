@@ -40,6 +40,7 @@ def make_type(value, _type):
     return type_func(value)
 
 
+
 def deep_merge(a, b):
     """ merges b into a
         in case of conflict the value from b is used

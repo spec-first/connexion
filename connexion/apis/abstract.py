@@ -37,7 +37,8 @@ class AbstractAPI(metaclass=AbstractAPIMeta):
     def __init__(self, specification, base_path=None, arguments=None,
                  validate_responses=False, strict_validation=False, resolver=None,
                  auth_all_paths=False, debug=False, resolver_error_handler=None,
-                 validator_map=None, pythonic_params=False, pass_context_arg_name=None, options=None):
+                 validator_map=None, format_converters=None,
+                 pythonic_params=False, pass_context_arg_name=None, options=None):
         """
         :type specification: pathlib.Path | dict
         :type base_path: str | None
@@ -48,6 +49,8 @@ class AbstractAPI(metaclass=AbstractAPIMeta):
         :type debug: bool
         :param validator_map: Custom validators for the types "parameter", "body" and "response".
         :type validator_map: dict
+        :param format_converters: Custom value converters based on the schema format of properties.
+        :type format_converters: dict
         :param resolver: Callable that maps operationID to a function
         :param resolver_error_handler: If given, a callable that generates an
             Operation used for handling ResolveErrors
@@ -63,6 +66,7 @@ class AbstractAPI(metaclass=AbstractAPIMeta):
         """
         self.debug = debug
         self.validator_map = validator_map
+        self.format_converters = format_converters
         self.resolver_error_handler = resolver_error_handler
 
         logger.debug('Loading specification: %s', specification,
@@ -167,6 +171,7 @@ class AbstractAPI(metaclass=AbstractAPIMeta):
             self.resolver,
             validate_responses=self.validate_responses,
             validator_map=self.validator_map,
+            format_converters=self.format_converters,
             strict_validation=self.strict_validation,
             pythonic_params=self.pythonic_params,
             uri_parser_class=self.options.uri_parser_class,

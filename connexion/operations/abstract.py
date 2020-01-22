@@ -8,7 +8,7 @@ from ..decorators.parameter import parameter_to_arg
 from ..decorators.produces import BaseSerializer, Produces
 from ..decorators.response import ResponseValidator
 from ..decorators.validation import ParameterValidator, RequestBodyValidator
-from ..utils import all_json, is_nullable
+from ..utils import all_json, is_nullable, make_type
 
 logger = logging.getLogger('connexion.operations.abstract')
 
@@ -43,8 +43,8 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
                  app_security=None, security_schemes=None,
                  validate_responses=False, strict_validation=False,
                  randomize_endpoint=None, validator_map=None,
-                 pythonic_params=False, uri_parser_class=None,
-                 pass_context_arg_name=None):
+                 format_converters=None, pythonic_params=False,
+                 uri_parser_class=None, pass_context_arg_name=None):
         """
         :param api: api that this operation is attached to
         :type api: apis.AbstractAPI
@@ -69,6 +69,8 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
         :type randomize_endpoint: integer
         :param validator_map: Custom validators for the types "parameter", "body" and "response".
         :type validator_map: dict
+        :param format_converters: Custom value converters based on the schema format of properties.
+        :type format_converters: dict
         :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended
         to any shadowed built-ins
         :type pythonic_params: bool
@@ -100,6 +102,7 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
 
         self._validator_map = dict(VALIDATOR_MAP)
         self._validator_map.update(validator_map or {})
+        self._format_converters = format_converters or {}
 
     @property
     def method(self):
@@ -128,6 +131,14 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
         Validators to use for parameter, body, and response validation
         """
         return self._validator_map
+
+    @property
+    def format_converters(self):
+        """
+        Converters to use to convert input type based on the schema format
+        attribute.
+        """
+        return self._format_converters
 
     @property
     def operation_id(self):
@@ -434,6 +445,26 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
         """
         ResponseValidator = self.validator_map['response']
         return ResponseValidator(self, self.get_mimetype())
+
+    def convert_type(self, value, _type, _format=None):
+        """
+        Convert the input value to the corresponding python type.
+
+        :param value: The raw input value from the HTTP request.
+        :param _type: The type of the property as defined in the schema.
+        :param _format: The optional format of the property as defined in the schema.
+        :return: The input value converted to the python type.
+        """
+        typed_value = make_type(value, _type)
+        type_converters = self.format_converters.get(_type)
+        if not type_converters:
+            return typed_value
+
+        format_converter = type_converters.get(_format)
+        if not format_converter:
+            return typed_value
+
+        return format_converter(_type, _format, value)
 
     def json_loads(self, data):
         """

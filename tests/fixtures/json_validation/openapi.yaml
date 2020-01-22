@@ -24,6 +24,9 @@ components:
         password:
           type: string
           writeOnly: true
+        creation_day:
+          type: string
+          format: date
     X:
       type: object
       properties:

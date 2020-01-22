@@ -86,7 +86,7 @@ class AbstractApp(metaclass=abc.ABCMeta):
                 auth_all_paths=None, validate_responses=False,
                 strict_validation=False, resolver=None, resolver_error=None,
                 pythonic_params=False, pass_context_arg_name=None, options=None,
-                validator_map=None):
+                validator_map=None, format_converters=None):
         """
         Adds an API to the application based on a swagger file or API dict
 
@@ -115,6 +115,8 @@ class AbstractApp(metaclass=abc.ABCMeta):
         :type pass_context_arg_name: str | None
         :param validator_map: map of validators
         :type validator_map: dict
+        :param format_converters: Custom value converters based on the schema format of properties.
+        :type format_converters: dict
         :rtype: AbstractAPI
         """
         # Turn the resolver_error code into a handler object
@@ -148,6 +150,7 @@ class AbstractApp(metaclass=abc.ABCMeta):
                            auth_all_paths=auth_all_paths,
                            debug=self.debug,
                            validator_map=validator_map,
+                           format_converters=format_converters,
                            pythonic_params=pythonic_params,
                            pass_context_arg_name=pass_context_arg_name,
                            options=api_options.as_dict())

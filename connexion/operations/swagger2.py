@@ -5,7 +5,7 @@ from connexion.operations.abstract import AbstractOperation
 
 from ..decorators.uri_parsing import Swagger2URIParser
 from ..exceptions import InvalidSpecification
-from ..utils import deep_get, is_null, is_nullable, make_type
+from ..utils import deep_get, is_null, is_nullable
 
 logger = logging.getLogger("connexion.operations.swagger2")
 
@@ -26,8 +26,8 @@ class Swagger2Operation(AbstractOperation):
                  path_parameters=None, app_security=None, security_definitions=None,
                  definitions=None, parameter_definitions=None,
                  response_definitions=None, validate_responses=False, strict_validation=False,
-                 randomize_endpoint=None, validator_map=None, pythonic_params=False,
-                 uri_parser_class=None, pass_context_arg_name=None):
+                 randomize_endpoint=None, validator_map=None, format_converters=None,
+                 pythonic_params=False, uri_parser_class=None, pass_context_arg_name=None):
         """
         :param api: api that this operation is attached to
         :type api: apis.AbstractAPI
@@ -65,6 +65,8 @@ class Swagger2Operation(AbstractOperation):
         :type randomize_endpoint: integer
         :param validator_map: Custom validators for the types "parameter", "body" and "response".
         :type validator_map: dict
+        :param format_converters: Custom value converters based on the schema format of properties.
+        :type format_converters: dict
         :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended
         to any shadowed built-ins
         :type pythonic_params: bool
@@ -93,7 +95,8 @@ class Swagger2Operation(AbstractOperation):
             validator_map=validator_map,
             pythonic_params=pythonic_params,
             uri_parser_class=uri_parser_class,
-            pass_context_arg_name=pass_context_arg_name
+            pass_context_arg_name=pass_context_arg_name,
+            format_converters=format_converters,
         )
 
         self._produces = operation.get('produces', app_produces)
@@ -280,6 +283,6 @@ class Swagger2Operation(AbstractOperation):
         query_schema = query_defn
 
         if query_schema["type"] == "array":
-            return [make_type(part, query_defn["items"]["type"]) for part in value]
+            return [self.convert_type(part, query_defn["items"]["type"], query_defn["items"].get("format")) for part in value]
         else:
-            return make_type(value, query_defn["type"])
+            return self.convert_type(value, query_defn["type"], query_defn.get("format"))

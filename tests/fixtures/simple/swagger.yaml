@@ -182,6 +182,19 @@ paths:
         200:
           description: OK
 
+  /test-custom-format-converter:
+    post:
+      summary: Test that body parameters can be converted based on the format
+      operationId: fakeapi.hello.test_custom_format_converter
+      parameters:
+      - name: body
+        in: body
+        schema:
+          $ref: '#/definitions/with_date_property'
+      responses:
+        '200':
+          description: OK
+
   /test-default-integer-body:
     post:
       summary: Test if default integer body param is passed to handler.
@@ -1006,6 +1019,12 @@ definitions:
         description: Docker image version to deploy
     required:
       - image_version
+  with_date_property:
+    type: object
+    properties:
+      creation_day:
+        type: string
+        format: date
 
 securityDefinitions:
     api_key:
