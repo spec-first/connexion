@@ -142,7 +142,7 @@ def test_empty(simple_app):
 def test_exploded_deep_object_param_endpoint_openapi_simple(simple_openapi_app):
     app_client = simple_openapi_app.app.test_client()
 
-    response = app_client.get('/v1.0/exploded-deep-object-param?id[foo]=bar&id[foofoo]=barbar')  # type: flask.Response
+    response = app_client.get('/v1.0/exploded-deep-object-param?id[foo]=bar')  # type: flask.Response
     assert response.status_code == 200
     response_data = json.loads(response.data.decode('utf-8', 'replace'))
     assert response_data == {'foo': 'bar', 'foo4': 'blubb'}
@@ -164,6 +164,13 @@ def test_exploded_deep_object_param_endpoint_openapi_additional_properties(simpl
     assert response.status_code == 200
     response_data = json.loads(response.data.decode('utf-8', 'replace'))
     assert response_data == {'foo': 'bar', 'fooint': '2'}
+
+
+def test_exploded_deep_object_param_endpoint_openapi_additional_properties_false(simple_openapi_app):
+    app_client = simple_openapi_app.app.test_client()
+
+    response = app_client.get('/v1.0/exploded-deep-object-param?id[foo]=bar&id[foofoo]=barbar')  # type: flask.Response
+    assert response.status_code == 400
 
 
 def test_exploded_deep_object_param_endpoint_openapi_with_dots(simple_openapi_app):
@@ -218,6 +225,17 @@ def test_empty_object_body(simple_app):
     assert resp.status_code == 200
     response = json.loads(resp.data.decode('utf-8', 'replace'))
     assert response['stack'] == {}
+
+
+def test_nested_additional_properties(simple_openapi_app):
+    app_client = simple_openapi_app.app.test_client()
+    resp = app_client.post(
+        '/v1.0/test-nested-additional-properties',
+        data=json.dumps({"nested": {"object": True}}),
+        headers={'Content-Type': 'application/json'})
+    assert resp.status_code == 200
+    response = json.loads(resp.data.decode('utf-8', 'replace'))
+    assert response == {"nested": {"object": True}}
 
 
 def test_custom_encoder(simple_app):

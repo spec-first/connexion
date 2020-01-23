@@ -163,6 +163,7 @@ paths:
           explode: true
           schema:
             type: object
+            additionalProperties: false
             properties:
               foo:
                 type: string
@@ -277,6 +278,24 @@ paths:
               $ref: '#/components/schemas/new_stack'
               default:
                 image_version: default_image
+  /test-nested-additional-properties:
+    post:
+      summary: Test if nested additionalProperties are cast
+      operationId: fakeapi.hello.test_nested_additional_properties
+      responses:
+        '200':
+          description: OK
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nested:
+                  type: object
+                  properties: {}
+                  additionalProperties:
+                    type: boolean
   /test-default-integer-body:
     post:
       summary: Test if default integer body param is passed to handler.
