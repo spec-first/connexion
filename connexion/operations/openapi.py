@@ -256,8 +256,8 @@ class OpenAPIOperation(AbstractOperation):
                       in self.body_schema.get("properties", {}).items()}
 
         if self.body_schema.get("type") == "object":
-            default_body = self._build_default_obj(self.body_schema)
-            body = deep_merge(default_body, body)
+            default_body = self._get_default_obj(self.body_schema)
+            body = deep_merge(default_body, (body or {}))
         else:
             if body is None:
                 body = deepcopy(self.body_schema.get('default', {}))
@@ -292,6 +292,13 @@ class OpenAPIOperation(AbstractOperation):
 
         return res
 
+    def _get_default_obj(self, schema):
+        try:
+            return deepcopy(schema["default"])
+        except KeyError:
+            _properties = schema.get("properties", {})
+            return self._build_default_obj_recursive(_properties, {})
+
     def _build_default_obj_recursive(self, _properties, res):
         """ takes disparate and nested default keys, and builds up a default object
         """
@@ -302,13 +309,6 @@ class OpenAPIOperation(AbstractOperation):
                 res.setdefault(key, {})
                 res[key] = self._build_default_obj_recursive(prop['properties'], res[key])
         return res
-
-    def _get_default_obj(self, schema):
-        try:
-            return deepcopy(schema["default"])
-        except KeyError:
-            _properties = schema.get("properties", {})
-            return self._build_default_obj_recursive(_properties, {})
 
     def _get_query_defaults(self, query_defns):
         defaults = {}
@@ -327,9 +327,7 @@ class OpenAPIOperation(AbstractOperation):
                        for p in self.parameters
                        if p["in"] == "query"}
         default_query_params = self._get_query_defaults(query_defns)
-
-        query_arguments = deepcopy(default_query_params)
-        query_arguments = deep_merge(query_arguments, query)
+        query_arguments = deep_merge(default_query_params, query)
         return self._query_args_helper(query_defns, query_arguments,
                                        arguments, has_kwargs, sanitize)
 

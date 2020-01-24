@@ -928,8 +928,9 @@ paths:
           multipart/form-data:
             schema:
               type: object
+              additionalProperties: false
               properties:
-                'form$':
+                '$form':
                   description: Just a testing parameter in the form data
                   type: string
   /body-sanitization:

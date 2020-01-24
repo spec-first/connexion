@@ -364,18 +364,18 @@ def test_args_kwargs(simple_app):
     assert json.loads(resp.data.decode('utf-8', 'replace')) == {'foo': 'a'}
 
 
-def test_param_sanitization(simple_app):
-    app_client = simple_app.app.test_client()
+def test_param_sanitization(strict_app):
+    app_client = strict_app.app.test_client()
     resp = app_client.post('/v1.0/param-sanitization')
     assert resp.status_code == 200
-    assert json.loads(resp.data.decode('utf-8', 'replace')) == {}
+    assert json.loads(resp.data.decode('utf-8', 'replace')) == {'body': None, 'query': None}
 
     resp = app_client.post('/v1.0/param-sanitization?$query=queryString',
             data={'$form': 'formString'})
     assert resp.status_code == 200
     assert json.loads(resp.data.decode('utf-8', 'replace')) == {
             'query': 'queryString',
-            'form': 'formString',
+            'body': 'formString',
             }
 
     body = { 'body1': 'bodyString', 'body2': 'otherString' }
@@ -384,6 +384,7 @@ def test_param_sanitization(simple_app):
         data=json.dumps(body),
         headers={'Content-Type': 'application/json'})
     assert resp.status_code == 200
+    print(resp.json)
     assert json.loads(resp.data.decode('utf-8', 'replace')) == body
 
     body = { 'body1': 'bodyString', 'body2': 12, 'body3': {'a':'otherString' }}

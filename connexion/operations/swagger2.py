@@ -240,13 +240,10 @@ class Swagger2Operation(AbstractOperation):
             body = deepcopy(body_parameters[0].get('schema', {}).get('default'))
         body_name = sanitize(body_parameters[0].get('name'))
 
-        form_defns = {sanitize(p['name']): p
+        form_defns = {p['name']: p
                       for p in self.parameters
                       if p['in'] == 'formData'}
 
-        default_form_params = {k: v['default']
-                               for k, v in form_defns.items()
-                               if 'default' in v}
 
         # Add body parameters
         if body_name:
@@ -257,11 +254,16 @@ class Swagger2Operation(AbstractOperation):
                 kwargs[body_name] = body
 
         # Add formData parameters
+        default_form_params = {sanitize(k): v['default']
+                               for k, v in form_defns.items()
+                               if 'default' in v}
         form_arguments = deepcopy(default_form_params)
         if form_defns and body:
             form_arguments.update(body)
+
         for key, value in form_arguments.items():
-            if not has_kwargs and key not in arguments:
+            sanitized_key = sanitize(key)
+            if not has_kwargs and sanitized_key not in arguments:
                 logger.debug("FormData parameter '%s' not in function arguments", key)
             else:
                 logger.debug("FormData parameter '%s' in function arguments", key)
@@ -270,7 +272,7 @@ class Swagger2Operation(AbstractOperation):
                 except KeyError:  # pragma: no cover
                     logger.error("Function argument '{}' not defined in specification".format(key))
                 else:
-                    kwargs[key] = self._get_val_from_param(value, form_defn)
+                    kwargs[sanitized_key] = self._get_val_from_param(value, form_defn)
         return kwargs
 
     def _get_val_from_param(self, value, query_defn):

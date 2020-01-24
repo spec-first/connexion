@@ -462,21 +462,18 @@ def test_args_kwargs(*args, **kwargs):
 
 
 def test_param_sanitization(query=None, form=None):
-    result = {}
-    if query:
-        result['query'] = query
-    if form:
-        result['form'] = form
-    return result
+    return {
+        "query": query,
+        "body": form
+    }
 
 
 def test_param_sanitization3(query=None, body=None):
-    result = {}
-    if query:
-        result['query'] = query
-    if body:
-        result['form'] = body["form"]
-    return result
+    body = body.get("$form")
+    return {
+        "query": query,
+        "body": body
+    }
 
 
 def test_body_sanitization(body=None):

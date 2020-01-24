@@ -1,4 +1,3 @@
-import collections
 import copy
 import functools
 import logging
@@ -230,8 +229,9 @@ class ParameterValidator(object):
         :param api: api that the validator is attached to
         :param strict_validation: Flag indicating if parameters not in spec are allowed
         """
-        self.parameters = collections.defaultdict(list)
+        self.parameters = {}
         for p in parameters:
+            self.parameters.setdefault(p['in'], [])
             self.parameters[p['in']].append(p)
 
         self.api = api
@@ -295,7 +295,7 @@ class ParameterValidator(object):
         try:
             spec_params = [x['name'] for x in self.parameters['formData']]
         except KeyError:
-            # OAS 3
+            # OAS 3, rely on additionalProperties validation
             return set()
         return validate_parameter_list(request_params, spec_params)
 
