@@ -71,15 +71,11 @@ def coerce_type(param, value, parameter_type, parameter_name=None):
         if param_schema.get('properties'):
             def cast_leaves(d, schema):
                 if type(d) is not dict:
-                    try:
-                        return make_type(d, schema['type'])
-                    except (ValueError, TypeError):
-                        return d
+                    return coerce_type(schema, d, parameter_type)
                 for k, v in d.items():
                     if k in schema['properties']:
                         d[k] = cast_leaves(v, schema['properties'][k])
                 return d
-
             return cast_leaves(value, param_schema)
         return value
     else:
@@ -157,7 +153,7 @@ class RequestBodyValidator(object):
                 if data is not None or not self.has_default:
                     self.validate_schema(data, request.url)
             elif self.consumes[0] in FORM_CONTENT_TYPES:
-                data = dict(request.form.items()) or (request.body if len(request.body) > 0 else {})
+                data = dict(request.form.items())
                 data.update(dict.fromkeys(request.files, ''))  # validator expects string..
                 logger.debug('%s validating schema...', request.url)
 
@@ -167,17 +163,11 @@ class RequestBodyValidator(object):
                         raise ExtraParameterProblem(formdata_errors, [])
 
                 if data:
-                    props = self.schema.get("properties", {})
-                    errs = []
-                    for k, param_defn in props.items():
-                        if k in data:
-                            try:
-                                data[k] = coerce_type(param_defn, data[k], 'requestBody', k)
-                            except TypeValidationError as e:
-                                errs += [str(e)]
-                                print(errs)
-                    if errs:
-                        raise BadRequestProblem(detail=errs)
+                    try:
+                        data = coerce_type(self.schema, data, 'requestBody')
+                        request.form = data
+                    except TypeValidationError as e:
+                        raise BadRequestProblem(detail=[str(e)])
 
                 self.validate_schema(data, request.url)
 
