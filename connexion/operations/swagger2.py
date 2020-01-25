@@ -279,9 +279,4 @@ class Swagger2Operation(AbstractOperation):
         if is_nullable(query_defn) and is_null(value):
             return None
 
-        query_schema = query_defn
-
-        if query_schema["type"] == "array":
-            return [make_type(part, query_defn["items"]["type"]) for part in value]
-        else:
-            return make_type(value, query_defn["type"])
+        return value

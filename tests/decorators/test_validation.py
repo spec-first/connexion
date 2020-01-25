@@ -5,29 +5,31 @@ from mock import MagicMock
 from connexion.decorators.validation import ParameterValidator
 from connexion.json_schema import (Draft4RequestValidator,
                                    Draft4ResponseValidator)
+from connexion.exceptions import BadRequestProblem
 
 
 def test_get_valid_parameter():
     result = ParameterValidator.validate_parameter('formdata', 20, {'type': 'number', 'name': 'foobar'})
-    assert result is None
+    assert result == 20.0
 
 
 def test_get_valid_parameter_with_required_attr():
     param = {'type': 'number', 'required': True, 'name': 'foobar'}
     result = ParameterValidator.validate_parameter('formdata', 20, param)
-    assert result is None
+    assert result == 20.0
 
 
 def test_get_valid_path_parameter():
     param = {'required': True, 'schema': {'type': 'number'}, 'name': 'foobar'}
     result = ParameterValidator.validate_parameter('path', 20, param)
-    assert result is None
+    assert result == 20.0
 
 
 def test_get_missing_required_parameter():
     param = {'type': 'number', 'required': True, 'name': 'foo'}
-    result = ParameterValidator.validate_parameter('formdata', None, param)
-    assert result == "Missing formdata parameter 'foo'"
+    with pytest.raises(BadRequestProblem) as e:
+        ParameterValidator.validate_parameter('formdata', None, param)
+        assert e.details == "Missing formdata parameter 'foo'"
 
 
 def test_get_x_nullable_parameter():
@@ -47,40 +49,35 @@ def test_get_explodable_object_parameter():
     param = {'schema': {'type': 'object', 'additionalProperties': True},
              'required': True, 'name': 'foo', 'style': 'deepObject', 'explode': True}
     result = ParameterValidator.validate_parameter('query', {'bar': 1}, param)
-    assert result is None
+    assert result == {"bar": 1}
 
 
-def test_invalid_type(monkeypatch):
-    logger = MagicMock()
-    monkeypatch.setattr('connexion.decorators.validation.logger', logger)
-    result = ParameterValidator.validate_parameter('formdata', 20, {'type': 'string', 'name': 'foo'})
-    expected_result = """20 is not of type 'string'
+def test_invalid_type():
+    with pytest.raises(BadRequestProblem) as e:
+        result = ParameterValidator.validate_parameter('formdata', 20, {'type': 'string', 'name': 'foo'})
+        assert e.details == """20 is not of type 'string'
 
 Failed validating 'type' in schema:
     {'name': 'foo', 'type': 'string'}
 
 On instance:
     20"""
-    assert result == expected_result
-    logger.info.assert_called_once()
 
 
-def test_invalid_type_value_error(monkeypatch):
-    logger = MagicMock()
-    monkeypatch.setattr('connexion.decorators.validation.logger', logger)
+def test_invalid_type_value_error():
     value = {'test': 1, 'second': 2}
-    result = ParameterValidator.validate_parameter('formdata', value, {'type': 'boolean', 'name': 'foo'})
-    assert result == "Wrong type, expected 'boolean' for formdata parameter 'foo'"
+    with pytest.raises(BadRequestProblem) as e:
+        result = ParameterValidator.validate_parameter('formdata', value, {'type': 'boolean', 'name': 'foo'})
+        assert e.details == "Wrong type, expected 'boolean' for formdata parameter 'foo'"
 
 
-def test_enum_error(monkeypatch):
-    logger = MagicMock()
-    monkeypatch.setattr('connexion.decorators.validation.logger', logger)
+def test_enum_error():
     value = 'INVALID'
     param = {'schema': {'type': 'string', 'enum': ['valid']},
              'name': 'test_path_param'}
-    result = ParameterValidator.validate_parameter('path', value, param)
-    assert result.startswith("'INVALID' is not one of ['valid']")
+    with pytest.raises(BadRequestProblem) as e:
+        result = ParameterValidator.validate_parameter('path', value, param)
+        assert e.details == "'INVALID' is not one of ['valid']"
 
 
 def test_support_nullable_properties():

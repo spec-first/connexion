@@ -74,6 +74,8 @@ def coerce_type(param, value, parameter_type, parameter_name=None):
                 for k, v in d.items():
                     if k in schema['properties']:
                         d[k] = cast_leaves(v, schema['properties'][k])
+                    elif schema.get('additionalProperites'):
+                        d[k] = cast_leaves(v, schema['additionalProperties'])
                 return d
             return cast_leaves(value, param_schema)
         return value
@@ -241,12 +243,12 @@ class ParameterValidator(object):
     def validate_parameter(parameter_type, value, param, param_name=None):
         if value is not None:
             if is_nullable(param) and is_null(value):
-                return
+                return None
 
             try:
                 converted_value = coerce_type(param, value, parameter_type, param_name)
             except TypeValidationError as e:
-                return str(e)
+                raise BadRequestProblem(detail=str(e))
 
             param = copy.deepcopy(param)
             param = param.get('schema', param)
@@ -280,10 +282,12 @@ class ParameterValidator(object):
                     param=param
                 )
                 logger.info(debug_msg.format(**fmt_params))
-                return str(exception)
+                raise BadRequestProblem(detail=str(exception))
+
+            return converted_value
 
         elif param.get('required'):
-            return "Missing {parameter_type} parameter '{param[name]}'".format(**locals())
+            raise BadRequestProblem(detail="Missing {parameter_type} parameter '{param[name]}'".format(**locals()))
 
     def validate_query_parameter_list(self, request):
         request_params = request.query.keys()
@@ -307,27 +311,38 @@ class ParameterValidator(object):
         :rtype: str
         """
         val = request.query.get(param['name'])
-        return self.validate_parameter('query', val, param)
+        ret = self.validate_parameter('query', val, param)
+        if ret is not None:
+            request.query[param['name']] = ret
 
     def validate_path_parameter(self, param, request):
         val = request.path_params.get(param['name'].replace('-', '_'))
-        return self.validate_parameter('path', val, param)
+        ret = self.validate_parameter('path', val, param)
+        if ret is not None:
+            request.path_params[param['name']] = ret
 
     def validate_header_parameter(self, param, request):
         val = request.headers.get(param['name'])
-        return self.validate_parameter('header', val, param)
+        ret = self.validate_parameter('header', val, param)
+        if ret is not None:
+            request.headers[param['name']] = ret
 
     def validate_cookie_parameter(self, param, request):
         val = request.cookies.get(param['name'])
-        return self.validate_parameter('cookie', val, param)
+        ret = self.validate_parameter('cookie', val, param)
+        if ret is not None:
+            request.cookies[param['name']] = ret
 
     def validate_formdata_parameter(self, param_name, param, request):
         if param.get('type') == 'file' or param.get('format') == 'binary':
             val = request.files.get(param_name)
+            self.validate_parameter('formdata', val, param)
         else:
             val = request.form.get(param_name)
+            ret = self.validate_parameter('formdata', val, param)
+            if ret is not None:
+                request.form[param_name] = ret
 
-        return self.validate_parameter('formdata', val, param)
 
     def __call__(self, function):
         """
@@ -347,29 +362,19 @@ class ParameterValidator(object):
                     raise ExtraParameterProblem(formdata_errors, query_errors)
 
             for param in self.parameters.get('query', []):
-                error = self.validate_query_parameter(param, request)
-                if error:
-                    raise BadRequestProblem(detail=error)
+                self.validate_query_parameter(param, request)
 
             for param in self.parameters.get('path', []):
-                error = self.validate_path_parameter(param, request)
-                if error:
-                    raise BadRequestProblem(detail=error)
+                self.validate_path_parameter(param, request)
 
             for param in self.parameters.get('header', []):
-                error = self.validate_header_parameter(param, request)
-                if error:
-                    raise BadRequestProblem(detail=error)
+                self.validate_header_parameter(param, request)
 
             for param in self.parameters.get('cookie', []):
-                error = self.validate_cookie_parameter(param, request)
-                if error:
-                    raise BadRequestProblem(detail=error)
+                self.validate_cookie_parameter(param, request)
 
             for param in self.parameters.get('formData', []):
-                error = self.validate_formdata_parameter(param["name"], param, request)
-                if error:
-                    raise BadRequestProblem(detail=error)
+                self.validate_formdata_parameter(param["name"], param, request)
 
             return function(request)
 

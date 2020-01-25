@@ -384,7 +384,6 @@ def test_param_sanitization(strict_app):
         data=json.dumps(body),
         headers={'Content-Type': 'application/json'})
     assert resp.status_code == 200
-    print(resp.json)
     assert json.loads(resp.data.decode('utf-8', 'replace')) == body
 
     body = { 'body1': 'bodyString', 'body2': 12, 'body3': {'a':'otherString' }}

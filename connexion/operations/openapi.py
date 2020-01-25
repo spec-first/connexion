@@ -281,7 +281,7 @@ class OpenAPIOperation(AbstractOperation):
         for key, value in body_arg.items():
             try:
                 prop_defn = body_props[key]
-                res[key] = self._get_val_from_param(value, prop_defn)
+                res[key] = value
             except KeyError:  # pragma: no cover
                 if not additional_props:
                     logger.error("Body property '{}' not defined in body schema".format(key))
@@ -337,7 +337,4 @@ class OpenAPIOperation(AbstractOperation):
         if is_nullable(query_schema) and is_null(value):
             return None
 
-        if query_schema["type"] == "array":
-            return [make_type(part, query_schema["items"]["type"]) for part in value]
-        else:
-            return make_type(value, query_schema["type"])
+        return value
