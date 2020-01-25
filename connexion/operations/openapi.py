@@ -264,34 +264,6 @@ class OpenAPIOperation(AbstractOperation):
 
         return {x_body_name: body}
 
-    def _get_typed_body_values(self, body_arg, body_props, additional_props):
-        """
-        Return a copy of the provided body_arg dictionary
-        whose values will have the appropriate types
-        as defined in the provided schemas.
-
-        :type body_arg: type dict
-        :type body_props: dict
-        :type additional_props: dict|bool
-        :rtype: dict
-        """
-        additional_props_defn = {"schema": additional_props} if isinstance(additional_props, dict) else None
-        res = {}
-
-        for key, value in body_arg.items():
-            try:
-                prop_defn = body_props[key]
-                res[key] = value
-            except KeyError:  # pragma: no cover
-                if not additional_props:
-                    logger.error("Body property '{}' not defined in body schema".format(key))
-                    continue
-                if additional_props_defn is not None:
-                    value = self._get_val_from_param(value, additional_props_defn)
-                res[key] = value
-
-        return res
-
     def _get_default_obj(self, schema):
         try:
             return deepcopy(schema["default"])
