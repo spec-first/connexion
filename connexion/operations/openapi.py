@@ -1,5 +1,5 @@
 import logging
-from copy import deepcopy
+from copy import copy, deepcopy
 
 from connexion.operations.abstract import AbstractOperation
 
@@ -303,23 +303,30 @@ class OpenAPIOperation(AbstractOperation):
 
         return res
 
-    def _build_default_obj(self, _properties, res={}):
+    def _build_default_obj_recursive(self, _properties, res):
         """ takes disparate and nested default keys, and builds up a default object
         """
         for key, prop in _properties.items():
             if 'default' in prop and key not in res:
-                res[key] = prop['default']
+                res[key] = copy(prop['default'])
             elif prop.get('type') == 'object' and 'properties' in prop:
                 res.setdefault(key, {})
-                res[key] = self._build_default_obj(prop['properties'], res[key])
+                res[key] = self._build_default_obj_recursive(prop['properties'], res[key])
         return res
+
+    def _get_default_obj(self, schema):
+        try:
+            return deepcopy(schema["default"])
+        except KeyError:
+            _properties = schema.get("properties", {})
+            return self._build_default_obj_recursive(_properties, {})
 
     def _get_query_defaults(self, query_defns):
         defaults = {}
         for k, v in query_defns.items():
             try:
                 if v["schema"]["type"] == "object":
-                    defaults[k] = self._build_default_obj(v["schema"]["properties"])
+                    defaults[k] = self._get_default_obj(v["schema"])
                 else:
                     defaults[k] = v["schema"]["default"]
             except KeyError:
@@ -345,16 +352,5 @@ class OpenAPIOperation(AbstractOperation):
 
         if query_schema["type"] == "array":
             return [make_type(part, query_schema["items"]["type"]) for part in value]
-        elif query_schema["type"] == "object" and 'properties' in query_schema:
-            return_dict = {}
-            for prop_key in query_schema['properties'].keys():
-                prop_value = value.get(prop_key, None)
-                if prop_value is not None:  # False is a valid value for boolean values
-                    try:
-                        return_dict[prop_key] = make_type(value[prop_key],
-                                                          query_schema['properties'][prop_key]['type'])
-                    except (KeyError, TypeError):
-                        return value
-            return return_dict
         else:
             return make_type(value, query_schema["type"])

@@ -281,6 +281,8 @@ def test_default_param(name):
 def test_default_object_body(stack):
     return {"stack": stack}
 
+def test_nested_additional_properties(body):
+    return body
 
 def test_default_integer_body(stack_version):
     return stack_version
