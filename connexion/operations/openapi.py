@@ -182,6 +182,7 @@ class OpenAPIOperation(AbstractOperation):
         schema_example_path = [
             str(status_code), 'content', content_type, 'schema', 'example'
         ]
+        schema_path = [str(status_code), 'content', content_type, 'schema']
 
         try:
             status_code = int(status_code)
@@ -203,7 +204,30 @@ class OpenAPIOperation(AbstractOperation):
             return (deep_get(self._responses, schema_example_path),
                     status_code)
         except KeyError:
+            pass
+
+        try:
+            return (self._nested_example(deep_get(self._responses, schema_path)),
+                    status_code)
+        except KeyError:
             return (None, status_code)
+
+    def _nested_example(self, schema):
+        try:
+            return schema["example"]
+        except KeyError:
+            pass
+        try:
+            # Recurse if schema is an object
+            return {key: self._nested_example(value)
+                    for (key, value) in schema["properties"].items()}
+        except KeyError:
+            pass
+        try:
+            # Recurse if schema is an array
+            return [self._nested_example(schema["items"])]
+        except KeyError:
+            raise
 
     def get_path_parameter_types(self):
         types = {}
