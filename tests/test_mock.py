@@ -249,6 +249,75 @@ def test_mock_resolver_example_nested_in_list_openapi():
     assert status_code == 200
     assert response == ['bar']
 
+def test_mock_resolver_no_example_nested_in_object():
+    resolver = MockResolver(mock_all=True)
+
+    responses = {
+        '200': {
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'foo': {
+                        'type': 'string',
+                    }
+                },
+            }
+        }
+    }
+
+    operation = Swagger2Operation(api=None,
+                                  method='GET',
+                                  path='endpoint',
+                                  path_parameters=[],
+                                  operation={
+                                      'responses': responses
+                                  },
+                                  app_produces=['application/json'],
+                                  app_consumes=['application/json'],
+                                  app_security=[],
+                                  security_definitions={},
+                                  definitions={},
+                                  parameter_definitions={},
+                                  resolver=resolver)
+    assert operation.operation_id == 'mock-1'
+
+    response, status_code = resolver.mock_operation(operation)
+    assert status_code == 200
+    assert response == 'No example response was defined.'
+
+def test_mock_resolver_no_example_nested_in_list_openapi():
+    resolver = MockResolver(mock_all=True)
+
+    responses = {
+        '202': {
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'array',
+                        'items': {
+                            'type': 'string',
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    operation = OpenAPIOperation(api=None,
+                                 method='GET',
+                                 path='endpoint',
+                                 path_parameters=[],
+                                 operation={
+                                     'responses': responses
+                                 },
+                                 app_security=[],
+                                 resolver=resolver)
+    assert operation.operation_id == 'mock-1'
+
+    response, status_code = resolver.mock_operation(operation)
+    assert status_code == 202
+    assert response == 'No example response was defined.'
+
 def test_mock_resolver_no_examples():
     resolver = MockResolver(mock_all=True)
 
