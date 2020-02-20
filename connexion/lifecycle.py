@@ -1,4 +1,3 @@
-
 class ConnexionRequest(object):
     def __init__(self,
                  url,
@@ -24,7 +23,9 @@ class ConnexionRequest(object):
 
     @property
     def json(self):
-        return self.json_getter()
+        if not hasattr(self, '_json'):
+            self._json = self.json_getter()
+        return self._json
 
 
 class ConnexionResponse(object):
