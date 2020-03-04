@@ -1,4 +1,5 @@
 from copy import deepcopy
+import six
 
 from jsonschema import Draft4Validator, RefResolver, _utils
 from jsonschema.exceptions import RefResolutionError, ValidationError  # noqa
@@ -99,16 +100,31 @@ def validate_readOnly(validator, ro, instance, schema):
 def validate_writeOnly(validator, wo, instance, schema):
     yield ValidationError("Property is write-only")
 
+def extend_with_set_default(validator_class):
+    validate_properties = validator_class.VALIDATORS["properties"]
 
-Draft4RequestValidator = extend(Draft4Validator, {
-                                'type': validate_type,
-                                'enum': validate_enum,
-                                'required': validate_required,
-                                'readOnly': validate_readOnly})
+    def set_defaults(validator, properties, instance, schema):
+        for property_, subschema in six.iteritems(properties):
+            if "default" in subschema:
+                instance.setdefault(property_, subschema["default"])
 
-Draft4ResponseValidator = extend(Draft4Validator, {
-                                 'type': validate_type,
-                                 'enum': validate_enum,
-                                 'required': validate_required,
-                                 'writeOnly': validate_writeOnly,
-                                 'x-writeOnly': validate_writeOnly})
+        for error in validate_properties(validator, properties, instance, schema):
+            yield error
+
+    return extend(validator_class, {"properties": set_defaults})
+
+
+Draft4RequestValidator = extend_with_set_default(extend(Draft4Validator, {
+    'type': validate_type,
+    'enum': validate_enum,
+    'required': validate_required,
+    'readOnly': validate_readOnly
+}))
+
+Draft4ResponseValidator = extend_with_set_default(extend(Draft4Validator, {
+    'type': validate_type,
+    'enum': validate_enum,
+    'required': validate_required,
+    'writeOnly': validate_writeOnly,
+    'x-writeOnly': validate_writeOnly
+}))
