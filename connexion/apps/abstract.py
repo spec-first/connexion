@@ -10,7 +10,7 @@ logger = logging.getLogger('connexion.app')
 
 class AbstractApp(metaclass=abc.ABCMeta):
     def __init__(self, import_name, api_cls, port=None, specification_dir='',
-                 host=None, server=None, server_args=dict(), arguments=None, auth_all_paths=False, debug=None,
+                 host=None, server=None, server_args=None, arguments=None, auth_all_paths=False, debug=None,
                  resolver=None, options=None, skip_error_handlers=False):
         """
         :param import_name: the name of the application package
@@ -46,7 +46,7 @@ class AbstractApp(metaclass=abc.ABCMeta):
         self.options = ConnexionOptions(options)
 
         self.server = server
-        self.server_args = server_args
+        self.server_args = dict() if server_args is None else server_args
         self.app = self.create_app()
         
 
