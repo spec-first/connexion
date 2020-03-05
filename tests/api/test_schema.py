@@ -237,3 +237,10 @@ def test_global_response_definitions(schema_app):
     app_client = schema_app.app.test_client()
     resp = app_client.get('/v1.0/define_global_response')
     assert json.loads(resp.data.decode('utf-8', 'replace')) == ['general', 'list']
+
+
+def test_defaults_insertion(schema_app):
+    app_client = schema_app.app.test_client()
+    headers = {'Content-type': 'application/json'}
+    resp = app_client.post('/v1.0/defaults_insertion', data='{"data": {}}', headers=headers)
+    assert json.loads(resp.data.decode('utf-8', 'replace')) == {'prop': 'prop_default'}

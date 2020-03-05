@@ -491,6 +491,12 @@ def test_body_sanitization_additional_properties_defined(body):
 def test_body_not_allowed_additional_properties(body):
     return body
 
+def test_defaults_insertion_openapi(body):
+    return body['data']
+
+def test_defaults_insertion_swagger(data):
+    return data['data']
+
 def post_wrong_content_type():
     return "NOT OK"
 

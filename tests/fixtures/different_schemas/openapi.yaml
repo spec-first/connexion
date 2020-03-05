@@ -264,6 +264,27 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/GeneralList'
+  /defaults_insertion:
+    post:
+      description: Should insert defaults into JSON body.
+      operationId: fakeapi.hello.test_defaults_insertion_openapi
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: ["data"]
+              properties:
+                data:
+                  type: object
+                  properties:
+                    prop:
+                      type: string
+                      default: prop_default
+      responses:
+        '200':
+          description: Data with defaults filled in by validator
 components:
   responses:
     GeneralList:
