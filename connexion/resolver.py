@@ -97,15 +97,17 @@ class RestyResolver(Resolver):
 
         :type operation: connexion.operations.AbstractOperation
         """
-        path_match = re.search(
-            r'^/?(?P<resource_name>([\w\-](?<!/))*)(?P<trailing_slash>/*)(?P<extended_path>.*)$', operation.path
-        )
+        fragments = operation.path.split('/')[1:]
+        path_match = {
+            'resource_name': '.'.join(filter(lambda fragment: not re.match(r'^{[^}]*}', fragment), fragments)),
+            'extended_path': fragments[-1] if re.match(r'^{[^}]*}', fragments[-1]) else None,
+        }
 
         def get_controller_name():
             x_router_controller = operation.router_controller
 
             name = self.default_module_name
-            resource_name = path_match.group('resource_name')
+            resource_name = path_match.get('resource_name')
 
             if x_router_controller:
                 name = x_router_controller
@@ -121,8 +123,8 @@ class RestyResolver(Resolver):
 
             is_collection_endpoint = \
                 method.lower() == 'get' \
-                and path_match.group('resource_name') \
-                and not path_match.group('extended_path')
+                and path_match.get('resource_name', None) \
+                and not path_match.get('extended_path', None)
 
             return self.collection_endpoint_name if is_collection_endpoint else method.lower()
 
