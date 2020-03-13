@@ -237,7 +237,8 @@ class AioHttpApi(AbstractAPI):
     async def _get_swagger_ui_home(self, req):
         base_path = self._base_path_for_prefix(req)
         template_variables = {
-            'openapi_spec_url': (base_path + self.options.openapi_spec_path)
+            'openapi_spec_url': (base_path + self.options.openapi_spec_path),
+            **self.options.openapi_console_ui_index_template_variables,
         }
         if self.options.openapi_console_ui_config is not None:
             template_variables['configUrl'] = 'swagger-ui-config.json'
