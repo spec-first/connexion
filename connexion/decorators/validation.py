@@ -149,7 +149,7 @@ class RequestBodyValidator(object):
                     else:
                         # the body has contents that were not parsed as JSON
                         raise UnsupportedMediaTypeProblem(
-                                       "Invalid Content-type ({content_type}), expected JSON data".format(
+                                       detail="Invalid Content-type ({content_type}), expected JSON data".format(
                                            content_type=request.headers.get("Content-Type", "")
                                        ))
 
