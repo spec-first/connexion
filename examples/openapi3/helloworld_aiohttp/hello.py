@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
-import asyncio
 
 import connexion
 from aiohttp import web
 
 
-@asyncio.coroutine
-def post_greeting(name):
+async def post_greeting(name):
     return web.Response(text='Hello {name}'.format(name=name))
 
 
