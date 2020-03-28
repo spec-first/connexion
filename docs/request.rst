@@ -144,7 +144,7 @@ api options.
 .. code-block:: python
 
    from connexion.decorators.uri_parsing import Swagger2URIParser
-   options = {'uri_parsing_class': Swagger2URIParser}
+   options = {'uri_parser_class': Swagger2URIParser}
    app = connexion.App(__name__, specification_dir='swagger/', options=options)
 
 You can implement your own URI parsing behavior by inheriting from
