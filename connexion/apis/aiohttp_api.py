@@ -89,11 +89,18 @@ class AioHttpApi(AbstractAPI):
             append_slash=True,
             redirect_class=HTTPPermanentRedirect
         )
+
+        other_args = {}
+        if kwargs['options']:
+            with suppress(KeyError):
+                other_args['client_max_size'] = kwargs['options']['client_max_size']
+
         self.subapp = web.Application(
             middlewares=[
                 problems_middleware,
                 trailing_slash_redirect
-            ]
+            ],
+            **other_args
         )
         AbstractAPI.__init__(self, *args, **kwargs)
 
