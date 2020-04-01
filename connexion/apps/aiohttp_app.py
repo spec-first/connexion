@@ -2,6 +2,7 @@ import logging
 import os.path
 import pkgutil
 import sys
+from contextlib import suppress
 
 from aiohttp import web
 
@@ -20,7 +21,10 @@ class AioHttpApp(AbstractApp):
         self._api_added = False
 
     def create_app(self):
-        return web.Application()
+        other_args = {}
+        with suppress(KeyError):
+            other_args['client_max_size'] = self.options.as_dict()['client_max_size']
+        return web.Application(**other_args)
 
     def get_root_path(self):
         mod = sys.modules.get(self.import_name)
