@@ -78,3 +78,12 @@ def test_errors(problem_app):
     problem_as_exception_body = json.loads(problem_as_exception.data.decode('utf-8', 'replace'))
     assert 'age' in problem_as_exception_body
     assert problem_as_exception_body['age'] == 30
+
+    unsupported_media_type = app_client.get('/v1.0/media_type_not_supported')
+    assert unsupported_media_type.status_code == 415
+    unsupported_media_type_body = json.loads(unsupported_media_type.data.decode('utf-8', 'replace'))
+    assert unsupported_media_type_body['type'] == 'about:blank'
+    assert unsupported_media_type_body['title'] == 'Unsupported media type'
+    assert unsupported_media_type_body['detail'] == 'Invalid Content-type (text/html), expected JSON data'
+    assert unsupported_media_type_body['status'] == 415
+    assert unsupported_media_type_body['instance'] == 'instance1'
