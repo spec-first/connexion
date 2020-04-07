@@ -417,10 +417,9 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
         """
         ParameterValidator = self.validator_map['parameter']
         RequestBodyValidator = self.validator_map['body']
-        if self.parameters:
-            yield ParameterValidator(self.parameters,
-                                     self.api,
-                                     strict_validation=self.strict_validation)
+        yield ParameterValidator(self.parameters,
+                                 self.api,
+                                 strict_validation=self.strict_validation)
         if self.body_schema:
             yield RequestBodyValidator(self.body_schema, self.consumes, self.api,
                                        is_nullable(self.body_definition),
