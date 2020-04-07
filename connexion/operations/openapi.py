@@ -233,7 +233,11 @@ class OpenAPIOperation(AbstractOperation):
         types = {}
         path_parameters = (p for p in self.parameters if p["in"] == "path")
         for path_defn in path_parameters:
-            path_schema = path_defn["schema"]
+            try:
+                path_schema = path_defn["schema"]
+            except:
+                content_type = list(path_defn["content"].keys())[0]
+                path_schema = path_defn["content"][content_type]
             if path_schema.get('type') == 'string' and path_schema.get('format') == 'path':
                 # path is special case for type 'string'
                 path_type = 'path'
