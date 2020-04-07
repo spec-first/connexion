@@ -237,7 +237,7 @@ class OpenAPIOperation(AbstractOperation):
                 path_schema = path_defn["schema"]
             except:
                 content_type = list(path_defn["content"].keys())[0]
-                path_schema = path_defn["content"][content_type]
+                path_schema = path_defn["content"][content_type]["schema"]
             if path_schema.get('type') == 'string' and path_schema.get('format') == 'path':
                 # path is special case for type 'string'
                 path_type = 'path'
@@ -355,6 +355,10 @@ class OpenAPIOperation(AbstractOperation):
             try:
                 if v["schema"]["type"] == "object":
                     defaults[k] = self._get_default_obj(v["schema"])
+                elif 'content' in list(v.keys()):
+                    content_type = list(v["content"].keys())[0]
+                    if v["content"][content_type]["schema"]["type"] == "object":
+                        defaults[k] = self._get_default_obj(v["schema"])
                 else:
                     defaults[k] = v["schema"]["default"]
             except KeyError:
@@ -372,8 +376,12 @@ class OpenAPIOperation(AbstractOperation):
         return self._query_args_helper(query_defns, query_arguments,
                                        arguments, has_kwargs, sanitize)
 
-    def _get_val_from_param(self, value, query_defn):
-        query_schema = query_defn["schema"]
+    def _get_val_from_param(self, value, query_defn):        
+        try:
+            query_schema = query_defn["schema"]
+        except:
+            content_type = list(query_defn["content"].keys())[0]
+            query_schema = query_defn["content"][content_type]["schema"]
 
         if is_nullable(query_schema) and is_null(value):
             return None
