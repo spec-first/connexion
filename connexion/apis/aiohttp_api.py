@@ -322,7 +322,8 @@ class AioHttpApi(AbstractAPI):
                                 body=body,
                                 json_getter=lambda: cls.jsonifier.loads(body),
                                 files={},
-                                context=req)
+                                context=req,
+                                cookies=req.cookies)
 
     @classmethod
     async def get_response(cls, response, mimetype=None, request=None):

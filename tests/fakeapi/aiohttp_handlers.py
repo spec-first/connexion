@@ -105,3 +105,7 @@ async def get_date():
 
 async def get_uuid():
     return ConnexionResponse(body={'value': uuid.UUID(hex='e7ff66d0-3ec2-4c4e-bed0-6e4723c24c51')})
+
+
+async def test_cookie_param(request):
+    return {"cookie_value": request.cookies["test_cookie"]}

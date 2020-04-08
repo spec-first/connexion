@@ -244,7 +244,8 @@ class FlaskApi(AbstractAPI):
             json_getter=lambda: flask_request.get_json(silent=True),
             files=flask_request.files,
             path_params=params,
-            context=context_dict
+            context=context_dict,
+            cookies=flask_request.cookies,
         )
         logger.debug('Getting data and status code',
                      extra={
