@@ -138,11 +138,7 @@ class RequestBodyValidator(object):
 
                 empty_body = not(request.body or request.form or request.files)
                 if data is None and not empty_body and not self.is_null_value_valid:
-                    try:
-                        ctype_is_json = is_json_mimetype(request.headers.get("Content-Type", ""))
-                    except ValueError:
-                        ctype_is_json = False
-
+                    ctype_is_json = is_json_mimetype(request.headers.get("Content-Type", ""))
                     if ctype_is_json:
                         # Content-Type is json but actual body was not parsed
                         raise BadRequestProblem(detail="Request body is not valid JSON")

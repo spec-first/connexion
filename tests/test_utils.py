@@ -61,3 +61,20 @@ def test_deep_get_dict():
 def test_deep_get_list():
     obj = [{'type': 'object', 'properties': {'id': {'type': 'string'}}}]
     assert utils.deep_get(obj, ['0', 'properties', 'id']) == {'type': 'string'}
+
+
+def test_is_json_mimetype():
+    assert utils.is_json_mimetype("application/json")
+    assert utils.is_json_mimetype("application/json; charset=utf-8")
+    assert utils.is_json_mimetype("application/json;charset=utf-8")
+    assert utils.is_json_mimetype("application/anything+json;charset=utf-8")
+    assert utils.is_json_mimetype("application/anything+json")
+
+    assert not utils.is_json_mimetype("application")
+    assert not utils.is_json_mimetype("appli/json")
+    assert not utils.is_json_mimetype("application/xml")
+    assert not utils.is_json_mimetype("application/xml; charset=utf-8")
+    assert not utils.is_json_mimetype("app/json; charset=utf-8")
+    assert not utils.is_json_mimetype("application/json;charset=utf-dfdfd")
+    assert not utils.is_json_mimetype("")
+

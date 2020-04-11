@@ -77,6 +77,38 @@ def test_writeonly(json_validation_spec_dir, spec):
     assert json.loads(res.data.decode())['title'] == 'Response body does not conform to specification'
 
 
+@pytest.mark.parametrize("spec", SPECS)
+def test_invalid_json(json_validation_spec_dir, spec):
+    app = build_app_from_fixture(json_validation_spec_dir, spec, validate_responses=True)
+    app_client = app.app.test_client()
+
+    # JSON Content-type, BadRequestProblem is raised
+    res = app_client.post('/v1.0/user', data="invalid json", content_type='application/json') # type: flask.Response
+    assert res.status_code == 400
+    assert json.loads(res.data.decode())['title'] == 'Bad Request'
+
+    res = app_client.post('/v1.0/user', data="invalid json", content_type='application/json; charset=utf-8') # type: flask.Response
+    assert res.status_code == 400
+    assert json.loads(res.data.decode())['title'] == 'Bad Request'
+
+    res = app_client.post('/v1.0/user', data="invalid json", content_type='application/anything+json; charset=utf-8') # type: flask.Response
+    assert res.status_code == 400
+    assert json.loads(res.data.decode())['title'] == 'Bad Request'
+
+    # Not a JSON Content-type, UnsupportedMediaTypeProblem is raised
+    res = app_client.post('/v1.0/user', data="invalid json", content_type='application') # type: flask.Response
+    assert res.status_code == 415
+    assert json.loads(res.data.decode())['title'] == 'Invalid Content-type (application), expected JSON data'
+
+    res = app_client.post('/v1.0/user', data="invalid json", content_type='application/xml') # type: flask.Response
+    assert res.status_code == 415
+    assert json.loads(res.data.decode())['title'] == 'Invalid Content-type (application/xml), expected JSON data'
+
+    res = app_client.post('/v1.0/user', data="invalid json", content_type='application/json; charset=invalid') # type: flask.Response
+    assert res.status_code == 415
+    assert json.loads(res.data.decode())['title'] == 'Invalid Content-type (application/json; charset=invalid), expected JSON data'
+
+
 @pytest.mark.parametrize("spec", ["openapi.yaml"])
 def test_multipart_form_json(json_validation_spec_dir, spec):
     app = build_app_from_fixture(json_validation_spec_dir, spec, validate_responses=True)
