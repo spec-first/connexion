@@ -174,7 +174,9 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
 
     @staticmethod
     def _get_file_arguments(files, arguments, has_kwargs=False):
-        return {k: files.getlist(k) for k in files.keys() if k in arguments or has_kwargs}
+        f = {k: files.getlist(k) for k in files if k in arguments or has_kwargs}
+        f = {k: v[0] if len(v) == 1 else v for k, v in f.items()}
+        return f
     
     @abc.abstractmethod
     def _get_val_from_param(self, value, query_defn):
