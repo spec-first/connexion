@@ -27,8 +27,9 @@ The recommended approach is to return a dict which complies with
 `RFC 7662 <rfc7662_>`_. Note that you have to validate the ``active``
 or ``exp`` fields etc. yourself.
 
-The ``sub`` property of the Token Info response will be passed in the ``user``
-argument to the handler function.
+The Token Info response will be passed in the ``token_info`` argument to the handler
+function. The ``sub`` property of the Token Info response will be passed in the ``user``
+argument to the handler function. 
 
 Deprecated features, retained for backward compability:
 
