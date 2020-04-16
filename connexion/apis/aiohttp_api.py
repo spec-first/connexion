@@ -343,12 +343,15 @@ class AioHttpApi(AbstractAPI):
     @classmethod
     def _framework_to_connexion_response(cls, response, mimetype):
         """ Cast framework response class to ConnexionResponse used for schema validation """
+        body = None
+        if hasattr(response, "body"):  # StreamResponse and FileResponse don't have body
+            body = response.body
         return ConnexionResponse(
             status_code=response.status,
             mimetype=mimetype,
             content_type=response.content_type,
             headers=response.headers,
-            body=response.body
+            body=body
         )
 
     @classmethod
