@@ -70,7 +70,7 @@ If multiple teams depend on your APIs, you can use Connexion to easily send them
 Other Sources/Mentions
 ----------------------
 
-- Zalando Tech blog post `API First`_
+- Zalando RESTful API guidelines with `API First`_
 - Connexion listed on Swagger_'s website
 - Blog post: `Crafting effective Microservices in Python`_
 
@@ -598,7 +598,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 .. _Flask: http://flask.pocoo.org/
 .. _issues waffle board: https://waffle.io/zalando/connexion
-.. _API First: https://tech.zalando.com/blog/on-apis-and-the-zalando-api-guild/
+.. _API First: https://opensource.zalando.com/restful-api-guidelines/#api-first
 .. _Hug: https://github.com/timothycrosley/hug
 .. _Swagger: http://swagger.io/open-source-integrations/
 .. _Jinja2: http://jinja.pocoo.org/
