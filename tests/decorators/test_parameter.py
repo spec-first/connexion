@@ -1,4 +1,3 @@
-# we are using "mock" module here for Py 2.7 support
 from unittest.mock import MagicMock
 
 from connexion.decorators.parameter import parameter_to_arg
