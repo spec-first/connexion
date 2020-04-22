@@ -1,6 +1,6 @@
 import functools
 import importlib
-
+import json
 import yaml
 
 
@@ -37,7 +37,11 @@ TYPE_MAP = {'integer': int,
 
 def make_type(value, _type):
     type_func = TYPE_MAP[_type]  # convert value to right type
-    return type_func(value)
+    try:
+        return type_func(value)
+    except:
+        if _type == 'object':
+            return json.loads(value)
 
 
 def deep_merge(a, b):
