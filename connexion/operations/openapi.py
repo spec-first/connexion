@@ -268,36 +268,79 @@ class OpenAPIOperation(AbstractOperation):
         return {}
 
     def _get_body_argument(self, body, arguments, has_kwargs, sanitize):
-        x_body_name = sanitize(self.body_schema.get('x-body-name', 'body'))
+        if len(arguments) <= 0 and not has_kwargs:
+            return {}
+
+        x_body_name_default = 'body'
+        x_body_name_explicit = True
+        x_body_name = sanitize(self.body_schema.get('x-body-name', ''))
+        if not x_body_name:
+            x_body_name_explicit = False
+            x_body_name = x_body_name_default
+
+        # if the body came in null, and the schema says it can be null, we decide
+        # to include no value for the body argument, rather than the default body
         if is_nullable(self.body_schema) and is_null(body):
-            return {x_body_name: None}
+            if x_body_name in arguments or has_kwargs:
+                return {x_body_name: None}
+            return {}
 
+        # now determine the actual value for the body (whether it came in or is default)
         default_body = self.body_schema.get('default', {})
-        body_props = {k: {"schema": v} for k, v
+        body_props = {sanitize(k): {"schema": v} for k, v
                       in self.body_schema.get("properties", {}).items()}
-
-        # by OpenAPI specification `additionalProperties` defaults to `true`
-        # see: https://github.com/OAI/OpenAPI-Specification/blame/3.0.2/versions/3.0.2.md#L2305
-        additional_props = self.body_schema.get("additionalProperties", True)
 
         if body is None:
             body = deepcopy(default_body)
 
+        # if the body isn't even an object, then none of the concerns below matter
         if self.body_schema.get("type") != "object":
             if x_body_name in arguments or has_kwargs:
                 return {x_body_name: body}
             return {}
 
-        body_arg = deepcopy(default_body)
-        body_arg.update(body or {})
+        # by OpenAPI specification `additionalProperties` defaults to `true`
+        # see: https://github.com/OAI/OpenAPI-Specification/blame/3.0.2/versions/3.0.2.md#L2305
+        additional_props = self.body_schema.get("additionalProperties", True)
 
-        res = {}
-        if body_props or additional_props:
-            res = self._get_typed_body_values(body_arg, body_props, additional_props)
+        # supply the initial defaults and convert all values to the proper types by schema
+        x = deepcopy(default_body)
+        x.update(body or {})
+        converted_body = self._get_typed_body_values(x, body_props, additional_props)
 
-        if x_body_name in arguments or has_kwargs:
-            return {x_body_name: res}
-        return {}
+        # NOTE:
+        # Handlers could have a single argument to receive the whole body or they
+        # could have individual arguments to receive all the body's parameters, or
+        # they may have a **kwargs, arguments to receive anything.  So, the question
+        # arises that if kwargs is given, do we pass to the handler a single body
+        # argument, or the broken out arguments, or both.
+        #
+        # #1 If 'x-body-arg' is explicitly given and it exists in [arguments], then the
+        # body, as a whole, will be passed to the handler with that name. STOP.
+        #
+        # #2 If kwargs is given, then we don't know what the handler cares about, so we
+        # pass the body as a whole as an argument named, 'body', along with the
+        # individual body properties. STOP.
+        #
+        # #3 Else, we pass the body's individual properties which  exist in [arguments].
+        #
+        # #4 Finally, if that resulting argument list is empty, then we include an argument
+        # named 'body' to the handler, but only if 'body' exists in [arguments]
+
+        if x_body_name_explicit and x_body_name in arguments: #1
+            return {x_body_name: converted_body}
+
+        if has_kwargs: #2
+            converted_body[x_body_name_default] = copy(converted_body) # copy just to avoid circular ref
+            return converted_body
+
+        r = {k: converted_body[k] for k in converted_body if k in arguments} #3
+
+        if len(r) <= 0 and x_body_name_default in arguments: #4
+            r[x_body_name_default] = converted_body
+
+        return r
+
 
     def _get_typed_body_values(self, body_arg, body_props, additional_props):
         """
