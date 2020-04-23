@@ -24,6 +24,15 @@ def test_get_response_from_aiohttp_response(api):
 
 
 @asyncio.coroutine
+def test_get_response_from_aiohttp_stream_response(api):
+    response = yield from api.get_response(web.StreamResponse(status=201, headers={'X-header': 'value'}))
+    assert isinstance(response, web.StreamResponse)
+    assert response.status == 201
+    assert response.content_type == 'application/octet-stream'
+    assert dict(response.headers) == {'X-header': 'value'}
+
+
+@asyncio.coroutine
 def test_get_response_from_connexion_response(api):
     response = yield from api.get_response(ConnexionResponse(status_code=201, mimetype='text/plain', body='foo', headers={'X-header': 'value'}))
     assert isinstance(response, web.Response)
@@ -170,3 +179,12 @@ def test_get_connexion_response_from_tuple(api):
     assert response.body == b'foo'
     assert response.content_type == 'text/plain'
     assert dict(response.headers) == {'Content-Type': 'text/plain; charset=utf-8', 'X-header': 'value'}
+
+@asyncio.coroutine
+def test_get_connexion_response_from_aiohttp_stream_response(api):
+    response = api.get_connexion_response(web.StreamResponse(status=201, headers={'X-header': 'value'}))
+    assert isinstance(response, ConnexionResponse)
+    assert response.status_code == 201
+    assert response.body == None
+    assert response.content_type == 'application/octet-stream'
+    assert dict(response.headers) == {'X-header': 'value'}
