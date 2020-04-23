@@ -1,6 +1,6 @@
 import pytest
 from jsonschema import ValidationError
-from mock import MagicMock
+from unittest.mock import MagicMock
 
 from connexion.decorators.validation import ParameterValidator
 from connexion.json_schema import (Draft4RequestValidator,

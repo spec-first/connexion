@@ -38,7 +38,6 @@ aiohttp_require = [
 
 tests_require = [
     'decorator',
-    'mock',
     'pytest',
     'pytest-cov',
     'testfixtures',

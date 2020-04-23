@@ -1,7 +1,7 @@
 import json
 
 import jinja2
-import mock
+from unittest import mock
 import pytest
 import yaml
 from openapi_spec_validator.loaders import ExtendedSafeLoader

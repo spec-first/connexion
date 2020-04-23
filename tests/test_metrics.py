@@ -2,7 +2,7 @@ import json
 
 import flask
 import pytest
-from mock import MagicMock
+from unittest.mock import MagicMock
 
 import connexion
 from connexion.exceptions import ProblemException

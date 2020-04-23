@@ -2,8 +2,7 @@ import json
 
 import flask
 import pytest
-# we are using "mock" module here for Py 2.7 support
-from mock import MagicMock
+from unittest.mock import MagicMock
 
 from connexion.apis.flask_api import FlaskApi
 from connexion.exceptions import BadRequestProblem

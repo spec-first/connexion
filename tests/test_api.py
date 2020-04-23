@@ -5,7 +5,7 @@ import os
 import tempfile
 
 import pytest
-from mock import MagicMock
+from unittest.mock import MagicMock
 from yaml import YAMLError
 
 from connexion import FlaskApi

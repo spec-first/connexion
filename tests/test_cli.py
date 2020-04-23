@@ -2,8 +2,8 @@ import logging
 
 import pytest
 from click.testing import CliRunner
-from mock import MagicMock
-from mock import call as mock_call
+from unittest.mock import MagicMock
+from unittest.mock import call as mock_call
 
 import connexion
 from conftest import FIXTURES_FOLDER
