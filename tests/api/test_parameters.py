@@ -352,6 +352,9 @@ def test_nullable_parameter(simple_app):
     resp = app_client.put('/v1.0/nullable-parameters', data="None", headers=headers)
     assert json.loads(resp.data.decode('utf-8', 'replace')) == 'it was None'
 
+    resp = app_client.put('/v1.0/nullable-parameters-noargs', data="None", headers=headers)
+    assert json.loads(resp.data.decode('utf-8', 'replace')) == 'hello'
+
 
 def test_args_kwargs(simple_app):
     app_client = simple_app.app.test_client()
@@ -362,6 +365,16 @@ def test_args_kwargs(simple_app):
     resp = app_client.get('/v1.0/query-params-as-kwargs?foo=a&bar=b')
     assert resp.status_code == 200
     assert json.loads(resp.data.decode('utf-8', 'replace')) == {'foo': 'a'}
+
+    if simple_app._spec_file == 'openapi.yaml':
+        body = { 'foo': 'a', 'bar': 'b' }
+        resp = app_client.post(
+            '/v1.0/body-params-as-kwargs',
+            data=json.dumps(body),
+            headers={'Content-Type': 'application/json'})
+        assert resp.status_code == 200
+        # having only kwargs and no explicit x-body-name, the handler would have been passed 'body' and the individual params from body
+        assert json.loads(resp.data.decode('utf-8', 'replace')) == {'body': {'foo': 'a', 'bar': 'b'}, 'foo': 'a', 'bar': 'b'}
 
 
 def test_param_sanitization(simple_app):

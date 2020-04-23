@@ -313,7 +313,7 @@ class OpenAPIOperation(AbstractOperation):
         # could have individual arguments to receive all the body's parameters, or
         # they may have a **kwargs, arguments to receive anything.  So, the question
         # arises that if kwargs is given, do we pass to the handler a single body
-        # argument, or the broken out arguments, or both.
+        # argument, or the broken out arguments, or both?
         #
         # #1 If 'x-body-arg' is explicitly given and it exists in [arguments], then the
         # body, as a whole, will be passed to the handler with that name. STOP.
