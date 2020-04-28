@@ -91,9 +91,8 @@ class AioHttpApi(AbstractAPI):
         )
 
         other_args = {}
-        if kwargs['options']:
-            with suppress(KeyError):
-                other_args['client_max_size'] = kwargs['options']['client_max_size']
+        with suppress(KeyError):
+            other_args['client_max_size'] = kwargs['options']['client_max_size']
 
         self.subapp = web.Application(
             middlewares=[
