@@ -1,6 +1,7 @@
 # Authentication and authorization related decorators
 import base64
 import functools
+import inspect
 import logging
 import os
 import textwrap
@@ -223,7 +224,12 @@ def verify_basic(basic_info_func):
         except Exception:
             raise OAuthProblem(description='Invalid authorization header')
 
-        token_info = basic_info_func(username, password, required_scopes=required_scopes)
+        if 'context' in inspect.signature(basic_info_func).parameters:
+            token_info = basic_info_func(
+                username, password, required_scopes=required_scopes, context=request.context)
+        else:
+            token_info = basic_info_func(username, password, required_scopes=required_scopes)
+
         if token_info is None:
             raise OAuthResponseProblem(
                 description='Provided authorization is not valid',
