@@ -86,22 +86,19 @@ async def get_uuid():
     return ConnexionResponse(body={'value': uuid.UUID(hex='e7ff66d0-3ec2-4c4e-bed0-6e4723c24c51')})
 
 
-@asyncio.coroutine
-def aiohttp_multipart_single_file(funky_funky):
+async def aiohttp_multipart_single_file(funky_funky):
     return aiohttp.web.json_response(
         data={'fileName': funky_funky.filename},
     )
 
 
-@asyncio.coroutine
-def aiohttp_multipart_many_files(files):
+async def aiohttp_multipart_many_files(files):
     return aiohttp.web.json_response(
         data={'filesCount': len(files)},
     )
 
 
-@asyncio.coroutine
-def aiohttp_multipart_mixed_single_file(dir_name, funky_funky):
+async def aiohttp_multipart_mixed_single_file(dir_name, funky_funky):
     return aiohttp.web.json_response(
         data={
             'dirName': dir_name,
@@ -110,8 +107,7 @@ def aiohttp_multipart_mixed_single_file(dir_name, funky_funky):
     )
 
 
-@asyncio.coroutine
-def aiohttp_multipart_mixed_many_files(dir_name, test_count, files):
+async def aiohttp_multipart_mixed_many_files(dir_name, test_count, files):
     return aiohttp.web.json_response(
         data={
             'filesCount': len(files),
