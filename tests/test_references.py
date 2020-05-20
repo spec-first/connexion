@@ -1,4 +1,4 @@
-import mock
+from unittest import mock
 import pytest
 
 from connexion.apis.flask_api import Jsonifier

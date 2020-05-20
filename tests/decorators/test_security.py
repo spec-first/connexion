@@ -2,7 +2,7 @@ import json
 
 import pytest
 import requests
-from mock import MagicMock
+from unittest.mock import MagicMock
 
 from connexion.decorators.security import (get_tokeninfo_func,
                                            get_tokeninfo_remote,

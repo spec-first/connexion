@@ -11,7 +11,7 @@ With Connexion, the API security definition **must** include a
 ``x-tokenInfoFunc`` must contain a reference to a function
 used to obtain the token info. This reference should be a string using
 the same syntax that is used to connect an ``operationId`` to a Python
-function when routing. For example, an ``x-tokenInfoFunc`` of 
+function when routing. For example, an ``x-tokenInfoFunc`` with a value of 
 ``auth.verifyToken`` would pass the user's token string to the function
 ``verifyToken`` in the module ``auth.py``. The referenced function accepts
 a token string as argument and should return a dict containing a ``scope``
@@ -27,8 +27,9 @@ The recommended approach is to return a dict which complies with
 `RFC 7662 <rfc7662_>`_. Note that you have to validate the ``active``
 or ``exp`` fields etc. yourself.
 
-The ``sub`` property of the Token Info response will be passed in the ``user``
-argument to the handler function.
+The Token Info response will be passed in the ``token_info`` argument to the handler
+function. The ``sub`` property of the Token Info response will be passed in the ``user``
+argument to the handler function. 
 
 Deprecated features, retained for backward compability:
 

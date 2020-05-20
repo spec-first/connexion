@@ -21,7 +21,7 @@ class FlaskApp(AbstractApp):
         super(FlaskApp, self).__init__(import_name, FlaskApi, server=server, **kwargs)
 
     def create_app(self):
-        app = flask.Flask(self.import_name)
+        app = flask.Flask(self.import_name, **self.server_args)
         app.json_encoder = FlaskJSONEncoder
         return app
 

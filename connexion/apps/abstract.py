@@ -10,7 +10,7 @@ logger = logging.getLogger('connexion.app')
 
 class AbstractApp(metaclass=abc.ABCMeta):
     def __init__(self, import_name, api_cls, port=None, specification_dir='',
-                 host=None, server=None, arguments=None, auth_all_paths=False, debug=None,
+                 host=None, server=None, server_args=None, arguments=None, auth_all_paths=False, debug=None,
                  resolver=None, options=None, skip_error_handlers=False):
         """
         :param import_name: the name of the application package
@@ -23,6 +23,8 @@ class AbstractApp(metaclass=abc.ABCMeta):
         :type specification_dir: pathlib.Path | str
         :param server: which wsgi server to use
         :type server: str | None
+        :param server_args: dictionary of arguments which are then passed to appropriate http server (Flask or aio_http)
+        :type server_args: dict | None
         :param arguments: arguments to replace on the specification
         :type arguments: dict | None
         :param auth_all_paths: whether to authenticate not defined paths
@@ -45,8 +47,9 @@ class AbstractApp(metaclass=abc.ABCMeta):
 
         self.options = ConnexionOptions(options)
 
-        self.app = self.create_app()
         self.server = server
+        self.server_args = dict() if server_args is None else server_args
+        self.app = self.create_app()
 
         # we get our application root path to avoid duplicating logic
         self.root_path = self.get_root_path()

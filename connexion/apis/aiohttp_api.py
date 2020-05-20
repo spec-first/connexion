@@ -44,10 +44,9 @@ def _generic_problem(http_status: HTTPStatus, exc: Exception = None):
 
 
 @web.middleware
-@asyncio.coroutine
-def problems_middleware(request, handler):
+async def problems_middleware(request, handler):
     try:
-        response = yield from handler(request)
+        response = await handler(request)
     except ProblemException as exc:
         response = problem(status=exc.status, detail=exc.detail, title=exc.title,
                            type=exc.type, instance=exc.instance, headers=exc.headers, ext=exc.ext)
@@ -75,7 +74,7 @@ def problems_middleware(request, handler):
         response = _generic_problem(HTTPStatus.INTERNAL_SERVER_ERROR, exc)
 
     if isinstance(response, ConnexionResponse):
-        response = yield from AioHttpApi.get_response(response)
+        response = await AioHttpApi.get_response(response)
     return response
 
 
@@ -165,16 +164,14 @@ class AioHttpApi(AbstractAPI):
             self._get_openapi_yaml
         )
 
-    @asyncio.coroutine
-    def _get_openapi_json(self, request):
+    async def _get_openapi_json(self, request):
         return web.Response(
             status=200,
             content_type='application/json',
             body=self.jsonifier.dumps(self._spec_for_prefix(request))
         )
 
-    @asyncio.coroutine
-    def _get_openapi_yaml(self, request):
+    async def _get_openapi_yaml(self, request):
         return web.Response(
             status=200,
             content_type='text/yaml',
@@ -211,8 +208,7 @@ class AioHttpApi(AbstractAPI):
         # normalize_path_middleware because we also serve static files
         # from this dir (below)
 
-        @asyncio.coroutine
-        def redirect(request):
+        async def redirect(request):
             raise web.HTTPMovedPermanently(
                 location=self.base_path + console_ui_path + '/'
             )
@@ -232,8 +228,7 @@ class AioHttpApi(AbstractAPI):
         )
 
     @aiohttp_jinja2.template('index.j2')
-    @asyncio.coroutine
-    def _get_swagger_ui_home(self, req):
+    async def _get_swagger_ui_home(self, req):
         base_path = self._base_path_for_prefix(req)
         template_variables = {
             'openapi_spec_url': (base_path + self.options.openapi_spec_path)
@@ -242,8 +237,7 @@ class AioHttpApi(AbstractAPI):
             template_variables['configUrl'] = 'swagger-ui-config.json'
         return template_variables
 
-    @asyncio.coroutine
-    def _get_swagger_ui_config(self, req):
+    async def _get_swagger_ui_config(self, req):
         return web.Response(
             status=200,
             content_type='text/json',
@@ -291,8 +285,7 @@ class AioHttpApi(AbstractAPI):
             )
 
     @classmethod
-    @asyncio.coroutine
-    def get_request(cls, req):
+    async def get_request(cls, req):
         """Convert aiohttp request to connexion
 
         :param req: instance of aiohttp.web.Request
@@ -320,7 +313,7 @@ class AioHttpApi(AbstractAPI):
 
         # if request is not multipart, `data` will be empty dict
         # and stream will not be consumed
-        post_data = yield from req.post()
+        post_data = await req.post()
 
         # set those up beforehand, they are needed anyway
         files = {}
@@ -344,7 +337,7 @@ class AioHttpApi(AbstractAPI):
             body = b''
         else:
             logger.debug('Reading data from request')
-            body = yield from req.read()
+            body = await req.read()
 
         return ConnexionRequest(url=url,
                                 method=req.method.lower(),
@@ -358,8 +351,7 @@ class AioHttpApi(AbstractAPI):
                                 context=req)
 
     @classmethod
-    @asyncio.coroutine
-    def get_response(cls, response, mimetype=None, request=None):
+    async def get_response(cls, response, mimetype=None, request=None):
         """Get response.
         This method is used in the lifecycle decorators
 
@@ -367,7 +359,7 @@ class AioHttpApi(AbstractAPI):
         :rtype: aiohttp.web.Response
         """
         while asyncio.iscoroutine(response):
-            response = yield from response
+            response = await response
 
         url = str(request.url) if request else ''
 
@@ -381,12 +373,15 @@ class AioHttpApi(AbstractAPI):
     @classmethod
     def _framework_to_connexion_response(cls, response, mimetype):
         """ Cast framework response class to ConnexionResponse used for schema validation """
+        body = None
+        if hasattr(response, "body"):  # StreamResponse and FileResponse don't have body
+            body = response.body
         return ConnexionResponse(
             status_code=response.status,
             mimetype=mimetype,
             content_type=response.content_type,
             headers=response.headers,
-            body=response.body
+            body=body
         )
 
     @classmethod
