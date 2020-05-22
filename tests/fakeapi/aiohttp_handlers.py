@@ -88,13 +88,19 @@ async def get_uuid():
 
 async def aiohttp_multipart_single_file(funky_funky):
     return aiohttp.web.json_response(
-        data={'fileName': funky_funky.filename},
+        data={
+			'fileName': funky_funky.filename,
+			'content': funky_funky.file.read().decode('utf8')
+		},
     )
 
 
 async def aiohttp_multipart_many_files(files):
     return aiohttp.web.json_response(
-        data={'filesCount': len(files)},
+        data={
+			'filesCount': len(files),
+            'contents': [ f.file.read().decode('utf8') for f in files ]
+		},
     )
 
 
@@ -103,6 +109,7 @@ async def aiohttp_multipart_mixed_single_file(dir_name, funky_funky):
         data={
             'dirName': dir_name,
             'fileName': funky_funky.filename,
+            'content': funky_funky.file.read().decode('utf8'),
         },
     )
 
@@ -113,5 +120,6 @@ async def aiohttp_multipart_mixed_many_files(dir_name, test_count, files):
             'filesCount': len(files),
             'dirName': dir_name,
             'testCount': test_count,
+            'contents': [ f.file.read().decode('utf8') for f in files ]
         },
     )
