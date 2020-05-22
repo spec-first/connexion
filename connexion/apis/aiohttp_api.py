@@ -324,9 +324,12 @@ class AioHttpApi(AbstractAPI):
             for k, v in post_data.items():
                 if isinstance(v, web.FileField):
                     if k in files:
-                        try:
+                        # if multiple files arrive under the same name in the
+                        # request, downstream requires that we put them all into
+                        # a list under the same key in the files dict.
+                        if isinstance(files[k], list):
                             files[k].append(v)
-                        except AttributeError:
+                        else:
                             files[k] = [files[k], v]
                     else:
                         files[k] = v
