@@ -15,8 +15,7 @@ class AbstractAsyncSecurityHandlerFactory(AbstractSecurityHandlerFactory):
     def _generic_check(self, func, exception_msg):
         need_to_add_context, need_to_add_required_scopes = self._need_to_add_context_or_scopes(func)
 
-        @asyncio.coroutine
-        def wrapper(request, *args, required_scopes=None):
+        async def wrapper(request, *args, required_scopes=None):
             kwargs = {}
             if need_to_add_context:
                 kwargs[self.pass_context_arg_name] = request.context
@@ -24,7 +23,7 @@ class AbstractAsyncSecurityHandlerFactory(AbstractSecurityHandlerFactory):
                 kwargs[self.required_scopes_kw] = required_scopes
             token_info = func(*args, **kwargs)
             while asyncio.iscoroutine(token_info):
-                token_info = yield from token_info
+                token_info = await token_info
             if token_info is self.no_value:
                 return self.no_value
             if token_info is None:
@@ -37,9 +36,8 @@ class AbstractAsyncSecurityHandlerFactory(AbstractSecurityHandlerFactory):
         get_token_info = self._generic_check(token_info_func, 'Provided token is not valid')
         need_to_add_context, _ = self._need_to_add_context_or_scopes(scope_validate_func)
 
-        @asyncio.coroutine
-        def wrapper(request, token, required_scopes):
-            token_info = yield from get_token_info(request, token, required_scopes=required_scopes)
+        async def wrapper(request, token, required_scopes):
+            token_info = await get_token_info(request, token, required_scopes=required_scopes)
 
             # Fallback to 'scopes' for backward compatibility
             token_scopes = token_info.get('scope', token_info.get('scopes', ''))
@@ -49,7 +47,7 @@ class AbstractAsyncSecurityHandlerFactory(AbstractSecurityHandlerFactory):
                 kwargs[self.pass_context_arg_name] = request.context
             validation = scope_validate_func(required_scopes, token_scopes, **kwargs)
             while asyncio.iscoroutine(validation):
-                validation = yield from validation
+                validation = await validation
             if not validation:
                 raise OAuthScopeProblem(
                     description='Provided token doesn\'t have the required scope',
@@ -62,14 +60,13 @@ class AbstractAsyncSecurityHandlerFactory(AbstractSecurityHandlerFactory):
 
     @classmethod
     def verify_security(cls, auth_funcs, required_scopes, function):
-        @asyncio.coroutine
         @functools.wraps(function)
-        def wrapper(request):
+        async def wrapper(request):
             token_info = None
             for func in auth_funcs:
                 token_info = func(request, required_scopes)
                 while asyncio.iscoroutine(token_info):
-                    token_info = yield from token_info
+                    token_info = await token_info
                 if token_info is not cls.no_value:
                     break
 
