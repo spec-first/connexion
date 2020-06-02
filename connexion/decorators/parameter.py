@@ -99,7 +99,7 @@ def parameter_to_arg(operation, function, pythonic_params=False,
             query = dict(request.query.items())
 
         kwargs.update(
-            operation.get_arguments(request.path_params, query, request_body,
+            operation.get_arguments(request.path_params, query, request.headers, request_body,
                                     request.files, arguments, has_kwargs, sanitize)
         )
 

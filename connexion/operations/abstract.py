@@ -226,6 +226,19 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
                 kwargs[sanitized_key] = value
         return kwargs
 
+    def _get_header_arguments(self, header_params, arguments, sanitize):
+        """
+        extract handler function arguments from header parameters
+        """
+        kwargs = {}
+        header_defns = {sanitize(p["name"]): p for p in self.parameters if p["in"] == "header"}
+        for key, value in header_params.items():
+            sanitized_key = sanitize(key)
+            if sanitized_key in header_defns and sanitized_key in arguments:
+                kwargs[sanitized_key] = value
+        return kwargs
+
+
     @abc.abstractproperty
     def parameters(self):
         """
@@ -257,7 +270,7 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
         :rtype: dict
         """
 
-    def get_arguments(self, path_params, query_params, body, files, arguments,
+    def get_arguments(self, path_params, query_params, headers, body, files, arguments,
                       has_kwargs, sanitize):
         """
         get arguments for handler function
@@ -266,6 +279,7 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
         ret.update(self._get_path_arguments(path_params, sanitize))
         ret.update(self._get_query_arguments(query_params, arguments,
                                              has_kwargs, sanitize))
+        ret.update(self._get_header_arguments(headers, arguments, sanitize))
 
         if self.method.upper() in ["PATCH", "POST", "PUT"]:
             ret.update(self._get_body_argument(body, arguments,
