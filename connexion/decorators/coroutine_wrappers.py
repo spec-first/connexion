@@ -6,7 +6,7 @@ def get_request_life_cycle_wrapper(function, api, mimetype):
     """
     It is a wrapper used on `RequestResponseDecorator` class.
     This function is located in an extra module because python2.7 don't
-    support the 'yield from' syntax. This function is used to await
+    support the 'await' syntax. This function is used to await
     the coroutines to connexion does the proper validation of parameters
     and responses.
 
@@ -36,7 +36,7 @@ def get_response_validator_wrapper(function, _wrapper):
     """
     It is a wrapper used on `ResponseValidator` class.
     This function is located in an extra module because python2.7 don't
-    support the 'yield from' syntax. This function is used to await
+    support the 'await' syntax. This function is used to await
     the coroutines to connexion does the proper validation of parameters
     and responses.
 
