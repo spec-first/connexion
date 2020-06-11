@@ -67,7 +67,7 @@ def test_app_with_resolver(sanic_api_spec_dir, spec):
     app = App(
         __name__,
         port=5001,
-        specification_dir=".." / sanic_api_spec_dir.relative_to(TEST_FOLDER),
+        specification_dir="tests" / sanic_api_spec_dir.relative_to(TEST_FOLDER),
         resolver=resolver,
     )
     api = app.add_api(spec)
@@ -81,13 +81,13 @@ def test_app_with_different_server_option(sanic_api_spec_dir, spec):
         __name__,
         port=5001,
         server="gevent",
-        specification_dir=".." / sanic_api_spec_dir.relative_to(TEST_FOLDER),
+        specification_dir="tests" / sanic_api_spec_dir.relative_to(TEST_FOLDER),
         debug=True,
     )
     app.add_api(spec)
 
     app_client = app.app.test_client
-    get_bye = app_client.get("/v1.0/bye/jsantos")  # type: httpx.models.Response
+    _, get_bye = app_client.get("/v1.0/bye/jsantos")  # type: httpx.models.Response
     assert get_bye.status_code == 200
     assert get_bye.content == b"Goodbye jsantos"
 
@@ -98,18 +98,18 @@ def test_app_with_different_uri_parser(sanic_api_spec_dir):
     app = App(
         __name__,
         port=5001,
-        specification_dir=".." / sanic_api_spec_dir.relative_to(TEST_FOLDER),
+        specification_dir="tests" / sanic_api_spec_dir.relative_to(TEST_FOLDER),
         options={"uri_parser_class": FirstValueURIParser},
         debug=True,
     )
     app.add_api("swagger.yaml")
 
     app_client = app.app.test_client
-    resp = app_client.get(
+    _, resp = app_client.get(
         "/v1.0/test_array_csv_query_param?items=a,b,c&items=d,e,f"
     )  # type: httpx.models.Response
     assert resp.status_code == 200
-    j = json.loads(resp.get_data(as_text=True))
+    j = resp.json
     assert j == ["a", "b", "c"]
 
 
