@@ -10,19 +10,23 @@ from connexion.mock import MockResolver
 logger = logging.getLogger('connexion.cli')
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 FLASK_APP = 'flask'
+SANIC_APP = 'sanic'
 AIOHTTP_APP = 'aiohttp'
 AVAILABLE_SERVERS = {
     'flask': [FLASK_APP],
     'gevent': [FLASK_APP],
     'tornado': [FLASK_APP],
-    'aiohttp': [AIOHTTP_APP]
+    'aiohttp': [AIOHTTP_APP],
+    'sanic': [SANIC_APP],
 }
 AVAILABLE_APPS = {
     FLASK_APP: 'connexion.apps.flask_app.FlaskApp',
+    SANIC_APP: 'connexion.apps.sanic_app.SanicApp',
     AIOHTTP_APP: 'connexion.apps.aiohttp_app.AioHttpApp'
 }
 DEFAULT_SERVERS = {
     FLASK_APP: FLASK_APP,
+    SANIC_APP: SANIC_APP,
     AIOHTTP_APP: AIOHTTP_APP
 }
 
