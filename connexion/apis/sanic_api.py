@@ -7,15 +7,12 @@ from http import HTTPStatus
 from urllib.parse import parse_qs
 
 import aiohttp_jinja2
-import jinja2
 
 import sanic
-#from aiohttp import web
-#from aiohttp.web_exceptions import HTTPNotFound, HTTPPermanentRedirect
-#from aiohttp.web_middlewares import normalize_path_middleware
 from sanic.exceptions import NotFound as HTTPNotFound
 from sanic import Blueprint
 from sanic.response import redirect, json, HTTPResponse
+from sanic.request import Request
 
 from connexion.apis.abstract import AbstractAPI
 from connexion.exceptions import ProblemException
@@ -24,7 +21,6 @@ from connexion.jsonifier import JSONEncoder, Jsonifier
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.problem import problem
 from connexion.utils import yamldumper
-from werkzeug.exceptions import HTTPException as werkzeug_HTTPException
 from .flask_utils import flaskify_endpoint
 logger = logging.getLogger('connexion.apis.sanic_api')
 
@@ -46,6 +42,10 @@ def _generic_problem(http_status: HTTPStatus, exc: Exception = None):
         detail=http_status.description,
         ext=extra,
     )
+
+
+def replace_braces(s):
+    return s.replace("{","<").replace("}",">")
 
 
 class SanicApi(AbstractAPI):
@@ -225,33 +225,36 @@ class SanicApi(AbstractAPI):
             SanicApi.normalize_string(path),
             method.lower()
         )
+        sanic_path = replace_braces(path)
+        logger.debug('... Replace %r -> %r', path, sanic_path)
         self.blueprint.add_route(
-            methods=[method], uri=path, handler=handler, name=endpoint_name
+            methods=[method], uri=sanic_path, handler=handler, name=endpoint_name
         )
 
         if False and not path.endswith('/'):
             self.blueprint.add_route(
-                methods=[method], uri=path + '/', handler=handler, name=endpoint_name + '_'
+                methods=[method], uri=sanic_path + '/', handler=handler, name=endpoint_name + '_'
             )
 
     @classmethod
-    async def get_request(cls, req):
-        """Convert aiohttp request to connexion
+    async def get_request(cls, req: Request, *args, **kwargs):
+        """Convert Sanic request to connexion
 
-        :param req: instance of aiohttp.web.Request
+        :param req: instance of sanic.request.Request
         :return: connexion request instance
         :rtype: ConnexionRequest
         """
+        context_dict = {}  # XXX: fixme use aiohttp-context with sanic
         url = str(req.url)
+        has_body = bool(req.body)
         logger.debug('Getting data and status code',
-                     extra={'has_body': req.has_body, 'url': url})
-        import pdb; pdb.set_trace()
+                     extra={'has_body': has_body, 'url': url})
 
-        query = parse_qs(req.rel_url.query_string)
+        query = dict(req.query_args)
         headers = req.headers
         body = None
-        if req.body_exists:
-            body = await req.read()
+        if has_body:
+            body = req.body  # AWAIT
 
         return ConnexionRequest(url=url,
                                 method=req.method.lower(),
@@ -261,10 +264,10 @@ class SanicApi(AbstractAPI):
                                 body=body,
                                 json_getter=lambda: cls.jsonifier.loads(body),
                                 files={},
-                                context=req)
+                                context=context_dict)
 
     @classmethod
-    async def get_response(cls, response, mimetype=None, request=None):
+    async def get_response(cls, response: HTTPResponse, mimetype=None, request=None):
         """Get response.
         This method is used in the lifecycle decorators
 
@@ -283,8 +286,6 @@ class SanicApi(AbstractAPI):
     @classmethod
     def _is_framework_response(cls, response):
         """ Return True if `response` is a framework response class """
-        import pdb; pdb.set_trace()
-
         return isinstance(response, sanic.response.HTTPResponse)
 
     @classmethod
@@ -318,18 +319,13 @@ class SanicApi(AbstractAPI):
         if cls._is_framework_response(data):
             raise TypeError("Cannot return web.StreamResponse in tuple. Only raw data can be returned in tuple.")
 
-        import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
         data, status_code, serialized_mimetype = cls._prepare_body_and_status_code(data=data, mimetype=mimetype, status_code=status_code, extra_context=extra_context)
 
-        if isinstance(data, str):
-            text = data
-            body = None
-        else:
-            text = None
-            body = data
+        body = data.encode() if isinstance(data, str) else data
 
         content_type = content_type or mimetype or serialized_mimetype
-        return HTTPResponse(body=body, text=text, headers=headers, status=status_code, content_type=content_type)
+        return HTTPResponse(body=body, headers=headers, status=status_code, content_type=content_type)
 
     @classmethod
     def _set_jsonifier(cls):

@@ -84,3 +84,14 @@ async def get_date(request):
 
 async def get_uuid(request):
     return ConnexionResponse(body={'value': uuid.UUID(hex='e7ff66d0-3ec2-4c4e-bed0-6e4723c24c51')})
+
+
+class DummyClass(object):
+    @classmethod
+    def test_classmethod(cls, request):
+        return cls.__name__
+
+    def test_method(self, request):
+        return self.__class__.__name__
+
+class_instance = DummyClass()  # noqa

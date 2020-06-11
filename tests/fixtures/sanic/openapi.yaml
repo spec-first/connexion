@@ -26,7 +26,7 @@ paths:
     post:
       summary: Generate greeting and collect the remainder of the url
       description: Generates a greeting message and includes the rest of the url.
-      operationId: fakeapi.hello.post_greeting_url
+      operationId: fakeapi.sanic_handlers.post_greeting_url
       responses:
         '200':
           description: greeting response with url
@@ -52,7 +52,7 @@ paths:
     get:
       summary: Generate greeting
       description: Generates a greeting message with custom mimetype
-      operationId: fakeapi.hello.get_greetings
+      operationId: fakeapi.sanic_handlers.get_greetings
       responses:
         '200':
           description: greeting response
@@ -71,7 +71,7 @@ paths:
     get:
       summary: Generate goodbye
       description: Generates a goodbye message.
-      operationId: fakeapi.hello.get_bye
+      operationId: fakeapi.sanic_handlers.get_bye
       responses:
         '200':
           description: goodbye response
@@ -92,7 +92,7 @@ paths:
     get:
       summary: Return flask response tuple
       description: Test returning a flask response tuple
-      operationId: fakeapi.hello.get_flask_response_tuple
+      operationId: fakeapi.sanic_handlers.get_flask_response_tuple
       responses:
         '200':
           description: json response
@@ -104,7 +104,7 @@ paths:
     get:
       summary: Generate a greeting in a list
       description: Generate a greeting in a list
-      operationId: fakeapi.hello.get_list
+      operationId: fakeapi.sanic_handlers.get_list
       responses:
         '200':
           description: a greeting in a list
@@ -123,7 +123,7 @@ paths:
             type: string
   /test_no_content_response:
     get:
-      operationId: fakeapi.hello.test_no_content_response
+      operationId: fakeapi.sanic_handlers.test_no_content_response
       responses:
         '204':
           description: No content returned
@@ -131,7 +131,7 @@ paths:
     get:
       summary: Has multiple content types
       description: Has multiple content types
-      operationId: fakeapi.hello.multimime
+      operationId: fakeapi.sanic_handlers.multimime
       responses:
         '200':
           description: goodbye response
@@ -146,7 +146,7 @@ paths:
     get:
       summary: Returns empty response
       description: Returns empty response
-      operationId: fakeapi.hello.empty
+      operationId: fakeapi.sanic_handlers.empty
       responses:
         '204':
           description: empty
@@ -154,7 +154,7 @@ paths:
     get:
       summary: Returns dict response
       description: Returns dict response
-      operationId: fakeapi.hello.test_exploded_deep_object_param
+      operationId: fakeapi.sanic_handlers.test_exploded_deep_object_param
       parameters:
         - name: id
           required: true
@@ -190,7 +190,7 @@ paths:
     get:
       summary: Returns dict response with flexible properties
       description: Returns dict response with flexible properties
-      operationId: fakeapi.hello.test_exploded_deep_object_param_additional_properties
+      operationId: fakeapi.sanic_handlers.test_exploded_deep_object_param_additional_properties
       parameters:
         - name: id
           required: false
@@ -214,7 +214,7 @@ paths:
     get:
       summary: Returns nested dict response
       description: Returns nested dict response
-      operationId: fakeapi.hello.test_nested_exploded_deep_object_param
+      operationId: fakeapi.sanic_handlers.test_nested_exploded_deep_object_param
       parameters:
         - name: id
           required: true
@@ -252,21 +252,21 @@ paths:
   /test-redirect-endpoint:
     get:
       summary: Tests handlers returning flask.Response objects
-      operationId: fakeapi.hello.test_redirect_endpoint
+      operationId: fakeapi.sanic_handlers.test_redirect_endpoint
       responses:
         '302':
           description: 302 Found
   /test-redirect-response-endpoint:
     get:
       summary: Tests handlers returning flask.Response objects
-      operationId: fakeapi.hello.test_redirect_response_endpoint
+      operationId: fakeapi.sanic_handlers.test_redirect_response_endpoint
       responses:
         '302':
           description: 302 Found
   /test-default-object-body:
     post:
       summary: Test if default object body param is passed to handler.
-      operationId: fakeapi.hello.test_default_object_body
+      operationId: fakeapi.sanic_handlers.test_default_object_body
       responses:
         '200':
           description: OK
@@ -281,7 +281,7 @@ paths:
   /test-nested-additional-properties:
     post:
       summary: Test if nested additionalProperties are cast
-      operationId: fakeapi.hello.test_nested_additional_properties
+      operationId: fakeapi.sanic_handlers.test_nested_additional_properties
       responses:
         '200':
           description: OK
@@ -299,7 +299,7 @@ paths:
   /test-default-integer-body:
     post:
       summary: Test if default integer body param is passed to handler.
-      operationId: fakeapi.hello.test_default_integer_body
+      operationId: fakeapi.sanic_handlers.test_default_integer_body
       responses:
         '200':
           description: OK
@@ -315,7 +315,7 @@ paths:
   /test-empty-object-body:
     post:
       summary: Test if empty object body param is passed to handler.
-      operationId: fakeapi.hello.test_empty_object_body
+      operationId: fakeapi.sanic_handlers.test_empty_object_body
       responses:
         '200':
           description: OK
@@ -328,20 +328,20 @@ paths:
   /resolver-test/method:
     get:
       summary: Test class instance method
-      operationId: fakeapi.hello.class_instance.test_method
+      operationId: fakeapi.sanic_handlers.class_instance.test_method
       responses:
         '200':
           description: OK
   /resolver-test/classmethod:
     get:
       summary: Test class instance method
-      operationId: fakeapi.hello.DummyClass.test_classmethod
+      operationId: fakeapi.sanic_handlers.DummyClass.test_classmethod
       responses:
         '200':
           description: OK
   /test_parameter_validation:
     get:
-      operationId: fakeapi.hello.test_parameter_validation
+      operationId: fakeapi.sanic_handlers.test_parameter_validation
       parameters:
         - name: date
           in: query
@@ -361,7 +361,7 @@ paths:
           description: OK
   /test_apikey_query_parameter_validation:
     get:
-      operationId: fakeapi.hello.test_apikey_query_parameter_validation
+      operationId: fakeapi.sanic_handlers.test_apikey_query_parameter_validation
       parameters:
         - name: name
           in: query
@@ -374,7 +374,7 @@ paths:
           description: OK
   /test_required_query_param:
     get:
-      operationId: fakeapi.hello.test_required_query_param
+      operationId: fakeapi.sanic_handlers.test_required_query_param
       parameters:
         - name: 'n'
           in: query
@@ -384,10 +384,16 @@ paths:
       responses:
         '200':
           description: OK
+          content:
+            application/json:
+              schema: {}
+              example:
+                n: 4
+                message: example from oas
 
   /test_array_csv_form_param:
     post:
-      operationId: fakeapi.hello.test_array_csv_form_param3
+      operationId: fakeapi.sanic_handlers.test_array_csv_form_param3
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -411,7 +417,7 @@ paths:
 
   /test_array_pipes_form_param:
     post:
-      operationId: fakeapi.hello.test_array_pipes_form_param3
+      operationId: fakeapi.sanic_handlers.test_array_pipes_form_param3
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -434,7 +440,7 @@ paths:
 
   /test_array_csv_query_param:
     get:
-      operationId: fakeapi.hello.test_array_csv_query_param
+      operationId: fakeapi.sanic_handlers.test_array_csv_query_param
       parameters:
         - name: items
           in: query
@@ -453,7 +459,7 @@ paths:
 
   /test_array_multi_query_param:
     get:
-      operationId: fakeapi.hello.test_array_multi_query_param
+      operationId: fakeapi.sanic_handlers.test_array_multi_query_param
       parameters:
         - name: items
           in: query
@@ -470,7 +476,7 @@ paths:
           description: OK
   /test_array_pipes_query_param:
     get:
-      operationId: fakeapi.hello.test_array_pipes_query_param
+      operationId: fakeapi.sanic_handlers.test_array_pipes_query_param
       parameters:
         - name: items
           in: query
@@ -486,7 +492,7 @@ paths:
           description: OK
   /test_array_unsupported_query_param:
     get:
-      operationId: fakeapi.hello.test_array_unsupported_query_param
+      operationId: fakeapi.sanic_handlers.test_array_unsupported_query_param
       parameters:
         - name: items
           in: query
@@ -503,7 +509,7 @@ paths:
   '/test-int-path/{someint}':
     get:
       summary: Test type casting of path parameter
-      operationId: fakeapi.hello.test_get_someint
+      operationId: fakeapi.sanic_handlers.test_get_someint
       parameters:
         - name: someint
           in: path
@@ -516,7 +522,7 @@ paths:
   '/test-float-path/{somefloat}':
     get:
       summary: Test type casting of path parameter
-      operationId: fakeapi.hello.test_get_somefloat
+      operationId: fakeapi.sanic_handlers.test_get_somefloat
       parameters:
         - name: somefloat
           in: path
@@ -529,7 +535,7 @@ paths:
   /test-default-query-parameter:
     get:
       summary: Test if default parameter is passed to function
-      operationId: fakeapi.hello.test_default_param
+      operationId: fakeapi.sanic_handlers.test_default_param
       parameters:
         - name: name
           in: query
@@ -542,7 +548,7 @@ paths:
   /test-falsy-param:
     get:
       summary: Test if default value when argument is falsy.
-      operationId: fakeapi.hello.test_falsy_param
+      operationId: fakeapi.sanic_handlers.test_falsy_param
       parameters:
         - name: falsy
           in: query
@@ -555,7 +561,7 @@ paths:
   /test-formData-param:
     post:
       summary: Test formData parameter
-      operationId: fakeapi.hello.test_formdata_param3
+      operationId: fakeapi.sanic_handlers.test_formdata_param3
       responses:
         '200':
           description: OK
@@ -572,7 +578,7 @@ paths:
   /test-formData-missing-param:
     post:
       summary: Test formData missing parameter in handler
-      operationId: fakeapi.hello.test_formdata_missing_param
+      operationId: fakeapi.sanic_handlers.test_formdata_missing_param
       responses:
         '200':
           description: OK
@@ -589,7 +595,7 @@ paths:
   /test-formData-file-upload:
     post:
       summary: 'Test formData with file type, for file upload'
-      operationId: fakeapi.hello.test_formdata_file_upload
+      operationId: fakeapi.sanic_handlers.test_formdata_file_upload
       responses:
         '200':
           description: OK
@@ -608,7 +614,7 @@ paths:
   /test-formData-file-upload-missing-param:
     post:
       summary: 'Test formData with file type, missing parameter in handler'
-      operationId: fakeapi.hello.test_formdata_file_upload_missing_param
+      operationId: fakeapi.sanic_handlers.test_formdata_file_upload_missing_param
       responses:
         '200':
           description: OK
@@ -626,7 +632,7 @@ paths:
   /test-bool-param:
     get:
       summary: Test usage of boolean default value
-      operationId: fakeapi.hello.test_bool_default_param
+      operationId: fakeapi.sanic_handlers.test_bool_default_param
       parameters:
         - name: thruthiness
           in: query
@@ -639,7 +645,7 @@ paths:
   /test-bool-array-param:
     get:
       summary: Test usage of an array of booleans value
-      operationId: fakeapi.hello.test_bool_array_param
+      operationId: fakeapi.sanic_handlers.test_bool_array_param
       parameters:
         - name: thruthiness
           in: query
@@ -653,7 +659,7 @@ paths:
   /test-required-param:
     get:
       summary: Test required param without default value
-      operationId: fakeapi.hello.test_required_param
+      operationId: fakeapi.sanic_handlers.test_required_param
       parameters:
         - name: simple
           in: query
@@ -673,7 +679,7 @@ paths:
           type: string
     get:
       summary: Test the method GET with parameter from path
-      operationId: fakeapi.hello.path_parameters_in_get_method
+      operationId: fakeapi.sanic_handlers.path_parameters_in_get_method
       responses:
         '200':
           description: OK
@@ -681,7 +687,7 @@ paths:
     post:
       summary: Generate good day greeting
       description: Generates a good day message.
-      operationId: fakeapi.hello.post_goodday
+      operationId: fakeapi.sanic_handlers.post_goodday
       responses:
         '201':
           description: gooday response
@@ -705,7 +711,7 @@ paths:
     post:
       summary: Generate good day greeting
       description: Generates a good day message.
-      operationId: fakeapi.hello.post_goodday_no_header
+      operationId: fakeapi.sanic_handlers.post_goodday_no_header
       responses:
         '201':
           description: goodday response
@@ -722,7 +728,7 @@ paths:
     post:
       summary: Generate good evening
       description: Generates a good evening message.
-      operationId: fakeapi.hello.post_goodevening
+      operationId: fakeapi.sanic_handlers.post_goodevening
       responses:
         '201':
           description: goodevening response
@@ -748,7 +754,7 @@ paths:
   /test-204-with-headers:
     get:
       summary: Tests that response code 204 can have headers set
-      operationId: fakeapi.hello.test_204_with_headers
+      operationId: fakeapi.sanic_handlers.test_204_with_headers
       responses:
         '204':
           headers:
@@ -760,7 +766,7 @@ paths:
   /test-204-with-headers-nocontent-obj:
     get:
       summary: Tests that response code 204 using NoContent obj can have headers set
-      operationId: fakeapi.hello.test_nocontent_obj_with_headers
+      operationId: fakeapi.sanic_handlers.test_nocontent_obj_with_headers
       responses:
         '204':
           headers:
@@ -771,7 +777,7 @@ paths:
           description: 204 no content
   '/test-array-in-path/{names}':
     get:
-      operationId: fakeapi.hello.test_array_in_path
+      operationId: fakeapi.sanic_handlers.test_array_in_path
       parameters:
         - name: names
           description: List of names.
@@ -793,7 +799,7 @@ paths:
                   type: string
   /nullable-parameters:
     post:
-      operationId: fakeapi.hello.test_nullable_param_post3
+      operationId: fakeapi.sanic_handlers.test_nullable_param_post3
       responses:
         '200':
           description: OK
@@ -812,7 +818,7 @@ paths:
               required:
                 - post_param
     put:
-      operationId: fakeapi.hello.test_nullable_param_put
+      operationId: fakeapi.sanic_handlers.test_nullable_param_put
       responses:
         '200':
           description: OK
@@ -829,7 +835,7 @@ paths:
         description: Just a testing parameter.
         required: true
     get:
-      operationId: fakeapi.hello.test_nullable_parameters
+      operationId: fakeapi.sanic_handlers.test_nullable_parameters
       parameters:
         - name: time_start
           description: Just a testing parameter.
@@ -844,7 +850,7 @@ paths:
           description: OK
   /custom-json-response:
     get:
-      operationId: fakeapi.hello.test_custom_json_response
+      operationId: fakeapi.sanic_handlers.test_custom_json_response
       responses:
         '200':
           description: OK
@@ -858,7 +864,7 @@ paths:
                     description: the number we wanna test
   /blob-response:
     get:
-      operationId: fakeapi.hello.get_blob_data
+      operationId: fakeapi.sanic_handlers.get_blob_data
       responses:
         '200':
           description: Some blob response
@@ -869,7 +875,7 @@ paths:
                 format: binary
   /binary-response:
     get:
-      operationId: fakeapi.hello.get_data_as_binary
+      operationId: fakeapi.sanic_handlers.get_data_as_binary
       responses:
         '200':
           description: Everything is ok
@@ -879,7 +885,7 @@ paths:
                 type: string
   /query-params-as-kwargs:
     get:
-      operationId: fakeapi.hello.test_args_kwargs
+      operationId: fakeapi.sanic_handlers.test_args_kwargs
       parameters:
         - name: foo
           description: Just a testing parameter.
@@ -895,7 +901,7 @@ paths:
                 type: object
   /text-request:
     post:
-      operationId: fakeapi.hello.get_data_as_text
+      operationId: fakeapi.sanic_handlers.get_data_as_text
       responses:
         '200':
           description: OK
@@ -909,7 +915,7 @@ paths:
         required: true
   /param-sanitization:
     post:
-      operationId: fakeapi.hello.test_param_sanitization3
+      operationId: fakeapi.sanic_handlers.test_param_sanitization3
       parameters:
         - name: $query
           description: Just a testing parameter with an invalid Python name
@@ -934,15 +940,15 @@ paths:
                   type: string
   /body-sanitization:
     post:
-      operationId: fakeapi.hello.test_body_sanitization
+      operationId: fakeapi.sanic_handlers.test_body_sanitization
       responses:
         '200':
           description: OK
       requestBody:
-        $ref: '#/components/requestBodies/fakeapi.hello.test_body_sanitization_body'
+        $ref: '#/components/requestBodies/fakeapi.sanic_handlers.test_body_sanitization_body'
   /body-sanitization-additional-properties:
     post:
-      operationId: fakeapi.hello.test_body_sanitization_additional_properties
+      operationId: fakeapi.sanic_handlers.test_body_sanitization_additional_properties
       responses:
         '200':
           description: OK
@@ -957,7 +963,7 @@ paths:
               additionalProperties: true
   /body-sanitization-additional-properties-defined:
     post:
-      operationId: fakeapi.hello.test_body_sanitization_additional_properties_defined
+      operationId: fakeapi.sanic_handlers.test_body_sanitization_additional_properties_defined
       responses:
         '200':
           description: OK
@@ -973,7 +979,7 @@ paths:
                 type: string
   /body-not-allowed-additional-properties:
     post:
-      operationId: fakeapi.hello.test_body_not_allowed_additional_properties
+      operationId: fakeapi.sanic_handlers.test_body_not_allowed_additional_properties
       responses:
         '200':
           description: OK
@@ -988,7 +994,7 @@ paths:
               additionalProperties: false
   /get_non_conforming_response:
     get:
-      operationId: fakeapi.hello.get_empty_dict
+      operationId: fakeapi.sanic_handlers.get_empty_dict
       responses:
         '200':
           description: OK
@@ -1003,18 +1009,18 @@ paths:
                     type: string
   /post_wrong_content_type:
     post:
-      operationId: fakeapi.hello.post_wrong_content_type
+      operationId: fakeapi.sanic_handlers.post_wrong_content_type
       responses:
         '200':
           description: OK
         '215':
           description: NOT-OK
       requestBody:
-        $ref: '#/components/requestBodies/fakeapi.hello.test_body_sanitization_body'
+        $ref: '#/components/requestBodies/fakeapi.sanic_handlers.test_body_sanitization_body'
   /get_unicode_request:
     get:
       summary: Test if a unicode string in query parameter works properly in Python 2
-      operationId: fakeapi.hello.get_unicode_query
+      operationId: fakeapi.sanic_handlers.get_unicode_query
       parameters:
         - name: price
           in: query
@@ -1025,7 +1031,7 @@ paths:
           description: OK
   /get_unicode_response:
     get:
-      operationId: fakeapi.hello.get_unicode_data
+      operationId: fakeapi.sanic_handlers.get_unicode_data
       responses:
         '200':
           description: Some unicode response
@@ -1035,7 +1041,7 @@ paths:
                 type: object
   /get_enum_response:
     get:
-      operationId: fakeapi.hello.get_enum_response
+      operationId: fakeapi.sanic_handlers.get_enum_response
       responses:
         '200':
           description: Some HTTPStatus response
@@ -1045,7 +1051,7 @@ paths:
                 type: object
   /get_httpstatus_response:
     get:
-      operationId: fakeapi.hello.get_httpstatus_response
+      operationId: fakeapi.sanic_handlers.get_httpstatus_response
       responses:
         '200':
           description: Some HTTPStatus response
@@ -1055,7 +1061,7 @@ paths:
                 type: object
   '/get_bad_default_response/{response_code}':
     get:
-      operationId: fakeapi.hello.get_bad_default_response
+      operationId: fakeapi.sanic_handlers.get_bad_default_response
       parameters:
         - name: response_code
           in: path
@@ -1085,48 +1091,48 @@ paths:
     parameters:
       - $ref: "#/components/parameters/Name"
     get:
-      operationId: fakeapi.hello.get_add_operation_on_http_methods_only
+      operationId: fakeapi.sanic_handlers.get_add_operation_on_http_methods_only
       responses:
         default:
           description: ''
     put:
-      operationId: fakeapi.hello.put_add_operation_on_http_methods_only
+      operationId: fakeapi.sanic_handlers.put_add_operation_on_http_methods_only
       responses:
         default:
           description: ''
     post:
-      operationId: fakeapi.hello.post_add_operation_on_http_methods_only
+      operationId: fakeapi.sanic_handlers.post_add_operation_on_http_methods_only
       responses:
         default:
           description: ''
     delete:
-      operationId: fakeapi.hello.delete_add_operation_on_http_methods_only
+      operationId: fakeapi.sanic_handlers.delete_add_operation_on_http_methods_only
       responses:
         default:
           description: ''
     options:
-      operationId: fakeapi.hello.options_add_operation_on_http_methods_only
+      operationId: fakeapi.sanic_handlers.options_add_operation_on_http_methods_only
       responses:
         default:
           description: ''
     head:
-      operationId: fakeapi.hello.head_add_operation_on_http_methods_only
+      operationId: fakeapi.sanic_handlers.head_add_operation_on_http_methods_only
       responses:
         default:
           description: ''
     patch:
-      operationId: fakeapi.hello.patch_add_operation_on_http_methods_only
+      operationId: fakeapi.sanic_handlers.patch_add_operation_on_http_methods_only
       responses:
         default:
           description: ''
     trace:
-      operationId: fakeapi.hello.trace_add_operation_on_http_methods_only
+      operationId: fakeapi.sanic_handlers.trace_add_operation_on_http_methods_only
       responses:
         default:
           description: ''
   /forward:
     post:
-      operationId: fakeapi.hello.forward
+      operationId: fakeapi.sanic_handlers.forward
       requestBody:
         content:
           application/json:
@@ -1157,7 +1163,7 @@ servers:
   - url: /v1.0
 components:
   requestBodies:
-    fakeapi.hello.test_body_sanitization_body:
+    fakeapi.sanic_handlers.test_body_sanitization_body:
       content:
         application/json:
           schema:
@@ -1195,4 +1201,4 @@ components:
       type: apiKey
       name: apikey
       in: query
-      x-apikeyInfoFunc: fakeapi.hello.apikey_info
+      x-apikeyInfoFunc: fakeapi.sanic_handlers.apikey_info

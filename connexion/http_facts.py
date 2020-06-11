@@ -11,5 +11,5 @@ METHODS = set([
     "options",
     "head",
     "patch",
-    "trace"
+#    "trace"  #  FIXME: rpolli
 ])

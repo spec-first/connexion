@@ -1,0 +1,1015 @@
+swagger: "2.0"
+
+info:
+  title: "{{title}}"
+  version: "1.0"
+
+basePath: /v1.0
+
+paths:
+  /greeting/{name}:
+    post:
+      summary: Generate greeting
+      description: Generates a greeting message.
+      operationId: fakeapi.sanic_handlers.post_greeting
+      responses:
+        '200':
+          description: greeting response
+          schema:
+            type: object
+      parameters:
+        - name: name
+          in: path
+          description: Name of the person to greet.
+          required: true
+          type: string
+  /greeting/{name}/{remainder}:
+    post:
+      summary: Generate greeting and collect the remainder of the url
+      description: Generates a greeting message and includes the rest of the url.
+      operationId: fakeapi.sanic_handlers.post_greeting_url
+      responses:
+        '200':
+          description: greeting response with url
+          schema:
+            type: object
+      parameters:
+        - name: name
+          in: path
+          description: Name of the person to greet.
+          required: true
+          type: string
+        - name: remainder
+          in: path
+          description: the rest of the url
+          required: true
+          type: string
+          format: path
+  /greetings/{name}:
+    get:
+      summary: Generate greeting
+      description: Generates a greeting message with custom mimetype
+      operationId: fakeapi.sanic_handlers.get_greetings
+      produces:
+        - application/x.connexion+json
+      responses:
+        '200':
+          description: greeting response
+          schema:
+            type: object
+      parameters:
+        - name: name
+          in: path
+          description: Name of the person to greet.
+          required: true
+          type: string
+
+  /bye/{name}:
+    get:
+      summary: Generate goodbye
+      description: Generates a goodbye message.
+      operationId: fakeapi.sanic_handlers.get_bye
+      produces:
+        - text/plain
+      responses:
+        '200':
+          description: goodbye response
+          schema:
+            type: string
+        default:
+          description: "unexpected error"
+      parameters:
+        - name: name
+          in: path
+          description: Name of the person to say bye.
+          required: true
+          type: string
+
+  /flask_response_tuple:
+    get:
+      summary: Return flask response tuple
+      description: Test returning a flask response tuple
+      operationId: fakeapi.sanic_handlers.get_flask_response_tuple
+      produces:
+        - application/json
+      responses:
+        200:
+          description: json response
+          schema:
+            type: object
+
+  /list/{name}:
+    get:
+      summary: Generate a greeting in a list
+      description: Generate a greeting in a list
+      operationId: fakeapi.sanic_handlers.get_list
+      produces:
+        - application/json
+      responses:
+        200:
+          description: a greeting in a list
+          schema:
+            type: array
+            items:
+              type: string
+      parameters:
+        - name: name
+          in: path
+          description: Name of the person to say hello to.
+          required: true
+          type: string
+
+  /test_no_content_response:
+    get:
+      operationId: fakeapi.sanic_handlers.test_no_content_response
+      responses:
+        204:
+          description: No content returned
+
+  /multimime:
+    get:
+      summary: Has multiple content types
+      description: Has multiple content types
+      operationId: fakeapi.sanic_handlers.multimime
+      produces:
+        - application/json
+        - application/xml
+      responses:
+        200:
+          description: goodbye response
+          schema:
+            type: string
+
+  /empty:
+    get:
+      summary: Returns empty response
+      description: Returns empty response
+      operationId: fakeapi.sanic_handlers.empty
+      produces:
+        - application/json
+      responses:
+        204:
+          description: empty
+
+  /test-redirect-endpoint:
+    get:
+      summary: Tests handlers returning flask.Response objects
+      operationId: fakeapi.sanic_handlers.test_redirect_endpoint
+      responses:
+        302:
+          description: 302 Found
+
+  /test-redirect-response-endpoint:
+    get:
+      summary: Tests handlers returning flask.Response objects
+      operationId: fakeapi.sanic_handlers.test_redirect_response_endpoint
+      responses:
+        302:
+          description: 302 Found
+
+  /test-default-object-body:
+    post:
+      summary: Test if default object body param is passed to handler.
+      operationId: fakeapi.sanic_handlers.test_default_object_body
+      parameters:
+        - name: stack
+          in: body
+          schema:
+            $ref: '#/definitions/new_stack'
+            default:
+                'image_version': 'default_image'
+      responses:
+        200:
+          description: OK
+
+  /test-default-integer-body:
+    post:
+      summary: Test if default integer body param is passed to handler.
+      operationId: fakeapi.sanic_handlers.test_default_integer_body
+      parameters:
+        - name: stack_version
+          in: body
+          schema:
+            type: integer
+            format: int32
+            example: 1
+            default: 1
+      responses:
+        200:
+          description: OK
+
+  /test-empty-object-body:
+    post:
+      summary: Test if empty object body param is passed to handler.
+      operationId: fakeapi.sanic_handlers.test_empty_object_body
+      parameters:
+        - name: stack
+          in: body
+          schema:
+            type: object
+      responses:
+        200:
+          description: OK
+
+  /resolver-test/method:
+    get:
+      summary: Test class instance method
+      operationId: fakeapi.sanic_handlers.class_instance.test_method
+      responses:
+        200:
+          description: OK
+
+  /resolver-test/classmethod:
+    get:
+      summary: Test class instance method
+      operationId: fakeapi.sanic_handlers.DummyClass.test_classmethod
+      responses:
+        200:
+          description: OK
+
+  /test_parameter_validation:
+    get:
+      operationId: fakeapi.sanic_handlers.test_parameter_validation
+      parameters:
+        - name: date
+          in: query
+          type: string
+          format: date
+        - name: int
+          in: query
+          type: integer
+        - name: bool
+          in: query
+          type: boolean
+      responses:
+        200:
+          description: OK
+
+  /test_apikey_query_parameter_validation:
+    get:
+      operationId: fakeapi.sanic_handlers.test_apikey_query_parameter_validation
+      parameters:
+        - name: name
+          in: query
+          type: string
+      security:
+        - api_key: []
+      responses:
+        200:
+          description: OK
+
+  /test_required_query_param:
+    get:
+      operationId: fakeapi.sanic_handlers.test_required_query_param
+      parameters:
+        - name: n
+          in: query
+          type: number
+          required: true
+      responses:
+        200:
+          description: OK
+
+  /test_array_csv_form_param:
+    post:
+      operationId: fakeapi.sanic_handlers.test_array_csv_form_param
+      consumes:
+        - application/x-www-form-urlencoded
+      parameters:
+        - name: items
+          in: formData
+          description: An comma separated array of items
+          type: array
+          items:
+            type: string
+          collectionFormat: csv
+          default: ["squash", "banana"]
+      responses:
+        200:
+          description: OK
+
+  /test_array_pipes_form_param:
+    post:
+      operationId: fakeapi.sanic_handlers.test_array_pipes_form_param
+      consumes:
+        - application/x-www-form-urlencoded
+      parameters:
+        - name: items
+          in: formData
+          description: An comma separated array of items
+          type: array
+          items:
+            type: integer
+          collectionFormat: pipes
+      responses:
+        200:
+          description: OK
+
+  /test_array_csv_query_param:
+    get:
+      operationId: fakeapi.sanic_handlers.test_array_csv_query_param
+      parameters:
+        - name: items
+          in: query
+          description: An comma separated array of items
+          type: array
+          items:
+            type: string
+          collectionFormat: csv
+          default: ["squash", "banana"]
+      responses:
+        200:
+          description: OK
+
+  /test_array_multi_query_param:
+    get:
+      operationId: fakeapi.sanic_handlers.test_array_multi_query_param
+      parameters:
+        - name: items
+          in: query
+          description: An comma separated array of items
+          type: array
+          items:
+            type: string
+          collectionFormat: multi
+      responses:
+        200:
+          description: OK
+
+  /test_array_pipes_query_param:
+    get:
+      operationId: fakeapi.sanic_handlers.test_array_pipes_query_param
+      parameters:
+        - name: items
+          in: query
+          description: An pipe separated array of items
+          required: true
+          type: array
+          items:
+            type: integer
+          collectionFormat: pipes
+      responses:
+        200:
+          description: OK
+
+  /test_array_unsupported_query_param:
+    get:
+      operationId: fakeapi.sanic_handlers.test_array_unsupported_query_param
+      parameters:
+        - name: items
+          in: query
+          description: An pipe separated array of items
+          required: true
+          type: array
+          items:
+            type: string
+          collectionFormat: tsv
+      responses:
+        200:
+          description: OK
+
+  /test-int-path/{someint}:
+    get:
+      summary: Test type casting of path parameter
+      operationId: fakeapi.sanic_handlers.test_get_someint
+      parameters:
+        - name: someint
+          in: path
+          type: integer
+          required: true
+      responses:
+        200:
+          description: OK
+
+  /test-float-path/{somefloat}:
+    get:
+      summary: Test type casting of path parameter
+      operationId: fakeapi.sanic_handlers.test_get_somefloat
+      parameters:
+        - name: somefloat
+          in: path
+          type: number
+          required: true
+      responses:
+        200:
+          description: OK
+
+  /test-default-query-parameter:
+    get:
+      summary: Test if default parameter is passed to function
+      operationId: fakeapi.sanic_handlers.test_default_param
+      parameters:
+        - name: name
+          in: query
+          type: string
+          default: connexion
+      responses:
+        200:
+          description: OK
+
+  /test-falsy-param:
+    get:
+      summary: Test if default value when argument is falsy.
+      operationId: fakeapi.sanic_handlers.test_falsy_param
+      parameters:
+        - name: falsy
+          type: integer
+          in: query
+          default: 1
+      responses:
+        200:
+          description: OK
+
+  /test-formData-param:
+    post:
+      consumes:
+        - application/x-www-form-urlencoded
+      summary: Test formData parameter
+      operationId: fakeapi.sanic_handlers.test_formdata_param
+      parameters:
+        - name: formData
+          type: string
+          in: formData
+          required: true
+      responses:
+        200:
+          description: OK
+
+  /test-formData-missing-param:
+    post:
+      summary: Test formData missing parameter in handler
+      operationId: fakeapi.sanic_handlers.test_formdata_missing_param
+      parameters:
+        - name: missing_formData
+          type: string
+          in: formData
+          required: true
+      responses:
+        200:
+          description: OK
+
+  /test-formData-file-upload:
+    post:
+      summary: Test formData with file type, for file upload
+      operationId: fakeapi.sanic_handlers.test_formdata_file_upload
+      consumes:
+      - multipart/form-data
+      parameters:
+        - name: formData
+          type: file
+          in: formData
+          required: true
+      responses:
+        200:
+          description: OK
+
+  /test-formData-file-upload-missing-param:
+    post:
+      summary: Test formData with file type, missing parameter in handler
+      operationId: fakeapi.sanic_handlers.test_formdata_file_upload_missing_param
+      consumes:
+      - multipart/form-data
+      parameters:
+        - name: missing_formData
+          type: file
+          in: formData
+          required: true
+      responses:
+        200:
+          description: OK
+
+  /test-bool-param:
+    get:
+      summary: Test usage of boolean default value
+      operationId: fakeapi.sanic_handlers.test_bool_default_param
+      parameters:
+        - name: thruthiness
+          type: boolean
+          in: query
+          default: false
+      responses:
+        200:
+          description: OK
+
+  /test-bool-array-param:
+    get:
+      summary: Test usage of an array of booleans value
+      operationId: fakeapi.sanic_handlers.test_bool_array_param
+      parameters:
+        - name: thruthiness
+          in: query
+          type: array
+          items:
+            type: boolean
+      responses:
+        200:
+          description: OK
+
+  /test-required-param:
+    get:
+      summary: Test required param without default value
+      operationId: fakeapi.sanic_handlers.test_required_param
+      parameters:
+        - name: simple
+          type: string
+          in: query
+          required: true
+      responses:
+        200:
+          description: OK
+
+  /parameters-in-root-path:
+    parameters:
+      - in: query
+        name: title
+        type: string
+        description: Some parameter in the path
+        required: true
+    get:
+      summary: Test the method GET with parameter from path
+      operationId: fakeapi.sanic_handlers.path_parameters_in_get_method
+      responses:
+        200:
+          description: Everything is OK
+      responses:
+        200:
+          description: OK
+
+  /goodday/{name}:
+    post:
+      summary: Generate good day greeting
+      description: Generates a good day message.
+      operationId: fakeapi.sanic_handlers.post_goodday
+      responses:
+        201:
+          description: gooday response
+          headers:
+            Location:
+              type: string
+              description: The URI of the created resource
+          schema:
+            type: object
+      parameters:
+        - name: name
+          in: path
+          description: Name of the person to greet.
+          required: true
+          type: string
+
+  /goodday/noheader:
+    post:
+      summary: Generate good day greeting
+      description: Generates a good day message.
+      operationId: fakeapi.sanic_handlers.post_goodday_no_header
+      responses:
+        201:
+          description: gooday response
+          headers:
+            Location:
+              type: string
+              description: The URI of the created resource
+          schema:
+            type: object
+
+  /goodevening/{name}:
+    post:
+      summary: Generate good evening
+      description: Generates a good evening message.
+      operationId: fakeapi.sanic_handlers.post_goodevening
+      produces:
+        - text/plain
+      responses:
+        201:
+          description: goodevening response
+          headers:
+            Location:
+              type: string
+              description: The URI of the created resource
+          schema:
+            type: string
+      parameters:
+        - name: name
+          in: path
+          description: Name of the person to say good evening.
+          required: true
+          type: string
+
+  /test-204-with-headers:
+    get:
+      summary: Tests that response code 204 can have headers set
+      operationId: fakeapi.sanic_handlers.test_204_with_headers
+      responses:
+        204:
+          headers:
+            X-Something:
+              description: A value that might be send in the response
+              type: string
+          description: 204 no content
+
+  /test-204-with-headers-nocontent-obj:
+    get:
+      summary: Tests that response code 204 using NoContent obj can have headers set
+      operationId: fakeapi.sanic_handlers.test_nocontent_obj_with_headers
+      responses:
+        204:
+          headers:
+            X-Something:
+              description: A value that might be send in the response
+              type: string
+          description: 204 no content
+
+  /test-array-in-path/{names}:
+    get:
+      operationId: fakeapi.sanic_handlers.test_array_in_path
+      produces:
+        - application/json
+      parameters:
+        - name: names
+          description: List of names.
+          in: path
+          type: array
+          items:
+            type: string
+          required: true
+          collectionFormat: csv
+      responses:
+        200:
+          description: OK
+          schema:
+            type: array
+            items:
+              type: string
+
+  /nullable-parameters:
+    post:
+      operationId: fakeapi.sanic_handlers.test_nullable_param_post
+      consumes:
+        - application/x-www-form-urlencoded
+      produces:
+        - application/json
+      parameters:
+        - name: post_param
+          description: Just a testing parameter.
+          in: formData
+          type: number
+          format: int32
+          x-nullable: true
+          required: true
+      responses:
+        200:
+          description: OK
+    put:
+      operationId: fakeapi.sanic_handlers.test_nullable_param_put
+      produces:
+        - application/json
+      parameters:
+        - name: contents
+          description: Just a testing parameter.
+          in: body
+          x-nullable: true
+          required: true
+          schema:
+              type: object
+              properties:
+                name:
+                  type: string
+      responses:
+        200:
+          description: OK
+    get:
+      operationId: fakeapi.sanic_handlers.test_nullable_parameters
+      produces:
+        - application/json
+      parameters:
+        - name: time_start
+          description: Just a testing parameter.
+          in: query
+          type: integer
+          format: int32
+          x-nullable: true
+          required: true
+      responses:
+        200:
+          description: OK
+
+  /custom-json-response:
+    get:
+      operationId: fakeapi.sanic_handlers.test_custom_json_response
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            type: object
+            properties:
+              theResult:
+                type: string
+                description: the number we wanna test
+
+  /blob-response:
+    get:
+      operationId: fakeapi.sanic_handlers.get_blob_data
+      produces:
+        - "application/octet-stream"
+      responses:
+        200:
+          description: Some blob response
+          schema:
+            type: string
+            format: binary
+
+  /binary-response:
+    get:
+      operationId: fakeapi.sanic_handlers.get_data_as_binary
+      produces:
+        - "application/octet-stream"
+      responses:
+        200:
+          description: Everything is ok
+          schema:
+            type: string
+
+  /query-params-as-kwargs:
+    get:
+      operationId: fakeapi.sanic_handlers.test_args_kwargs
+      produces:
+        - application/json
+      parameters:
+        - name: foo
+          description: Just a testing parameter.
+          in: query
+          type: string
+      responses:
+        200:
+          description: Return kwargs
+          schema:
+            type: object
+
+  /text-request:
+    post:
+      operationId: fakeapi.sanic_handlers.get_data_as_text
+      consumes:
+        - "text/plain"
+      parameters:
+        - name: post_param
+          description: Just a testing parameter.
+          in: body
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+
+  /param-sanitization:
+    post:
+      operationId: fakeapi.sanic_handlers.test_param_sanitization
+      consumes:
+      - multipart/form-data
+      produces:
+        - application/json
+      parameters:
+        - name: $query
+          description: Just a testing parameter with an invalid Python name
+          in: query
+          type: string
+        - name: $form
+          description: Just a testing parameter in the form data
+          in: formData
+          type: string
+      responses:
+        200:
+          description: Return parameters
+          schema:
+            type: object
+
+  /body-sanitization:
+    post:
+      operationId: fakeapi.sanic_handlers.test_body_sanitization
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: $body
+          description: Just a testing parameter in the body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              body1:
+                type: string
+              body2:
+                type: string
+      responses:
+        200:
+          description: OK
+
+  /body-sanitization-additional-properties:
+    post:
+      operationId: fakeapi.sanic_handlers.test_body_sanitization_additional_properties
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: $body
+          description: Just a testing parameter in the body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              body1:
+                type: string
+            additionalProperties: true
+      responses:
+        200:
+          description: OK
+
+  /body-sanitization-additional-properties-defined:
+    post:
+      operationId: fakeapi.sanic_handlers.test_body_sanitization_additional_properties_defined
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: $body
+          description: Just a testing parameter in the body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              body1:
+                type: string
+            additionalProperties:
+              type: string
+      responses:
+        200:
+          description: OK
+
+  /body-not-allowed-additional-properties:
+    post:
+      operationId: fakeapi.sanic_handlers.test_body_not_allowed_additional_properties
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: $body
+          description: Just a testing parameter in the body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              body1:
+                type: string
+            additionalProperties: false
+      responses:
+        200:
+          description: OK
+
+  /get_non_conforming_response:
+    get:
+      operationId: fakeapi.sanic_handlers.get_empty_dict
+      responses:
+        200:
+          description: OK
+          schema:
+            type: object
+            required:
+              - some
+            properties:
+              some:
+                type: string
+  /post_wrong_content_type:
+    post:
+      operationId: fakeapi.sanic_handlers.post_wrong_content_type
+      consumes:
+      - application/json
+      parameters:
+        - name: $body
+          description: Just a testing parameter in the body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              body1:
+                type: string
+              body2:
+                type: string
+      responses:
+        200:
+          description: OK
+        215:
+          description: NOT-OK
+
+  /get_unicode_request:
+    get:
+      summary: Test if a unicode string in query parameter works properly in Python 2
+      operationId: fakeapi.sanic_handlers.get_unicode_query
+      parameters:
+        - name: price
+          in: query
+          type: string
+      responses:
+        200:
+          description: OK
+
+  /get_unicode_response:
+    get:
+      operationId: fakeapi.sanic_handlers.get_unicode_data
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: Some unicode response
+          schema:
+            type: object
+
+  /get_enum_response:
+    get:
+      operationId: fakeapi.sanic_handlers.get_enum_response
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: Some HTTPStatus response
+          schema:
+            type: object
+
+  /get_httpstatus_response:
+    get:
+      operationId: fakeapi.sanic_handlers.get_httpstatus_response
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: Some HTTPStatus response
+          schema:
+            type: object
+
+  /get_bad_default_response/{response_code}:
+    get:
+      operationId: fakeapi.sanic_handlers.get_bad_default_response
+      produces:
+        - "application/json"
+      parameters:
+        - name: response_code
+          in: path
+          type: integer
+          required: true
+      responses:
+        200:
+          description: Some object response
+          schema:
+            type: object
+        default:
+          description: Some array response
+          schema:
+            type: array
+            items:
+              type: integer
+
+  /forward:
+    post:
+      operationId: fakeapi.sanic_handlers.forward
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+      responses:
+        200:
+          description: >
+            The response containing the same data as were present in request body.
+          schema:
+            type: object
+
+definitions:
+  new_stack:
+    type: object
+    properties:
+      image_version:
+        type: string
+        description: Docker image version to deploy
+    required:
+      - image_version
+
+securityDefinitions:
+    api_key:
+      type: apiKey
+      name: apikey
+      in: query
+      x-apikeyInfoFunc: fakeapi.sanic_handlers.apikey_info
