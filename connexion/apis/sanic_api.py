@@ -244,7 +244,7 @@ class SanicApi(AbstractAPI):
         :return: connexion request instance
         :rtype: ConnexionRequest
         """
-        context_dict = {}  # XXX: fixme use aiohttp-context with sanic
+        context_dict = {"request": req}  # XXX: fixme use aiohttp-context with sanic
         url = str(req.url)
         has_body = bool(req.body)
         logger.debug('Getting data and status code',

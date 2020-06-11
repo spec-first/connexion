@@ -5,7 +5,7 @@ import sys
 
 import pytest
 
-from connexion import App
+from connexion import App, SanicApp
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -121,7 +121,6 @@ def build_app_from_fixture(api_spec_folder, spec_file='openapi.yaml', **kwargs):
     cnx_app.add_api(spec_file, **kwargs)
     cnx_app._spec_file = spec_file
     return cnx_app
-
 
 @pytest.fixture(scope="session", params=SPECS)
 def simple_app(request):

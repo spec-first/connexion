@@ -8,14 +8,14 @@ from sanic.request import Request
 
 
 async def get_bye(request, name):
-    return HTTPResponse(text='Goodbye {}'.format(name))
+    return HTTPResponse(body='Goodbye {}'.format(name).encode())
 
 
-async def sanic_str_response(request):
+async def sanic_str_response(request=None):
     return 'str response'
 
 
-async def sanic_non_str_non_json_response(request):
+async def sanic_non_str_non_json_response(request=None):
     return 1234
 
 
@@ -88,10 +88,15 @@ async def get_uuid(request):
 
 class DummyClass(object):
     @classmethod
-    def test_classmethod(cls, request):
+    async def test_classmethod(cls, request):
         return cls.__name__
 
-    def test_method(self, request):
+    async def test_method(self, request):
         return self.__class__.__name__
 
 class_instance = DummyClass()  # noqa
+
+
+async def forward(request, body):
+    """Return a response with the same payload as in the request body."""
+    return body
