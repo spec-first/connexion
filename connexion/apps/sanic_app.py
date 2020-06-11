@@ -4,8 +4,9 @@ import pathlib
 from decimal import Decimal
 from types import FunctionType  # NOQA
 
+import sanic
 from sanic import Sanic
-import werkzeug.exceptions
+from sanic.exceptions import SanicException, ServerError, NotFound
 from sanic.response import json
 
 from ..apis.sanic_api import SanicApi
@@ -17,7 +18,7 @@ logger = logging.getLogger('connexion.app')
 
 
 class SanicApp(AbstractApp):
-    def __init__(self, import_name, server='flask', **kwargs):
+    def __init__(self, import_name, server='sanic', **kwargs):
         super(SanicApp, self).__init__(import_name, SanicApi, server=server, **kwargs)
 
     def create_app(self):
@@ -25,16 +26,17 @@ class SanicApp(AbstractApp):
         return app
 
     def get_root_path(self):
+        self.app.root_path = "./"
         return pathlib.Path(self.app.root_path)
 
     def set_errors_handlers(self):
-        for error_code in werkzeug.exceptions.default_exceptions:
+        for error_code in sanic.exceptions._sanic_exceptions.values():
             self.add_error_handler(error_code, self.common_error_handler)
 
         self.add_error_handler(ProblemException, self.common_error_handler)
 
     @staticmethod
-    def common_error_handler(exception):
+    async def common_error_handler(request, exception):
         """
         :type exception: Exception
         """
@@ -44,13 +46,16 @@ class SanicApp(AbstractApp):
                 type=exception.type, instance=exception.instance, headers=exception.headers,
                 ext=exception.ext)
         else:
-            if not isinstance(exception, werkzeug.exceptions.HTTPException):
-                exception = werkzeug.exceptions.InternalServerError()
+            if not isinstance(exception, SanicException):
+                exception = ServerError()
 
-            response = problem(title=exception.name, detail=exception.description,
-                               status=exception.code)
-
-        return SanicApi.get_response(response)
+            response = problem(title=exception.__class__.__name__, detail=exception.args,
+                               status=exception.status_code)
+        #
+        # XXX stub return json-problems
+        #
+        return json(status=response.status_code, body=response.body, content_type=response.content_type)
+        # return SanicApi.get_response(response)
 
     def add_api(self, specification, **kwargs):
         api = super(SanicApp, self).add_api(specification, **kwargs)
@@ -59,7 +64,8 @@ class SanicApp(AbstractApp):
 
     def add_error_handler(self, error_code, function):
         # type: (int, FunctionType) -> None
-        self.app.register_error_handler(error_code, function)
+
+        self.app.error_handler.add(error_code, function)
 
     def run(self, port=None, server=None, debug=None, host=None, **options):  # pragma: no cover
         """

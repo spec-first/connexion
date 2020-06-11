@@ -1,0 +1,21 @@
+swagger: "2.0"
+
+info:
+  title: "{{title}}"
+  version: "1.0"
+
+basePath: /v1.0
+
+paths:
+  /sanic_validate_responses:
+    get:
+      summary: Return a bytes response
+      description: Test returning a bytes response
+      operationId: fakeapi.sanic_handlers_async_def.sanic_validate_responses
+      produces:
+        - application/json
+      responses:
+        200:
+          description: json response
+          schema:
+            type: object

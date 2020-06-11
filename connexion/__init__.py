@@ -44,5 +44,14 @@ except ImportError as e:  # pragma: no cover
     AioHttpApi = _aiohttp_not_installed_error
     AioHttpApp = _aiohttp_not_installed_error
 
+try:
+    from .apis.sanic_api import SanicApi
+    from .apps.sanic_app import SanicApp
+except ImportError as e:  # pragma: no cover
+    _sanic_not_installed_error = not_installed_error(e)
+    SanicApi = _sanic_not_installed_error
+    SanicApp = _sanic_not_installed_error
+
+
 # This version is replaced during release process.
 __version__ = '2020.0.dev1'

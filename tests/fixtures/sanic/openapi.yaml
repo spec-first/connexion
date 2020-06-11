@@ -1,0 +1,1198 @@
+openapi: 3.0.0
+info:
+  title: '{{title}}'
+  version: '1.0'
+paths:
+  '/greeting/{name}':
+    post:
+      summary: Generate greeting
+      description: Generates a greeting message.
+      operationId: fakeapi.sanic_handlers.post_greeting
+      responses:
+        '200':
+          description: greeting response
+          content:
+            'application/json':
+              schema:
+                type: object
+      parameters:
+        - name: name
+          in: path
+          description: Name of the person to greet.
+          required: true
+          schema:
+            type: string
+  '/greeting/{name}/{remainder}':
+    post:
+      summary: Generate greeting and collect the remainder of the url
+      description: Generates a greeting message and includes the rest of the url.
+      operationId: fakeapi.hello.post_greeting_url
+      responses:
+        '200':
+          description: greeting response with url
+          content:
+            'application/json':
+              schema:
+                type: object
+      parameters:
+        - name: name
+          in: path
+          description: Name of the person to greet.
+          required: true
+          schema:
+            type: string
+        - name: remainder
+          in: path
+          description: the rest of the url
+          required: true
+          schema:
+            type: string
+            format: path
+  '/greetings/{name}':
+    get:
+      summary: Generate greeting
+      description: Generates a greeting message with custom mimetype
+      operationId: fakeapi.hello.get_greetings
+      responses:
+        '200':
+          description: greeting response
+          content:
+            application/x.connexion+json:
+              schema:
+                type: object
+      parameters:
+        - name: name
+          in: path
+          description: Name of the person to greet.
+          required: true
+          schema:
+            type: string
+  '/bye/{name}':
+    get:
+      summary: Generate goodbye
+      description: Generates a goodbye message.
+      operationId: fakeapi.hello.get_bye
+      responses:
+        '200':
+          description: goodbye response
+          content:
+            text/plain:
+              schema:
+                type: string
+        default:
+          description: unexpected error
+      parameters:
+        - name: name
+          in: path
+          description: Name of the person to say bye.
+          required: true
+          schema:
+            type: string
+  /flask_response_tuple:
+    get:
+      summary: Return flask response tuple
+      description: Test returning a flask response tuple
+      operationId: fakeapi.hello.get_flask_response_tuple
+      responses:
+        '200':
+          description: json response
+          content:
+            application/json:
+              schema:
+                type: object
+  '/list/{name}':
+    get:
+      summary: Generate a greeting in a list
+      description: Generate a greeting in a list
+      operationId: fakeapi.hello.get_list
+      responses:
+        '200':
+          description: a greeting in a list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+      parameters:
+        - name: name
+          in: path
+          description: Name of the person to say hello to.
+          required: true
+          schema:
+            type: string
+  /test_no_content_response:
+    get:
+      operationId: fakeapi.hello.test_no_content_response
+      responses:
+        '204':
+          description: No content returned
+  /multimime:
+    get:
+      summary: Has multiple content types
+      description: Has multiple content types
+      operationId: fakeapi.hello.multimime
+      responses:
+        '200':
+          description: goodbye response
+          content:
+            application/json:
+              schema:
+                type: string
+            application/xml:
+              schema:
+                type: string
+  /empty:
+    get:
+      summary: Returns empty response
+      description: Returns empty response
+      operationId: fakeapi.hello.empty
+      responses:
+        '204':
+          description: empty
+  /exploded-deep-object-param:
+    get:
+      summary: Returns dict response
+      description: Returns dict response
+      operationId: fakeapi.hello.test_exploded_deep_object_param
+      parameters:
+        - name: id
+          required: true
+          in: query
+          style: deepObject
+          explode: true
+          schema:
+            type: object
+            additionalProperties: false
+            properties:
+              foo:
+                type: string
+              fooint:
+                type: integer
+              fooboo:
+                type: boolean
+              foo4:
+                type: string
+                default: blubb
+      responses:
+        '200':
+          description: object response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  foo:
+                    type: string
+                  foo4:
+                    type: string
+  /exploded-deep-object-param-additional-properties:
+    get:
+      summary: Returns dict response with flexible properties
+      description: Returns dict response with flexible properties
+      operationId: fakeapi.hello.test_exploded_deep_object_param_additional_properties
+      parameters:
+        - name: id
+          required: false
+          in: query
+          style: deepObject
+          explode: true
+          schema:
+            type: object
+            additionalProperties:
+              type: string
+      responses:
+        '200':
+          description: object response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+  /nested-exploded-deep-object-param:
+    get:
+      summary: Returns nested dict response
+      description: Returns nested dict response
+      operationId: fakeapi.hello.test_nested_exploded_deep_object_param
+      parameters:
+        - name: id
+          required: true
+          in: query
+          style: deepObject
+          explode: true
+          schema:
+            type: object
+            properties:
+              foo:
+                type: object
+                properties:
+                  foo2:
+                    type: string
+                  foo3:
+                    type: string
+                    default: blubb
+              foofoo:
+                type: string
+      responses:
+        '200':
+          description: object response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  foo:
+                    type: object
+                    properties:
+                      foo2:
+                        type: string
+                      foo3:
+                        type: string
+  /test-redirect-endpoint:
+    get:
+      summary: Tests handlers returning flask.Response objects
+      operationId: fakeapi.hello.test_redirect_endpoint
+      responses:
+        '302':
+          description: 302 Found
+  /test-redirect-response-endpoint:
+    get:
+      summary: Tests handlers returning flask.Response objects
+      operationId: fakeapi.hello.test_redirect_response_endpoint
+      responses:
+        '302':
+          description: 302 Found
+  /test-default-object-body:
+    post:
+      summary: Test if default object body param is passed to handler.
+      operationId: fakeapi.hello.test_default_object_body
+      responses:
+        '200':
+          description: OK
+      requestBody:
+        content:
+          application/json:
+            schema:
+              x-body-name: stack
+              $ref: '#/components/schemas/new_stack'
+              default:
+                image_version: default_image
+  /test-nested-additional-properties:
+    post:
+      summary: Test if nested additionalProperties are cast
+      operationId: fakeapi.hello.test_nested_additional_properties
+      responses:
+        '200':
+          description: OK
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nested:
+                  type: object
+                  properties: {}
+                  additionalProperties:
+                    type: boolean
+  /test-default-integer-body:
+    post:
+      summary: Test if default integer body param is passed to handler.
+      operationId: fakeapi.hello.test_default_integer_body
+      responses:
+        '200':
+          description: OK
+      requestBody:
+        content:
+          application/json:
+            schema:
+              x-body-name: stack_version
+              type: integer
+              format: int32
+              example: 1
+              default: 1
+  /test-empty-object-body:
+    post:
+      summary: Test if empty object body param is passed to handler.
+      operationId: fakeapi.hello.test_empty_object_body
+      responses:
+        '200':
+          description: OK
+      requestBody:
+        content:
+          application/json:
+            schema:
+              x-body-name: stack
+              type: object
+  /resolver-test/method:
+    get:
+      summary: Test class instance method
+      operationId: fakeapi.hello.class_instance.test_method
+      responses:
+        '200':
+          description: OK
+  /resolver-test/classmethod:
+    get:
+      summary: Test class instance method
+      operationId: fakeapi.hello.DummyClass.test_classmethod
+      responses:
+        '200':
+          description: OK
+  /test_parameter_validation:
+    get:
+      operationId: fakeapi.hello.test_parameter_validation
+      parameters:
+        - name: date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: int
+          in: query
+          schema:
+            type: integer
+        - name: bool
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: OK
+  /test_apikey_query_parameter_validation:
+    get:
+      operationId: fakeapi.hello.test_apikey_query_parameter_validation
+      parameters:
+        - name: name
+          in: query
+          schema:
+            type: string
+      security:
+        - api_key: []
+      responses:
+        '200':
+          description: OK
+  /test_required_query_param:
+    get:
+      operationId: fakeapi.hello.test_required_query_param
+      parameters:
+        - name: 'n'
+          in: query
+          required: true
+          schema:
+            type: number
+      responses:
+        '200':
+          description: OK
+
+  /test_array_csv_form_param:
+    post:
+      operationId: fakeapi.hello.test_array_csv_form_param3
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              default:
+                items: ["squash", "banana"]
+              x-body-name: items
+              properties:
+                items:
+                  type: array
+                  items:
+                    type: string
+            encoding:
+              items:
+                style: form
+                explode: false
+      responses:
+        200:
+          description: OK
+
+  /test_array_pipes_form_param:
+    post:
+      operationId: fakeapi.hello.test_array_pipes_form_param3
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              x-body-name: items
+              properties:
+                items:
+                  type: array
+                  items:
+                    type: integer
+              required:
+              - items
+            encoding:
+              items:
+                style: pipeDelimited
+      responses:
+        200:
+          description: OK
+
+  /test_array_csv_query_param:
+    get:
+      operationId: fakeapi.hello.test_array_csv_query_param
+      parameters:
+        - name: items
+          in: query
+          description: An comma separated array of items
+          style: form
+          explode: false
+          schema:
+            type: array
+            default: ["squash", "banana"]
+            items:
+              type: string
+      responses:
+        '200':
+          description: OK
+
+
+  /test_array_multi_query_param:
+    get:
+      operationId: fakeapi.hello.test_array_multi_query_param
+      parameters:
+        - name: items
+          in: query
+          description: An comma separated array of items
+          style: form
+          explode: true
+          schema:
+            type: array
+            default: ["squash", "banana"]
+            items:
+              type: string
+      responses:
+        '200':
+          description: OK
+  /test_array_pipes_query_param:
+    get:
+      operationId: fakeapi.hello.test_array_pipes_query_param
+      parameters:
+        - name: items
+          in: query
+          description: An pipe separated array of items
+          required: true
+          style: pipeDelimited
+          schema:
+            type: array
+            items:
+              type: integer
+      responses:
+        '200':
+          description: OK
+  /test_array_unsupported_query_param:
+    get:
+      operationId: fakeapi.hello.test_array_unsupported_query_param
+      parameters:
+        - name: items
+          in: query
+          description: An pipe separated array of items
+          required: true
+          style: pipeDelimited
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: OK
+  '/test-int-path/{someint}':
+    get:
+      summary: Test type casting of path parameter
+      operationId: fakeapi.hello.test_get_someint
+      parameters:
+        - name: someint
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+  '/test-float-path/{somefloat}':
+    get:
+      summary: Test type casting of path parameter
+      operationId: fakeapi.hello.test_get_somefloat
+      parameters:
+        - name: somefloat
+          in: path
+          required: true
+          schema:
+            type: number
+      responses:
+        '200':
+          description: OK
+  /test-default-query-parameter:
+    get:
+      summary: Test if default parameter is passed to function
+      operationId: fakeapi.hello.test_default_param
+      parameters:
+        - name: name
+          in: query
+          schema:
+            type: string
+            default: connexion
+      responses:
+        '200':
+          description: OK
+  /test-falsy-param:
+    get:
+      summary: Test if default value when argument is falsy.
+      operationId: fakeapi.hello.test_falsy_param
+      parameters:
+        - name: falsy
+          in: query
+          schema:
+            type: integer
+            default: 1
+      responses:
+        '200':
+          description: OK
+  /test-formData-param:
+    post:
+      summary: Test formData parameter
+      operationId: fakeapi.hello.test_formdata_param3
+      responses:
+        '200':
+          description: OK
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                formData:
+                  type: string
+              required:
+                - formData
+  /test-formData-missing-param:
+    post:
+      summary: Test formData missing parameter in handler
+      operationId: fakeapi.hello.test_formdata_missing_param
+      responses:
+        '200':
+          description: OK
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                missing_formData:
+                  type: string
+              required:
+                - missing_formData
+  /test-formData-file-upload:
+    post:
+      summary: 'Test formData with file type, for file upload'
+      operationId: fakeapi.hello.test_formdata_file_upload
+      responses:
+        '200':
+          description: OK
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              x-body-name: formData
+              type: object
+              properties:
+                formData:
+                  type: string
+                  format: binary
+              required:
+                - formData
+  /test-formData-file-upload-missing-param:
+    post:
+      summary: 'Test formData with file type, missing parameter in handler'
+      operationId: fakeapi.hello.test_formdata_file_upload_missing_param
+      responses:
+        '200':
+          description: OK
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                missing_formData:
+                  type: string
+                  format: binary
+              required:
+                - missing_formData
+  /test-bool-param:
+    get:
+      summary: Test usage of boolean default value
+      operationId: fakeapi.hello.test_bool_default_param
+      parameters:
+        - name: thruthiness
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: OK
+  /test-bool-array-param:
+    get:
+      summary: Test usage of an array of booleans value
+      operationId: fakeapi.hello.test_bool_array_param
+      parameters:
+        - name: thruthiness
+          in: query
+          schema:
+            type: array
+            items:
+              type: boolean
+      responses:
+        '200':
+          description: OK
+  /test-required-param:
+    get:
+      summary: Test required param without default value
+      operationId: fakeapi.hello.test_required_param
+      parameters:
+        - name: simple
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /parameters-in-root-path:
+    parameters:
+      - in: query
+        name: title
+        description: Some parameter in the path
+        required: true
+        schema:
+          type: string
+    get:
+      summary: Test the method GET with parameter from path
+      operationId: fakeapi.hello.path_parameters_in_get_method
+      responses:
+        '200':
+          description: OK
+  '/goodday/{name}':
+    post:
+      summary: Generate good day greeting
+      description: Generates a good day message.
+      operationId: fakeapi.hello.post_goodday
+      responses:
+        '201':
+          description: gooday response
+          headers:
+            Location:
+              description: The URI of the created resource
+              schema:
+                type: string
+          content:
+            'application/json':
+              schema:
+                type: object
+      parameters:
+        - name: name
+          in: path
+          description: Name of the person to greet.
+          required: true
+          schema:
+            type: string
+  /goodday/noheader:
+    post:
+      summary: Generate good day greeting
+      description: Generates a good day message.
+      operationId: fakeapi.hello.post_goodday_no_header
+      responses:
+        '201':
+          description: goodday response
+          headers:
+            Location:
+              description: The URI of the created resource
+              schema:
+                type: string
+          content:
+            'application/json':
+              schema:
+                type: object
+  '/goodevening/{name}':
+    post:
+      summary: Generate good evening
+      description: Generates a good evening message.
+      operationId: fakeapi.hello.post_goodevening
+      responses:
+        '201':
+          description: goodevening response
+          headers:
+            Location:
+              description: The URI of the created resource
+              schema:
+                type: string
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                justAnExample:
+                  $ref: '#/components/examples/justAnExample'
+      parameters:
+        - name: name
+          in: path
+          description: Name of the person to say good evening.
+          required: true
+          schema:
+            type: string
+  /test-204-with-headers:
+    get:
+      summary: Tests that response code 204 can have headers set
+      operationId: fakeapi.hello.test_204_with_headers
+      responses:
+        '204':
+          headers:
+            X-Something:
+              description: A value that might be send in the response
+              schema:
+                type: string
+          description: 204 no content
+  /test-204-with-headers-nocontent-obj:
+    get:
+      summary: Tests that response code 204 using NoContent obj can have headers set
+      operationId: fakeapi.hello.test_nocontent_obj_with_headers
+      responses:
+        '204':
+          headers:
+            X-Something:
+              description: A value that might be send in the response
+              schema:
+                type: string
+          description: 204 no content
+  '/test-array-in-path/{names}':
+    get:
+      operationId: fakeapi.hello.test_array_in_path
+      parameters:
+        - name: names
+          description: List of names.
+          in: path
+          required: true
+          style: simple
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+  /nullable-parameters:
+    post:
+      operationId: fakeapi.hello.test_nullable_param_post3
+      responses:
+        '200':
+          description: OK
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              nullable: true
+              properties:
+                post_param:
+                  description: Just a testing parameter.
+                  type: number
+                  format: int32
+                  nullable: true
+              required:
+                - post_param
+    put:
+      operationId: fakeapi.hello.test_nullable_param_put
+      responses:
+        '200':
+          description: OK
+      requestBody:
+        content:
+          application/json:
+            schema:
+              nullable: true
+              x-body-name: contents
+              type: object
+              properties:
+                name:
+                  type: string
+        description: Just a testing parameter.
+        required: true
+    get:
+      operationId: fakeapi.hello.test_nullable_parameters
+      parameters:
+        - name: time_start
+          description: Just a testing parameter.
+          in: query
+          required: true
+          schema:
+            nullable: true
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: OK
+  /custom-json-response:
+    get:
+      operationId: fakeapi.hello.test_custom_json_response
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  theResult:
+                    type: string
+                    description: the number we wanna test
+  /blob-response:
+    get:
+      operationId: fakeapi.hello.get_blob_data
+      responses:
+        '200':
+          description: Some blob response
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+  /binary-response:
+    get:
+      operationId: fakeapi.hello.get_data_as_binary
+      responses:
+        '200':
+          description: Everything is ok
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+  /query-params-as-kwargs:
+    get:
+      operationId: fakeapi.hello.test_args_kwargs
+      parameters:
+        - name: foo
+          description: Just a testing parameter.
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Return kwargs
+          content:
+            application/json:
+              schema:
+                type: object
+  /text-request:
+    post:
+      operationId: fakeapi.hello.get_data_as_text
+      responses:
+        '200':
+          description: OK
+      requestBody:
+        content:
+          text/plain:
+            schema:
+              x-body-name: post_param
+              type: string
+        description: Just a testing parameter.
+        required: true
+  /param-sanitization:
+    post:
+      operationId: fakeapi.hello.test_param_sanitization3
+      parameters:
+        - name: $query
+          description: Just a testing parameter with an invalid Python name
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Return parameters
+          content:
+            application/json:
+              schema:
+                type: object
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                'form$':
+                  description: Just a testing parameter in the form data
+                  type: string
+  /body-sanitization:
+    post:
+      operationId: fakeapi.hello.test_body_sanitization
+      responses:
+        '200':
+          description: OK
+      requestBody:
+        $ref: '#/components/requestBodies/fakeapi.hello.test_body_sanitization_body'
+  /body-sanitization-additional-properties:
+    post:
+      operationId: fakeapi.hello.test_body_sanitization_additional_properties
+      responses:
+        '200':
+          description: OK
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                body1:
+                  type: string
+              additionalProperties: true
+  /body-sanitization-additional-properties-defined:
+    post:
+      operationId: fakeapi.hello.test_body_sanitization_additional_properties_defined
+      responses:
+        '200':
+          description: OK
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                body1:
+                  type: string
+              additionalProperties:
+                type: string
+  /body-not-allowed-additional-properties:
+    post:
+      operationId: fakeapi.hello.test_body_not_allowed_additional_properties
+      responses:
+        '200':
+          description: OK
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                body1:
+                  type: string
+              additionalProperties: false
+  /get_non_conforming_response:
+    get:
+      operationId: fakeapi.hello.get_empty_dict
+      responses:
+        '200':
+          description: OK
+          content:
+            'application/json':
+              schema:
+                type: object
+                required:
+                  - some
+                properties:
+                  some:
+                    type: string
+  /post_wrong_content_type:
+    post:
+      operationId: fakeapi.hello.post_wrong_content_type
+      responses:
+        '200':
+          description: OK
+        '215':
+          description: NOT-OK
+      requestBody:
+        $ref: '#/components/requestBodies/fakeapi.hello.test_body_sanitization_body'
+  /get_unicode_request:
+    get:
+      summary: Test if a unicode string in query parameter works properly in Python 2
+      operationId: fakeapi.hello.get_unicode_query
+      parameters:
+        - name: price
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /get_unicode_response:
+    get:
+      operationId: fakeapi.hello.get_unicode_data
+      responses:
+        '200':
+          description: Some unicode response
+          content:
+            application/json:
+              schema:
+                type: object
+  /get_enum_response:
+    get:
+      operationId: fakeapi.hello.get_enum_response
+      responses:
+        '200':
+          description: Some HTTPStatus response
+          content:
+            application/json:
+              schema:
+                type: object
+  /get_httpstatus_response:
+    get:
+      operationId: fakeapi.hello.get_httpstatus_response
+      responses:
+        '200':
+          description: Some HTTPStatus response
+          content:
+            application/json:
+              schema:
+                type: object
+  '/get_bad_default_response/{response_code}':
+    get:
+      operationId: fakeapi.hello.get_bad_default_response
+      parameters:
+        - name: response_code
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Some object response
+          content:
+            application/json:
+              schema:
+                type: object
+        default:
+          description: Some array response
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {}
+  /add_operation_on_http_methods_only:
+    summary: this is a test
+    description: check if add_operation is called only on http methods field
+    x-test: True
+    servers:
+      - url: http://localhost
+    parameters:
+      - $ref: "#/components/parameters/Name"
+    get:
+      operationId: fakeapi.hello.get_add_operation_on_http_methods_only
+      responses:
+        default:
+          description: ''
+    put:
+      operationId: fakeapi.hello.put_add_operation_on_http_methods_only
+      responses:
+        default:
+          description: ''
+    post:
+      operationId: fakeapi.hello.post_add_operation_on_http_methods_only
+      responses:
+        default:
+          description: ''
+    delete:
+      operationId: fakeapi.hello.delete_add_operation_on_http_methods_only
+      responses:
+        default:
+          description: ''
+    options:
+      operationId: fakeapi.hello.options_add_operation_on_http_methods_only
+      responses:
+        default:
+          description: ''
+    head:
+      operationId: fakeapi.hello.head_add_operation_on_http_methods_only
+      responses:
+        default:
+          description: ''
+    patch:
+      operationId: fakeapi.hello.patch_add_operation_on_http_methods_only
+      responses:
+        default:
+          description: ''
+    trace:
+      operationId: fakeapi.hello.trace_add_operation_on_http_methods_only
+      responses:
+        default:
+          description: ''
+  /forward:
+    post:
+      operationId: fakeapi.hello.forward
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: >
+            The response containing the same data as were present in request body.
+          content:
+            application/json:
+              schema:
+                type: object
+
+servers:
+  - url: http://localhost:{port}/{basePath}
+    variables:
+      port:
+        enum:
+         - '4000'
+         - '5000'
+        default: '5000'
+      basePath:
+        enum:
+         - v1.0
+         - v1
+        default: v1.0
+  - url: /v1.0
+components:
+  requestBodies:
+    fakeapi.hello.test_body_sanitization_body:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              body1:
+                type: string
+              body2:
+                type: string
+      description: Just a testing parameter in the body
+      required: true
+  examples:
+    justAnExample:
+      summary: a basic example.
+      value: Good evening, doctor.
+  schemas:
+    new_stack:
+      type: object
+      properties:
+        image_version:
+          type: string
+          description: Docker image version to deploy
+      required:
+        - image_version
+  parameters:
+    Name:
+      name: name
+      in: path
+      description: Name of the person to greet.
+      required: true
+      schema:
+        type: string
+  securitySchemes:
+    api_key:
+      type: apiKey
+      name: apikey
+      in: query
+      x-apikeyInfoFunc: fakeapi.hello.apikey_info

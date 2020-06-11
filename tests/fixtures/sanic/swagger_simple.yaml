@@ -1,0 +1,203 @@
+swagger: "2.0"
+
+info:
+  title: "{{title}}"
+  version: "1.0"
+
+basePath: /v1.0
+
+paths:
+  /bye/{name}:
+    get:
+      summary: Generate goodbye
+      description: Generates a goodbye message.
+      operationId: fakeapi.sanic_handlers.get_bye
+      produces:
+        - text/plain
+      responses:
+        '200':
+          description: goodbye response
+          schema:
+            type: string
+        default:
+          description: "unexpected error"
+      parameters:
+        - name: name
+          in: path
+          description: Name of the person to say bye.
+          required: true
+          type: string
+
+  /sanic_str_response:
+    get:
+      summary: Return a str response
+      description: Test returning a str response
+      operationId: fakeapi.sanic_handlers.sanic_str_response
+      produces:
+        - text/plain
+      responses:
+        200:
+          description: json response
+          schema:
+            type: string
+
+  /sanic_non_str_non_json_response:
+    get:
+      summary: Return a non str and non json response
+      description: Test returning a non str and non json response
+      operationId: fakeapi.sanic_handlers.sanic_non_str_non_json_response
+      produces:
+        - text/plain
+      responses:
+        200:
+          description: non str non json response
+
+  /sanic_bytes_response:
+    get:
+      summary: Return a bytes response
+      description: Test returning a bytes response
+      operationId: fakeapi.sanic_handlers.sanic_bytes_response
+      produces:
+        - text/plain
+      responses:
+        200:
+          description: bytes response
+
+  /sanic_validate_responses:
+    get:
+      summary: Return a bytes response
+      description: Test returning a bytes response
+      operationId: fakeapi.sanic_handlers.sanic_validate_responses
+      produces:
+        - application/json
+      responses:
+        200:
+          description: json response
+          schema:
+            type: object
+
+  /sanic_access_request_context:
+    post:
+      summary: Test request context access
+      description: Test request context access in handlers.
+      operationId: fakeapi.sanic_handlers.sanic_access_request_context
+      responses:
+        204:
+          description: success no content.
+
+  /users/:
+    get:
+      summary: Test get users
+      description: Get test users list
+      operationId: fakeapi.sanic_handlers.sanic_users_get
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Return users
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/User'
+
+    post:
+      summary: Create a new user
+      description: Add new user to a list of users
+      operationId: fakeapi.sanic_handlers.sanic_users_post
+      consumes:
+        - application/json
+      parameters:
+        - in: body
+          name: user
+          description: The user to create
+          schema:
+            $ref: '#/definitions/User'
+      responses:
+        201:
+          description: json response
+          schema:
+            $ref: '#/definitions/User'
+
+  /sanic_query_parsing_str:
+    get:
+      summary: Test proper parsing of query parameters
+      description: Tests proper parsing
+      operationId: fakeapi.sanic_handlers.sanic_query_parsing_str
+      parameters:
+        - in: query
+          name: query
+          description: Simple query param
+          type: string
+          required: true
+      responses:
+        200:
+          description: Query parsing result
+          schema:
+            $ref: '#/definitions/SimpleQuery'
+
+  /sanic_query_parsing_array:
+    get:
+      summary: Test proper parsing of query parameters
+      description: Tests proper parsing
+      operationId: fakeapi.sanic_handlers.sanic_query_parsing_array
+      parameters:
+        - in: query
+          name: query
+          description: Array like query param
+          type: array
+          items:
+            type: string
+          required: true
+      responses:
+        200:
+          description: Query parsing result
+          schema:
+            $ref: '#/definitions/MultiQuery'
+
+  /sanic_query_parsing_array_multi:
+    get:
+      summary: Test proper parsing of query parameters
+      description: Tests proper parsing
+      operationId: fakeapi.sanic_handlers.sanic_query_parsing_array_multi
+      parameters:
+        - in: query
+          name: query
+          description: Array like query param
+          type: array
+          items:
+            type: string
+          collectionFormat: multi
+          required: true
+      responses:
+        200:
+          description: Query parsing result
+          schema:
+            $ref: '#/definitions/MultiQuery'
+
+
+definitions:
+  SimpleQuery:
+    type: object
+    required:
+      - query
+    properties:
+      query:
+        type: string
+  MultiQuery:
+    type: object
+    required:
+      - query
+    properties:
+      query:
+        type: array
+        items:
+          type: string
+  User:
+    type: object
+    required:
+      - name
+    properties:
+      id:
+        type: number
+      name:
+        type: string

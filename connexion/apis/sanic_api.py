@@ -13,6 +13,9 @@ import sanic
 #from aiohttp import web
 #from aiohttp.web_exceptions import HTTPNotFound, HTTPPermanentRedirect
 #from aiohttp.web_middlewares import normalize_path_middleware
+from sanic.exceptions import NotFound as HTTPNotFound
+from sanic import Blueprint
+from sanic.response import redirect, json, HTTPResponse
 
 from connexion.apis.abstract import AbstractAPI
 from connexion.exceptions import ProblemException
@@ -22,8 +25,7 @@ from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.problem import problem
 from connexion.utils import yamldumper
 from werkzeug.exceptions import HTTPException as werkzeug_HTTPException
-
-
+from .flask_utils import flaskify_endpoint
 logger = logging.getLogger('connexion.apis.sanic_api')
 
 
@@ -53,6 +55,9 @@ class SanicApi(AbstractAPI):
     def _set_base_path(self, base_path):
         AbstractAPI._set_base_path(self, base_path)
         self._api_name = SanicApi.normalize_string(self.base_path)
+        logger.debug('Creating API blueprint: %s', self.base_path)
+        endpoint = flaskify_endpoint(self.base_path)
+        self.blueprint = Blueprint(endpoint, url_prefix=self.base_path)
 
     @staticmethod
     def normalize_string(string):
@@ -85,10 +90,17 @@ class SanicApi(AbstractAPI):
         """
         logger.debug('Adding spec json: %s/%s', self.base_path,
                      self.options.openapi_spec_path)
-        self.subapp.router.add_route(
-            'GET',
-            self.options.openapi_spec_path,
-            self._get_openapi_json
+
+        async def _get_openapi_json(request):
+            return HTTPResponse(
+                status=200,
+                content_type='application/json',
+                body=self.jsonifier.dumps(self._spec_for_prefix(request))
+            )
+        self.blueprint.add_route(
+            methods=['GET'],
+            uri=self.options.openapi_spec_path,
+            handler=_get_openapi_json
         )
 
     def add_openapi_yaml(self):
@@ -103,24 +115,17 @@ class SanicApi(AbstractAPI):
             self.options.openapi_spec_path[:-len("json")] + "yaml"
         logger.debug('Adding spec yaml: %s/%s', self.base_path,
                      openapi_spec_path_yaml)
-        self.subapp.router.add_route(
-            'GET',
-            openapi_spec_path_yaml,
-            self._get_openapi_yaml
-        )
 
-    async def _get_openapi_json(self, request):
-        return web.Response(
-            status=200,
-            content_type='application/json',
-            body=self.jsonifier.dumps(self._spec_for_prefix(request))
-        )
-
-    async def _get_openapi_yaml(self, request):
-        return web.Response(
-            status=200,
-            content_type='text/yaml',
-            body=yamldumper(self._spec_for_prefix(request))
+        async def _get_openapi_yaml(request):
+            return HTTPResponse(
+                status=200,
+                content_type='text/yaml',
+                body=yamldumper(self._spec_for_prefix(request))
+            )
+        self.blueprint.add_route(
+            methods=['GET'],
+            uri=openapi_spec_path_yaml,
+            handler=_get_openapi_yaml
         )
 
     def add_swagger_ui(self):
@@ -132,61 +137,61 @@ class SanicApi(AbstractAPI):
                      self.base_path,
                      console_ui_path)
 
+        async def _get_swagger_ui_config(req):
+            return HTTPResponse(
+                status=200,
+                content_type='text/json',
+                body=self.jsonifier.dumps(self.options.openapi_console_ui_config)
+            )
+
+        @aiohttp_jinja2.template('index.j2')
+        async def _get_swagger_ui_home(req):
+            base_path = self._base_path_for_prefix(req)
+            template_variables = {
+                'openapi_spec_url': (base_path + self.options.openapi_spec_path)
+            }
+            if self.options.openapi_console_ui_config is not None:
+                template_variables['configUrl'] = 'swagger-ui-config.json'
+            return template_variables
+
         for path in (
             console_ui_path + '/',
             console_ui_path + '/index.html',
         ):
-            self.subapp.router.add_route(
-                'GET',
-                path,
-                self._get_swagger_ui_home
+            self.blueprint.add_route(
+                methods=['GET'],
+                uri=path,
+                handler=self._get_swagger_ui_home
             )
 
         if self.options.openapi_console_ui_config is not None:
-            self.subapp.router.add_route(
-                'GET',
-                console_ui_path + '/swagger-ui-config.json',
-                self._get_swagger_ui_config
+            self.blueprint.add_route(
+                methods=['GET'],
+                uri=console_ui_path + '/swagger-ui-config.json',
+                handler=_get_swagger_ui_config
             )
 
         # we have to add an explicit redirect instead of relying on the
         # normalize_path_middleware because we also serve static files
         # from this dir (below)
 
-        async def redirect(request):
-            raise web.HTTPMovedPermanently(
-                location=self.base_path + console_ui_path + '/'
+        async def _redirect(request):
+            return redirect(
+                to=self.base_path + console_ui_path + '/'
             )
 
-        self.subapp.router.add_route(
-            'GET',
-            console_ui_path,
-            redirect
+        self.blueprint.add_route(
+            methods=['GET'],
+            uri=console_ui_path,
+            handler=_redirect
         )
 
         # this route will match and get a permission error when trying to
         # serve index.html, so we add the redirect above.
-        self.subapp.router.add_static(
+        self.blueprint.static(
             console_ui_path,
-            path=str(self.options.openapi_console_ui_from_dir),
+            str(self.options.openapi_console_ui_from_dir),
             name='swagger_ui_static'
-        )
-
-    @aiohttp_jinja2.template('index.j2')
-    async def _get_swagger_ui_home(self, req):
-        base_path = self._base_path_for_prefix(req)
-        template_variables = {
-            'openapi_spec_url': (base_path + self.options.openapi_spec_path)
-        }
-        if self.options.openapi_console_ui_config is not None:
-            template_variables['configUrl'] = 'swagger-ui-config.json'
-        return template_variables
-
-    async def _get_swagger_ui_config(self, req):
-        return web.Response(
-            status=200,
-            content_type='text/json',
-            body=self.jsonifier.dumps(self.options.openapi_console_ui_config)
         )
 
     def add_auth_on_not_found(self, security, security_definitions):
@@ -200,10 +205,10 @@ class SanicApi(AbstractAPI):
             security_definitions=security_definitions
         )
         endpoint_name = "{}_not_found".format(self._api_name)
-        self.subapp.router.add_route(
-            '*',
-            '/{not_found_path}',
-            not_found_error.function,
+        self.blueprint.add_route(
+            methods=['*'],
+            uri='/{not_found_path}',
+            handler=not_found_error.function,
             name=endpoint_name
         )
 
@@ -217,16 +222,16 @@ class SanicApi(AbstractAPI):
         handler = operation.function
         endpoint_name = '{}_{}_{}'.format(
             self._api_name,
-            AioHttpApi.normalize_string(path),
+            SanicApi.normalize_string(path),
             method.lower()
         )
-        self.subapp.router.add_route(
-            method, path, handler, name=endpoint_name
+        self.blueprint.add_route(
+            methods=[method], uri=path, handler=handler, name=endpoint_name
         )
 
-        if not path.endswith('/'):
-            self.subapp.router.add_route(
-                method, path + '/', handler, name=endpoint_name + '_'
+        if False and not path.endswith('/'):
+            self.blueprint.add_route(
+                methods=[method], uri=path + '/', handler=handler, name=endpoint_name + '_'
             )
 
     @classmethod
@@ -240,6 +245,7 @@ class SanicApi(AbstractAPI):
         url = str(req.url)
         logger.debug('Getting data and status code',
                      extra={'has_body': req.has_body, 'url': url})
+        import pdb; pdb.set_trace()
 
         query = parse_qs(req.rel_url.query_string)
         headers = req.headers
@@ -265,6 +271,8 @@ class SanicApi(AbstractAPI):
         :type response: aiohttp.web.StreamResponse | (Any,) | (Any, int) | (Any, dict) | (Any, int, dict)
         :rtype: aiohttp.web.Response
         """
+        import pdb; pdb.set_trace()
+
         while asyncio.iscoroutine(response):
             response = await response
 
@@ -275,7 +283,9 @@ class SanicApi(AbstractAPI):
     @classmethod
     def _is_framework_response(cls, response):
         """ Return True if `response` is a framework response class """
-        return isinstance(response, web.StreamResponse)
+        import pdb; pdb.set_trace()
+
+        return isinstance(response, sanic.response.HTTPResponse)
 
     @classmethod
     def _framework_to_connexion_response(cls, response, mimetype):
@@ -308,6 +318,7 @@ class SanicApi(AbstractAPI):
         if cls._is_framework_response(data):
             raise TypeError("Cannot return web.StreamResponse in tuple. Only raw data can be returned in tuple.")
 
+        import pdb; pdb.set_trace()
         data, status_code, serialized_mimetype = cls._prepare_body_and_status_code(data=data, mimetype=mimetype, status_code=status_code, extra_context=extra_context)
 
         if isinstance(data, str):
@@ -318,7 +329,7 @@ class SanicApi(AbstractAPI):
             body = data
 
         content_type = content_type or mimetype or serialized_mimetype
-        return web.Response(body=body, text=text, headers=headers, status=status_code, content_type=content_type)
+        return HTTPResponse(body=body, text=text, headers=headers, status=status_code, content_type=content_type)
 
     @classmethod
     def _set_jsonifier(cls):
@@ -327,6 +338,9 @@ class SanicApi(AbstractAPI):
 
 class _HttpNotFoundError(HTTPNotFound):
     def __init__(self):
+
+
+        import pdb; pdb.set_trace()
         self.name = 'Not Found'
         self.description = (
             'The requested URL was not found on the server. '
@@ -336,4 +350,4 @@ class _HttpNotFoundError(HTTPNotFound):
         self.code = type(self).status_code
         self.empty_body = True
 
-        HTTPNotFound.__init__(self, reason=self.name)
+        HTTPNotFound.__init__(self, message=self.name)
