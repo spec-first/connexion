@@ -121,9 +121,9 @@ def test_swagger_ui(sanic_api_spec_dir, spec):
     _, swagger_ui = app_client.get("/v1.0/ui/")  # type: httpx.models.Response
     assert swagger_ui.status_code == 200
     spec_json_filename = spec_url(spec)
-    assert spec_json_filename.encode() in swagger_ui.data
+    assert spec_json_filename.encode() in swagger_ui.content
     if "openapi" in spec:
-        assert b"swagger-ui-config.json" not in swagger_ui.data
+        assert b"swagger-ui-config.json" not in swagger_ui.content
 
 
 @pytest.mark.parametrize("spec", SPECS)
@@ -142,7 +142,7 @@ def test_swagger_ui_with_config(sanic_api_spec_dir, spec):
     _, swagger_ui = app_client.get("/v1.0/ui/")  # type: httpx.models.Response
     assert swagger_ui.status_code == 200
     if "openapi" in spec:
-        assert b'configUrl: "swagger-ui-config.json"' in swagger_ui.data
+        assert b'configUrl: "swagger-ui-config.json"' in swagger_ui.content
 
 
 @pytest.mark.parametrize("spec", SPECS)
@@ -185,9 +185,7 @@ def test_swagger_ui_config_json(sanic_api_spec_dir, spec):
     url = "/v1.0/ui/swagger-ui-config.json"
     _, swagger_ui_config_json = app_client.get(url)  # type: httpx.models.Response
     assert swagger_ui_config_json.status_code == 200
-    assert swagger_ui_config == json.loads(
-        swagger_ui_config_json.get_data(as_text=True)
-    )
+    assert swagger_ui_config == swagger_ui_config_json.json
 
 
 @pytest.mark.parametrize("spec", SPECS)

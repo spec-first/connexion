@@ -14,11 +14,11 @@ from ..exceptions import ProblemException
 from ..problem import problem
 from .abstract import AbstractApp
 
-logger = logging.getLogger('connexion.app')
+logger = logging.getLogger("connexion.app")
 
 
 class SanicApp(AbstractApp):
-    def __init__(self, import_name, server='sanic', **kwargs):
+    def __init__(self, import_name, server="sanic", **kwargs):
         super(SanicApp, self).__init__(import_name, SanicApi, server=server, **kwargs)
 
     def create_app(self):
@@ -42,19 +42,31 @@ class SanicApp(AbstractApp):
         """
         if isinstance(exception, ProblemException):
             response = problem(
-                status=exception.status, title=exception.title, detail=exception.detail,
-                type=exception.type, instance=exception.instance, headers=exception.headers,
-                ext=exception.ext)
+                status=exception.status,
+                title=exception.title,
+                detail=exception.detail,
+                type=exception.type,
+                instance=exception.instance,
+                headers=exception.headers,
+                ext=exception.ext,
+            )
         else:
             if not isinstance(exception, SanicException):
                 exception = ServerError()
 
-            response = problem(title=exception.__class__.__name__, detail=exception.args,
-                               status=exception.status_code)
+            response = problem(
+                title=exception.__class__.__name__,
+                detail=exception.args,
+                status=exception.status_code,
+            )
         #
         # XXX stub return json-problems
         #
-        return json(status=response.status_code, body=response.body, content_type=response.content_type)
+        return json(
+            status=response.status_code,
+            body=response.body,
+            content_type=response.content_type,
+        )
         # return SanicApi.get_response(response)
 
     def add_api(self, specification, **kwargs):
@@ -67,7 +79,9 @@ class SanicApp(AbstractApp):
 
         self.app.error_handler.add(error_code, function)
 
-    def run(self, port=None, server=None, debug=None, host=None, **options):  # pragma: no cover
+    def run(
+        self, port=None, server=None, debug=None, host=None, **options
+    ):  # pragma: no cover
         """
         Runs the application on a local development server.
         :param host: the host interface to bind on.
@@ -88,7 +102,7 @@ class SanicApp(AbstractApp):
         elif self.port is None:
             self.port = 5000
 
-        self.host = host or self.host or '0.0.0.0'
+        self.host = host or self.host or "0.0.0.0"
 
         if server is not None:
             self.server = server
@@ -96,8 +110,8 @@ class SanicApp(AbstractApp):
         if debug is not None:
             self.debug = debug
 
-        logger.debug('Starting %s HTTP server..', self.server, extra=vars(self))
-        if self.server == 'sanic':
+        logger.debug("Starting %s HTTP server..", self.server, extra=vars(self))
+        if self.server == "sanic":
             self.app.run(self.host, port=self.port, debug=self.debug, **options)
         else:
-            raise Exception('Server {} not recognized'.format(self.server))
+            raise Exception("Server {} not recognized".format(self.server))
