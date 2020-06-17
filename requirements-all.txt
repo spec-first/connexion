@@ -1,6 +1,5 @@
 -r requirements-aiohttp.txt
+-r requirements-sanic.txt
 -r requirements-devel.txt
 openapi_spec_validator
 pytest-aiohttp
-sanic
-sanic

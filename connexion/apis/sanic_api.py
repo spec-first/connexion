@@ -4,6 +4,7 @@ import re
 import traceback
 from contextlib import suppress
 from http import HTTPStatus
+from re import findall
 from urllib.parse import parse_qs
 
 import aiohttp_jinja2
@@ -45,8 +46,33 @@ def _generic_problem(http_status: HTTPStatus, exc: Exception = None):
     )
 
 
-def replace_braces(s):
-    return s.replace("{", "<").replace("}", ">")
+def replace_braces(path, parameters):
+    schemed_parameters = {
+        p["name"]: p["schema"]
+        for p in parameters
+        if p.get("in") == "path"
+        and p.get("schema", {}).get("type") in ("string", "integer", "number")
+    }
+    for p_name in findall(r"{([a-zA-Z\_]+)}", path):
+        src = f"{{{p_name}}}"
+        p_scheme = ""
+
+        if p_name in schemed_parameters:
+            p_type = schemed_parameters[p_name]["type"]
+            if p_type in ("integer",):
+                p_scheme = ":int"
+            elif p_type in ("number",):
+                p_scheme = ":number"
+            elif p_type in ("string",):
+                if schemed_parameters[p_name].get("pattern"):
+                    p_scheme = ":" + schemed_parameters[p_name].get("pattern").strip()
+                else:
+                    p_scheme = ":string"
+
+        dest = f"<{p_name}{p_scheme}>"
+        path = path.replace(src, dest)
+
+    return path
 
 
 class SanicApi(AbstractAPI):
@@ -231,19 +257,11 @@ class SanicApi(AbstractAPI):
         endpoint_name = "{}_{}_{}".format(
             self._api_name, SanicApi.normalize_string(path), method.lower()
         )
-        sanic_path = replace_braces(path)
+        sanic_path = replace_braces(path, operation.parameters)
         logger.debug("... Replace %r -> %r", path, sanic_path)
         self.blueprint.add_route(
             methods=[method], uri=sanic_path, handler=handler, name=endpoint_name
         )
-
-        if False and not path.endswith("/"):
-            self.blueprint.add_route(
-                methods=[method],
-                uri=sanic_path + "/",
-                handler=handler,
-                name=endpoint_name + "_",
-            )
 
     @classmethod
     async def get_request(cls, req: Request, *args, **kwargs):
