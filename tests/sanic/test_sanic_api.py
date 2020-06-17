@@ -1,11 +1,11 @@
 # coding: utf-8
 
-import pathlib
 import os
+import pathlib
 import tempfile
+from unittest.mock import MagicMock
 
 import pytest
-from unittest.mock import MagicMock
 from yaml import YAMLError
 
 from connexion import SanicApi

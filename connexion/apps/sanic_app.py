@@ -1,12 +1,13 @@
-import datetime
 import logging
 import pathlib
-from decimal import Decimal
+import pkgutil
+import sys
+from os.path import abspath, dirname
 from types import FunctionType  # NOQA
 
 import sanic
 from sanic import Sanic
-from sanic.exceptions import SanicException, ServerError, NotFound
+from sanic.exceptions import NotFound, SanicException, ServerError
 from sanic.response import json
 
 from ..apis.sanic_api import SanicApi
@@ -71,7 +72,7 @@ class SanicApp(AbstractApp):
 
     def add_api(self, specification, **kwargs):
         api = super(SanicApp, self).add_api(specification, **kwargs)
-        self.app.register_blueprint(api.blueprint)
+        self.app.blueprint(api.blueprint)
         return api
 
     def add_error_handler(self, error_code, function):

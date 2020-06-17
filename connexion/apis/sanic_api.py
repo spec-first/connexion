@@ -7,12 +7,11 @@ from http import HTTPStatus
 from urllib.parse import parse_qs
 
 import aiohttp_jinja2
-
 import sanic
-from sanic.exceptions import NotFound as HTTPNotFound
 from sanic import Blueprint
-from sanic.response import redirect, json, HTTPResponse, text
+from sanic.exceptions import NotFound as HTTPNotFound
 from sanic.request import Request
+from sanic.response import HTTPResponse, json, redirect, text
 
 from connexion.apis.abstract import AbstractAPI
 from connexion.exceptions import ProblemException
@@ -21,6 +20,7 @@ from connexion.jsonifier import JSONEncoder, Jsonifier
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.problem import problem
 from connexion.utils import yamldumper
+
 from .flask_utils import flaskify_endpoint
 
 logger = logging.getLogger("connexion.apis.sanic_api")

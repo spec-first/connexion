@@ -1,6 +1,6 @@
 from sanic import Sanic
 
-from connexion import SanicApp, SanicApi
+from connexion import SanicApi, SanicApp
 
 
 def test_sanic_app_default_params():

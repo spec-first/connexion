@@ -1,14 +1,13 @@
 import json
+from unittest import mock
 
 import jinja2
-from unittest import mock
 import pytest
 import yaml
 from openapi_spec_validator.loaders import ExtendedSafeLoader
-
-from conftest import TEST_FOLDER, FIXTURES_FOLDER
 from sanic.response import text
 
+from conftest import FIXTURES_FOLDER, TEST_FOLDER
 from connexion import SanicApp as App
 from connexion.exceptions import InvalidSpecification
 from connexion.http_facts import METHODS
@@ -389,8 +388,8 @@ def test_using_all_fields_in_path_item(sanic_api_spec_dir):
     app.add_api("openapi.yaml")
 
     test_methods = set()
-    for rule in app.app.url_map.iter_rules():
-        if rule.rule != "/v1.0/add_operation_on_http_methods_only":
+    for rule_url, rule in app.app.router.routes_all.items():
+        if rule_url != "/v1.0/add_operation_on_http_methods_only":
             continue
         test_methods.update({method.lower() for method in rule.methods})
     assert set(test_methods) == METHODS
