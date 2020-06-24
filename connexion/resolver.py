@@ -47,7 +47,7 @@ class Resolver(object):
         """
         operation_id = operation.operation_id
         router_controller = operation.router_controller
-        if operation.router_controller is None:
+        if router_controller is None:
             return operation_id
         return '{}.{}'.format(router_controller, operation_id)
 
