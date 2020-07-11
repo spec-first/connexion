@@ -55,14 +55,15 @@ def test_resty_resolve_x_router_controller_with_operation_id():
 
 
 def test_resty_resolve_x_router_controller_without_operation_id():
-    operation = OpenAPIOperation(api=None,
-                                 method='GET',
-                                 path='/hello/{id}',
-                                 path_parameters=[],
-                                 operation={'x-openapi-router-controller': 'fakeapi.hello'},
-                                 app_security=[],
-                                 components=COMPONENTS,
-                                 resolver=RestyResolver('fakeapi'))
+    operation = OpenAPIOperation(
+        api=None,
+        method='GET',
+        path='/hello/{id}',
+        path_parameters=[],
+        operation={'x-openapi-router-controller': 'fakeapi.hello'},
+        app_security=[],
+        components=COMPONENTS,
+        resolver=RestyResolver('fakeapi'))
     assert operation.operation_id == 'fakeapi.hello.get'
 
 
@@ -78,6 +79,7 @@ def test_resty_resolve_with_default_module_name():
         resolver=RestyResolver('fakeapi')
     )
     assert operation.operation_id == 'fakeapi.hello.get'
+
 
 def test_resty_resolve_with_default_module_name():
     operation = OpenAPIOperation(
