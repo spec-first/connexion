@@ -56,13 +56,13 @@ def test_resty_resolve_x_router_controller_with_operation_id():
 
 def test_resty_resolve_x_router_controller_without_operation_id():
     operation = OpenAPIOperation(api=None,
-                          method='GET',
-                          path='/hello/{id}',
-                          path_parameters=[],
-                          operation={'x-openapi-router-controller': 'fakeapi.hello'},
-                          app_security=[],
-                          components=COMPONENTS,
-                          resolver=RestyResolver('fakeapi'))
+                                 method='GET',
+                                 path='/hello/{id}',
+                                 path_parameters=[],
+                                 operation={'x-openapi-router-controller': 'fakeapi.hello'},
+                                 app_security=[],
+                                 components=COMPONENTS,
+                                 resolver=RestyResolver('fakeapi'))
     assert operation.operation_id == 'fakeapi.hello.get'
 
 
@@ -79,6 +79,19 @@ def test_resty_resolve_with_default_module_name():
     )
     assert operation.operation_id == 'fakeapi.hello.get'
 
+def test_resty_resolve_with_default_module_name():
+    operation = OpenAPIOperation(
+        api=None,
+        method='GET',
+        path='/hello/{id}/world',
+        path_parameters=[],
+        operation={},
+        app_security=[],
+        components=COMPONENTS,
+        resolver=RestyResolver('fakeapi')
+    )
+    assert operation.operation_id == 'fakeapi.hello.world.search'
+
 
 def test_resty_resolve_with_default_module_name_lowercase_verb():
     operation = OpenAPIOperation(
@@ -92,6 +105,20 @@ def test_resty_resolve_with_default_module_name_lowercase_verb():
         resolver=RestyResolver('fakeapi')
     )
     assert operation.operation_id == 'fakeapi.hello.get'
+
+
+def test_resty_resolve_with_default_module_name_lowercase_verb_nested():
+    operation = OpenAPIOperation(
+        api=None,
+        method='get',
+        path='/hello/world/{id}',
+        path_parameters=[],
+        operation={},
+        app_security=[],
+        components=COMPONENTS,
+        resolver=RestyResolver('fakeapi')
+    )
+    assert operation.operation_id == 'fakeapi.hello.world.get'
 
 
 def test_resty_resolve_with_default_module_name_will_translate_dashes_in_resource_name():
