@@ -124,6 +124,22 @@ def test_resty_resolve_with_default_module_name():
     assert operation.operation_id == 'fakeapi.hello.get'
 
 
+def test_resty_resolve_with_default_module_name_nested():
+    operation = Swagger2Operation(api=None,
+                                  method='GET',
+                                  path='/hello/{id}/world',
+                                  path_parameters=[],
+                                  operation={},
+                                  app_produces=['application/json'],
+                                  app_consumes=['application/json'],
+                                  app_security=[],
+                                  security_definitions={},
+                                  definitions={},
+                                  parameter_definitions=PARAMETER_DEFINITIONS,
+                                  resolver=RestyResolver('fakeapi'))
+    assert operation.operation_id == 'fakeapi.hello.world.search'
+
+
 def test_resty_resolve_with_default_module_name_lowercase_verb():
     operation = Swagger2Operation(api=None,
                                   method='get',
