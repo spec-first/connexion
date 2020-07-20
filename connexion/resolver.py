@@ -97,22 +97,28 @@ class RestyResolver(Resolver):
 
         :type operation: connexion.operations.AbstractOperation
         """
-        path_match = re.search(
-            r'^/?(?P<resource_name>([\w\-](?<!/))*)(?P<trailing_slash>/*)(?P<extended_path>.*)$', operation.path
-        )
+
+        # Split the path into components delimited by '/'
+        path_components = [c for c in operation.path.split('/') if len(c)]
+
+        def is_var(component):
+            """True if the path component is a var. eg, '{id}'"""
+            return (component[0] == '{') and (component[-1] == '}')
+
+        resource_name = '.'.join(
+            [c for c in path_components if not is_var(c)]
+        ).replace('-', '_')
 
         def get_controller_name():
             x_router_controller = operation.router_controller
 
             name = self.default_module_name
-            resource_name = path_match.group('resource_name')
 
             if x_router_controller:
                 name = x_router_controller
 
             elif resource_name:
-                resource_controller_name = resource_name.replace('-', '_')
-                name += '.' + resource_controller_name
+                name += '.' + resource_name
 
             return name
 
@@ -121,8 +127,8 @@ class RestyResolver(Resolver):
 
             is_collection_endpoint = \
                 method.lower() == 'get' \
-                and path_match.group('resource_name') \
-                and not path_match.group('extended_path')
+                and len(resource_name) \
+                and not is_var(path_components[-1])
 
             return self.collection_endpoint_name if is_collection_endpoint else method.lower()
 
