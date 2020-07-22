@@ -6,6 +6,7 @@ import sys
 import pytest
 
 from connexion import App
+from connexion.security import FlaskSecurityHandlerFactory
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -57,7 +58,13 @@ def oauth_requests(monkeypatch):
                 return FakeResponse(200, '{"uid": "test-user", "scopes": ["myscope", "otherscope"]}')
         return url
 
-    monkeypatch.setattr('connexion.decorators.security.session.get', fake_get)
+    monkeypatch.setattr('connexion.security.flask_security_handler_factory.session.get', fake_get)
+
+
+@pytest.fixture
+def security_handler_factory():
+    security_handler_factory = FlaskSecurityHandlerFactory(None)
+    yield security_handler_factory
 
 
 @pytest.fixture
