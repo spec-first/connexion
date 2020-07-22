@@ -58,6 +58,7 @@ If you want to use a parameter name that collides with a Python built-in,
 you can enable the `pythonic_params` option:
 
 .. code-block:: python
+
     app = connexion.FlaskApp(__name__)
     app.add_api('api.yaml', ..., pythonic_params=True)
 
@@ -68,6 +69,7 @@ and if it does it appends an underscore to the name.
 As example you have an endpoint specified as:
 
 .. code-block:: yaml
+
     paths:
       /foo:
         get:
@@ -78,9 +80,11 @@ As example you have an endpoint specified as:
               in: query
               type: string
               required: true
+
 And the view function:
 
 .. code-block:: python
+
     # api.py file
     def foo_get(filter_):
         # do something
@@ -123,7 +127,7 @@ available type castings are:
 | object       | dict        |
 +--------------+-------------+
 
-.. note:: For more details about `collectionFormat`s please check the
+.. note:: For more details about `collectionFormat`\ s please check the
           official `OpenAPI 2.0 Specification`_.
 
 
@@ -181,6 +185,7 @@ There are a handful of URI parsers included with connection.
 
 .. _jsonschema: https://pypi.python.org/pypi/jsonschema
 .. _`OpenAPI 2.0 Specification`: https://github.com/OAI/OpenAPI-Specification/blob/OpenAPI.next/versions/2.0.md#fixed-fields-7
+.. _OpenAPI 3.0 Style Values: https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#style-values
 
 Parameter validation
 ^^^^^^^^^^^^^^^^^^^^
