@@ -6,7 +6,6 @@ import os
 import sys
 
 from setuptools import find_packages, setup
-from setuptools.command.test import test as TestCommand
 
 __location__ = os.path.join(os.getcwd(), os.path.dirname(inspect.getfile(inspect.currentframe())))
 
@@ -50,30 +49,6 @@ tests_require.append('pytest-aiohttp')
 tests_require.append('aiohttp-remotes')
 
 
-class PyTest(TestCommand):
-
-    user_options = [('cov-html=', None, 'Generate junit html report')]
-
-    def initialize_options(self):
-        TestCommand.initialize_options(self)
-        self.cov = None
-        self.pytest_args = ['--cov', 'connexion', '--cov-report', 'term-missing',
-                            '--cov-config=py3-coveragerc', '-v']
-        self.cov_html = False
-
-    def finalize_options(self):
-        TestCommand.finalize_options(self)
-        if self.cov_html:
-            self.pytest_args.extend(['--cov-report', 'html'])
-        self.pytest_args.extend(['tests'])
-
-    def run_tests(self):
-        import pytest
-
-        errno = pytest.main(self.pytest_args)
-        sys.exit(errno)
-
-
 def readme():
     try:
         return open('README.rst', encoding='utf-8').read()
@@ -101,7 +76,6 @@ setup(
         'swagger-ui': swagger_ui_require,
         'aiohttp': aiohttp_require
     },
-    cmdclass={'test': PyTest},
     test_suite='tests',
     classifiers=[
         'Programming Language :: Python',
