@@ -48,6 +48,14 @@ def test_get_explodable_object_parameter():
              'required': True, 'name': 'foo', 'style': 'deepObject', 'explode': True}
     result = ParameterValidator.validate_parameter('query', {'bar': 1}, param)
     assert result is None
+    
+    
+def test_get_valid_parameter_with_enum_array_header():
+    value = 'VALUE1,VALUE2'
+    param = {'schema': {'type': 'array', 'items': {'type': 'string', 'enum': ['VALUE1', 'VALUE2']}},
+             'name': 'test_header_param'}
+    result = ParameterValidator.validate_parameter('header', value, param)
+    assert result is None
 
 
 def test_invalid_type(monkeypatch):
