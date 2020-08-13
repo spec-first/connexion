@@ -37,7 +37,8 @@ class AbstractAPI(metaclass=AbstractAPIMeta):
     def __init__(self, specification, base_path=None, arguments=None,
                  validate_responses=False, strict_validation=False, resolver=None,
                  auth_all_paths=False, debug=False, resolver_error_handler=None,
-                 validator_map=None, pythonic_params=False, pass_context_arg_name=None, options=None,
+                 validator_map=None, pythonic_params=False, pass_context_arg_name=None,
+                 pass_operation_arg_name=None, options=None,
                  ):
         """
         :type specification: pathlib.Path | dict
@@ -61,6 +62,9 @@ class AbstractAPI(metaclass=AbstractAPIMeta):
         :param pass_context_arg_name: If not None URL request handling functions with an argument matching this name
         will be passed the framework's request context.
         :type pass_context_arg_name: str | None
+        :param pass_operation_arg_name: If not None URL request handling functions with an argument matching this name
+        will be passed the current operation.
+        :type pass_operation_arg_name: str | None
         """
         self.debug = debug
         self.validator_map = validator_map
@@ -101,6 +105,9 @@ class AbstractAPI(metaclass=AbstractAPIMeta):
 
         logger.debug('pass_context_arg_name: %s', pass_context_arg_name)
         self.pass_context_arg_name = pass_context_arg_name
+
+        logger.debug('pass_operation_arg_name: %s', pass_operation_arg_name)
+        self.pass_operation_arg_name = pass_operation_arg_name
 
         self.security_handler_factory = self.make_security_handler_factory(pass_context_arg_name)
 
@@ -178,7 +185,8 @@ class AbstractAPI(metaclass=AbstractAPIMeta):
             strict_validation=self.strict_validation,
             pythonic_params=self.pythonic_params,
             uri_parser_class=self.options.uri_parser_class,
-            pass_context_arg_name=self.pass_context_arg_name
+            pass_context_arg_name=self.pass_context_arg_name,
+            pass_operation_arg_name=self.pass_operation_arg_name,
         )
         self._add_operation_internal(method, path, operation)
 

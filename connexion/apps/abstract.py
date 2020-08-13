@@ -88,8 +88,8 @@ class AbstractApp(metaclass=abc.ABCMeta):
     def add_api(self, specification, base_path=None, arguments=None,
                 auth_all_paths=None, validate_responses=False,
                 strict_validation=False, resolver=None, resolver_error=None,
-                pythonic_params=False, pass_context_arg_name=None, options=None,
-                validator_map=None):
+                pythonic_params=False, pass_context_arg_name=None,
+                pass_operation_arg_name=None, options=None, validator_map=None):
         """
         Adds an API to the application based on a swagger file or API dict
 
@@ -116,6 +116,9 @@ class AbstractApp(metaclass=abc.ABCMeta):
         :type options: dict | None
         :param pass_context_arg_name: Name of argument in handler functions to pass request context to.
         :type pass_context_arg_name: str | None
+        :param pass_operation_arg_name: If not None URL request handling functions with an argument matching this name
+        will be passed the current operation.
+        :type pass_operation_arg_name: str | None
         :param validator_map: map of validators
         :type validator_map: dict
         :rtype: AbstractAPI
@@ -153,6 +156,7 @@ class AbstractApp(metaclass=abc.ABCMeta):
                            validator_map=validator_map,
                            pythonic_params=pythonic_params,
                            pass_context_arg_name=pass_context_arg_name,
+                           pass_operation_arg_name=pass_operation_arg_name,
                            options=api_options.as_dict())
         return api
 

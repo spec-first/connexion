@@ -18,7 +18,8 @@ class OpenAPIOperation(AbstractOperation):
     def __init__(self, api, method, path, operation, resolver, path_parameters=None,
                  app_security=None, components=None, validate_responses=False,
                  strict_validation=False, randomize_endpoint=None, validator_map=None,
-                 pythonic_params=False, uri_parser_class=None, pass_context_arg_name=None):
+                 pythonic_params=False, uri_parser_class=None, pass_context_arg_name=None,
+                 pass_operation_arg_name=None):
         """
         This class uses the OperationID identify the module and function that will handle the operation
 
@@ -59,6 +60,9 @@ class OpenAPIOperation(AbstractOperation):
         :param pass_context_arg_name: If not None will try to inject the request context to the function using this
         name.
         :type pass_context_arg_name: str|None
+        :param pass_operation_arg_name: If not None will try to inject self to the function using this
+        name.
+        :type pass_operation_arg_name: str|None
         """
         self.components = components or {}
 
@@ -86,7 +90,8 @@ class OpenAPIOperation(AbstractOperation):
             validator_map=validator_map,
             pythonic_params=pythonic_params,
             uri_parser_class=uri_parser_class,
-            pass_context_arg_name=pass_context_arg_name
+            pass_context_arg_name=pass_context_arg_name,
+            pass_operation_arg_name=pass_operation_arg_name
         )
 
         self._definitions_map = {

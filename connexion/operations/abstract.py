@@ -44,7 +44,7 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
                  validate_responses=False, strict_validation=False,
                  randomize_endpoint=None, validator_map=None,
                  pythonic_params=False, uri_parser_class=None,
-                 pass_context_arg_name=None):
+                 pass_context_arg_name=None, pass_operation_arg_name=None):
         """
         :param api: api that this operation is attached to
         :type api: apis.AbstractAPI
@@ -77,6 +77,9 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
         :param pass_context_arg_name: If not None will try to inject the request context to the function using this
         name.
         :type pass_context_arg_name: str|None
+        :param pass_operation_arg_name: If not None will try to inject self to the function using this
+        name.
+        :type pass_operation_arg_name: str|None
         """
         self._api = api
         self._method = method
@@ -90,6 +93,7 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
         self._pythonic_params = pythonic_params
         self._uri_parser_class = uri_parser_class
         self._pass_context_arg_name = pass_context_arg_name
+        self._pass_operation_arg_name = pass_operation_arg_name
         self._randomize_endpoint = randomize_endpoint
 
         self._operation_id = self._operation.get("operationId")
@@ -345,7 +349,7 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
         """
         function = parameter_to_arg(
             self, self._resolution.function, self.pythonic_params,
-            self._pass_context_arg_name
+            self._pass_context_arg_name, self._pass_operation_arg_name
         )
 
         if self.validate_responses:

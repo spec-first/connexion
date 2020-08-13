@@ -54,7 +54,7 @@ def snake_and_shadow(name):
 
 
 def parameter_to_arg(operation, function, pythonic_params=False,
-                     pass_context_arg_name=None):
+                     pass_context_arg_name=None, pass_operation_arg_name=None):
     """
     Pass query and body parameters as keyword arguments to handler function.
 
@@ -117,6 +117,10 @@ def parameter_to_arg(operation, function, pythonic_params=False,
         # attempt to provide the request context to the function
         if pass_context_arg_name and (has_kwargs or pass_context_arg_name in arguments):
             kwargs[pass_context_arg_name] = request.context
+
+        # attempt to provide the current operation to the function
+        if pass_operation_arg_name and (has_kwargs or pass_operation_arg_name in arguments):
+            kwargs[pass_operation_arg_name] = operation
 
         return function(**kwargs)
 

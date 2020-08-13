@@ -27,7 +27,7 @@ class Swagger2Operation(AbstractOperation):
                  definitions=None, parameter_definitions=None,
                  response_definitions=None, validate_responses=False, strict_validation=False,
                  randomize_endpoint=None, validator_map=None, pythonic_params=False,
-                 uri_parser_class=None, pass_context_arg_name=None):
+                 uri_parser_class=None, pass_context_arg_name=None, pass_operation_arg_name=None):
         """
         :param api: api that this operation is attached to
         :type api: apis.AbstractAPI
@@ -73,6 +73,9 @@ class Swagger2Operation(AbstractOperation):
         :param pass_context_arg_name: If not None will try to inject the request context to the function using this
         name.
         :type pass_context_arg_name: str|None
+        :param pass_operation_arg_name: If not None will try to inject self to the function using this
+        name.
+        :type pass_operation_arg_name: str|None
         """
         app_security = operation.get('security', app_security)
         uri_parser_class = uri_parser_class or Swagger2URIParser
@@ -93,7 +96,8 @@ class Swagger2Operation(AbstractOperation):
             validator_map=validator_map,
             pythonic_params=pythonic_params,
             uri_parser_class=uri_parser_class,
-            pass_context_arg_name=pass_context_arg_name
+            pass_context_arg_name=pass_context_arg_name,
+            pass_operation_arg_name=pass_operation_arg_name,
         )
 
         self._produces = operation.get('produces', app_produces)
