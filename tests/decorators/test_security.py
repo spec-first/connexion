@@ -165,3 +165,46 @@ def test_verify_apikey_header(security_handler_factory):
     request.headers = {"X-Auth": 'foobar'}
 
     assert wrapped_func(request, ['admin']) is not None
+
+
+def test_multiple_schemes(security_handler_factory):
+    def apikey1_info(apikey, required_scopes=None):
+        if apikey == 'foobar':
+            return {'sub': 'foo'}
+        return None
+    def apikey2_info(apikey, required_scopes=None):
+        if apikey == 'bar':
+            return {'sub': 'bar'}
+        return None
+
+    wrapped_func_key1 = security_handler_factory.verify_api_key(apikey1_info, 'header', 'X-Auth-1')
+    wrapped_func_key2 = security_handler_factory.verify_api_key(apikey2_info, 'header', 'X-Auth-2')
+    schemes = {
+        'key1': wrapped_func_key1,
+        'key2': wrapped_func_key2,
+    }
+    wrapped_func = security_handler_factory.verify_multiple_schemes(schemes)
+
+    # Single key does not succeed
+    request = MagicMock()
+    request.headers = {"X-Auth-1": 'foobar'}
+
+    assert wrapped_func(request, ['admin']) is security_handler_factory.no_value
+
+    request = MagicMock()
+    request.headers = {"X-Auth-2": 'bar'}
+
+    assert wrapped_func(request, ['admin']) is security_handler_factory.no_value
+
+    # Supplying both keys does succeed
+    request = MagicMock()
+    request.headers = {
+        "X-Auth-1": 'foobar',
+        "X-Auth-2": 'bar'
+    }
+
+    expected_token_info = {
+        'key1': {'sub': 'foo'},
+        'key2': {'sub': 'bar'},
+    }
+    assert wrapped_func(request, ['admin']) == expected_token_info

@@ -87,6 +87,19 @@ semantics as for ``x-tokenInfoFunc``, but the function accepts one parameter: to
 
 You can find a `minimal JWT example application`_ in Connexion's "examples/openapi3" folder.
 
+Multiple Authentication Schemes
+-------------------------------
+
+With Connexion, it is also possible to combine multiple authentication schemes
+as described in the `OpenAPI specification`_. When multiple authentication
+schemes are combined using logical AND, the ``token_info`` argument will
+consist of a dictionary mapping the names of the security scheme to their
+corresponding ``token_info``.
+
+Multiple OAuth2 security schemes in AND fashion are not supported.
+
+.. _OpenAPI specification: https://swagger.io/docs/specification/authentication/#multiple
+
 Deploying Authentication
 ------------------------
 
