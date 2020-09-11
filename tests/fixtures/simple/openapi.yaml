@@ -1140,6 +1140,24 @@ paths:
             application/json:
               schema:
                 type: object
+  /test-optional-headers:
+    get:
+      operationId: fakeapi.hello.test_optional_headers
+      responses:
+        '200':
+          description: Some object response
+          content:
+            application/json:
+              schema:
+                type: object
+          headers:
+            X-Optional-Header:
+              description: Optional header
+              schema:
+                type: string
+              required: False
+
+
 
 servers:
   - url: http://localhost:{port}/{basePath}
