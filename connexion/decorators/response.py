@@ -52,9 +52,11 @@ class ResponseValidator(BaseDecorator):
                 raise NonConformingResponseBody(message=str(e))
 
         if response_definition and response_definition.get("headers"):
-            response_definition_header_keys = response_definition.get("headers").keys()
-            header_keys = headers.keys()
-            missing_keys = response_definition_header_keys - header_keys
+            # converting to set is needed to support python 2.7
+            required_header_keys = {k for (k, v) in response_definition.get("headers").items()
+                                    if 'required' not in v or v['required']}
+            header_keys = set(headers.keys())
+            missing_keys = required_header_keys - header_keys
             if missing_keys:
                 pretty_list = ', '.join(missing_keys)
                 msg = ("Keys in header don't match response specification. "

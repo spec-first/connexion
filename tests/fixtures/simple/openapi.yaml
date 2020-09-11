@@ -1157,8 +1157,6 @@ paths:
                 type: string
               required: False
 
-
-
 servers:
   - url: http://localhost:{port}/{basePath}
     variables:
