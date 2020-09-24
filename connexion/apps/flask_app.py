@@ -48,8 +48,10 @@ class FlaskApp(AbstractApp):
             if not isinstance(exception, werkzeug.exceptions.HTTPException):
                 exception = werkzeug.exceptions.InternalServerError()
 
-            response = problem(title=exception.name, detail=exception.description,
-                               status=exception.code)
+            response = problem(title=exception.name,
+                               detail=exception.description,
+                               status=exception.code,
+                               headers=exception.get_headers())
 
         return FlaskApi.get_response(response)
 
