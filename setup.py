@@ -27,6 +27,7 @@ install_requires = [
     'requests>=2.9.1',
     'inflection>=0.3.1',
     'openapi-spec-validator>=0.2.4',
+    'werkzeug>=1.0,<2.0',
 ]
 
 swagger_ui_require = 'swagger-ui-bundle>=0.0.2'
