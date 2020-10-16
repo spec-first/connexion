@@ -27,6 +27,8 @@ class FlaskApp(AbstractApp):
     def create_app(self):
         app = flask.Flask(self.import_name, **self.server_args)
         app.json_encoder = FlaskJSONEncoder
+        app.url_map.converters['float'] = NumberConverter
+        app.url_map.converters['int'] = IntegerConverter
         return app
 
     def get_root_path(self):
@@ -142,3 +144,18 @@ class FlaskJSONEncoder(json.JSONEncoder):
             return float(o)
 
         return json.JSONEncoder.default(self, o)
+
+
+class NumberConverter(werkzeug.routing.BaseConverter):
+    """ Flask converter for OpenAPI number type """
+    regex = r"[+-]?[0-9]*(\.[0-9]*)?"
+
+    def to_python(self, value):
+        return float(value)
+
+class IntegerConverter(werkzeug.routing.BaseConverter):
+    """ Flask converter for OpenAPI integer type """
+    regex = r"[+-]?[0-9]+"
+
+    def to_python(self, value):
+        return int(value)
