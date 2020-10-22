@@ -28,6 +28,12 @@ Connexion
 .. image:: https://img.shields.io/pypi/l/connexion.svg
    :target: https://github.com/zalando/connexion/blob/master/LICENSE
    :alt: License
+   
+   
+.. contents:: **Table of Contents**
+
+Overview
+--------
 
 Connexion is a framework that automagically handles HTTP requests based on `OpenAPI Specification`_
 (formerly known as Swagger Spec) of your API described in `YAML format`_. Connexion allows you to
@@ -41,8 +47,8 @@ We built Connexion this way in order to:
 - simplify the development process
 - confirm expectations about what your API will look like
 
-Connexion Features:
--------------------
+Connexion Features
+------------------
 
 - Validates requests and endpoint parameters automatically, based on
   your specification
@@ -74,8 +80,8 @@ Other Sources/Mentions
 - Connexion listed on Swagger_'s website
 - Blog post: `Crafting effective Microservices in Python`_
 
-New in Connexion 2.0:
----------------------
+New in Connexion 2.0
+--------------------
 - App and Api options must be provided through the "options" argument (``old_style_options`` have been removed).
 - You must specify a form content-type in 'consumes' in order to consume form data.
 - The `Operation` interface has been formalized in the `AbstractOperation` class.
