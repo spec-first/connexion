@@ -86,12 +86,21 @@ the endpoints in your specification:
           # Implied operationId: api.foo.copy
        delete:
           # Implied operationId: api.foo.delete
+     '/foo/{id}/bar':
+       get:
+          # Implied operationId: api.foo.bar.search
+     '/foo/{id}/bar/{name}':
+       get:
+          # Implied operationId: api.foo.bar.get
+          # Handler signature: `def get(id, name): ...`
 
 ``RestyResolver`` will give precedence to any ``operationId``
 encountered in the specification. It will also respect
 ``x-swagger-router-controller``. You may import and extend
 ``connexion.resolver.Resolver`` to implement your own ``operationId``
 (and function) resolution algorithm.
+Note that when using multiple parameters in the path, they will be
+collected and all passed to the endpoint handlers.
 
 Automatic Routing with MethodViewResolver
 -------------------------------------------

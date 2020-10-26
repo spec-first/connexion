@@ -15,18 +15,9 @@ paths:
               schema:
                 type: string
       security:
-        - oauth2: ['secret']
-        - basic: []
+        - basic: ['secret']
 components:
   securitySchemes:
-    oauth2:
-      type: oauth2
-      x-tokenInfoFunc: app.dummy_func
-      flows:
-        implicit:
-          authorizationUrl: https://example.com/oauth2/dialog
-          scopes:
-            secret: Allow accessing secret
     basic:
       type: http
       scheme: basic
