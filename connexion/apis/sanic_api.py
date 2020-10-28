@@ -7,7 +7,6 @@ from http import HTTPStatus
 from re import findall
 from urllib.parse import parse_qs
 
-import aiohttp_jinja2
 import sanic
 from sanic import Blueprint
 from sanic.exceptions import NotFound as HTTPNotFound
