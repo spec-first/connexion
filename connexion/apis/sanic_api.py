@@ -5,16 +5,15 @@ import traceback
 from contextlib import suppress
 from http import HTTPStatus
 from re import findall
-from urllib.parse import parse_qs
 
 import sanic
 from sanic import Blueprint
 from sanic.exceptions import NotFound as HTTPNotFound
 from sanic.request import Request
-from sanic.response import HTTPResponse, json, redirect, text
+from sanic.response import HTTPResponse, redirect, text
 
 from connexion.apis.abstract import AbstractAPI
-from connexion.exceptions import ProblemException
+from connexion.security import SanicSecurityHandlerFactory
 from connexion.handlers import AuthErrorHandler
 from connexion.jsonifier import JSONEncoder, Jsonifier
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
@@ -77,6 +76,11 @@ def replace_braces(path, parameters):
 class SanicApi(AbstractAPI):
     def __init__(self, *args, **kwargs):
         AbstractAPI.__init__(self, *args, **kwargs)
+
+    @staticmethod
+    def make_security_handler_factory(pass_context_arg_name):
+        """ Create default SecurityHandlerFactory to create all security check handlers """
+        return SanicSecurityHandlerFactory(pass_context_arg_name)
 
     def _set_base_path(self, base_path):
         AbstractAPI._set_base_path(self, base_path)
