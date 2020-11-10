@@ -3,8 +3,6 @@ import asyncio
 import functools
 import logging
 
-import aiohttp
-
 from ..exceptions import OAuthProblem, OAuthResponseProblem, OAuthScopeProblem
 from .security_handler_factory import AbstractSecurityHandlerFactory
 
