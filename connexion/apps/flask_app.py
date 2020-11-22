@@ -6,8 +6,8 @@ from types import FunctionType  # NOQA
 
 import flask
 import werkzeug.exceptions
-from flask import json
-from flask import signals
+from flask import json, signals
+
 from ..apis.flask_api import FlaskApi
 from ..exceptions import ProblemException
 from ..problem import problem
@@ -96,9 +96,9 @@ class FlaskApp(AbstractApp):
             self.app.run(self.host, port=self.port, debug=self.debug, **options)
         elif self.server == 'tornado':
             try:
-                import tornado.wsgi
                 import tornado.httpserver
                 import tornado.ioloop
+                import tornado.wsgi
             except ImportError:
                 raise Exception('tornado library not installed')
             wsgi_container = tornado.wsgi.WSGIContainer(self.app)
