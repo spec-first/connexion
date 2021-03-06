@@ -1,4 +1,4 @@
 -r requirements-aiohttp.txt
 -r requirements-devel.txt
-openapi_spec_validator
+openapi_spec_validator<=0.2.10
 pytest-aiohttp
