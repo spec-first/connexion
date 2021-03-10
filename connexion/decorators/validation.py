@@ -2,6 +2,8 @@ import collections
 import copy
 import functools
 import logging
+from urllib.parse import parse_qs
+
 
 import pkg_resources
 from jsonschema import Draft4Validator, ValidationError, draft4_format_checker
@@ -125,6 +127,19 @@ class RequestBodyValidator(object):
         spec_params = self.schema.get('properties', {}).keys()
         return validate_parameter_list(request_params, spec_params)
 
+    def parse_body_parameters(self, body):
+        parsed_body = parse_qs(body.decode("utf-8"))
+        # Flatten the parameters and take only the first value
+        params = dict()
+        for key,value in parsed_body.items():
+            valen = len(value)
+            if valen:
+                if valen<=1:
+                    params[key] = value[0] # flatten single element lists
+                else:
+                    params[key] = value # leave multi-valued lists intact
+        return params
+
     def __call__(self, function):
         """
         :type function: types.FunctionType
@@ -157,7 +172,8 @@ class RequestBodyValidator(object):
                 if data is not None or not self.has_default:
                     self.validate_schema(data, request.url)
             elif self.consumes[0] in FORM_CONTENT_TYPES:
-                data = dict(request.form.items()) or (request.body if len(request.body) > 0 else {})
+                data = dict(request.form.items()) or \
+                       (self.parse_body_parameters(request.body) if len(request.body) > 0 else {})
                 data.update(dict.fromkeys(request.files, ''))  # validator expects string..
                 logger.debug('%s validating schema...', request.url)
 
