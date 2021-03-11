@@ -100,6 +100,20 @@ def validate_parameter_list(request_params, spec_params):
     return request_params.difference(spec_params)
 
 
+def parse_body_parameters(body, encoding="utf-8"):
+    parsed_body = parse_qs(body.decode(encoding))
+    # Flatten the parameters and take only the first value
+    params = dict()
+    for key, value in parsed_body.items():
+        valen = len(value)
+        if valen:
+            if valen <= 1:
+                params[key] = value[0]  # flatten single element lists
+            else:
+                params[key] = value  # leave multi-valued lists intact
+    return params
+
+
 class RequestBodyValidator(object):
 
     def __init__(self, schema, consumes, api, is_null_value_valid=False, validator=None,
@@ -126,19 +140,6 @@ class RequestBodyValidator(object):
         request_params = request.form.keys()
         spec_params = self.schema.get('properties', {}).keys()
         return validate_parameter_list(request_params, spec_params)
-
-    def parse_body_parameters(self, body, encoding="utf-8"):
-        parsed_body = parse_qs(body.decode(encoding))
-        # Flatten the parameters and take only the first value
-        params = dict()
-        for key,value in parsed_body.items():
-            valen = len(value)
-            if valen:
-                if valen<=1:
-                    params[key] = value[0] # flatten single element lists
-                else:
-                    params[key] = value # leave multi-valued lists intact
-        return params
 
     def __call__(self, function):
         """
@@ -174,7 +175,7 @@ class RequestBodyValidator(object):
             elif self.consumes[0] in FORM_CONTENT_TYPES:
                 # TODO: parse_body_parameters() should probably be given an explicit encoding from the request
                 data = dict(request.form.items()) or \
-                       (self.parse_body_parameters(request.body) if len(request.body) > 0 else {})
+                       (parse_body_parameters(request.body) if len(request.body) > 0 else {})
                 data.update(dict.fromkeys(request.files, ''))  # validator expects string..
                 logger.debug('%s validating schema...', request.url)
 
