@@ -306,7 +306,7 @@ class AioHttpApi(AbstractAPI):
         query = parse_qs(req.rel_url.query_string)
         headers = req.headers
         
-        body = None
+        body = b''
         files = {}
         if req.content_type == 'application/x-www-form-urlencoded':
             if req.body_exists:
