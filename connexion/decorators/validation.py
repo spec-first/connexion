@@ -127,7 +127,7 @@ class RequestBodyValidator(object):
         spec_params = self.schema.get('properties', {}).keys()
         return validate_parameter_list(request_params, spec_params)
 
-    def parse_body_parameters(self, body, encoding="ascii"):
+    def parse_body_parameters(self, body, encoding="utf-8"):
         parsed_body = parse_qs(body.decode(encoding))
         # Flatten the parameters and take only the first value
         params = dict()
@@ -172,6 +172,7 @@ class RequestBodyValidator(object):
                 if data is not None or not self.has_default:
                     self.validate_schema(data, request.url)
             elif self.consumes[0] in FORM_CONTENT_TYPES:
+                # TODO: parse_body_parameters() should probably be given an explicit encoding from the request
                 data = dict(request.form.items()) or \
                        (self.parse_body_parameters(request.body) if len(request.body) > 0 else {})
                 data.update(dict.fromkeys(request.files, ''))  # validator expects string..
