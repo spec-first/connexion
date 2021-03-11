@@ -9,6 +9,7 @@ from urllib.parse import parse_qs
 import aiohttp_jinja2
 import jinja2
 from aiohttp import web
+from aiohttp.web_request import FileField
 from aiohttp.web_exceptions import HTTPNotFound, HTTPPermanentRedirect
 from aiohttp.web_middlewares import normalize_path_middleware
 from connexion.apis.abstract import AbstractAPI
@@ -304,10 +305,14 @@ class AioHttpApi(AbstractAPI):
 
         query = parse_qs(req.rel_url.query_string)
         headers = req.headers
+        
         body = None
         if req.body_exists:
             body = await req.read()
-
+            
+        data = await req.post()
+        files = {k: v for k, v in data.items() if isinstance(v, FileField)}
+        
         return ConnexionRequest(url=url,
                                 method=req.method.lower(),
                                 path_params=dict(req.match_info),
@@ -315,7 +320,7 @@ class AioHttpApi(AbstractAPI):
                                 headers=headers,
                                 body=body,
                                 json_getter=lambda: cls.jsonifier.loads(body),
-                                files={},
+                                files=files,
                                 context=req)
 
     @classmethod
