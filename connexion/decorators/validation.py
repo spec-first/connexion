@@ -127,8 +127,8 @@ class RequestBodyValidator(object):
         spec_params = self.schema.get('properties', {}).keys()
         return validate_parameter_list(request_params, spec_params)
 
-    def parse_body_parameters(self, body):
-        parsed_body = parse_qs(body.decode("utf-8"))
+    def parse_body_parameters(self, body, encoding="ascii"):
+        parsed_body = parse_qs(body.decode(encoding))
         # Flatten the parameters and take only the first value
         params = dict()
         for key,value in parsed_body.items():
