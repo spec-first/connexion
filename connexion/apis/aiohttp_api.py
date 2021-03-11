@@ -307,11 +307,15 @@ class AioHttpApi(AbstractAPI):
         headers = req.headers
         
         body = None
-        if req.body_exists:
-            body = await req.read()
-            
-        data = await req.post()
-        files = {k: v for k, v in data.items() if isinstance(v, FileField)}
+        files = {}
+        if req.content_type == 'application/x-www-form-urlencoded':
+            if req.body_exists:
+                body = await req.read()
+        elif req.content_type == 'multipart/form-data':
+            pass
+            # here, we need to do or - more likely - defer a multi-part read of data files
+            # data = await req.post()
+            # files = {k: v for k, v in data.items() if isinstance(v, FileField)}
         
         return ConnexionRequest(url=url,
                                 method=req.method.lower(),
