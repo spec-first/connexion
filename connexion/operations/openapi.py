@@ -5,6 +5,7 @@ from connexion.operations.abstract import AbstractOperation
 
 from ..decorators.uri_parsing import OpenAPIURIParser
 from ..utils import deep_get, deep_merge, is_null, is_nullable, make_type
+from ..http_facts import FORM_CONTENT_TYPES
 
 logger = logging.getLogger("connexion.operations.openapi3")
 
@@ -297,6 +298,11 @@ class OpenAPIOperation(AbstractOperation):
 
         if x_body_name in arguments or has_kwargs:
             return {x_body_name: res}
+        
+        # If the content type is "multipart/form-data" return the properties as-is
+        if self.consumes[0] in FORM_CONTENT_TYPES:
+            return res
+        
         return {}
 
     def _get_typed_body_values(self, body_arg, body_props, additional_props):
