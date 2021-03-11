@@ -1,7 +1,5 @@
 import json
 
-from connexion import FlaskApp
-
 
 def test_security_over_nonexistent_endpoints(oauth_requests, secure_api_app):
     app_client = secure_api_app.app.test_client()

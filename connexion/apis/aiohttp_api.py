@@ -18,6 +18,7 @@ from connexion.jsonifier import JSONEncoder, Jsonifier
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.problem import problem
 from connexion.utils import yamldumper
+from connexion.security import AioHttpSecurityHandlerFactory
 from werkzeug.exceptions import HTTPException as werkzeug_HTTPException
 
 
@@ -104,6 +105,11 @@ class AioHttpApi(AbstractAPI):
         )
         middlewares = self.options.as_dict().get('middlewares', [])
         self.subapp.middlewares.extend(middlewares)
+
+    @staticmethod
+    def make_security_handler_factory(pass_context_arg_name):
+        """ Create default SecurityHandlerFactory to create all security check handlers """
+        return AioHttpSecurityHandlerFactory(pass_context_arg_name)
 
     def _set_base_path(self, base_path):
         AbstractAPI._set_base_path(self, base_path)

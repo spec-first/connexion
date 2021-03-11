@@ -62,6 +62,8 @@ def coerce_type(param, value, parameter_type, parameter_name=None):
     parameter_name = parameter_name if parameter_name else param.get('name')
     if param_type == "array":
         converted_params = []
+        if parameter_type == "header":
+            value = value.split(',')
         for v in value:
             try:
                 converted = make_type(v, param_schema["items"]["type"])

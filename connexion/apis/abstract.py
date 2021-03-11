@@ -37,7 +37,8 @@ class AbstractAPI(metaclass=AbstractAPIMeta):
     def __init__(self, specification, base_path=None, arguments=None,
                  validate_responses=False, strict_validation=False, resolver=None,
                  auth_all_paths=False, debug=False, resolver_error_handler=None,
-                 validator_map=None, pythonic_params=False, pass_context_arg_name=None, options=None):
+                 validator_map=None, pythonic_params=False, pass_context_arg_name=None, options=None,
+                 ):
         """
         :type specification: pathlib.Path | dict
         :type base_path: str | None
@@ -101,6 +102,8 @@ class AbstractAPI(metaclass=AbstractAPIMeta):
         logger.debug('pass_context_arg_name: %s', pass_context_arg_name)
         self.pass_context_arg_name = pass_context_arg_name
 
+        self.security_handler_factory = self.make_security_handler_factory(pass_context_arg_name)
+
         if self.options.openapi_spec_available:
             self.add_openapi_json()
             self.add_openapi_yaml()
@@ -142,6 +145,11 @@ class AbstractAPI(metaclass=AbstractAPIMeta):
         """
         Adds a 404 error handler to authenticate and only expose the 404 status if the security validation pass.
         """
+
+    @staticmethod
+    @abc.abstractmethod
+    def make_security_handler_factory(pass_context_arg_name):
+        """ Create SecurityHandlerFactory to create all security check handlers """
 
     def add_operation(self, path, method):
         """

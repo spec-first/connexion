@@ -74,6 +74,10 @@ async def aiohttp_users_post(user):
     return aiohttp.web.json_response(data=USERS[-1], status=201)
 
 
+async def aiohttp_token_info(token_info):
+    return aiohttp.web.json_response(data=token_info)
+
+
 async def get_datetime():
     return ConnexionResponse(body={'value': datetime.datetime(2000, 1, 2, 3, 4, 5, 6)})
 
