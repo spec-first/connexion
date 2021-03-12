@@ -25,7 +25,8 @@ TYPE_MAP = {
     'integer': int,
     'number': float,
     'boolean': boolean,
-    'object': dict
+    'object': dict,
+    'string': str
 }
 
 
