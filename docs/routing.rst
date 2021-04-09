@@ -19,7 +19,7 @@ identify which Python function should handle each URL.
 If you provided this path in your specification POST requests to
 ``http://MYHOST/hello_world``, it would be handled by the function
 ``hello_world`` in ``myapp.api`` module. Optionally, you can include
-``x-swagger-router-controller`` in your operation definition, making
+``x-openapi-router-controller`` in your operation definition, making
 ``operationId`` relative:
 
 .. code-block:: yaml
@@ -27,7 +27,7 @@ If you provided this path in your specification POST requests to
     paths:
       /hello_world:
         post:
-          x-swagger-router-controller: myapp.api
+          x-openapi-router-controller: myapp.api
           operationId: hello_world
 
 Keep in mind that Connexion follows how `HTTP methods work in Flask`_
@@ -96,7 +96,7 @@ the endpoints in your specification:
 
 ``RestyResolver`` will give precedence to any ``operationId``
 encountered in the specification. It will also respect
-``x-swagger-router-controller``. You may import and extend
+``x-openapi-router-controller``. You may import and extend
 ``connexion.resolver.Resolver`` to implement your own ``operationId``
 (and function) resolution algorithm.
 Note that when using multiple parameters in the path, they will be
@@ -207,7 +207,7 @@ and a __init__.py file to make the Class visible in the api directory.
 
 ``MethodViewResolver`` will give precedence to any ``operationId``
 encountered in the specification. It will also respect
-``x-swagger-router-controller``. You may import and extend
+``x-openapi-router-controller``. You may import and extend
 ``connexion.resolver.MethodViewResolver`` to implement your own ``operationId``
 (and function) resolution algorithm.
 

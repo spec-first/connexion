@@ -176,7 +176,7 @@ identify which Python function should handle each URL.
 If you provide this path in your specification POST requests to
 ``http://MYHOST/hello_world``, it will be handled by the function
 ``hello_world`` in the ``myapp.api`` module. Optionally, you can include
-``x-swagger-router-controller`` (or ``x-openapi-router-controller``) in your
+``x-openapi-router-controller`` in your
 operation definition, making ``operationId`` relative:
 
 .. code-block:: yaml
@@ -184,7 +184,7 @@ operation definition, making ``operationId`` relative:
     paths:
       /hello_world:
         post:
-          x-swagger-router-controller: myapp.api
+          x-openapi-router-controller: myapp.api
           operationId: hello_world
 
 Keep in mind that Connexion follows how `HTTP methods work in Flask`_ and therefore HEAD requests will be handled by the ``operationId`` specified under GET in the specification. If both methods are supported, ``connexion.request.method`` can be used to determine which request was made.
