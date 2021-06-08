@@ -11,6 +11,8 @@ from werkzeug.datastructures import FileStorage
 from ..exceptions import ExtraParameterProblem, BadRequestProblem, UnsupportedMediaTypeProblem
 from ..http_facts import FORM_CONTENT_TYPES
 from ..json_schema import Draft4RequestValidator, Draft4ResponseValidator
+from ..content_types import ContentHandlerFactory
+from ..types import TypeValidationError, coerce_type
 from ..utils import all_json, boolean, is_json_mimetype, is_null, is_nullable
 
 _jsonschema_3_or_newer = pkg_resources.parse_version(
@@ -19,78 +21,78 @@ _jsonschema_3_or_newer = pkg_resources.parse_version(
 
 logger = logging.getLogger('connexion.decorators.validation')
 
-TYPE_MAP = {
-    'integer': int,
-    'number': float,
-    'boolean': boolean,
-    'object': dict
-}
+# TYPE_MAP = {
+#     'integer': int,
+#     'number': float,
+#     'boolean': boolean,
+#     'object': dict
+# }
 
 
-class TypeValidationError(Exception):
-    def __init__(self, schema_type, parameter_type, parameter_name):
-        """
-        Exception raise when type validation fails
+# class TypeValidationError(Exception):
+#     def __init__(self, schema_type, parameter_type, parameter_name):
+#         """
+#         Exception raise when type validation fails
 
-        :type schema_type: str
-        :type parameter_type: str
-        :type parameter_name: str
-        :return:
-        """
-        self.schema_type = schema_type
-        self.parameter_type = parameter_type
-        self.parameter_name = parameter_name
+#         :type schema_type: str
+#         :type parameter_type: str
+#         :type parameter_name: str
+#         :return:
+#         """
+#         self.schema_type = schema_type
+#         self.parameter_type = parameter_type
+#         self.parameter_name = parameter_name
 
-    def __str__(self):
-        msg = "Wrong type, expected '{schema_type}' for {parameter_type} parameter '{parameter_name}'"
-        return msg.format(**vars(self))
+#     def __str__(self):
+#         msg = "Wrong type, expected '{schema_type}' for {parameter_type} parameter '{parameter_name}'"
+#         return msg.format(**vars(self))
 
 
-def coerce_type(param, value, parameter_type, parameter_name=None):
+# def coerce_type(param, value, parameter_type, parameter_name=None):
 
-    def make_type(value, type_literal):
-        type_func = TYPE_MAP.get(type_literal)
-        return type_func(value)
+#     def make_type(value, type_literal):
+#         type_func = TYPE_MAP.get(type_literal)
+#         return type_func(value)
 
-    param_schema = param.get("schema", param)
-    if is_nullable(param_schema) and is_null(value):
-        return None
+#     param_schema = param.get("schema", param)
+#     if is_nullable(param_schema) and is_null(value):
+#         return None
 
-    param_type = param_schema.get('type')
-    parameter_name = parameter_name if parameter_name else param.get('name')
-    if param_type == "array":
-        converted_params = []
-        if parameter_type == "header":
-            value = value.split(',')
-        for v in value:
-            try:
-                converted = make_type(v, param_schema["items"]["type"])
-            except (ValueError, TypeError):
-                converted = v
-            converted_params.append(converted)
-        return converted_params
-    elif param_type == 'object':
-        if param_schema.get('properties'):
-            def cast_leaves(d, schema):
-                if type(d) is not dict:
-                    try:
-                        return make_type(d, schema['type'])
-                    except (ValueError, TypeError):
-                        return d
-                for k, v in d.items():
-                    if k in schema['properties']:
-                        d[k] = cast_leaves(v, schema['properties'][k])
-                return d
+#     param_type = param_schema.get('type')
+#     parameter_name = parameter_name if parameter_name else param.get('name')
+#     if param_type == "array":
+#         converted_params = []
+#         if parameter_type == "header":
+#             value = value.split(',')
+#         for v in value:
+#             try:
+#                 converted = make_type(v, param_schema["items"]["type"])
+#             except (ValueError, TypeError):
+#                 converted = v
+#             converted_params.append(converted)
+#         return converted_params
+#     elif param_type == 'object':
+#         if param_schema.get('properties'):
+#             def cast_leaves(d, schema):
+#                 if type(d) is not dict:
+#                     try:
+#                         return make_type(d, schema['type'])
+#                     except (ValueError, TypeError):
+#                         return d
+#                 for k, v in d.items():
+#                     if k in schema['properties']:
+#                         d[k] = cast_leaves(v, schema['properties'][k])
+#                 return d
 
-            return cast_leaves(value, param_schema)
-        return value
-    else:
-        try:
-            return make_type(value, param_type)
-        except ValueError:
-            raise TypeValidationError(param_type, parameter_type, parameter_name)
-        except TypeError:
-            return value
+#             return cast_leaves(value, param_schema)
+#         return value
+#     else:
+#         try:
+#             return make_type(value, param_type)
+#         except ValueError:
+#             raise TypeValidationError(param_type, parameter_type, parameter_name)
+#         except TypeError:
+#             return value
 
 
 def validate_parameter_list(request_params, spec_params):
@@ -121,11 +123,18 @@ class RequestBodyValidator(object):
         self.validator = validatorClass(schema, format_checker=draft4_format_checker)
         self.api = api
         self.strict_validation = strict_validation
+        self.content_handler_factory = ContentHandlerFactory(
+            self.validator,
+            self.schema,
+            self.strict_validation,
+            self.is_null_value_valid,
+            self.consumes
+        )
 
-    def validate_formdata_parameter_list(self, request):
-        request_params = request.form.keys()
-        spec_params = self.schema.get('properties', {}).keys()
-        return validate_parameter_list(request_params, spec_params)
+    # def validate_formdata_parameter_list(self, request):
+    #     request_params = request.form.keys()
+    #     spec_params = self.schema.get('properties', {}).keys()
+    #     return validate_parameter_list(request_params, spec_params)
 
     def __call__(self, function):
         """
@@ -135,53 +144,62 @@ class RequestBodyValidator(object):
 
         @functools.wraps(function)
         def wrapper(request):
-            if all_json(self.consumes):
-                data = request.json
+            # if all_json(self.consumes):
+            #     data = request.json
 
-                empty_body = not(request.body or request.form or request.files)
-                if data is None and not empty_body and not self.is_null_value_valid:
-                    try:
-                        ctype_is_json = is_json_mimetype(request.headers.get("Content-Type", ""))
-                    except ValueError:
-                        ctype_is_json = False
+            #     empty_body = not(request.body or request.form or request.files)
+            #     if data is None and not empty_body and not self.is_null_value_valid:
+            #         try:
+            #             ctype_is_json = is_json_mimetype(request.headers.get("Content-Type", ""))
+            #         except ValueError:
+            #             ctype_is_json = False
 
-                    if ctype_is_json:
-                        # Content-Type is json but actual body was not parsed
-                        raise BadRequestProblem(detail="Request body is not valid JSON")
-                    else:
-                        # the body has contents that were not parsed as JSON
-                        raise UnsupportedMediaTypeProblem(
-                                       "Invalid Content-type ({content_type}), expected JSON data".format(
-                                           content_type=request.headers.get("Content-Type", "")
-                                       ))
+            #         if ctype_is_json:
+            #             # Content-Type is json but actual body was not parsed
+            #             raise BadRequestProblem(detail="Request body is not valid JSON")
+            #         else:
+            #             # the body has contents that were not parsed as JSON
+            #             raise UnsupportedMediaTypeProblem(
+            #                            "Invalid Content-type ({content_type}), expected JSON data".format(
+            #                                content_type=request.headers.get("Content-Type", "")
+            #                            ))
 
-                logger.debug("%s validating schema...", request.url)
-                if data is not None or not self.has_default:
-                    self.validate_schema(data, request.url)
-            elif self.consumes[0] in FORM_CONTENT_TYPES:
-                data = dict(request.form.items()) or (request.body if len(request.body) > 0 else {})
-                data.update(dict.fromkeys(request.files, ''))  # validator expects string..
-                logger.debug('%s validating schema...', request.url)
+            #     logger.debug("%s validating schema...", request.url)
+            #     if data is not None or not self.has_default:
+            #         self.validate_schema(data, request.url)
+            # elif self.consumes[0] in FORM_CONTENT_TYPES:
+            #     data = dict(request.form.items()) or (request.body if len(request.body) > 0 else {})
+            #     data.update(dict.fromkeys(request.files, ''))  # validator expects string..
+            #     logger.debug('%s validating schema...', request.url)
 
-                if self.strict_validation:
-                    formdata_errors = self.validate_formdata_parameter_list(request)
-                    if formdata_errors:
-                        raise ExtraParameterProblem(formdata_errors, [])
+            #     if self.strict_validation:
+            #         formdata_errors = self.validate_formdata_parameter_list(request)
+            #         if formdata_errors:
+            #             raise ExtraParameterProblem(formdata_errors, [])
 
-                if data:
-                    props = self.schema.get("properties", {})
-                    errs = []
-                    for k, param_defn in props.items():
-                        if k in data:
-                            try:
-                                data[k] = coerce_type(param_defn, data[k], 'requestBody', k)
-                            except TypeValidationError as e:
-                                errs += [str(e)]
-                                print(errs)
-                    if errs:
-                        raise BadRequestProblem(detail=errs)
+            #     if data:
+            #         props = self.schema.get("properties", {})
+            #         errs = []
+            #         for k, param_defn in props.items():
+            #             if k in data:
+            #                 try:
+            #                     data[k] = coerce_type(param_defn, data[k], 'requestBody', k)
+            #                 except TypeValidationError as e:
+            #                     errs += [str(e)]
+            #                     print(errs)
+            #         if errs:
+            #             raise BadRequestProblem(detail=errs)
 
-                self.validate_schema(data, request.url)
+            #     self.validate_schema(data, request.url)
+
+            content_handler = self.content_handler_factory.get_handler(request.content_type)
+            if content_handler is None:
+                raise UnsupportedMediaTypeProblem(
+                    "Unsupported Content-type ({content_type})".format(
+                        content_type=request.headers.get("Content-Type", "")
+                    ))
+
+            content_handler.validate_request(request)
 
             response = function(request)
             return response

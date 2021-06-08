@@ -7,7 +7,7 @@ import inflection
 
 from ..http_facts import FORM_CONTENT_TYPES
 from ..lifecycle import ConnexionRequest  # NOQA
-from ..utils import all_json
+from ..utils import is_json_mimetype, is_xml_mimetype
 
 try:
     import builtins
@@ -86,10 +86,12 @@ def parameter_to_arg(operation, function, pythonic_params=False,
         logger.debug('Function Arguments: %s', arguments)
         kwargs = {}
 
-        if all_json(consumes):
+        # if all_json(consumes):
+        if is_json_mimetype(request.content_type):
             request_body = request.json
-        elif consumes[0] in FORM_CONTENT_TYPES:
-            request_body = {sanitize(k): v for k, v in request.form.items()}
+        # elif consumes[0] in FORM_CONTENT_TYPES:
+        elif is_xml_mimetype(request.content_type):
+            request_body = request.xml
         else:
             request_body = request.body
 

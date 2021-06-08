@@ -23,6 +23,10 @@ class ConnexionRequest(object):
         self.context = context if context is not None else {}
 
     @property
+    def content_type(self):
+        return self.headers.get("Content-Type")
+
+    @property
     def json(self):
         return self.json_getter()
 

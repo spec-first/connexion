@@ -2,3 +2,4 @@
 -r requirements-devel.txt
 openapi_spec_validator
 pytest-aiohttp
+xmltodict

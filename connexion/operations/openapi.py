@@ -296,7 +296,8 @@ class OpenAPIOperation(AbstractOperation):
             res = self._get_typed_body_values(body_arg, body_props, additional_props)
 
         if x_body_name in arguments or has_kwargs:
-            return {x_body_name: res}
+            # return {x_body_name: res}
+            return {x_body_name: body_arg}
         return {}
 
     def _get_typed_body_values(self, body_arg, body_props, additional_props):

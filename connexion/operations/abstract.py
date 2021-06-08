@@ -341,6 +341,23 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
         """
         Operation function with decorators
 
+        request comes in -> connexionrequest (framework generic)
+        API metrics recorded
+        API security applied
+        arrays are deserialized (spec dependent)
+         - query params
+         - form params
+         - path params
+        body is deserialized (spec dependent, content dependent)
+        validation is applied (spec dependent, content dependent)
+         - query params
+         - form params
+         - body params
+         - path params ?
+        parameter_to_arg (handler, what to call it)
+        json serializer is applied
+        response is validated if json
+
         :rtype: types.FunctionType
         """
         function = parameter_to_arg(
