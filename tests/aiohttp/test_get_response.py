@@ -1,7 +1,6 @@
 import json
 
 import pytest
-
 from aiohttp import web
 from connexion.apis.aiohttp_api import AioHttpApi
 from connexion.lifecycle import ConnexionResponse

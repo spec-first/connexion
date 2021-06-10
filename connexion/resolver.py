@@ -1,5 +1,4 @@
 import logging
-import re
 import sys
 
 import connexion.utils as utils

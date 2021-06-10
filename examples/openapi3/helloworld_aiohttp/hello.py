@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-import connexion
 from aiohttp import web
+import connexion
 
 
 async def post_greeting(name):

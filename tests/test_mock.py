@@ -1,5 +1,5 @@
 from connexion.mock import MockResolver
-from connexion.operations import Swagger2Operation, OpenAPIOperation
+from connexion.operations import OpenAPIOperation, Swagger2Operation
 
 
 def test_mock_resolver_default():

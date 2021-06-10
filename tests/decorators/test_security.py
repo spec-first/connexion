@@ -1,9 +1,8 @@
-import json
-
-import pytest
-import requests
 from unittest.mock import MagicMock
 
+import json
+import pytest
+import requests
 from connexion.exceptions import OAuthResponseProblem, OAuthScopeProblem
 
 

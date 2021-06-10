@@ -1,11 +1,10 @@
 import abc
 import base64
 import functools
+import http.cookies
 import logging
 import os
 import textwrap
-
-import http.cookies
 
 from ..decorators.parameter import inspect_function_arguments
 from ..exceptions import (ConnexionException, OAuthProblem,
