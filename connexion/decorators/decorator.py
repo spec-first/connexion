@@ -28,8 +28,9 @@ class RequestResponseDecorator(BaseDecorator):
     framework specific object.
     """
 
-    def __init__(self, api, mimetype):
+    def __init__(self, api, stream_upload, mimetype):
         self.api = api
+        self.stream_upload = stream_upload
         self.mimetype = mimetype
 
     def __call__(self, function):
@@ -39,12 +40,14 @@ class RequestResponseDecorator(BaseDecorator):
         """
         if has_coroutine(function, self.api):
             from .coroutine_wrappers import get_request_life_cycle_wrapper
-            wrapper = get_request_life_cycle_wrapper(function, self.api, self.mimetype)
+            wrapper = get_request_life_cycle_wrapper(function, self.api, self.stream_upload, self.mimetype)
 
         else:  # pragma: 3 no cover
             @functools.wraps(function)
             def wrapper(*args, **kwargs):
-                request = self.api.get_request(*args, **kwargs)
+                # Pass args and kwargs as a tuple/dict respectively so they don't
+                # interfere with the other parameters.
+                request = self.api.get_request(self.stream_upload, args, kwargs)
                 response = function(request)
                 return self.api.get_response(response, self.mimetype, request)
 

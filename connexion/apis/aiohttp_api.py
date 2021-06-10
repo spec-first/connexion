@@ -285,13 +285,16 @@ class AioHttpApi(AbstractAPI):
             )
 
     @classmethod
-    async def get_request(cls, req):
+    async def get_request(cls, stream_upload, args, params):
         """Convert aiohttp request to connexion
 
-        :param req: instance of aiohttp.web.Request
+        :param stream_upload: flag indicating that the upload should be streamed)
+        :param args: one-element tuple containing an instance of aiohttp.web.Request
+        :param params: unused
         :return: connexion request instance
         :rtype: ConnexionRequest
         """
+        req = args[0]
         url = str(req.url)
         logger.debug('Getting data and status code',
                      extra={'has_body': req.has_body, 'url': url})

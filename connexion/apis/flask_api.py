@@ -205,8 +205,8 @@ class FlaskApi(AbstractAPI):
         return body, mimetype
 
     @classmethod
-    def get_request(cls, *args, **params):
-        # type: (*Any, **Any) -> ConnexionRequest
+    def get_request(cls, stream_upload, args, params):
+        # type: (bool, tuple, dict) -> ConnexionRequest
         """Gets ConnexionRequest instance for the operation handler
         result. Status Code and Headers for response.  If only body
         data is returned by the endpoint function, then the status
@@ -226,7 +226,7 @@ class FlaskApi(AbstractAPI):
             headers=flask_request.headers,
             form=flask_request.form,
             query=flask_request.args,
-            body=flask_request.get_data(),
+            body=flask_request.stream if stream_upload else flask_request.get_data(),
             json_getter=lambda: flask_request.get_json(silent=True),
             files=flask_request.files,
             path_params=params,

@@ -2,7 +2,7 @@ import asyncio
 import functools
 
 
-def get_request_life_cycle_wrapper(function, api, mimetype):
+def get_request_life_cycle_wrapper(function, api, stream_upload, mimetype):
     """
     It is a wrapper used on `RequestResponseDecorator` class.
     This function is located in an extra module because python2.7 don't
@@ -14,7 +14,9 @@ def get_request_life_cycle_wrapper(function, api, mimetype):
     """
     @functools.wraps(function)
     def wrapper(*args, **kwargs):
-        connexion_request = api.get_request(*args, **kwargs)
+        # Pass args and kwargs as a tuple/dict respectively so they don't
+        # interfere with the other parameters.
+        connexion_request = api.get_request(stream_upload, args, kwargs)
         while asyncio.iscoroutine(connexion_request):
             connexion_request = yield from connexion_request
 

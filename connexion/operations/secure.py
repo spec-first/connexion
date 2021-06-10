@@ -152,6 +152,9 @@ class SecureOperation(object):
     def get_mimetype(self):
         return DEFAULT_MIMETYPE
 
+    def get_stream_upload(self):
+        return False
+
     @property
     def _request_response_decorator(self):
         """
@@ -161,4 +164,4 @@ class SecureOperation(object):
         object is returned.
         :rtype: types.FunctionType
         """
-        return RequestResponseDecorator(self.api, self.get_mimetype())
+        return RequestResponseDecorator(self.api, self.get_stream_upload(), self.get_mimetype())

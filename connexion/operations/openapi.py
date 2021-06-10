@@ -154,6 +154,9 @@ class OpenAPIOperation(AbstractOperation):
     def produces(self):
         return self._produces
 
+    def get_stream_upload(self):
+        return self.request_body.get('x-stream-upload', False)
+
     def with_definitions(self, schema):
         if self.components:
             schema['schema']['components'] = self.components
