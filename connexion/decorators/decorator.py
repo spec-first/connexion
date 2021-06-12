@@ -56,7 +56,7 @@ class RequestResponseDecorator(BaseDecorator):
 
                 return framework_response
 
-        else:  # pragma: 3 no cover
+        else:  # pragma: no cover
             @functools.wraps(function)
             def wrapper(*args, **kwargs):
                 request = self.api.get_request(*args, **kwargs)
