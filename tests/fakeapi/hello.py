@@ -602,3 +602,19 @@ def get_date():
 
 def get_uuid():
     return {'value': uuid.UUID(hex='e7ff66d0-3ec2-4c4e-bed0-6e4723c24c51')}
+
+
+def check_if_streaming(body):
+    streaming = body is not None and \
+        hasattr(body, 'read') and \
+        callable(getattr(body, 'read')) and \
+        body is request.stream
+    return {'streaming': streaming}, 200
+
+
+def test_streaming_upload(body=None):
+    return check_if_streaming(body)
+
+
+def test_non_streaming_upload(body=None):
+    return check_if_streaming(body)

@@ -1140,6 +1140,41 @@ paths:
             application/json:
               schema:
                 type: object
+  /test_streaming_upload:
+    post:
+      operationId: fakeapi.hello.test_streaming_upload
+      requestBody:
+        x-stream-upload: true
+        content:
+          application/octet-stream:
+              schema:
+                type: string
+                format: binary
+      responses:
+        '200':
+          description: >
+            JSON indicating whether the request body was streamed.
+          content:
+            application/json:
+              schema:
+                type: object
+  /test_non_streaming_upload:
+    post:
+      operationId: fakeapi.hello.test_non_streaming_upload
+      requestBody:
+        content:
+          application/octet-stream:
+              schema:
+                type: string
+                format: binary
+      responses:
+        '200':
+          description: >
+            JSON indicating whether the request body was streamed.
+          content:
+            application/json:
+              schema:
+                type: object
 
 servers:
   - url: http://localhost:{port}/{basePath}

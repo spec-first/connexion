@@ -383,3 +383,22 @@ def test_get_bad_default_response(simple_app):
 
     resp = app_client.get('/v1.0/get_bad_default_response/202')
     assert resp.status_code == 500
+
+
+def test_upload_streaming_response(simple_app):
+    app_client = simple_app.app.test_client()
+    resp = app_client.post(
+        '/v1.0/test_streaming_upload',
+        data=json.dumps({}),
+        headers={'Content-Type': 'application/json'})
+    assert resp.status_code == 200
+    data = json.loads(resp.data.decode('utf-8'))
+    assert data['streaming']
+
+    resp = app_client.post(
+        '/v1.0/test_non_streaming_upload',
+        data=json.dumps({}),
+        headers={'Content-Type': 'application/json'})
+    assert resp.status_code == 200
+    data = json.loads(resp.data.decode('utf-8'))
+    assert not data['streaming']
