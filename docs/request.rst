@@ -257,3 +257,70 @@ change the validation, you can override the defaults with:
     app.add_api('api.yaml', ..., validator_map=validator_map)
 
 See custom validator example in ``examples/enforcedefaults``.
+
+Upload Streaming
+----------------
+
+Connexion typically reads an entire request into memory so that it can be validated.
+Applications that upload large files, however, may want to stream them to disk
+instead. This can be configured using the ``x-stream-upload`` vendor extension.
+
+If you are using the OpenAPI 3.0 specification, ``x-stream-upload`` should be added
+to the ``requestBody``. The ``content`` type should be ``application/octet-stream``,
+the ``schema`` type should be ``string``, and the schema ``format`` should be
+``binary``:
+
+.. code-block:: yaml
+
+    /streaming_upload_endpoint:
+      post:
+        operationId: api.streaming_upload
+        requestBody:
+          x-stream-upload: true
+          content:
+            application/octet-stream:
+                schema:
+                  type: string
+                  format: binary
+
+For the OpenAPI 2.0 specification, ``x-stream-upload`` should be included in the
+``body`` parameter, and the endpoint should consume ``application/octet-stream``:
+
+.. code-block:: yaml
+
+  /test_streaming_upload:
+    post:
+      operationId: api.streaming_upload
+      consumes:
+        - application/octet-stream
+      produces:
+        - application/json
+      parameters:
+        - name: body
+          in: body
+          required: true
+          x-stream-upload: true
+          schema:
+            type: string
+
+In your application, the ``body`` parameter will be set to `flask.request.stream`_,
+which you can use to write the data to disk in chunks:
+
+.. code-block:: python
+
+    # api.py file
+    def streaming_upload(body):
+        chunk_size = 4096
+        with open('output_file', 'wb') as output_file:
+            while True:
+              chunk = body.read(chunk_size)
+              if len(chunk) == 0:
+                  break
+              output_file.write(chunk)
+
+.. warning:: No validation is performed on streamed requests. The application
+             should perform its own validation.
+
+.. note:: Upload streaming is only supported for Flask.
+
+.. _flask.request.stream: https://flask.palletsprojects.com/en/2.0.x/api/?highlight=stream#flask.Request.stream

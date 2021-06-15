@@ -1010,7 +1010,7 @@ paths:
           required: true
           x-stream-upload: true
           schema:
-            type: object
+            type: string
       responses:
         200:
           description: >
@@ -1031,7 +1031,7 @@ paths:
           required: true
           x-stream-upload: false
           schema:
-            type: object
+            type: string
       responses:
         200:
           description: >
@@ -1052,7 +1052,7 @@ paths:
           required: true
           x-stream-upload: abc
           schema:
-            type: object
+            type: string
       responses:
         200:
           description: >
