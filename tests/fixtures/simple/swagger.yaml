@@ -1029,6 +1029,7 @@ paths:
         - name: body
           in: body
           required: true
+          x-stream-upload: false
           schema:
             type: object
       responses:

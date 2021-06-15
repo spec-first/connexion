@@ -1162,6 +1162,7 @@ paths:
     post:
       operationId: fakeapi.hello.test_non_streaming_upload
       requestBody:
+        x-stream-upload: false
         content:
           application/octet-stream:
               schema:
