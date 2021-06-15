@@ -154,7 +154,7 @@ class OpenAPIOperation(AbstractOperation):
     def produces(self):
         return self._produces
 
-    def get_stream_upload(self):
+    def _get_stream_upload_internal(self):
         if self.request_body:
             return self.request_body.get('x-stream-upload', False)
         else:

@@ -1,5 +1,6 @@
 import functools
 import logging
+import distutils
 
 from ..decorators.decorator import RequestResponseDecorator
 from ..decorators.security import (get_apikeyinfo_func, get_basicinfo_func,
@@ -153,6 +154,26 @@ class SecureOperation(object):
         return DEFAULT_MIMETYPE
 
     def get_stream_upload(self):
+        """
+        Indicates whether this operation should allow streaming uploads
+        to disk.
+        """
+        stream_upload = self._get_stream_upload_internal()
+        if isinstance(stream_upload, bool):
+            return stream_upload
+        else:
+            try:
+                str_stream_upload = str(stream_upload).lower()
+                return distutils.util.strtobool(str_stream_upload)
+            except ValueError:
+                return False
+
+    def _get_stream_upload_internal(self):
+        """
+        Subclasses can override this function to indicate whether this
+        operation should allow streaming uploads to disk. The value
+        returned from this function will be converted to a boolean.
+        """
         return False
 
     @property

@@ -615,3 +615,7 @@ def test_streaming_upload(body=None):
 
 def test_non_streaming_upload(body=None):
     return check_if_streaming(body)
+
+
+def test_invalid_streaming_upload(body=None):
+    return check_if_streaming(body)

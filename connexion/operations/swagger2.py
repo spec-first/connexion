@@ -149,7 +149,7 @@ class Swagger2Operation(AbstractOperation):
     def produces(self):
         return self._produces
 
-    def get_stream_upload(self):
+    def _get_stream_upload_internal(self):
         return self.body_definition.get('x-stream-upload', False)
 
     def get_path_parameter_types(self):
