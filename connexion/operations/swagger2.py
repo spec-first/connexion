@@ -149,6 +149,9 @@ class Swagger2Operation(AbstractOperation):
     def produces(self):
         return self._produces
 
+    def get_stream_upload(self):
+        return self.body_definition.get('x-stream-upload', False)
+
     def get_path_parameter_types(self):
         types = {}
         path_parameters = (p for p in self.parameters if p["in"] == "path")

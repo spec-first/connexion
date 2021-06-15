@@ -605,10 +605,7 @@ def get_uuid():
 
 
 def check_if_streaming(body):
-    streaming = body is not None and \
-        hasattr(body, 'read') and \
-        callable(getattr(body, 'read')) and \
-        body is request.stream
+    streaming = body is request.stream
     return {'streaming': streaming}, 200
 
 
