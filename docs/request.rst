@@ -58,6 +58,7 @@ If you want to use a parameter name that collides with a Python built-in,
 you can enable the `pythonic_params` option:
 
 .. code-block:: python
+
     app = connexion.FlaskApp(__name__)
     app.add_api('api.yaml', ..., pythonic_params=True)
 
@@ -68,6 +69,7 @@ and if it does it appends an underscore to the name.
 As example you have an endpoint specified as:
 
 .. code-block:: yaml
+
     paths:
       /foo:
         get:
@@ -78,9 +80,11 @@ As example you have an endpoint specified as:
               in: query
               type: string
               required: true
+
 And the view function:
 
 .. code-block:: python
+
     # api.py file
     def foo_get(filter_):
         # do something
@@ -266,8 +270,9 @@ Applications that upload large files, however, may want to stream them to disk
 instead. This can be configured using the ``x-stream-upload`` vendor extension.
 
 If you are using the OpenAPI 3.0 specification, ``x-stream-upload`` should be added
-to the ``requestBody``. The ``content`` type should be ``application/octet-stream``,
-the ``schema`` type should be ``string``, and the schema ``format`` should be
+to the ``requestBody``. The ``content`` type should be a binary type such as
+``application/octet-stream`` (``application/json`` will not work).
+The ``schema`` type should be ``string``, and the schema ``format`` should be
 ``binary``:
 
 .. code-block:: yaml
@@ -284,11 +289,11 @@ the ``schema`` type should be ``string``, and the schema ``format`` should be
                   format: binary
 
 For the OpenAPI 2.0 specification, ``x-stream-upload`` should be included in the
-``body`` parameter, and the endpoint should consume ``application/octet-stream``:
+``body`` parameter:
 
 .. code-block:: yaml
 
-  /test_streaming_upload:
+  /streaming_upload_endpoint:
     post:
       operationId: api.streaming_upload
       consumes:
@@ -323,4 +328,4 @@ which you can use to write the data to disk in chunks:
 
 .. note:: Upload streaming is only supported for Flask.
 
-.. _flask.request.stream: https://flask.palletsprojects.com/en/2.0.x/api/?highlight=stream#flask.Request.stream
+.. _flask.request.stream: https://flask.palletsprojects.com/en/2.0.x/api/#flask.Request.stream
