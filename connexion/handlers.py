@@ -1,3 +1,7 @@
+"""
+This module defines error handlers, operations that produce proper response problems.
+"""
+
 import logging
 
 from .exceptions import AuthenticationProblem, ResolverProblem

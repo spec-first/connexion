@@ -1,3 +1,8 @@
+"""
+This module defines a BaseDecorator to wrap a user view function and a RequestResponseDecorator
+which manages the lifecycle of a request internally in Connexion.
+"""
+
 import asyncio
 import functools
 import logging

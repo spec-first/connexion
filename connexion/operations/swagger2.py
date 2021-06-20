@@ -1,3 +1,7 @@
+"""
+This module defines a Swagger2Operation class, a Connexion operation specific for Swagger 2 specs.
+"""
+
 import logging
 from copy import deepcopy
 

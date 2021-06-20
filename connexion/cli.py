@@ -1,3 +1,8 @@
+"""
+This module defines a command-line interface (CLI) that runs an OpenAPI specification to be a
+starting point for developing your API with Connexion.
+"""
+
 import logging
 import sys
 from os import path

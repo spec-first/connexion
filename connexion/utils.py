@@ -1,3 +1,7 @@
+"""
+This module provides general utility functions used within Connexion.
+"""
+
 import asyncio
 import functools
 import importlib
@@ -6,7 +10,7 @@ import yaml
 
 
 def boolean(s):
-    '''
+    """
     Convert JSON/Swagger boolean value to Python, raise ValueError otherwise
 
     >>> boolean('true')
@@ -14,7 +18,7 @@ def boolean(s):
 
     >>> boolean('false')
     False
-    '''
+    """
     if isinstance(s, bool):
         return s
     elif not hasattr(s, 'lower'):

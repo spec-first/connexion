@@ -1,3 +1,8 @@
+"""
+This module contains resolvers, functions that resolves the user defined view functions
+from the operations defined in the OpenAPI spec.
+"""
+
 import logging
 import sys
 

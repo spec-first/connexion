@@ -1,3 +1,8 @@
+"""
+This module defines a Flask Connexion API which implements translations between Flask and
+Connexion requests / responses.
+"""
+
 import logging
 import warnings
 from typing import Any

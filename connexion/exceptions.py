@@ -1,3 +1,7 @@
+"""
+This module defines Exception classes used by Connexion to generate a proper response.
+"""
+
 import warnings
 
 from jsonschema.exceptions import ValidationError
@@ -14,7 +18,7 @@ class ProblemException(ConnexionException):
     def __init__(self, status=400, title=None, detail=None, type=None,
                  instance=None, headers=None, ext=None):
         """
-        This exception is holds arguments that are going to be passed to the
+        This exception holds arguments that are going to be passed to the
         `connexion.problem` function to generate a proper response.
         """
         self.status = status

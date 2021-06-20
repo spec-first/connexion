@@ -1,3 +1,7 @@
+"""
+This module defines view function decorators to validate request and response parameters and bodies.
+"""
+
 import collections
 import copy
 import functools

@@ -1,3 +1,7 @@
+"""
+This module defines an aiohttp-specific SecurityHandlerFactory.
+"""
+
 import logging
 
 import aiohttp

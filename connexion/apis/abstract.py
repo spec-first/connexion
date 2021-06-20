@@ -1,3 +1,7 @@
+"""
+This module defines an AbstractAPI, which defines a standardized interface for a Connexion API.
+"""
+
 import abc
 import logging
 import pathlib

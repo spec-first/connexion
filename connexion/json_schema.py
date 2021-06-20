@@ -1,3 +1,7 @@
+"""
+Module containing all code related to json schema validation.
+"""
+
 from collections.abc import Mapping
 from copy import deepcopy
 
