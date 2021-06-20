@@ -302,14 +302,14 @@ class ParameterValidator(object):
         spec_params = [x['name'] for x in self.parameters.get('query', [])]
         return validate_parameter_list(request_params, spec_params)
 
-    def validate_formdata_parameter_list(self, request):
-        request_params = request.form.keys()
-        try:
-            spec_params = [x['name'] for x in self.parameters['formData']]
-        except KeyError:
+    #def validate_formdata_parameter_list(self, request):
+        #request_params = request.form.keys()
+        #try:
+            #spec_params = [x['name'] for x in self.parameters['formData']]
+        #except KeyError:
             # OAS 3
-            return set()
-        return validate_parameter_list(request_params, spec_params)
+            #return set()
+        #return validate_parameter_list(request_params, spec_params)
 
     def validate_query_parameter(self, param, request):
         """
@@ -353,10 +353,10 @@ class ParameterValidator(object):
 
             if self.strict_validation:
                 query_errors = self.validate_query_parameter_list(request)
-                formdata_errors = self.validate_formdata_parameter_list(request)
+                #formdata_errors = self.validate_formdata_parameter_list(request)
 
-                if formdata_errors or query_errors:
-                    raise ExtraParameterProblem(formdata_errors, query_errors)
+                if query_errors:
+                    raise ExtraParameterProblem(query_errors)
 
             for param in self.parameters.get('query', []):
                 error = self.validate_query_parameter(param, request)
