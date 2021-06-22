@@ -1,4 +1,5 @@
 # Decorators to change the return type of endpoints
+import asyncio
 import functools
 import logging
 
@@ -51,9 +52,8 @@ class ResponseValidator(BaseDecorator):
                 raise NonConformingResponseBody(message=str(e))
 
         if response_definition and response_definition.get("headers"):
-            # converting to set is needed to support python 2.7
-            response_definition_header_keys = set(response_definition.get("headers").keys())
-            header_keys = set(headers.keys())
+            response_definition_header_keys = response_definition.get("headers").keys()
+            header_keys = headers.keys()
             missing_keys = response_definition_header_keys - header_keys
             if missing_keys:
                 pretty_list = ', '.join(missing_keys)
@@ -94,8 +94,13 @@ class ResponseValidator(BaseDecorator):
             return response
 
         if has_coroutine(function):
-            from .coroutine_wrappers import get_response_validator_wrapper
-            wrapper = get_response_validator_wrapper(function, _wrapper)
+            @functools.wraps(function)
+            async def wrapper(request):
+                response = function(request)
+                while asyncio.iscoroutine(response):
+                    response = await response
+
+                return _wrapper(request, response)
 
         else:  # pragma: 3 no cover
             @functools.wraps(function)

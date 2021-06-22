@@ -38,13 +38,15 @@ class AbstractURIParser(BaseDecorator, metaclass=abc.ABCMeta):
         self._body_schema = body_defn.get("schema", {})
         self._body_encoding = body_defn.get("encoding", {})
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def param_defns(self):
         """
         returns the parameter definitions by name
         """
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def param_schemas(self):
         """
         returns the parameter schemas by name

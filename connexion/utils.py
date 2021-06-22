@@ -1,3 +1,4 @@
+import asyncio
 import functools
 import importlib
 
@@ -183,8 +184,6 @@ def has_coroutine(function, api=None):
     If ``function`` is a decorator (has a ``__wrapped__`` attribute)
     this function will also look at the wrapped function.
     """
-    import asyncio
-
     def iscorofunc(func):
         iscorofunc = asyncio.iscoroutinefunction(func)
         while not iscorofunc and hasattr(func, '__wrapped__'):

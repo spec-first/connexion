@@ -226,31 +226,36 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
                 kwargs[sanitized_key] = value
         return kwargs
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def parameters(self):
         """
         Returns the parameters for this operation
         """
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def produces(self):
         """
         Content-Types that the operation produces
         """
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def consumes(self):
         """
         Content-Types that the operation consumes
         """
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def body_schema(self):
         """
         The body schema definition for this operation.
         """
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def body_definition(self):
         """
         The body definition for this operation.
