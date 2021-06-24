@@ -216,7 +216,7 @@ class ResponseBodyValidator(object):
         """
         :param schema: The schema of the response body
         :param validator: Validator class that should be used to validate passed data
-                          against API schema. Default is jsonschema.Draft4Validator.
+                          against API schema. Default is Draft4ResponseValidator.
         :type validator: jsonschema.IValidator
         """
         ValidatorClass = validator or Draft4ResponseValidator
