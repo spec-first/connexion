@@ -26,7 +26,7 @@ Connexion
    :alt: Python Versions
 
 .. image:: https://img.shields.io/pypi/l/connexion.svg
-   :target: https://github.com/zalando/connexion/blob/main/LICENSE
+   :target: https://github.com/zalando/connexion/blob/main/LICENSE.txt
    :alt: License
 
 Connexion is a framework that automagically handles HTTP requests based on `OpenAPI Specification`_
