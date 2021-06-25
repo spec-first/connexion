@@ -9,8 +9,8 @@ Connexion
    :alt: Build status
    :target: https://github.com/zalando/connexion/actions/workflows/pipeline.yml
 
-.. image:: https://coveralls.io/repos/zalando/connexion/badge.svg?branch=main
-   :target: https://coveralls.io/r/zalando/connexion?branch=main
+.. image:: https://coveralls.io/repos/github/zalando/connexion/badge.svg?branch=main
+   :target: https://coveralls.io/github/zalando/connexion?branch=main
    :alt: Coveralls status
 
 .. image:: https://img.shields.io/pypi/v/connexion.svg
