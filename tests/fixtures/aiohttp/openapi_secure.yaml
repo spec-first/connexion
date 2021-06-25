@@ -8,7 +8,7 @@ paths:
   '/all_auth':
     get:
       summary: Test basic and oauth auth
-      operationId: fakeapi.aiohttp_handlers.aiohttp_token_info
+      operationId: fakeapi.aiohttp_handlers.aiohttp_all_auth
       security:
         - oauth:
             - myscope
@@ -19,8 +19,8 @@ paths:
           $ref: "#/components/responses/Success"
   '/async_auth':
     get:
-      summary: Test api key auth
-      operationId: fakeapi.aiohttp_handlers.aiohttp_token_info
+      summary: Test async auth
+      operationId: fakeapi.aiohttp_handlers.aiohttp_async_auth
       security:
         - async_oauth:
             - myscope
@@ -32,7 +32,7 @@ paths:
   '/bearer_auth':
     get:
       summary: Test api key auth
-      operationId: fakeapi.aiohttp_handlers.aiohttp_token_info
+      operationId: fakeapi.aiohttp_handlers.aiohttp_bearer_auth
       security:
         - bearer: []
       responses:
@@ -41,7 +41,7 @@ paths:
   '/async_bearer_auth':
     get:
       summary: Test api key auth
-      operationId: fakeapi.aiohttp_handlers.aiohttp_token_info
+      operationId: fakeapi.aiohttp_handlers.aiohttp_async_bearer_auth
       security:
         - async_bearer: []
       responses:
@@ -81,6 +81,7 @@ components:
 
     async_oauth:
       type: oauth2
+      flows: {}
       x-tokenInfoFunc: fakeapi.auth.async_json_auth
       x-scopeValidateFunc: fakeapi.auth.async_scope_validation
     async_basic:

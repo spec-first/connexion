@@ -1,14 +1,12 @@
 import logging
-
-import pytest
-from click.testing import CliRunner
 from unittest.mock import MagicMock
-from unittest.mock import call as mock_call
 
 import connexion
-from conftest import FIXTURES_FOLDER
+import pytest
+from click.testing import CliRunner
 from connexion.cli import main
-from connexion.exceptions import ResolverError
+
+from conftest import FIXTURES_FOLDER
 
 
 @pytest.fixture()

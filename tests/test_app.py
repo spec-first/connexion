@@ -1,8 +1,8 @@
 # coding: utf-8
 from flask import Flask
 
-from connexion.apps.flask_app import FlaskApp
 from connexion.apis.flask_api import FlaskApi
+from connexion.apps.flask_app import FlaskApp
 
 
 def test_flask_app_default_params():

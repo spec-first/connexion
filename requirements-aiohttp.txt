@@ -1,3 +1,0 @@
-aiohttp>=2.2.5
-aiohttp-swagger>=1.0.5
-aiohttp_jinja2==0.15.0
