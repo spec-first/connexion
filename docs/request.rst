@@ -127,7 +127,7 @@ available type castings are:
 | object       | dict        |
 +--------------+-------------+
 
-.. note:: For more details about `collectionFormat`s please check the
+.. note:: For more details about `collectionFormat`\ s please check the
           official `OpenAPI 2.0 Specification`_.
 
 
@@ -185,6 +185,7 @@ There are a handful of URI parsers included with connection.
 
 .. _jsonschema: https://pypi.python.org/pypi/jsonschema
 .. _`OpenAPI 2.0 Specification`: https://github.com/OAI/OpenAPI-Specification/blob/OpenAPI.next/versions/2.0.md#fixed-fields-7
+.. _OpenAPI 3.0 Style Values: https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#style-values
 
 Parameter validation
 ^^^^^^^^^^^^^^^^^^^^

@@ -9,12 +9,18 @@ from connexion.handlers import AuthErrorHandler
 from connexion.jsonifier import Jsonifier
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.utils import is_json_mimetype, yamldumper
+from connexion.security import FlaskSecurityHandlerFactory
 from werkzeug.local import LocalProxy
 
 logger = logging.getLogger('connexion.apis.flask_api')
 
 
 class FlaskApi(AbstractAPI):
+
+    @staticmethod
+    def make_security_handler_factory(pass_context_arg_name):
+        """ Create default SecurityHandlerFactory to create all security check handlers """
+        return FlaskSecurityHandlerFactory(pass_context_arg_name)
 
     def _set_base_path(self, base_path):
         super(FlaskApi, self)._set_base_path(base_path)
