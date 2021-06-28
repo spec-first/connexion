@@ -1,6 +1,7 @@
 import abc
 import copy
 import pathlib
+from collections.abc import Mapping
 from urllib.parse import urlsplit
 
 import jinja2
@@ -11,11 +12,6 @@ from .exceptions import InvalidSpecification
 from .json_schema import resolve_refs
 from .operations import OpenAPIOperation, Swagger2Operation
 from .utils import deep_get
-
-try:
-    import collections.abc as collections_abc  # python 3.3+
-except ImportError:
-    import collections as collections_abc
 
 
 NO_SPEC_VERSION_ERR_MSG = """Unable to get the spec version.
@@ -30,7 +26,7 @@ def canonical_base_path(base_path):
     return base_path.rstrip('/')
 
 
-class Specification(collections_abc.Mapping):
+class Specification(Mapping):
 
     def __init__(self, raw_spec):
         self._raw_spec = copy.deepcopy(raw_spec)

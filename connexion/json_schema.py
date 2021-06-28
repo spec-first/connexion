@@ -1,3 +1,4 @@
+from collections.abc import Mapping
 from copy import deepcopy
 
 from jsonschema import Draft4Validator, RefResolver, _utils
@@ -6,11 +7,6 @@ from jsonschema.validators import extend
 from openapi_spec_validator.handlers import UrlHandler
 
 from .utils import deep_get
-
-try:
-    from collections.abc import Mapping
-except ImportError:
-    from collections import Mapping
 
 
 default_handlers = {

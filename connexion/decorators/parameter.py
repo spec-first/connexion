@@ -1,3 +1,4 @@
+import builtins
 import functools
 import inspect
 import logging
@@ -9,19 +10,8 @@ from ..http_facts import FORM_CONTENT_TYPES
 from ..lifecycle import ConnexionRequest  # NOQA
 from ..utils import all_json
 
-try:
-    import builtins
-except ImportError:  # pragma: no cover
-    import __builtin__ as builtins
-
 
 logger = logging.getLogger(__name__)
-
-# Python 2/3 compatibility:
-try:
-    py_string = unicode
-except NameError:  # pragma: no cover
-    py_string = str  # pragma: no cover
 
 
 def inspect_function_arguments(function):  # pragma: no cover
