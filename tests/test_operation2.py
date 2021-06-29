@@ -205,6 +205,11 @@ OPERATION8 = {'description': 'Adds a new stack to be created by lizzy and return
                'security': [{'oauth': ['uid']}],
                'summary': 'Create new stack'}
 
+OPERATION9 = {'description': 'operation secured with 2 api keys',
+                'operationId': 'fakeapi.hello.post_greeting',
+                'responses': {'200': {'description': 'OK'}},
+                'security': [{'key1': [], 'key2': []}]}
+
 SECURITY_DEFINITIONS_REMOTE = {'oauth': {'type': 'oauth2',
                                          'flow': 'password',
                                          'x-tokenInfoUrl': 'https://oauth.example/token_info',
@@ -224,6 +229,15 @@ SECURITY_DEFINITIONS_BOTH = {'oauth': {'type': 'oauth2',
 SECURITY_DEFINITIONS_WO_INFO = {'oauth': {'type': 'oauth2',
                                           'flow': 'password',
                                           'scopes': {'myscope': 'can do stuff'}}}
+
+SECURITY_DEFINITIONS_2_KEYS = {'key1': {'type': 'apiKey',
+                                        'in': 'header',
+                                        'name': 'X-Auth-1',
+                                        'x-apikeyInfoFunc': 'math.ceil'},
+                               'key2': {'type': 'apiKey',
+                                        'in': 'header',
+                                        'name': 'X-Auth-2',
+                                        'x-apikeyInfoFunc': 'math.ceil'}}
 
 
 @pytest.fixture
@@ -451,6 +465,47 @@ def test_no_token_info(api):
     expected_body_schema = {'definitions': DEFINITIONS}
     expected_body_schema.update(DEFINITIONS["new_stack"])
     assert operation.body_schema == expected_body_schema
+
+
+def test_multiple_security_schemes_and(api):
+    """Tests an operation with multiple security schemes in AND fashion."""
+    def return_api_key_name(func, in_, name):
+        return name
+    verify_api_key = mock.MagicMock(side_effect=return_api_key_name)
+    api.security_handler_factory.verify_api_key = verify_api_key
+    verify_multiple = mock.MagicMock(return_value='verify_multiple_result')
+    api.security_handler_factory.verify_multiple_schemes = verify_multiple
+
+    op_spec = make_operation(OPERATION9)
+    operation = Swagger2Operation(api=api,
+                                  method='GET',
+                                  path='endpoint',
+                                  path_parameters=[],
+                                  operation=op_spec,
+                                  app_produces=['application/json'],
+                                  app_consumes=['application/json'],
+                                  app_security=SECURITY_DEFINITIONS_2_KEYS,
+                                  security_definitions=SECURITY_DEFINITIONS_2_KEYS,
+                                  definitions=DEFINITIONS,
+                                  parameter_definitions=PARAMETER_DEFINITIONS,
+                                  resolver=Resolver())
+    assert isinstance(operation.function, types.FunctionType)
+    assert verify_api_key.call_count == 2
+    verify_api_key.assert_any_call(math.ceil, 'header', 'X-Auth-1')
+    verify_api_key.assert_any_call(math.ceil, 'header', 'X-Auth-2')
+    # Assert verify_multiple_schemes is called with mapping from scheme name
+    # to result of security_handler_factory.verify_api_key()
+    verify_multiple.assert_called_with({'key1': 'X-Auth-1', 'key2': 'X-Auth-2'})
+
+    security_decorator = operation.security_decorator
+    assert len(security_decorator.args[0]) == 1
+    assert security_decorator.args[0][0] == 'verify_multiple_result'
+    assert security_decorator.args[1] is None
+
+    assert operation.method == 'GET'
+    assert operation.produces == ['application/json']
+    assert operation.consumes == ['application/json']
+    assert operation.security == [{'key1': [], 'key2': []}]
 
 
 def test_parameter_reference(api):
