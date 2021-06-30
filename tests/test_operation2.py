@@ -1,4 +1,5 @@
 import copy
+import logging
 import math
 import pathlib
 import types
@@ -210,6 +211,11 @@ OPERATION9 = {'description': 'operation secured with 2 api keys',
                 'responses': {'200': {'description': 'OK'}},
                 'security': [{'key1': [], 'key2': []}]}
 
+OPERATION10 = {'description': 'operation secured with 2 oauth schemes combined using logical AND',
+                'operationId': 'fakeapi.hello.post_greeting',
+                'responses': {'200': {'description': 'OK'}},
+                'security': [{'oauth_1': ['uid'], 'oauth_2': ['uid']}]}
+
 SECURITY_DEFINITIONS_REMOTE = {'oauth': {'type': 'oauth2',
                                          'flow': 'password',
                                          'x-tokenInfoUrl': 'https://oauth.example/token_info',
@@ -238,6 +244,15 @@ SECURITY_DEFINITIONS_2_KEYS = {'key1': {'type': 'apiKey',
                                         'in': 'header',
                                         'name': 'X-Auth-2',
                                         'x-apikeyInfoFunc': 'math.ceil'}}
+
+SECURITY_DEFINITIONS_2_OAUTH = {'oauth_1': {'type': 'oauth2',
+                                            'flow': 'password',
+                                            'x-tokenInfoFunc': 'math.ceil',
+                                            'scopes': {'myscope': 'can do stuff'}},
+                                'oauth_2': {'type': 'oauth2',
+                                            'flow': 'password',
+                                            'x-tokenInfoFunc': 'math.ceil',
+                                            'scopes': {'myscope': 'can do stuff'}}}
 
 
 @pytest.fixture
@@ -506,6 +521,42 @@ def test_multiple_security_schemes_and(api):
     assert operation.produces == ['application/json']
     assert operation.consumes == ['application/json']
     assert operation.security == [{'key1': [], 'key2': []}]
+
+
+def test_multiple_oauth_in_and(api, caplog):
+    """Tests an operation with multiple oauth security schemes in AND fashion.
+    These should be ignored and raise a warning.
+    """
+    caplog.set_level(logging.WARNING, logger="connexion.operations.secure")
+    verify_oauth = mock.MagicMock(return_value='verify_oauth_result')
+    api.security_handler_factory.verify_oauth = verify_oauth
+
+    op_spec = make_operation(OPERATION10)
+    operation = Swagger2Operation(api=api,
+                                  method='GET',
+                                  path='endpoint',
+                                  path_parameters=[],
+                                  operation=op_spec,
+                                  app_produces=['application/json'],
+                                  app_consumes=['application/json'],
+                                  app_security=SECURITY_DEFINITIONS_2_OAUTH,
+                                  security_definitions=SECURITY_DEFINITIONS_2_OAUTH,
+                                  definitions=DEFINITIONS,
+                                  parameter_definitions=PARAMETER_DEFINITIONS,
+                                  resolver=Resolver())
+    assert isinstance(operation.function, types.FunctionType)
+
+    security_decorator = operation.security_decorator
+    assert len(security_decorator.args[0]) == 0
+    assert security_decorator.args[0] == []
+    assert security_decorator.args[1] == ['uid']
+
+    assert '... multiple OAuth2 security schemes in AND fashion not supported' in caplog.text
+
+    assert operation.method == 'GET'
+    assert operation.produces == ['application/json']
+    assert operation.consumes == ['application/json']
+    assert operation.security == [{'oauth_1': ['uid'], 'oauth_2': ['uid']}]
 
 
 def test_parameter_reference(api):
