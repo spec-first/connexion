@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 import json
 import pytest
 import requests
-from connexion.exceptions import OAuthResponseProblem, OAuthScopeProblem
+from connexion.exceptions import OAuthProblem, OAuthResponseProblem, OAuthScopeProblem
 
 
 def test_get_tokeninfo_url(monkeypatch, security_handler_factory):
@@ -164,3 +164,15 @@ def test_verify_apikey_header(security_handler_factory):
     request.headers = {"X-Auth": 'foobar'}
 
     assert wrapped_func(request, ['admin']) is not None
+
+
+def test_verify_security_oauthproblem(security_handler_factory):
+    """Tests whether verify_security raises an OAuthProblem if there are no auth_funcs."""
+    func_to_secure = MagicMock(return_value='func')
+    secured_func = security_handler_factory.verify_security([], [], func_to_secure)
+
+    request = MagicMock()
+    with pytest.raises(OAuthProblem) as exc_info:
+        secured_func(request)
+
+    assert str(exc_info.value) == '401 Unauthorized: No authorization token provided'
