@@ -60,7 +60,7 @@ class AbstractAsyncSecurityHandlerFactory(AbstractSecurityHandlerFactory):
     def verify_security(cls, auth_funcs, required_scopes, function):
         @functools.wraps(function)
         async def wrapper(request):
-            token_info = None
+            token_info = cls.no_value
             for func in auth_funcs:
                 token_info = func(request, required_scopes)
                 while asyncio.iscoroutine(token_info):

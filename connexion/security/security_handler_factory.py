@@ -338,7 +338,7 @@ class AbstractSecurityHandlerFactory(abc.ABC):
     def verify_security(cls, auth_funcs, required_scopes, function):
         @functools.wraps(function)
         def wrapper(request):
-            token_info = None
+            token_info = cls.no_value
             for func in auth_funcs:
                 token_info = func(request, required_scopes)
                 if token_info is not cls.no_value:
