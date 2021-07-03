@@ -10,7 +10,7 @@ from connexion.apis.abstract import AbstractAPI
 from connexion.handlers import AuthErrorHandler
 from connexion.jsonifier import Jsonifier
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
-from connexion.security import FlaskSecurityHandlerFactory
+from connexion.security.flask_security_handler_factory import FlaskSecurityHandlerFactory
 from connexion.utils import is_json_mimetype, yamldumper
 
 logger = logging.getLogger('connexion.apis.flask_api')

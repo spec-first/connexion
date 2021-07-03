@@ -5,7 +5,7 @@ import sys
 
 import pytest
 from connexion import App
-from connexion.security import FlaskSecurityHandlerFactory
+from connexion.security.flask_security_handler_factory import FlaskSecurityHandlerFactory
 
 logging.basicConfig(level=logging.DEBUG)
 
