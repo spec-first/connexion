@@ -86,20 +86,13 @@ def parameter_to_arg(operation, function, pythonic_params=False,
         logger.debug('Function Arguments: %s', arguments)
         kwargs = {}
 
-        if all_json(consumes):
-            request_body = request.json
-        elif consumes[0] in FORM_CONTENT_TYPES:
-            request_body = {sanitize(k): v for k, v in request.form.items()}
-        else:
-            request_body = request.body
-
         try:
             query = request.query.to_dict(flat=False)
         except AttributeError:
             query = dict(request.query.items())
 
         kwargs.update(
-            operation.get_arguments(request.path_params, query, request_body,
+            operation.get_arguments(request.path_params, query, request,
                                     request.files, arguments, has_kwargs, sanitize)
         )
 

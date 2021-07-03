@@ -401,18 +401,7 @@ def test_non_streaming_upload_response(simple_app):
     resp = app_client.post(
         '/v1.0/test_non_streaming_upload',
         data=json.dumps({}),
-        headers={'Content-Type': 'application/octet-stream'})
-    assert resp.status_code == 200
-    data = json.loads(resp.data.decode('utf-8'))
-    assert not data['streaming']
-
-
-def test_invalid_streaming_upload_response(simple_app):
-    app_client = simple_app.app.test_client()
-    resp = app_client.post(
-        '/v1.0/test_invalid_streaming_upload',
-        data=json.dumps({}),
-        headers={'Content-Type': 'application/octet-stream'})
+        headers={'Content-Type': 'application/json'})
     assert resp.status_code == 200
     data = json.loads(resp.data.decode('utf-8'))
     assert not data['streaming']

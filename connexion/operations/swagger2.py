@@ -261,11 +261,9 @@ class Swagger2Operation(AbstractOperation):
         return self._query_args_helper(query_defns, query_arguments,
                                        arguments, has_kwargs, sanitize)
 
-    def _get_body_argument(self, body, arguments, has_kwargs, sanitize):
+    def _get_body_argument(self, request, arguments, has_kwargs, sanitize):
         kwargs = {}
         body_parameters = [p for p in self.parameters if p['in'] == 'body'] or [{}]
-        if body is None:
-            body = deepcopy(body_parameters[0].get('schema', {}).get('default'))
         body_name = sanitize(body_parameters[0].get('name'))
 
         form_defns = {sanitize(p['name']): p
@@ -276,12 +274,29 @@ class Swagger2Operation(AbstractOperation):
                                for k, v in form_defns.items()
                                if 'default' in v}
 
+        body = None
         # Add body parameters
+        print(body_name)
         if body_name:
             if not has_kwargs and body_name not in arguments:
                 logger.debug("Body parameter '%s' not in function arguments", body_name)
+
             else:
                 logger.debug("Body parameter '%s' in function arguments", body_name)
+
+                from ..http_facts import FORM_CONTENT_TYPES
+                from ..utils import all_json
+
+                if all_json(self.consumes):
+                    request_body = request.json
+                elif self.consumes[0] in FORM_CONTENT_TYPES:
+                    request_body = {sanitize(k): v for k, v in request.form.items()}
+                else:
+                    request_body = request.body
+
+                if request_body is None:
+                    request_body = deepcopy(body_parameters[0].get('schema', {}).get('default'))
+                body = request_body
                 kwargs[body_name] = body
 
         # Add formData parameters

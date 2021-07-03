@@ -7,7 +7,7 @@ class ConnexionRequest(object):
                  query=None,
                  headers=None,
                  form=None,
-                 body=None,
+                 body_getter=None,
                  json_getter=None,
                  files=None,
                  context=None):
@@ -17,7 +17,7 @@ class ConnexionRequest(object):
         self.query = query or {}
         self.headers = headers or {}
         self.form = form or {}
-        self.body = body
+        self.body_getter = body_getter
         self.json_getter = json_getter
         self.files = files
         self.context = context if context is not None else {}
@@ -25,6 +25,10 @@ class ConnexionRequest(object):
     @property
     def json(self):
         return self.json_getter()
+
+    @property
+    def body(self):
+        return self.body_getter()
 
 
 class ConnexionResponse(object):

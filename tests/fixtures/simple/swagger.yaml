@@ -1008,7 +1008,6 @@ paths:
         - name: body
           in: body
           required: true
-          x-stream-upload: true
           schema:
             type: string
       responses:
@@ -1022,37 +1021,15 @@ paths:
     post:
       operationId: fakeapi.hello.test_non_streaming_upload
       consumes:
-        - application/octet-stream
+        - application/json
       produces:
         - application/json
       parameters:
         - name: body
           in: body
           required: true
-          x-stream-upload: false
-          schema:
-            type: string
-      responses:
-        200:
-          description: >
-            JSON indicating whether the request body was streamed.
           schema:
             type: object
-
-  /test_invalid_streaming_upload:
-    post:
-      operationId: fakeapi.hello.test_invalid_streaming_upload
-      consumes:
-        - application/octet-stream
-      produces:
-        - application/json
-      parameters:
-        - name: body
-          in: body
-          required: true
-          x-stream-upload: abc
-          schema:
-            type: string
       responses:
         200:
           description: >

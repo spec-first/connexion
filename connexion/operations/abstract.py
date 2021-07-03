@@ -257,7 +257,7 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
         :rtype: dict
         """
 
-    def get_arguments(self, path_params, query_params, body, files, arguments,
+    def get_arguments(self, path_params, query_params, request, files, arguments,
                       has_kwargs, sanitize):
         """
         get arguments for handler function
@@ -268,7 +268,7 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
                                              has_kwargs, sanitize))
 
         if self.method.upper() in ["PATCH", "POST", "PUT"]:
-            ret.update(self._get_body_argument(body, arguments,
+            ret.update(self._get_body_argument(request, arguments,
                                                has_kwargs, sanitize))
             ret.update(self._get_file_arguments(files, arguments, has_kwargs))
         return ret

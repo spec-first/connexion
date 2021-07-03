@@ -2,7 +2,7 @@ import asyncio
 import base64
 
 import pytest
-from mock import MagicMock
+from unittest.mock import MagicMock
 
 from connexion import AioHttpApp
 

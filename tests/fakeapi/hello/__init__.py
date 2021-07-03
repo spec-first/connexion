@@ -604,18 +604,15 @@ def get_uuid():
     return {'value': uuid.UUID(hex='e7ff66d0-3ec2-4c4e-bed0-6e4723c24c51')}
 
 
-def check_if_streaming(body):
-    streaming = body is request.stream
-    return {'streaming': streaming}, 200
+def check_if_streaming():
+    # streaming = body is request.stream
+    stream = request.stream.read()
+    return {'streaming': bool(stream)}, 200
 
 
-def test_streaming_upload(body=None):
-    return check_if_streaming(body)
+def test_streaming_upload():
+    return check_if_streaming()
 
 
 def test_non_streaming_upload(body=None):
-    return check_if_streaming(body)
-
-
-def test_invalid_streaming_upload(body=None):
-    return check_if_streaming(body)
+    return check_if_streaming()

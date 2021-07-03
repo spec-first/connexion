@@ -232,7 +232,7 @@ class FlaskApi(AbstractAPI):
             headers=flask_request.headers,
             form=flask_request.form,
             query=flask_request.args,
-            body=flask_request.stream if stream_upload else flask_request.get_data(),
+            body_getter=flask_request.get_data,
             json_getter=lambda: flask_request.get_json(silent=True),
             files=flask_request.files,
             path_params=params,
@@ -240,8 +240,8 @@ class FlaskApi(AbstractAPI):
         )
         logger.debug('Getting data and status code',
                      extra={
-                         'data': request.body,
-                         'data_type': type(request.body),
+                         # 'data': request.body,
+                         # 'data_type': type(request.body),
                          'url': request.url
                      })
         return request
