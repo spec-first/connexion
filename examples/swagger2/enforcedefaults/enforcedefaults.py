@@ -2,7 +2,6 @@
 
 import connexion
 import jsonschema
-import six
 from connexion.decorators.validation import RequestBodyValidator
 from connexion.json_schema import Draft4RequestValidator
 
@@ -16,7 +15,7 @@ def extend_with_set_default(validator_class):
     validate_properties = validator_class.VALIDATORS['properties']
 
     def set_defaults(validator, properties, instance, schema):
-        for property, subschema in six.iteritems(properties):
+        for property, subschema in properties.items():
             if 'default' in subschema:
                 instance.setdefault(property, subschema['default'])
 
