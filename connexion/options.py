@@ -138,6 +138,4 @@ def filter_values(dictionary):
     :param dictionary:
     :return:
     """
-    return {key: value
-                 for key, value in dictionary.items()
-                 if value is not None}
+    return {key: value for key, value in dictionary.items() if value is not None}
