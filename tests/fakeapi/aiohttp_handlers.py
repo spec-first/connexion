@@ -9,7 +9,7 @@ from connexion.lifecycle import ConnexionResponse
 
 
 async def get_bye(name):
-    return AioHttpResponse(text='Goodbye {}'.format(name))
+    return AioHttpResponse(text=f'Goodbye {name}')
 
 
 async def aiohttp_str_response():
@@ -29,7 +29,7 @@ async def aiohttp_validate_responses():
 
 
 async def aiohttp_post_greeting(name, **kwargs):
-    data = {'greeting': 'Hello {name}'.format(name=name)}
+    data = {'greeting': f'Hello {name}'}
     return data
 
 async def aiohttp_echo(**kwargs):

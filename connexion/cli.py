@@ -46,7 +46,7 @@ def validate_server_requirements(ctx, param, value):
 def print_version(ctx, param, value):
     if not value or ctx.resilient_parsing:
         return
-    click.echo('Connexion {}'.format(connexion.__version__))
+    click.echo(f'Connexion {connexion.__version__}')
     ctx.exit()
 
 
@@ -167,7 +167,7 @@ def run(spec_file,
     spec_file_full_path = path.abspath(spec_file)
     py_module_path = base_module_path or path.dirname(spec_file_full_path)
     sys.path.insert(1, path.abspath(py_module_path))
-    logger.debug('Added {} to system path.'.format(py_module_path))
+    logger.debug(f'Added {py_module_path} to system path.')
 
     resolver_error = None
     if stub:

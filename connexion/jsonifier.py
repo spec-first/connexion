@@ -23,7 +23,7 @@ class JSONEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, o)
 
 
-class Jsonifier(object):
+class Jsonifier:
     """
     Used to serialized and deserialize to/from JSon
     """

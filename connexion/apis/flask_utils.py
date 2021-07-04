@@ -41,9 +41,9 @@ def convert_path_parameter(match, types):
     name = match.group(1)
     swagger_type = types.get(name)
     converter = PATH_PARAMETER_CONVERTERS.get(swagger_type)
-    return '<{0}{1}{2}>'.format(converter or '',
-                                ':' if converter else '',
-                                name.replace('-', '_'))
+    return '<{}{}{}>'.format(
+        converter or '', ':' if converter else '', name.replace('-', '_')
+    )
 
 
 def flaskify_path(swagger_path, types=None):

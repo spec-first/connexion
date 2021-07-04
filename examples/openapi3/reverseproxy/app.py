@@ -13,7 +13,7 @@ import connexion
 
 
 # adapted from http://flask.pocoo.org/snippets/35/
-class ReverseProxied(object):
+class ReverseProxied:
     '''Wrap the application in this middleware and configure the
     reverse proxy to add these headers, to let you quietly bind
     this to a URL other than / and to an HTTP scheme that is

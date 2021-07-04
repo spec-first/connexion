@@ -8,7 +8,7 @@ logger = logging.getLogger("connexion.operations.secure")
 DEFAULT_MIMETYPE = 'application/json'
 
 
-class SecureOperation(object):
+class SecureOperation:
 
     def __init__(self, api, security, security_schemes):
         """

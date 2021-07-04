@@ -79,7 +79,7 @@ class Swagger2Operation(AbstractOperation):
 
         self._router_controller = operation.get('x-swagger-router-controller')
 
-        super(Swagger2Operation, self).__init__(
+        super().__init__(
             api=api,
             method=method,
             path=path,
@@ -293,7 +293,7 @@ class Swagger2Operation(AbstractOperation):
                 try:
                     form_defn = form_defns[key]
                 except KeyError:  # pragma: no cover
-                    logger.error("Function argument '{}' not defined in specification".format(key))
+                    logger.error(f"Function argument '{key}' not defined in specification")
                 else:
                     kwargs[key] = self._get_val_from_param(value, form_defn)
         return kwargs

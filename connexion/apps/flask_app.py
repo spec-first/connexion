@@ -18,7 +18,7 @@ logger = logging.getLogger('connexion.app')
 
 class FlaskApp(AbstractApp):
     def __init__(self, import_name, server='flask', **kwargs):
-        super(FlaskApp, self).__init__(import_name, FlaskApi, server=server, **kwargs)
+        super().__init__(import_name, FlaskApi, server=server, **kwargs)
 
     def create_app(self):
         app = flask.Flask(self.import_name, **self.server_args)
@@ -54,7 +54,7 @@ class FlaskApp(AbstractApp):
         return FlaskApi.get_response(response)
 
     def add_api(self, specification, **kwargs):
-        api = super(FlaskApp, self).add_api(specification, **kwargs)
+        api = super().add_api(specification, **kwargs)
         self.app.register_blueprint(api.blueprint)
         return api
 
@@ -115,7 +115,7 @@ class FlaskApp(AbstractApp):
             logger.info('Listening on %s:%s..', self.host, self.port)
             http_server.serve_forever()
         else:
-            raise Exception('Server {} not recognized'.format(self.server))
+            raise Exception(f'Server {self.server} not recognized')
 
 
 class FlaskJSONEncoder(json.JSONEncoder):

@@ -19,9 +19,8 @@ def extend_with_set_default(validator_class):
             if 'default' in subschema:
                 instance.setdefault(property, subschema['default'])
 
-        for error in validate_properties(
-                validator, properties, instance, schema):
-            yield error
+        yield from validate_properties(
+                validator, properties, instance, schema)
 
     return jsonschema.validators.extend(
         validator_class, {'properties': set_defaults})
@@ -31,7 +30,7 @@ DefaultsEnforcingDraft4Validator = extend_with_set_default(Draft4RequestValidato
 
 class DefaultsEnforcingRequestBodyValidator(RequestBodyValidator):
     def __init__(self, *args, **kwargs):
-        super(DefaultsEnforcingRequestBodyValidator, self).__init__(
+        super().__init__(
             *args, validator=DefaultsEnforcingDraft4Validator, **kwargs)
 
 

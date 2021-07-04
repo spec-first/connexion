@@ -11,7 +11,7 @@ from .operations import compat
 from .problem import problem  # NOQA
 from .resolver import Resolution, Resolver, RestyResolver  # NOQA
 
-full_name = '{}.operation'.format(__package__)
+full_name = f'{__package__}.operation'
 sys.modules[full_name] = sys.modules[compat.__name__]
 
 

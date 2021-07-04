@@ -17,7 +17,7 @@ OPENAPI3_SPEC = ["openapi.yaml"]
 SPECS = OPENAPI2_SPEC + OPENAPI3_SPEC
 
 
-class FakeResponse(object):
+class FakeResponse:
     def __init__(self, status_code, text):
         """
         :type status_code: int
@@ -138,7 +138,7 @@ def simple_openapi_app(request):
 def reverse_proxied_app(request):
 
     # adapted from http://flask.pocoo.org/snippets/35/
-    class ReverseProxied(object):
+    class ReverseProxied:
 
         def __init__(self, app, script_name=None, scheme=None, server=None):
             self.app = app

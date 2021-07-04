@@ -20,7 +20,7 @@ async def test_swagger_json(aiohttp_api_spec_dir, aiohttp_client):
     def get_value(data, path):
         for part in path.split('.'):
             data = data.get(part)
-            assert data, "No data in part '{}' of '{}'".format(part, path)
+            assert data, f"No data in part '{part}' of '{path}'"
         return data
 
     example = get_value(spec_data, 'paths./datetime.get.responses.200.content.application/json.schema.example.value')

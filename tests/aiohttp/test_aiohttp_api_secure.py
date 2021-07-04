@@ -5,7 +5,7 @@ import pytest
 from connexion import AioHttpApp
 
 
-class FakeAioHttpClientResponse(object):
+class FakeAioHttpClientResponse:
     def __init__(self, status_code, data):
         """
         :type status_code: int

@@ -66,7 +66,7 @@ def validate_enum(validator, enums, instance, schema):
         return
 
     if instance not in enums:
-        yield ValidationError("%r is not one of %r" % (instance, enums))
+        yield ValidationError(f"{instance!r} is not one of {enums!r}")
 
 
 def validate_required(validator, required, instance, schema):

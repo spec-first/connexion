@@ -58,7 +58,7 @@ class ResponseValidator(BaseDecorator):
             if missing_keys:
                 pretty_list = ', '.join(missing_keys)
                 msg = ("Keys in header don't match response specification. "
-                       "Difference: {0}").format(pretty_list)
+                       "Difference: {}").format(pretty_list)
                 raise NonConformingResponseHeaders(message=msg)
         return True
 
