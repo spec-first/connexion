@@ -2,6 +2,7 @@ import abc
 import copy
 import pathlib
 from collections.abc import Mapping
+from typing import List
 from urllib.parse import urlsplit
 
 import jinja2
