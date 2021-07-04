@@ -11,10 +11,10 @@ jobs:
       - run: codespell --ignore-words-list="connexion" || true  # --skip=""
       - run: flake8 . --count --select=E9,F63 --show-source --statistics
       - run: flake8 . --count --exit-zero --max-complexity=10 --max-line-length=88 --show-source --statistics
-      - run: ./setup.py flake8
+      #- run: ./setup.py flake8
       - run: isort --check-only --profile black . || true
       - run: pip install -r requirements.txt || true
-      #- run: pip install -e .
+      - run: pip install -e .
       - run: ./setup.py --help
       - run: mypy --ignore-missing-imports . || true
       - run: pytest . || true
