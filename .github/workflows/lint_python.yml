@@ -10,7 +10,7 @@ jobs:
       - run: black --check . || true
       - run: codespell --ignore-words-list="connexion" || true  # PR #1385
       - run: flake8 . --count --select=E9,F63 --show-source --statistics
-      - run: flake8 . --count --exit-zero --max-complexity=10 --max-line-length=150 --show-source --statistics
+      - run: flake8 . --count --exit-zero --max-complexity=19 --max-line-length=166 --show-source --statistics
       - run: isort --check-only --profile black . || true  # PR #1384
       - run: ./setup.py --help
       - run: ./setup.py install
