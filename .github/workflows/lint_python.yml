@@ -13,9 +13,10 @@ jobs:
       - run: flake8 . --count --exit-zero --max-complexity=10 --max-line-length=88 --show-source --statistics
       #- run: ./setup.py flake8
       - run: isort --check-only --profile black . || true
-      - run: pip install -r requirements.txt || true
-      - run: pip install -e .
       - run: ./setup.py --help
+      - run: ./setup.py install
+      #- run: pip install -r requirements.txt || true
+      #- run: pip install -e .
       - run: mypy --ignore-missing-imports . || true
       - run: pytest . || true
       - run: pytest --doctest-modules . || true
