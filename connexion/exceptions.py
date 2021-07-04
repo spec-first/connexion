@@ -15,7 +15,7 @@ class ProblemException(ConnexionException):
                  instance=None, headers=None, ext=None):
         """
         This exception is holds arguments that are going to be passed to the
-        `connexion.problem` function to generate a propert response.
+        `connexion.problem` function to generate a property response.
         """
         self.status = status
         self.title = title
