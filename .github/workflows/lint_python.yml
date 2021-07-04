@@ -8,7 +8,7 @@ jobs:
       - uses: actions/setup-python@v2
       - run: pip install black codespell flake8 isort mypy pytest pyupgrade safety
       - run: black --check . || true
-      - run: codespell --ignore-words-list="connexion" || true  # PR #1385
+      - run: codespell --ignore-words-list="connexion"
       - run: flake8 . --count --select=E9,F63 --show-source --statistics
       - run: flake8 . --count --exit-zero --max-complexity=19 --max-line-length=166 --show-source --statistics
       - run: isort --check-only --profile black . || true  # PR #1384
