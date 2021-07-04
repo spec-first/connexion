@@ -2,6 +2,7 @@ import collections
 import copy
 import functools
 import logging
+from typing import AnyStr, Union
 
 import pkg_resources
 from jsonschema import Draft4Validator, ValidationError, draft4_format_checker
@@ -12,6 +13,7 @@ from ..exceptions import (BadRequestProblem, ExtraParameterProblem,
                           UnsupportedMediaTypeProblem)
 from ..http_facts import FORM_CONTENT_TYPES
 from ..json_schema import Draft4RequestValidator, Draft4ResponseValidator
+from ..lifecycle import ConnexionResponse
 from ..utils import all_json, boolean, is_json_mimetype, is_null, is_nullable
 
 _jsonschema_3_or_newer = pkg_resources.parse_version(

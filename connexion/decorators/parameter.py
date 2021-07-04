@@ -3,6 +3,7 @@ import functools
 import inspect
 import logging
 import re
+from typing import Any
 
 import inflection
 
