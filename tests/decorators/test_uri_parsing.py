@@ -26,7 +26,7 @@ MULTI = "multi"
         (FirstValueURIParser, ['a'], QUERY2, PIPES),
         (AlwaysMultiURIParser, ['a', 'b', 'c', 'd', 'e', 'f'], QUERY2, PIPES)])
 def test_uri_parser_query_params(parser_class, expected, query_in, collection_format):
-    class Request(object):
+    class Request:
         query = query_in
         path_params = {}
         form = {}
@@ -56,7 +56,7 @@ def test_uri_parser_query_params(parser_class, expected, query_in, collection_fo
         (FirstValueURIParser, ['a'], QUERY2, PIPES),
         (AlwaysMultiURIParser, ['a', 'b', 'c', 'd', 'e', 'f'], QUERY2, PIPES)])
 def test_uri_parser_form_params(parser_class, expected, query_in, collection_format):
-    class Request(object):
+    class Request:
         query = {}
         form = query_in
         path_params = {}
@@ -83,7 +83,7 @@ def test_uri_parser_form_params(parser_class, expected, query_in, collection_for
         (FirstValueURIParser, ['d', 'e', 'f'], PATH2, PIPES),
         (AlwaysMultiURIParser, ['d', 'e', 'f'], PATH2, PIPES)])
 def test_uri_parser_path_params(parser_class, expected, query_in, collection_format):
-    class Request(object):
+    class Request:
         query = {}
         form = {}
         path_params = query_in

@@ -5,7 +5,7 @@ import connexion
 
 
 async def post_greeting(name):
-    return web.Response(text='Hello {name}'.format(name=name))
+    return web.Response(text=f'Hello {name}')
 
 
 if __name__ == '__main__':

@@ -24,7 +24,7 @@ class FlaskApi(AbstractAPI):
         return FlaskSecurityHandlerFactory(pass_context_arg_name)
 
     def _set_base_path(self, base_path):
-        super(FlaskApi, self)._set_base_path(base_path)
+        super()._set_base_path(base_path)
         self._set_blueprint()
 
     def _set_blueprint(self):
@@ -40,7 +40,7 @@ class FlaskApi(AbstractAPI):
         """
         logger.debug('Adding spec json: %s/%s', self.base_path,
                      self.options.openapi_spec_path)
-        endpoint_name = "{name}_openapi_json".format(name=self.blueprint.name)
+        endpoint_name = f"{self.blueprint.name}_openapi_json"
 
         self.blueprint.add_url_rule(self.options.openapi_spec_path,
                                     endpoint_name,
@@ -58,7 +58,7 @@ class FlaskApi(AbstractAPI):
             self.options.openapi_spec_path[:-len("json")] + "yaml"
         logger.debug('Adding spec yaml: %s/%s', self.base_path,
                      openapi_spec_path_yaml)
-        endpoint_name = "{name}_openapi_yaml".format(name=self.blueprint.name)
+        endpoint_name = f"{self.blueprint.name}_openapi_yaml"
         self.blueprint.add_url_rule(
             openapi_spec_path_yaml,
             endpoint_name,
@@ -75,7 +75,7 @@ class FlaskApi(AbstractAPI):
                      console_ui_path)
 
         if self.options.openapi_console_ui_config is not None:
-            config_endpoint_name = "{name}_swagger_ui_config".format(name=self.blueprint.name)
+            config_endpoint_name = f"{self.blueprint.name}_swagger_ui_config"
             config_file_url = '/{console_ui_path}/swagger-ui-config.json'.format(
                 console_ui_path=console_ui_path)
 
@@ -83,7 +83,7 @@ class FlaskApi(AbstractAPI):
                                         config_endpoint_name,
                                         lambda: flask.jsonify(self.options.openapi_console_ui_config))
 
-        static_endpoint_name = "{name}_swagger_ui_static".format(name=self.blueprint.name)
+        static_endpoint_name = f"{self.blueprint.name}_swagger_ui_static"
         static_files_url = '/{console_ui_path}/<path:filename>'.format(
             console_ui_path=console_ui_path)
 
@@ -91,7 +91,7 @@ class FlaskApi(AbstractAPI):
                                     static_endpoint_name,
                                     self._handlers.console_ui_static_files)
 
-        index_endpoint_name = "{name}_swagger_ui_index".format(name=self.blueprint.name)
+        index_endpoint_name = f"{self.blueprint.name}_swagger_ui_index"
         console_ui_url = '/{console_ui_path}/'.format(
             console_ui_path=console_ui_path)
 
@@ -106,7 +106,7 @@ class FlaskApi(AbstractAPI):
         logger.debug('Adding path not found authentication')
         not_found_error = AuthErrorHandler(self, werkzeug.exceptions.NotFound(), security=security,
                                            security_definitions=security_definitions)
-        endpoint_name = "{name}_not_found".format(name=self.blueprint.name)
+        endpoint_name = f"{self.blueprint.name}_not_found"
         self.blueprint.add_url_rule('/<path:invalid_path>', endpoint_name, not_found_error.function)
 
     def _add_operation_internal(self, method, path, operation):
@@ -262,7 +262,7 @@ def _get_context():
 context = LocalProxy(_get_context)
 
 
-class InternalHandlers(object):
+class InternalHandlers:
     """
     Flask handlers for internally registered endpoints.
     """

@@ -16,19 +16,17 @@ def test_validator_map(json_validation_spec_dir, spec):
     def validate_type(validator, types, instance, schema):
         types = _utils.ensure_list(types)
         errors = Draft4RequestValidator.VALIDATORS['type'](validator, types, instance, schema)
-        for e in errors:
-            yield e
+        yield from errors
 
         if 'string' in types and 'minLength' not in schema:
             errors = Draft4RequestValidator.VALIDATORS['minLength'](validator, 1, instance, schema)
-            for e in errors:
-                yield e
+            yield from errors
 
     MinLengthRequestValidator = extend(Draft4RequestValidator, {'type': validate_type})
 
     class MyRequestBodyValidator(RequestBodyValidator):
         def __init__(self, *args, **kwargs):
-            super(MyRequestBodyValidator, self).__init__(*args, validator=MinLengthRequestValidator, **kwargs)
+            super().__init__(*args, validator=MinLengthRequestValidator, **kwargs)
 
     validator_map = {'body': MyRequestBodyValidator}
 

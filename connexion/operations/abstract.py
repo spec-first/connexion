@@ -194,7 +194,7 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
                 try:
                     query_defn = query_defns[key]
                 except KeyError:  # pragma: no cover
-                    logger.error("Function argument '{}' not defined in specification".format(key))
+                    logger.error(f"Function argument '{key}' not defined in specification")
                 else:
                     logger.debug('%s is a %s', key, query_defn)
                     res.update({key: self._get_val_from_param(value, query_defn)})

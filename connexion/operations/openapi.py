@@ -72,7 +72,7 @@ class OpenAPIOperation(AbstractOperation):
 
         self._router_controller = operation.get('x-openapi-router-controller')
 
-        super(OpenAPIOperation, self).__init__(
+        super().__init__(
             api=api,
             method=method,
             path=path,
@@ -319,7 +319,7 @@ class OpenAPIOperation(AbstractOperation):
                 res[key] = self._get_val_from_param(value, prop_defn)
             except KeyError:  # pragma: no cover
                 if not additional_props:
-                    logger.error("Body property '{}' not defined in body schema".format(key))
+                    logger.error(f"Body property '{key}' not defined in body schema")
                     continue
                 if additional_props_defn is not None:
                     value = self._get_val_from_param(value, additional_props_defn)

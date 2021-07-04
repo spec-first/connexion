@@ -7,7 +7,7 @@ from ..utils import has_coroutine
 logger = logging.getLogger('connexion.decorators.decorator')
 
 
-class BaseDecorator(object):
+class BaseDecorator:
 
     def __call__(self, function):
         """

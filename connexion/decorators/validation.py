@@ -101,7 +101,7 @@ def validate_parameter_list(request_params, spec_params):
     return request_params.difference(spec_params)
 
 
-class RequestBodyValidator(object):
+class RequestBodyValidator:
 
     def __init__(self, schema, consumes, api, is_null_value_valid=False, validator=None,
                  strict_validation=False):
@@ -198,7 +198,7 @@ class RequestBodyValidator(object):
             self.validator.validate(data)
         except ValidationError as exception:
             error_path = '.'.join(str(item) for item in exception.path)
-            error_path_msg = " - '{path}'".format(path=error_path) \
+            error_path_msg = f" - '{error_path}'" \
                 if error_path else ""
             logger.error(
                 "{url} validation error: {error}{error_path_msg}".format(
@@ -212,7 +212,7 @@ class RequestBodyValidator(object):
         return None
 
 
-class ResponseBodyValidator(object):
+class ResponseBodyValidator:
     def __init__(self, schema, validator=None):
         """
         :param schema: The schema of the response body
@@ -236,7 +236,7 @@ class ResponseBodyValidator(object):
         return None
 
 
-class ParameterValidator(object):
+class ParameterValidator:
     def __init__(self, parameters, api, strict_validation=False):
         """
         :param parameters: List of request parameter dictionaries

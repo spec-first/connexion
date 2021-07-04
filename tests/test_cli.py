@@ -53,7 +53,7 @@ def spec_file():
 def test_print_version():
     runner = CliRunner()
     result = runner.invoke(main, ['--version'], catch_exceptions=False)
-    assert "Connexion {}".format(connexion.__version__) in result.output
+    assert f"Connexion {connexion.__version__}" in result.output
 
 
 def test_run_missing_spec():

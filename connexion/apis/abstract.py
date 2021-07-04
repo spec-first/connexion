@@ -227,7 +227,7 @@ class AbstractAPI(metaclass=AbstractAPIMeta):
                     self._handle_add_operation_error(path, method, sys.exc_info())
 
     def _handle_add_operation_error(self, path, method, exc_info):
-        url = '{base_path}{path}'.format(base_path=self.base_path, path=path)
+        url = f'{self.base_path}{path}'
         error_msg = 'Failed to add operation for {method} {url}'.format(
             method=method.upper(),
             url=url)

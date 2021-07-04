@@ -39,7 +39,7 @@ def snake_and_shadow(name):
     """
     snake = inflection.underscore(name)
     if snake in builtins.__dict__.keys():
-        return "{}_".format(snake)
+        return f"{snake}_"
     return snake
 
 

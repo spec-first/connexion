@@ -114,7 +114,7 @@ def get_function_from_name(function_name):
             last_import_error = import_error
             if '.' in module_name:
                 module_name, attr_path1 = module_name.rsplit('.', 1)
-                attr_path = '{0}.{1}'.format(attr_path1, attr_path)
+                attr_path = f'{attr_path1}.{attr_path}'
             else:
                 raise
     try:
@@ -210,14 +210,14 @@ def yamldumper(openapi):
     """
     def should_use_block(value):
         char_list = (
-          u"\u000a"  # line feed
-          u"\u000d"  # carriage return
-          u"\u001c"  # file separator
-          u"\u001d"  # group separator
-          u"\u001e"  # record separator
-          u"\u0085"  # next line
-          u"\u2028"  # line separator
-          u"\u2029"  # paragraph separator
+          "\u000a"  # line feed
+          "\u000d"  # carriage return
+          "\u001c"  # file separator
+          "\u001d"  # group separator
+          "\u001e"  # record separator
+          "\u0085"  # next line
+          "\u2028"  # line separator
+          "\u2029"  # paragraph separator
         )
         for c in char_list:
             if c in value:

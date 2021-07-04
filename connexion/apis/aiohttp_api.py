@@ -54,7 +54,7 @@ async def problems_middleware(request, handler):
     except (werkzeug_HTTPException, _HttpNotFoundError) as exc:
         response = problem(status=exc.code, title=exc.name, detail=exc.description)
     except web.HTTPError as exc:
-        if exc.text == "{}: {}".format(exc.status, exc.reason):
+        if exc.text == f"{exc.status}: {exc.reason}":
             detail = HTTPStatus(exc.status).description
         else:
             detail = exc.text
@@ -260,7 +260,7 @@ class AioHttpApi(AbstractAPI):
             security=security,
             security_definitions=security_definitions
         )
-        endpoint_name = "{}_not_found".format(self._api_name)
+        endpoint_name = f"{self._api_name}_not_found"
         self.subapp.router.add_route(
             '*',
             '/{not_found_path}',

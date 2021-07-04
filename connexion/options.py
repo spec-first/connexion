@@ -16,7 +16,7 @@ NO_UI_MSG = """The swagger_ui directory could not be found.
 logger = logging.getLogger("connexion.options")
 
 
-class ConnexionOptions(object):
+class ConnexionOptions:
 
     def __init__(self, options=None, oas_version=(2,)):
         self._options = {}
@@ -138,6 +138,6 @@ def filter_values(dictionary):
     :param dictionary:
     :return:
     """
-    return dict([(key, value)
+    return {key: value
                  for key, value in dictionary.items()
-                 if value is not None])
+                 if value is not None}

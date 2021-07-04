@@ -1,5 +1,3 @@
-# coding: utf-8
-
 import pathlib
 import os
 import tempfile
@@ -106,7 +104,7 @@ def test_invalid_schema_file_structure():
 
 def test_invalid_encoding():
     with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-        f.write(u"swagger: '2.0'\ninfo:\n  title: Foo 整\n  version: v1\npaths: {}".encode('gbk'))
+        f.write("swagger: '2.0'\ninfo:\n  title: Foo 整\n  version: v1\npaths: {}".encode('gbk'))
     FlaskApi(pathlib.Path(f.name), base_path="/api/v1.0")
     os.unlink(f.name)
 
@@ -114,7 +112,7 @@ def test_invalid_encoding():
 def test_use_of_safe_load_for_yaml_swagger_specs():
     with pytest.raises(YAMLError):
         with tempfile.NamedTemporaryFile(delete=False) as f:
-            f.write('!!python/object:object {}\n'.encode())
+            f.write(b'!!python/object:object {}\n')
         try:
             FlaskApi(pathlib.Path(f.name), base_path="/api/v1.0")
             os.unlink(f.name)
@@ -124,7 +122,7 @@ def test_use_of_safe_load_for_yaml_swagger_specs():
 
 def test_validation_error_on_completely_invalid_swagger_spec():
     with tempfile.NamedTemporaryFile(delete=False) as f:
-        f.write('[1]\n'.encode())
+        f.write(b'[1]\n')
     with pytest.raises(InvalidSpecification):
         FlaskApi(pathlib.Path(f.name), base_path="/api/v1.0")
     os.unlink(f.name)

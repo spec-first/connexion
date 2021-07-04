@@ -4,7 +4,7 @@ import connexion
 
 
 def post_greeting(name: str) -> str:
-    return 'Hello {name}'.format(name=name)
+    return f'Hello {name}'
 
 if __name__ == '__main__':
     app = connexion.FlaskApp(__name__, port=9090, specification_dir='swagger/')

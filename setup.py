@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 import inspect
 import os
@@ -12,7 +11,7 @@ __location__ = os.path.join(os.getcwd(), os.path.dirname(inspect.getfile(inspect
 
 
 def read_version(package):
-    with open(os.path.join(package, '__init__.py'), 'r') as fd:
+    with open(os.path.join(package, '__init__.py')) as fd:
         for line in fd:
             if line.startswith('__version__ = '):
                 return line.split()[-1].strip().strip("'")

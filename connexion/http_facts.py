@@ -3,7 +3,7 @@ FORM_CONTENT_TYPES = [
     'multipart/form-data'
 ]
 
-METHODS = set([
+METHODS = {
     "get",
     "put",
     "post",
@@ -12,4 +12,4 @@ METHODS = set([
     "head",
     "patch",
     "trace"
-])
+}
