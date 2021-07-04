@@ -132,7 +132,7 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
     @property
     def operation_id(self):
         """
-        The operation id used to indentify the operation internally to the app
+        The operation id used to identify the operation internally to the app
         """
         return self._operation_id
 
