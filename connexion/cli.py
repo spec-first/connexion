@@ -3,9 +3,8 @@ import sys
 from os import path
 
 import click
-from clickclick import AliasedGroup, fatal_error
-
 import connexion
+from clickclick import AliasedGroup, fatal_error
 from connexion.mock import MockResolver
 
 logger = logging.getLogger('connexion.cli')

@@ -13,7 +13,6 @@ from .json_schema import resolve_refs
 from .operations import OpenAPIOperation, Swagger2Operation
 from .utils import deep_get
 
-
 NO_SPEC_VERSION_ERR_MSG = """Unable to get the spec version.
 You are missing either '"swagger": "2.0"' or '"openapi": "3.0.0"'
 from the top level of your spec."""

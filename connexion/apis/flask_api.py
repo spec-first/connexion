@@ -3,8 +3,6 @@ import warnings
 
 import flask
 import werkzeug.exceptions
-from werkzeug.local import LocalProxy
-
 from connexion.apis import flask_utils
 from connexion.apis.abstract import AbstractAPI
 from connexion.handlers import AuthErrorHandler
@@ -12,6 +10,7 @@ from connexion.jsonifier import Jsonifier
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.security import FlaskSecurityHandlerFactory
 from connexion.utils import is_json_mimetype, yamldumper
+from werkzeug.local import LocalProxy
 
 logger = logging.getLogger('connexion.apis.flask_api')
 
