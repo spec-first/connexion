@@ -14,7 +14,7 @@ jobs:
       - run: isort --check-only --profile black . || true  # PR #1384
       - run: ./setup.py --help
       - run: ./setup.py install
-      - run: ./setup.py tests
+      - run: ./setup.py test
       - run: pip install -e .[swagger-ui]
       - run: pip install aiohttp aiohttp_jinja2 aiohttp_remotes pytest-aiohttp
       - run: mypy --ignore-missing-imports . || true
