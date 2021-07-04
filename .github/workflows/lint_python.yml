@@ -15,6 +15,7 @@ jobs:
       - run: isort --check-only --profile black . || true
       - run: ./setup.py --help
       - run: ./setup.py install
+      - run: pip install -e .[swagger-ui] || true
       - run: pip install aiohttp aiohttp_jinja2 aiohttp_remotes pip install pytest-aiohttp pytest-aiohttp-client
       #- run: pip install -r requirements.txt || true
       #- run: pip install -e .
