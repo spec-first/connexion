@@ -6,12 +6,12 @@ example of aiohttp connexion running behind a path-altering reverse-proxy
 import json
 import logging
 
-import connexion
-
 from aiohttp import web
 from aiohttp_remotes.exceptions import RemoteError, TooManyHeaders
 from aiohttp_remotes.x_forwarded import XForwardedBase
 from yarl import URL
+
+import connexion
 
 X_FORWARDED_PATH = "X-Forwarded-Path"
 

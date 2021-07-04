@@ -1,4 +1,5 @@
 import pytest
+
 import connexion.apps
 from connexion.exceptions import ResolverError
 from connexion.operations import Swagger2Operation

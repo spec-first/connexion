@@ -5,10 +5,11 @@ Basic example of a resource server
 
 import time
 
-import connexion
+import six
+from jose import JWTError, jwt
 from werkzeug.exceptions import Unauthorized
 
-from jose import JWTError, jwt
+import connexion
 
 JWT_ISSUER = 'com.zalando.connexion'
 JWT_SECRET = 'change_this'

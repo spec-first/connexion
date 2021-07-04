@@ -2,10 +2,10 @@
 import datetime
 import logging
 
+import orm
+
 import connexion
 from connexion import NoContent
-
-import orm
 
 db_session = None
 

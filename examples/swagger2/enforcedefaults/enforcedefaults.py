@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
-import connexion
 import jsonschema
+
+import connexion
 from connexion.decorators.validation import RequestBodyValidator
 from connexion.json_schema import Draft4RequestValidator
 

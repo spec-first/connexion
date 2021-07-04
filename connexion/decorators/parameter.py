@@ -10,7 +10,6 @@ from ..http_facts import FORM_CONTENT_TYPES
 from ..lifecycle import ConnexionRequest  # NOQA
 from ..utils import all_json
 
-
 logger = logging.getLogger(__name__)
 
 

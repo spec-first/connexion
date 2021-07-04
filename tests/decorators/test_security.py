@@ -1,9 +1,11 @@
+import json
 from unittest.mock import MagicMock
 
-import json
 import pytest
 import requests
-from connexion.exceptions import OAuthProblem, OAuthResponseProblem, OAuthScopeProblem
+
+from connexion.exceptions import (OAuthProblem, OAuthResponseProblem,
+                                  OAuthScopeProblem)
 
 
 def test_get_tokeninfo_url(monkeypatch, security_handler_factory):

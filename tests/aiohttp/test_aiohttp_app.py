@@ -3,10 +3,10 @@ import os
 from unittest import mock
 
 import pytest
+from conftest import TEST_FOLDER
+
 from connexion import AioHttpApp
 from connexion.exceptions import ConnexionException
-
-from conftest import TEST_FOLDER
 
 
 @pytest.fixture
