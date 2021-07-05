@@ -4,6 +4,7 @@ import pathlib
 import sys
 
 import pytest
+
 from connexion import App
 from connexion.security import FlaskSecurityHandlerFactory
 

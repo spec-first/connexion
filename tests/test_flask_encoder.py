@@ -5,6 +5,7 @@ from decimal import Decimal
 
 import pytest
 from conftest import build_app_from_fixture
+
 from connexion.apps.flask_app import FlaskJSONEncoder
 
 SPECS = ["swagger.yaml", "openapi.yaml"]

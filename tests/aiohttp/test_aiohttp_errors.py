@@ -2,6 +2,7 @@ import asyncio
 
 import aiohttp.test_utils
 import pytest
+
 from connexion import AioHttpApp
 from connexion.apis.aiohttp_api import HTTPStatus
 

@@ -2,8 +2,9 @@
 import datetime
 import uuid
 
-from connexion import NoContent, ProblemException, context, request
 from flask import jsonify, redirect
+
+from connexion import NoContent, ProblemException, context, request
 
 
 class DummyClass:

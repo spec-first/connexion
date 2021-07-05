@@ -1,6 +1,7 @@
+from flask import Flask
+
 from connexion.apis.flask_api import FlaskApi
 from connexion.apps.flask_app import FlaskApp
-from flask import Flask
 
 
 def test_flask_app_default_params():

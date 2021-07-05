@@ -2,6 +2,7 @@ from unittest.mock import MagicMock
 
 import flask
 import pytest
+
 from connexion.decorators.metrics import UWSGIMetricsCollector
 from connexion.exceptions import ProblemException
 

@@ -1,10 +1,11 @@
 import logging
 from unittest.mock import MagicMock
 
-import connexion
 import pytest
 from click.testing import CliRunner
 from conftest import FIXTURES_FOLDER
+
+import connexion
 from connexion.cli import main
 
 

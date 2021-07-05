@@ -2,6 +2,7 @@ from unittest.mock import MagicMock
 
 import flask
 import pytest
+
 from connexion.apis.flask_api import FlaskApi
 from connexion.decorators.validation import ParameterValidator
 from connexion.exceptions import BadRequestProblem
