@@ -2,9 +2,8 @@ import json
 from struct import unpack
 
 import yaml
-from werkzeug.test import Client, EnvironBuilder
-
 from connexion.apps.flask_app import FlaskJSONEncoder
+from werkzeug.test import Client, EnvironBuilder
 
 
 def test_app(simple_app):
