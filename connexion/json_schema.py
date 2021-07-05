@@ -8,7 +8,6 @@ from openapi_spec_validator.handlers import UrlHandler
 
 from .utils import deep_get
 
-
 default_handlers = {
     'http': UrlHandler('http'),
     'https': UrlHandler('https'),

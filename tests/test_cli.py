@@ -4,9 +4,8 @@ from unittest.mock import MagicMock
 import connexion
 import pytest
 from click.testing import CliRunner
-from connexion.cli import main
-
 from conftest import FIXTURES_FOLDER
+from connexion.cli import main
 
 
 @pytest.fixture()
