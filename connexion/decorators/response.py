@@ -62,7 +62,7 @@ class ResponseValidator(BaseDecorator):
                 raise NonConformingResponseHeaders(message=msg)
         return True
 
-    def is_json_schema_compatible(self, response_schema):
+    def is_json_schema_compatible(self, response_schema: dict) -> bool:
         """
         Verify if the specified operation responses are JSON schema
         compatible.
@@ -70,9 +70,6 @@ class ResponseValidator(BaseDecorator):
         All operations that specify a JSON schema and have content
         type "application/json" or "text/plain" can be validated using
         json_schema package.
-
-        :type response_schema: dict
-        :rtype bool
         """
         if not response_schema:
             return False

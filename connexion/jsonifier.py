@@ -29,7 +29,7 @@ class Jsonifier:
     """
     def __init__(self, json_=json, **kwargs):
         """
-        :param json_: json library to use. Must have loads() and dumps() method
+        :param json_: json library to use. Must have loads() and dumps() method  # NOQA
         :param kwargs: default arguments to pass to json.dumps()
         """
         self.json = json_

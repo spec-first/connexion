@@ -188,7 +188,7 @@ class FlaskApi(AbstractAPI):
             'status': status_code
         }
         kwargs = {k: v for k, v in kwargs.items() if v is not None}
-        return flask.current_app.response_class(**kwargs)  # type: flask.Response
+        return flask.current_app.response_class(**kwargs)
 
     @classmethod
     def _serialize_data(cls, data, mimetype):
