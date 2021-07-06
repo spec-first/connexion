@@ -123,6 +123,16 @@ class ConnexionOptions:
         return self._options.get('swagger_ui_config', None)
 
     @property
+    def openapi_console_ui_index_template_variables(self):
+        # type: () -> dict
+        """
+        Custom variables passed to the OpenAPI Console UI template.
+
+        Default: {}
+        """
+        return self._options.get('swagger_ui_template_arguments', {})
+
+    @property
     def uri_parser_class(self):
         # type: () -> AbstractURIParser
         """

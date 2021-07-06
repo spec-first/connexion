@@ -286,7 +286,8 @@ class InternalHandlers:
             prefix=escaped
         )
         template_variables = {
-            'openapi_spec_url': flask.url_for(openapi_json_route_name)
+            'openapi_spec_url': flask.url_for(openapi_json_route_name),
+            **self.options.openapi_console_ui_index_template_variables,
         }
         if self.options.openapi_console_ui_config is not None:
             template_variables['configUrl'] = 'swagger-ui-config.json'
