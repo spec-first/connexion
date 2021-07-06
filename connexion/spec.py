@@ -2,7 +2,6 @@ import abc
 import copy
 import pathlib
 from collections.abc import Mapping
-from typing import List
 from urllib.parse import urlsplit
 
 import jinja2
@@ -78,9 +77,9 @@ class Specification(Mapping):
     def _load_spec_from_file(arguments, specification):
         """
         Loads a YAML specification file, optionally rendering it with Jinja2.
-        Takes:
-          arguments - passed to Jinja2 renderer
-          specification - path to specification
+
+        :param arguments: passed to Jinja2 renderer
+        :param specification: path to specification
         """
         arguments = arguments or {}
 
@@ -163,7 +162,7 @@ class Swagger2Specification(Specification):
     @classmethod
     def _set_defaults(cls, spec):
         spec.setdefault('produces', [])
-        spec.setdefault('consumes', ['application/json'])  # type: List[str]
+        spec.setdefault('consumes', ['application/json'])
         spec.setdefault('definitions', {})
         spec.setdefault('parameters', {})
         spec.setdefault('responses', {})

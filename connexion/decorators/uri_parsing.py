@@ -27,10 +27,10 @@ class AbstractURIParser(BaseDecorator, metaclass=abc.ABCMeta):
         When called with a request object, it handles array types in the URI
         both in the path and query according to the spec.
         Some examples include:
-         - https://mysite.fake/in/path/1,2,3/            # path parameters
-         - https://mysite.fake/?in_query=a,b,c           # simple query params
-         - https://mysite.fake/?in_query=a|b|c           # various separators
-         - https://mysite.fake/?in_query=a&in_query=b,c  # complex query params
+        - https://mysite.fake/in/path/1,2,3/            # path parameters
+        - https://mysite.fake/?in_query=a,b,c           # simple query params
+        - https://mysite.fake/?in_query=a|b|c           # various separators
+        - https://mysite.fake/?in_query=a&in_query=b,c  # complex query params
         """
         self._param_defns = {p["name"]: p
                              for p in param_defns

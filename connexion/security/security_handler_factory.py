@@ -5,6 +5,7 @@ import http.cookies
 import logging
 import os
 import textwrap
+import typing as t
 
 from ..decorators.parameter import inspect_function_arguments
 from ..exceptions import (ConnexionException, OAuthProblem,
@@ -25,6 +26,7 @@ class AbstractSecurityHandlerFactory(abc.ABC):
         check_* -> returns a function tasked with doing auth for use inside the verify wrapper
             check helpers (used outside wrappers): _need_to_add_context_or_scopes
             the security function
+
         verify helpers (used inside wrappers): get_auth_header_value, get_cookie_value
     """
     no_value = object()
@@ -43,15 +45,7 @@ class AbstractSecurityHandlerFactory(abc.ABC):
             return get_function_from_name(func)
         return default
 
-    def get_tokeninfo_func(self, security_definition):
-        """
-        :type security_definition: dict
-        :param get_token_info_remote_func Function executed to download token info from x-tokenInfoUrl
-        :rtype: function
-
-        >>> get_tokeninfo_url({'x-tokenInfoFunc': 'foo.bar'})
-        '<function foo.bar>'
-        """
+    def get_tokeninfo_func(self, security_definition: dict) -> t.Optional[t.Callable]:
         token_info_func = self._get_function(security_definition, "x-tokenInfoFunc", 'TOKENINFO_FUNC')
         if token_info_func:
             return token_info_func

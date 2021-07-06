@@ -26,6 +26,7 @@ def flaskify_endpoint(identifier, randomize=None):
         and digits) to the endpoint name, separated by a pipe character.
     :type randomize: int | None
     :rtype: str
+
     """
     result = identifier.replace('.', '_')
     if randomize is None:
@@ -66,12 +67,9 @@ def flaskify_path(swagger_path, types=None):
     return PATH_PARAMETER.sub(convert_match, swagger_path)
 
 
-def is_flask_response(obj):
+def is_flask_response(obj: object) -> bool:
     """
     Verifies if obj is a default Flask response instance.
-
-    :type obj: object
-    :rtype bool
 
     >>> is_flask_response(redirect('http://example.com/'))
     True

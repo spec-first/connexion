@@ -28,7 +28,7 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
     The operation uses a resolver to resolve its handler function.
     We use the provided spec to do a bunch of heavy lifting before
     (and after) we call security_schemes handler.
-    The registered handler function ends up looking something like:
+    The registered handler function ends up looking something like::
 
         @secure_endpoint
         @validate_inputs
@@ -70,12 +70,12 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
         :param validator_map: Custom validators for the types "parameter", "body" and "response".
         :type validator_map: dict
         :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended
-        to any shadowed built-ins
+            to any shadowed built-ins
         :type pythonic_params: bool
         :param uri_parser_class: class to use for uri parsing
         :type uri_parser_class: AbstractURIParser
         :param pass_context_arg_name: If not None will try to inject the request context to the function using this
-        name.
+            name.
         :type pass_context_arg_name: str|None
         """
         self._api = api
