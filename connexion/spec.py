@@ -12,6 +12,8 @@ import pkg_resources
 
 import jinja2
 import jsonschema
+from jsonschema import Draft4Validator
+from jsonschema.validators import extend as extend_validator
 import yaml
 from openapi_spec_validator.exceptions import OpenAPIValidationError
 
@@ -19,6 +21,42 @@ from .exceptions import InvalidSpecification
 from .json_schema import resolve_refs
 from .operations import OpenAPIOperation, Swagger2Operation
 from .utils import deep_get
+
+try:
+    import collections.abc as collections_abc  # python 3.3+
+except ImportError:
+    import collections as collections_abc
+
+validate_properties = Draft4Validator.VALIDATORS["properties"]
+
+
+def validate_defaults(validator, properties, instance, schema):
+    """Validate `properties` subschema.
+
+    Enforcing each default value validates against the schema in which it resides.
+    """
+    valid = True
+    for error in validate_properties(
+        validator, properties, instance, schema,
+    ):
+        valid = False
+        yield error
+
+    # Validate default only when the subschema has validated successfully
+    # and only when an instance validator is available.
+    if not valid or not hasattr(validator, 'instance_validator'):
+        return
+    if isinstance(instance, dict) and 'default' in instance:
+        for error in validator.instance_validator.iter_errors(
+            instance['default'],
+            instance
+        ):
+            yield error
+
+
+OpenApiValidator = extend_validator(
+    Draft4Validator, {"properties": validate_defaults},
+)
 
 NO_SPEC_VERSION_ERR_MSG = """Unable to get the spec version.
 You are missing either '"swagger": "2.0"' or '"openapi": "3.0.0"'
@@ -215,7 +253,9 @@ class Swagger2Specification(Specification):
     @classmethod
     def _validate_spec(cls, spec):
         try:
-            jsonschema.validate(spec, cls.openapi_schema)
+            validator = OpenApiValidator(cls.openapi_schema)
+            validator.instance_validator = Draft4Validator(spec)
+            validator.validate(spec)
         except jsonschema.exceptions.ValidationError as e:
             raise InvalidSpecification.create_from(e)
 
@@ -244,7 +284,9 @@ class OpenAPISpecification(Specification):
     @classmethod
     def _validate_spec(cls, spec):
         try:
-            jsonschema.validate(spec, cls.openapi_schema)
+            validator = OpenApiValidator(cls.openapi_schema)
+            validator.instance_validator = Draft4Validator(spec)
+            validator.validate(spec)
         except jsonschema.exceptions.ValidationError as e:
             raise InvalidSpecification.create_from(e)
 
