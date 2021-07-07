@@ -247,3 +247,12 @@ def yamldumper(openapi):
     yaml.representer.SafeRepresenter.represent_scalar = my_represent_scalar
 
     return yaml.dump(openapi, allow_unicode=True, Dumper=NoAnchorDumper)
+
+
+def not_installed_error(exc):  # pragma: no cover
+    """Raises the ImportError when the module/object is actually called."""
+
+    def _required_lib(exc, *args, **kwargs):
+        raise exc
+
+    return functools.partial(_required_lib, exc)

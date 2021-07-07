@@ -10,18 +10,10 @@ from .exceptions import ProblemException  # NOQA
 from .operations import compat
 from .problem import problem  # NOQA
 from .resolver import Resolution, Resolver, RestyResolver  # NOQA
+from .utils import not_installed_error  # NOQA
 
 full_name = f'{__package__}.operation'
 sys.modules[full_name] = sys.modules[compat.__name__]
-
-
-def not_installed_error(exc):  # pragma: no cover
-    import functools
-
-    def _required_lib(exc, *args, **kwargs):
-        raise exc
-
-    return functools.partial(_required_lib, exc)
 
 
 try:
