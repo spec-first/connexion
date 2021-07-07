@@ -54,7 +54,7 @@ class ResponseValidator(BaseDecorator):
         if response_definition and response_definition.get("headers"):
             # converting to set is needed to support python 2.7
             required_header_keys = {k for (k, v) in response_definition.get("headers").items()
-                                    if 'required' not in v or v['required']}
+                                    if v.get('required', False)}
             header_keys = set(headers.keys())
             missing_keys = required_header_keys - header_keys
             if missing_keys:
