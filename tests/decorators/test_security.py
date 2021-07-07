@@ -3,7 +3,6 @@ from unittest.mock import MagicMock
 
 import pytest
 import requests
-
 from connexion.exceptions import (OAuthProblem, OAuthResponseProblem,
                                   OAuthScopeProblem)
 

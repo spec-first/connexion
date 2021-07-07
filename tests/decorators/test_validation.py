@@ -1,12 +1,11 @@
 from unittest.mock import MagicMock
 
 import pytest
-from jsonschema import ValidationError
-
 from connexion.apis.flask_api import FlaskApi
 from connexion.decorators.validation import ParameterValidator
 from connexion.json_schema import (Draft4RequestValidator,
                                    Draft4ResponseValidator)
+from jsonschema import ValidationError
 
 
 def test_get_valid_parameter():

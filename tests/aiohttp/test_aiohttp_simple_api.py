@@ -2,9 +2,9 @@ import sys
 
 import pytest
 import yaml
-from conftest import TEST_FOLDER
-
 from connexion import AioHttpApp
+
+from conftest import TEST_FOLDER
 
 try:
     import ujson as json

@@ -1,11 +1,11 @@
 import asyncio
 
-from aiohttp import web
 from aiohttp_remotes.exceptions import RemoteError, TooManyHeaders
 from aiohttp_remotes.x_forwarded import XForwardedBase
+from connexion import AioHttpApp
 from yarl import URL
 
-from connexion import AioHttpApp
+from aiohttp import web
 
 X_FORWARDED_PATH = "X-Forwarded-Path"
 

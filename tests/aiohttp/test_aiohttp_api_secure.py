@@ -2,7 +2,6 @@ import base64
 from unittest.mock import MagicMock
 
 import pytest
-
 from connexion import AioHttpApp
 
 

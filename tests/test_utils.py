@@ -1,9 +1,8 @@
 import math
 from unittest.mock import MagicMock
 
-import pytest
-
 import connexion.apps
+import pytest
 from connexion import utils
 
 

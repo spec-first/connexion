@@ -1,10 +1,10 @@
 import json
 
 import pytest
-from aiohttp import web
-
 from connexion.apis.aiohttp_api import AioHttpApi
 from connexion.lifecycle import ConnexionResponse
+
+from aiohttp import web
 
 
 @pytest.fixture(scope='module')
