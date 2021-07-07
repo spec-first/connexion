@@ -2,10 +2,11 @@
 import datetime
 import uuid
 
+from connexion.lifecycle import ConnexionResponse
+
 import aiohttp
 from aiohttp.web import Request
 from aiohttp.web import Response as AioHttpResponse
-from connexion.lifecycle import ConnexionResponse
 
 
 async def get_bye(name):

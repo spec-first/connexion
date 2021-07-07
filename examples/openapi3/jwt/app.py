@@ -6,9 +6,8 @@ Basic example of a resource server
 import time
 
 import connexion
-from werkzeug.exceptions import Unauthorized
-
 from jose import JWTError, jwt
+from werkzeug.exceptions import Unauthorized
 
 JWT_ISSUER = 'com.zalando.connexion'
 JWT_SECRET = 'change_this'
