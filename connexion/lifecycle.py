@@ -1,5 +1,4 @@
-
-class ConnexionRequest(object):
+class ConnexionRequest:
     def __init__(self,
                  url,
                  method,
@@ -27,7 +26,7 @@ class ConnexionRequest(object):
         return self.json_getter()
 
 
-class ConnexionResponse(object):
+class ConnexionResponse:
     def __init__(self,
                  status_code=200,
                  mimetype=None,

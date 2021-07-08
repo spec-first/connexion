@@ -5,12 +5,12 @@ Connexion
    :alt: Join the chat at https://gitter.im/zalando/connexion
    :target: https://gitter.im/zalando/connexion?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 
-.. image:: https://travis-ci.org/zalando/connexion.svg?branch=master
-   :target: https://travis-ci.org/zalando/connexion
-   :alt: Travis CI build status
+.. image:: https://github.com/zalando/connexion/actions/workflows/pipeline.yml/badge.svg
+   :alt: Build status
+   :target: https://github.com/zalando/connexion/actions/workflows/pipeline.yml
 
-.. image:: https://coveralls.io/repos/zalando/connexion/badge.svg?branch=master
-   :target: https://coveralls.io/r/zalando/connexion?branch=master
+.. image:: https://coveralls.io/repos/github/zalando/connexion/badge.svg?branch=main
+   :target: https://coveralls.io/github/zalando/connexion?branch=main
    :alt: Coveralls status
 
 .. image:: https://img.shields.io/pypi/v/connexion.svg
@@ -26,7 +26,7 @@ Connexion
    :alt: Python Versions
 
 .. image:: https://img.shields.io/pypi/l/connexion.svg
-   :target: https://github.com/zalando/connexion/blob/master/LICENSE
+   :target: https://github.com/zalando/connexion/blob/main/LICENSE.txt
    :alt: License
 
 Connexion is a framework that automagically handles HTTP requests based on `OpenAPI Specification`_

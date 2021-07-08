@@ -2,15 +2,18 @@ import collections
 import copy
 import functools
 import logging
+from typing import AnyStr, Union
 
 import pkg_resources
 from jsonschema import Draft4Validator, ValidationError, draft4_format_checker
 from jsonschema.validators import extend
 from werkzeug.datastructures import FileStorage
 
-from ..exceptions import ExtraParameterProblem, BadRequestProblem, UnsupportedMediaTypeProblem
+from ..exceptions import (BadRequestProblem, ExtraParameterProblem,
+                          UnsupportedMediaTypeProblem)
 from ..http_facts import FORM_CONTENT_TYPES
 from ..json_schema import Draft4RequestValidator, Draft4ResponseValidator
+from ..lifecycle import ConnexionResponse
 from ..utils import all_json, boolean, is_json_mimetype, is_null, is_nullable
 
 _jsonschema_3_or_newer = pkg_resources.parse_version(
@@ -100,7 +103,7 @@ def validate_parameter_list(request_params, spec_params):
     return request_params.difference(spec_params)
 
 
-class RequestBodyValidator(object):
+class RequestBodyValidator:
 
     def __init__(self, schema, consumes, api, is_null_value_valid=False, validator=None,
                  strict_validation=False):
@@ -191,8 +194,7 @@ class RequestBodyValidator(object):
     @classmethod
     def _error_path_message(cls, exception):
         error_path = '.'.join(str(item) for item in exception.path)
-        error_path_msg = " - '{path}'".format(path=error_path) \
-            if error_path else ""
+        error_path_msg = f" - '{error_path}'" if error_path else ""
         return error_path_msg
 
     def validate_schema(self, data, url):
@@ -216,12 +218,12 @@ class RequestBodyValidator(object):
         return None
 
 
-class ResponseBodyValidator(object):
+class ResponseBodyValidator:
     def __init__(self, schema, validator=None):
         """
         :param schema: The schema of the response body
         :param validator: Validator class that should be used to validate passed data
-                          against API schema. Default is jsonschema.Draft4Validator.
+                          against API schema. Default is Draft4ResponseValidator.
         :type validator: jsonschema.IValidator
         """
         ValidatorClass = validator or Draft4ResponseValidator
@@ -240,7 +242,7 @@ class ResponseBodyValidator(object):
         return None
 
 
-class ParameterValidator(object):
+class ParameterValidator:
     def __init__(self, parameters, api, strict_validation=False):
         """
         :param parameters: List of request parameter dictionaries
@@ -309,10 +311,9 @@ class ParameterValidator(object):
 
     def validate_formdata_parameter_list(self, request):
         request_params = request.form.keys()
-        try:
+        if 'formData' in self.parameters:  # Swagger 2:
             spec_params = [x['name'] for x in self.parameters['formData']]
-        except KeyError:
-            # OAS 3
+        else:  # OAS 3
             return set()
         return validate_parameter_list(request_params, spec_params)
 

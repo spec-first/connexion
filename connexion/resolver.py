@@ -1,5 +1,4 @@
 import logging
-import re
 import sys
 
 import connexion.utils as utils
@@ -8,7 +7,7 @@ from connexion.exceptions import ResolverError
 logger = logging.getLogger('connexion.resolver')
 
 
-class Resolution(object):
+class Resolution:
     def __init__(self, function, operation_id):
         """
         Represents the result of operation resolution
@@ -20,7 +19,7 @@ class Resolution(object):
         self.operation_id = operation_id
 
 
-class Resolver(object):
+class Resolver:
     def __init__(self, function_resolver=utils.get_function_from_name):
         """
         Standard resolver
@@ -49,7 +48,7 @@ class Resolver(object):
         router_controller = operation.router_controller
         if router_controller is None:
             return operation_id
-        return '{}.{}'.format(router_controller, operation_id)
+        return f'{router_controller}.{operation_id}'
 
     def resolve_function_from_operation_id(self, operation_id):
         """
@@ -60,7 +59,7 @@ class Resolver(object):
         try:
             return self.function_resolver(operation_id)
         except ImportError as e:
-            msg = 'Cannot resolve operationId "{}"! Import error was "{}"'.format(operation_id, str(e))
+            msg = f'Cannot resolve operationId "{operation_id}"! Import error was "{str(e)}"'
             raise ResolverError(msg, sys.exc_info())
         except (AttributeError, ValueError) as e:
             raise ResolverError(str(e), sys.exc_info())
@@ -132,7 +131,7 @@ class RestyResolver(Resolver):
 
             return self.collection_endpoint_name if is_collection_endpoint else method.lower()
 
-        return '{}.{}'.format(get_controller_name(), get_function_name())
+        return f'{get_controller_name()}.{get_function_name()}'
 
 
 class MethodViewResolver(RestyResolver):
@@ -168,7 +167,7 @@ class MethodViewResolver(RestyResolver):
         module_name, view_base, meth_name = operation_id.rsplit('.', 2)
         view_name = view_base[0].upper() + view_base[1:] + 'View'
 
-        return "{}.{}.{}".format(module_name, view_name, meth_name)
+        return f"{module_name}.{view_name}.{meth_name}"
 
     def resolve_function_from_operation_id(self, operation_id):
         """

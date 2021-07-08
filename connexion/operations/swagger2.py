@@ -66,12 +66,12 @@ class Swagger2Operation(AbstractOperation):
         :param validator_map: Custom validators for the types "parameter", "body" and "response".
         :type validator_map: dict
         :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended
-        to any shadowed built-ins
+            to any shadowed built-ins
         :type pythonic_params: bool
         :param uri_parser_class: class to use for uri parsing
         :type uri_parser_class: AbstractURIParser
         :param pass_context_arg_name: If not None will try to inject the request context to the function using this
-        name.
+            name.
         :type pass_context_arg_name: str|None
         """
         app_security = operation.get('security', app_security)
@@ -79,7 +79,7 @@ class Swagger2Operation(AbstractOperation):
 
         self._router_controller = operation.get('x-swagger-router-controller')
 
-        super(Swagger2Operation, self).__init__(
+        super().__init__(
             api=api,
             method=method,
             path=path,
@@ -293,7 +293,7 @@ class Swagger2Operation(AbstractOperation):
                 try:
                     form_defn = form_defns[key]
                 except KeyError:  # pragma: no cover
-                    logger.error("Function argument '{}' not defined in specification".format(key))
+                    logger.error(f"Function argument '{key}' not defined in specification")
                 else:
                     kwargs[key] = self._get_val_from_param(value, form_defn)
         return kwargs

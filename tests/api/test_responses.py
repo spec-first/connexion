@@ -2,9 +2,8 @@ import json
 from struct import unpack
 
 import yaml
-from werkzeug.test import Client, EnvironBuilder
-
 from connexion.apps.flask_app import FlaskJSONEncoder
+from werkzeug.test import Client, EnvironBuilder
 
 
 def test_app(simple_app):
@@ -360,7 +359,7 @@ def test_post_wrong_content_type(simple_app):
 def test_get_unicode_response(simple_app):
     app_client = simple_app.app.test_client()
     resp = app_client.get('/v1.0/get_unicode_response')
-    actualJson = {u'currency': u'\xa3', u'key': u'leena'}
+    actualJson = {'currency': '\xa3', 'key': 'leena'}
     assert json.loads(resp.data.decode('utf-8','replace')) == actualJson
 
 

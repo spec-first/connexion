@@ -1,10 +1,11 @@
 import asyncio
 
-from aiohttp import web
 from aiohttp_remotes.exceptions import RemoteError, TooManyHeaders
 from aiohttp_remotes.x_forwarded import XForwardedBase
 from connexion import AioHttpApp
 from yarl import URL
+
+from aiohttp import web
 
 X_FORWARDED_PATH = "X-Forwarded-Path"
 
@@ -52,8 +53,7 @@ class XPathForwarded(XForwardedBase):
         await self.raise_error(request)
 
 
-    @asyncio.coroutine
-    def test_swagger_json_behind_proxy(simple_api_spec_dir, aiohttp_client):
+    async def test_swagger_json_behind_proxy(simple_api_spec_dir, aiohttp_client):
         """ Verify the swagger.json file is returned with base_path updated
             according to X-Forwarded-Path header. """
         app = AioHttpApp(__name__, port=5001,
@@ -65,20 +65,19 @@ class XPathForwarded(XForwardedBase):
         reverse_proxied = XPathForwarded()
         aio.middlewares.append(reverse_proxied.middleware)
 
-        app_client = yield from aiohttp_client(app.app)
+        app_client = await aiohttp_client(app.app)
         headers = {'X-Forwarded-Path': '/behind/proxy'}
 
-        swagger_ui = yield from app_client.get('/v1.0/ui/', headers=headers)
+        swagger_ui = await app_client.get('/v1.0/ui/', headers=headers)
         assert swagger_ui.status == 200
         assert b'url = "/behind/proxy/v1.0/swagger.json"' in (
-            yield from swagger_ui.read()
+            await swagger_ui.read()
         )
 
-        swagger_json = yield from app_client.get('/v1.0/swagger.json',
-                                                 headers=headers)
+        swagger_json = await app_client.get('/v1.0/swagger.json', headers=headers)
         assert swagger_json.status == 200
         assert swagger_json.headers.get('Content-Type') == 'application/json'
-        json_ = yield from swagger_json.json()
+        json_ = await swagger_json.json()
 
         assert api.specification.raw['basePath'] == '/v1.0', \
             "Original specifications should not have been changed"
@@ -91,8 +90,7 @@ class XPathForwarded(XForwardedBase):
             "Only basePath should have been updated"
 
 
-    @asyncio.coroutine
-    def test_openapi_json_behind_proxy(simple_api_spec_dir, aiohttp_client):
+    async def test_openapi_json_behind_proxy(simple_api_spec_dir, aiohttp_client):
         """ Verify the swagger.json file is returned with base_path updated
             according to X-Forwarded-Path header. """
         app = AioHttpApp(__name__, port=5001,
@@ -105,20 +103,19 @@ class XPathForwarded(XForwardedBase):
         reverse_proxied = XPathForwarded()
         aio.middlewares.append(reverse_proxied.middleware)
 
-        app_client = yield from aiohttp_client(app.app)
+        app_client = await aiohttp_client(app.app)
         headers = {'X-Forwarded-Path': '/behind/proxy'}
 
-        swagger_ui = yield from app_client.get('/v1.0/ui/', headers=headers)
+        swagger_ui = await app_client.get('/v1.0/ui/', headers=headers)
         assert swagger_ui.status == 200
         assert b'url: "/behind/proxy/v1.0/openapi.json"' in (
-            yield from swagger_ui.read()
+            await swagger_ui.read()
         )
 
-        swagger_json = yield from app_client.get('/v1.0/openapi.json',
-                                                 headers=headers)
+        swagger_json = await app_client.get('/v1.0/openapi.json', headers=headers)
         assert swagger_json.status == 200
         assert swagger_json.headers.get('Content-Type') == 'application/json'
-        json_ = yield from swagger_json.json()
+        json_ = await swagger_json.json()
 
         assert json_.get('servers', [{}])[0].get('url') == '/behind/proxy/v1.0', \
             "basePath should contains original URI"

@@ -1,8 +1,0 @@
-[run]
-omit = connexion/apis/aiohttp_api.py
-       connexion/apps/aiohttp_app.py
-       connexion/decorators/response_coroutine.py
-
-[report]
-exclude_lines =
-    pragma: no cover

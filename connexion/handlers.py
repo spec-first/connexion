@@ -1,7 +1,7 @@
 import logging
 
-from .operations.secure import SecureOperation
 from .exceptions import AuthenticationProblem, ResolverProblem
+from .operations.secure import SecureOperation
 
 logger = logging.getLogger('connexion.handlers')
 
@@ -27,7 +27,7 @@ class AuthErrorHandler(SecureOperation):
         :type security_definitions: dict
         """
         self.exception = exception
-        super(AuthErrorHandler, self).__init__(api, security, security_definitions)
+        super().__init__(api, security, security_definitions)
 
     @property
     def function(self):
@@ -60,7 +60,7 @@ class ResolverErrorHandler(SecureOperation):
     def __init__(self, api, status_code, exception, security, security_definitions):
         self.status_code = status_code
         self.exception = exception
-        super(ResolverErrorHandler, self).__init__(api, security, security_definitions)
+        super().__init__(api, security, security_definitions)
 
     @property
     def function(self):

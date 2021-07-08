@@ -1,4 +1,3 @@
-import asyncio
 import logging
 
 import aiohttp
@@ -10,7 +9,7 @@ logger = logging.getLogger('connexion.api.security')
 
 class AioHttpSecurityHandlerFactory(AbstractAsyncSecurityHandlerFactory):
     def __init__(self, pass_context_arg_name):
-        super(AioHttpSecurityHandlerFactory, self).__init__(pass_context_arg_name=pass_context_arg_name)
+        super().__init__(pass_context_arg_name=pass_context_arg_name)
         self.client_session = None
 
     def get_token_info_remote(self, token_info_url):
@@ -28,7 +27,7 @@ class AioHttpSecurityHandlerFactory(AbstractAsyncSecurityHandlerFactory):
             if not self.client_session:
                 # Must be created in a coroutine
                 self.client_session = aiohttp.ClientSession()
-            headers = {'Authorization': 'Bearer {}'.format(token)}
+            headers = {'Authorization': f'Bearer {token}'}
             token_request = await self.client_session.get(token_info_url, headers=headers, timeout=5)
             if token_request.status != 200:
                 return None

@@ -1,22 +1,17 @@
 import abc
 import copy
 import pathlib
+from collections.abc import Mapping
+from urllib.parse import urlsplit
 
 import jinja2
 import yaml
 from openapi_spec_validator.exceptions import OpenAPIValidationError
-from urllib.parse import urlsplit
 
 from .exceptions import InvalidSpecification
 from .json_schema import resolve_refs
 from .operations import OpenAPIOperation, Swagger2Operation
 from .utils import deep_get
-
-try:
-    import collections.abc as collections_abc  # python 3.3+
-except ImportError:
-    import collections as collections_abc
-
 
 NO_SPEC_VERSION_ERR_MSG = """Unable to get the spec version.
 You are missing either '"swagger": "2.0"' or '"openapi": "3.0.0"'
@@ -30,7 +25,7 @@ def canonical_base_path(base_path):
     return base_path.rstrip('/')
 
 
-class Specification(collections_abc.Mapping):
+class Specification(Mapping):
 
     def __init__(self, raw_spec):
         self._raw_spec = copy.deepcopy(raw_spec)
@@ -81,9 +76,9 @@ class Specification(collections_abc.Mapping):
     def _load_spec_from_file(arguments, specification):
         """
         Loads a YAML specification file, optionally rendering it with Jinja2.
-        Takes:
-          arguments - passed to Jinja2 renderer
-          specification - path to specification
+
+        :param arguments: passed to Jinja2 renderer
+        :param specification: path to specification
         """
         arguments = arguments or {}
 
@@ -166,7 +161,7 @@ class Swagger2Specification(Specification):
     @classmethod
     def _set_defaults(cls, spec):
         spec.setdefault('produces', [])
-        spec.setdefault('consumes', ['application/json'])  # type: List[str]
+        spec.setdefault('consumes', ['application/json'])
         spec.setdefault('definitions', {})
         spec.setdefault('parameters', {})
         spec.setdefault('responses', {})

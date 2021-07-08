@@ -36,6 +36,7 @@ exception and render it in some sort of custom format. For example
 
 .. code-block:: python
 
+    from flask import Response
     import connexion
     from connexion.exceptions import OAuthResponseProblem
 
