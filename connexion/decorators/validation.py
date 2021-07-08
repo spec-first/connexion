@@ -189,7 +189,7 @@ class RequestBodyValidator(object):
         return wrapper
 
     @classmethod
-    def error_path_message(cls, exception):
+    def _error_path_message(cls, exception):
         error_path = '.'.join(str(item) for item in exception.path)
         error_path_msg = " - '{path}'".format(path=error_path) \
             if error_path else ""
@@ -203,7 +203,7 @@ class RequestBodyValidator(object):
         try:
             self.validator.validate(data)
         except ValidationError as exception:
-            error_path_msg = self.error_path_message(exception=exception)
+            error_path_msg = self._error_path_message(exception=exception)
             logger.error(
                 "{url} validation error: {error}{error_path_msg}".format(
                     url=url, error=exception.message,
