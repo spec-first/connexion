@@ -241,6 +241,17 @@ Without this sanitation it would e.g. be impossible to implement an
 `OData
 <http://www.odata.org>`_ API.
 
+You can also convert *CamelCase* parameters to *snake_case* automatically using `pythonic_params` option:
+
+.. code-block:: python
+
+    app = connexion.FlaskApp(__name__)
+    app.add_api('api.yaml', ..., pythonic_params=True)
+
+With this option enabled, Connexion firstly converts *CamelCase* names
+to *snake_case*. Secondly it looks to see if the name matches a known built-in
+and if it does it appends an underscore to the name.
+
 Parameter Variable Converters
 -----------------------------
 
