@@ -49,6 +49,10 @@ tests_require.extend(aiohttp_require)
 tests_require.append('pytest-aiohttp')
 tests_require.append('aiohttp-remotes')
 
+docs_require = [
+    'sphinx-autoapi==1.8.1'
+]
+
 
 class PyTest(TestCommand):
 
@@ -98,7 +102,8 @@ setup(
         'tests': tests_require,
         'flask': flask_require,
         'swagger-ui': swagger_ui_require,
-        'aiohttp': aiohttp_require
+        'aiohttp': aiohttp_require,
+        'docs': docs_require
     },
     cmdclass={'test': PyTest},
     test_suite='tests',
