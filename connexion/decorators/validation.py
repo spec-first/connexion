@@ -191,6 +191,12 @@ class RequestBodyValidator:
 
         return wrapper
 
+    @classmethod
+    def _error_path_message(cls, exception):
+        error_path = '.'.join(str(item) for item in exception.path)
+        error_path_msg = f" - '{error_path}'" if error_path else ""
+        return error_path_msg
+
     def validate_schema(self, data, url):
         # type: (dict, AnyStr) -> Union[ConnexionResponse, None]
         if self.is_null_value_valid and is_null(data):
@@ -199,9 +205,7 @@ class RequestBodyValidator:
         try:
             self.validator.validate(data)
         except ValidationError as exception:
-            error_path = '.'.join(str(item) for item in exception.path)
-            error_path_msg = f" - '{error_path}'" \
-                if error_path else ""
+            error_path_msg = self._error_path_message(exception=exception)
             logger.error(
                 "{url} validation error: {error}{error_path_msg}".format(
                     url=url, error=exception.message,
