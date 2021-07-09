@@ -1,3 +1,7 @@
+"""
+This module defines an AioHttpApp, a Connexion application to wrap an AioHttp application.
+"""
+
 import logging
 import os.path
 import pkgutil

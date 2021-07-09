@@ -1,3 +1,7 @@
+"""
+This module defines a Flask-specific SecurityHandlerFactory.
+"""
+
 import requests
 
 from .security_handler_factory import AbstractSecurityHandlerFactory

@@ -1,4 +1,7 @@
-# Decorators to split query and path parameters
+"""
+This module defines view function decorators to split query and path parameters.
+"""
+
 import abc
 import functools
 import json

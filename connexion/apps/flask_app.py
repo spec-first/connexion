@@ -1,3 +1,7 @@
+"""
+This module defines a FlaskApp, a Connexion application to wrap a Flask application.
+"""
+
 import datetime
 import logging
 import pathlib

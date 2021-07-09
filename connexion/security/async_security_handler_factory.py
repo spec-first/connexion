@@ -1,3 +1,8 @@
+"""
+This module defines an abstract asynchronous SecurityHandlerFactory which supports the creation of
+asynchronous security handlers for coroutine operations.
+"""
+
 import abc
 import asyncio
 import functools

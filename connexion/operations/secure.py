@@ -1,3 +1,7 @@
+"""
+This module defines a SecureOperation class, which implements the security handler for an operation.
+"""
+
 import functools
 import logging
 

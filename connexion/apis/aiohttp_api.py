@@ -1,3 +1,8 @@
+"""
+This module defines an AioHttp Connexion API which implements translations between AioHttp and
+Connexion requests / responses.
+"""
+
 import asyncio
 import logging
 import re

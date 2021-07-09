@@ -1,3 +1,7 @@
+"""
+This module contains a mock resolver that returns mock functions for operations it cannot resolve.
+"""
+
 import functools
 import logging
 

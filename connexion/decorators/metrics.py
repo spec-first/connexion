@@ -1,3 +1,8 @@
+"""
+This module defines view function decorator to collect UWSGI metrics and expose them via an
+endpoint.
+"""
+
 import functools
 import os
 import time

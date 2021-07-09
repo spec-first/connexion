@@ -568,6 +568,9 @@ Contributing to Connexion/TODOs
 We welcome your ideas, issues, and pull requests. Just follow the
 usual/standard GitHub practices.
 
+You can find out more about how Connexion works and where to apply your changes by having a look
+at our `ARCHITECTURE.rst <ARCHITECTURE.rst>`_.
+
 Unless you explicitly state otherwise in advance, any non trivial
 contribution intentionally submitted for inclusion in this project by you
 to the steward of this repository (Zalando SE, Berlin) shall be under the

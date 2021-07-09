@@ -1,9 +1,22 @@
+"""
+This module centralizes all functionality related to json encoding and decoding in Connexion.
+"""
+
 import datetime
 import json
 import uuid
 
 
 class JSONEncoder(json.JSONEncoder):
+    """The default Connexion JSON encoder. Handles extra types compared to the
+    built-in :class:`json.JSONEncoder`.
+
+    -   :class:`datetime.datetime` and :class:`datetime.date` are
+        serialized to :rfc:`822` strings. This is the same as the HTTP
+        date format.
+    -   :class:`uuid.UUID` is serialized to a string.
+    """
+
     def default(self, o):
         if isinstance(o, datetime.datetime):
             if o.tzinfo:
@@ -25,7 +38,7 @@ class JSONEncoder(json.JSONEncoder):
 
 class Jsonifier:
     """
-    Used to serialized and deserialize to/from JSon
+    Central point to serialize and deserialize to/from JSon in Connexion.
     """
     def __init__(self, json_=json, **kwargs):
         """

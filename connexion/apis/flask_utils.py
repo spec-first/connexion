@@ -1,3 +1,7 @@
+"""
+This module defines utility functions related to the Flask framework.
+"""
+
 import functools
 import random
 import re

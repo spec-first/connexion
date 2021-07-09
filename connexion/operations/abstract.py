@@ -1,3 +1,8 @@
+"""
+This module defines an AbstractOperation class which implements an abstract Operation interface
+and functionality shared between Swagger 2 and OpenAPI 3 specifications.
+"""
+
 import abc
 import logging
 

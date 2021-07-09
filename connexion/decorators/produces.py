@@ -1,4 +1,7 @@
-# Decorators to change the return type of endpoints
+"""
+This module defines decorators to change the return type of a view function.
+"""
+
 import functools
 import logging
 

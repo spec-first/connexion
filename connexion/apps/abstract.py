@@ -1,3 +1,8 @@
+"""
+This module defines an AbstractApp, which defines a standardized user interface for a Connexion
+application.
+"""
+
 import abc
 import logging
 import pathlib

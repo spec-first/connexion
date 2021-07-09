@@ -1,3 +1,7 @@
+"""
+This module defines an OpenAPIOperation class, a Connexion operation specific for OpenAPI 3 specs.
+"""
+
 import logging
 from copy import copy, deepcopy
 
