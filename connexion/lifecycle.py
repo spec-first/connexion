@@ -3,6 +3,7 @@ This module defines interfaces for requests and responses used in Connexion for 
 validation, serialization, etc.
 """
 
+
 class ConnexionRequest:
     """Connexion interface for a request."""
     def __init__(self,
