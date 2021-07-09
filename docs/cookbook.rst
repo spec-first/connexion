@@ -4,6 +4,32 @@ Connexion Cookbook
 This section aims to be a cookbook of possible solutions for specific
 use cases of Connexion.
 
+Wildcard path parameters
+------------------------
+
+Path parameters cannot contain slashes by default, but sometimes it's useful
+to have a path parameter which takes the full remainder of the HTTP path
+including slashes, e.g. to allow parsing "my/deep/path" from
+"/pages/my/deep/path". Connexion supports parsing such path remainders
+by using ``format: path``:
+
+.. code-block:: yaml
+
+    paths:
+      /pages/{path}: 
+        get:
+         # (...)
+          parameters:
+            - name: "path"                                                                                 
+              in: path
+              description: "Full page path including slashes."     
+              required: true
+              schema:
+                type: string
+                format: path
+                minLength: 1
+
+
 Custom type format
 ------------------
 
