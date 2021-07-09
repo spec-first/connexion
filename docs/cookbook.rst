@@ -16,18 +16,16 @@ by using ``format: path``:
 .. code-block:: yaml
 
     paths:
-      /pages/{path}: 
+      /pages/{path}:
         get:
          # (...)
           parameters:
-            - name: "path"                                                                                 
+            - name: "path"
               in: path
-              description: "Full page path including slashes."     
-              required: true
+              description: "Remainder of path, including slashes."
               schema:
                 type: string
                 format: path
-                minLength: 1
 
 
 Custom type format
@@ -123,7 +121,7 @@ Logging
 ------------
 
 You can customize logging accessing the `_flask-logger` directly
-or configuring the logger via dictConfig. 
+or configuring the logger via dictConfig.
 Remember that you should configure logging for your project as soon
 as possible when the program starts or you'll get the default configuration.
 
@@ -131,8 +129,8 @@ as possible when the program starts or you'll get the default configuration.
 
     import connexion
     from logging.config import dictConfig
-    
-    
+
+
     dictConfig({
         'version': 1,
         'handlers': {
