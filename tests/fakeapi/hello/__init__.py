@@ -266,11 +266,11 @@ def test_schema_int(test_int):
 
 
 def test_get_someint(someint):
-    return '%s %g' % (type(someint).__name__, someint)
+    return f'{type(someint).__name__} {someint:g}'
 
 
 def test_get_somefloat(somefloat):
-    return '%s %g' % (type(somefloat).__name__, somefloat)
+    return f'{type(somefloat).__name__} {somefloat:g}'
 
 
 def test_default_param(name):

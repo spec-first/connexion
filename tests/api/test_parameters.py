@@ -140,7 +140,7 @@ def test_strict_formdata_param(strict_app):
 def test_path_parameter_someint(simple_app, arg, result):
     assert isinstance(arg, str)  # sanity check
     app_client = simple_app.app.test_client()
-    resp = app_client.get('/v1.0/test-int-path/'+arg)  # type: flask.Response
+    resp = app_client.get(f'/v1.0/test-int-path/{arg}')  # type: flask.Response
     assert resp.data.decode('utf-8', 'replace') == f'"{result}"\n'
 
 
@@ -170,7 +170,7 @@ def test_path_parameter_someint__bad(simple_app):
 def test_path_parameter_somefloat(simple_app, arg, result):
     assert isinstance(arg, str)  # sanity check
     app_client = simple_app.app.test_client()
-    resp = app_client.get('/v1.0/test-float-path/' + arg)  # type: flask.Response
+    resp = app_client.get(f'/v1.0/test-float-path/{arg}')  # type: flask.Response
     assert resp.data.decode('utf-8', 'replace') == f'"{result}"\n'
 
 
