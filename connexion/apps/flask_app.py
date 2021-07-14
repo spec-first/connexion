@@ -153,6 +153,7 @@ class NumberConverter(werkzeug.routing.BaseConverter):
     def to_python(self, value):
         return float(value)
 
+
 class IntegerConverter(werkzeug.routing.BaseConverter):
     """ Flask converter for OpenAPI integer type """
     regex = r"[+-]?[0-9]+"
