@@ -155,6 +155,10 @@ class MethodViewResolver(RestyResolver):
                     return ...
     """
 
+    def __init__(self, *args, **kwargs):
+        super(MethodViewResolver, self).__init__(*args, **kwargs)
+        self.initialized_views = []
+
     def resolve_operation_id(self, operation):
         """
         Resolves the operationId using REST semantics unless explicitly configured in the spec
@@ -190,7 +194,14 @@ class MethodViewResolver(RestyResolver):
             mod = __import__(module_name, fromlist=[view_name])
             view_cls = getattr(mod, view_name)
             # Find the class and instantiate it
-            view = view_cls()
+            view = None
+            for v in self.initialized_views:
+                if v.__class__ == view_cls:
+                    view = v
+                    break
+            if view is None:
+                view = view_cls()
+                self.initialized_views.append(view)
             func = getattr(view, meth_name)
             # Return the method function of the class
             return func
