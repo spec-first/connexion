@@ -1,4 +1,7 @@
-# Decorators to change the return type of endpoints
+"""
+This module defines decorators to change the return type of a view function.
+"""
+
 import functools
 import logging
 
@@ -22,7 +25,7 @@ class BaseSerializer(BaseDecorator):
         """
         :rtype: str
         """
-        return '<BaseSerializer: {}>'.format(self.mimetype)  # pragma: no cover
+        return f'<BaseSerializer: {self.mimetype}>'  # pragma: no cover
 
 
 class Produces(BaseSerializer):
@@ -46,4 +49,4 @@ class Produces(BaseSerializer):
         """
         :rtype: str
         """
-        return '<Produces: {}>'.format(self.mimetype)  # pragma: no cover
+        return f'<Produces: {self.mimetype}>'  # pragma: no cover

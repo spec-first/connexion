@@ -1,3 +1,7 @@
+"""
+This module defines a Flask-specific SecurityHandlerFactory.
+"""
+
 import requests
 
 from .security_handler_factory import AbstractSecurityHandlerFactory
@@ -28,7 +32,7 @@ class FlaskSecurityHandlerFactory(AbstractSecurityHandlerFactory):
             :type token: str
             :rtype: dict
             """
-            headers = {'Authorization': 'Bearer {}'.format(token)}
+            headers = {'Authorization': f'Bearer {token}'}
             token_request = session.get(token_info_url, headers=headers, timeout=5)
             if not token_request.ok:
                 return None

@@ -1,11 +1,14 @@
-# Decorators to split query and path parameters
+"""
+This module defines view function decorators to split query and path parameters.
+"""
+
 import abc
 import functools
+import json
 import logging
 import re
-import json
-from .. import utils
 
+from .. import utils
 from .decorator import BaseDecorator
 
 logger = logging.getLogger('connexion.decorators.uri_parsing')
@@ -27,10 +30,10 @@ class AbstractURIParser(BaseDecorator, metaclass=abc.ABCMeta):
         When called with a request object, it handles array types in the URI
         both in the path and query according to the spec.
         Some examples include:
-         - https://mysite.fake/in/path/1,2,3/            # path parameters
-         - https://mysite.fake/?in_query=a,b,c           # simple query params
-         - https://mysite.fake/?in_query=a|b|c           # various separators
-         - https://mysite.fake/?in_query=a&in_query=b,c  # complex query params
+        - https://mysite.fake/in/path/1,2,3/            # path parameters
+        - https://mysite.fake/?in_query=a,b,c           # simple query params
+        - https://mysite.fake/?in_query=a|b|c           # various separators
+        - https://mysite.fake/?in_query=a&in_query=b,c  # complex query params
         """
         self._param_defns = {p["name"]: p
                              for p in param_defns
@@ -38,13 +41,15 @@ class AbstractURIParser(BaseDecorator, metaclass=abc.ABCMeta):
         self._body_schema = body_defn.get("schema", {})
         self._body_encoding = body_defn.get("encoding", {})
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def param_defns(self):
         """
         returns the parameter definitions by name
         """
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def param_schemas(self):
         """
         returns the parameter schemas by name

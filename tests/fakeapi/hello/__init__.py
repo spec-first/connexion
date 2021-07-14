@@ -2,12 +2,11 @@
 import datetime
 import uuid
 
+from connexion import NoContent, ProblemException, context, request
 from flask import jsonify, redirect
 
-from connexion import NoContent, ProblemException, context, request
 
-
-class DummyClass(object):
+class DummyClass:
     @classmethod
     def test_classmethod(cls):
         return cls.__name__
@@ -35,7 +34,7 @@ def post():
 
 
 def post_greeting(name, **kwargs):
-    data = {'greeting': 'Hello {name}'.format(name=name)}
+    data = {'greeting': f'Hello {name}'}
     return data
 
 def post_greeting3(body, **kwargs):
@@ -43,11 +42,11 @@ def post_greeting3(body, **kwargs):
     return data
 
 def post_greeting_url(name, remainder, **kwargs):
-    data = {'greeting': 'Hello {name} thanks for {remainder}'.format(name=name,remainder=remainder)}
+    data = {'greeting': f'Hello {name} thanks for {remainder}'}
     return data
 
 def post_goodday(name):
-    data = {'greeting': 'Hello {name}'.format(name=name)}
+    data = {'greeting': f'Hello {name}'}
     headers = {"Location": "/my/uri"}
     return data, 201, headers
 
@@ -57,7 +56,7 @@ def post_goodday_no_header():
 
 
 def post_goodevening(name):
-    data = 'Good evening {name}'.format(name=name)
+    data = f'Good evening {name}'
     headers = {"Location": "/my/uri"}
     return data, 201, headers
 
@@ -68,7 +67,7 @@ def get_list(name):
 
 
 def get_bye(name):
-    return 'Goodbye {name}'.format(name=name)
+    return f'Goodbye {name}'
 
 
 def get_flask_response_tuple():
@@ -76,7 +75,7 @@ def get_flask_response_tuple():
 
 
 def get_bye_secure(name, user, token_info):
-    return 'Goodbye {name} (Secure: {user})'.format(name=name, user=user)
+    return f'Goodbye {name} (Secure: {user})'
 
 
 def get_bye_secure_from_flask():
@@ -88,10 +87,10 @@ def get_bye_secure_from_connexion(req_context):
 
 
 def get_bye_secure_ignoring_context(name):
-    return 'Goodbye {name} (Secure!)'.format(name=name)
+    return f'Goodbye {name} (Secure!)'
 
 def get_bye_secure_jwt(name, user, token_info):
-    return 'Goodbye {name} (Secure: {user})'.format(name=name, user=user)
+    return f'Goodbye {name} (Secure: {user})'
 
 def with_problem():
     raise ProblemException(type='http://www.example.com/error',
@@ -117,7 +116,7 @@ def get_greetings(name):
     """
     Used to test custom mimetypes
     """
-    data = {'greetings': 'Hello {name}'.format(name=name)}
+    data = {'greetings': f'Hello {name}'}
     return data
 
 
@@ -500,7 +499,7 @@ def get_unicode_query(price=None):
 
 
 def get_unicode_data():
-    jsonResponse = {u'currency': u'\xa3', u'key': u'leena'}
+    jsonResponse = {'currency': '\xa3', 'key': 'leena'}
     return jsonResponse
 
 

@@ -1,3 +1,8 @@
+"""
+Module containing all code related to json schema validation.
+"""
+
+from collections.abc import Mapping
 from copy import deepcopy
 
 from jsonschema import Draft4Validator, RefResolver, _utils
@@ -6,12 +11,6 @@ from jsonschema.validators import extend
 from openapi_spec_validator.handlers import UrlHandler
 
 from .utils import deep_get
-
-try:
-    from collections.abc import Mapping
-except ImportError:
-    from collections import Mapping
-
 
 default_handlers = {
     'http': UrlHandler('http'),
@@ -70,7 +69,7 @@ def validate_enum(validator, enums, instance, schema):
         return
 
     if instance not in enums:
-        yield ValidationError("%r is not one of %r" % (instance, enums))
+        yield ValidationError(f"{instance!r} is not one of {enums!r}")
 
 
 def validate_required(validator, required, instance, schema):
