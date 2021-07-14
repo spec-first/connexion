@@ -1,11 +1,16 @@
+"""
+This module defines an abstract SecurityHandlerFactory which supports the creation of security
+handlers for operations.
+"""
+
 import abc
 import base64
 import functools
+import http.cookies
 import logging
 import os
 import textwrap
-
-import http.cookies
+import typing as t
 
 from ..decorators.parameter import inspect_function_arguments
 from ..exceptions import (ConnexionException, OAuthProblem,
@@ -26,6 +31,7 @@ class AbstractSecurityHandlerFactory(abc.ABC):
         check_* -> returns a function tasked with doing auth for use inside the verify wrapper
             check helpers (used outside wrappers): _need_to_add_context_or_scopes
             the security function
+
         verify helpers (used inside wrappers): get_auth_header_value, get_cookie_value
     """
     no_value = object()
@@ -44,11 +50,9 @@ class AbstractSecurityHandlerFactory(abc.ABC):
             return get_function_from_name(func)
         return default
 
-    def get_tokeninfo_func(self, security_definition):
+    def get_tokeninfo_func(self, security_definition: dict) -> t.Optional[t.Callable]:
         """
         :type security_definition: dict
-        :param get_token_info_remote_func Function executed to download token info from x-tokenInfoUrl
-        :rtype: function
 
         >>> get_tokeninfo_url({'x-tokenInfoFunc': 'foo.bar'})
         '<function foo.bar>'
@@ -339,7 +343,7 @@ class AbstractSecurityHandlerFactory(abc.ABC):
     def verify_security(cls, auth_funcs, required_scopes, function):
         @functools.wraps(function)
         def wrapper(request):
-            token_info = None
+            token_info = cls.no_value
             for func in auth_funcs:
                 token_info = func(request, required_scopes)
                 if token_info is not cls.no_value:

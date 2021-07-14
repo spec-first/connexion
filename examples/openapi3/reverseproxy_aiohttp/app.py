@@ -7,7 +7,6 @@ import json
 import logging
 
 import connexion
-
 from aiohttp import web
 from aiohttp_remotes.exceptions import RemoteError, TooManyHeaders
 from aiohttp_remotes.x_forwarded import XForwardedBase

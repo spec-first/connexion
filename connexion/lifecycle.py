@@ -1,5 +1,11 @@
+"""
+This module defines interfaces for requests and responses used in Connexion for authentication,
+validation, serialization, etc.
+"""
 
-class ConnexionRequest(object):
+
+class ConnexionRequest:
+    """Connexion interface for a request."""
     def __init__(self,
                  url,
                  method,
@@ -27,7 +33,8 @@ class ConnexionRequest(object):
         return self.json_getter()
 
 
-class ConnexionResponse(object):
+class ConnexionResponse:
+    """Connexion interface for a response."""
     def __init__(self,
                  status_code=200,
                  mimetype=None,

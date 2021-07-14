@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 import json
 from io import BytesIO
 
@@ -336,7 +333,7 @@ def test_nullable_parameter(simple_app):
 
     time_start = 1010
     resp = app_client.get(
-        '/v1.0/nullable-parameters?time_start={}'.format(time_start))
+        f'/v1.0/nullable-parameters?time_start={time_start}')
     assert json.loads(resp.data.decode('utf-8', 'replace')) == time_start
 
     resp = app_client.post('/v1.0/nullable-parameters', data={"post_param": 'None'})

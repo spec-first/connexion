@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 import inspect
 import os
@@ -12,7 +11,7 @@ __location__ = os.path.join(os.getcwd(), os.path.dirname(inspect.getfile(inspect
 
 
 def read_version(package):
-    with open(os.path.join(package, '__init__.py'), 'r') as fd:
+    with open(os.path.join(package, '__init__.py')) as fd:
         for line in fd:
             if line.startswith('__version__ = '):
                 return line.split()[-1].strip().strip("'")
@@ -21,26 +20,27 @@ def read_version(package):
 version = read_version('connexion')
 
 install_requires = [
-    'clickclick>=1.2',
-    'jsonschema>=2.5.1',
-    'PyYAML>=5.1',
-    'requests>=2.9.1',
-    'inflection>=0.3.1',
-    'openapi-spec-validator>=0.2.4',
+    'clickclick>=1.2,<21',
+    'jsonschema>=2.5.1,<4',
+    'PyYAML>=5.1,<6',
+    'requests>=2.9.1,<3',
+    'inflection>=0.3.1,<0.6',
+    'openapi-spec-validator>=0.2.4,<0.4',
+    'werkzeug>=1.0,<2.0',
 ]
 
-swagger_ui_require = 'swagger-ui-bundle>=0.0.2'
-flask_require = 'flask>=1.0.4'
+swagger_ui_require = 'swagger-ui-bundle>=0.0.2,<0.1'
+flask_require = 'flask>=1.0.4,<2'
 aiohttp_require = [
-    'aiohttp>=2.3.10',
-    'aiohttp-jinja2>=0.14.0'
+    'aiohttp>=2.3.10,<4',
+    'aiohttp-jinja2>=0.14.0,<2'
 ]
 
 tests_require = [
-    'decorator',
-    'pytest',
-    'pytest-cov',
-    'testfixtures',
+    'decorator>=5,<6',
+    'pytest>=6,<7',
+    'pytest-cov>=2,<3',
+    'testfixtures>=6,<7',
     flask_require,
     swagger_ui_require
 ]
@@ -48,6 +48,10 @@ tests_require = [
 tests_require.extend(aiohttp_require)
 tests_require.append('pytest-aiohttp')
 tests_require.append('aiohttp-remotes')
+
+docs_require = [
+    'sphinx-autoapi==1.8.1'
+]
 
 
 class PyTest(TestCommand):
@@ -57,8 +61,7 @@ class PyTest(TestCommand):
     def initialize_options(self):
         TestCommand.initialize_options(self)
         self.cov = None
-        self.pytest_args = ['--cov', 'connexion', '--cov-report', 'term-missing',
-                            '--cov-config=py3-coveragerc', '-v']
+        self.pytest_args = ['--cov', 'connexion', '--cov-report', 'term-missing', '-v']
         self.cov_html = False
 
     def finalize_options(self):
@@ -99,7 +102,8 @@ setup(
         'tests': tests_require,
         'flask': flask_require,
         'swagger-ui': swagger_ui_require,
-        'aiohttp': aiohttp_require
+        'aiohttp': aiohttp_require,
+        'docs': docs_require
     },
     cmdclass={'test': PyTest},
     test_suite='tests',

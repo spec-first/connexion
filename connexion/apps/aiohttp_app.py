@@ -1,3 +1,7 @@
+"""
+This module defines an AioHttpApp, a Connexion application to wrap an AioHttp application.
+"""
+
 import logging
 import os.path
 import pkgutil
@@ -15,7 +19,7 @@ logger = logging.getLogger('connexion.aiohttp_app')
 class AioHttpApp(AbstractApp):
 
     def __init__(self, import_name, only_one_api=False, **kwargs):
-        super(AioHttpApp, self).__init__(import_name, AioHttpApi, server='aiohttp', **kwargs)
+        super().__init__(import_name, AioHttpApi, server='aiohttp', **kwargs)
         self._only_one_api = only_one_api
         self._api_added = False
 
@@ -34,7 +38,7 @@ class AioHttpApp(AbstractApp):
             filepath = loader.get_filename(self.import_name)
 
         if filepath is None:
-            raise RuntimeError("Invalid import name '{}'".format(self.import_name))
+            raise RuntimeError(f"Invalid import name '{self.import_name}'")
 
         return os.path.dirname(os.path.abspath(filepath))
 
@@ -66,7 +70,7 @@ class AioHttpApp(AbstractApp):
         return api
 
     def _get_api(self, specification, kwargs):
-        return super(AioHttpApp, self).add_api(specification, **kwargs)
+        return super().add_api(specification, **kwargs)
 
     def run(self, port=None, server=None, debug=None, host=None, **options):
         if port is not None:
@@ -92,4 +96,4 @@ class AioHttpApp(AbstractApp):
 
             web.run_app(self.app, port=self.port, host=self.host, access_log=access_log, **options)
         else:
-            raise Exception('Server {} not recognized'.format(self.server))
+            raise Exception(f'Server {self.server} not recognized')

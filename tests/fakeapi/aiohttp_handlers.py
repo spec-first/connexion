@@ -2,14 +2,15 @@
 import datetime
 import uuid
 
+from connexion.lifecycle import ConnexionResponse
+
 import aiohttp
 from aiohttp.web import Request
 from aiohttp.web import Response as AioHttpResponse
-from connexion.lifecycle import ConnexionResponse
 
 
 async def get_bye(name):
-    return AioHttpResponse(text='Goodbye {}'.format(name))
+    return AioHttpResponse(text=f'Goodbye {name}')
 
 
 async def aiohttp_str_response():
@@ -29,7 +30,7 @@ async def aiohttp_validate_responses():
 
 
 async def aiohttp_post_greeting(name, **kwargs):
-    data = {'greeting': 'Hello {name}'.format(name=name)}
+    data = {'greeting': f'Hello {name}'}
     return data
 
 async def aiohttp_echo(**kwargs):
@@ -76,6 +77,22 @@ async def aiohttp_users_post(user):
 
 async def aiohttp_token_info(token_info):
     return aiohttp.web.json_response(data=token_info)
+
+
+async def aiohttp_all_auth(token_info):
+    return await aiohttp_token_info(token_info)
+
+
+async def aiohttp_async_auth(token_info):
+    return await aiohttp_token_info(token_info)
+
+
+async def aiohttp_bearer_auth(token_info):
+    return await aiohttp_token_info(token_info)
+
+
+async def aiohttp_async_bearer_auth(token_info):
+    return await aiohttp_token_info(token_info)
 
 
 async def get_datetime():

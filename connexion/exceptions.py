@@ -1,4 +1,9 @@
+"""
+This module defines Exception classes used by Connexion to generate a proper response.
+"""
+
 import warnings
+
 from jsonschema.exceptions import ValidationError
 from werkzeug.exceptions import Forbidden, Unauthorized
 
@@ -13,8 +18,8 @@ class ProblemException(ConnexionException):
     def __init__(self, status=400, title=None, detail=None, type=None,
                  instance=None, headers=None, ext=None):
         """
-        This exception is holds arguments that are going to be passed to the
-        `connexion.problem` function to generate a propert response.
+        This exception holds arguments that are going to be passed to the
+        `connexion.problem` function to generate a proper response.
         """
         self.status = status
         self.title = title
@@ -46,10 +51,10 @@ class ResolverError(LookupError):
         self.exc_info = exc_info
 
     def __str__(self):  # pragma: no cover
-        return '<ResolverError: {}>'.format(self.reason)
+        return f'<ResolverError: {self.reason}>'
 
     def __repr__(self):  # pragma: no cover
-        return '<ResolverError: {}>'.format(self.reason)
+        return f'<ResolverError: {self.reason}>'
 
 
 class InvalidSpecification(ConnexionException, ValidationError):
@@ -62,49 +67,49 @@ class NonConformingResponse(ProblemException):
         :param reason: Reason why the response did not conform to the specification
         :type reason: str
         """
-        super(NonConformingResponse, self).__init__(status=500, title=reason, detail=message)
+        super().__init__(status=500, title=reason, detail=message)
         self.reason = reason
         self.message = message
 
     def __str__(self):  # pragma: no cover
-        return '<NonConformingResponse: {}>'.format(self.reason)
+        return f'<NonConformingResponse: {self.reason}>'
 
     def __repr__(self):  # pragma: no cover
-        return '<NonConformingResponse: {}>'.format(self.reason)
+        return f'<NonConformingResponse: {self.reason}>'
 
 
 class AuthenticationProblem(ProblemException):
 
     def __init__(self, status, title, detail):
-        super(AuthenticationProblem, self).__init__(status=status, title=title, detail=detail)
+        super().__init__(status=status, title=title, detail=detail)
 
 
 class ResolverProblem(ProblemException):
 
     def __init__(self, status, title, detail):
-        super(ResolverProblem, self).__init__(status=status, title=title, detail=detail)
+        super().__init__(status=status, title=title, detail=detail)
 
 
 class BadRequestProblem(ProblemException):
 
     def __init__(self, title='Bad Request', detail=None):
-        super(BadRequestProblem, self).__init__(status=400, title=title, detail=detail)
+        super().__init__(status=400, title=title, detail=detail)
 
 
 class UnsupportedMediaTypeProblem(ProblemException):
 
     def __init__(self, title="Unsupported Media Type", detail=None):
-        super(UnsupportedMediaTypeProblem, self).__init__(status=415, title=title, detail=detail)
+        super().__init__(status=415, title=title, detail=detail)
 
 
 class NonConformingResponseBody(NonConformingResponse):
     def __init__(self, message, reason="Response body does not conform to specification"):
-        super(NonConformingResponseBody, self).__init__(reason=reason, message=message)
+        super().__init__(reason=reason, message=message)
 
 
 class NonConformingResponseHeaders(NonConformingResponse):
     def __init__(self, message, reason="Response headers do not conform to specification"):
-        super(NonConformingResponseHeaders, self).__init__(reason=reason, message=message)
+        super().__init__(reason=reason, message=message)
 
 
 class OAuthProblem(Unauthorized):
@@ -114,7 +119,7 @@ class OAuthProblem(Unauthorized):
 class OAuthResponseProblem(OAuthProblem):
     def __init__(self, token_response, **kwargs):
         self.token_response = token_response
-        super(OAuthResponseProblem, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
 
 class OAuthScopeProblem(Forbidden):
@@ -122,7 +127,7 @@ class OAuthScopeProblem(Forbidden):
         self.required_scopes = required_scopes
         self.token_scopes = token_scopes
 
-        super(OAuthScopeProblem, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
 
 class ExtraParameterProblem(ProblemException):
@@ -139,4 +144,4 @@ class ExtraParameterProblem(ProblemException):
                 detail = "Extra {parameter_type} parameter(s) {extra_params} not in spec"\
                     .format(parameter_type='formData', extra_params=', '.join(self.extra_formdata))
 
-        super(ExtraParameterProblem, self).__init__(title=title, detail=detail, **kwargs)
+        super().__init__(title=title, detail=detail, **kwargs)
