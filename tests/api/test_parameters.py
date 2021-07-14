@@ -1,6 +1,8 @@
 import json
 from io import BytesIO
 
+import pytest
+
 
 def test_parameter_validation(simple_app):
     app_client = simple_app.app.test_client()
@@ -124,22 +126,57 @@ def test_strict_formdata_param(strict_app):
     assert resp.status_code == 200
 
 
-def test_path_parameter_someint(simple_app):
+@pytest.mark.parametrize('arg, result', [
+    # The cases accepted by the Flask/Werkzeug converter
+    ['123', 'int 123'],
+    ['0', 'int 0'],
+    ['0000', 'int 0'],
+    # Additional cases that we want to support
+    ['+123', 'int 123'],
+    ['+0', 'int 0'],
+    ['-0', 'int 0'],
+    ['-123', 'int -123'],
+])
+def test_path_parameter_someint(simple_app, arg, result):
+    assert isinstance(arg, str)  # sanity check
     app_client = simple_app.app.test_client()
-    resp = app_client.get('/v1.0/test-int-path/123')  # type: flask.Response
-    assert resp.data.decode('utf-8', 'replace') == '"int"\n'
+    resp = app_client.get(f'/v1.0/test-int-path/{arg}')  # type: flask.Response
+    assert resp.data.decode('utf-8', 'replace') == f'"{result}"\n'
 
+
+def test_path_parameter_someint__bad(simple_app):
     # non-integer values will not match Flask route
+    app_client = simple_app.app.test_client()
     resp = app_client.get('/v1.0/test-int-path/foo')  # type: flask.Response
     assert resp.status_code == 404
 
 
-def test_path_parameter_somefloat(simple_app):
+@pytest.mark.parametrize('arg, result', [
+    # The cases accepted by the Flask/Werkzeug converter
+    ['123.45', 'float 123.45'],
+    ['123.0', 'float 123'],
+    ['0.999999999999999999', 'float 1'],
+    # Additional cases that we want to support
+    ['+123.45', 'float 123.45'],
+    ['-123.45', 'float -123.45'],
+    ['123.', 'float 123'],
+    ['.45', 'float 0.45'],
+    ['123', 'float 123'],
+    ['0', 'float 0'],
+    ['0000', 'float 0'],
+    ['-0.000000001', 'float -1e-09'],
+    ['100000000000', 'float 1e+11'],
+])
+def test_path_parameter_somefloat(simple_app, arg, result):
+    assert isinstance(arg, str)  # sanity check
     app_client = simple_app.app.test_client()
-    resp = app_client.get('/v1.0/test-float-path/123.45')  # type: flask.Response
-    assert resp.data.decode('utf-8' , 'replace') == '"float"\n'
+    resp = app_client.get(f'/v1.0/test-float-path/{arg}')  # type: flask.Response
+    assert resp.data.decode('utf-8', 'replace') == f'"{result}"\n'
 
+
+def test_path_parameter_somefloat__bad(simple_app):
     # non-float values will not match Flask route
+    app_client = simple_app.app.test_client()
     resp = app_client.get('/v1.0/test-float-path/123,45')  # type: flask.Response
     assert resp.status_code == 404
 
