@@ -17,8 +17,8 @@ def test_headers_produces(simple_app):
     assert response.headers["Location"] == "http://localhost/my/uri"
 
 
-def test_header_not_returned(simple_app):
-    app_client = simple_app.app.test_client()
+def test_header_not_returned(simple_openapi_app):
+    app_client = simple_openapi_app.app.test_client()
 
     response = app_client.post('/v1.0/goodday/noheader', data={})  # type: flask.Response
     assert response.status_code == 500  # view_func has not returned what was promised in spec

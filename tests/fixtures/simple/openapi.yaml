@@ -714,6 +714,7 @@ paths:
               description: The URI of the created resource
               schema:
                 type: string
+              required: true
           content:
             'application/json':
               schema:
@@ -1155,7 +1156,7 @@ paths:
               description: Optional header
               schema:
                 type: string
-              required: False
+              required: false
 
 servers:
   - url: http://localhost:{port}/{basePath}
