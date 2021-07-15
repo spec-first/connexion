@@ -690,6 +690,7 @@ paths:
               description: The URI of the created resource
               schema:
                 type: string
+              required: true
           content:
             'application/json':
               schema:
@@ -732,6 +733,7 @@ paths:
               description: The URI of the created resource
               schema:
                 type: string
+              required: true
           content:
             text/plain:
               schema:
