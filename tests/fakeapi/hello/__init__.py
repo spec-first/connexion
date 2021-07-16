@@ -601,3 +601,7 @@ def get_date():
 
 def get_uuid():
     return {'value': uuid.UUID(hex='e7ff66d0-3ec2-4c4e-bed0-6e4723c24c51')}
+
+
+def test_optional_headers():
+    return {}, 200
