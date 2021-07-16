@@ -21,7 +21,7 @@ class Pet(Base):
             self.created = created
 
     def dump(self):
-        return dict([(k, v) for k, v in vars(self).items() if not k.startswith('_')])
+        return {k: v for k, v in vars(self).items() if not k.startswith('_')}
 
 
 def init_db(uri):

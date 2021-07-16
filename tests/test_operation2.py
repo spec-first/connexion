@@ -3,10 +3,9 @@ import logging
 import math
 import pathlib
 import types
-
 from unittest import mock
-import pytest
 
+import pytest
 from connexion.apis.flask_api import Jsonifier
 from connexion.exceptions import InvalidSpecification
 from connexion.json_schema import resolve_refs

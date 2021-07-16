@@ -1,15 +1,15 @@
 import json
+from unittest import mock
 
 import jinja2
-from unittest import mock
 import pytest
 import yaml
-from openapi_spec_validator.loaders import ExtendedSafeLoader
-
-from conftest import TEST_FOLDER, build_app_from_fixture
 from connexion import App
 from connexion.exceptions import InvalidSpecification
 from connexion.http_facts import METHODS
+from openapi_spec_validator.loaders import ExtendedSafeLoader
+
+from conftest import TEST_FOLDER, build_app_from_fixture
 
 SPECS = ["swagger.yaml", "openapi.yaml"]
 

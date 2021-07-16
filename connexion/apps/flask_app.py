@@ -1,3 +1,7 @@
+"""
+This module defines a FlaskApp, a Connexion application to wrap a Flask application.
+"""
+
 import datetime
 import logging
 import pathlib
@@ -18,11 +22,13 @@ logger = logging.getLogger('connexion.app')
 
 class FlaskApp(AbstractApp):
     def __init__(self, import_name, server='flask', **kwargs):
-        super(FlaskApp, self).__init__(import_name, FlaskApi, server=server, **kwargs)
+        super().__init__(import_name, FlaskApi, server=server, **kwargs)
 
     def create_app(self):
         app = flask.Flask(self.import_name, **self.server_args)
         app.json_encoder = FlaskJSONEncoder
+        app.url_map.converters['float'] = NumberConverter
+        app.url_map.converters['int'] = IntegerConverter
         return app
 
     def get_root_path(self):
@@ -48,13 +54,15 @@ class FlaskApp(AbstractApp):
             if not isinstance(exception, werkzeug.exceptions.HTTPException):
                 exception = werkzeug.exceptions.InternalServerError()
 
-            response = problem(title=exception.name, detail=exception.description,
-                               status=exception.code)
+            response = problem(title=exception.name,
+                               detail=exception.description,
+                               status=exception.code,
+                               headers=exception.get_headers())
 
         return FlaskApi.get_response(response)
 
     def add_api(self, specification, **kwargs):
-        api = super(FlaskApp, self).add_api(specification, **kwargs)
+        api = super().add_api(specification, **kwargs)
         self.app.register_blueprint(api.blueprint)
         return api
 
@@ -96,9 +104,9 @@ class FlaskApp(AbstractApp):
             self.app.run(self.host, port=self.port, debug=self.debug, **options)
         elif self.server == 'tornado':
             try:
-                import tornado.wsgi
                 import tornado.httpserver
                 import tornado.ioloop
+                import tornado.wsgi
             except ImportError:
                 raise Exception('tornado library not installed')
             wsgi_container = tornado.wsgi.WSGIContainer(self.app)
@@ -115,7 +123,7 @@ class FlaskApp(AbstractApp):
             logger.info('Listening on %s:%s..', self.host, self.port)
             http_server.serve_forever()
         else:
-            raise Exception('Server {} not recognized'.format(self.server))
+            raise Exception(f'Server {self.server} not recognized')
 
 
 class FlaskJSONEncoder(json.JSONEncoder):
@@ -136,3 +144,19 @@ class FlaskJSONEncoder(json.JSONEncoder):
             return float(o)
 
         return json.JSONEncoder.default(self, o)
+
+
+class NumberConverter(werkzeug.routing.BaseConverter):
+    """ Flask converter for OpenAPI number type """
+    regex = r"[+-]?[0-9]*(\.[0-9]*)?"
+
+    def to_python(self, value):
+        return float(value)
+
+
+class IntegerConverter(werkzeug.routing.BaseConverter):
+    """ Flask converter for OpenAPI integer type """
+    regex = r"[+-]?[0-9]+"
+
+    def to_python(self, value):
+        return int(value)

@@ -1,3 +1,7 @@
+"""
+This module defines a SecureOperation class, which implements the security handler for an operation.
+"""
+
 import functools
 import logging
 
@@ -8,7 +12,7 @@ logger = logging.getLogger("connexion.operations.secure")
 DEFAULT_MIMETYPE = 'application/json'
 
 
-class SecureOperation(object):
+class SecureOperation:
 
     def __init__(self, api, security, security_schemes):
         """

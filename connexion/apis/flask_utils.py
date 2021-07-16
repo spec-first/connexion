@@ -1,3 +1,7 @@
+"""
+This module defines utility functions related to the Flask framework.
+"""
+
 import functools
 import random
 import re
@@ -26,6 +30,7 @@ def flaskify_endpoint(identifier, randomize=None):
         and digits) to the endpoint name, separated by a pipe character.
     :type randomize: int | None
     :rtype: str
+
     """
     result = identifier.replace('.', '_')
     if randomize is None:
@@ -41,9 +46,9 @@ def convert_path_parameter(match, types):
     name = match.group(1)
     swagger_type = types.get(name)
     converter = PATH_PARAMETER_CONVERTERS.get(swagger_type)
-    return '<{0}{1}{2}>'.format(converter or '',
-                                ':' if converter else '',
-                                name.replace('-', '_'))
+    return '<{}{}{}>'.format(
+        converter or '', ':' if converter else '', name.replace('-', '_')
+    )
 
 
 def flaskify_path(swagger_path, types=None):
@@ -66,12 +71,9 @@ def flaskify_path(swagger_path, types=None):
     return PATH_PARAMETER.sub(convert_match, swagger_path)
 
 
-def is_flask_response(obj):
+def is_flask_response(obj: object) -> bool:
     """
     Verifies if obj is a default Flask response instance.
-
-    :type obj: object
-    :rtype bool
 
     >>> is_flask_response(redirect('http://example.com/'))
     True

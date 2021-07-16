@@ -119,6 +119,22 @@ server that runs is a "normal" HTTP server. This means that the
 Swagger UI cannot be used to play with the API. What is the correct
 way to start a HTTPS server when using Connexion?
 
+One way, `described by Flask`_, looks like this:
+
+.. code-block:: python
+
+   from OpenSSL import SSL
+   context = SSL.Context(SSL.SSLv23_METHOD)
+   context.use_privatekey_file('yourserver.key')
+   context.use_certificate_file('yourserver.crt')
+
+   app.run(host='127.0.0.1', port='12344',
+           debug=False/True, ssl_context=context)
+
+However, Connexion doesn't provide an ssl_context parameter. This is
+because Flask doesn't, either--but it uses ``**kwargs`` to send the
+parameters to the underlying `werkzeug`_ server.
+
 .. _rfc6750: https://tools.ietf.org/html/rfc6750
 .. _rfc6749: https://tools.ietf.org/html/rfc6749
 .. _rfc7662: https://tools.ietf.org/html/rfc7662

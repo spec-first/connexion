@@ -1,3 +1,9 @@
+"""
+This module defines a BaseDecorator to wrap a user view function and a RequestResponseDecorator
+which manages the lifecycle of a request internally in Connexion.
+"""
+
+import asyncio
 import functools
 import logging
 
@@ -6,7 +12,7 @@ from ..utils import has_coroutine
 logger = logging.getLogger('connexion.decorators.decorator')
 
 
-class BaseDecorator(object):
+class BaseDecorator:
 
     def __call__(self, function):
         """
@@ -38,10 +44,24 @@ class RequestResponseDecorator(BaseDecorator):
         :rtype: types.FunctionType
         """
         if has_coroutine(function, self.api):
-            from .coroutine_wrappers import get_request_life_cycle_wrapper
-            wrapper = get_request_life_cycle_wrapper(function, self.api, self.mimetype)
+            @functools.wraps(function)
+            async def wrapper(*args, **kwargs):
+                connexion_request = self.api.get_request(*args, **kwargs)
+                while asyncio.iscoroutine(connexion_request):
+                    connexion_request = await connexion_request
 
-        else:  # pragma: 3 no cover
+                connexion_response = function(connexion_request)
+                while asyncio.iscoroutine(connexion_response):
+                    connexion_response = await connexion_response
+
+                framework_response = self.api.get_response(connexion_response, self.mimetype,
+                                                           connexion_request)
+                while asyncio.iscoroutine(framework_response):
+                    framework_response = await framework_response
+
+                return framework_response
+
+        else:  # pragma: no cover
             @functools.wraps(function)
             def wrapper(*args, **kwargs):
                 request = self.api.get_request(*args, **kwargs)

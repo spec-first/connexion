@@ -23,7 +23,7 @@ def apikey_auth(token, required_scopes):
 
 
 def get_secret(user) -> str:
-    return "You are {user} and the secret is 'wbevuec'".format(user=user)
+    return f"You are {user} and the secret is 'wbevuec'"
 
 
 if __name__ == '__main__':
