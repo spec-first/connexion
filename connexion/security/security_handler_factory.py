@@ -271,6 +271,28 @@ class AbstractSecurityHandlerFactory(abc.ABC):
 
         return wrapper
 
+    def verify_multiple_schemes(self, schemes):
+        """
+        Verifies multiple authentication schemes in AND fashion.
+        If any scheme fails, the entire authentication fails.
+
+        :param schemes: mapping scheme_name to auth function
+        :type schemes: dict
+        :rtype: types.FunctionType
+        """
+
+        def wrapper(request, required_scopes):
+            token_info = {}
+            for scheme_name, func in schemes.items():
+                result = func(request, required_scopes)
+                if result is self.no_value:
+                    return self.no_value
+                token_info[scheme_name] = result
+
+            return token_info
+
+        return wrapper
+
     @staticmethod
     def verify_none():
         """
