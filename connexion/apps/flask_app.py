@@ -10,7 +10,7 @@ from types import FunctionType  # NOQA
 
 import flask
 import werkzeug.exceptions
-from flask import json
+from flask import json, signals
 
 from ..apis.flask_api import FlaskApi
 from ..exceptions import ProblemException
@@ -40,11 +40,11 @@ class FlaskApp(AbstractApp):
 
         self.add_error_handler(ProblemException, self.common_error_handler)
 
-    @staticmethod
-    def common_error_handler(exception):
+    def common_error_handler(self, exception):
         """
         :type exception: Exception
         """
+        signals.got_request_exception.send(self.app, exception=exception)
         if isinstance(exception, ProblemException):
             response = problem(
                 status=exception.status, title=exception.title, detail=exception.detail,
