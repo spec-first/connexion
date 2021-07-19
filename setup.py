@@ -26,11 +26,11 @@ install_requires = [
     'requests>=2.9.1,<3',
     'inflection>=0.3.1,<0.6',
     'openapi-spec-validator>=0.2.4,<0.4',
-    'werkzeug>=1.0,<2.0',
+    'werkzeug>=1.0,<3',
 ]
 
 swagger_ui_require = 'swagger-ui-bundle>=0.0.2,<0.1'
-flask_require = 'flask>=1.0.4,<2'
+flask_require = 'flask>=1.0.4,<3'
 aiohttp_require = [
     'aiohttp>=2.3.10,<4',
     'aiohttp-jinja2>=0.14.0,<2'
