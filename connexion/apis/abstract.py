@@ -1,7 +1,12 @@
+"""
+This module defines an AbstractAPI, which defines a standardized interface for a Connexion API.
+"""
+
 import abc
 import logging
 import pathlib
 import sys
+import typing as t
 import warnings
 from enum import Enum
 
@@ -54,12 +59,12 @@ class AbstractAPI(metaclass=AbstractAPIMeta):
             Operation used for handling ResolveErrors
         :type resolver_error_handler: callable | None
         :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended
-        to any shadowed built-ins
+            to any shadowed built-ins
         :type pythonic_params: bool
         :param options: New style options dictionary.
         :type options: dict | None
         :param pass_context_arg_name: If not None URL request handling functions with an argument matching this name
-        will be passed the framework's request context.
+            will be passed the framework's request context.
         :type pass_context_arg_name: str | None
         """
         self.debug = debug
@@ -227,7 +232,7 @@ class AbstractAPI(metaclass=AbstractAPIMeta):
                     self._handle_add_operation_error(path, method, sys.exc_info())
 
     def _handle_add_operation_error(self, path, method, exc_info):
-        url = '{base_path}{path}'.format(base_path=self.base_path, path=path)
+        url = f'{self.base_path}{path}'
         error_msg = 'Failed to add operation for {method} {url}'.format(
             method=method.upper(),
             url=url)
@@ -293,23 +298,24 @@ class AbstractAPI(metaclass=AbstractAPIMeta):
         return framework_response
 
     @classmethod
-    def _response_from_handler(cls, response, mimetype, extra_context=None):
+    def _response_from_handler(
+            cls,
+            response: t.Union[t.Any, str, t.Tuple[str], t.Tuple[str, int], t.Tuple[str, int, dict]],
+            mimetype: str,
+            extra_context: t.Optional[dict] = None
+    ) -> t.Any:
         """
         Create a framework response from the operation handler data.
         An operation handler can return:
         - a framework response
         - a body (str / binary / dict / list), a response will be created
-            with a status code 200 by default and empty headers.
+        with a status code 200 by default and empty headers.
         - a tuple of (body: str, status_code: int)
         - a tuple of (body: str, status_code: int, headers: dict)
+
         :param response: A response from an operation handler.
-        :type response Union[Response, str, Tuple[str,], Tuple[str, int], Tuple[str, int, dict]]
         :param mimetype: The response mimetype.
-        :type mimetype: str
         :param extra_context: dict of extra details, like url, to include in logs
-        :type extra_context: Union[None, dict]
-        :return A framework response.
-        :rtype Response
         """
         if cls._is_framework_response(response):
             return response

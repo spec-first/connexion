@@ -1,12 +1,17 @@
+"""
+This module defines a Connexion specific options class to pass to the Connexion App or API.
+"""
+
 import logging
 import pathlib
 from typing import Optional  # NOQA
 
 try:
-    from swagger_ui_bundle import (swagger_ui_2_path,
-                                   swagger_ui_3_path)
+    from swagger_ui_bundle import swagger_ui_2_path, swagger_ui_3_path
 except ImportError:
     swagger_ui_2_path = swagger_ui_3_path = None
+
+from connexion.decorators.uri_parsing import AbstractURIParser
 
 MODULE_PATH = pathlib.Path(__file__).absolute().parent
 NO_UI_MSG = """The swagger_ui directory could not be found.
@@ -17,7 +22,8 @@ NO_UI_MSG = """The swagger_ui directory could not be found.
 logger = logging.getLogger("connexion.options")
 
 
-class ConnexionOptions(object):
+class ConnexionOptions:
+    """Class holding connexion specific options."""
 
     def __init__(self, options=None, oas_version=(2,)):
         self._options = {}
@@ -122,6 +128,16 @@ class ConnexionOptions(object):
         return self._options.get('swagger_ui_config', None)
 
     @property
+    def openapi_console_ui_index_template_variables(self):
+        # type: () -> dict
+        """
+        Custom variables passed to the OpenAPI Console UI template.
+
+        Default: {}
+        """
+        return self._options.get('swagger_ui_template_arguments', {})
+
+    @property
     def uri_parser_class(self):
         # type: () -> AbstractURIParser
         """
@@ -139,6 +155,4 @@ def filter_values(dictionary):
     :param dictionary:
     :return:
     """
-    return dict([(key, value)
-                 for key, value in dictionary.items()
-                 if value is not None])
+    return {key: value for key, value in dictionary.items() if value is not None}

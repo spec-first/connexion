@@ -1,4 +1,8 @@
-# Decorators to change the return type of endpoints
+"""
+This module defines a view function decorator to validate its responses.
+"""
+
+import asyncio
 import functools
 import logging
 
@@ -19,7 +23,7 @@ class ResponseValidator(BaseDecorator):
         :type operation: Operation
         :type mimetype: str
         :param validator: Validator class that should be used to validate passed data
-                          against API schema. Default is jsonschema.Draft4Validator.
+                          against API schema.
         :type validator: jsonschema.IValidator
         """
         self.operation = operation
@@ -29,7 +33,7 @@ class ResponseValidator(BaseDecorator):
     def validate_response(self, data, status_code, headers, url):
         """
         Validates the Response object based on what has been declared in the specification.
-        Ensures the response body matches the declated schema.
+        Ensures the response body matches the declared schema.
         :type data: dict
         :type status_code: int
         :type headers: dict
@@ -51,18 +55,18 @@ class ResponseValidator(BaseDecorator):
                 raise NonConformingResponseBody(message=str(e))
 
         if response_definition and response_definition.get("headers"):
-            # converting to set is needed to support python 2.7
-            response_definition_header_keys = set(response_definition.get("headers").keys())
+            required_header_keys = {k for (k, v) in response_definition.get("headers").items()
+                                    if v.get("required", False)}
             header_keys = set(headers.keys())
-            missing_keys = response_definition_header_keys - header_keys
+            missing_keys = required_header_keys - header_keys
             if missing_keys:
                 pretty_list = ', '.join(missing_keys)
                 msg = ("Keys in header don't match response specification. "
-                       "Difference: {0}").format(pretty_list)
+                       "Difference: {}").format(pretty_list)
                 raise NonConformingResponseHeaders(message=msg)
         return True
 
-    def is_json_schema_compatible(self, response_schema):
+    def is_json_schema_compatible(self, response_schema: dict) -> bool:
         """
         Verify if the specified operation responses are JSON schema
         compatible.
@@ -70,9 +74,6 @@ class ResponseValidator(BaseDecorator):
         All operations that specify a JSON schema and have content
         type "application/json" or "text/plain" can be validated using
         json_schema package.
-
-        :type response_schema: dict
-        :rtype bool
         """
         if not response_schema:
             return False
@@ -94,10 +95,15 @@ class ResponseValidator(BaseDecorator):
             return response
 
         if has_coroutine(function):
-            from .coroutine_wrappers import get_response_validator_wrapper
-            wrapper = get_response_validator_wrapper(function, _wrapper)
+            @functools.wraps(function)
+            async def wrapper(request):
+                response = function(request)
+                while asyncio.iscoroutine(response):
+                    response = await response
 
-        else:  # pragma: 3 no cover
+                return _wrapper(request, response)
+
+        else:  # pragma: no cover
             @functools.wraps(function)
             def wrapper(request):
                 response = function(request)
