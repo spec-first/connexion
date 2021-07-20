@@ -1,3 +1,2 @@
-recursive-include connexion/vendor/swagger-ui *
 include *.txt
 include *.rst
