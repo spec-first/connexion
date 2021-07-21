@@ -3,7 +3,6 @@ This module defines a Connexion specific options class to pass to the Connexion 
 """
 
 import logging
-import pathlib
 from typing import Optional  # NOQA
 
 try:
@@ -13,7 +12,6 @@ except ImportError:
 
 from connexion.decorators.uri_parsing import AbstractURIParser
 
-MODULE_PATH = pathlib.Path(__file__).absolute().parent
 NO_UI_MSG = """The swagger_ui directory could not be found.
     Please install connexion with extra install: pip install connexion[swagger-ui]
     or provide the path to your local installation by passing swagger_path=<your path>
