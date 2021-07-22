@@ -251,7 +251,7 @@ class Swagger2Operation(AbstractOperation):
         return body_parameters[0] if body_parameters else {}
 
     def _get_query_arguments(self, query, arguments, has_kwargs, sanitize):
-        query_defns = {sanitize(p["name"]): p
+        query_defns = {p["name"]: p
                        for p in self.parameters
                        if p["in"] == "query"}
         default_query_params = {k: v['default']
@@ -269,7 +269,7 @@ class Swagger2Operation(AbstractOperation):
             body = deepcopy(body_parameters[0].get('schema', {}).get('default'))
         body_name = sanitize(body_parameters[0].get('name'))
 
-        form_defns = {sanitize(p['name']): p
+        form_defns = {p['name']: p
                       for p in self.parameters
                       if p['in'] == 'formData'}
 
@@ -290,16 +290,20 @@ class Swagger2Operation(AbstractOperation):
         if form_defns and body:
             form_arguments.update(body)
         for key, value in form_arguments.items():
-            if not has_kwargs and key not in arguments:
-                logger.debug("FormData parameter '%s' not in function arguments", key)
+            sanitized_key = sanitize(key)
+            if not has_kwargs and sanitized_key not in arguments:
+                logger.debug("FormData parameter '%s' (sanitized: '%s') not in function arguments",
+                             key, sanitized_key)
             else:
-                logger.debug("FormData parameter '%s' in function arguments", key)
+                logger.debug("FormData parameter '%s' (sanitized: '%s') in function arguments",
+                             key, sanitized_key)
                 try:
                     form_defn = form_defns[key]
                 except KeyError:  # pragma: no cover
-                    logger.error(f"Function argument '{key}' not defined in specification")
+                    logger.error("Function argument '%s' (non-sanitized: %s) not defined in specification",
+                                 key, sanitized_key)
                 else:
-                    kwargs[key] = self._get_val_from_param(value, form_defn)
+                    kwargs[sanitized_key] = self._get_val_from_param(value, form_defn)
         return kwargs
 
     def _get_val_from_param(self, value, query_defn):
