@@ -4,6 +4,7 @@ Connexion requests / responses.
 """
 
 import logging
+import pathlib
 import warnings
 from typing import Any
 
@@ -296,7 +297,13 @@ class InternalHandlers:
         }
         if self.options.openapi_console_ui_config is not None:
             template_variables['configUrl'] = 'swagger-ui-config.json'
-        return flask.render_template('index.j2', **template_variables)
+
+        # Use `render_template_string` instead of `render_template` to circumvent the flask
+        # template lookup mechanism and explicitly render the template of the current blueprint.
+        # https://github.com/zalando/connexion/issues/1289#issuecomment-884105076
+        template_dir = pathlib.Path(self.options.openapi_console_ui_from_dir)
+        index_path = template_dir / 'index.j2'
+        return flask.render_template_string(index_path.read_text(), **template_variables)
 
     def console_ui_static_files(self, filename):
         """
