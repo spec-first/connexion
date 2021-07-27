@@ -184,14 +184,24 @@ class OpenAPIURIParser(AbstractURIParser):
                 form_data[k] = json.loads(form_data[k])
         return form_data
 
-    @staticmethod
-    def _make_deep_object(k, v):
+    def _make_deep_object(self, k, v):
         """ consumes keys, value pairs like (a[foo][bar], "baz")
             returns (a, {"foo": {"bar": "baz"}}}, is_deep_object)
         """
-        root_key = k.split("[", 1)[0]
-        if k == root_key:
-            return (k, v, False)
+        root_key = None
+        if k in self.param_schemas.keys():
+            return k, v, False
+        else:
+            for keys in self.param_schemas.keys():
+                if k.startswith(keys):
+                    rest = keys.replace(k, '')
+                    root_key = rest
+
+        if not root_key:
+            root_key = k.split("[", 1)[0]
+            if k == root_key:
+                return k, v, False
+
         key_path = re.findall(r'\[([^\[\]]*)\]', k)
         root = prev = node = {}
         for k in key_path:
@@ -199,7 +209,8 @@ class OpenAPIURIParser(AbstractURIParser):
             prev = node
             node = node[k]
         prev[k] = v[0]
-        return (root_key, [root], True)
+        return root_key, [root], True
+
 
     def _preprocess_deep_objects(self, query_data):
         """ deep objects provide a way of rendering nested objects using query
