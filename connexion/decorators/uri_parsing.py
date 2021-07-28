@@ -211,7 +211,6 @@ class OpenAPIURIParser(AbstractURIParser):
         prev[k] = v[0]
         return root_key, [root], True
 
-
     def _preprocess_deep_objects(self, query_data):
         """ deep objects provide a way of rendering nested objects using query
             parameters.

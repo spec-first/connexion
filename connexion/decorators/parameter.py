@@ -65,7 +65,7 @@ def parameter_to_arg(operation, function, pythonic_params=False,
     consumes = operation.consumes
 
     def sanitized(name):
-        return name and re.sub('^[^a-zA-Z_]+', '', re.sub('[^0-9a-zA-Z[_]', '', re.sub('[\[]', '_', name)))
+        return name and re.sub('^[^a-zA-Z_]+', '', re.sub('[^0-9a-zA-Z[_]', '', re.sub(r'[\[]', '_', name)))
 
     def pythonic(name):
         name = name and snake_and_shadow(name)
