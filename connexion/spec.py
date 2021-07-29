@@ -8,13 +8,13 @@ import json
 import pathlib
 from collections.abc import Mapping
 from urllib.parse import urlsplit
-import pkg_resources
 
 import jinja2
 import jsonschema
+import pkg_resources
+import yaml
 from jsonschema import Draft4Validator
 from jsonschema.validators import extend as extend_validator
-import yaml
 from openapi_spec_validator.exceptions import OpenAPIValidationError
 
 from .exceptions import InvalidSpecification
