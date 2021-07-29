@@ -79,10 +79,15 @@ class Specification(Mapping):
         """
 
     @classmethod
-    @abc.abstractmethod
     def _validate_spec(cls, spec):
         """ validate spec against schema
         """
+        try:
+            validator = OpenApiValidator(cls.openapi_schema)
+            validator.instance_validator = Draft4Validator(spec)
+            validator.validate(spec)
+        except jsonschema.exceptions.ValidationError as e:
+            raise InvalidSpecification.create_from(e)
 
     def get_path_params(self, path):
         return deep_get(self._spec, ["paths", path]).get("parameters", [])
@@ -244,15 +249,6 @@ class Swagger2Specification(Specification):
         self._raw_spec['basePath'] = base_path
         self._spec['basePath'] = base_path
 
-    @classmethod
-    def _validate_spec(cls, spec):
-        try:
-            validator = OpenApiValidator(cls.openapi_schema)
-            validator.instance_validator = Draft4Validator(spec)
-            validator.validate(spec)
-        except jsonschema.exceptions.ValidationError as e:
-            raise InvalidSpecification.create_from(e)
-
 
 class OpenAPISpecification(Specification):
     """Python interface for an OpenAPI 3 specification."""
@@ -274,15 +270,6 @@ class OpenAPISpecification(Specification):
     @property
     def components(self):
         return self._spec['components']
-
-    @classmethod
-    def _validate_spec(cls, spec):
-        try:
-            validator = OpenApiValidator(cls.openapi_schema)
-            validator.instance_validator = Draft4Validator(spec)
-            validator.validate(spec)
-        except jsonschema.exceptions.ValidationError as e:
-            raise InvalidSpecification.create_from(e)
 
     @property
     def base_path(self):
