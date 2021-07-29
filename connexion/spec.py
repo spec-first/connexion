@@ -15,17 +15,11 @@ import pkg_resources
 import yaml
 from jsonschema import Draft4Validator
 from jsonschema.validators import extend as extend_validator
-from openapi_spec_validator.exceptions import OpenAPIValidationError
 
 from .exceptions import InvalidSpecification
 from .json_schema import resolve_refs
 from .operations import OpenAPIOperation, Swagger2Operation
 from .utils import deep_get
-
-try:
-    import collections.abc as collections_abc  # python 3.3+
-except ImportError:
-    import collections as collections_abc
 
 validate_properties = Draft4Validator.VALIDATORS["properties"]
 
