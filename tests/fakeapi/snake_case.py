@@ -19,6 +19,11 @@ def get_query_shadow(list_):
     return data
 
 
+def get_camelcase(truthiness, order_by=None):
+    data = {'truthiness': truthiness, 'order_by': order_by}
+    return data
+
+
 def post_path_snake(some_id, some_other_id):
     data = {'SomeId': some_id, 'SomeOtherId': some_other_id}
     return data

@@ -164,3 +164,21 @@ paths:
           required: true
           schema:
             type: object
+  /test-get-camel-case-version:
+    get:
+      summary: Test for CamelCase version of query parameter
+      description: Test for when the CamelCase version of a query parameter is provided.
+      operationId: fakeapi.snake_case.get_camelcase
+      responses:
+        '200':
+          description: OK
+      parameters:
+      - name: truthiness
+        in: query
+        description: A test parameter, for which 'Truthiness' will be given in the request.
+        type: boolean
+        default: false
+      - name: orderBy
+        in: query
+        description: A CamelCase parameter, for which 'order_by' will be given in the request.
+        type: string
