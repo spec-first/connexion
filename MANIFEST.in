@@ -1,2 +1,3 @@
 include *.txt
 include *.rst
+recursive-include connexion/resources *.json
