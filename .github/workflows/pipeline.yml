@@ -21,9 +21,7 @@ jobs:
         pip install --upgrade pip
         pip install "tox<4" "tox-gh-actions<3" "setuptools<58" "coveralls<4"
     - name: Test with tox
-      run: |
-        mkdir -p .mypy_cache
-        tox
+      run: tox
     - name: Coveralls
       run: coveralls --service github
       env:
