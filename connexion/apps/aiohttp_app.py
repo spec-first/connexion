@@ -4,6 +4,7 @@ This module defines an AioHttpApp, a Connexion application to wrap an AioHttp ap
 
 import logging
 import os.path
+import pathlib
 import pkgutil
 import sys
 
@@ -29,7 +30,8 @@ class AioHttpApp(AbstractApp):
     def get_root_path(self):
         mod = sys.modules.get(self.import_name)
         if mod is not None and hasattr(mod, '__file__'):
-            return os.path.dirname(os.path.abspath(mod.__file__))
+            root_path = os.path.dirname(os.path.abspath(mod.__file__))
+            return pathlib.Path(root_path)
 
         loader = pkgutil.get_loader(self.import_name)
         filepath = None
@@ -40,7 +42,8 @@ class AioHttpApp(AbstractApp):
         if filepath is None:
             raise RuntimeError(f"Invalid import name '{self.import_name}'")
 
-        return os.path.dirname(os.path.abspath(filepath))
+        root_path = os.path.dirname(os.path.abspath(filepath))
+        return pathlib.Path(root_path)
 
     def set_errors_handlers(self):
         pass
