@@ -1,5 +1,6 @@
 import json
 from io import BytesIO
+from typing import List
 
 import pytest
 
@@ -43,31 +44,31 @@ def test_array_query_param(simple_app):
     headers = {'Content-type': 'application/json'}
     url = '/v1.0/test_array_csv_query_param'
     response = app_client.get(url, headers=headers)
-    array_response = json.loads(response.data.decode('utf-8', 'replace'))  # type: [str]
+    array_response: List[str] = json.loads(response.data.decode('utf-8', 'replace'))
     assert array_response == ['squash', 'banana']
     url = '/v1.0/test_array_csv_query_param?items=one,two,three'
     response = app_client.get(url, headers=headers)
-    array_response = json.loads(response.data.decode('utf-8', 'replace'))  # type: [str]
+    array_response: List[str] = json.loads(response.data.decode('utf-8', 'replace'))
     assert array_response == ['one', 'two', 'three']
     url = '/v1.0/test_array_pipes_query_param?items=1|2|3'
     response = app_client.get(url, headers=headers)
-    array_response = json.loads(response.data.decode('utf-8', 'replace'))  # type: [int]
+    array_response: List[int] = json.loads(response.data.decode('utf-8', 'replace'))
     assert array_response == [1, 2, 3]
     url = '/v1.0/test_array_unsupported_query_param?items=1;2;3'
     response = app_client.get(url, headers=headers)
-    array_response = json.loads(response.data.decode('utf-8', 'replace'))  # [str] unsupported collectionFormat
+    array_response: List[str] = json.loads(response.data.decode('utf-8', 'replace'))  # unsupported collectionFormat
     assert array_response == ["1;2;3"]
     url = '/v1.0/test_array_csv_query_param?items=A&items=B&items=C&items=D,E,F'
     response = app_client.get(url, headers=headers)
-    array_response = json.loads(response.data.decode('utf-8', 'replace'))  # type: [str] multi array with csv format
+    array_response: List[str] = json.loads(response.data.decode('utf-8', 'replace'))  # multi array with csv format
     assert array_response == ['D', 'E', 'F']
     url = '/v1.0/test_array_multi_query_param?items=A&items=B&items=C&items=D,E,F'
     response = app_client.get(url, headers=headers)
-    array_response = json.loads(response.data.decode('utf-8', 'replace'))  # type: [str] multi array with csv format
+    array_response: List[str] = json.loads(response.data.decode('utf-8', 'replace'))  # multi array with csv format
     assert array_response == ['A', 'B', 'C', 'D', 'E', 'F']
     url = '/v1.0/test_array_pipes_query_param?items=4&items=5&items=6&items=7|8|9'
     response = app_client.get(url, headers=headers)
-    array_response = json.loads(response.data.decode('utf-8', 'replace'))  # type: [int] multi array with pipes format
+    array_response: List[int] = json.loads(response.data.decode('utf-8', 'replace'))  # multi array with pipes format
     assert array_response == [7, 8, 9]
 
 
@@ -76,25 +77,25 @@ def test_array_form_param(simple_app):
     headers = {'Content-type': 'application/x-www-form-urlencoded'}
     url = '/v1.0/test_array_csv_form_param'
     response = app_client.post(url, headers=headers)
-    array_response = json.loads(response.data.decode('utf-8', 'replace'))  # type: [str]
+    array_response: List[str] = json.loads(response.data.decode('utf-8', 'replace'))
     assert array_response == ['squash', 'banana']
     url = '/v1.0/test_array_csv_form_param'
     response = app_client.post(url, headers=headers, data={"items": "one,two,three"})
-    array_response = json.loads(response.data.decode('utf-8', 'replace'))  # type: [str]
+    array_response: List[str] = json.loads(response.data.decode('utf-8', 'replace'))
     assert array_response == ['one', 'two', 'three']
     url = '/v1.0/test_array_pipes_form_param'
     response = app_client.post(url, headers=headers, data={"items": "1|2|3"})
-    array_response = json.loads(response.data.decode('utf-8', 'replace'))  # type: [int]
+    array_response: List[int] = json.loads(response.data.decode('utf-8', 'replace'))
     assert array_response == [1, 2, 3]
     url = '/v1.0/test_array_csv_form_param'
     data = 'items=A&items=B&items=C&items=D,E,F'
     response = app_client.post(url, headers=headers, data=data)
-    array_response = json.loads(response.data.decode('utf-8', 'replace'))  # type: [str] multi array with csv format
+    array_response: List[str] = json.loads(response.data.decode('utf-8', 'replace'))  # multi array with csv format
     assert array_response == ['D', 'E', 'F']
     url = '/v1.0/test_array_pipes_form_param'
     data = 'items=4&items=5&items=6&items=7|8|9'
     response = app_client.post(url, headers=headers, data=data)
-    array_response = json.loads(response.data.decode('utf-8', 'replace'))  # type: [int] multi array with pipes format
+    array_response: List[int] = json.loads(response.data.decode('utf-8', 'replace'))  # multi array with pipes format
     assert array_response == [7, 8, 9]
 
 
