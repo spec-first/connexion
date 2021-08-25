@@ -23,6 +23,7 @@ logger = logging.getLogger('connexion.app')
 class FlaskApp(AbstractApp):
     def __init__(self, import_name, server='flask', **kwargs):
         super().__init__(import_name, FlaskApi, server=server, **kwargs)
+        self.extra_files = kwargs.get("extra_files", [])
 
     def create_app(self):
         app = flask.Flask(self.import_name, **self.server_args)
@@ -64,6 +65,8 @@ class FlaskApp(AbstractApp):
     def add_api(self, specification, **kwargs):
         api = super().add_api(specification, **kwargs)
         self.app.register_blueprint(api.blueprint)
+        if isinstance(specification, (str, pathlib.Path)):
+            self.extra_files.append(specification)
         return api
 
     def add_error_handler(self, error_code, function):
@@ -101,7 +104,8 @@ class FlaskApp(AbstractApp):
 
         logger.debug('Starting %s HTTP server..', self.server, extra=vars(self))
         if self.server == 'flask':
-            self.app.run(self.host, port=self.port, debug=self.debug, **options)
+            self.app.run(self.host, port=self.port, debug=self.debug,
+                         extra_files=self.extra_files, **options)
         elif self.server == 'tornado':
             try:
                 import tornado.httpserver
