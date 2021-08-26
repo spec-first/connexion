@@ -70,6 +70,28 @@ class Resolver:
             raise ResolverError(str(e), sys.exc_info())
 
 
+class RelativeResolver(Resolver):
+    """
+    Resolves endpoint functions relative to a given root path.
+    """
+    def __init__(self, root_path, function_resolver):
+        super().__init__(function_resolver=function_resolver)
+        self.root_path = root_path
+
+    def resolve_operation_id(self, operation):
+        """Resolves the operationId relative to the root path, unless
+        x-swagger-router-controller or x-openapi-router-controller is specified.
+
+        :param operation: The operation to resolve
+        :type operation: connexion.operations.AbstractOperation
+        """
+        operation_id = operation.operation_id
+        router_controller = operation.router_controller
+        if router_controller is None:
+            return f'{self.root_path}.{operation_id}'
+        return f'{router_controller}.{operation_id}'
+
+
 class RestyResolver(Resolver):
     """
     Resolves endpoint functions using REST semantics (unless overridden by specifying operationId)
