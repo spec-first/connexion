@@ -3,6 +3,7 @@ This module contains resolvers, functions that resolves the user defined view fu
 from the operations defined in the OpenAPI spec.
 """
 
+import inspect
 import logging
 import sys
 
@@ -74,9 +75,19 @@ class RelativeResolver(Resolver):
     """
     Resolves endpoint functions relative to a given root path.
     """
-    def __init__(self, root_path, function_resolver):
+    def __init__(self, root_path, function_resolver=utils.get_function_from_name):
+        """
+        :param root_path: The root path relative to which an operationId is resolved.
+            Can also be a module.
+        :type root_path: typing.Union[str, types.ModuleType]
+        :param function_resolver: Function that resolves functions using an operationId
+        :type function_resolver: types.FunctionType
+        """
         super().__init__(function_resolver=function_resolver)
-        self.root_path = root_path
+        if inspect.ismodule(root_path):
+            self.root_path = root_path.__name__
+        else:
+            self.root_path = root_path
 
     def resolve_operation_id(self, operation):
         """Resolves the operationId relative to the root path, unless
