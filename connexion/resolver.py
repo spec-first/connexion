@@ -102,7 +102,7 @@ class RestyResolver(Resolver):
         :param default_module_name: Default module name for operations
         :type default_module_name: str
         """
-        super().__init__(self)
+        super().__init__()
         self.default_module_name = default_module_name
         self.collection_endpoint_name = collection_endpoint_name
 
@@ -113,7 +113,7 @@ class RestyResolver(Resolver):
         :type operation: connexion.operations.AbstractOperation
         """
         if operation.operation_id:
-            return super().resolve_operation_id(self, operation)
+            return super().resolve_operation_id(operation)
 
         return self.resolve_operation_id_using_rest_semantics(operation)
 
