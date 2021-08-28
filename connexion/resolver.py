@@ -73,12 +73,14 @@ class Resolver:
 
 class RelativeResolver(Resolver):
     """
-    Resolves endpoint functions relative to a given root path.
+    Resolves endpoint functions relative to a given root path or module.
     """
     def __init__(self, root_path, function_resolver=utils.get_function_from_name):
         """
         :param root_path: The root path relative to which an operationId is resolved.
-            Can also be a module.
+            Can also be a module. Has the same effect as setting
+            `x-swagger-router-controller` or `x-openapi-router-controller` equal to
+            `root_path` for every operation individually.
         :type root_path: typing.Union[str, types.ModuleType]
         :param function_resolver: Function that resolves functions using an operationId
         :type function_resolver: types.FunctionType

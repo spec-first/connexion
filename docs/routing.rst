@@ -42,6 +42,18 @@ in your operation definition, making ``operationId`` relative:
           x-openapi-router-controller: myapp.api
           operationId: hello_world
 
+If all your operations are relative, you can use the ``RelativeResolver`` class
+instead of repeating the same ``x-swagger-router-controller`` or
+``x-openapi-router-controller`` in every operation:
+
+.. code-block:: python
+
+    from connexion.resolver import RelativeResolver
+      
+    app = connexion.FlaskApp(__name__)
+    app.add_api('swagger.yaml', resolver=RelativeResolver('api'))
+
+
 Keep in mind that Connexion follows how `HTTP methods work in Flask`_
 and therefore HEAD requests will be handled by the ``operationId`` specified
 under GET in the specification. If both methods are supported,
