@@ -462,7 +462,7 @@ def test_parameters_snake_case(snake_case_app):
     assert resp.status_code == 200
     resp = app_client.post('/v1.0/test-post-query-snake?someId=123', headers=headers, data=json.dumps({"a": "test"}))
     assert resp.status_code == 200
-    resp = app_client.post('/v1.0/test-post-query-shadow?id=123', headers=headers, data=json.dumps({"a": "test"}))
+    resp = app_client.post('/v1.0/test-post-query-shadow?id=123&class=header', headers=headers, data=json.dumps({"a": "test"}))
     assert resp.status_code == 200
     resp = app_client.get('/v1.0/test-get-path-snake/123')
     assert resp.status_code == 200
