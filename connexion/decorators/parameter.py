@@ -3,9 +3,9 @@ This module defines a decorator to convert request parameters to arguments for t
 """
 
 import builtins
-import keyword
 import functools
 import inspect
+import keyword
 import logging
 import re
 from typing import Any
