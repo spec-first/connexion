@@ -43,10 +43,7 @@ def snake_and_shadow(name):
     :return:
     """
     snake = inflection.underscore(name)
-    all_reserved = []
-    all_reserved.extend(list(builtins.__dict__.keys()))
-    all_reserved.extend(keyword.kwlist)
-    if snake in all_reserved:
+    if snake in builtins.__dict__ or keyword.iskeyword(snake):
         return f"{snake}_"
     return snake
 
