@@ -179,6 +179,12 @@ paths:
           required: true
           schema:
             type: integer
+        - name: class
+          in: query
+          description: class parameter
+          required: true
+          schema:
+            type: string
       requestBody:
         content:
           application/json:

@@ -5,6 +5,7 @@ This module defines a decorator to convert request parameters to arguments for t
 import builtins
 import functools
 import inspect
+import keyword
 import logging
 import re
 from typing import Any
@@ -42,7 +43,7 @@ def snake_and_shadow(name):
     :return:
     """
     snake = inflection.underscore(name)
-    if snake in builtins.__dict__.keys():
+    if snake in builtins.__dict__ or keyword.iskeyword(snake):
         return f"{snake}_"
     return snake
 
