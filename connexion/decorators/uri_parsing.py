@@ -113,7 +113,7 @@ class AbstractURIParser(BaseDecorator, metaclass=abc.ABCMeta):
                 # multiple values in a path is impossible
                 values = [values]
 
-            if (param_schema is not None and param_schema['type'] == 'array'):
+            if param_schema and param_schema['type'] == 'array':
                 # resolve variable re-assignment, handle explode
                 values = self._resolve_param_duplicates(values, param_defn, _in)
                 # handle array styles

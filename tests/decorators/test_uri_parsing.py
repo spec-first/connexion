@@ -1,13 +1,16 @@
 import pytest
 from connexion.decorators.uri_parsing import (AlwaysMultiURIParser,
                                               FirstValueURIParser,
-                                              Swagger2URIParser)
+                                              Swagger2URIParser,
+                                              OpenAPIURIParser)
 from werkzeug.datastructures import MultiDict
 
 QUERY1 = MultiDict([("letters", "a"), ("letters", "b,c"),
                     ("letters", "d,e,f")])
 QUERY2 = MultiDict([("letters", "a"), ("letters", "b|c"),
                     ("letters", "d|e|f")])
+QUERY3 = MultiDict([("letters[eq]", "a"), ("letters[eq]", "b,c"),
+                    ("letters[eq]", ["d", "e", "f"])])
 PATH1 = {"letters": "d,e,f"}
 PATH2 = {"letters": "d|e|f"}
 CSV = "csv"
@@ -100,3 +103,25 @@ def test_uri_parser_path_params(parser_class, expected, query_in, collection_for
     p = parser_class(parameters, body_defn)
     res = p(lambda x: x)(request)
     assert res.path_params["letters"] == expected
+
+
+@pytest.mark.parametrize("parser_class, expected, query_in, collection_format", [
+        (OpenAPIURIParser, ['d', 'e', 'f'], QUERY3, {})])
+def test_uri_parser_query_params_with_square_brackets(parser_class, expected, query_in, collection_format):
+    class Request:
+        query = query_in
+        path_params = {}
+        form = {}
+
+    request = Request()
+    parameters = [
+        {"name": "letters[eq]",
+         "in": "query",
+         "type": "array",
+         "items": {"type": "string"},
+         "collectionFormat": collection_format}
+    ]
+    body_defn = {}
+    p = parser_class(parameters, body_defn)
+    res = p(lambda x: x)(request)
+    assert res.query["letters[eq]"] == expected
