@@ -134,8 +134,8 @@ class StarletteApi(AbstractAPI):
         path prefix.
         """
         base_path = self.base_path
-        if not request.path.startswith(self.base_path):
-            prefix = request.path.split(self.base_path)[0]
+        if not request.url.path.startswith(self.base_path):
+            prefix = request.url.path.split(self.base_path)[0]
             base_path = prefix + base_path
         return base_path
 
@@ -243,6 +243,7 @@ class StarletteApi(AbstractAPI):
     async def _get_swagger_ui_home(self, req):
         base_path = self._base_path_for_prefix(req)
         template_variables = {
+            'request': req,
             'openapi_spec_url': (base_path + self.options.openapi_spec_path),
             **self.options.openapi_console_ui_index_template_variables,
         }
