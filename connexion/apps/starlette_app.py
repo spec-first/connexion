@@ -86,7 +86,6 @@ class StarletteApp(AbstractApp):
                 raise Exception("uvicorn server not installed")
 
             logger.info('Listening on %s:%s..', self.host, self.port)
-            print(self.app.routes) 
             # TODO: access log
             uvicorn.run(
                 self.app, 
@@ -101,3 +100,7 @@ class StarletteApp(AbstractApp):
             #web.run_app(self.app, port=self.port, host=self.host, access_log=access_log, **options)
         else:
             raise Exception(f'Server {self.server} not recognized')
+
+
+    async def __call__(self, scope, receive, send):
+        return await self.app(scope, receive, send)
