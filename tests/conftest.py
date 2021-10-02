@@ -83,6 +83,12 @@ def aiohttp_api_spec_dir():
     return FIXTURES_FOLDER / 'aiohttp'
 
 
+@pytest.fixture(scope='session')
+def starlette_api_spec_dir():
+    return FIXTURES_FOLDER / 'starlette'
+
+
+
 @pytest.fixture
 def problem_api_spec_dir():
     return FIXTURES_FOLDER / 'problem'

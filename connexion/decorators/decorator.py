@@ -49,7 +49,6 @@ class RequestResponseDecorator(BaseDecorator):
                 connexion_request = self.api.get_request(*args, **kwargs)
                 while asyncio.iscoroutine(connexion_request):
                     connexion_request = await connexion_request
-
                 connexion_response = function(connexion_request)
                 while asyncio.iscoroutine(connexion_response):
                     connexion_response = await connexion_response

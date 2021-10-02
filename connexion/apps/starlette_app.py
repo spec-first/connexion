@@ -2,18 +2,73 @@
 This module defines an AioHttpApp, a Connexion application to wrap an AioHttp application.
 """
 
+from connexion.apis.aiohttp_api import AioHttpApi
+from http import HTTPStatus
 import logging
 import pathlib
 import pkgutil
 import sys
+import asyncio
+import traceback
+from contextlib import suppress
 
+from werkzeug.exceptions import HTTPException as werkzeug_HTTPException
 from starlette.applications import Starlette
+from starlette.exceptions import HTTPException
+from starlette.middleware import Middleware
+from starlette.middleware.errors import ServerErrorMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 
+from ..problem import problem
 from ..apis.starlette_api import StarletteApi
-from ..exceptions import ConnexionException
+from ..exceptions import ConnexionException, ProblemException
 from .abstract import AbstractApp
 
-logger = logging.getLogger('connexion.aiohttp_app')
+
+logger = logging.getLogger('connexion.starlette_app')
+
+
+def _generic_problem(http_status: HTTPStatus, exc: Exception = None):
+    extra = None
+    if exc is not None:
+        loop = asyncio.get_event_loop()
+        if loop.get_debug():
+            tb = None
+            with suppress(Exception):
+                tb = traceback.format_exc()
+            if tb:
+                extra = {"traceback": tb}
+
+    return problem(
+        status=http_status.value,
+        title=http_status.phrase,
+        detail=http_status.description,
+        ext=extra,
+    )
+
+async def _exception_handler(request, exc: Exception):
+    print("called exception handler")
+    if isinstance(exc, ProblemException):
+        response = problem(status=exc.status, detail=exc.detail, title=exc.title,
+                           type=exc.type, instance=exc.instance, headers=exc.headers, ext=exc.ext)
+    elif isinstance(exc, werkzeug_HTTPException):
+        response = problem(status=exc.code, title=exc.name, detail=exc.description)
+    elif isinstance(exc, HTTPException):
+        # Convert Starlette error messages to the error messages
+        # Connexion expects
+        _exc = HTTPStatus(exc.status_code)
+        response = problem(status=exc.status_code, title=_exc.name, detail=_exc.description)
+    elif isinstance(exc, asyncio.TimeoutError):
+        # overrides 504 from aiohttp.web_protocol.RequestHandler.start()
+        logger.debug('Request handler timed out.', exc_info=exc)
+        response = _generic_problem(HTTPStatus.GATEWAY_TIMEOUT, exc)
+    else:
+        # overrides 500 from aiohttp.web_protocol.RequestHandler.start()
+        print("caught generic!")
+        logger.exception('Error handling request', exc_info=exc)
+        response = _generic_problem(HTTPStatus.INTERNAL_SERVER_ERROR, exc)
+
+    return await StarletteApi.get_response(response)
 
 
 class StarletteApp(AbstractApp):
@@ -24,7 +79,15 @@ class StarletteApp(AbstractApp):
         self._api_added = False
 
     def create_app(self):
-        return Starlette(**self.server_args)
+        return Starlette(
+            **self.server_args,
+            exception_handlers={
+                HTTPException: _exception_handler
+            }, 
+            middleware=[
+                Middleware(ServerErrorMiddleware, handler=_exception_handler),
+            ],
+        )
 
     def get_root_path(self):
         mod = sys.modules.get(self.import_name)

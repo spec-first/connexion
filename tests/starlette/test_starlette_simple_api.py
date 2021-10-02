@@ -4,6 +4,7 @@ import pytest
 import yaml
 from connexion import StarletteApp
 from starlette.testclient import TestClient
+from urllib.parse import urlparse
 from conftest import TEST_FOLDER
 
 try:
@@ -13,9 +14,9 @@ except ImportError:
 
 
 @pytest.fixture
-def starlette_app(aiohttp_api_spec_dir):
+def starlette_app(starlette_api_spec_dir):
     app = StarletteApp(__name__, port=5001,
-                     specification_dir=aiohttp_api_spec_dir,
+                     specification_dir=starlette_api_spec_dir,
                      debug=True)
     options = {"validate_responses": True}
     app.add_api('swagger_simple.yaml', validate_responses=True, pass_context_arg_name='request_ctx', options=options)
@@ -30,11 +31,11 @@ def test_app(starlette_app):
     assert get_bye.content == b'Goodbye jsantos'
 
 
-def test_app_with_relative_path(aiohttp_api_spec_dir):
+def test_app_with_relative_path(starlette_api_spec_dir):
     # Create the app with a relative path and run the test_app testcase below.
     app = StarletteApp(__name__, port=5001,
                      specification_dir='..' /
-                                       aiohttp_api_spec_dir.relative_to(TEST_FOLDER),
+                                       starlette_api_spec_dir.relative_to(TEST_FOLDER),
                      debug=True)
     app.add_api('swagger_simple.yaml')
     app_client = TestClient(app.app)
@@ -43,10 +44,10 @@ def test_app_with_relative_path(aiohttp_api_spec_dir):
     assert get_bye.content == b'Goodbye jsantos'
 
 
-def test_swagger_json(aiohttp_api_spec_dir):
+def test_swagger_json(starlette_api_spec_dir):
     """ Verify the swagger.json file is returned for default setting passed to app. """
     app = StarletteApp(__name__, port=5001,
-                     specification_dir=aiohttp_api_spec_dir,
+                     specification_dir=starlette_api_spec_dir,
                      debug=True)
     api = app.add_api('swagger_simple.yaml')
 
@@ -58,10 +59,10 @@ def test_swagger_json(aiohttp_api_spec_dir):
     assert api.specification.raw == json_
 
 
-def test_swagger_yaml(aiohttp_api_spec_dir):
+def test_swagger_yaml(starlette_api_spec_dir):
     """ Verify the swagger.yaml file is returned for default setting passed to app. """
     app = StarletteApp(__name__, port=5001,
-                     specification_dir=aiohttp_api_spec_dir,
+                     specification_dir=starlette_api_spec_dir,
                      debug=True)
     api = app.add_api('swagger_simple.yaml')
 
@@ -73,11 +74,11 @@ def test_swagger_yaml(aiohttp_api_spec_dir):
     assert api.specification.raw == yaml.load(data_)
 
 
-def test_no_swagger_json(aiohttp_api_spec_dir):
+def test_no_swagger_json(starlette_api_spec_dir):
     """ Verify the swagger.json file is not returned when set to False when creating app. """
     options = {"swagger_json": False}
     app = StarletteApp(__name__, port=5001,
-                     specification_dir=aiohttp_api_spec_dir,
+                     specification_dir=starlette_api_spec_dir,
                      options=options,
                      debug=True)
     app.add_api('swagger_simple.yaml')
@@ -87,11 +88,11 @@ def test_no_swagger_json(aiohttp_api_spec_dir):
     assert swagger_json.status_code == 404
 
 
-def test_no_swagger_yaml(aiohttp_api_spec_dir):
+def test_no_swagger_yaml(starlette_api_spec_dir):
     """ Verify the swagger.json file is not returned when set to False when creating app. """
     options = {"swagger_json": False}
     app = StarletteApp(__name__, port=5001,
-                     specification_dir=aiohttp_api_spec_dir,
+                     specification_dir=starlette_api_spec_dir,
                      options=options,
                      debug=True)
     app.add_api('swagger_simple.yaml')
@@ -101,16 +102,16 @@ def test_no_swagger_yaml(aiohttp_api_spec_dir):
     assert spec_response.status_code == 404
 
 
-def test_swagger_ui(aiohttp_api_spec_dir):
+def test_swagger_ui(starlette_api_spec_dir):
     app = StarletteApp(__name__, port=5001,
-                     specification_dir=aiohttp_api_spec_dir,
+                     specification_dir=starlette_api_spec_dir,
                      debug=True)
     app.add_api('swagger_simple.yaml')
 
     app_client = TestClient(app.app)
     swagger_ui = app_client.get('/v1.0/ui')
     assert swagger_ui.status_code == 200
-    assert swagger_ui.url.path == '/v1.0/ui/'
+    assert urlparse(swagger_ui.url).path == '/v1.0/ui/'
     assert b'url = "/v1.0/swagger.json"' in swagger_ui.content
 
     swagger_ui = app_client.get('/v1.0/ui/')
@@ -118,12 +119,12 @@ def test_swagger_ui(aiohttp_api_spec_dir):
     assert b'url = "/v1.0/swagger.json"' in swagger_ui.content
 
 
-def test_swagger_ui_config_json(aiohttp_api_spec_dir):
+def test_swagger_ui_config_json(starlette_api_spec_dir):
     """ Verify the swagger-ui-config.json file is returned for swagger_ui_config option passed to app. """
     swagger_ui_config = {"displayOperationId": True}
     options = {"swagger_ui_config": swagger_ui_config}
     app = StarletteApp(__name__, port=5001,
-                     specification_dir=aiohttp_api_spec_dir,
+                     specification_dir=starlette_api_spec_dir,
                      options=options,
                      debug=True)
     api = app.add_api('swagger_simple.yaml')
@@ -136,10 +137,10 @@ def test_swagger_ui_config_json(aiohttp_api_spec_dir):
     assert swagger_ui_config == json.loads(json_)
 
 
-def test_no_swagger_ui_config_json(aiohttp_api_spec_dir):
+def test_no_swagger_ui_config_json(starlette_api_spec_dir):
     """ Verify the swagger-ui-config.json file is not returned when the swagger_ui_config option not passed to app. """
     app = StarletteApp(__name__, port=5001,
-                     specification_dir=aiohttp_api_spec_dir,
+                     specification_dir=starlette_api_spec_dir,
                      debug=True)
     app.add_api('swagger_simple.yaml')
 
@@ -148,9 +149,9 @@ def test_no_swagger_ui_config_json(aiohttp_api_spec_dir):
     assert swagger_ui_config_json.status_code == 404
 
 
-def test_swagger_ui_index(aiohttp_api_spec_dir):
+def test_swagger_ui_index(starlette_api_spec_dir):
     app = StarletteApp(__name__, port=5001,
-                     specification_dir=aiohttp_api_spec_dir,
+                     specification_dir=starlette_api_spec_dir,
                      debug=True)
     app.add_api('openapi_secure.yaml')
 
@@ -161,11 +162,11 @@ def test_swagger_ui_index(aiohttp_api_spec_dir):
     assert b'swagger-ui-config.json' not in swagger_ui.content
 
 
-def test_swagger_ui_index_with_config(aiohttp_api_spec_dir):
+def test_swagger_ui_index_with_config(starlette_api_spec_dir):
     swagger_ui_config = {"displayOperationId": True}
     options = {"swagger_ui_config": swagger_ui_config}
     app = StarletteApp(__name__, port=5001,
-                     specification_dir=aiohttp_api_spec_dir,
+                     specification_dir=starlette_api_spec_dir,
                      options=options,
                      debug=True)
     app.add_api('openapi_secure.yaml')
@@ -176,9 +177,9 @@ def test_swagger_ui_index_with_config(aiohttp_api_spec_dir):
     assert b'configUrl: "swagger-ui-config.json"' in swagger_ui.content
 
 
-def test_pythonic_path_param(aiohttp_api_spec_dir):
+def test_pythonic_path_param(starlette_api_spec_dir):
     app = StarletteApp(__name__, port=5001,
-                     specification_dir=aiohttp_api_spec_dir,
+                     specification_dir=starlette_api_spec_dir,
                      debug=True)
     app.add_api('openapi_simple.yaml', pythonic_params=True)
 
@@ -189,9 +190,9 @@ def test_pythonic_path_param(aiohttp_api_spec_dir):
     assert j['id_'] == 100
 
 
-def test_swagger_ui_static(aiohttp_api_spec_dir):
+def test_swagger_ui_static(starlette_api_spec_dir):
     app = StarletteApp(__name__, port=5001,
-                     specification_dir=aiohttp_api_spec_dir,
+                     specification_dir=starlette_api_spec_dir,
                      debug=True)
     app.add_api('swagger_simple.yaml')
 
@@ -204,10 +205,10 @@ def test_swagger_ui_static(aiohttp_api_spec_dir):
     assert swagger_ui.status_code == 200
 
 
-def test_no_swagger_ui(aiohttp_api_spec_dir):
+def test_no_swagger_ui(starlette_api_spec_dir):
     options = {"swagger_ui": False}
     app = StarletteApp(__name__, port=5001,
-                     specification_dir=aiohttp_api_spec_dir,
+                     specification_dir=starlette_api_spec_dir,
                      options=options, debug=True)
     app.add_api('swagger_simple.yaml')
 
@@ -216,7 +217,7 @@ def test_no_swagger_ui(aiohttp_api_spec_dir):
     assert swagger_ui.status_code == 404
 
     app2 = StarletteApp(__name__, port=5001,
-                      specification_dir=aiohttp_api_spec_dir,
+                      specification_dir=starlette_api_spec_dir,
                       debug=True)
     options = {"swagger_ui": False}
     app2.add_api('swagger_simple.yaml', options=options)
@@ -225,7 +226,7 @@ def test_no_swagger_ui(aiohttp_api_spec_dir):
     assert swagger_ui2.status_code == 404
 
 
-def test_middlewares(aiohttp_api_spec_dir):
+def test_middlewares(starlette_api_spec_dir):
     def middleware(app, handler):
         async def middleware_handler(request):
             response = (await handler(request))
@@ -236,7 +237,7 @@ def test_middlewares(aiohttp_api_spec_dir):
 
     options = {"middlewares": [middleware]}
     app = StarletteApp(__name__, port=5001,
-                     specification_dir=aiohttp_api_spec_dir,
+                     specification_dir=starlette_api_spec_dir,
                      debug=True, options=options)
     app.add_api('swagger_simple.yaml')
     app_client = TestClient(app.app)
@@ -248,7 +249,7 @@ def test_middlewares(aiohttp_api_spec_dir):
 def test_response_with_str_body(starlette_app):
     # Create the app and run the test_app testcase below.
     app_client = TestClient(starlette_app.app)
-    get_bye = app_client.get('/v1.0/aiohttp_str_response')
+    get_bye = app_client.get('/v1.0/starlette_str_response')
     assert get_bye.status_code == 200
     assert get_bye.content == b'str response'
 
@@ -256,7 +257,7 @@ def test_response_with_str_body(starlette_app):
 def test_response_with_non_str_and_non_json_body(starlette_app):
     app_client = TestClient(starlette_app.app)
     get_bye = app_client.get(
-        '/v1.0/aiohttp_non_str_non_json_response'
+        '/v1.0/starlette_non_str_non_json_response'
     )
     assert get_bye.status_code == 200
     assert get_bye.content == b'1234'
@@ -265,14 +266,14 @@ def test_response_with_non_str_and_non_json_body(starlette_app):
 def test_response_with_bytes_body(starlette_app):
     # Create the app and run the test_app testcase below.
     app_client = TestClient(starlette_app.app)
-    get_bye = app_client.get('/v1.0/aiohttp_bytes_response')
+    get_bye = app_client.get('/v1.0/starlette_bytes_response')
     assert get_bye.status_code == 200
     assert get_bye.content == b'bytes response'
 
 
 def test_validate_responses(starlette_app):
     app_client = TestClient(starlette_app.app)
-    get_bye = app_client.get('/v1.0/aiohttp_validate_responses')
+    get_bye = app_client.get('/v1.0/starlette_validate_responses')
     assert get_bye.status_code == 200
     assert get_bye.json() == {"validate": True}
 
@@ -280,7 +281,7 @@ def test_validate_responses(starlette_app):
 def test_get_users(starlette_app):
     app_client = TestClient(starlette_app.app)
     resp = app_client.get('/v1.0/users')
-    assert resp.url.path == '/v1.0/users/'  # followed redirect
+    assert urlparse(resp.url).path == '/v1.0/users/'  # followed redirect
     assert resp.status_code == 200
 
     json_data = resp.json()
@@ -297,7 +298,7 @@ def test_create_user(starlette_app):
 
 def test_access_request_context(starlette_app):
     app_client = TestClient(starlette_app.app)
-    resp = app_client.post('/v1.0/aiohttp_access_request_context/')
+    resp = app_client.post('/v1.0/starlette_access_request_context/')
     assert resp.status_code == 204
 
 
@@ -306,7 +307,7 @@ def test_query_parsing_simple(starlette_app):
 
     app_client = TestClient(starlette_app.app)
     resp = app_client.get(
-        '/v1.0/aiohttp_query_parsing_str',
+        '/v1.0/starlette_query_parsing_str',
         params={
             'query': expected_query,
         },
@@ -322,7 +323,7 @@ def test_query_parsing_array(starlette_app):
 
     app_client = TestClient(starlette_app.app)
     resp = app_client.get(
-        '/v1.0/aiohttp_query_parsing_array',
+        '/v1.0/starlette_query_parsing_array',
         params={
             'query': ','.join(expected_query),
         },
@@ -339,7 +340,7 @@ def test_query_parsing_array_multi(starlette_app):
 
     app_client = TestClient(starlette_app.app)
     resp = app_client.get(
-        '/v1.0/aiohttp_query_parsing_array_multi?%s' % query_str,
+        '/v1.0/starlette_query_parsing_array_multi?%s' % query_str,
     )
     assert resp.status_code == 200
 
@@ -349,9 +350,9 @@ def test_query_parsing_array_multi(starlette_app):
 
 if sys.version_info[0:2] >= (3, 5):
     @pytest.fixture
-    def starlette_app_async_def(aiohttp_api_spec_dir):
+    def starlette_app_async_def(starlette_api_spec_dir):
         app = StarletteApp(__name__, port=5001,
-                         specification_dir=aiohttp_api_spec_dir,
+                         specification_dir=starlette_api_spec_dir,
                          debug=True)
         app.add_api('swagger_simple_async_def.yaml', validate_responses=True)
         return app
@@ -359,6 +360,6 @@ if sys.version_info[0:2] >= (3, 5):
 
     def test_validate_responses_async_def(starlette_app_async_def):
         app_client = TestClient(starlette_app_async_def.app)
-        get_bye = app_client.get('/v1.0/aiohttp_validate_responses')
+        get_bye = app_client.get('/v1.0/starlette_validate_responses')
         assert get_bye.status_code == 200
         assert get_bye.content == b'{"validate": true}'

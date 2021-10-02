@@ -6,90 +6,21 @@ Connexion requests / responses.
 import asyncio
 import logging
 import re
-import traceback
-import typing
-from contextlib import suppress
-from http import HTTPStatus
 from urllib.parse import parse_qs
 
-import aiohttp_jinja2
-
 from starlette.templating import Jinja2Templates
-from starlette.middleware import Middleware
-from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response, RedirectResponse, PlainTextResponse
-from starlette.applications import Starlette
-from starlette.routing import BaseRoute
+from starlette.routing import Router
 from starlette.staticfiles import StaticFiles
-from aiohttp import web
-from aiohttp.web_exceptions import HTTPNotFound, HTTPPermanentRedirect
-from werkzeug.exceptions import HTTPException as werkzeug_HTTPException
 
 from connexion.apis.abstract import AbstractAPI
-from connexion.exceptions import ProblemException
 from connexion.handlers import AuthErrorHandler
 from connexion.jsonifier import JSONEncoder, Jsonifier
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
-from connexion.problem import problem
 from connexion.security import AioHttpSecurityHandlerFactory
 from connexion.utils import yamldumper
 
-logger = logging.getLogger('connexion.apis.aiohttp_api')
-
-
-def _generic_problem(http_status: HTTPStatus, exc: Exception = None):
-    extra = None
-    if exc is not None:
-        loop = asyncio.get_event_loop()
-        if loop.get_debug():
-            tb = None
-            with suppress(Exception):
-                tb = traceback.format_exc()
-            if tb:
-                extra = {"traceback": tb}
-
-    return problem(
-        status=http_status.value,
-        title=http_status.phrase,
-        detail=http_status.description,
-        ext=extra,
-    )
-
-
-class ProblemsMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request, call_next):
-        try:
-            response = await call_next(request)
-        except ProblemException as exc:
-            response = problem(status=exc.status, detail=exc.detail, title=exc.title,
-                               type=exc.type, instance=exc.instance, headers=exc.headers, ext=exc.ext)
-        except (werkzeug_HTTPException, _HttpNotFoundError) as exc:
-            response = problem(status=exc.code, title=exc.name, detail=exc.description)
-        except web.HTTPError as exc:
-            if exc.text == f"{exc.status}: {exc.reason}":
-                detail = HTTPStatus(exc.status).description
-            else:
-                detail = exc.text
-            response = problem(status=exc.status, title=exc.reason, detail=detail)
-        except (
-            web.HTTPException,  # eg raised HTTPRedirection or HTTPSuccessful
-            asyncio.CancelledError,  # skipped in default web_protocol
-        ):
-            # leave this to default handling in aiohttp.web_protocol.RequestHandler.start()
-            raise
-        except asyncio.TimeoutError as exc:
-            # overrides 504 from aiohttp.web_protocol.RequestHandler.start()
-            logger.debug('Request handler timed out.', exc_info=exc)
-            response = _generic_problem(HTTPStatus.GATEWAY_TIMEOUT, exc)
-        except Exception as exc:
-            # overrides 500 from aiohttp.web_protocol.RequestHandler.start()
-            logger.exception('Error handling request', exc_info=exc)
-            response = _generic_problem(HTTPStatus.INTERNAL_SERVER_ERROR, exc)
-
-        if isinstance(response, ConnexionResponse):
-            response = await StarletteApi.get_response(response)
-
-        return response
+logger = logging.getLogger('connexion.apis.starlette_api')
 
 
 class StarletteApi(AbstractAPI):
@@ -99,11 +30,7 @@ class StarletteApi(AbstractAPI):
         # on 301, 302, or 303
         # see https://tools.ietf.org/html/rfc7538
 
-        self.subapp: Starlette = Starlette(
-                middleware=[
-                    Middleware(ProblemsMiddleware)
-                ]
-        )
+        self.subapp: Router = Router()
 
         AbstractAPI.__init__(self, *args, **kwargs)
 
@@ -155,8 +82,8 @@ class StarletteApi(AbstractAPI):
         """
         logger.debug('Adding spec json: %s/%s', self.base_path,
                      self.options.openapi_spec_path)
-        self.subapp.router.add_route(
-            methods=('GET',),
+        self.subapp.add_route(
+            methods=['GET'],
             path=self.options.openapi_spec_path,
             endpoint=self._get_openapi_json
         )
@@ -173,8 +100,8 @@ class StarletteApi(AbstractAPI):
             self.options.openapi_spec_path[:-len("json")] + "yaml"
         logger.debug('Adding spec yaml: %s/%s', self.base_path,
                      openapi_spec_path_yaml)
-        self.subapp.router.add_route(
-            methods=('GET',),
+        self.subapp.add_route(
+            methods=['GET'],
             path=openapi_spec_path_yaml,
             endpoint=self._get_openapi_yaml
         )
@@ -206,15 +133,15 @@ class StarletteApi(AbstractAPI):
             console_ui_path + '/',
             console_ui_path + '/index.html',
         ):
-            self.subapp.router.add_route(
-                methods=('GET',),
+            self.subapp.add_route(
+                methods=['GET'],
                 path=path,
                 endpoint=self._get_swagger_ui_home
             )
 
         if self.options.openapi_console_ui_config is not None:
-            self.subapp.router.add_route(
-                methods=('GET',),
+            self.subapp.add_route(
+                methods=['GET'],
                 path=console_ui_path + '/swagger-ui-config.json',
                 endpoint=self._get_swagger_ui_config
             )
@@ -226,15 +153,15 @@ class StarletteApi(AbstractAPI):
         async def redirect(request):
             return RedirectResponse(url=self.base_path + console_ui_path + '/')
 
-        self.subapp.router.add_route(
-            methods=('GET',),
+        self.subapp.add_route(
+            methods=['GET'],
             path=console_ui_path,
             endpoint=redirect
         )
 
         # this route will match and get a permission error when trying to
         # serve index.html, so we add the redirect above.
-        self.subapp.router.mount(
+        self.subapp.mount(
             path=console_ui_path,
             app=StaticFiles(directory=str(self.options.openapi_console_ui_from_dir)),
             name="swagger_ui_static"
@@ -270,10 +197,9 @@ class StarletteApi(AbstractAPI):
             security_definitions=security_definitions
         )
         endpoint_name = f"{self._api_name}_not_found"
-        self.subapp.router.add_route(
-            '*',
-            '/{not_found_path}',
-            not_found_error.function,
+        self.subapp.add_route(
+            path='/{not_found_path}',
+            endpoint=not_found_error.function,
             name=endpoint_name
         )
 
@@ -290,16 +216,16 @@ class StarletteApi(AbstractAPI):
             StarletteApi.normalize_string(path),
             method.lower()
         )
-        self.subapp.router.add_route(
-            methods=(method,), 
+        self.subapp.add_route(
+            methods=[method], 
             path=path, 
             endpoint=handler, 
             name=endpoint_name
         )
 
         if not path.endswith('/'):
-            self.subapp.router.add_route(
-                methods=(method,), 
+            self.subapp.add_route(
+                methods=[method], 
                 path=path + '/', 
                 endpoint=handler, name=endpoint_name + '_'
             )
@@ -345,7 +271,6 @@ class StarletteApi(AbstractAPI):
         """
         while asyncio.iscoroutine(response):
             response = await response
-
         url = str(request.url) if request else ''
 
         return cls._get_response(response, mimetype=mimetype, extra_context={"url": url})
@@ -353,25 +278,24 @@ class StarletteApi(AbstractAPI):
     @classmethod
     def _is_framework_response(cls, response):
         """ Return True if `response` is a framework response class """
-        return isinstance(response, web.StreamResponse)
+        return isinstance(response, Response)
 
     @classmethod
     def _framework_to_connexion_response(cls, response, mimetype):
         """ Cast framework response class to ConnexionResponse used for schema validation """
-        body = None
-        if hasattr(response, "body"):  # StreamResponse and FileResponse don't have body
-            body = response.body
+        print(type(response))
         return ConnexionResponse(
-            status_code=response.status,
+            status_code=response.status_code,
             mimetype=mimetype,
-            content_type=response.content_type,
+            content_type=response.media_type,
             headers=response.headers,
-            body=body
+            body=response.body,
         )
 
     @classmethod
     def _connexion_to_framework_response(cls, response, mimetype, extra_context=None):
         """ Cast ConnexionResponse to framework response class """
+        print(response)
         return cls._build_response(
             mimetype=response.mimetype or mimetype,
             status_code=response.status_code,
@@ -384,10 +308,9 @@ class StarletteApi(AbstractAPI):
     @classmethod
     def _build_response(cls, data, mimetype, content_type=None, headers=None, status_code=None, extra_context=None):
         if cls._is_framework_response(data):
-            raise TypeError("Cannot return web.StreamResponse in tuple. Only raw data can be returned in tuple.")
-
+            raise TypeError("Cannot return starlette.requests.Response in tuple. Only raw data can be returned in tuple.")
+        print(data, type(data))
         data, status_code, serialized_mimetype = cls._prepare_body_and_status_code(data=data, mimetype=mimetype, status_code=status_code, extra_context=extra_context)
-
         content_type = content_type or mimetype or serialized_mimetype
 
         if isinstance(data, str):
@@ -406,17 +329,3 @@ class StarletteApi(AbstractAPI):
     @classmethod
     def _set_jsonifier(cls):
         cls.jsonifier = Jsonifier(cls=JSONEncoder)
-
-
-class _HttpNotFoundError(HTTPNotFound):
-    def __init__(self):
-        self.name = 'Not Found'
-        self.description = (
-            'The requested URL was not found on the server. '
-            'If you entered the URL manually please check your spelling and '
-            'try again.'
-        )
-        self.code = type(self).status_code
-        self.empty_body = True
-
-        HTTPNotFound.__init__(self, reason=self.name)
