@@ -2,8 +2,8 @@ import base64
 from unittest.mock import MagicMock
 
 import pytest
-from connexion import AioHttpApp
-
+from connexion import StarletteApp
+from starlette.testclient import TestClient
 
 class FakeAioHttpClientResponse:
     def __init__(self, status_code, data):
@@ -20,7 +20,7 @@ class FakeAioHttpClientResponse:
 
 
 @pytest.fixture
-def oauth_aiohttp_client(monkeypatch):
+def oauth_starlette_client(monkeypatch):
     async def fake_get(url, params=None, headers=None, timeout=None):
         """
         :type url: str
@@ -47,80 +47,80 @@ def oauth_aiohttp_client(monkeypatch):
     monkeypatch.setattr('aiohttp.ClientSession', MagicMock(return_value=client_instance))
 
 
-async def test_auth_all_paths(oauth_aiohttp_client, aiohttp_api_spec_dir, aiohttp_client):
-    app = AioHttpApp(__name__, port=5001,
-                     specification_dir=aiohttp_api_spec_dir,
+def test_auth_all_paths(starlette_api_spec_dir):
+    app = StarletteApp(__name__, port=5001,
+                     specification_dir=starlette_api_spec_dir,
                      debug=True, auth_all_paths=True)
     app.add_api('swagger_secure.yaml')
 
-    app_client = await aiohttp_client(app.app)
+    app_client = TestClient(app.app)
 
-    get_inexistent_endpoint = await app_client.get(
+    get_inexistent_endpoint = app_client.get(
         '/v1.0/does-not-exist-valid-token',
         headers={'Authorization': 'Bearer 100'}
     )
-    assert get_inexistent_endpoint.status == 404
-    assert get_inexistent_endpoint.content_type == 'application/problem+json'
+    assert get_inexistent_endpoint.status_code == 404
+    assert get_inexistent_endpoint.headers["content-type"] == 'application/problem+json'
 
-    get_inexistent_endpoint = await app_client.get(
+    get_inexistent_endpoint = app_client.get(
         '/v1.0/does-not-exist-no-token'
     )
-    assert get_inexistent_endpoint.status == 401
-    assert get_inexistent_endpoint.content_type == 'application/problem+json'
+    assert get_inexistent_endpoint.status_code == 401
+    assert get_inexistent_endpoint.headers["content-type"] == 'application/problem+json'
 
 
 @pytest.mark.parametrize('spec', ['swagger_secure.yaml', 'openapi_secure.yaml'])
-async def test_secure_app(oauth_aiohttp_client, aiohttp_api_spec_dir, aiohttp_client, spec):
+def test_secure_app(aiohttp_api_spec_dir, spec):
     """
     Test common authentication method between Swagger 2 and OpenApi 3
     """
-    app = AioHttpApp(__name__, port=5001, specification_dir=aiohttp_api_spec_dir, debug=True)
+    app = StarletteApp(__name__, port=5001, specification_dir=aiohttp_api_spec_dir, debug=True)
     app.add_api(spec)
-    app_client = await aiohttp_client(app.app)
+    app_client = TestClient(app.app)
 
-    response = await app_client.get('/v1.0/all_auth')
-    assert response.status == 401
-    assert response.content_type == 'application/problem+json'
+    response = app_client.get('/v1.0/all_auth')
+    assert response.status_code == 401
+    assert response.headers["content-type"] == 'application/problem+json'
 
-    response = await app_client.get('/v1.0/all_auth', headers={'Authorization': 'Bearer 100'})
-    assert response.status == 200
-    assert (await response.json()) == {"scope": ['myscope'], "uid": 'test-user'}
+    response = app_client.get('/v1.0/all_auth', headers={'Authorization': 'Bearer 100'})
+    assert response.status_code == 200
+    assert response.json() == {"scope": ['myscope'], "uid": 'test-user'}
 
-    response = await app_client.get('/v1.0/all_auth', headers={'authorization': 'Bearer 100'})
-    assert response.status == 200, "Authorization header in lower case should be accepted"
-    assert (await response.json()) == {"scope": ['myscope'], "uid": 'test-user'}
+    response = app_client.get('/v1.0/all_auth', headers={'authorization': 'Bearer 100'})
+    assert response.status_code == 200, "Authorization header in lower case should be accepted"
+    assert response.json() == {"scope": ['myscope'], "uid": 'test-user'}
 
-    response = await app_client.get('/v1.0/all_auth', headers={'AUTHORIZATION': 'Bearer 100'})
-    assert response.status == 200, "Authorization header in upper case should be accepted"
-    assert (await response.json()) == {"scope": ['myscope'], "uid": 'test-user'}
+    response = app_client.get('/v1.0/all_auth', headers={'AUTHORIZATION': 'Bearer 100'})
+    assert response.status_code == 200, "Authorization header in upper case should be accepted"
+    assert response.json() == {"scope": ['myscope'], "uid": 'test-user'}
 
     basic_header = 'Basic ' + base64.b64encode(b'username:username').decode('ascii')
-    response = await app_client.get('/v1.0/all_auth', headers={'Authorization': basic_header})
-    assert response.status == 200
-    assert (await response.json()) == {"uid": 'username'}
+    response = app_client.get('/v1.0/all_auth', headers={'Authorization': basic_header})
+    assert response.status_code == 200
+    assert response.json() == {"uid": 'username'}
 
     basic_header = 'Basic ' + base64.b64encode(b'username:wrong').decode('ascii')
-    response = await app_client.get('/v1.0/all_auth', headers={'Authorization': basic_header})
-    assert response.status == 401, "Wrong password should trigger unauthorized"
-    assert response.content_type == 'application/problem+json'
+    response = app_client.get('/v1.0/all_auth', headers={'Authorization': basic_header})
+    assert response.status_code == 401, "Wrong password should trigger unauthorized"
+    assert response.headers["content-type"] == 'application/problem+json'
 
-    response = await app_client.get('/v1.0/all_auth', headers={'X-API-Key': '{"foo": "bar"}'})
-    assert response.status == 200
-    assert (await response.json()) == {"foo": "bar"}
+    response = app_client.get('/v1.0/all_auth', headers={'X-API-Key': '{"foo": "bar"}'})
+    assert response.status_code == 200
+    assert response.json() == {"foo": "bar"}
 
 
-async def test_bearer_secure(aiohttp_api_spec_dir, aiohttp_client):
+def test_bearer_secure(starlette_api_spec_dir):
     """
     Test authentication method specific to OpenApi 3
     """
-    app = AioHttpApp(__name__, port=5001, specification_dir=aiohttp_api_spec_dir, debug=True)
+    app = StarletteApp(__name__, port=5001, specification_dir=starlette_api_spec_dir, debug=True)
     app.add_api('openapi_secure.yaml')
-    app_client = await aiohttp_client(app.app)
+    app_client = TestClient(app.app)
 
     bearer_header = 'Bearer {"scope": ["myscope"], "uid": "test-user"}'
-    response = await app_client.get('/v1.0/bearer_auth', headers={'Authorization': bearer_header})
-    assert response.status == 200
-    assert (await response.json()) == {"scope": ['myscope'], "uid": 'test-user'}
+    response = app_client.get('/v1.0/bearer_auth', headers={'Authorization': bearer_header})
+    assert response.status_code == 200
+    assert response.json() == {"scope": ['myscope'], "uid": 'test-user'}
 
 
 async def test_async_secure(aiohttp_api_spec_dir, aiohttp_client):
