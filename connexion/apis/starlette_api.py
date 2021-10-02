@@ -12,7 +12,7 @@ from starlette.templating import Jinja2Templates
 from starlette.responses import Response, RedirectResponse, PlainTextResponse
 from starlette.routing import Router
 from starlette.staticfiles import StaticFiles
-
+from starlette.exceptions import HTTPException
 from connexion.apis.abstract import AbstractAPI
 from connexion.handlers import AuthErrorHandler
 from connexion.jsonifier import JSONEncoder, Jsonifier
@@ -192,7 +192,7 @@ class StarletteApi(AbstractAPI):
         """
         logger.debug('Adding path not found authentication')
         not_found_error = AuthErrorHandler(
-            self, _HttpNotFoundError(),
+            self, HTTPException(status_code=404),
             security=security,
             security_definitions=security_definitions
         )
@@ -318,13 +318,20 @@ class StarletteApi(AbstractAPI):
         else:
             resp_class = Response
 
-
-        return resp_class(
+        response = resp_class(
             content=data, 
             status_code=status_code,
             media_type=serialized_mimetype,
             headers=headers
         )
+
+        # Conform to what other frameworks do by removing
+        # content-length
+        del response.headers["content-length"]
+
+        return response
+
+
 
     @classmethod
     def _set_jsonifier(cls):

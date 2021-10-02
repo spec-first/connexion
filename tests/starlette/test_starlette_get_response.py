@@ -97,7 +97,7 @@ async def test_get_response_from_string_status_headers(api):
 @pytest.mark.asyncio
 async def test_get_response_from_tuple_error(api):
     with pytest.raises(TypeError) as e:
-        await api.get_response((Response(text='foo', status=201, headers={'x-header': 'value'}), 200))
+        await api.get_response((Response(content='foo', status_code=201, headers={'x-header': 'value'}), 200))
     assert str(e.value) == "Cannot return StreamingResponse in tuple. Only raw data can be returned in tuple."
 
 
@@ -179,7 +179,7 @@ async def test_get_connexion_response_from_tuple(api):
     assert isinstance(response, ConnexionResponse)
     assert response.status_code == 201
     assert response.body == b'foo'
-    assert response.media_type == 'text/plain'
+    assert response.headers["content-type"] == 'text/plain'
     assert dict(response.headers) == {'content-type': 'text/plain; charset=utf-8', 'x-header': 'value'}
 
 
