@@ -1,4 +1,6 @@
-from connexion import AioHttpApp
+from connexion import StarletteApp
+from starlette.testclient import TestClient
+
 
 try:
     import ujson as json
@@ -6,16 +8,16 @@ except ImportError:
     import json
 
 
-async def test_swagger_json(aiohttp_api_spec_dir, aiohttp_client):
+def test_swagger_json(aiohttp_api_spec_dir):
     """ Verify the swagger.json file is returned for default setting passed to app. """
-    app = AioHttpApp(__name__, port=5001,
+    app = StarletteApp(__name__, port=5001,
                      specification_dir=aiohttp_api_spec_dir,
                      debug=True)
     app.add_api('datetime_support.yaml')
 
-    app_client = await aiohttp_client(app.app)
-    swagger_json = await app_client.get('/v1.0/openapi.json')
-    spec_data = await swagger_json.json()
+    app_client = TestClient(app.app)
+    swagger_json = app_client.get('/v1.0/openapi.json')
+    spec_data = swagger_json.json()
 
     def get_value(data, path):
         for part in path.split('.'):
@@ -33,17 +35,17 @@ async def test_swagger_json(aiohttp_api_spec_dir, aiohttp_client):
     example = get_value(spec_data, 'paths./uuid.get.responses.200.content.application/json.schema.example.value')
     assert example == 'a7b8869c-5f24-4ce0-a5d1-3e44c3663aa9'
 
-    resp = await app_client.get('/v1.0/datetime')
-    assert resp.status == 200
-    json_data = await resp.json()
+    resp = app_client.get('/v1.0/datetime')
+    assert resp.status_code == 200
+    json_data = resp.json()
     assert json_data == {'value': '2000-01-02T03:04:05.000006Z'}
 
-    resp = await app_client.get('/v1.0/date')
-    assert resp.status == 200
-    json_data = await resp.json()
+    resp = app_client.get('/v1.0/date')
+    assert resp.status_code == 200
+    json_data = resp.json()
     assert json_data == {'value': '2000-01-02'}
 
-    resp = await app_client.get('/v1.0/uuid')
-    assert resp.status == 200
-    json_data = await resp.json()
+    resp = app_client.get('/v1.0/uuid')
+    assert resp.status_code == 200
+    json_data = resp.json()
     assert json_data == {'value': 'e7ff66d0-3ec2-4c4e-bed0-6e4723c24c51'}

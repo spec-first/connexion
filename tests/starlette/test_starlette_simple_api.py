@@ -2,8 +2,8 @@ import sys
 
 import pytest
 import yaml
-from connexion import AioHttpApp
-
+from connexion import StarletteApp
+from starlette.testclient import TestClient
 from conftest import TEST_FOLDER
 
 try:
@@ -13,8 +13,8 @@ except ImportError:
 
 
 @pytest.fixture
-def aiohttp_app(aiohttp_api_spec_dir):
-    app = AioHttpApp(__name__, port=5001,
+def starlette_app(aiohttp_api_spec_dir):
+    app = StarletteApp(__name__, port=5001,
                      specification_dir=aiohttp_api_spec_dir,
                      debug=True)
     options = {"validate_responses": True}
@@ -22,211 +22,211 @@ def aiohttp_app(aiohttp_api_spec_dir):
     return app
 
 
-async def test_app(aiohttp_app, aiohttp_client):
+def test_app(starlette_app):
     # Create the app and run the test_app testcase below.
-    app_client = await aiohttp_client(aiohttp_app.app)
-    get_bye = await app_client.get('/v1.0/bye/jsantos')
-    assert get_bye.status == 200
-    assert (await get_bye.read()) == b'Goodbye jsantos'
+    app_client = TestClient(starlette_app)
+    get_bye = app_client.get('/v1.0/bye/jsantos')
+    assert get_bye.status_code == 200
+    assert get_bye.content == b'Goodbye jsantos'
 
 
-async def test_app_with_relative_path(aiohttp_api_spec_dir, aiohttp_client):
+def test_app_with_relative_path(aiohttp_api_spec_dir):
     # Create the app with a relative path and run the test_app testcase below.
-    app = AioHttpApp(__name__, port=5001,
+    app = StarletteApp(__name__, port=5001,
                      specification_dir='..' /
                                        aiohttp_api_spec_dir.relative_to(TEST_FOLDER),
                      debug=True)
     app.add_api('swagger_simple.yaml')
-    app_client = await aiohttp_client(app.app)
-    get_bye = await app_client.get('/v1.0/bye/jsantos')
-    assert get_bye.status == 200
-    assert (await get_bye.read()) == b'Goodbye jsantos'
+    app_client = TestClient(app.app)
+    get_bye = app_client.get('/v1.0/bye/jsantos')
+    assert get_bye.status_code == 200
+    assert get_bye.content == b'Goodbye jsantos'
 
 
-async def test_swagger_json(aiohttp_api_spec_dir, aiohttp_client):
+def test_swagger_json(aiohttp_api_spec_dir):
     """ Verify the swagger.json file is returned for default setting passed to app. """
-    app = AioHttpApp(__name__, port=5001,
+    app = StarletteApp(__name__, port=5001,
                      specification_dir=aiohttp_api_spec_dir,
                      debug=True)
     api = app.add_api('swagger_simple.yaml')
 
-    app_client = await aiohttp_client(app.app)
-    swagger_json = await app_client.get('/v1.0/swagger.json')
+    app_client = TestClient(app.app)
+    swagger_json = app_client.get('/v1.0/swagger.json')
 
-    assert swagger_json.status == 200
-    json_ = await swagger_json.json()
+    assert swagger_json.status_code == 200
+    json_ = swagger_json.json()
     assert api.specification.raw == json_
 
 
-async def test_swagger_yaml(aiohttp_api_spec_dir, aiohttp_client):
+def test_swagger_yaml(aiohttp_api_spec_dir):
     """ Verify the swagger.yaml file is returned for default setting passed to app. """
-    app = AioHttpApp(__name__, port=5001,
+    app = StarletteApp(__name__, port=5001,
                      specification_dir=aiohttp_api_spec_dir,
                      debug=True)
     api = app.add_api('swagger_simple.yaml')
 
-    app_client = await aiohttp_client(app.app)
-    spec_response = await app_client.get('/v1.0/swagger.yaml')
-    data_ = await spec_response.read()
+    app_client = TestClient(app.app)
+    spec_response = app_client.get('/v1.0/swagger.yaml')
+    data_ = spec_response.content
 
-    assert spec_response.status == 200
+    assert spec_response.status_code == 200
     assert api.specification.raw == yaml.load(data_)
 
 
-async def test_no_swagger_json(aiohttp_api_spec_dir, aiohttp_client):
+def test_no_swagger_json(aiohttp_api_spec_dir):
     """ Verify the swagger.json file is not returned when set to False when creating app. """
     options = {"swagger_json": False}
-    app = AioHttpApp(__name__, port=5001,
+    app = StarletteApp(__name__, port=5001,
                      specification_dir=aiohttp_api_spec_dir,
                      options=options,
                      debug=True)
     app.add_api('swagger_simple.yaml')
 
-    app_client = await aiohttp_client(app.app)
-    swagger_json = await app_client.get('/v1.0/swagger.json')  # type: flask.Response
-    assert swagger_json.status == 404
+    app_client = TestClient(app.app)
+    swagger_json = app_client.get('/v1.0/swagger.json')  # type: flask.Response
+    assert swagger_json.status_code == 404
 
 
-async def test_no_swagger_yaml(aiohttp_api_spec_dir, aiohttp_client):
+def test_no_swagger_yaml(aiohttp_api_spec_dir):
     """ Verify the swagger.json file is not returned when set to False when creating app. """
     options = {"swagger_json": False}
-    app = AioHttpApp(__name__, port=5001,
+    app = StarletteApp(__name__, port=5001,
                      specification_dir=aiohttp_api_spec_dir,
                      options=options,
                      debug=True)
     app.add_api('swagger_simple.yaml')
 
-    app_client = await aiohttp_client(app.app)
-    spec_response = await app_client.get('/v1.0/swagger.yaml')  # type: flask.Response
-    assert spec_response.status == 404
+    app_client = TestClient(app.app)
+    spec_response = app_client.get('/v1.0/swagger.yaml')  # type: flask.Response
+    assert spec_response.status_code == 404
 
 
-async def test_swagger_ui(aiohttp_api_spec_dir, aiohttp_client):
-    app = AioHttpApp(__name__, port=5001,
+def test_swagger_ui(aiohttp_api_spec_dir):
+    app = StarletteApp(__name__, port=5001,
                      specification_dir=aiohttp_api_spec_dir,
                      debug=True)
     app.add_api('swagger_simple.yaml')
 
-    app_client = await aiohttp_client(app.app)
-    swagger_ui = await app_client.get('/v1.0/ui')
-    assert swagger_ui.status == 200
+    app_client = TestClient(app.app)
+    swagger_ui = app_client.get('/v1.0/ui')
+    assert swagger_ui.status_code == 200
     assert swagger_ui.url.path == '/v1.0/ui/'
-    assert b'url = "/v1.0/swagger.json"' in (await swagger_ui.read())
+    assert b'url = "/v1.0/swagger.json"' in swagger_ui.content
 
-    swagger_ui = await app_client.get('/v1.0/ui/')
-    assert swagger_ui.status == 200
-    assert b'url = "/v1.0/swagger.json"' in (await swagger_ui.read())
+    swagger_ui = app_client.get('/v1.0/ui/')
+    assert swagger_ui.status_code == 200
+    assert b'url = "/v1.0/swagger.json"' in swagger_ui.content
 
 
-async def test_swagger_ui_config_json(aiohttp_api_spec_dir, aiohttp_client):
+def test_swagger_ui_config_json(aiohttp_api_spec_dir):
     """ Verify the swagger-ui-config.json file is returned for swagger_ui_config option passed to app. """
     swagger_ui_config = {"displayOperationId": True}
     options = {"swagger_ui_config": swagger_ui_config}
-    app = AioHttpApp(__name__, port=5001,
+    app = StarletteApp(__name__, port=5001,
                      specification_dir=aiohttp_api_spec_dir,
                      options=options,
                      debug=True)
     api = app.add_api('swagger_simple.yaml')
 
-    app_client = await aiohttp_client(app.app)
-    swagger_ui_config_json = await app_client.get('/v1.0/ui/swagger-ui-config.json')
-    json_ = await swagger_ui_config_json.read()
+    app_client = TestClient(app.app)
+    swagger_ui_config_json = app_client.get('/v1.0/ui/swagger-ui-config.json')
+    json_ = swagger_ui_config_json.content
 
-    assert swagger_ui_config_json.status == 200
+    assert swagger_ui_config_json.status_code == 200
     assert swagger_ui_config == json.loads(json_)
 
 
-async def test_no_swagger_ui_config_json(aiohttp_api_spec_dir, aiohttp_client):
+def test_no_swagger_ui_config_json(aiohttp_api_spec_dir):
     """ Verify the swagger-ui-config.json file is not returned when the swagger_ui_config option not passed to app. """
-    app = AioHttpApp(__name__, port=5001,
+    app = StarletteApp(__name__, port=5001,
                      specification_dir=aiohttp_api_spec_dir,
                      debug=True)
     app.add_api('swagger_simple.yaml')
 
-    app_client = await aiohttp_client(app.app)
-    swagger_ui_config_json = await app_client.get('/v1.0/ui/swagger-ui-config.json')
-    assert swagger_ui_config_json.status == 404
+    app_client = TestClient(app.app)
+    swagger_ui_config_json = app_client.get('/v1.0/ui/swagger-ui-config.json')
+    assert swagger_ui_config_json.status_code == 404
 
 
-async def test_swagger_ui_index(aiohttp_api_spec_dir, aiohttp_client):
-    app = AioHttpApp(__name__, port=5001,
+def test_swagger_ui_index(aiohttp_api_spec_dir):
+    app = StarletteApp(__name__, port=5001,
                      specification_dir=aiohttp_api_spec_dir,
                      debug=True)
     app.add_api('openapi_secure.yaml')
 
-    app_client = await aiohttp_client(app.app)
-    swagger_ui = await app_client.get('/v1.0/ui/index.html')
-    assert swagger_ui.status == 200
-    assert b'url: "/v1.0/openapi.json"' in (await swagger_ui.read())
-    assert b'swagger-ui-config.json' not in (await swagger_ui.read())
+    app_client = TestClient(app.app)
+    swagger_ui = app_client.get('/v1.0/ui/index.html')
+    assert swagger_ui.status_code == 200
+    assert b'url: "/v1.0/openapi.json"' in swagger_ui.content
+    assert b'swagger-ui-config.json' not in swagger_ui.content
 
 
-async def test_swagger_ui_index_with_config(aiohttp_api_spec_dir, aiohttp_client):
+def test_swagger_ui_index_with_config(aiohttp_api_spec_dir):
     swagger_ui_config = {"displayOperationId": True}
     options = {"swagger_ui_config": swagger_ui_config}
-    app = AioHttpApp(__name__, port=5001,
+    app = StarletteApp(__name__, port=5001,
                      specification_dir=aiohttp_api_spec_dir,
                      options=options,
                      debug=True)
     app.add_api('openapi_secure.yaml')
 
-    app_client = await aiohttp_client(app.app)
-    swagger_ui = await app_client.get('/v1.0/ui/index.html')
-    assert swagger_ui.status == 200
-    assert b'configUrl: "swagger-ui-config.json"' in (await swagger_ui.read())
+    app_client = TestClient(app.app)
+    swagger_ui = app_client.get('/v1.0/ui/index.html')
+    assert swagger_ui.status_code == 200
+    assert b'configUrl: "swagger-ui-config.json"' in swagger_ui.content
 
 
-async def test_pythonic_path_param(aiohttp_api_spec_dir, aiohttp_client):
-    app = AioHttpApp(__name__, port=5001,
+def test_pythonic_path_param(aiohttp_api_spec_dir):
+    app = StarletteApp(__name__, port=5001,
                      specification_dir=aiohttp_api_spec_dir,
                      debug=True)
     app.add_api('openapi_simple.yaml', pythonic_params=True)
 
-    app_client = await aiohttp_client(app.app)
-    pythonic = await app_client.get('/v1.0/pythonic/100')
-    assert pythonic.status == 200
-    j = await pythonic.json()
+    app_client = TestClient(app.app)
+    pythonic = app_client.get('/v1.0/pythonic/100')
+    assert pythonic.status_code == 200
+    j = pythonic.json()
     assert j['id_'] == 100
 
 
-async def test_swagger_ui_static(aiohttp_api_spec_dir, aiohttp_client):
-    app = AioHttpApp(__name__, port=5001,
+def test_swagger_ui_static(aiohttp_api_spec_dir):
+    app = StarletteApp(__name__, port=5001,
                      specification_dir=aiohttp_api_spec_dir,
                      debug=True)
     app.add_api('swagger_simple.yaml')
 
-    app_client = await aiohttp_client(app.app)
-    swagger_ui = await app_client.get('/v1.0/ui/lib/swagger-oauth.js')
-    assert swagger_ui.status == 200
+    app_client = TestClient(app.app)
+    swagger_ui = app_client.get('/v1.0/ui/lib/swagger-oauth.js')
+    assert swagger_ui.status_code == 200
 
-    app_client = await aiohttp_client(app.app)
-    swagger_ui = await app_client.get('/v1.0/ui/swagger-ui.min.js')
-    assert swagger_ui.status == 200
+    app_client = TestClient(app.app)
+    swagger_ui = app_client.get('/v1.0/ui/swagger-ui.min.js')
+    assert swagger_ui.status_code == 200
 
 
-async def test_no_swagger_ui(aiohttp_api_spec_dir, aiohttp_client):
+def test_no_swagger_ui(aiohttp_api_spec_dir):
     options = {"swagger_ui": False}
-    app = AioHttpApp(__name__, port=5001,
+    app = StarletteApp(__name__, port=5001,
                      specification_dir=aiohttp_api_spec_dir,
                      options=options, debug=True)
     app.add_api('swagger_simple.yaml')
 
-    app_client = await aiohttp_client(app.app)
-    swagger_ui = await app_client.get('/v1.0/ui/')
-    assert swagger_ui.status == 404
+    app_client = TestClient(app.app)
+    swagger_ui = app_client.get('/v1.0/ui/')
+    assert swagger_ui.status_code == 404
 
-    app2 = AioHttpApp(__name__, port=5001,
+    app2 = StarletteApp(__name__, port=5001,
                       specification_dir=aiohttp_api_spec_dir,
                       debug=True)
     options = {"swagger_ui": False}
     app2.add_api('swagger_simple.yaml', options=options)
-    app2_client = await aiohttp_client(app.app)
-    swagger_ui2 = await app2_client.get('/v1.0/ui/')
-    assert swagger_ui2.status == 404
+    app2_client = TestClient(app.app)
+    swagger_ui2 = app2_client.get('/v1.0/ui/')
+    assert swagger_ui2.status_code == 404
 
 
-async def test_middlewares(aiohttp_api_spec_dir, aiohttp_client):
-    async def middleware(app, handler):
+def test_middlewares(aiohttp_api_spec_dir):
+    def middleware(app, handler):
         async def middleware_handler(request):
             response = (await handler(request))
             response.body += b' middleware'
@@ -235,130 +235,130 @@ async def test_middlewares(aiohttp_api_spec_dir, aiohttp_client):
         return middleware_handler
 
     options = {"middlewares": [middleware]}
-    app = AioHttpApp(__name__, port=5001,
+    app = StarletteApp(__name__, port=5001,
                      specification_dir=aiohttp_api_spec_dir,
                      debug=True, options=options)
     app.add_api('swagger_simple.yaml')
-    app_client = await aiohttp_client(app.app)
-    get_bye = await app_client.get('/v1.0/bye/jsantos')
-    assert get_bye.status == 200
-    assert (await get_bye.read()) == b'Goodbye jsantos middleware'
+    app_client = TestClient(app.app)
+    get_bye = app_client.get('/v1.0/bye/jsantos')
+    assert get_bye.status_code == 200
+    assert get_bye.content == b'Goodbye jsantos middleware'
 
 
-async def test_response_with_str_body(aiohttp_app, aiohttp_client):
+def test_response_with_str_body(starlette_app):
     # Create the app and run the test_app testcase below.
-    app_client = await aiohttp_client(aiohttp_app.app)
-    get_bye = await app_client.get('/v1.0/aiohttp_str_response')
-    assert get_bye.status == 200
-    assert (await get_bye.read()) == b'str response'
+    app_client = TestClient(starlette_app.app)
+    get_bye = app_client.get('/v1.0/aiohttp_str_response')
+    assert get_bye.status_code == 200
+    assert get_bye.content == b'str response'
 
 
-async def test_response_with_non_str_and_non_json_body(aiohttp_app, aiohttp_client):
-    app_client = await aiohttp_client(aiohttp_app.app)
-    get_bye = await app_client.get(
+def test_response_with_non_str_and_non_json_body(starlette_app):
+    app_client = TestClient(starlette_app.app)
+    get_bye = app_client.get(
         '/v1.0/aiohttp_non_str_non_json_response'
     )
-    assert get_bye.status == 200
-    assert (await get_bye.read()) == b'1234'
+    assert get_bye.status_code == 200
+    assert get_bye.content == b'1234'
 
 
-async def test_response_with_bytes_body(aiohttp_app, aiohttp_client):
+def test_response_with_bytes_body(starlette_app):
     # Create the app and run the test_app testcase below.
-    app_client = await aiohttp_client(aiohttp_app.app)
-    get_bye = await app_client.get('/v1.0/aiohttp_bytes_response')
-    assert get_bye.status == 200
-    assert (await get_bye.read()) == b'bytes response'
+    app_client = TestClient(starlette_app.app)
+    get_bye = app_client.get('/v1.0/aiohttp_bytes_response')
+    assert get_bye.status_code == 200
+    assert get_bye.content == b'bytes response'
 
 
-async def test_validate_responses(aiohttp_app, aiohttp_client):
-    app_client = await aiohttp_client(aiohttp_app.app)
-    get_bye = await app_client.get('/v1.0/aiohttp_validate_responses')
-    assert get_bye.status == 200
-    assert (await get_bye.json()) == {"validate": True}
+def test_validate_responses(starlette_app):
+    app_client = TestClient(starlette_app.app)
+    get_bye = app_client.get('/v1.0/aiohttp_validate_responses')
+    assert get_bye.status_code == 200
+    assert get_bye.json() == {"validate": True}
 
 
-async def test_get_users(aiohttp_client, aiohttp_app):
-    app_client = await aiohttp_client(aiohttp_app.app)
-    resp = await app_client.get('/v1.0/users')
+def test_get_users(starlette_app):
+    app_client = TestClient(starlette_app.app)
+    resp = app_client.get('/v1.0/users')
     assert resp.url.path == '/v1.0/users/'  # followed redirect
-    assert resp.status == 200
+    assert resp.status_code == 200
 
-    json_data = await resp.json()
+    json_data = resp.json()
     assert json_data == \
            [{'name': 'John Doe', 'id': 1}, {'name': 'Nick Carlson', 'id': 2}]
 
 
-async def test_create_user(aiohttp_client, aiohttp_app):
-    app_client = await aiohttp_client(aiohttp_app.app)
+def test_create_user(starlette_app):
+    app_client = TestClient(starlette_app.app)
     user = {'name': 'Maksim'}
-    resp = await app_client.post('/v1.0/users', json=user, headers={'Content-type': 'application/json'})
-    assert resp.status == 201
+    resp = app_client.post('/v1.0/users', json=user, headers={'Content-type': 'application/json'})
+    assert resp.status_code == 201
 
 
-async def test_access_request_context(aiohttp_client, aiohttp_app):
-    app_client = await aiohttp_client(aiohttp_app.app)
-    resp = await app_client.post('/v1.0/aiohttp_access_request_context/')
-    assert resp.status == 204
+def test_access_request_context(starlette_app):
+    app_client = TestClient(starlette_app.app)
+    resp = app_client.post('/v1.0/aiohttp_access_request_context/')
+    assert resp.status_code == 204
 
 
-async def test_query_parsing_simple(aiohttp_client, aiohttp_app):
+def test_query_parsing_simple(starlette_app):
     expected_query = 'query'
 
-    app_client = await aiohttp_client(aiohttp_app.app)
-    resp = await app_client.get(
+    app_client = TestClient(starlette_app.app)
+    resp = app_client.get(
         '/v1.0/aiohttp_query_parsing_str',
         params={
             'query': expected_query,
         },
     )
-    assert resp.status == 200
+    assert resp.status_code == 200
 
-    json_data = await resp.json()
+    json_data = resp.json()
     assert json_data == {'query': expected_query}
 
 
-async def test_query_parsing_array(aiohttp_client, aiohttp_app):
+def test_query_parsing_array(starlette_app):
     expected_query = ['queryA', 'queryB']
 
-    app_client = await aiohttp_client(aiohttp_app.app)
-    resp = await app_client.get(
+    app_client = TestClient(starlette_app.app)
+    resp = app_client.get(
         '/v1.0/aiohttp_query_parsing_array',
         params={
             'query': ','.join(expected_query),
         },
     )
-    assert resp.status == 200
+    assert resp.status_code == 200
 
-    json_data = await resp.json()
+    json_data = resp.json()
     assert json_data == {'query': expected_query}
 
 
-async def test_query_parsing_array_multi(aiohttp_client, aiohttp_app):
+def test_query_parsing_array_multi(starlette_app):
     expected_query = ['queryA', 'queryB', 'queryC']
     query_str = '&'.join(['query=%s' % q for q in expected_query])
 
-    app_client = await aiohttp_client(aiohttp_app.app)
-    resp = await app_client.get(
+    app_client = TestClient(starlette_app.app)
+    resp = app_client.get(
         '/v1.0/aiohttp_query_parsing_array_multi?%s' % query_str,
     )
-    assert resp.status == 200
+    assert resp.status_code == 200
 
-    json_data = await resp.json()
+    json_data = resp.json()
     assert json_data == {'query': expected_query}
 
 
 if sys.version_info[0:2] >= (3, 5):
     @pytest.fixture
-    def aiohttp_app_async_def(aiohttp_api_spec_dir):
-        app = AioHttpApp(__name__, port=5001,
+    def starlette_app_async_def(aiohttp_api_spec_dir):
+        app = StarletteApp(__name__, port=5001,
                          specification_dir=aiohttp_api_spec_dir,
                          debug=True)
         app.add_api('swagger_simple_async_def.yaml', validate_responses=True)
         return app
 
 
-    async def test_validate_responses_async_def(aiohttp_app_async_def, aiohttp_client):
-        app_client = await aiohttp_client(aiohttp_app_async_def.app)
-        get_bye = await app_client.get('/v1.0/aiohttp_validate_responses')
-        assert get_bye.status == 200
-        assert (await get_bye.read()) == b'{"validate": true}'
+    def test_validate_responses_async_def(starlette_app_async_def):
+        app_client = TestClient(starlette_app_async_def.app)
+        get_bye = app_client.get('/v1.0/aiohttp_validate_responses')
+        assert get_bye.status_code == 200
+        assert get_bye.content == b'{"validate": true}'
