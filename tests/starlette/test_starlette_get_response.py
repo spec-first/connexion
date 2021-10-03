@@ -153,7 +153,7 @@ async def test_get_response_binary_no_mimetype(api):
     assert response.status_code== 200
     assert response.body == b'{"foo":"bar"}'
     assert response.media_type == 'application/octet-stream'
-    assert dict(response.headers) == {}
+    assert dict(response.headers) == {'content-type': 'application/octet-stream', 'content-length': '13'}
 
 
 @pytest.mark.asyncio
@@ -163,7 +163,7 @@ async def test_get_connexion_response_from_starlette_response(api):
     assert response.status_code == 201
     assert response.body == b'foo'
     assert response.content_type == 'text/plain'
-    assert dict(response.headers) == {'content-type': 'text/plain; charset=utf-8', 'x-header': 'value'}
+    assert dict(response.headers) == {'content-type': 'text/plain; charset=utf-8', 'x-header': 'value', 'content-length': '3'}
 
 
 @pytest.mark.asyncio
@@ -173,7 +173,7 @@ async def test_get_connexion_response_from_connexion_response(api):
     assert response.status_code == 201
     assert response.body == b'foo'
     assert response.content_type == 'text/plain'
-    assert dict(response.headers) == {'content-type': 'text/plain; charset=utf-8', 'x-header': 'value'}
+    assert dict(response.headers) == {'content-type': 'text/plain; charset=utf-8', 'x-header': 'value', 'content-length': '3'}
 
 
 @pytest.mark.asyncio
@@ -188,9 +188,12 @@ async def test_get_connexion_response_from_tuple(api):
 
 @pytest.mark.asyncio
 async def test_get_connexion_response_from_starlette_stream_response(api):
-    response = api.get_connexion_response(StreamingResponse(status=201, headers={'x-header': 'value'}))
+    async def generator():
+        return
+
+    response = api.get_connexion_response(StreamingResponse(generator(), status_code=201, headers={'x-header': 'value'}))
     assert isinstance(response, ConnexionResponse)
     assert response.status_code == 201
     assert response.body == None
-    assert response.media_type == 'application/octet-stream'
+    assert response.content_type == 'application/octet-stream'
     assert dict(response.headers) == {'x-header': 'value'}
