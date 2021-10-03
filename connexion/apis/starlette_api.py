@@ -266,12 +266,18 @@ class StarletteApi(AbstractAPI):
     @classmethod
     def _framework_to_connexion_response(cls, response, mimetype):
         """ Cast framework response class to ConnexionResponse used for schema validation """
+
+        # FileResponse and StreamingResponse do not a `body` (yet)
+        body = None
+        if hasattr(response, 'body'):
+            body = response.body
+
         return ConnexionResponse(
             status_code=response.status_code,
             mimetype=mimetype,
             content_type=response.media_type,
             headers=response.headers,
-            body=response.body,
+            body=body,
         )
 
     @classmethod

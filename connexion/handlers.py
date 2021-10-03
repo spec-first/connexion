@@ -4,7 +4,6 @@ This module defines error handlers, operations that produce proper response prob
 
 import logging
 
-from werkzeug.exceptions import HTTPException
 from .exceptions import AuthenticationProblem, ResolverProblem
 from .operations.secure import SecureOperation
 
@@ -31,8 +30,6 @@ class AuthErrorHandler(SecureOperation):
             <https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-definitions-object>`_
         :type security_definitions: dict
         """
-        if not isinstance(exception, HTTPException):
-            raise TypeError("exception is not HTTPException")
         self.exception = exception
         super().__init__(api, security, security_definitions)
 

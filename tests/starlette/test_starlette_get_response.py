@@ -23,15 +23,10 @@ async def test_get_response_from_starlette_response(api):
 
 
 @pytest.mark.asyncio
-@pytest.mark.skip()
 async def test_get_response_from_starlette_stream_response(api):
-    async def generator():
-        yield b"dummy string"
-
-    response = await api.get_response(StreamingResponse(generator(), status_code=201, headers={'x-header': 'value'}))
+    response = await api.get_response(StreamingResponse([], status_code=201, headers={'x-header': 'value'}))
     assert isinstance(response, StreamingResponse)
     assert response.status_code == 201
-    assert response.media_type == 'application/octet-stream'
     assert dict(response.headers) == {'x-header': 'value'}
 
 
@@ -158,7 +153,7 @@ async def test_get_response_binary_no_mimetype(api):
 
 @pytest.mark.asyncio
 async def test_get_connexion_response_from_starlette_response(api):
-    response = api.get_connexion_response(Response(content='foo', status_code=201, headers={'x-header': 'value'}))
+    response = api.get_connexion_response(PlainTextResponse(content='foo', status_code=201, headers={'x-header': 'value'}))
     assert isinstance(response, ConnexionResponse)
     assert response.status_code == 201
     assert response.body == b'foo'
@@ -182,18 +177,13 @@ async def test_get_connexion_response_from_tuple(api):
     assert isinstance(response, ConnexionResponse)
     assert response.status_code == 201
     assert response.body == b'foo'
-    assert response.headers["content-type"] == 'text/plain'
-    assert dict(response.headers) == {'content-type': 'text/plain; charset=utf-8', 'x-header': 'value'}
+    assert dict(response.headers) == {'content-type': 'text/plain; charset=utf-8', 'x-header': 'value', 'content-length': '3'}
 
 
 @pytest.mark.asyncio
 async def test_get_connexion_response_from_starlette_stream_response(api):
-    async def generator():
-        return
-
-    response = api.get_connexion_response(StreamingResponse(generator(), status_code=201, headers={'x-header': 'value'}))
+    response = api.get_connexion_response(StreamingResponse([], status_code=201, headers={'x-header': 'value'}))
     assert isinstance(response, ConnexionResponse)
     assert response.status_code == 201
     assert response.body == None
-    assert response.content_type == 'application/octet-stream'
     assert dict(response.headers) == {'x-header': 'value'}
