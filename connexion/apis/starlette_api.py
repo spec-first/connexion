@@ -26,11 +26,6 @@ logger = logging.getLogger("connexion.apis.starlette_api")
 
 class StarletteApi(AbstractAPI):
     def __init__(self, *args, **kwargs):
-        # NOTE we use HTTPPermanentRedirect (308) because
-        # clients sometimes turn POST requests into GET requests
-        # on 301, 302, or 303
-        # see https://tools.ietf.org/html/rfc7538
-
         self.subapp: Router = Router()
 
         AbstractAPI.__init__(self, *args, **kwargs)
@@ -38,10 +33,6 @@ class StarletteApi(AbstractAPI):
         self._templates = Jinja2Templates(
             directory=str(self.options.openapi_console_ui_from_dir)
         )
-
-        # middlewares = self.options.as_dict().get('middlewares', [])
-        # for middleware in middlewares:
-        #    self.subapp.add_middleware(middleware)
 
     @staticmethod
     def make_security_handler_factory(pass_context_arg_name):

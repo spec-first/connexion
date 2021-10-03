@@ -4,7 +4,7 @@ import pytest
 import yaml
 from connexion import StarletteApp
 from starlette.testclient import TestClient
-from starlette.responses import Response
+from starlette.responses import StreamingResponse
 from starlette.middleware import Middleware
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -234,7 +234,16 @@ def test_no_swagger_ui(starlette_api_spec_dir):
 def test_middlewares(starlette_api_spec_dir):
     class TestMiddleware(BaseHTTPMiddleware):
         async def dispatch(self, request, call_next):
-            return await call_next(request)
+            response = await call_next(request)
+
+            async def generator():
+                nonlocal response
+                async for chunk in response.body_iterator:
+                    yield chunk
+                yield b" middleware"
+
+            return StreamingResponse(generator(), status_code=response.status_code)
+
 
     options = {"middlewares": [Middleware(TestMiddleware)]}
     app = StarletteApp(__name__, port=5001,
@@ -293,7 +302,7 @@ def test_get_users(starlette_app):
 def test_create_user(starlette_app):
     app_client = TestClient(starlette_app.app)
     user = {'name': 'Maksim'}
-    resp = app_client.post('/v1.0/users', json=user, headers={'Content-type': 'application/json'})
+    resp = app_client.post('/v1.0/users', json=user, allow_redirects=True, headers={'Content-type': 'application/json'})
     assert resp.status_code == 201
 
 
