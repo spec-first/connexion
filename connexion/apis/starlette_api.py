@@ -21,7 +21,7 @@ from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.security import AioHttpSecurityHandlerFactory
 from connexion.utils import yamldumper
 
-logger = logging.getLogger('connexion.apis.starlette_api')
+logger = logging.getLogger("connexion.apis.starlette_api")
 
 
 class StarletteApi(AbstractAPI):
@@ -39,8 +39,8 @@ class StarletteApi(AbstractAPI):
             directory=str(self.options.openapi_console_ui_from_dir)
         )
 
-        #middlewares = self.options.as_dict().get('middlewares', [])
-        #for middleware in middlewares:
+        # middlewares = self.options.as_dict().get('middlewares', [])
+        # for middleware in middlewares:
         #    self.subapp.add_middleware(middleware)
 
     @staticmethod
@@ -54,7 +54,7 @@ class StarletteApi(AbstractAPI):
 
     @staticmethod
     def normalize_string(string):
-        return re.sub(r'[^a-zA-Z0-9]', '_', string.strip('/'))
+        return re.sub(r"[^a-zA-Z0-9]", "_", string.strip("/"))
 
     def _base_path_for_prefix(self, request):
         """
@@ -81,12 +81,13 @@ class StarletteApi(AbstractAPI):
         Adds openapi json to {base_path}/openapi.json
              (or {base_path}/swagger.json for swagger2)
         """
-        logger.debug('Adding spec json: %s/%s', self.base_path,
-                     self.options.openapi_spec_path)
+        logger.debug(
+            "Adding spec json: %s/%s", self.base_path, self.options.openapi_spec_path
+        )
         self.subapp.add_route(
-            methods=['GET'],
+            methods=["GET"],
             path=self.options.openapi_spec_path,
-            endpoint=self._get_openapi_json
+            endpoint=self._get_openapi_json,
         )
 
     def add_openapi_yaml(self):
@@ -97,54 +98,48 @@ class StarletteApi(AbstractAPI):
         if not self.options.openapi_spec_path.endswith("json"):
             return
 
-        openapi_spec_path_yaml = \
-            self.options.openapi_spec_path[:-len("json")] + "yaml"
-        logger.debug('Adding spec yaml: %s/%s', self.base_path,
-                     openapi_spec_path_yaml)
+        openapi_spec_path_yaml = self.options.openapi_spec_path[: -len("json")] + "yaml"
+        logger.debug("Adding spec yaml: %s/%s", self.base_path, openapi_spec_path_yaml)
         self.subapp.add_route(
-            methods=['GET'],
+            methods=["GET"],
             path=openapi_spec_path_yaml,
-            endpoint=self._get_openapi_yaml
+            endpoint=self._get_openapi_yaml,
         )
 
     async def _get_openapi_json(self, request):
         return Response(
             content=self.jsonifier.dumps(self._spec_for_prefix(request)),
             status_code=200,
-            media_type="application/json"
+            media_type="application/json",
         )
 
     async def _get_openapi_yaml(self, request):
         return Response(
             content=yamldumper(self._spec_for_prefix(request)),
             status_code=200,
-            media_type="text/yaml"
+            media_type="text/yaml",
         )
 
     def add_swagger_ui(self):
         """
         Adds swagger ui to {base_path}/ui/
         """
-        console_ui_path = self.options.openapi_console_ui_path.strip().rstrip('/')
-        logger.debug('Adding swagger-ui: %s%s/',
-                     self.base_path,
-                     console_ui_path)
+        console_ui_path = self.options.openapi_console_ui_path.strip().rstrip("/")
+        logger.debug("Adding swagger-ui: %s%s/", self.base_path, console_ui_path)
 
         for path in (
-            console_ui_path + '/',
-            console_ui_path + '/index.html',
+            console_ui_path + "/",
+            console_ui_path + "/index.html",
         ):
             self.subapp.add_route(
-                methods=['GET'],
-                path=path,
-                endpoint=self._get_swagger_ui_home
+                methods=["GET"], path=path, endpoint=self._get_swagger_ui_home
             )
 
         if self.options.openapi_console_ui_config is not None:
             self.subapp.add_route(
-                methods=['GET'],
-                path=console_ui_path + '/swagger-ui-config.json',
-                endpoint=self._get_swagger_ui_config
+                methods=["GET"],
+                path=console_ui_path + "/swagger-ui-config.json",
+                endpoint=self._get_swagger_ui_config,
             )
 
         # we have to add an explicit redirect instead of relying on the
@@ -152,31 +147,27 @@ class StarletteApi(AbstractAPI):
         # from this dir (below)
 
         async def redirect(request):
-            return RedirectResponse(url=self.base_path + console_ui_path + '/')
+            return RedirectResponse(url=self.base_path + console_ui_path + "/")
 
-        self.subapp.add_route(
-            methods=['GET'],
-            path=console_ui_path,
-            endpoint=redirect
-        )
+        self.subapp.add_route(methods=["GET"], path=console_ui_path, endpoint=redirect)
 
         # this route will match and get a permission error when trying to
         # serve index.html, so we add the redirect above.
         self.subapp.mount(
             path=console_ui_path,
             app=StaticFiles(directory=str(self.options.openapi_console_ui_from_dir)),
-            name="swagger_ui_static"
+            name="swagger_ui_static",
         )
 
     async def _get_swagger_ui_home(self, req):
         base_path = self._base_path_for_prefix(req)
         template_variables = {
-            'request': req,
-            'openapi_spec_url': (base_path + self.options.openapi_spec_path),
+            "request": req,
+            "openapi_spec_url": (base_path + self.options.openapi_spec_path),
             **self.options.openapi_console_ui_index_template_variables,
         }
         if self.options.openapi_console_ui_config is not None:
-            template_variables['configUrl'] = 'swagger-ui-config.json'
+            template_variables["configUrl"] = "swagger-ui-config.json"
 
         return self._templates.TemplateResponse("index.j2", template_variables)
 
@@ -184,51 +175,47 @@ class StarletteApi(AbstractAPI):
         return Response(
             status_code=200,
             media_type="text/json",
-            content=self.jsonifier.dumps(self.options.openapi_console_ui_config)
+            content=self.jsonifier.dumps(self.options.openapi_console_ui_config),
         )
 
     def add_auth_on_not_found(self, security, security_definitions):
         """
         Adds a 404 error handler to authenticate and only expose the 404 status if the security validation pass.
         """
-        logger.debug('Adding path not found authentication')
+        logger.debug("Adding path not found authentication")
         not_found_error = AuthErrorHandler(
-            self, NotFound(),
+            self,
+            NotFound(),
             security=security,
-            security_definitions=security_definitions
+            security_definitions=security_definitions,
         )
         endpoint_name = f"{self._api_name}_not_found"
         self.subapp.add_route(
-            path='/{not_found_path}',
+            path="/{not_found_path}",
             endpoint=not_found_error.function,
-            name=endpoint_name
+            name=endpoint_name,
         )
 
     def _add_operation_internal(self, method, path, operation):
         method = method.upper()
         operation_id = operation.operation_id or path
 
-        logger.debug('... Adding %s -> %s', method, operation_id,
-                     extra=vars(operation))
+        logger.debug("... Adding %s -> %s", method, operation_id, extra=vars(operation))
 
         handler = operation.function
-        endpoint_name = '{}_{}_{}'.format(
-            self._api_name,
-            StarletteApi.normalize_string(path),
-            method.lower()
+        endpoint_name = "{}_{}_{}".format(
+            self._api_name, StarletteApi.normalize_string(path), method.lower()
         )
         self.subapp.add_route(
-            methods=[method], 
-            path=path, 
-            endpoint=handler, 
-            name=endpoint_name
+            methods=[method], path=path, endpoint=handler, name=endpoint_name
         )
 
-        if not path.endswith('/'):
+        if not path.endswith("/"):
             self.subapp.add_route(
-                methods=[method], 
-                path=path + '/', 
-                endpoint=handler, name=endpoint_name + '_'
+                methods=[method],
+                path=path + "/",
+                endpoint=handler,
+                name=endpoint_name + "_",
             )
 
     @classmethod
@@ -240,11 +227,8 @@ class StarletteApi(AbstractAPI):
         :rtype: ConnexionRequest
         """
         url = str(req.url)
-        logger.debug('Getting data and status code',
-                     extra={'url': url})
-        # TODO
-        query = parse_qs(url)
-        headers = req.headers
+        logger.debug("Getting data and status code", extra={"url": url})
+        query = parse_qs(req.url.query)
 
         # Empty body <=> no body
         body = await req.body()
@@ -253,17 +237,19 @@ class StarletteApi(AbstractAPI):
 
         # TODO: setup `context` properly
         # TODO: setup `headers` properly
+        headers = req.headers
         # TODO: setup `path_params` properly
 
-        return ConnexionRequest(url=url,
-                                method=req.method.lower(),
-                                path_params=dict(req.path_params),
-                                query=query,
-                                headers=headers,
-                                body=body,
-                                json_getter=lambda: cls.jsonifier.loads(body),
-                                files={})
-
+        return ConnexionRequest(
+            url=url,
+            method=req.method.lower(),
+            path_params=dict(req.path_params),
+            query=query,
+            headers=headers,
+            body=body,
+            json_getter=lambda: cls.jsonifier.loads(body),
+            files={},
+        )
 
     @classmethod
     async def get_response(cls, response, mimetype=None, request=None):
@@ -275,9 +261,11 @@ class StarletteApi(AbstractAPI):
         """
         while asyncio.iscoroutine(response):
             response = await response
-        url = str(request.url) if request else ''
+        url = str(request.url) if request else ""
 
-        return cls._get_response(response, mimetype=mimetype, extra_context={"url": url})
+        return cls._get_response(
+            response, mimetype=mimetype, extra_context={"url": url}
+        )
 
     @classmethod
     def _is_framework_response(cls, response):
@@ -308,17 +296,32 @@ class StarletteApi(AbstractAPI):
         )
 
     @classmethod
-    def _build_response(cls, data, mimetype, content_type=None, headers=None, status_code=None, extra_context=None):
+    def _build_response(
+        cls,
+        data,
+        mimetype,
+        content_type=None,
+        headers=None,
+        status_code=None,
+        extra_context=None,
+    ):
         if cls._is_framework_response(data):
-            raise TypeError("Cannot return starlette.requests.Response in tuple. Only raw data can be returned in tuple.")
-        data, status_code, serialized_mimetype = cls._prepare_body_and_status_code(data=data, mimetype=mimetype, status_code=status_code, extra_context=extra_context)
+            raise TypeError(
+                "Cannot return starlette.requests.Response in tuple. Only raw data can be returned in tuple."
+            )
+        data, status_code, serialized_mimetype = cls._prepare_body_and_status_code(
+            data=data,
+            mimetype=mimetype,
+            status_code=status_code,
+            extra_context=extra_context,
+        )
         content_type = content_type or mimetype or serialized_mimetype
 
         response = Response(
-            content=data, 
+            content=data,
             status_code=status_code,
             media_type=serialized_mimetype,
-            headers=headers
+            headers=headers,
         )
 
         # Conform to what other frameworks do by removing
@@ -326,8 +329,6 @@ class StarletteApi(AbstractAPI):
         del response.headers["content-length"]
 
         return response
-
-
 
     @classmethod
     def _set_jsonifier(cls):
