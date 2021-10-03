@@ -106,12 +106,12 @@ class StarletteApp(AbstractApp):
         self._api_added = False
 
     def create_app(self):
-        return Starlette(
-            **self.server_args,
-            middleware=[
-                Middleware(ConnexionStarletteErrorMiddleware),
-            ],
-        )
+        options = self.options.as_dict()
+
+        middlewares = [Middleware(ConnexionStarletteErrorMiddleware)]
+        middlewares.extend(options.get("middlewares", []))
+
+        return Starlette(**self.server_args, middleware=middlewares)
 
     def get_root_path(self):
         mod = sys.modules.get(self.import_name)

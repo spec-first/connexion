@@ -4,6 +4,11 @@ import pytest
 import yaml
 from connexion import StarletteApp
 from starlette.testclient import TestClient
+from starlette.responses import Response
+from starlette.middleware import Middleware
+from starlette.middleware.base import BaseHTTPMiddleware
+
+
 from urllib.parse import urlparse
 from conftest import TEST_FOLDER
 
@@ -227,15 +232,11 @@ def test_no_swagger_ui(starlette_api_spec_dir):
 
 
 def test_middlewares(starlette_api_spec_dir):
-    def middleware(app, handler):
-        async def middleware_handler(request):
-            response = (await handler(request))
-            response.body += b' middleware'
-            return response
+    class TestMiddleware(BaseHTTPMiddleware):
+        async def dispatch(self, request, call_next):
+            return await call_next(request)
 
-        return middleware_handler
-
-    options = {"middlewares": [middleware]}
+    options = {"middlewares": [Middleware(TestMiddleware)]}
     app = StarletteApp(__name__, port=5001,
                      specification_dir=starlette_api_spec_dir,
                      debug=True, options=options)
