@@ -27,9 +27,8 @@ def test_app_run(uvicorn_app_mock, starlette_api_spec_dir):
                      specification_dir=starlette_api_spec_dir,
                      debug=True)
     app.run(use_default_access_log=True)
-    logger = logging.getLogger('connexion.aiohttp_app')
     assert uvicorn_app_mock.call_args_list == [
-        mock.call(app.app, port=5001, host='0.0.0.0', access_log=logger)
+        mock.call(app.app, port=5001, host='0.0.0.0')
     ]
 
 
@@ -39,7 +38,7 @@ def test_app_run_new_port(uvicorn_app_mock, starlette_api_spec_dir):
                      debug=True)
     app.run(port=5002)
     assert uvicorn_app_mock.call_args_list == [
-        mock.call(app.app, port=5002, host='0.0.0.0', access_log=None)
+        mock.call(app.app, port=5002, host='0.0.0.0')
     ]
 
 
@@ -49,7 +48,7 @@ def test_app_run_default_port(uvicorn_app_mock, starlette_api_spec_dir):
                      debug=True)
     app.run()
     assert uvicorn_app_mock.call_args_list == [
-        mock.call(app.app, port=5000, host='0.0.0.0', access_log=None)
+        mock.call(app.app, port=5000, host='0.0.0.0')
     ]
 
 
@@ -59,18 +58,7 @@ def test_app_run_debug(uvicorn_app_mock, starlette_api_spec_dir):
     app.add_api('swagger_simple.yaml')
     app.run(debug=True)
     assert uvicorn_app_mock.call_args_list == [
-        mock.call(app.app, port=5001, host='0.0.0.0', access_log=None)
-    ]
-
-
-def test_app_run_access_log(uvicorn_app_mock, starlette_api_spec_dir):
-    app = StarletteApp(__name__, port=5001,
-                     specification_dir=starlette_api_spec_dir,
-                     debug=True)
-    logger = logging.getLogger('connexion.aiohttp_app')
-    app.run(access_log=logger)
-    assert uvicorn_app_mock.call_args_list == [
-        mock.call(app.app, port=5001, host='0.0.0.0', access_log=logger)
+        mock.call(app.app, port=5001, host='0.0.0.0')
     ]
 
 
@@ -116,20 +104,6 @@ def test_app_get_root_path_invalid(sys_modules_mock, starlette_api_spec_dir):
                    specification_dir=starlette_api_spec_dir)
 
     assert exc_info.value.args == ("Invalid import name 'error__'",)
-
-
-def test_app_with_empty_base_path_error(starlette_api_spec_dir):
-    spec_dir = '..' / starlette_api_spec_dir.relative_to(TEST_FOLDER)
-    app = StarletteApp(__name__, port=5001,
-                     specification_dir=spec_dir,
-                     debug=True)
-    with pytest.raises(ConnexionException) as exc_info:
-        app.add_api('swagger_empty_base_path.yaml')
-
-    assert exc_info.value.args == (
-        "aiohttp doesn't allow to set empty base_path ('/'), "
-        "use non-empty instead, e.g /api",
-    )
 
 
 def test_app_with_empty_base_path_and_only_one_api(starlette_api_spec_dir):
