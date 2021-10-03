@@ -36,17 +36,23 @@ aiohttp_require = [
     'aiohttp-jinja2>=0.14.0,<2'
 ]
 
+starlette_require = [
+    'starlette>=0.16'
+]
+
 tests_require = [
     'decorator>=5,<6',
     'pytest>=6,<7',
     'pytest-cov>=2,<3',
     'testfixtures>=6,<7',
     flask_require,
-    swagger_ui_require
+    swagger_ui_require,
+    starlette_require
 ]
 
 tests_require.extend(aiohttp_require)
 tests_require.append('pytest-aiohttp')
+tests_require.append('pytest-asyncio')
 tests_require.append('aiohttp-remotes')
 
 docs_require = [
@@ -103,6 +109,7 @@ setup(
         'flask': flask_require,
         'swagger-ui': swagger_ui_require,
         'aiohttp': aiohttp_require,
+        'starlette': starlette_require,
         'docs': docs_require
     },
     cmdclass={'test': PyTest},
