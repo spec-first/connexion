@@ -1,7 +1,7 @@
 import asyncio
 
 import pytest
-from connexion import AioHttpApp
+from connexion import StarletteApp
 from connexion.apis.aiohttp_api import HTTPStatus
 
 import aiohttp.test_utils
@@ -13,7 +13,7 @@ def is_valid_problem_json(json_body):
 
 @pytest.fixture
 def aiohttp_app(problem_api_spec_dir):
-    app = AioHttpApp(__name__, port=5001,
+    app = StarletteApp(__name__, port=5001,
                      specification_dir=problem_api_spec_dir,
                      debug=True)
     options = {"validate_responses": True}

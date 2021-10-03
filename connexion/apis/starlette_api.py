@@ -298,7 +298,7 @@ class StarletteApi(AbstractAPI):
     ):
         if cls._is_framework_response(data):
             raise TypeError(
-                "Cannot return starlette.requests.Response in tuple. Only raw data can be returned in tuple."
+                "Cannot return starlette.responses.Response in tuple. Only raw data can be returned in tuple."
             )
         data, status_code, serialized_mimetype = cls._prepare_body_and_status_code(
             data=data,
@@ -306,18 +306,21 @@ class StarletteApi(AbstractAPI):
             status_code=status_code,
             extra_context=extra_context,
         )
+
         content_type = content_type or mimetype or serialized_mimetype
+
+        if content_type is None:
+            if isinstance(data, str):
+                content_type = "text/plain"
+            elif isinstance(data, bytes):
+                content_type = "application/octet-stream"
 
         response = Response(
             content=data,
             status_code=status_code,
-            media_type=serialized_mimetype,
+            media_type=content_type,
             headers=headers,
         )
-
-        # Conform to what other frameworks do by removing
-        # content-length
-        del response.headers["content-length"]
 
         return response
 
