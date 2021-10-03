@@ -247,8 +247,8 @@ class StarletteApi(AbstractAPI):
         """Get response.
         This method is used in the lifecycle decorators
 
-        :type response: aiohttp.web.StreamResponse | (Any,) | (Any, int) | (Any, dict) | (Any, int, dict)
-        :rtype: aiohttp.web.Response
+        :type response: starlette.responses.Response | (Any,) | (Any, int) | (Any, dict) | (Any, int, dict)
+        :rtype: starlette.responses.Response
         """
         while asyncio.iscoroutine(response):
             response = await response
@@ -315,14 +315,12 @@ class StarletteApi(AbstractAPI):
             elif isinstance(data, bytes):
                 content_type = "application/octet-stream"
 
-        response = Response(
+        return Response(
             content=data,
             status_code=status_code,
             media_type=content_type,
             headers=headers,
         )
-
-        return response
 
     @classmethod
     def _set_jsonifier(cls):
