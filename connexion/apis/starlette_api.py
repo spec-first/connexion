@@ -8,11 +8,12 @@ import logging
 import re
 from urllib.parse import parse_qs
 
+from werkzeug.exceptions import HTTPException as werkzeug_HTTPException, NotFound
+
 from starlette.templating import Jinja2Templates
 from starlette.responses import Response, RedirectResponse, PlainTextResponse
 from starlette.routing import Router
 from starlette.staticfiles import StaticFiles
-from starlette.exceptions import HTTPException
 from connexion.apis.abstract import AbstractAPI
 from connexion.handlers import AuthErrorHandler
 from connexion.jsonifier import JSONEncoder, Jsonifier
@@ -192,7 +193,7 @@ class StarletteApi(AbstractAPI):
         """
         logger.debug('Adding path not found authentication')
         not_found_error = AuthErrorHandler(
-            self, HTTPException(status_code=404),
+            self, NotFound(),
             security=security,
             security_definitions=security_definitions
         )
@@ -245,11 +246,14 @@ class StarletteApi(AbstractAPI):
         query = parse_qs(url)
         headers = req.headers
 
-        _body = await req.body()
-        if _body:
-            body = _body
-        else:
+        # Empty body <=> no body
+        body = await req.body()
+        if not body:
             body = None
+
+        # TODO: setup `context` properly
+        # TODO: setup `headers` properly
+        # TODO: setup `path_params` properly
 
         return ConnexionRequest(url=url,
                                 method=req.method.lower(),
@@ -258,8 +262,8 @@ class StarletteApi(AbstractAPI):
                                 headers=headers,
                                 body=body,
                                 json_getter=lambda: cls.jsonifier.loads(body),
-                                files={},
-                                context=req)
+                                files={})
+
 
     @classmethod
     async def get_response(cls, response, mimetype=None, request=None):
@@ -283,7 +287,6 @@ class StarletteApi(AbstractAPI):
     @classmethod
     def _framework_to_connexion_response(cls, response, mimetype):
         """ Cast framework response class to ConnexionResponse used for schema validation """
-        print(type(response))
         return ConnexionResponse(
             status_code=response.status_code,
             mimetype=mimetype,
@@ -295,7 +298,6 @@ class StarletteApi(AbstractAPI):
     @classmethod
     def _connexion_to_framework_response(cls, response, mimetype, extra_context=None):
         """ Cast ConnexionResponse to framework response class """
-        print(response)
         return cls._build_response(
             mimetype=response.mimetype or mimetype,
             status_code=response.status_code,
@@ -309,16 +311,10 @@ class StarletteApi(AbstractAPI):
     def _build_response(cls, data, mimetype, content_type=None, headers=None, status_code=None, extra_context=None):
         if cls._is_framework_response(data):
             raise TypeError("Cannot return starlette.requests.Response in tuple. Only raw data can be returned in tuple.")
-        print(data, type(data))
         data, status_code, serialized_mimetype = cls._prepare_body_and_status_code(data=data, mimetype=mimetype, status_code=status_code, extra_context=extra_context)
         content_type = content_type or mimetype or serialized_mimetype
 
-        if isinstance(data, str):
-            resp_class = PlainTextResponse
-        else:
-            resp_class = Response
-
-        response = resp_class(
+        response = Response(
             content=data, 
             status_code=status_code,
             media_type=serialized_mimetype,

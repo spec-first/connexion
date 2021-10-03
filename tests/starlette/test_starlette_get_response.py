@@ -98,7 +98,7 @@ async def test_get_response_from_string_status_headers(api):
 async def test_get_response_from_tuple_error(api):
     with pytest.raises(TypeError) as e:
         await api.get_response((Response(content='foo', status_code=201, headers={'x-header': 'value'}), 200))
-    assert str(e.value) == "Cannot return StreamingResponse in tuple. Only raw data can be returned in tuple."
+    assert str(e.value) == "Cannot return starlette.responses.Response in tuple. Only raw data can be returned in tuple."
 
 
 @pytest.mark.asyncio

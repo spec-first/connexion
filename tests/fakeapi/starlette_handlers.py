@@ -91,7 +91,7 @@ async def starlette_bearer_auth(token_info):
     return await starlette_token_info(token_info)
 
 
-async def aiohttp_async_bearer_auth(token_info):
+async def starlette_async_bearer_auth(token_info):
     return await starlette_token_info(token_info)
 
 

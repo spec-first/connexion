@@ -20,7 +20,7 @@ class FakeAioHttpClientResponse:
 
 
 @pytest.fixture
-def oauth_starlette_client(monkeypatch):
+def oauth_aiohttp_client(monkeypatch):
     async def fake_get(url, params=None, headers=None, timeout=None):
         """
         :type url: str
@@ -47,7 +47,7 @@ def oauth_starlette_client(monkeypatch):
     monkeypatch.setattr('aiohttp.ClientSession', MagicMock(return_value=client_instance))
 
 
-def test_auth_all_paths(starlette_api_spec_dir):
+def test_auth_all_paths(oauth_aiohttp_client, starlette_api_spec_dir):
     app = StarletteApp(__name__, port=5001,
                      specification_dir=starlette_api_spec_dir,
                      debug=True, auth_all_paths=True)
@@ -70,11 +70,11 @@ def test_auth_all_paths(starlette_api_spec_dir):
 
 
 @pytest.mark.parametrize('spec', ['swagger_secure.yaml', 'openapi_secure.yaml'])
-def test_secure_app(aiohttp_api_spec_dir, spec):
+def test_secure_app(oauth_aiohttp_client, starlette_api_spec_dir, spec):
     """
     Test common authentication method between Swagger 2 and OpenApi 3
     """
-    app = StarletteApp(__name__, port=5001, specification_dir=aiohttp_api_spec_dir, debug=True)
+    app = StarletteApp(__name__, port=5001, specification_dir=starlette_api_spec_dir, debug=True)
     app.add_api(spec)
     app_client = TestClient(app.app)
 
@@ -123,39 +123,39 @@ def test_bearer_secure(starlette_api_spec_dir):
     assert response.json() == {"scope": ['myscope'], "uid": 'test-user'}
 
 
-async def test_async_secure(aiohttp_api_spec_dir, aiohttp_client):
-    app = AioHttpApp(__name__, port=5001, specification_dir=aiohttp_api_spec_dir, debug=True)
+def test_async_secure(starlette_api_spec_dir):
+    app = StarletteApp(__name__, port=5001, specification_dir=starlette_api_spec_dir, debug=True)
     app.add_api('openapi_secure.yaml', pass_context_arg_name='request')
-    app_client = await aiohttp_client(app.app)
+    app_client = TestClient(app.app)
 
-    response = await app_client.get('/v1.0/async_auth')
-    assert response.status == 401
-    assert response.content_type == 'application/problem+json'
+    response = app_client.get('/v1.0/async_auth')
+    assert response.status_code == 401
+    assert response.headers["content-type"] == 'application/problem+json'
 
     bearer_header = 'Bearer {"scope": ["myscope"], "uid": "test-user"}'
-    response = await app_client.get('/v1.0/async_auth', headers={'Authorization': bearer_header})
-    assert response.status == 200
-    assert (await response.json()) == {"scope": ['myscope'], "uid": 'test-user'}
+    response = app_client.get('/v1.0/async_auth', headers={'Authorization': bearer_header})
+    assert response.status_code == 200
+    assert response.json() == {"scope": ['myscope'], "uid": 'test-user'}
 
     bearer_header = 'Bearer {"scope": ["myscope", "other_scope"], "uid": "test-user"}'
-    response = await app_client.get('/v1.0/async_auth', headers={'Authorization': bearer_header})
-    assert response.status == 403, "async_scope_validation should deny access if scopes are not strictly the same"
+    response = app_client.get('/v1.0/async_auth', headers={'Authorization': bearer_header})
+    assert response.status_code == 403, "async_scope_validation should deny access if scopes are not strictly the same"
 
     basic_header = 'Basic ' + base64.b64encode(b'username:username').decode('ascii')
-    response = await app_client.get('/v1.0/async_auth', headers={'Authorization': basic_header})
-    assert response.status == 200
-    assert (await response.json()) == {"uid": 'username'}
+    response = app_client.get('/v1.0/async_auth', headers={'Authorization': basic_header})
+    assert response.status_code == 200
+    assert response.json() == {"uid": 'username'}
 
     basic_header = 'Basic ' + base64.b64encode(b'username:wrong').decode('ascii')
-    response = await app_client.get('/v1.0/async_auth', headers={'Authorization': basic_header})
-    assert response.status == 401, "Wrong password should trigger unauthorized"
-    assert response.content_type == 'application/problem+json'
+    response = app_client.get('/v1.0/async_auth', headers={'Authorization': basic_header})
+    assert response.status_code == 401, "Wrong password should trigger unauthorized"
+    assert response.headers["content-type"] == 'application/problem+json'
 
-    response = await app_client.get('/v1.0/all_auth', headers={'X-API-Key': '{"foo": "bar"}'})
-    assert response.status == 200
-    assert (await response.json()) == {"foo": "bar"}
+    response = app_client.get('/v1.0/all_auth', headers={'X-API-Key': '{"foo": "bar"}'})
+    assert response.status_code == 200
+    assert response.json() == {"foo": "bar"}
 
     bearer_header = 'Bearer {"scope": ["myscope"], "uid": "test-user"}'
-    response = await app_client.get('/v1.0/async_bearer_auth', headers={'Authorization': bearer_header})
-    assert response.status == 200
-    assert (await response.json()) == {"scope": ['myscope'], "uid": 'test-user'}
+    response = app_client.get('/v1.0/async_bearer_auth', headers={'Authorization': bearer_header})
+    assert response.status_code == 200
+    assert response.json() == {"scope": ['myscope'], "uid": 'test-user'}

@@ -46,29 +46,56 @@ def _generic_problem(http_status: HTTPStatus, exc: Exception = None):
         ext=extra,
     )
 
-async def _exception_handler(request, exc: Exception):
-    print("called exception handler")
-    if isinstance(exc, ProblemException):
-        response = problem(status=exc.status, detail=exc.detail, title=exc.title,
-                           type=exc.type, instance=exc.instance, headers=exc.headers, ext=exc.ext)
-    elif isinstance(exc, werkzeug_HTTPException):
-        response = problem(status=exc.code, title=exc.name, detail=exc.description)
-    elif isinstance(exc, HTTPException):
-        # Convert Starlette error messages to the error messages
-        # Connexion expects
-        _exc = HTTPStatus(exc.status_code)
-        response = problem(status=exc.status_code, title=_exc.name, detail=_exc.description)
-    elif isinstance(exc, asyncio.TimeoutError):
-        # overrides 504 from aiohttp.web_protocol.RequestHandler.start()
-        logger.debug('Request handler timed out.', exc_info=exc)
-        response = _generic_problem(HTTPStatus.GATEWAY_TIMEOUT, exc)
-    else:
-        # overrides 500 from aiohttp.web_protocol.RequestHandler.start()
-        print("caught generic!")
-        logger.exception('Error handling request', exc_info=exc)
-        response = _generic_problem(HTTPStatus.INTERNAL_SERVER_ERROR, exc)
 
-    return await StarletteApi.get_response(response)
+
+class ConnexionStarletteErrorMiddleware:
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        sent_data = False
+        async def _send(msg):
+            nonlocal sent_data
+            if msg["type"] == "http.response.start":
+                sent_data = True
+            await send(msg)
+    
+        try:
+            await self.app(scope, receive, _send)
+        except Exception as e:
+            if sent_data:
+                raise
+            
+            response = await self.handle_exception(e)
+            await response(scope, receive, send)
+
+    async def handle_exception(self, exc: Exception):
+        if isinstance(exc, ProblemException):
+            response = problem(status=exc.status, detail=exc.detail, title=exc.title,
+                               type=exc.type, instance=exc.instance, headers=exc.headers, ext=exc.ext)
+        elif isinstance(exc, werkzeug_HTTPException):
+            response = problem(status=exc.code, title=exc.name, detail=exc.description)
+        elif isinstance(exc, HTTPException):
+            # Convert Starlette error messages to the error messages
+            # Connexion expects
+            _exc = HTTPStatus(exc.status_code)
+            response = problem(status=exc.status_code, title=_exc.name, detail=_exc.description)
+        elif isinstance(exc, asyncio.TimeoutError):
+            # overrides 504 from aiohttp.web_protocol.RequestHandler.start()
+            logger.debug('Request handler timed out.', exc_info=exc)
+            response = _generic_problem(HTTPStatus.GATEWAY_TIMEOUT, exc)
+        else:
+            # overrides 500 from aiohttp.web_protocol.RequestHandler.start()
+            print("caught generic!")
+            logger.exception('Error handling request', exc_info=exc)
+            response = _generic_problem(HTTPStatus.INTERNAL_SERVER_ERROR, exc)
+
+        return await StarletteApi.get_response(response)
+
 
 
 class StarletteApp(AbstractApp):
@@ -81,11 +108,8 @@ class StarletteApp(AbstractApp):
     def create_app(self):
         return Starlette(
             **self.server_args,
-            exception_handlers={
-                HTTPException: _exception_handler
-            }, 
             middleware=[
-                Middleware(ServerErrorMiddleware, handler=_exception_handler),
+                Middleware(ConnexionStarletteErrorMiddleware),
             ],
         )
 
