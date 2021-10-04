@@ -1,5 +1,5 @@
 """
-This module defines an AioHttp Connexion API which implements translations between AioHttp and
+This module defines an Starlette Connexion API which implements translations between ASGI and
 Connexion requests / responses.
 """
 
@@ -8,10 +8,10 @@ import logging
 import re
 from urllib.parse import parse_qs
 
-from werkzeug.exceptions import HTTPException as werkzeug_HTTPException, NotFound
+from werkzeug.exceptions import NotFound
 
 from starlette.templating import Jinja2Templates
-from starlette.responses import Response, RedirectResponse, PlainTextResponse
+from starlette.responses import Response, RedirectResponse
 from starlette.routing import Router
 from starlette.staticfiles import StaticFiles
 from connexion.apis.abstract import AbstractAPI
@@ -20,6 +20,7 @@ from connexion.jsonifier import JSONEncoder, Jsonifier
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.security import AioHttpSecurityHandlerFactory
 from connexion.utils import yamldumper
+
 
 logger = logging.getLogger("connexion.apis.starlette_api")
 
