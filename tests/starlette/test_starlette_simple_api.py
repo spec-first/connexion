@@ -76,7 +76,7 @@ def test_swagger_yaml(starlette_api_spec_dir):
     data_ = spec_response.content
 
     assert spec_response.status_code == 200
-    assert api.specification.raw == yaml.load(data_)
+    assert api.specification.raw == yaml.safe_load(data_)
 
 
 def test_no_swagger_json(starlette_api_spec_dir):
@@ -89,7 +89,7 @@ def test_no_swagger_json(starlette_api_spec_dir):
     app.add_api('swagger_simple.yaml')
 
     app_client = TestClient(app.app)
-    swagger_json = app_client.get('/v1.0/swagger.json')  # type: flask.Response
+    swagger_json = app_client.get('/v1.0/swagger.json')
     assert swagger_json.status_code == 404
 
 
@@ -103,7 +103,7 @@ def test_no_swagger_yaml(starlette_api_spec_dir):
     app.add_api('swagger_simple.yaml')
 
     app_client = TestClient(app.app)
-    spec_response = app_client.get('/v1.0/swagger.yaml')  # type: flask.Response
+    spec_response = app_client.get('/v1.0/swagger.yaml')
     assert spec_response.status_code == 404
 
 
