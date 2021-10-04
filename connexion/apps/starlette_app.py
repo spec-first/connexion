@@ -68,7 +68,6 @@ class ConnexionStarletteErrorMiddleware:
         try:
             await self.app(scope, receive, _send)
         except Exception as e:
-            print(e)
             if sent_data:
                 raise
             response = await self.handle_exception(e)
