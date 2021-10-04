@@ -306,6 +306,7 @@ def test_create_user(starlette_app):
     assert resp.status_code == 201
 
 
+@pytest.mark.skip("request is not passed currently, as it is not serializable")
 def test_access_request_context(starlette_app):
     app_client = TestClient(starlette_app.app)
     resp = app_client.post('/v1.0/starlette_access_request_context/')
