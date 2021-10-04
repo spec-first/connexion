@@ -17,19 +17,23 @@ logger = logging.getLogger('connexion.cli')
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 FLASK_APP = 'flask'
 AIOHTTP_APP = 'aiohttp'
+STARLETTE_APP = 'starlette'
 AVAILABLE_SERVERS = {
     'flask': [FLASK_APP],
     'gevent': [FLASK_APP],
     'tornado': [FLASK_APP],
-    'aiohttp': [AIOHTTP_APP]
+    'aiohttp': [AIOHTTP_APP],
+    'uvicorn': [STARLETTE_APP]
 }
 AVAILABLE_APPS = {
     FLASK_APP: 'connexion.apps.flask_app.FlaskApp',
-    AIOHTTP_APP: 'connexion.apps.aiohttp_app.AioHttpApp'
+    AIOHTTP_APP: 'connexion.apps.aiohttp_app.AioHttpApp',
+    STARLETTE_APP: 'connexion.apps.starlette_app.StarletteApp'
 }
 DEFAULT_SERVERS = {
     FLASK_APP: FLASK_APP,
-    AIOHTTP_APP: AIOHTTP_APP
+    AIOHTTP_APP: AIOHTTP_APP,
+    STARLETTE_APP: 'uvicorn'
 }
 
 
@@ -44,6 +48,11 @@ def validate_server_requirements(ctx, param, value):
             import tornado  # NOQA
         except ImportError:
             fatal_error('tornado library is not installed')
+    elif value == 'uvicorn':
+        try:
+            import uvicorn  # NOQA
+        except ImportError:
+            fatal_error('uvicorn library is not installed')
     else:
         return value
 
