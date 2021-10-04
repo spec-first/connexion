@@ -8,19 +8,18 @@ import logging
 import re
 from urllib.parse import parse_qs
 
-from werkzeug.exceptions import NotFound
-
-from starlette.templating import Jinja2Templates
-from starlette.responses import Response, RedirectResponse
+from starlette.responses import RedirectResponse, Response
 from starlette.routing import Router
 from starlette.staticfiles import StaticFiles
+from starlette.templating import Jinja2Templates
+from werkzeug.exceptions import NotFound
+
 from connexion.apis.abstract import AbstractAPI
 from connexion.handlers import AuthErrorHandler
 from connexion.jsonifier import JSONEncoder, Jsonifier
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.security import AioHttpSecurityHandlerFactory
 from connexion.utils import yamldumper
-
 
 logger = logging.getLogger("connexion.apis.starlette_api")
 

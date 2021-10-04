@@ -2,26 +2,25 @@
 This module defines an StarletteApp, a Connexion application to wrap an Starlette application.
 """
 
-from http import HTTPStatus
+import asyncio
 import logging
 import pathlib
 import pkgutil
 import sys
-import asyncio
 import traceback
 from contextlib import suppress
+from http import HTTPStatus
 
-from werkzeug.exceptions import HTTPException as werkzeug_HTTPException
-from starlette.responses import Response
 from starlette.applications import Starlette
 from starlette.exceptions import HTTPException
 from starlette.middleware import Middleware
+from starlette.responses import Response
+from werkzeug.exceptions import HTTPException as werkzeug_HTTPException
 
-from ..problem import problem
 from ..apis.starlette_api import StarletteApi
 from ..exceptions import ConnexionException, ProblemException
+from ..problem import problem
 from .abstract import AbstractApp
-
 
 logger = logging.getLogger("connexion.apps.starlette_app")
 
