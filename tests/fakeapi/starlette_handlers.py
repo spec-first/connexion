@@ -33,7 +33,6 @@ async def starlette_post_greeting(name, **kwargs):
     return data
 
 async def starlette_echo(**kwargs):
-    print(kwargs)
     return JSONResponse(content=kwargs, status_code=200)
 
 

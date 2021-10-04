@@ -43,7 +43,6 @@ async def test_get_response_from_connexion_response(api):
 @pytest.mark.asyncio
 async def test_get_response_from_string(api):
     response = await api.get_response('foo')
-    print(response.headers)
     assert isinstance(response, Response)
     assert response.status_code == 200
     assert response.body == b'foo'

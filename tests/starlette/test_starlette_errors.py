@@ -25,7 +25,6 @@ def test_starlette_problems_404(starlette_app):
     app_client = TestClient(starlette_app.app)  
 
     greeting404 = app_client.get('/v1.0/greeting')
-    print(greeting404.content)
     assert greeting404.headers["content-type"] == 'application/problem+json'
     assert greeting404.status_code == 404
     error404 = greeting404.json()
