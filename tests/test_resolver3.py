@@ -1,5 +1,5 @@
 from connexion.operations import OpenAPIOperation
-from connexion.resolver import Resolver, RestyResolver
+from connexion.resolver import RelativeResolver, Resolver, RestyResolver
 
 COMPONENTS = {'parameters': {'myparam': {'in': 'path', 'schema': {'type': 'integer'}}}}
 
@@ -17,6 +17,56 @@ def test_standard_resolve_x_router_controller():
         app_security=[],
         components=COMPONENTS,
         resolver=Resolver()
+    )
+    assert operation.operation_id == 'fakeapi.hello.post_greeting'
+
+
+def test_relative_resolve_x_router_controller():
+    operation = OpenAPIOperation(
+        api=None,
+        method='GET',
+        path='endpoint',
+        path_parameters=[],
+        operation={
+            'x-openapi-router-controller': 'fakeapi.hello',
+            'operationId': 'post_greeting',
+        },
+        app_security=[],
+        components=COMPONENTS,
+        resolver=RelativeResolver('root_path')
+    )
+    assert operation.operation_id == 'fakeapi.hello.post_greeting'
+
+
+def test_relative_resolve_operation_id():
+    operation = OpenAPIOperation(
+        api=None,
+        method='GET',
+        path='endpoint',
+        path_parameters=[],
+        operation={
+            'operationId': 'hello.post_greeting',
+        },
+        app_security=[],
+        components=COMPONENTS,
+        resolver=RelativeResolver('fakeapi')
+    )
+    assert operation.operation_id == 'fakeapi.hello.post_greeting'
+
+
+def test_relative_resolve_operation_id_with_module():
+    import fakeapi
+    operation = OpenAPIOperation(
+        api=None,
+        method='GET',
+        path='endpoint',
+        path_parameters=[],
+        operation={
+            'operationId': 'hello.post_greeting',
+        },
+        app_security=[],
+        components=COMPONENTS,
+        resolver=RelativeResolver(fakeapi)
     )
     assert operation.operation_id == 'fakeapi.hello.post_greeting'
 

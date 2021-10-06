@@ -3,6 +3,7 @@ This module contains resolvers, functions that resolves the user defined view fu
 from the operations defined in the OpenAPI spec.
 """
 
+import inspect
 import logging
 import sys
 
@@ -70,6 +71,40 @@ class Resolver:
             raise ResolverError(str(e), sys.exc_info())
 
 
+class RelativeResolver(Resolver):
+    """
+    Resolves endpoint functions relative to a given root path or module.
+    """
+    def __init__(self, root_path, function_resolver=utils.get_function_from_name):
+        """
+        :param root_path: The root path relative to which an operationId is resolved.
+            Can also be a module. Has the same effect as setting
+            `x-swagger-router-controller` or `x-openapi-router-controller` equal to
+            `root_path` for every operation individually.
+        :type root_path: typing.Union[str, types.ModuleType]
+        :param function_resolver: Function that resolves functions using an operationId
+        :type function_resolver: types.FunctionType
+        """
+        super().__init__(function_resolver=function_resolver)
+        if inspect.ismodule(root_path):
+            self.root_path = root_path.__name__
+        else:
+            self.root_path = root_path
+
+    def resolve_operation_id(self, operation):
+        """Resolves the operationId relative to the root path, unless
+        x-swagger-router-controller or x-openapi-router-controller is specified.
+
+        :param operation: The operation to resolve
+        :type operation: connexion.operations.AbstractOperation
+        """
+        operation_id = operation.operation_id
+        router_controller = operation.router_controller
+        if router_controller is None:
+            return f'{self.root_path}.{operation_id}'
+        return f'{router_controller}.{operation_id}'
+
+
 class RestyResolver(Resolver):
     """
     Resolves endpoint functions using REST semantics (unless overridden by specifying operationId)
@@ -80,7 +115,7 @@ class RestyResolver(Resolver):
         :param default_module_name: Default module name for operations
         :type default_module_name: str
         """
-        Resolver.__init__(self)
+        super().__init__()
         self.default_module_name = default_module_name
         self.collection_endpoint_name = collection_endpoint_name
 
@@ -91,7 +126,7 @@ class RestyResolver(Resolver):
         :type operation: connexion.operations.AbstractOperation
         """
         if operation.operation_id:
-            return Resolver.resolve_operation_id(self, operation)
+            return super().resolve_operation_id(operation)
 
         return self.resolve_operation_id_using_rest_semantics(operation)
 
