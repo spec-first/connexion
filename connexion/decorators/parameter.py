@@ -14,7 +14,7 @@ import inflection
 
 from ..http_facts import FORM_CONTENT_TYPES
 from ..lifecycle import ConnexionRequest  # NOQA
-from ..utils import all_json
+from ..utils import all_json, is_json_mimetype
 
 logger = logging.getLogger(__name__)
 
@@ -80,10 +80,10 @@ def parameter_to_arg(operation, function, pythonic_params=False,
         # type: (ConnexionRequest) -> Any
         logger.debug('Function Arguments: %s', arguments)
         kwargs = {}
-
-        if all_json(consumes):
+        request_content_type = request.headers.get('CONTENT_TYPE')
+        if all_json(consumes) or is_json_mimetype(request_content_type):
             request_body = request.json
-        elif consumes[0] in FORM_CONTENT_TYPES:
+        elif consumes[0] in FORM_CONTENT_TYPES or request_content_type in FORM_CONTENT_TYPES:
             request_body = {sanitize(k): v for k, v in request.form.items()}
         else:
             request_body = request.body
