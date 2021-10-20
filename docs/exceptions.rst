@@ -13,6 +13,17 @@ decorator have been converted.
 Flask Error Handler Example
 ---------------------------
 
+The goal here is to make the api returning the 404 status code
+when there is a NotFoundException (instead of 500)
+
+.. code-block:: python
+
+    def test_should_return_404(client):
+        invalid_id = 0
+        response = client.get(f"/api/data/{invalid_id}")
+        assert response.status_code == 404
+
+
 Firstly, it's possible to declare what Exception must be handled
 
 .. code-block:: python
@@ -29,6 +40,12 @@ Firstly, it's possible to declare what Exception must be handled
     # init flask app
     import connexion
 
+    def not_found_handler(error):
+        return {
+            "detail": str(error),
+            "status": 404,
+            "title": "Not Found",
+        }, 404
 
     def create_app():
 
@@ -37,16 +54,12 @@ Firstly, it's possible to declare what Exception must be handled
         connexion_app.add_api(
             "openapi.yaml", validate_responses=True,
             base_path="/")
+
+        # Handle NotFoundException
+        connexion_app.add_error_handler(
+            NotFoundException, not_found_handler)
+
         app = connexion_app.app
-
-        @app.errorhandler(NotFoundException)
-        def not_found_handler(error):
-            return {
-                "detail": str(error),
-                "status": 404,
-                "title": "Not Found",
-            }, 404
-
         return app
 
 In this way, it's possible to raise anywhere the NotFoundException or its subclasses
