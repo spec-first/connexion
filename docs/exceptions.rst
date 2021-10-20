@@ -10,6 +10,69 @@ Connexion is moving from returning flask responses on errors to throwing excepti
 that are a subclass of ``connexion.problem``. So far exceptions thrown in the OAuth
 decorator have been converted.
 
+Flask Error Handler Example
+---------------------------
+
+Firstly, it's possible to declare what Exception must be handled
+
+.. code-block:: python
+
+    # exceptions.py
+    class NotFoundException(RuntimeError):
+        """Not found."""
+
+    class MyDataNotFound(NotFoundException):
+        def __init__(self, id):
+            super().__init__(f"ID '{id}' not found.")
+
+
+    # init flask app
+    import connexion
+
+
+    def create_app():
+
+        connexion_app = connexion.FlaskApp(
+            __name__, specification_dir="../api/")
+        connexion_app.add_api(
+            "openapi.yaml", validate_responses=True,
+            base_path="/")
+        app = connexion_app.app
+
+        @app.errorhandler(NotFoundException)
+        def not_found_handler(error):
+            return {
+                "detail": str(error),
+                "status": 404,
+                "title": "Not Found",
+            }, 404
+
+        return app
+
+In this way, it's possible to raise anywhere the NotFoundException or its subclasses
+and we know the API will return 404 status code.
+
+.. code-block:: python
+
+    from sqlalchemy.orm.exc import NoResultFound
+
+    from .exceptions import MyDataNotFound
+    from .models import MyData
+
+
+    def get_my_data(id, token_info=None):
+        try:
+            data = MyData.query.filter(MyData.id == id).one()
+
+            return {
+                "id": data.id,
+                "description": data.description,
+            }
+
+        except NoResultFound:
+            raise MyDataNotFound(id)
+
+
 Default Exception Handling
 --------------------------
 By default connexion exceptions are JSON serialized according to
