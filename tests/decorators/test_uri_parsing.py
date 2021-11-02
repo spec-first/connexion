@@ -1,21 +1,26 @@
 import pytest
 from connexion.decorators.uri_parsing import (AlwaysMultiURIParser,
                                               FirstValueURIParser,
-                                              Swagger2URIParser,
-                                              OpenAPIURIParser)
+                                              OpenAPIURIParser,
+                                              Swagger2URIParser)
 from werkzeug.datastructures import MultiDict
 
 QUERY1 = MultiDict([("letters", "a"), ("letters", "b,c"),
                     ("letters", "d,e,f")])
 QUERY2 = MultiDict([("letters", "a"), ("letters", "b|c"),
                     ("letters", "d|e|f")])
-QUERY3 = MultiDict([("letters[eq]", "a"), ("letters[eq]", "b,c"),
+QUERY3 = MultiDict([("letters[eq]", ["a"]), ("letters[eq]", ["b", "c"]),
                     ("letters[eq]", ["d", "e", "f"])])
+QUERY4 = MultiDict([("letters[eq]", "a"), ("letters[eq]", "b|c"),
+                    ("letters[eq]", "d|e|f")])
+QUERY5 = MultiDict([("letters[eq]", "a"), ("letters[eq]", "b,c"),
+                    ("letters[eq]", "d,e,f")])
 PATH1 = {"letters": "d,e,f"}
 PATH2 = {"letters": "d|e|f"}
 CSV = "csv"
 PIPES = "pipes"
 MULTI = "multi"
+DICT = {}
 
 
 @pytest.mark.parametrize("parser_class, expected, query_in, collection_format", [
@@ -106,7 +111,13 @@ def test_uri_parser_path_params(parser_class, expected, query_in, collection_for
 
 
 @pytest.mark.parametrize("parser_class, expected, query_in, collection_format", [
-        (OpenAPIURIParser, ['d', 'e', 'f'], QUERY3, {})])
+        (OpenAPIURIParser, ['d', 'e', 'f'], QUERY3, DICT),
+        (Swagger2URIParser, ['d', 'e', 'f'], QUERY5, CSV),
+        (FirstValueURIParser, ['a'], QUERY5, CSV),
+        (AlwaysMultiURIParser, ['a', 'b', 'c', 'd', 'e', 'f'], QUERY5, CSV),
+        (Swagger2URIParser, ['d', 'e', 'f'], QUERY4, PIPES),
+        (FirstValueURIParser, ['a'], QUERY4, PIPES),
+        (AlwaysMultiURIParser, ['a', 'b', 'c', 'd', 'e', 'f'], QUERY4, PIPES)])
 def test_uri_parser_query_params_with_square_brackets(parser_class, expected, query_in, collection_format):
     class Request:
         query = query_in
