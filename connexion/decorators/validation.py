@@ -166,6 +166,12 @@ class RequestBodyValidator:
                 if data is not None or not self.has_default:
                     self.validate_schema(data, request.url)
             elif self.consumes[0] in FORM_CONTENT_TYPES:
+                # Convert multipart object items into dictionaries
+                for k, v in request.form.items():
+                    if (k in self.schema.get('properties', {}).keys() and
+                            self.schema['properties'][k]['type'] == 'object'):
+                        request.form[k] = json.loads(v) if v else {}
+
                 data = dict(request.form.items()) or (request.body if len(request.body) > 0 else {})
                 data.update(dict.fromkeys(request.files, ''))  # validator expects string..
                 logger.debug('%s validating schema...', request.url)
