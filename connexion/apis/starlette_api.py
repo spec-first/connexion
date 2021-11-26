@@ -165,7 +165,7 @@ class StarletteApi(AbstractAPI):
     async def _get_swagger_ui_config(self, request):
         return Response(
             status_code=200,
-            media_type="text/json",
+            media_type="application/json",
             content=self.jsonifier.dumps(self.options.openapi_console_ui_config),
         )
 

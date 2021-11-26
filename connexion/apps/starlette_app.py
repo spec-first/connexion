@@ -191,7 +191,7 @@ class StarletteApp(AbstractApp):
                 port=self.port,
             )
         else:
-            raise Exception(f"Server {self.server} not recognized")
+            raise Exception(f"Server {self.server} not recognized when using Starlette framework")
 
     async def __call__(self, scope, receive, send):
         return await self.app(scope, receive, send)

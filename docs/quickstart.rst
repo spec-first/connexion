@@ -110,7 +110,7 @@ You can also use the ``starlette`` framework as a server backend
 
    import connexion
 
-   app = connexion.StarletteApp(__name__, port = 8080, specification_dir='openapi/')
+   app = connexion.StarletteApp(__name__, port=8080, specification_dir='openapi/')
 
 .. _Jinja2: http://jinja.pocoo.org/
 .. _Tornado: http://www.tornadoweb.org/en/stable/
