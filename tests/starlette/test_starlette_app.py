@@ -69,7 +69,7 @@ def test_app_run_server_error(uvicorn_app_mock, starlette_api_spec_dir):
     with pytest.raises(Exception) as exc_info:
         app.run(server='other')
 
-    assert exc_info.value.args == ('Server other not recognized',)
+    assert exc_info.value.args == ('Server other not recognized when using Starlette framework',)
 
 
 def test_app_get_root_path_return_Path(starlette_api_spec_dir):
