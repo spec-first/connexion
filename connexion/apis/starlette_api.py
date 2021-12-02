@@ -8,7 +8,7 @@ import logging
 import re
 from urllib.parse import parse_qs
 
-from starlette.responses import RedirectResponse, Response
+from starlette.responses import JSONResponse, RedirectResponse, Response
 from starlette.routing import Router
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
@@ -221,15 +221,11 @@ class StarletteApi(AbstractAPI):
         logger.debug("Getting data and status code", extra={"url": url})
         query = parse_qs(req.url.query)
 
-        # Empty body <=> no body
         body = await req.body()
         if not body:
             body = None
 
-        # TODO: setup `context` properly
-        # TODO: setup `headers` properly
         headers = req.headers
-        # TODO: setup `path_params` properly
 
         return ConnexionRequest(
             url=url,
@@ -321,7 +317,12 @@ class StarletteApi(AbstractAPI):
             elif isinstance(data, bytes):
                 content_type = "application/octet-stream"
 
-        return Response(
+        if isinstance(data, dict) or isinstance(data, list):
+            response_cls = JSONResponse
+        else:
+            response_cls = Response
+
+        return response_cls(
             content=data,
             status_code=status_code,
             media_type=content_type,
