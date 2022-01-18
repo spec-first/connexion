@@ -5,7 +5,7 @@ Module containing all code related to json schema validation.
 from collections.abc import Mapping
 from copy import deepcopy
 
-from jsonschema import Draft4Validator, RefResolver, _utils
+from jsonschema import Draft4Validator, RefResolver
 from jsonschema.exceptions import RefResolutionError, ValidationError  # noqa
 from jsonschema.validators import extend
 from openapi_spec_validator.handlers import UrlHandler
@@ -58,10 +58,11 @@ def validate_type(validator, types, instance, schema):
     if instance is None and (schema.get('x-nullable') is True or schema.get('nullable')):
         return
 
-    types = _utils.ensure_list(types)
+    if isinstance(types, str):
+        types = (types,)
 
     if not any(validator.is_type(instance, type) for type in types):
-        yield ValidationError(_utils.types_msg(instance, types))
+        yield ValidationError(f"{instance!r} is not one of {types!r}")
 
 
 def validate_enum(validator, enums, instance, schema):
