@@ -66,7 +66,7 @@ class FlaskApp(AbstractApp):
         api = super().add_api(specification, **kwargs)
         self.app.register_blueprint(api.blueprint)
         if isinstance(specification, (str, pathlib.Path)):
-            self.extra_files.append(specification)
+            self.extra_files.append(self.specification_dir / specification)
         return api
 
     def add_error_handler(self, error_code, function):
