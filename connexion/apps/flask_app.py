@@ -73,7 +73,13 @@ class FlaskApp(AbstractApp):
         # type: (int, FunctionType) -> None
         self.app.register_error_handler(error_code, function)
 
-    def run(self, port=None, server=None, debug=None, host=None, **options):  # pragma: no cover
+    def run(self,
+            port=None,
+            server=None,
+            debug=None,
+            host=None,
+            extra_files=None,
+            **options):  # pragma: no cover
         """
         Runs the application on a local development server.
         :param host: the host interface to bind on.
@@ -84,6 +90,9 @@ class FlaskApp(AbstractApp):
         :type server: str | None
         :param debug: include debugging information
         :type debug: bool
+        :param extra_files: extra files that should be watched by the Flask/Werkzeug reloader.
+            By default, the swagger spec is watched by the reloader.
+        :type extra_files: Optional[Iterable[str | pathlib.Path]]
         :param options: options to be forwarded to the underlying server
         """
         # this functions is not covered in unit tests because we would effectively testing the mocks
@@ -101,6 +110,9 @@ class FlaskApp(AbstractApp):
 
         if debug is not None:
             self.debug = debug
+
+        if extra_files is not None:
+            self.extra_files.extend(extra_files)
 
         logger.debug('Starting %s HTTP server..', self.server, extra=vars(self))
         if self.server == 'flask':
