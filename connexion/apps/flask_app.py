@@ -21,9 +21,9 @@ logger = logging.getLogger('connexion.app')
 
 
 class FlaskApp(AbstractApp):
-    def __init__(self, import_name, server='flask', **kwargs):
+    def __init__(self, import_name, server='flask', extra_files=None, **kwargs):
         super().__init__(import_name, FlaskApi, server=server, **kwargs)
-        self.extra_files = kwargs.get("extra_files", [])
+        self.extra_files = extra_files or []
 
     def create_app(self):
         app = flask.Flask(self.import_name, **self.server_args)
