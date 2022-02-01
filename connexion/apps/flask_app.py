@@ -90,8 +90,7 @@ class FlaskApp(AbstractApp):
         :type server: str | None
         :param debug: include debugging information
         :type debug: bool
-        :param extra_files: extra files that should be watched by the Flask/Werkzeug reloader.
-            By default, the swagger spec is watched by the reloader.
+        :param extra_files: additional files to be watched by the reloader.
         :type extra_files: Optional[Iterable[str | pathlib.Path]]
         :param options: options to be forwarded to the underlying server
         """
