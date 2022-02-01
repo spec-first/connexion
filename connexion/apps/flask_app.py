@@ -21,8 +21,15 @@ logger = logging.getLogger('connexion.app')
 
 
 class FlaskApp(AbstractApp):
-    def __init__(self, import_name, server='flask', **kwargs):
+    def __init__(self, import_name, server='flask', extra_files=None, **kwargs):
+        """
+        :param extra_files: additional files to be watched by the reloader, defaults to the swagger specs of added apis
+        :type extra_files: list[str | pathlib.Path], optional
+
+        See :class:`~connexion.AbstractApp` for additional parameters.
+        """
         super().__init__(import_name, FlaskApi, server=server, **kwargs)
+        self.extra_files = extra_files or []
 
     def create_app(self):
         app = flask.Flask(self.import_name, **self.server_args)
@@ -64,15 +71,24 @@ class FlaskApp(AbstractApp):
     def add_api(self, specification, **kwargs):
         api = super().add_api(specification, **kwargs)
         self.app.register_blueprint(api.blueprint)
+        if isinstance(specification, (str, pathlib.Path)):
+            self.extra_files.append(self.specification_dir / specification)
         return api
 
     def add_error_handler(self, error_code, function):
         # type: (int, FunctionType) -> None
         self.app.register_error_handler(error_code, function)
 
-    def run(self, port=None, server=None, debug=None, host=None, **options):  # pragma: no cover
+    def run(self,
+            port=None,
+            server=None,
+            debug=None,
+            host=None,
+            extra_files=None,
+            **options):  # pragma: no cover
         """
         Runs the application on a local development server.
+
         :param host: the host interface to bind on.
         :type host: str
         :param port: port to listen to
@@ -81,6 +97,8 @@ class FlaskApp(AbstractApp):
         :type server: str | None
         :param debug: include debugging information
         :type debug: bool
+        :param extra_files: additional files to be watched by the reloader.
+        :type extra_files: Iterable[str | pathlib.Path]
         :param options: options to be forwarded to the underlying server
         """
         # this functions is not covered in unit tests because we would effectively testing the mocks
@@ -99,9 +117,13 @@ class FlaskApp(AbstractApp):
         if debug is not None:
             self.debug = debug
 
+        if extra_files is not None:
+            self.extra_files.extend(extra_files)
+
         logger.debug('Starting %s HTTP server..', self.server, extra=vars(self))
         if self.server == 'flask':
-            self.app.run(self.host, port=self.port, debug=self.debug, **options)
+            self.app.run(self.host, port=self.port, debug=self.debug,
+                         extra_files=self.extra_files, **options)
         elif self.server == 'tornado':
             try:
                 import tornado.httpserver
