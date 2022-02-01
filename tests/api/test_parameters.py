@@ -472,6 +472,22 @@ def test_parameters_snake_case(snake_case_app):
     assert resp.status_code == 200
     resp = app_client.get('/v1.0/test-get-query-shadow?list=123')
     assert resp.status_code == 200
+    # Tests for when CamelCase parameter is supplied, of which the snake_case version
+    # matches an existing parameter and view func argument, or vice versa
+    resp = app_client.get('/v1.0/test-get-camel-case-version?truthiness=true&orderBy=asc')
+    assert resp.status_code == 200
+    assert resp.get_json() == {'truthiness': True, 'order_by': 'asc'}
+    resp = app_client.get('/v1.0/test-get-camel-case-version?truthiness=5')
+    assert resp.status_code == 400
+    assert resp.get_json()['detail'] == "Wrong type, expected 'boolean' for query parameter 'truthiness'"
+    # Incorrectly cased params should be ignored
+    resp = app_client.get('/v1.0/test-get-camel-case-version?Truthiness=true&order_by=asc')
+    assert resp.status_code == 200
+    assert resp.get_json() == {'truthiness': False, 'order_by': None}  # default values
+    resp = app_client.get('/v1.0/test-get-camel-case-version?Truthiness=5&order_by=4')
+    assert resp.status_code == 200
+    assert resp.get_json() == {'truthiness': False, 'order_by': None}  # default values
+    # TODO: Add tests for body parameters
 
 
 def test_get_unicode_request(simple_app):

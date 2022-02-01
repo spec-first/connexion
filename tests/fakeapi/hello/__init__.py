@@ -474,7 +474,7 @@ def test_param_sanitization3(query=None, body=None):
     if query:
         result['query'] = query
     if body:
-        result['form'] = body["form"]
+        result['form'] = body["$form"]
     return result
 
 

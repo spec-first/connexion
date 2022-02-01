@@ -932,7 +932,7 @@ paths:
             schema:
               type: object
               properties:
-                'form$':
+                '$form':
                   description: Just a testing parameter in the form data
                   type: string
   /body-sanitization:

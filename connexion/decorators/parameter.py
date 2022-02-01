@@ -84,7 +84,7 @@ def parameter_to_arg(operation, function, pythonic_params=False,
         if all_json(consumes):
             request_body = request.json
         elif consumes[0] in FORM_CONTENT_TYPES:
-            request_body = {sanitize(k): v for k, v in request.form.items()}
+            request_body = request.form
         else:
             request_body = request.body
 

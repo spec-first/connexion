@@ -79,6 +79,27 @@ paths:
           required: true
           schema:
             type: integer
+  /test-get-camel-case-version:
+    get:
+      summary: Test for CamelCase version of query parameter
+      description: Test for when a wrongly cased parameter is supplied.
+      operationId: fakeapi.snake_case.get_camelcase
+      responses:
+        '200':
+          description: OK
+      parameters:
+      - name: truthiness
+        in: query
+        description: A test parameter, for which 'Truthiness' will be given in the request.
+        schema:
+          type: boolean
+          default: false
+      - name: orderBy
+        in: query
+        description: A CamelCase parameter, for which 'order_by' will be given in the request.
+        schema:
+          type: string
+
   '/test-post-path-snake/{SomeId}':
     post:
       summary: Test converting to snake_case in path
