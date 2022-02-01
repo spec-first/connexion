@@ -22,6 +22,12 @@ logger = logging.getLogger('connexion.app')
 
 class FlaskApp(AbstractApp):
     def __init__(self, import_name, server='flask', extra_files=None, **kwargs):
+        """
+        :param extra_files: additional files to be watched by the reloader, defaults to the swagger specs of added apis
+        :type extra_files: list[str | pathlib.Path], optional
+
+        See :class:`~connexion.AbstractApp` for additional parameters.
+        """
         super().__init__(import_name, FlaskApi, server=server, **kwargs)
         self.extra_files = extra_files or []
 
@@ -82,6 +88,7 @@ class FlaskApp(AbstractApp):
             **options):  # pragma: no cover
         """
         Runs the application on a local development server.
+
         :param host: the host interface to bind on.
         :type host: str
         :param port: port to listen to
@@ -91,7 +98,7 @@ class FlaskApp(AbstractApp):
         :param debug: include debugging information
         :type debug: bool
         :param extra_files: additional files to be watched by the reloader.
-        :type extra_files: Optional[Iterable[str | pathlib.Path]]
+        :type extra_files: Iterable[str | pathlib.Path]
         :param options: options to be forwarded to the underlying server
         """
         # this functions is not covered in unit tests because we would effectively testing the mocks
