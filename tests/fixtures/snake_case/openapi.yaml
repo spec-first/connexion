@@ -149,8 +149,10 @@ paths:
       requestBody:
         content:
           application/json:
+            x-body-name: round_
             schema:
-              x-body-name: round_
+              # should be ignored because the preferred location is at the media-type level above
+              x-body-name: this_should_be_ignored
               type: object
         description: round parameter
         required: true

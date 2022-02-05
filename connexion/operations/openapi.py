@@ -272,7 +272,10 @@ class OpenAPIOperation(AbstractOperation):
         return {}
 
     def _get_body_argument(self, body, arguments, has_kwargs, sanitize):
-        x_body_name = sanitize(self.body_schema.get('x-body-name', 'body'))
+        x_body_name = sanitize(self.body_definition.get('x-body-name', None))
+        if not x_body_name:
+            x_body_name = sanitize(self.body_schema.get('x-body-name', 'body'))
+
         if is_nullable(self.body_schema) and is_null(body):
             return {x_body_name: None}
 
