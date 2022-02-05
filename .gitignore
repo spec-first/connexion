@@ -14,3 +14,4 @@ htmlcov/
 .vscode/
 venv/
 src/
+*.un~
