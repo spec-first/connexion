@@ -37,6 +37,7 @@ autoapi_options = ['members',
                    'show-module-summary',
                    'special-members',
                    'imported-members']
+autoapi_python_class_content = 'both'
 autoapi_dirs = [
     '../connexion'
 ]
