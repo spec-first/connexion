@@ -271,9 +271,9 @@ paths:
         '200':
           description: OK
       requestBody:
+        x-body-name: stack
         content:
           application/json:
-            x-body-name: stack
             schema:
               # should be ignored because the preferred location is at the media-type level above
               x-body-name: this_should_be_ignored

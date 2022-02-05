@@ -266,7 +266,7 @@ of the endpoint parameter ``message`` to your view function.
 
 .. note:: In the OpenAPI 3.x.x spec, the requestBody does not have a name.
           By default it will be passed in as 'body'. You can optionally
-          provide the x-body-name parameter in your requestBody media-type
+          provide the x-body-name parameter in your requestBody 
           (or non-OAS compliant legacy position within the requestBody schema)
           to override the name of the parameter that will be passed to your
           handler function.
@@ -274,11 +274,11 @@ of the endpoint parameter ``message`` to your view function.
 .. code-block:: yaml
 
     requestBody:
+      x-body-name: stack
       content:
         application/json:
-          x-body-name: stack
           schema:
-            # legacy location here should be ignored because the preferred location is at the media-type level above
+            # legacy location here should be ignored because the preferred location is at the requestBody level above
             x-body-name: this_should_be_ignored
             $ref: '#/components/schemas/someComponent'
 
