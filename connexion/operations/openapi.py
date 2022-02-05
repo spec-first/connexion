@@ -272,8 +272,10 @@ class OpenAPIOperation(AbstractOperation):
         return {}
 
     def _get_body_argument(self, body, arguments, has_kwargs, sanitize):
+        # prefer the x-body-name as an extension of the media-type
         x_body_name = sanitize(self.body_definition.get('x-body-name', None))
         if not x_body_name:
+            # x-body-name also accepted in the schema field of the media-type for legacy compat
             x_body_name = sanitize(self.body_schema.get('x-body-name', 'body'))
 
         if is_nullable(self.body_schema) and is_null(body):

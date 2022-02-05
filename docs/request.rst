@@ -92,9 +92,21 @@ And the view function:
 
 .. note:: In the OpenAPI 3.x.x spec, the requestBody does not have a name.
           By default it will be passed in as 'body'. You can optionally
-          provide the x-body-name parameter in your requestBody schema
+          provide the x-body-name parameter in your requestBody media-type
+          (or non-OAS compliant legacy position within the requestBody schema)
           to override the name of the parameter that will be passed to your
           handler function.
+
+.. code-block:: yaml
+
+    requestBody:
+      content:
+        application/json:
+          x-body-name: stack
+          schema:
+            # legacy location here should be ignored because the preferred location is at the media-type level above
+            x-body-name: this_should_be_ignored
+            $ref: '#/components/schemas/someComponent'
 
 .. warning:: Please note that when you have a parameter defined as
              *not* required at your endpoint and your Python view have
