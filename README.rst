@@ -266,21 +266,24 @@ of the endpoint parameter ``message`` to your view function.
 
 .. note:: In the OpenAPI 3.x.x spec, the requestBody does not have a name.
           By default it will be passed in as 'body'. You can optionally
-          provide the x-body-name parameter in your requestBody 
+          provide the x-body-name parameter in your operation 
           (or non-OAS compliant legacy position within the requestBody schema)
           to override the name of the parameter that will be passed to your
           handler function.
 
 .. code-block:: yaml
 
-    requestBody:
-      x-body-name: stack
-      content:
-        application/json:
-          schema:
-            # legacy location here should be ignored because the preferred location is at the requestBody level above
-            x-body-name: this_should_be_ignored
-            $ref: '#/components/schemas/someComponent'
+
+    /path
+      post:
+        x-body-name: body
+        requestBody:
+          content:
+            application/json:
+              schema:
+                # legacy location here should be ignored because the preferred location for x-body-name is at the operation level above
+                x-body-name: this_should_be_ignored
+                $ref: '#/components/schemas/someComponent'
 
 .. warning:: When you define a parameter at your endpoint as *not* required, and
     this argument does not have default value in your Python view, you will get
