@@ -3,7 +3,6 @@ This module defines an OpenAPIOperation class, a Connexion operation specific fo
 """
 
 import logging
-import io
 from copy import copy, deepcopy
 
 from connexion.operations.abstract import AbstractOperation
