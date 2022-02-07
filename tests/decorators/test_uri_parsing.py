@@ -20,7 +20,6 @@ PATH2 = {"letters": "d|e|f"}
 CSV = "csv"
 PIPES = "pipes"
 MULTI = "multi"
-DICT = {}
 
 
 @pytest.mark.parametrize("parser_class, expected, query_in, collection_format", [
@@ -111,7 +110,7 @@ def test_uri_parser_path_params(parser_class, expected, query_in, collection_for
 
 
 @pytest.mark.parametrize("parser_class, expected, query_in, collection_format", [
-        (OpenAPIURIParser, ['d', 'e', 'f'], QUERY3, DICT),
+        (OpenAPIURIParser, ['d', 'e', 'f'], QUERY3, None),
         (Swagger2URIParser, ['d', 'e', 'f'], QUERY5, CSV),
         (FirstValueURIParser, ['a'], QUERY5, CSV),
         (AlwaysMultiURIParser, ['a', 'b', 'c', 'd', 'e', 'f'], QUERY5, CSV),
