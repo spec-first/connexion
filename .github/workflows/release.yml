@@ -1,8 +1,8 @@
 name: Publish Python 🐍 distributions 📦 to PyPI and TestPyPI
 on:
   push:
-    branches:
-      - main
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
   release:
     types:
       - published
@@ -19,7 +19,6 @@ jobs:
         python-version: 3.9
 
     - name: Update version
-      if: github.event_name == 'release'
       run: sed -i "s/__version__ = .*/__version__ = '${{github.ref_name}}'/" */__init__.py
 
     - name: Build a binary wheel and a source tarball
