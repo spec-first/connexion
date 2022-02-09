@@ -163,6 +163,7 @@ class FlaskApi(AbstractAPI):
             content_type=response.content_type,
             headers=response.headers,
             body=response.get_data(),
+            is_streamed=response.is_streamed
         )
 
     @classmethod
