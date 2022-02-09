@@ -382,3 +382,9 @@ def test_get_bad_default_response(simple_app):
 
     resp = app_client.get('/v1.0/get_bad_default_response/202')
     assert resp.status_code == 500
+
+
+def test_streaming_response(simple_app):
+    app_client = simple_app.app.test_client()
+    resp = app_client.get('/v1.0/get_streaming_response')
+    assert resp.status_code == 200

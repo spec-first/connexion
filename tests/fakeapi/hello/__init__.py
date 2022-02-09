@@ -3,7 +3,7 @@ import datetime
 import uuid
 
 from connexion import NoContent, ProblemException, context, request
-from flask import jsonify, redirect
+from flask import jsonify, redirect, send_file
 
 
 class DummyClass:
@@ -615,3 +615,7 @@ def test_optional_headers():
 
 def nullable_default(test):
     return
+
+
+def get_streaming_response():
+    return send_file(__file__)
