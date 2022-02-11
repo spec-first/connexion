@@ -331,20 +331,19 @@ class OpenAPIOperation(AbstractOperation):
         # #4 Finally, if that resulting argument list is empty, then we include an argument
         # named 'body' to the handler, but only if 'body' exists in [arguments]
 
-        if x_body_name_explicit and x_body_name in arguments: #1
+        if x_body_name_explicit and x_body_name in arguments:  # 1
             return {x_body_name: converted_body}
 
-        if has_kwargs: #2
-            converted_body[x_body_name_default] = copy(converted_body) # copy just to avoid circular ref
+        if has_kwargs:  # 2
+            converted_body[x_body_name_default] = copy(converted_body)  # copy just to avoid circular ref
             return converted_body
 
-        r = {k: converted_body[k] for k in converted_body if k in arguments} #3
+        r = {k: converted_body[k] for k in converted_body if k in arguments}  # 3
 
-        if len(r) <= 0 and x_body_name_default in arguments: #4
+        if len(r) <= 0 and x_body_name_default in arguments:  # 4
             r[x_body_name_default] = converted_body
 
         return r
-
 
     def _get_typed_body_values(self, body_arg, body_props, additional_props):
         """

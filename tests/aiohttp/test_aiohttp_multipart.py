@@ -1,10 +1,10 @@
 import os
-
-import aiohttp
-import pytest
 from pathlib import Path
 
+import pytest
 from connexion import AioHttpApp
+
+import aiohttp
 
 try:
     import ujson as json
