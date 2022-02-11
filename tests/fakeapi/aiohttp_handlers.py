@@ -119,7 +119,7 @@ async def aiohttp_multipart_single_file(funky_funky):
 async def aiohttp_multipart_many_files(files):
     return aiohttp.web.json_response(
         data={
-			'filesCount': len(files),
+			'files_count': len(files),
             'contents': [ f.file.read().decode('utf8') for f in files ]
 		},
     )
@@ -128,7 +128,7 @@ async def aiohttp_multipart_many_files(files):
 async def aiohttp_multipart_mixed_single_file(dir_name, funky_funky):
     return aiohttp.web.json_response(
         data={
-            'dirName': dir_name,
+            'dir_name': dir_name,
             'fileName': funky_funky.filename,
             'content': funky_funky.file.read().decode('utf8'),
         },
@@ -138,9 +138,9 @@ async def aiohttp_multipart_mixed_single_file(dir_name, funky_funky):
 async def aiohttp_multipart_mixed_many_files(dir_name, test_count, files):
     return aiohttp.web.json_response(
         data={
-            'filesCount': len(files),
-            'dirName': dir_name,
-            'testCount': test_count,
+            'files_count': len(files),
+            'dir_name': dir_name,
+            'test_count': test_count,
             'contents': [ f.file.read().decode('utf8') for f in files ]
         },
     )

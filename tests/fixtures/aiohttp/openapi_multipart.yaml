@@ -19,7 +19,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  dirName:
+                  dir_name:
                     type: string
                   fileName:
                     type: string
@@ -32,7 +32,7 @@ paths:
             schema:
               type: object
               properties:
-                dirName:
+                dir_name:
                   type: string
                 funky_funky:
                   type: string
@@ -50,11 +50,11 @@ paths:
               schema:
                 type: object
                 properties:
-                  dirName:
+                  dir_name:
                     type: string
-                  testCount:
+                  test_count:
                     type: number
-                  filesCount:
+                  files_count:
                     type: number
         default:
           description: unexpected error
@@ -65,9 +65,9 @@ paths:
             schema:
               type: object
               properties:
-                dirName:
+                dir_name:
                   type: string
-                testCount:
+                test_count:
                   type: number
                 files:
                   type: array
@@ -114,7 +114,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  filesCount:
+                  files_count:
                     type: number
         default:
           description: unexpected error
