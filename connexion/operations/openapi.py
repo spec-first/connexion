@@ -1,3 +1,7 @@
+"""
+This module defines an OpenAPIOperation class, a Connexion operation specific for OpenAPI 3 specs.
+"""
+
 import logging
 from copy import copy, deepcopy
 
@@ -52,12 +56,12 @@ class OpenAPIOperation(AbstractOperation):
         :param validator_map: Custom validators for the types "parameter", "body" and "response".
         :type validator_map: dict
         :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended
-        to any shadowed built-ins
+            to any shadowed built-ins
         :type pythonic_params: bool
         :param uri_parser_class: class to use for uri parsing
         :type uri_parser_class: AbstractURIParser
         :param pass_context_arg_name: If not None will try to inject the request context to the function using this
-        name.
+            name.
         :type pass_context_arg_name: str|None
         """
         self.components = components or {}
@@ -72,7 +76,7 @@ class OpenAPIOperation(AbstractOperation):
 
         self._router_controller = operation.get('x-openapi-router-controller')
 
-        super(OpenAPIOperation, self).__init__(
+        super().__init__(
             api=api,
             method=method,
             path=path,
@@ -362,7 +366,7 @@ class OpenAPIOperation(AbstractOperation):
                 res[key] = self._get_val_from_param(value, prop_defn)
             except KeyError:  # pragma: no cover
                 if not additional_props:
-                    logger.error("Body property '{}' not defined in body schema".format(key))
+                    logger.error(f"Body property '{key}' not defined in body schema")
                     continue
                 if additional_props_defn is not None:
                     value = self._get_val_from_param(value, additional_props_defn)
@@ -401,7 +405,7 @@ class OpenAPIOperation(AbstractOperation):
         return defaults
 
     def _get_query_arguments(self, query, arguments, has_kwargs, sanitize):
-        query_defns = {sanitize(p["name"]): p
+        query_defns = {p["name"]: p
                        for p in self.parameters
                        if p["in"] == "query"}
         default_query_params = self._get_query_defaults(query_defns)

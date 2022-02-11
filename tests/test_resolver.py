@@ -1,15 +1,19 @@
-import pytest
-
 import connexion.apps
+import pytest
 from connexion.exceptions import ResolverError
 from connexion.operations import Swagger2Operation
-from connexion.resolver import Resolver, RestyResolver
+from connexion.resolver import RelativeResolver, Resolver, RestyResolver
 
 PARAMETER_DEFINITIONS = {'myparam': {'in': 'path', 'type': 'integer'}}
 
 
 def test_standard_get_function():
     function = Resolver().resolve_function_from_operation_id('connexion.FlaskApp.common_error_handler')
+    assert function == connexion.FlaskApp.common_error_handler
+
+
+def test_relative_get_function():
+    function = RelativeResolver('connexion').resolve_function_from_operation_id('connexion.FlaskApp.common_error_handler')
     assert function == connexion.FlaskApp.common_error_handler
 
 
@@ -24,6 +28,8 @@ def test_missing_operation_id():
     with pytest.raises(ResolverError):
         Resolver().resolve_function_from_operation_id(None)
     with pytest.raises(ResolverError):
+        RelativeResolver('connexion').resolve_function_from_operation_id(None)
+    with pytest.raises(ResolverError):
         RestyResolver('connexion').resolve_function_from_operation_id(None)
 
 
@@ -32,6 +38,8 @@ def test_bad_operation_id():
     # be handled upstream.
     with pytest.raises(ResolverError):
         Resolver().resolve_function_from_operation_id('ohai.I.do.not.exist')
+    with pytest.raises(ResolverError):
+        RelativeResolver('connexion').resolve_function_from_operation_id('ohai.I.do.not.exist')
     with pytest.raises(ResolverError):
         RestyResolver('connexion').resolve_function_from_operation_id('ohai.I.do.not.exist')
 
@@ -52,6 +60,62 @@ def test_standard_resolve_x_router_controller():
                                   definitions={},
                                   parameter_definitions=PARAMETER_DEFINITIONS,
                                   resolver=Resolver())
+    assert operation.operation_id == 'fakeapi.hello.post_greeting'
+
+
+def test_relative_resolve_x_router_controller():
+    operation = Swagger2Operation(api=None,
+                                  method='GET',
+                                  path='endpoint',
+                                  path_parameters=[],
+                                  operation={
+                                      'x-swagger-router-controller': 'fakeapi.hello',
+                                      'operationId': 'post_greeting',
+                                  },
+                                  app_produces=['application/json'],
+                                  app_consumes=['application/json'],
+                                  app_security=[],
+                                  security_definitions={},
+                                  definitions={},
+                                  parameter_definitions=PARAMETER_DEFINITIONS,
+                                  resolver=RelativeResolver('root_path'))
+    assert operation.operation_id == 'fakeapi.hello.post_greeting'
+
+
+def test_relative_resolve_operation_id():
+    operation = Swagger2Operation(api=None,
+                                  method='GET',
+                                  path='endpoint',
+                                  path_parameters=[],
+                                  operation={
+                                      'operationId': 'hello.post_greeting',
+                                  },
+                                  app_produces=['application/json'],
+                                  app_consumes=['application/json'],
+                                  app_security=[],
+                                  security_definitions={},
+                                  definitions={},
+                                  parameter_definitions=PARAMETER_DEFINITIONS,
+                                  resolver=RelativeResolver('fakeapi'))
+    assert operation.operation_id == 'fakeapi.hello.post_greeting'
+
+
+def test_relative_resolve_operation_id_with_module():
+    import fakeapi
+    operation = Swagger2Operation(api=None,
+                                  method='GET',
+                                  path='endpoint',
+                                  path_parameters=[],
+                                  operation={
+                                      'operationId': 'hello.post_greeting',
+                                  },
+                                  app_produces=['application/json'],
+                                  app_consumes=['application/json'],
+                                  app_security=[],
+                                  security_definitions={},
+                                  definitions={},
+                                  parameter_definitions=PARAMETER_DEFINITIONS,
+                                  resolver=RelativeResolver(fakeapi))
     assert operation.operation_id == 'fakeapi.hello.post_greeting'
 
 

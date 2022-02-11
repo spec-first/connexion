@@ -1,21 +1,60 @@
+"""
+This module defines Python interfaces for OpenAPI specifications.
+"""
+
 import abc
 import copy
+import json
 import pathlib
+import typing as t
+from collections.abc import Mapping
+from urllib.parse import urlsplit
 
 import jinja2
+import jsonschema
+import pkg_resources
 import yaml
-from openapi_spec_validator.exceptions import OpenAPIValidationError
-from urllib.parse import urlsplit
+from jsonschema import Draft4Validator
+from jsonschema.validators import extend as extend_validator
 
 from .exceptions import InvalidSpecification
 from .json_schema import resolve_refs
 from .operations import OpenAPIOperation, Swagger2Operation
 from .utils import deep_get
 
-try:
-    import collections.abc as collections_abc  # python 3.3+
-except ImportError:
-    import collections as collections_abc
+validate_properties = Draft4Validator.VALIDATORS["properties"]
+
+
+def create_validate_default_fn(instance_validator: Draft4Validator) -> t.Callable:
+    """Creates a validation function for property defaults. This validation function will be used
+    by a validator that validates an openapi spec against the openapi schema. The default value
+    however needs to be validated against the openapi spec itself.
+
+    :param instance_validator: A validator to validate defaults against the openapi spec itself
+                               instead of against the openapi schema.
+
+    :return: A validation function for property defaults using the passed in instance_validator
+
+    """
+
+    def validate_defaults(validator, properties, instance, schema):
+        """Validate `properties` subschema.
+
+        Enforcing each default value validates against the schema in which it resides.
+        """
+        valid = True
+        for error in validate_properties(validator, properties, instance, schema):
+            valid = False
+            yield error
+
+        # Validate default only when the subschema has validated successfully
+        if not valid:
+            return
+        if isinstance(instance, dict) and 'default' in instance:
+            for error in instance_validator.iter_errors(instance['default'], instance):
+                yield error
+
+    return validate_defaults
 
 
 NO_SPEC_VERSION_ERR_MSG = """Unable to get the spec version.
@@ -30,7 +69,7 @@ def canonical_base_path(base_path):
     return base_path.rstrip('/')
 
 
-class Specification(collections_abc.Mapping):
+class Specification(Mapping):
 
     def __init__(self, raw_spec):
         self._raw_spec = copy.deepcopy(raw_spec)
@@ -45,10 +84,17 @@ class Specification(collections_abc.Mapping):
         """
 
     @classmethod
-    @abc.abstractmethod
     def _validate_spec(cls, spec):
         """ validate spec against schema
         """
+        try:
+            instance_validator = Draft4Validator(spec)
+            validate_defaults = create_validate_default_fn(instance_validator)
+            OpenApiValidator = extend_validator(Draft4Validator, {"properties": validate_defaults})
+            validator = OpenApiValidator(cls.openapi_schema)
+            validator.validate(spec)
+        except jsonschema.exceptions.ValidationError as e:
+            raise InvalidSpecification.create_from(e)
 
     def get_path_params(self, path):
         return deep_get(self._spec, ["paths", path]).get("parameters", [])
@@ -81,9 +127,9 @@ class Specification(collections_abc.Mapping):
     def _load_spec_from_file(arguments, specification):
         """
         Loads a YAML specification file, optionally rendering it with Jinja2.
-        Takes:
-          arguments - passed to Jinja2 renderer
-          specification - path to specification
+
+        :param arguments: passed to Jinja2 renderer
+        :param specification: path to specification
         """
         arguments = arguments or {}
 
@@ -160,13 +206,18 @@ class Specification(collections_abc.Mapping):
 
 
 class Swagger2Specification(Specification):
+    """Python interface for a Swagger 2 specification."""
+
     yaml_name = 'swagger.yaml'
     operation_cls = Swagger2Operation
+
+    schema_string = pkg_resources.resource_string('connexion', 'resources/schemas/v2.0/schema.json')
+    openapi_schema = json.loads(schema_string.decode('utf-8'))
 
     @classmethod
     def _set_defaults(cls, spec):
         spec.setdefault('produces', [])
-        spec.setdefault('consumes', ['application/json'])  # type: List[str]
+        spec.setdefault('consumes', ['application/json'])
         spec.setdefault('definitions', {})
         spec.setdefault('parameters', {})
         spec.setdefault('responses', {})
@@ -205,18 +256,15 @@ class Swagger2Specification(Specification):
         self._raw_spec['basePath'] = base_path
         self._spec['basePath'] = base_path
 
-    @classmethod
-    def _validate_spec(cls, spec):
-        from openapi_spec_validator import validate_v2_spec as validate_spec
-        try:
-            validate_spec(spec)
-        except OpenAPIValidationError as e:
-            raise InvalidSpecification.create_from(e)
-
 
 class OpenAPISpecification(Specification):
+    """Python interface for an OpenAPI 3 specification."""
+
     yaml_name = 'openapi.yaml'
     operation_cls = OpenAPIOperation
+
+    schema_string = pkg_resources.resource_string('connexion', 'resources/schemas/v3.0/schema.json')
+    openapi_schema = json.loads(schema_string.decode('utf-8'))
 
     @classmethod
     def _set_defaults(cls, spec):
@@ -229,14 +277,6 @@ class OpenAPISpecification(Specification):
     @property
     def components(self):
         return self._spec['components']
-
-    @classmethod
-    def _validate_spec(cls, spec):
-        from openapi_spec_validator import validate_v3_spec as validate_spec
-        try:
-            validate_spec(spec)
-        except OpenAPIValidationError as e:
-            raise InvalidSpecification.create_from(e)
 
     @property
     def base_path(self):

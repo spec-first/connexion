@@ -79,6 +79,18 @@ paths:
       responses:
         '200':
           description: Problem exception
+  /post_wrong_content_type:
+    post:
+      description: Unsupported media type
+      operationId: fakeapi.hello.post_wrong_content_type
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        200:
+          description: OK
 servers:
   - url: /v1.0
 components:

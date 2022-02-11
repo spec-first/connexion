@@ -1,17 +1,17 @@
+"""
+Module containing all code related to json schema validation.
+"""
+
+import typing as t
+from collections.abc import Mapping
 from copy import deepcopy
 
-from jsonschema import Draft4Validator, RefResolver, _utils
+from jsonschema import Draft4Validator, RefResolver
 from jsonschema.exceptions import RefResolutionError, ValidationError  # noqa
 from jsonschema.validators import extend
 from openapi_spec_validator.handlers import UrlHandler
 
 from .utils import deep_get
-
-try:
-    from collections.abc import Mapping
-except ImportError:
-    from collections import Mapping
-
 
 default_handlers = {
     'http': UrlHandler('http'),
@@ -55,22 +55,16 @@ def resolve_refs(spec, store=None, handlers=None):
     return res
 
 
-def validate_type(validator, types, instance, schema):
-    if instance is None and (schema.get('x-nullable') is True or schema.get('nullable')):
-        return
+def allow_nullable(validation_fn: t.Callable) -> t.Callable:
+    """Extend an existing validation function, so it allows nullable values to be null."""
 
-    types = _utils.ensure_list(types)
+    def nullable_validation_fn(validator, to_validate, instance, schema):
+        if instance is None and (schema.get('x-nullable') is True or schema.get('nullable')):
+            return
 
-    if not any(validator.is_type(instance, type) for type in types):
-        yield ValidationError(_utils.types_msg(instance, types))
+        yield from validation_fn(validator, to_validate, instance, schema)
 
-
-def validate_enum(validator, enums, instance, schema):
-    if instance is None and (schema.get('x-nullable') is True or schema.get('nullable')):
-        return
-
-    if instance not in enums:
-        yield ValidationError("%r is not one of %r" % (instance, enums))
+    return nullable_validation_fn
 
 
 def validate_required(validator, required, instance, schema):
@@ -101,14 +95,14 @@ def validate_writeOnly(validator, wo, instance, schema):
 
 
 Draft4RequestValidator = extend(Draft4Validator, {
-                                'type': validate_type,
-                                'enum': validate_enum,
+                                'type': allow_nullable(Draft4Validator.VALIDATORS['type']),
+                                'enum': allow_nullable(Draft4Validator.VALIDATORS['enum']),
                                 'required': validate_required,
                                 'readOnly': validate_readOnly})
 
 Draft4ResponseValidator = extend(Draft4Validator, {
-                                 'type': validate_type,
-                                 'enum': validate_enum,
+                                 'type': allow_nullable(Draft4Validator.VALIDATORS['type']),
+                                 'enum': allow_nullable(Draft4Validator.VALIDATORS['enum']),
                                  'required': validate_required,
                                  'writeOnly': validate_writeOnly,
                                  'x-writeOnly': validate_writeOnly})

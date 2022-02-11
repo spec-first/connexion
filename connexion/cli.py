@@ -1,10 +1,16 @@
+"""
+This module defines a command-line interface (CLI) that runs an OpenAPI specification to be a
+starting point for developing your API with Connexion.
+"""
+
 import logging
 import sys
 from os import path
 
 import click
-import connexion
 from clickclick import AliasedGroup, fatal_error
+
+import connexion
 from connexion.mock import MockResolver
 
 logger = logging.getLogger('connexion.cli')
@@ -45,7 +51,7 @@ def validate_server_requirements(ctx, param, value):
 def print_version(ctx, param, value):
     if not value or ctx.resilient_parsing:
         return
-    click.echo('Connexion {}'.format(connexion.__version__))
+    click.echo(f'Connexion {connexion.__version__}')
     ctx.exit()
 
 
@@ -166,7 +172,7 @@ def run(spec_file,
     spec_file_full_path = path.abspath(spec_file)
     py_module_path = base_module_path or path.dirname(spec_file_full_path)
     sys.path.insert(1, path.abspath(py_module_path))
-    logger.debug('Added {} to system path.'.format(py_module_path))
+    logger.debug(f'Added {py_module_path} to system path.')
 
     resolver_error = None
     if stub:

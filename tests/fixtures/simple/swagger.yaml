@@ -556,21 +556,6 @@ paths:
           required: true
           type: string
 
-  /goodday/noheader:
-    post:
-      summary: Generate good day greeting
-      description: Generates a good day message.
-      operationId: fakeapi.hello.post_goodday_no_header
-      responses:
-        201:
-          description: gooday response
-          headers:
-            Location:
-              type: string
-              description: The URI of the created resource
-          schema:
-            type: object
-
   /goodevening/{name}:
     post:
       summary: Generate good evening

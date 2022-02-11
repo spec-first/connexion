@@ -48,8 +48,8 @@ You can find a `minimal OAuth example application`_ showing the use of
 ``x-tokenInfoUrl``, and `another OAuth example`_ showing the use of
 ``x-tokenInfoFunc`` in Connexion's "examples" folder.
 
-.. _minimal OAuth example application: https://github.com/zalando/connexion/tree/master/examples/swagger2/oauth2
-.. _another OAuth example: https://github.com/zalando/connexion/tree/master/examples/swagger2/oauth2_local_tokeninfo
+.. _minimal OAuth example application: https://github.com/zalando/connexion/tree/main/examples/swagger2/oauth2
+.. _another OAuth example: https://github.com/zalando/connexion/tree/main/examples/swagger2/oauth2_local_tokeninfo
 
 Basic Authentication
 --------------------
@@ -66,7 +66,7 @@ authentication.
 You can find a `minimal Basic Auth example application`_ in Connexion's "examples" folder.
 
 .. _oauth scope: https://oauth.net/2/scope/
-.. _minimal Basic Auth example application: https://github.com/zalando/connexion/tree/master/examples/openapi3/basicauth
+.. _minimal Basic Auth example application: https://github.com/zalando/connexion/tree/main/examples/openapi3/basicauth
 
 ApiKey Authentication
 ---------------------
@@ -87,6 +87,19 @@ semantics as for ``x-tokenInfoFunc``, but the function accepts one parameter: to
 
 You can find a `minimal JWT example application`_ in Connexion's "examples/openapi3" folder.
 
+Multiple Authentication Schemes
+-------------------------------
+
+With Connexion, it is also possible to combine multiple authentication schemes
+as described in the `OpenAPI specification`_. When multiple authentication
+schemes are combined using logical AND, the ``token_info`` argument will
+consist of a dictionary mapping the names of the security scheme to their
+corresponding ``token_info``.
+
+Multiple OAuth2 security schemes in AND fashion are not supported.
+
+.. _OpenAPI specification: https://swagger.io/docs/specification/authentication/#multiple
+
 Deploying Authentication
 ------------------------
 
@@ -106,10 +119,26 @@ server that runs is a "normal" HTTP server. This means that the
 Swagger UI cannot be used to play with the API. What is the correct
 way to start a HTTPS server when using Connexion?
 
+One way, `described by Flask`_, looks like this:
+
+.. code-block:: python
+
+   from OpenSSL import SSL
+   context = SSL.Context(SSL.SSLv23_METHOD)
+   context.use_privatekey_file('yourserver.key')
+   context.use_certificate_file('yourserver.crt')
+
+   app.run(host='127.0.0.1', port='12344',
+           debug=False/True, ssl_context=context)
+
+However, Connexion doesn't provide an ssl_context parameter. This is
+because Flask doesn't, either--but it uses ``**kwargs`` to send the
+parameters to the underlying `werkzeug`_ server.
+
 .. _rfc6750: https://tools.ietf.org/html/rfc6750
 .. _rfc6749: https://tools.ietf.org/html/rfc6749
 .. _rfc7662: https://tools.ietf.org/html/rfc7662
-.. _minimal API Key example application: https://github.com/zalando/connexion/blob/master/examples/openapi3/apikey
-.. _minimal JWT example application: https://github.com/zalando/connexion/tree/master/examples/openapi3/jwt
+.. _minimal API Key example application: https://github.com/zalando/connexion/blob/main/examples/openapi3/apikey
+.. _minimal JWT example application: https://github.com/zalando/connexion/tree/main/examples/openapi3/jwt
 .. _enabling authentication passthrough in modwsgi: https://modwsgi.readthedocs.io/en/develop/configuration-directives/WSGIPassAuthorization.html
 .. _modwsgi documentation: https://modwsgi.readthedocs.io/en/develop/index.html

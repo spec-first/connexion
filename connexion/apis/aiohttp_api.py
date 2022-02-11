@@ -1,3 +1,8 @@
+"""
+This module defines an AioHttp Connexion API which implements translations between AioHttp and
+Connexion requests / responses.
+"""
+
 import asyncio
 import logging
 import re
@@ -11,15 +16,16 @@ import jinja2
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPNotFound, HTTPPermanentRedirect
 from aiohttp.web_middlewares import normalize_path_middleware
+from werkzeug.exceptions import HTTPException as werkzeug_HTTPException
+
 from connexion.apis.abstract import AbstractAPI
 from connexion.exceptions import ProblemException
 from connexion.handlers import AuthErrorHandler
 from connexion.jsonifier import JSONEncoder, Jsonifier
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.problem import problem
+from connexion.security import AioHttpSecurityHandlerFactory
 from connexion.utils import yamldumper
-from werkzeug.exceptions import HTTPException as werkzeug_HTTPException
-
 
 logger = logging.getLogger('connexion.apis.aiohttp_api')
 
@@ -53,7 +59,7 @@ async def problems_middleware(request, handler):
     except (werkzeug_HTTPException, _HttpNotFoundError) as exc:
         response = problem(status=exc.code, title=exc.name, detail=exc.description)
     except web.HTTPError as exc:
-        if exc.text == "{}: {}".format(exc.status, exc.reason):
+        if exc.text == f"{exc.status}: {exc.reason}":
             detail = HTTPStatus(exc.status).description
         else:
             detail = exc.text
@@ -104,6 +110,11 @@ class AioHttpApi(AbstractAPI):
         )
         middlewares = self.options.as_dict().get('middlewares', [])
         self.subapp.middlewares.extend(middlewares)
+
+    @staticmethod
+    def make_security_handler_factory(pass_context_arg_name):
+        """ Create default SecurityHandlerFactory to create all security check handlers """
+        return AioHttpSecurityHandlerFactory(pass_context_arg_name)
 
     def _set_base_path(self, base_path):
         AbstractAPI._set_base_path(self, base_path)
@@ -231,7 +242,8 @@ class AioHttpApi(AbstractAPI):
     async def _get_swagger_ui_home(self, req):
         base_path = self._base_path_for_prefix(req)
         template_variables = {
-            'openapi_spec_url': (base_path + self.options.openapi_spec_path)
+            'openapi_spec_url': (base_path + self.options.openapi_spec_path),
+            **self.options.openapi_console_ui_index_template_variables,
         }
         if self.options.openapi_console_ui_config is not None:
             template_variables['configUrl'] = 'swagger-ui-config.json'
@@ -254,7 +266,7 @@ class AioHttpApi(AbstractAPI):
             security=security,
             security_definitions=security_definitions
         )
-        endpoint_name = "{}_not_found".format(self._api_name)
+        endpoint_name = f"{self._api_name}_not_found"
         self.subapp.router.add_route(
             '*',
             '/{not_found_path}',

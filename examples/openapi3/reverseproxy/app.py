@@ -13,7 +13,7 @@ import connexion
 
 
 # adapted from http://flask.pocoo.org/snippets/35/
-class ReverseProxied(object):
+class ReverseProxied:
     '''Wrap the application in this middleware and configure the
     reverse proxy to add these headers, to let you quietly bind
     this to a URL other than / and to an HTTP scheme that is
@@ -76,4 +76,4 @@ if __name__ == '__main__':
         script_name='/reverse_proxied/'
     )
     flask_app.wsgi_app = proxied
-    app.run(port=8080)
+    flask_app.run(port=8080)

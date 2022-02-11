@@ -1,23 +1,37 @@
+"""
+This module defines a Flask Connexion API which implements translations between Flask and
+Connexion requests / responses.
+"""
+
 import logging
+import pathlib
 import warnings
+from typing import Any
 
 import flask
 import werkzeug.exceptions
+from werkzeug.local import LocalProxy
+
 from connexion.apis import flask_utils
 from connexion.apis.abstract import AbstractAPI
 from connexion.handlers import AuthErrorHandler
 from connexion.jsonifier import Jsonifier
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
+from connexion.security import FlaskSecurityHandlerFactory
 from connexion.utils import is_json_mimetype, yamldumper
-from werkzeug.local import LocalProxy
 
 logger = logging.getLogger('connexion.apis.flask_api')
 
 
 class FlaskApi(AbstractAPI):
 
+    @staticmethod
+    def make_security_handler_factory(pass_context_arg_name):
+        """ Create default SecurityHandlerFactory to create all security check handlers """
+        return FlaskSecurityHandlerFactory(pass_context_arg_name)
+
     def _set_base_path(self, base_path):
-        super(FlaskApi, self)._set_base_path(base_path)
+        super()._set_base_path(base_path)
         self._set_blueprint()
 
     def _set_blueprint(self):
@@ -33,7 +47,7 @@ class FlaskApi(AbstractAPI):
         """
         logger.debug('Adding spec json: %s/%s', self.base_path,
                      self.options.openapi_spec_path)
-        endpoint_name = "{name}_openapi_json".format(name=self.blueprint.name)
+        endpoint_name = f"{self.blueprint.name}_openapi_json"
 
         self.blueprint.add_url_rule(self.options.openapi_spec_path,
                                     endpoint_name,
@@ -51,7 +65,7 @@ class FlaskApi(AbstractAPI):
             self.options.openapi_spec_path[:-len("json")] + "yaml"
         logger.debug('Adding spec yaml: %s/%s', self.base_path,
                      openapi_spec_path_yaml)
-        endpoint_name = "{name}_openapi_yaml".format(name=self.blueprint.name)
+        endpoint_name = f"{self.blueprint.name}_openapi_yaml"
         self.blueprint.add_url_rule(
             openapi_spec_path_yaml,
             endpoint_name,
@@ -68,7 +82,7 @@ class FlaskApi(AbstractAPI):
                      console_ui_path)
 
         if self.options.openapi_console_ui_config is not None:
-            config_endpoint_name = "{name}_swagger_ui_config".format(name=self.blueprint.name)
+            config_endpoint_name = f"{self.blueprint.name}_swagger_ui_config"
             config_file_url = '/{console_ui_path}/swagger-ui-config.json'.format(
                 console_ui_path=console_ui_path)
 
@@ -76,7 +90,7 @@ class FlaskApi(AbstractAPI):
                                         config_endpoint_name,
                                         lambda: flask.jsonify(self.options.openapi_console_ui_config))
 
-        static_endpoint_name = "{name}_swagger_ui_static".format(name=self.blueprint.name)
+        static_endpoint_name = f"{self.blueprint.name}_swagger_ui_static"
         static_files_url = '/{console_ui_path}/<path:filename>'.format(
             console_ui_path=console_ui_path)
 
@@ -84,7 +98,7 @@ class FlaskApi(AbstractAPI):
                                     static_endpoint_name,
                                     self._handlers.console_ui_static_files)
 
-        index_endpoint_name = "{name}_swagger_ui_index".format(name=self.blueprint.name)
+        index_endpoint_name = f"{self.blueprint.name}_swagger_ui_index"
         console_ui_url = '/{console_ui_path}/'.format(
             console_ui_path=console_ui_path)
 
@@ -99,7 +113,7 @@ class FlaskApi(AbstractAPI):
         logger.debug('Adding path not found authentication')
         not_found_error = AuthErrorHandler(self, werkzeug.exceptions.NotFound(), security=security,
                                            security_definitions=security_definitions)
-        endpoint_name = "{name}_not_found".format(name=self.blueprint.name)
+        endpoint_name = f"{self.blueprint.name}_not_found"
         self.blueprint.add_url_rule('/<path:invalid_path>', endpoint_name, not_found_error.function)
 
     def _add_operation_internal(self, method, path, operation):
@@ -180,7 +194,7 @@ class FlaskApi(AbstractAPI):
             'status': status_code
         }
         kwargs = {k: v for k, v in kwargs.items() if v is not None}
-        return flask.current_app.response_class(**kwargs)  # type: flask.Response
+        return flask.current_app.response_class(**kwargs)
 
     @classmethod
     def _serialize_data(cls, data, mimetype):
@@ -255,7 +269,7 @@ def _get_context():
 context = LocalProxy(_get_context)
 
 
-class InternalHandlers(object):
+class InternalHandlers:
     """
     Flask handlers for internally registered endpoints.
     """
@@ -278,11 +292,18 @@ class InternalHandlers(object):
             prefix=escaped
         )
         template_variables = {
-            'openapi_spec_url': flask.url_for(openapi_json_route_name)
+            'openapi_spec_url': flask.url_for(openapi_json_route_name),
+            **self.options.openapi_console_ui_index_template_variables,
         }
         if self.options.openapi_console_ui_config is not None:
             template_variables['configUrl'] = 'swagger-ui-config.json'
-        return flask.render_template('index.j2', **template_variables)
+
+        # Use `render_template_string` instead of `render_template` to circumvent the flask
+        # template lookup mechanism and explicitly render the template of the current blueprint.
+        # https://github.com/zalando/connexion/issues/1289#issuecomment-884105076
+        template_dir = pathlib.Path(self.options.openapi_console_ui_from_dir)
+        index_path = template_dir / 'index.j2'
+        return flask.render_template_string(index_path.read_text(), **template_variables)
 
     def console_ui_static_files(self, filename):
         """

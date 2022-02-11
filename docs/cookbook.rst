@@ -4,6 +4,30 @@ Connexion Cookbook
 This section aims to be a cookbook of possible solutions for specific
 use cases of Connexion.
 
+Wildcard path parameters
+------------------------
+
+Path parameters cannot contain slashes by default, but sometimes it's useful
+to have a path parameter which takes the full remainder of the HTTP path
+including slashes, e.g. to allow parsing "my/deep/path" from
+"/pages/my/deep/path". Connexion supports parsing such path remainders
+by using ``format: path``:
+
+.. code-block:: yaml
+
+    paths:
+      /pages/{path}:
+        get:
+         # (...)
+          parameters:
+            - name: "path"
+              in: path
+              description: "Remainder of path, including slashes."
+              schema:
+                type: string
+                format: path
+
+
 Custom type format
 ------------------
 
@@ -97,7 +121,7 @@ Logging
 ------------
 
 You can customize logging accessing the `_flask-logger` directly
-or configuring the logger via dictConfig. 
+or configuring the logger via dictConfig.
 Remember that you should configure logging for your project as soon
 as possible when the program starts or you'll get the default configuration.
 
@@ -105,8 +129,8 @@ as possible when the program starts or you'll get the default configuration.
 
     import connexion
     from logging.config import dictConfig
-    
-    
+
+
     dictConfig({
         'version': 1,
         'handlers': {
