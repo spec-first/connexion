@@ -323,11 +323,10 @@ class AioHttpApi(AbstractAPI):
         headers = req.headers
         body = None
 
-        # if request is not multipart, `data` will be empty dict
-        # and stream will not be consumed
+        # Note: if request is not 'application/x-www-form-urlencoded' nor 'application/x-www-form-urlencoded',
+        #       then `post_data` will be left an empty dict and the stream will not be consumed.
         post_data = await req.post()
 
-        # set those up beforehand, they are needed anyway
         files = {}
         form = {}
 
