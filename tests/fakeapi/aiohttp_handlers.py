@@ -107,40 +107,43 @@ async def get_uuid():
     return ConnexionResponse(body={'value': uuid.UUID(hex='e7ff66d0-3ec2-4c4e-bed0-6e4723c24c51')})
 
 
-async def aiohttp_multipart_single_file(funky_funky):
+async def aiohttp_multipart_single_file(myfile):
     return aiohttp.web.json_response(
         data={
-			'fileName': funky_funky.filename,
-			'content': funky_funky.file.read().decode('utf8')
-		},
-    )
-
-
-async def aiohttp_multipart_many_files(files):
-    return aiohttp.web.json_response(
-        data={
-			'files_count': len(files),
-            'contents': [ f.file.read().decode('utf8') for f in files ]
-		},
-    )
-
-
-async def aiohttp_multipart_mixed_single_file(dir_name, funky_funky):
-    return aiohttp.web.json_response(
-        data={
-            'dir_name': dir_name,
-            'fileName': funky_funky.filename,
-            'content': funky_funky.file.read().decode('utf8'),
+            'fileName': myfile.filename,
+            'myfile_content': myfile.file.read().decode('utf8')
         },
     )
 
 
-async def aiohttp_multipart_mixed_many_files(dir_name, test_count, files):
+async def aiohttp_multipart_many_files(myfiles):
     return aiohttp.web.json_response(
         data={
-            'files_count': len(files),
+            'files_count': len(myfiles),
+            'myfiles_content': [ f.file.read().decode('utf8') for f in myfiles ]
+        },
+    )
+
+
+async def aiohttp_multipart_mixed_single_file(myfile, body):
+    dir_name = body['dir_name']
+    return aiohttp.web.json_response(
+        data={
+            'dir_name': dir_name,
+            'fileName': myfile.filename,
+            'myfile_content': myfile.file.read().decode('utf8'),
+        },
+    )
+
+
+async def aiohttp_multipart_mixed_many_files(myfiles, body):
+    dir_name = body['dir_name']
+    test_count = body['test_count']
+    return aiohttp.web.json_response(
+        data={
+            'files_count': len(myfiles),
             'dir_name': dir_name,
             'test_count': test_count,
-            'contents': [ f.file.read().decode('utf8') for f in files ]
+            'myfiles_content': [ f.file.read().decode('utf8') for f in myfiles ]
         },
     )

@@ -32,13 +32,13 @@ async def test_single_file_upload(aiohttp_app, aiohttp_client):
 
     resp = await app_client.post(
         '/v1.0/upload_file',
-        data=aiohttp.FormData(fields=[('funky_funky', open(__file__, 'rb'))])(),
+        data=aiohttp.FormData(fields=[('myfile', open(__file__, 'rb'))])(),
     )
 
     data = await resp.json()
     assert resp.status == 200
     assert data['fileName'] == f'{__name__}.py'
-    assert data['content'] == Path(__file__).read_bytes().decode('utf8')
+    assert data['myfile_content'] == Path(__file__).read_bytes().decode('utf8')
 
 
 async def test_many_files_upload(aiohttp_app, aiohttp_client):
@@ -46,7 +46,7 @@ async def test_many_files_upload(aiohttp_app, aiohttp_client):
 
     dir_name = os.path.dirname(__file__)
     files_field = [
-        ('files', open(f'{dir_name}/{file_name}', 'rb')) \
+        ('myfiles', open(f'{dir_name}/{file_name}', 'rb')) \
             for file_name in sorted(os.listdir(dir_name)) if file_name.endswith('.py')
     ]
 
@@ -61,7 +61,7 @@ async def test_many_files_upload(aiohttp_app, aiohttp_client):
 
     assert resp.status == 200
     assert data['files_count'] == len(files_field)
-    assert data['contents'] == [
+    assert data['myfiles_content'] == [
         Path(f'{dir_name}/{file_name}').read_bytes().decode('utf8') \
             for file_name in sorted(os.listdir(dir_name)) if file_name.endswith('.py')
     ]
@@ -72,7 +72,7 @@ async def test_mixed_multipart_single_file(aiohttp_app, aiohttp_client):
 
     form_data = aiohttp.FormData()
     form_data.add_field('dir_name', os.path.dirname(__file__))
-    form_data.add_field('funky_funky', open(__file__, 'rb'))
+    form_data.add_field('myfile', open(__file__, 'rb'))
 
     resp = await app_client.post(
         '/v1.0/mixed_single_file',
@@ -84,7 +84,7 @@ async def test_mixed_multipart_single_file(aiohttp_app, aiohttp_client):
     assert resp.status == 200
     assert data['dir_name'] == os.path.dirname(__file__)
     assert data['fileName'] == f'{__name__}.py'
-    assert data['content'] == Path(__file__).read_bytes().decode('utf8')
+    assert data['myfile_content'] == Path(__file__).read_bytes().decode('utf8')
 
 
 
@@ -93,7 +93,7 @@ async def test_mixed_multipart_many_files(aiohttp_app, aiohttp_client):
 
     dir_name = os.path.dirname(__file__)
     files_field = [
-        ('files', open(f'{dir_name}/{file_name}', 'rb')) \
+        ('myfiles', open(f'{dir_name}/{file_name}', 'rb')) \
             for file_name in sorted(os.listdir(dir_name)) if file_name.endswith('.py')
     ]
 
@@ -112,7 +112,7 @@ async def test_mixed_multipart_many_files(aiohttp_app, aiohttp_client):
     assert data['dir_name'] == os.path.dirname(__file__)
     assert data['test_count'] == len(files_field)
     assert data['files_count'] == len(files_field)
-    assert data['contents'] == [
+    assert data['myfiles_content'] == [
         Path(f'{dir_name}/{file_name}').read_bytes().decode('utf8') \
             for file_name in sorted(os.listdir(dir_name)) if file_name.endswith('.py')
     ]

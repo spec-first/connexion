@@ -6,6 +6,62 @@ info:
   title: "{{title}}"
   version: "1.0"
 paths:
+  "/upload_file":
+    post:
+      summary: Uploads single file
+      description: Handles multipart file upload.
+      operationId: fakeapi.aiohttp_handlers.aiohttp_multipart_single_file
+      responses:
+        "200":
+          description: OK response
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  fileName:
+                    type: string
+        default:
+          description: unexpected error
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                myfile:
+                  type: string
+                  format: binary
+  "/upload_files":
+    post:
+      summary: Uploads many files
+      description: Handles multipart file upload.
+      operationId: fakeapi.aiohttp_handlers.aiohttp_multipart_many_files
+      responses:
+        "200":
+          description: OK response
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  files_count:
+                    type: number
+        default:
+          description: unexpected error
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                myfiles:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
   "/mixed_single_file":
     post:
       summary: Reads multipart data
@@ -34,7 +90,7 @@ paths:
               properties:
                 dir_name:
                   type: string
-                funky_funky:
+                myfile:
                   type: string
                   format: binary
   "/mixed_many_files":
@@ -69,63 +125,7 @@ paths:
                   type: string
                 test_count:
                   type: number
-                files:
-                  type: array
-                  items:
-                    type: string
-                    format: binary
-  "/upload_file":
-    post:
-      summary: Uploads single file
-      description: Handles multipart file upload.
-      operationId: fakeapi.aiohttp_handlers.aiohttp_multipart_single_file
-      responses:
-        "200":
-          description: OK response
-          content:
-            'application/json':
-              schema:
-                type: object
-                properties:
-                  fileName:
-                    type: string
-        default:
-          description: unexpected error
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                funky_funky:
-                  type: string
-                  format: binary
-  "/upload_files":
-    post:
-      summary: Uploads many files
-      description: Handles multipart file upload.
-      operationId: fakeapi.aiohttp_handlers.aiohttp_multipart_many_files
-      responses:
-        "200":
-          description: OK response
-          content:
-            'application/json':
-              schema:
-                type: object
-                properties:
-                  files_count:
-                    type: number
-        default:
-          description: unexpected error
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                file:
+                myfiles:
                   type: array
                   items:
                     type: string

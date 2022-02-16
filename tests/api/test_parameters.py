@@ -408,8 +408,8 @@ def test_args_kwargs(simple_app):
             data=json.dumps(body),
             headers={'Content-Type': 'application/json'})
         assert resp.status_code == 200
-        # having only kwargs and no explicit x-body-name, the handler would have been passed 'body' and the individual params from body
-        assert json.loads(resp.data.decode('utf-8', 'replace')) == {'body': {'foo': 'a', 'bar': 'b'}, 'foo': 'a', 'bar': 'b'}
+        # having only kwargs, the handler would have been passed 'body'
+        assert json.loads(resp.data.decode('utf-8', 'replace')) == {'body': {'foo': 'a', 'bar': 'b'}, }
 
 
 def test_param_sanitization(simple_app):
