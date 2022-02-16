@@ -191,18 +191,21 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
                            function_arguments, has_kwargs, sanitize):
         res = {}
         for key, value in query_arguments.items():
-            key = sanitize(key)
-            if not has_kwargs and key not in function_arguments:
-                logger.debug("Query Parameter '%s' not in function arguments", key)
+            sanitized_key = sanitize(key)
+            if not has_kwargs and sanitized_key not in function_arguments:
+                logger.debug("Query Parameter '%s' (sanitized: '%s') not in function arguments",
+                             key, sanitized_key)
             else:
-                logger.debug("Query Parameter '%s' in function arguments", key)
+                logger.debug("Query Parameter '%s' (sanitized: '%s') in function arguments",
+                             key, sanitized_key)
                 try:
                     query_defn = query_defns[key]
                 except KeyError:  # pragma: no cover
-                    logger.error(f"Function argument '{key}' not defined in specification")
+                    logger.error("Function argument '%s' (non-sanitized: %s) not defined in specification",
+                                 sanitized_key, key)
                 else:
                     logger.debug('%s is a %s', key, query_defn)
-                    res.update({key: self._get_val_from_param(value, query_defn)})
+                    res.update({sanitized_key: self._get_val_from_param(value, query_defn)})
         return res
 
     @abc.abstractmethod

@@ -362,7 +362,7 @@ class OpenAPIOperation(AbstractOperation):
         return defaults
 
     def _get_query_arguments(self, query, arguments, has_kwargs, sanitize):
-        query_defns = {sanitize(p["name"]): p
+        query_defns = {p["name"]: p
                        for p in self.parameters
                        if p["in"] == "query"}
         default_query_params = self._get_query_defaults(query_defns)

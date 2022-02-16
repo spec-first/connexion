@@ -66,7 +66,7 @@ def parameter_to_arg(operation, function, pythonic_params=False,
     consumes = operation.consumes
 
     def sanitized(name):
-        return name and re.sub('^[^a-zA-Z_]+', '', re.sub('[^0-9a-zA-Z_]', '', name))
+        return name and re.sub('^[^a-zA-Z_]+', '', re.sub('[^0-9a-zA-Z[_]', '', re.sub(r'[\[]', '_', name)))
 
     def pythonic(name):
         name = name and snake_and_shadow(name)
@@ -84,7 +84,7 @@ def parameter_to_arg(operation, function, pythonic_params=False,
         if all_json(consumes):
             request_body = request.json
         elif consumes[0] in FORM_CONTENT_TYPES:
-            request_body = {sanitize(k): v for k, v in request.form.items()}
+            request_body = request.form
         else:
             request_body = request.body
 
