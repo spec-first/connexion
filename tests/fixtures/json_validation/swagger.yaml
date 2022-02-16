@@ -67,3 +67,16 @@ paths:
           description: User object
           schema:
             $ref: '#/definitions/User'
+
+  /nullable_default:
+    get:
+      operationId: fakeapi.hello.nullable_default
+      parameters:
+        - name: test
+          in: query
+          type: string
+          x-nullable: true
+          default: null
+      responses:
+        204:
+          description: OK

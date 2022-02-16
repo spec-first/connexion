@@ -94,15 +94,18 @@ def validate_writeOnly(validator, wo, instance, schema):
     yield ValidationError("Property is write-only")
 
 
+NullableTypeValidator = allow_nullable(Draft4Validator.VALIDATORS['type'])
+NullableEnumValidator = allow_nullable(Draft4Validator.VALIDATORS['enum'])
+
 Draft4RequestValidator = extend(Draft4Validator, {
-                                'type': allow_nullable(Draft4Validator.VALIDATORS['type']),
-                                'enum': allow_nullable(Draft4Validator.VALIDATORS['enum']),
+                                'type': NullableTypeValidator,
+                                'enum': NullableEnumValidator,
                                 'required': validate_required,
                                 'readOnly': validate_readOnly})
 
 Draft4ResponseValidator = extend(Draft4Validator, {
-                                 'type': allow_nullable(Draft4Validator.VALIDATORS['type']),
-                                 'enum': allow_nullable(Draft4Validator.VALIDATORS['enum']),
+                                 'type': NullableTypeValidator,
+                                 'enum': NullableTypeValidator,
                                  'required': validate_required,
                                  'writeOnly': validate_writeOnly,
                                  'x-writeOnly': validate_writeOnly})
