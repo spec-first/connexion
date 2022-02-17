@@ -605,3 +605,7 @@ def get_uuid():
 
 def test_optional_headers():
     return {}, 200
+
+
+def nullable_default(test):
+    return
