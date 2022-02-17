@@ -105,7 +105,7 @@ Draft4RequestValidator = extend(Draft4Validator, {
 
 Draft4ResponseValidator = extend(Draft4Validator, {
                                  'type': NullableTypeValidator,
-                                 'enum': NullableTypeValidator,
+                                 'enum': NullableEnumValidator,
                                  'required': validate_required,
                                  'writeOnly': validate_writeOnly,
                                  'x-writeOnly': validate_writeOnly})
