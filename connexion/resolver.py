@@ -5,6 +5,7 @@ from the operations defined in the OpenAPI spec.
 
 import inspect
 import logging
+import re
 import sys
 
 import connexion.utils as utils
@@ -209,7 +210,7 @@ class MethodViewResolver(RestyResolver):
         # Use RestyResolver to get operation_id for us (follow their naming conventions/structure)
         operation_id = self.resolve_operation_id_using_rest_semantics(operation)
         module_name, view_base, meth_name = operation_id.rsplit('.', 2)
-        view_name = view_base[0].upper() + view_base[1:] + 'View'
+        view_name = ''.join(w.title() for w in re.split('_|-', view_base)) + 'View'
 
         return f"{module_name}.{view_name}.{meth_name}"
 
