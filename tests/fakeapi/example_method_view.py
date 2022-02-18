@@ -1,7 +1,7 @@
 from flask.views import MethodView
 
 
-class Example_methodView(MethodView):
+class ExampleMethodView(MethodView):
     mycontent="demonstrate return from MethodView class"
     def get(self):
       return self.mycontent
