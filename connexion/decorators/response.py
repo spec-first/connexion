@@ -88,9 +88,11 @@ class ResponseValidator(BaseDecorator):
         def _wrapper(request, response):
             connexion_response = \
                 self.operation.api.get_connexion_response(response, self.mimetype)
-            self.validate_response(
-                connexion_response.body, connexion_response.status_code,
-                connexion_response.headers, request.url)
+            if not connexion_response.is_streamed:
+                logger.warning("Skipping response validation for streamed response.")
+                self.validate_response(
+                    connexion_response.body, connexion_response.status_code,
+                    connexion_response.headers, request.url)
 
             return response
 
