@@ -173,10 +173,10 @@ class AbstractSecurityHandlerFactory(abc.ABC):
             raise OAuthProblem(description='Invalid authorization header')
         return auth_type.lower(), value
 
-    def verify_oauth(self, token_info_func, scope_validate_func):
+    def verify_oauth(self, token_info_func, scope_validate_func, required_scopes):
         check_oauth_func = self.check_oauth_func(token_info_func, scope_validate_func)
 
-        def wrapper(request, required_scopes):
+        def wrapper(request):
             auth_type, token = self.get_auth_header_value(request)
             if auth_type != 'bearer':
                 return self.no_value
@@ -188,7 +188,7 @@ class AbstractSecurityHandlerFactory(abc.ABC):
     def verify_basic(self, basic_info_func):
         check_basic_info_func = self.check_basic_auth(basic_info_func)
 
-        def wrapper(request, required_scopes):
+        def wrapper(request):
             auth_type, user_pass = self.get_auth_header_value(request)
             if auth_type != 'basic':
                 return self.no_value
@@ -198,7 +198,7 @@ class AbstractSecurityHandlerFactory(abc.ABC):
             except Exception:
                 raise OAuthProblem(description='Invalid authorization header')
 
-            return check_basic_info_func(request, username, password, required_scopes=required_scopes)
+            return check_basic_info_func(request, username, password)
 
         return wrapper
 
@@ -221,7 +221,7 @@ class AbstractSecurityHandlerFactory(abc.ABC):
     def verify_api_key(self, api_key_info_func, loc, name):
         check_api_key_func = self.check_api_key(api_key_info_func)
 
-        def wrapper(request, required_scopes):
+        def wrapper(request):
 
             def _immutable_pop(_dict, key):
                 """
@@ -252,7 +252,7 @@ class AbstractSecurityHandlerFactory(abc.ABC):
             if api_key is None:
                 return self.no_value
 
-            return check_api_key_func(request, api_key, required_scopes=required_scopes)
+            return check_api_key_func(request, api_key)
 
         return wrapper
 
@@ -263,11 +263,11 @@ class AbstractSecurityHandlerFactory(abc.ABC):
         """
         check_bearer_func = self.check_bearer_token(token_info_func)
 
-        def wrapper(request, required_scopes):
+        def wrapper(request):
             auth_type, token = self.get_auth_header_value(request)
             if auth_type != 'bearer':
                 return self.no_value
-            return check_bearer_func(request, token, required_scopes=required_scopes)
+            return check_bearer_func(request, token)
 
         return wrapper
 
@@ -281,10 +281,10 @@ class AbstractSecurityHandlerFactory(abc.ABC):
         :rtype: types.FunctionType
         """
 
-        def wrapper(request, required_scopes):
+        def wrapper(request):
             token_info = {}
             for scheme_name, func in schemes.items():
-                result = func(request, required_scopes)
+                result = func(request)
                 if result is self.no_value:
                     return self.no_value
                 token_info[scheme_name] = result
@@ -299,7 +299,7 @@ class AbstractSecurityHandlerFactory(abc.ABC):
         :rtype: types.FunctionType
         """
 
-        def wrapper(request, required_scopes):
+        def wrapper(request):
             return {}
 
         return wrapper
@@ -320,6 +320,9 @@ class AbstractSecurityHandlerFactory(abc.ABC):
             if need_to_add_required_scopes:
                 kwargs[self.required_scopes_kw] = required_scopes
             token_info = func(*args, **kwargs)
+            # TODO: Multiple OAuth schemes defined in OR fashion
+            # This currently doesn't work because if the first one doesn't apply, it will raise an error
+            # and the second OAuth security func is never checked
             if token_info is self.no_value:
                 return self.no_value
             if token_info is None:
@@ -362,18 +365,26 @@ class AbstractSecurityHandlerFactory(abc.ABC):
         return wrapper
 
     @classmethod
-    def verify_security(cls, auth_funcs, required_scopes, function):
+    def verify_security(cls, auth_funcs, function):
         @functools.wraps(function)
         def wrapper(request):
             token_info = cls.no_value
+            problem = None
             for func in auth_funcs:
-                token_info = func(request, required_scopes)
-                if token_info is not cls.no_value:
-                    break
+                try:
+                    token_info = func(request)
+                    if token_info is not cls.no_value:
+                        break
+                # TODO: Catch any error that might be raised instead of specific ones?
+                except (OAuthProblem, OAuthResponseProblem, OAuthScopeProblem) as err:
+                    problem = err
 
             if token_info is cls.no_value:
-                logger.info("... No auth provided. Aborting with 401.")
-                raise OAuthProblem(description='No authorization token provided')
+                if problem is not None:
+                    raise problem
+                else:
+                    logger.info("... No auth provided. Aborting with 401.")
+                    raise OAuthProblem(description='No authorization token provided')
 
             # Fallback to 'uid' for backward compatibility
             request.context['user'] = token_info.get('sub', token_info.get('uid'))

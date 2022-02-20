@@ -75,7 +75,6 @@ class SecureOperation:
             return self._api.security_handler_factory.security_passthrough
 
         auth_funcs = []
-        required_scopes = None
         for security_req in self.security:
             if not security_req:
                 auth_funcs.append(self._api.security_handler_factory.verify_none())
@@ -83,7 +82,7 @@ class SecureOperation:
 
             sec_req_funcs = {}
             oauth = False
-            for scheme_name, scopes in security_req.items():
+            for scheme_name, required_scopes in security_req.items():
                 security_scheme = self.security_schemes[scheme_name]
 
                 if security_scheme['type'] == 'oauth2':
@@ -91,7 +90,6 @@ class SecureOperation:
                         logger.warning("... multiple OAuth2 security schemes in AND fashion not supported", extra=vars(self))
                         break
                     oauth = True
-                    required_scopes = scopes
                     token_info_func = self._api.security_handler_factory.get_tokeninfo_func(security_scheme)
                     scope_validate_func = self._api.security_handler_factory.get_scope_validate_func(security_scheme)
                     if not token_info_func:
@@ -99,7 +97,7 @@ class SecureOperation:
                         break
 
                     sec_req_funcs[scheme_name] = self._api.security_handler_factory.verify_oauth(
-                        token_info_func, scope_validate_func)
+                        token_info_func, scope_validate_func, required_scopes)
 
                 # Swagger 2.0
                 elif security_scheme['type'] == 'basic':
@@ -159,7 +157,7 @@ class SecureOperation:
                 else:
                     auth_funcs.append(self._api.security_handler_factory.verify_multiple_schemes(sec_req_funcs))
 
-        return functools.partial(self._api.security_handler_factory.verify_security, auth_funcs, required_scopes)
+        return functools.partial(self._api.security_handler_factory.verify_security, auth_funcs)
 
     def get_mimetype(self):
         return DEFAULT_MIMETYPE
