@@ -286,7 +286,7 @@ class OpenAPIOperation(AbstractOperation):
 
         # now determine the actual value for the body (whether it came in or is default)
         default_body = self.body_schema.get('default', {})
-        body_props = {sanitize(k): {"schema": v} for k, v
+        body_props = {k: {"schema": v} for k, v
                       in self.body_schema.get("properties", {}).items()}
 
         # by OpenAPI specification `additionalProperties` defaults to `true`
