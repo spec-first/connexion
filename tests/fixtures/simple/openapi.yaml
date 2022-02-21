@@ -1196,6 +1196,17 @@ paths:
               schema:
                 type: string
               required: false
+  /get_streaming_response:
+    get:
+      operationId: fakeapi.hello.get_streaming_response
+      responses:
+        '200':
+          description: OK
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
 
 servers:
   - url: http://localhost:{port}/{basePath}

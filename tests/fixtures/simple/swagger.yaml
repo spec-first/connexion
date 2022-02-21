@@ -1026,6 +1026,15 @@ paths:
           schema:
             type: object
 
+  /get_streaming_response:
+    get:
+      operationId: fakeapi.hello.get_streaming_response
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: file
+
 definitions:
   new_stack:
     type: object
