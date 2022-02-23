@@ -272,8 +272,8 @@ class OpenAPIOperation(AbstractOperation):
         return {}
 
     def _get_body_argument(self, body, arguments, has_kwargs, sanitize):
-        # prefer the x-body-name as an extension of operation
-        x_body_name = sanitize(self._operation.get('x-body-name', None))
+        # prefer the x-body-name as an extension of requestBody
+        x_body_name = sanitize(self.request_body.get('x-body-name', None))
 
         if not x_body_name:
             # x-body-name also accepted in the schema field for legacy connexion compat

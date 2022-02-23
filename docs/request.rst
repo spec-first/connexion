@@ -93,7 +93,7 @@ And the view function:
 .. note:: In the OpenAPI 3.x.x spec, the requestBody does not have a name.
           By default it will be passed in as 'body'. You can optionally
           provide the x-body-name parameter in your operation 
-          (or non-OAS compliant legacy position within the requestBody schema)
+          (or legacy position within the requestBody schema)
           to override the name of the parameter that will be passed to your
           handler function.
 
@@ -101,8 +101,8 @@ And the view function:
 
     /path
       post:
-        x-body-name: body
         requestBody:
+          x-body-name: body
           content:
             application/json:
               schema:

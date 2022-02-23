@@ -270,8 +270,8 @@ paths:
       responses:
         '200':
           description: OK
-      x-body-name: stack
       requestBody:
+        x-body-name: stack
         content:
           application/json:
             schema:
