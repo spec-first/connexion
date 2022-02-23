@@ -106,7 +106,7 @@ And the view function:
           content:
             application/json:
               schema:
-                # legacy location here should be ignored because the preferred location for x-body-name is at the operation level above
+                # legacy location here should be ignored because the preferred location for x-body-name is at the requestBody level above
                 x-body-name: this_should_be_ignored
 
 .. warning:: Please note that when you have a parameter defined as
