@@ -3,7 +3,7 @@ import datetime
 import uuid
 
 from connexion import NoContent, ProblemException, context, request
-from flask import jsonify, redirect
+from flask import jsonify, redirect, send_file
 
 
 class DummyClass:
@@ -402,6 +402,9 @@ def test_nullable_param_put(contents):
         return 'it was None'
     return contents
 
+def test_nullable_param_put_noargs(dummy=''):
+    return 'hello'
+
 
 def test_custom_json_response():
     return {'theResult': DummyClass()}, 200
@@ -457,6 +460,9 @@ def optional_auth(**kwargs):
 
 
 def test_args_kwargs(*args, **kwargs):
+    return kwargs
+
+def test_args_kwargs_post(*args, **kwargs):
     return kwargs
 
 
@@ -605,3 +611,11 @@ def get_uuid():
 
 def test_optional_headers():
     return {}, 200
+
+
+def nullable_default(test):
+    return
+
+
+def get_streaming_response():
+    return send_file(__file__)

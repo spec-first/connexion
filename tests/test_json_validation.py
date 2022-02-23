@@ -1,9 +1,11 @@
 import json
+import pathlib
 
 import pytest
 from connexion import App
 from connexion.decorators.validation import RequestBodyValidator
 from connexion.json_schema import Draft4RequestValidator
+from connexion.spec import Specification
 from jsonschema.validators import _utils, extend
 
 from conftest import build_app_from_fixture
@@ -74,6 +76,12 @@ def test_writeonly(json_validation_spec_dir, spec):
     res = app_client.get('/v1.0/user_with_password') # type: flask.Response
     assert res.status_code == 500
     assert json.loads(res.data.decode())['title'] == 'Response body does not conform to specification'
+
+
+@pytest.mark.parametrize("spec", SPECS)
+def test_nullable_default(json_validation_spec_dir, spec):
+    spec_path = pathlib.Path(json_validation_spec_dir) / spec
+    Specification.load(spec_path)
 
 
 @pytest.mark.parametrize("spec", ["openapi.yaml"])

@@ -6,7 +6,6 @@ import abc
 import copy
 import json
 import pathlib
-import typing as t
 from collections.abc import Mapping
 from urllib.parse import urlsplit
 
@@ -18,29 +17,26 @@ from jsonschema import Draft4Validator
 from jsonschema.validators import extend as extend_validator
 
 from .exceptions import InvalidSpecification
-from .json_schema import resolve_refs
+from .json_schema import NullableTypeValidator, resolve_refs
 from .operations import OpenAPIOperation, Swagger2Operation
 from .utils import deep_get
 
 validate_properties = Draft4Validator.VALIDATORS["properties"]
 
 
-def create_validate_default_fn(instance_validator: Draft4Validator) -> t.Callable:
-    """Creates a validation function for property defaults. This validation function will be used
-    by a validator that validates an openapi spec against the openapi schema. The default value
-    however needs to be validated against the openapi spec itself.
+def create_spec_validator(spec: dict) -> Draft4Validator:
+    """Create a Validator to validate an OpenAPI spec against the OpenAPI schema.
 
-    :param instance_validator: A validator to validate defaults against the openapi spec itself
-                               instead of against the openapi schema.
-
-    :return: A validation function for property defaults using the passed in instance_validator
-
+    :param spec: specification to validate
     """
+    # Create an instance validator, which validates defaults against the spec itself instead of
+    # against the OpenAPI schema.
+    InstanceValidator = extend_validator(Draft4Validator, {'type': NullableTypeValidator})
+    instance_validator = InstanceValidator(spec)
 
     def validate_defaults(validator, properties, instance, schema):
-        """Validate `properties` subschema.
-
-        Enforcing each default value validates against the schema in which it resides.
+        """Validation function to validate the `properties` subschema, enforcing each default
+        value validates against the schema in which it resides.
         """
         valid = True
         for error in validate_properties(validator, properties, instance, schema):
@@ -54,7 +50,8 @@ def create_validate_default_fn(instance_validator: Draft4Validator) -> t.Callabl
             for error in instance_validator.iter_errors(instance['default'], instance):
                 yield error
 
-    return validate_defaults
+    SpecValidator = extend_validator(Draft4Validator, {"properties": validate_defaults})
+    return SpecValidator
 
 
 NO_SPEC_VERSION_ERR_MSG = """Unable to get the spec version.
@@ -88,9 +85,7 @@ class Specification(Mapping):
         """ validate spec against schema
         """
         try:
-            instance_validator = Draft4Validator(spec)
-            validate_defaults = create_validate_default_fn(instance_validator)
-            OpenApiValidator = extend_validator(Draft4Validator, {"properties": validate_defaults})
+            OpenApiValidator = create_spec_validator(spec)
             validator = OpenApiValidator(cls.openapi_schema)
             validator.validate(spec)
         except jsonschema.exceptions.ValidationError as e:

@@ -847,6 +847,24 @@ paths:
       responses:
         '200':
           description: OK
+  /nullable-parameters-noargs:
+    put:
+      operationId: fakeapi.hello.test_nullable_param_put_noargs
+      responses:
+        '200':
+          description: OK
+      requestBody:
+        content:
+          application/json:
+            schema:
+              nullable: true
+              x-body-name: contents
+              type: object
+              properties:
+                name:
+                  type: string
+        description: Just a testing parameter.
+        required: true
   /custom-json-response:
     get:
       operationId: fakeapi.hello.test_custom_json_response
@@ -891,6 +909,25 @@ paths:
           in: query
           schema:
             type: string
+      responses:
+        '200':
+          description: Return kwargs
+          content:
+            application/json:
+              schema:
+                type: object
+  /body-params-as-kwargs:
+    post:
+      operationId: fakeapi.hello.test_args_kwargs_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                foo:
+                  type: string
+              additionalProperties: true
       responses:
         '200':
           description: Return kwargs
@@ -1161,6 +1198,17 @@ paths:
               schema:
                 type: string
               required: false
+  /get_streaming_response:
+    get:
+      operationId: fakeapi.hello.get_streaming_response
+      responses:
+        '200':
+          description: OK
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
 
 servers:
   - url: http://localhost:{port}/{basePath}
