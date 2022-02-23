@@ -266,7 +266,7 @@ of the endpoint parameter ``message`` to your view function.
 
 .. note:: In the OpenAPI 3.x.x spec, the requestBody does not have a name.
           By default it will be passed in as 'body'. You can optionally
-          provide the x-body-name parameter in your operation 
+          provide the x-body-name parameter in your requestBody
           (or legacy position within the requestBody schema)
           to override the name of the parameter that will be passed to your
           handler function.
