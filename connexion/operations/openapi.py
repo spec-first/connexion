@@ -272,10 +272,19 @@ class OpenAPIOperation(AbstractOperation):
         return {}
 
     def _get_body_argument(self, body, arguments, has_kwargs, sanitize):
-        x_body_name = sanitize(self.body_schema.get('x-body-name', 'body'))
-        if is_nullable(self.body_schema) and is_null(body):
-            return {x_body_name: None}
+        if len(arguments) <= 0 and not has_kwargs:
+            return {}
 
+        x_body_name = sanitize(self.body_schema.get('x-body-name', 'body'))
+
+        # if the body came in null, and the schema says it can be null, we decide
+        # to include no value for the body argument, rather than the default body
+        if is_nullable(self.body_schema) and is_null(body):
+            if x_body_name in arguments or has_kwargs:
+                return {x_body_name: None}
+            return {}
+
+        # now determine the actual value for the body (whether it came in or is default)
         default_body = self.body_schema.get('default', {})
         body_props = {k: {"schema": v} for k, v
                       in self.body_schema.get("properties", {}).items()}
@@ -287,11 +296,13 @@ class OpenAPIOperation(AbstractOperation):
         if body is None:
             body = deepcopy(default_body)
 
+        # if the body isn't even an object, then none of the concerns below matter
         if self.body_schema.get("type") != "object":
             if x_body_name in arguments or has_kwargs:
                 return {x_body_name: body}
             return {}
 
+        # supply the initial defaults and convert all values to the proper types by schema
         body_arg = deepcopy(default_body)
         body_arg.update(body or {})
 

@@ -42,9 +42,11 @@ class ConnexionResponse:
                  mimetype=None,
                  content_type=None,
                  body=None,
-                 headers=None):
+                 headers=None,
+                 is_streamed=False):
         self.status_code = status_code
         self.mimetype = mimetype
         self.content_type = content_type
         self.body = body
         self.headers = headers or {}
+        self.is_streamed = is_streamed

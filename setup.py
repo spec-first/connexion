@@ -25,15 +25,19 @@ install_requires = [
     'PyYAML>=5.1,<6',
     'requests>=2.9.1,<3',
     'inflection>=0.3.1,<0.6',
-    'openapi-spec-validator>=0.2.4,<0.4',
     'werkzeug>=1.0,<3',
 ]
 
 swagger_ui_require = 'swagger-ui-bundle>=0.0.2,<0.1'
-flask_require = 'flask>=1.0.4,<3'
+
+flask_require = [
+    'flask>=1.0.4,<3',
+    'itsdangerous>=0.24',
+]
 aiohttp_require = [
     'aiohttp>=2.3.10,<4',
-    'aiohttp-jinja2>=0.14.0,<2'
+    'aiohttp-jinja2>=0.14.0,<2',
+    'MarkupSafe>=0.23',
 ]
 
 tests_require = [
@@ -41,7 +45,7 @@ tests_require = [
     'pytest>=6,<7',
     'pytest-cov>=2,<3',
     'testfixtures>=6,<7',
-    flask_require,
+    *flask_require,
     swagger_ui_require
 ]
 
@@ -96,7 +100,7 @@ setup(
     license='Apache License Version 2.0',
     setup_requires=['flake8'],
     python_requires=">=3.6",
-    install_requires=install_requires + [flask_require],
+    install_requires=install_requires + flask_require,
     tests_require=tests_require,
     extras_require={
         'tests': tests_require,

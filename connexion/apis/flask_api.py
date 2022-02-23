@@ -162,7 +162,8 @@ class FlaskApi(AbstractAPI):
             mimetype=response.mimetype,
             content_type=response.content_type,
             headers=response.headers,
-            body=response.get_data(),
+            body=response.get_data() if not response.direct_passthrough else None,
+            is_streamed=response.is_streamed
         )
 
     @classmethod
