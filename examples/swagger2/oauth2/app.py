@@ -7,7 +7,7 @@ import connexion
 
 
 def get_secret(user) -> str:
-    return 'You are: {uid}'.format(uid=user)
+    return f'You are: {user}'
 
 
 if __name__ == '__main__':

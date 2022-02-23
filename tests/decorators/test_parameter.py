@@ -1,5 +1,4 @@
-# we are using "mock" module here for Py 2.7 support
-from mock import MagicMock
+from unittest.mock import MagicMock
 
 from connexion.decorators.parameter import parameter_to_arg
 
@@ -15,7 +14,7 @@ def test_injection():
     def handler(**kwargs):
         func(**kwargs)
 
-    class Op(object):
+    class Op:
         consumes = ['application/json']
 
         def get_arguments(self, *args, **kwargs):

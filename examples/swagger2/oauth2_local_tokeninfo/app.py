@@ -13,7 +13,7 @@ TOKENS = {
 
 
 def get_secret(user) -> str:
-    return 'You are: {uid}'.format(uid=user)
+    return f'You are: {user}'
 
 
 def token_info(access_token) -> dict:

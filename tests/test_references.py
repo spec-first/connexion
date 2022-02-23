@@ -1,6 +1,6 @@
-import mock
-import pytest
+from unittest import mock
 
+import pytest
 from connexion.apis.flask_api import Jsonifier
 from connexion.json_schema import RefResolutionError, resolve_refs
 

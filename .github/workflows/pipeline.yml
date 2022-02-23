@@ -1,0 +1,41 @@
+name: Test pipeline
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8, 3.9]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        pip install --upgrade pip
+        pip install "tox<4" "tox-gh-actions<3" "setuptools<58" "coveralls<4"
+    - name: Test with tox
+      run: tox
+    - name: Coveralls
+      run: coveralls --service github
+      env:
+        COVERALLS_PARALLEL: true
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        COVERALLS_FLAG_NAME: test-${{ matrix.python-version }}
+
+  finish-coveralls:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install "coveralls<4"
+      run: pip install coveralls
+    - name: Coveralls Finished
+      run: coveralls --service github --finish
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

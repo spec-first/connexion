@@ -5,12 +5,12 @@ Connexion
    :alt: Join the chat at https://gitter.im/zalando/connexion
    :target: https://gitter.im/zalando/connexion?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 
-.. image:: https://travis-ci.org/zalando/connexion.svg?branch=master
-   :target: https://travis-ci.org/zalando/connexion
-   :alt: Travis CI build status
+.. image:: https://github.com/zalando/connexion/actions/workflows/pipeline.yml/badge.svg
+   :alt: Build status
+   :target: https://github.com/zalando/connexion/actions/workflows/pipeline.yml
 
-.. image:: https://coveralls.io/repos/zalando/connexion/badge.svg?branch=master
-   :target: https://coveralls.io/r/zalando/connexion?branch=master
+.. image:: https://coveralls.io/repos/github/zalando/connexion/badge.svg?branch=main
+   :target: https://coveralls.io/github/zalando/connexion?branch=main
    :alt: Coveralls status
 
 .. image:: https://img.shields.io/pypi/v/connexion.svg
@@ -26,7 +26,7 @@ Connexion
    :alt: Python Versions
 
 .. image:: https://img.shields.io/pypi/l/connexion.svg
-   :target: https://github.com/zalando/connexion/blob/master/LICENSE
+   :target: https://github.com/zalando/connexion/blob/main/LICENSE.txt
    :alt: License
 
 Connexion is a framework that automagically handles HTTP requests based on `OpenAPI Specification`_
@@ -70,7 +70,7 @@ If multiple teams depend on your APIs, you can use Connexion to easily send them
 Other Sources/Mentions
 ----------------------
 
-- Zalando Tech blog post `API First`_
+- Zalando RESTful API guidelines with `API First`_
 - Connexion listed on Swagger_'s website
 - Blog post: `Crafting effective Microservices in Python`_
 
@@ -568,6 +568,9 @@ Contributing to Connexion/TODOs
 We welcome your ideas, issues, and pull requests. Just follow the
 usual/standard GitHub practices.
 
+You can find out more about how Connexion works and where to apply your changes by having a look
+at our `ARCHITECTURE.rst <ARCHITECTURE.rst>`_.
+
 Unless you explicitly state otherwise in advance, any non trivial
 contribution intentionally submitted for inclusion in this project by you
 to the steward of this repository (Zalando SE, Berlin) shall be under the
@@ -598,7 +601,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 .. _Flask: http://flask.pocoo.org/
 .. _issues waffle board: https://waffle.io/zalando/connexion
-.. _API First: https://tech.zalando.com/blog/on-apis-and-the-zalando-api-guild/
+.. _API First: https://opensource.zalando.com/restful-api-guidelines/#api-first
 .. _Hug: https://github.com/timothycrosley/hug
 .. _Swagger: http://swagger.io/open-source-integrations/
 .. _Jinja2: http://jinja.pocoo.org/

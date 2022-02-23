@@ -1,14 +1,12 @@
 import copy
+import logging
 import math
 import pathlib
 import types
+from unittest import mock
 
-import mock
 import pytest
-
 from connexion.apis.flask_api import Jsonifier
-from connexion.decorators.security import (get_tokeninfo_remote,
-                                           validate_scope, verify_security)
 from connexion.exceptions import InvalidSpecification
 from connexion.json_schema import resolve_refs
 from connexion.operations import Swagger2Operation
@@ -207,6 +205,16 @@ OPERATION8 = {'description': 'Adds a new stack to be created by lizzy and return
                'security': [{'oauth': ['uid']}],
                'summary': 'Create new stack'}
 
+OPERATION9 = {'description': 'operation secured with 2 api keys',
+                'operationId': 'fakeapi.hello.post_greeting',
+                'responses': {'200': {'description': 'OK'}},
+                'security': [{'key1': [], 'key2': []}]}
+
+OPERATION10 = {'description': 'operation secured with 2 oauth schemes combined using logical AND',
+                'operationId': 'fakeapi.hello.post_greeting',
+                'responses': {'200': {'description': 'OK'}},
+                'security': [{'oauth_1': ['uid'], 'oauth_2': ['uid']}]}
+
 SECURITY_DEFINITIONS_REMOTE = {'oauth': {'type': 'oauth2',
                                          'flow': 'password',
                                          'x-tokenInfoUrl': 'https://oauth.example/token_info',
@@ -227,10 +235,30 @@ SECURITY_DEFINITIONS_WO_INFO = {'oauth': {'type': 'oauth2',
                                           'flow': 'password',
                                           'scopes': {'myscope': 'can do stuff'}}}
 
+SECURITY_DEFINITIONS_2_KEYS = {'key1': {'type': 'apiKey',
+                                        'in': 'header',
+                                        'name': 'X-Auth-1',
+                                        'x-apikeyInfoFunc': 'math.ceil'},
+                               'key2': {'type': 'apiKey',
+                                        'in': 'header',
+                                        'name': 'X-Auth-2',
+                                        'x-apikeyInfoFunc': 'math.ceil'}}
+
+SECURITY_DEFINITIONS_2_OAUTH = {'oauth_1': {'type': 'oauth2',
+                                            'flow': 'password',
+                                            'x-tokenInfoFunc': 'math.ceil',
+                                            'scopes': {'myscope': 'can do stuff'}},
+                                'oauth_2': {'type': 'oauth2',
+                                            'flow': 'password',
+                                            'x-tokenInfoFunc': 'math.ceil',
+                                            'scopes': {'myscope': 'can do stuff'}}}
+
 
 @pytest.fixture
-def api():
-  return mock.MagicMock(jsonifier=Jsonifier)
+def api(security_handler_factory):
+    api = mock.MagicMock(jsonifier=Jsonifier)
+    api.security_handler_factory = security_handler_factory
+    yield api
 
 
 def make_operation(op, definitions=True, parameters=True):
@@ -245,10 +273,10 @@ def make_operation(op, definitions=True, parameters=True):
     return resolve_refs(new_op)["wrapper"]
 
 
-def test_operation(api, monkeypatch):
-    dummy = object()
-    verify_oauth = mock.MagicMock(return_value=dummy)
-    monkeypatch.setattr('connexion.operations.secure.verify_oauth', verify_oauth)
+def test_operation(api, security_handler_factory):
+    verify_oauth = mock.MagicMock(return_value='verify_oauth_result')
+    security_handler_factory.verify_oauth = verify_oauth
+    security_handler_factory.get_token_info_remote = mock.MagicMock(return_value='get_token_info_remote_result')
 
     op_spec = make_operation(OPERATION1)
     operation = Swagger2Operation(api=api,
@@ -266,14 +294,11 @@ def test_operation(api, monkeypatch):
     assert isinstance(operation.function, types.FunctionType)
 
     security_decorator = operation.security_decorator
-    assert security_decorator.func is verify_security
     assert len(security_decorator.args[0]) == 1
-    assert security_decorator.args[0][0] is dummy
+    assert security_decorator.args[0][0] == 'verify_oauth_result'
     assert security_decorator.args[1] == ['uid']
-    call_args = verify_oauth.call_args[0]
-    assert call_args[0].func is get_tokeninfo_remote
-    assert call_args[0].args == ('https://oauth.example/token_info',)
-    assert call_args[1] is validate_scope
+    verify_oauth.assert_called_with('get_token_info_remote_result',security_handler_factory.validate_scope)
+    security_handler_factory.get_token_info_remote.assert_called_with('https://oauth.example/token_info')
 
     assert operation.method == 'GET'
     assert operation.produces == ['application/json']
@@ -338,10 +363,9 @@ def test_operation_composed_definition(api):
     assert operation.body_schema == expected_body_schema
 
 
-def test_operation_local_security_oauth2(api, monkeypatch):
-    dummy = object()
-    verify_oauth = mock.MagicMock(return_value=dummy)
-    monkeypatch.setattr('connexion.operations.secure.verify_oauth', verify_oauth)
+def test_operation_local_security_oauth2(api):
+    verify_oauth = mock.MagicMock(return_value='verify_oauth_result')
+    api.security_handler_factory.verify_oauth = verify_oauth
 
     op_spec = make_operation(OPERATION8)
     operation = Swagger2Operation(api=api,
@@ -358,13 +382,10 @@ def test_operation_local_security_oauth2(api, monkeypatch):
                                   resolver=Resolver())
     assert isinstance(operation.function, types.FunctionType)
     security_decorator = operation.security_decorator
-    assert security_decorator.func is verify_security
     assert len(security_decorator.args[0]) == 1
-    assert security_decorator.args[0][0] is dummy
+    assert security_decorator.args[0][0] == 'verify_oauth_result'
     assert security_decorator.args[1] == ['uid']
-    call_args = verify_oauth.call_args[0]
-    assert call_args[0] is math.ceil
-    assert call_args[1] is validate_scope
+    verify_oauth.assert_called_with(math.ceil, api.security_handler_factory.validate_scope)
 
     assert operation.method == 'GET'
     assert operation.produces == ['application/json']
@@ -375,10 +396,9 @@ def test_operation_local_security_oauth2(api, monkeypatch):
     assert operation.body_schema == expected_body_schema
 
 
-def test_operation_local_security_duplicate_token_info(api, monkeypatch):
-    dummy = object()
-    verify_oauth = mock.MagicMock(return_value=dummy)
-    monkeypatch.setattr('connexion.operations.secure.verify_oauth', verify_oauth)
+def test_operation_local_security_duplicate_token_info(api):
+    verify_oauth = mock.MagicMock(return_value='verify_oauth_result')
+    api.security_handler_factory.verify_oauth = verify_oauth
 
     op_spec = make_operation(OPERATION8)
     operation = Swagger2Operation(api=api,
@@ -396,13 +416,10 @@ def test_operation_local_security_duplicate_token_info(api, monkeypatch):
     assert isinstance(operation.function, types.FunctionType)
 
     security_decorator = operation.security_decorator
-    assert security_decorator.func is verify_security
     assert len(security_decorator.args[0]) == 1
-    assert security_decorator.args[0][0] is dummy
+    assert security_decorator.args[0][0] == 'verify_oauth_result'
     assert security_decorator.args[1] == ['uid']
-    call_args = verify_oauth.call_args[0]
-    assert call_args[0] is math.ceil
-    assert call_args[1] is validate_scope
+    verify_oauth.call_args.assert_called_with(math.ceil, api.security_handler_factory.validate_scope)
 
     assert operation.method == 'GET'
     assert operation.produces == ['application/json']
@@ -452,7 +469,6 @@ def test_no_token_info(api):
     assert isinstance(operation.function, types.FunctionType)
 
     security_decorator = operation.security_decorator
-    assert security_decorator.func is verify_security
     assert len(security_decorator.args[0]) == 0
 
     assert operation.method == 'GET'
@@ -463,6 +479,83 @@ def test_no_token_info(api):
     expected_body_schema = {'definitions': DEFINITIONS}
     expected_body_schema.update(DEFINITIONS["new_stack"])
     assert operation.body_schema == expected_body_schema
+
+
+def test_multiple_security_schemes_and(api):
+    """Tests an operation with multiple security schemes in AND fashion."""
+    def return_api_key_name(func, in_, name):
+        return name
+    verify_api_key = mock.MagicMock(side_effect=return_api_key_name)
+    api.security_handler_factory.verify_api_key = verify_api_key
+    verify_multiple = mock.MagicMock(return_value='verify_multiple_result')
+    api.security_handler_factory.verify_multiple_schemes = verify_multiple
+
+    op_spec = make_operation(OPERATION9)
+    operation = Swagger2Operation(api=api,
+                                  method='GET',
+                                  path='endpoint',
+                                  path_parameters=[],
+                                  operation=op_spec,
+                                  app_produces=['application/json'],
+                                  app_consumes=['application/json'],
+                                  app_security=SECURITY_DEFINITIONS_2_KEYS,
+                                  security_definitions=SECURITY_DEFINITIONS_2_KEYS,
+                                  definitions=DEFINITIONS,
+                                  parameter_definitions=PARAMETER_DEFINITIONS,
+                                  resolver=Resolver())
+    assert isinstance(operation.function, types.FunctionType)
+    assert verify_api_key.call_count == 2
+    verify_api_key.assert_any_call(math.ceil, 'header', 'X-Auth-1')
+    verify_api_key.assert_any_call(math.ceil, 'header', 'X-Auth-2')
+    # Assert verify_multiple_schemes is called with mapping from scheme name
+    # to result of security_handler_factory.verify_api_key()
+    verify_multiple.assert_called_with({'key1': 'X-Auth-1', 'key2': 'X-Auth-2'})
+
+    security_decorator = operation.security_decorator
+    assert len(security_decorator.args[0]) == 1
+    assert security_decorator.args[0][0] == 'verify_multiple_result'
+    assert security_decorator.args[1] is None
+
+    assert operation.method == 'GET'
+    assert operation.produces == ['application/json']
+    assert operation.consumes == ['application/json']
+    assert operation.security == [{'key1': [], 'key2': []}]
+
+
+def test_multiple_oauth_in_and(api, caplog):
+    """Tests an operation with multiple oauth security schemes in AND fashion.
+    These should be ignored and raise a warning.
+    """
+    caplog.set_level(logging.WARNING, logger="connexion.operations.secure")
+    verify_oauth = mock.MagicMock(return_value='verify_oauth_result')
+    api.security_handler_factory.verify_oauth = verify_oauth
+
+    op_spec = make_operation(OPERATION10)
+    operation = Swagger2Operation(api=api,
+                                  method='GET',
+                                  path='endpoint',
+                                  path_parameters=[],
+                                  operation=op_spec,
+                                  app_produces=['application/json'],
+                                  app_consumes=['application/json'],
+                                  app_security=SECURITY_DEFINITIONS_2_OAUTH,
+                                  security_definitions=SECURITY_DEFINITIONS_2_OAUTH,
+                                  definitions=DEFINITIONS,
+                                  parameter_definitions=PARAMETER_DEFINITIONS,
+                                  resolver=Resolver())
+    assert isinstance(operation.function, types.FunctionType)
+
+    security_decorator = operation.security_decorator
+    assert len(security_decorator.args[0]) == 0
+    assert security_decorator.args[0] == []
+    assert security_decorator.args[1] == ['uid']
+
+    assert '... multiple OAuth2 security schemes in AND fashion not supported' in caplog.text
+
+    assert operation.method == 'GET'
+    assert operation.produces == ['application/json']
+    assert operation.consumes == ['application/json']
+    assert operation.security == [{'oauth_1': ['uid'], 'oauth_2': ['uid']}]
 
 
 def test_parameter_reference(api):

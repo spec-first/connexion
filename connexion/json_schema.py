@@ -1,22 +1,71 @@
+"""
+Module containing all code related to json schema validation.
+"""
+
+import contextlib
+import io
+import os
+import typing as t
+import urllib.parse
+import urllib.request
+from collections.abc import Mapping
 from copy import deepcopy
 
-from jsonschema import Draft4Validator, RefResolver, _utils
+import requests
+import yaml
+from jsonschema import Draft4Validator, RefResolver
 from jsonschema.exceptions import RefResolutionError, ValidationError  # noqa
 from jsonschema.validators import extend
-from openapi_spec_validator.handlers import UrlHandler
 
 from .utils import deep_get
 
-try:
-    from collections.abc import Mapping
-except ImportError:
-    from collections import Mapping
+
+class ExtendedSafeLoader(yaml.SafeLoader):
+    """Extends the yaml SafeLoader to coerce all keys to string so the result is valid json."""
+
+    def __init__(self, stream):
+        self.original_construct_mapping = self.construct_mapping
+        self.construct_mapping = self.extended_construct_mapping
+        super().__init__(stream)
+
+    def extended_construct_mapping(self, node, deep=False):
+        data = self.original_construct_mapping(node, deep)
+        return {str(key): data[key] for key in data}
+
+
+class FileHandler:
+    """Handler to resolve file refs."""
+
+    def __call__(self, uri):
+        filepath = self._uri_to_path(uri)
+        with open(filepath) as fh:
+            return yaml.load(fh, ExtendedSafeLoader)
+
+    @staticmethod
+    def _uri_to_path(uri):
+        parsed = urllib.parse.urlparse(uri)
+        host = "{0}{0}{mnt}{0}".format(os.path.sep, mnt=parsed.netloc)
+        return os.path.abspath(
+            os.path.join(host, urllib.request.url2pathname(parsed.path))
+        )
+
+
+class URLHandler:
+    """Handler to resolve url refs."""
+
+    def __call__(self, uri):
+        response = requests.get(uri)
+        response.raise_for_status()
+
+        data = io.StringIO(response.text)
+        with contextlib.closing(data) as fh:
+            return yaml.load(fh, ExtendedSafeLoader)
 
 
 default_handlers = {
-    'http': UrlHandler('http'),
-    'https': UrlHandler('https'),
-    'file': UrlHandler('file'),
+    'http': URLHandler(),
+    'https': URLHandler(),
+    'file': FileHandler(),
 }
 
 
@@ -55,22 +104,16 @@ def resolve_refs(spec, store=None, handlers=None):
     return res
 
 
-def validate_type(validator, types, instance, schema):
-    if instance is None and (schema.get('x-nullable') is True or schema.get('nullable')):
-        return
+def allow_nullable(validation_fn: t.Callable) -> t.Callable:
+    """Extend an existing validation function, so it allows nullable values to be null."""
 
-    types = _utils.ensure_list(types)
+    def nullable_validation_fn(validator, to_validate, instance, schema):
+        if instance is None and (schema.get('x-nullable') is True or schema.get('nullable')):
+            return
 
-    if not any(validator.is_type(instance, type) for type in types):
-        yield ValidationError(_utils.types_msg(instance, types))
+        yield from validation_fn(validator, to_validate, instance, schema)
 
-
-def validate_enum(validator, enums, instance, schema):
-    if instance is None and (schema.get('x-nullable') is True or schema.get('nullable')):
-        return
-
-    if instance not in enums:
-        yield ValidationError("%r is not one of %r" % (instance, enums))
+    return nullable_validation_fn
 
 
 def validate_required(validator, required, instance, schema):
@@ -100,15 +143,18 @@ def validate_writeOnly(validator, wo, instance, schema):
     yield ValidationError("Property is write-only")
 
 
+NullableTypeValidator = allow_nullable(Draft4Validator.VALIDATORS['type'])
+NullableEnumValidator = allow_nullable(Draft4Validator.VALIDATORS['enum'])
+
 Draft4RequestValidator = extend(Draft4Validator, {
-                                'type': validate_type,
-                                'enum': validate_enum,
+                                'type': NullableTypeValidator,
+                                'enum': NullableEnumValidator,
                                 'required': validate_required,
                                 'readOnly': validate_readOnly})
 
 Draft4ResponseValidator = extend(Draft4Validator, {
-                                 'type': validate_type,
-                                 'enum': validate_enum,
+                                 'type': NullableTypeValidator,
+                                 'enum': NullableEnumValidator,
                                  'required': validate_required,
                                  'writeOnly': validate_writeOnly,
                                  'x-writeOnly': validate_writeOnly})

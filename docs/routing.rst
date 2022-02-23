@@ -18,9 +18,10 @@ identify which Python function should handle each URL.
 
 If you provided this path in your specification POST requests to
 ``http://MYHOST/hello_world``, it would be handled by the function
-``hello_world`` in ``myapp.api`` module. Optionally, you can include
-``x-swagger-router-controller`` in your operation definition, making
-``operationId`` relative:
+``hello_world`` in ``myapp.api`` module.
+
+Optionally, you can include ``x-swagger-router-controller`` in your operation
+definition, making ``operationId`` relative:
 
 .. code-block:: yaml
 
@@ -30,17 +31,40 @@ If you provided this path in your specification POST requests to
           x-swagger-router-controller: myapp.api
           operationId: hello_world
 
+NOTE: If you are using an OpenAPI spec, you should use ``x-openapi-router-controller`` 
+in your operation definition, making ``operationId`` relative:
+
+.. code-block:: yaml
+
+    paths:
+      /hello_world:
+        post:
+          x-openapi-router-controller: myapp.api
+          operationId: hello_world
+
+If all your operations are relative, you can use the ``RelativeResolver`` class
+instead of repeating the same ``x-swagger-router-controller`` or
+``x-openapi-router-controller`` in every operation:
+
+.. code-block:: python
+
+    from connexion.resolver import RelativeResolver
+      
+    app = connexion.FlaskApp(__name__)
+    app.add_api('swagger.yaml', resolver=RelativeResolver('api'))
+
+
 Keep in mind that Connexion follows how `HTTP methods work in Flask`_
 and therefore HEAD requests will be handled by the ``operationId`` specified
 under GET in the specification. If both methods are supported,
 ``connexion.request.method`` can be used to determine which request was made.
 
-By default, Connexion strictly enforces the presence of a handler 
+By default, Connexion strictly enforces the presence of a handler
 function for any path defined in your specification. Because of this, adding
-new paths without implementing a corresponding handler function will produce 
-runtime errors and your application will not start. To allow new paths to be 
-added to your specification, e.g. in an API design first workflow, set the 
-``resolver_error`` to configure Connexion to provide an error response for 
+new paths without implementing a corresponding handler function will produce
+runtime errors and your application will not start. To allow new paths to be
+added to your specification, e.g. in an API design first workflow, set the
+``resolver_error`` to configure Connexion to provide an error response for
 paths that are not yet implemented:
 
 .. code-block:: python
@@ -86,12 +110,21 @@ the endpoints in your specification:
           # Implied operationId: api.foo.copy
        delete:
           # Implied operationId: api.foo.delete
+     '/foo/{id}/bar':
+       get:
+          # Implied operationId: api.foo.bar.search
+     '/foo/{id}/bar/{name}':
+       get:
+          # Implied operationId: api.foo.bar.get
+          # Handler signature: `def get(id, name): ...`
 
 ``RestyResolver`` will give precedence to any ``operationId``
 encountered in the specification. It will also respect
-``x-swagger-router-controller``. You may import and extend
-``connexion.resolver.Resolver`` to implement your own ``operationId``
-(and function) resolution algorithm.
+``x-swagger-router-controller`` and ``x-openapi-router-controller``.
+You may import and extend ``connexion.resolver.Resolver`` to implement your own
+``operationId`` (and function) resolution algorithm.
+Note that when using multiple parameters in the path, they will be
+collected and all passed to the endpoint handlers.
 
 Automatic Routing with MethodViewResolver
 -------------------------------------------
@@ -198,9 +231,9 @@ and a __init__.py file to make the Class visible in the api directory.
 
 ``MethodViewResolver`` will give precedence to any ``operationId``
 encountered in the specification. It will also respect
-``x-swagger-router-controller``. You may import and extend
-``connexion.resolver.MethodViewResolver`` to implement your own ``operationId``
-(and function) resolution algorithm.
+``x-swagger-router-controller`` and ``x-openapi-router-controller``.
+You may import and extend ``connexion.resolver.MethodViewResolver`` to implement
+your own ``operationId`` (and function) resolution algorithm.
 
 Parameter Name Sanitation
 -------------------------
@@ -219,6 +252,17 @@ under-score is encountered. As an example:
 Without this sanitation it would e.g. be impossible to implement an
 `OData
 <http://www.odata.org>`_ API.
+
+You can also convert *CamelCase* parameters to *snake_case* automatically using `pythonic_params` option:
+
+.. code-block:: python
+
+    app = connexion.FlaskApp(__name__)
+    app.add_api('api.yaml', ..., pythonic_params=True)
+
+With this option enabled, Connexion firstly converts *CamelCase* names
+to *snake_case*. Secondly it looks to see if the name matches a known built-in
+and if it does it appends an underscore to the name.
 
 Parameter Variable Converters
 -----------------------------

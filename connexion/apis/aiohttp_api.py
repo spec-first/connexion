@@ -1,3 +1,8 @@
+"""
+This module defines an AioHttp Connexion API which implements translations between AioHttp and
+Connexion requests / responses.
+"""
+
 import asyncio
 import logging
 import re
@@ -11,15 +16,16 @@ import jinja2
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPNotFound, HTTPPermanentRedirect
 from aiohttp.web_middlewares import normalize_path_middleware
+from werkzeug.exceptions import HTTPException as werkzeug_HTTPException
+
 from connexion.apis.abstract import AbstractAPI
 from connexion.exceptions import ProblemException
 from connexion.handlers import AuthErrorHandler
 from connexion.jsonifier import JSONEncoder, Jsonifier
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.problem import problem
+from connexion.security import AioHttpSecurityHandlerFactory
 from connexion.utils import yamldumper
-from werkzeug.exceptions import HTTPException as werkzeug_HTTPException
-
 
 logger = logging.getLogger('connexion.apis.aiohttp_api')
 
@@ -44,17 +50,16 @@ def _generic_problem(http_status: HTTPStatus, exc: Exception = None):
 
 
 @web.middleware
-@asyncio.coroutine
-def problems_middleware(request, handler):
+async def problems_middleware(request, handler):
     try:
-        response = yield from handler(request)
+        response = await handler(request)
     except ProblemException as exc:
         response = problem(status=exc.status, detail=exc.detail, title=exc.title,
                            type=exc.type, instance=exc.instance, headers=exc.headers, ext=exc.ext)
     except (werkzeug_HTTPException, _HttpNotFoundError) as exc:
         response = problem(status=exc.code, title=exc.name, detail=exc.description)
     except web.HTTPError as exc:
-        if exc.text == "{}: {}".format(exc.status, exc.reason):
+        if exc.text == f"{exc.status}: {exc.reason}":
             detail = HTTPStatus(exc.status).description
         else:
             detail = exc.text
@@ -75,7 +80,7 @@ def problems_middleware(request, handler):
         response = _generic_problem(HTTPStatus.INTERNAL_SERVER_ERROR, exc)
 
     if isinstance(response, ConnexionResponse):
-        response = yield from AioHttpApi.get_response(response)
+        response = await AioHttpApi.get_response(response)
     return response
 
 
@@ -105,6 +110,11 @@ class AioHttpApi(AbstractAPI):
         )
         middlewares = self.options.as_dict().get('middlewares', [])
         self.subapp.middlewares.extend(middlewares)
+
+    @staticmethod
+    def make_security_handler_factory(pass_context_arg_name):
+        """ Create default SecurityHandlerFactory to create all security check handlers """
+        return AioHttpSecurityHandlerFactory(pass_context_arg_name)
 
     def _set_base_path(self, base_path):
         AbstractAPI._set_base_path(self, base_path)
@@ -165,16 +175,14 @@ class AioHttpApi(AbstractAPI):
             self._get_openapi_yaml
         )
 
-    @asyncio.coroutine
-    def _get_openapi_json(self, request):
+    async def _get_openapi_json(self, request):
         return web.Response(
             status=200,
             content_type='application/json',
             body=self.jsonifier.dumps(self._spec_for_prefix(request))
         )
 
-    @asyncio.coroutine
-    def _get_openapi_yaml(self, request):
+    async def _get_openapi_yaml(self, request):
         return web.Response(
             status=200,
             content_type='text/yaml',
@@ -211,8 +219,7 @@ class AioHttpApi(AbstractAPI):
         # normalize_path_middleware because we also serve static files
         # from this dir (below)
 
-        @asyncio.coroutine
-        def redirect(request):
+        async def redirect(request):
             raise web.HTTPMovedPermanently(
                 location=self.base_path + console_ui_path + '/'
             )
@@ -232,18 +239,17 @@ class AioHttpApi(AbstractAPI):
         )
 
     @aiohttp_jinja2.template('index.j2')
-    @asyncio.coroutine
-    def _get_swagger_ui_home(self, req):
+    async def _get_swagger_ui_home(self, req):
         base_path = self._base_path_for_prefix(req)
         template_variables = {
-            'openapi_spec_url': (base_path + self.options.openapi_spec_path)
+            'openapi_spec_url': (base_path + self.options.openapi_spec_path),
+            **self.options.openapi_console_ui_index_template_variables,
         }
         if self.options.openapi_console_ui_config is not None:
             template_variables['configUrl'] = 'swagger-ui-config.json'
         return template_variables
 
-    @asyncio.coroutine
-    def _get_swagger_ui_config(self, req):
+    async def _get_swagger_ui_config(self, req):
         return web.Response(
             status=200,
             content_type='text/json',
@@ -260,7 +266,7 @@ class AioHttpApi(AbstractAPI):
             security=security,
             security_definitions=security_definitions
         )
-        endpoint_name = "{}_not_found".format(self._api_name)
+        endpoint_name = f"{self._api_name}_not_found"
         self.subapp.router.add_route(
             '*',
             '/{not_found_path}',
@@ -291,8 +297,7 @@ class AioHttpApi(AbstractAPI):
             )
 
     @classmethod
-    @asyncio.coroutine
-    def get_request(cls, req):
+    async def get_request(cls, req):
         """Convert aiohttp request to connexion
 
         :param req: instance of aiohttp.web.Request
@@ -300,14 +305,53 @@ class AioHttpApi(AbstractAPI):
         :rtype: ConnexionRequest
         """
         url = str(req.url)
-        logger.debug('Getting data and status code',
-                     extra={'has_body': req.has_body, 'url': url})
+
+        logger.debug(
+            'Getting data and status code',
+            extra={
+                # has_body | can_read_body report if
+                # body has been read or not
+                # body_exists refers to underlying stream of data
+                'body_exists': req.body_exists,
+                'can_read_body': req.can_read_body,
+                'content_type': req.content_type,
+                'url': url,
+            },
+        )
 
         query = parse_qs(req.rel_url.query_string)
         headers = req.headers
         body = None
-        if req.body_exists:
-            body = yield from req.read()
+
+        # Note: if request is not 'application/x-www-form-urlencoded' nor 'multipart/form-data',
+        #       then `post_data` will be left an empty dict and the stream will not be consumed.
+        post_data = await req.post()
+
+        files = {}
+        form = {}
+
+        if post_data:
+            logger.debug('Reading multipart data from request')
+            for k, v in post_data.items():
+                if isinstance(v, web.FileField):
+                    if k in files:
+                        # if multiple files arrive under the same name in the
+                        # request, downstream requires that we put them all into
+                        # a list under the same key in the files dict.
+                        if isinstance(files[k], list):
+                            files[k].append(v)
+                        else:
+                            files[k] = [files[k], v]
+                    else:
+                        files[k] = v
+                else:
+                    # put normal fields as an array, that's how werkzeug does that for Flask
+                    # and that's what Connexion expects in its processing functions
+                    form[k] = [v]
+            body = b''
+        else:
+            logger.debug('Reading data from request')
+            body = await req.read()
 
         return ConnexionRequest(url=url,
                                 method=req.method.lower(),
@@ -316,12 +360,12 @@ class AioHttpApi(AbstractAPI):
                                 headers=headers,
                                 body=body,
                                 json_getter=lambda: cls.jsonifier.loads(body),
-                                files={},
+                                form=form,
+                                files=files,
                                 context=req)
 
     @classmethod
-    @asyncio.coroutine
-    def get_response(cls, response, mimetype=None, request=None):
+    async def get_response(cls, response, mimetype=None, request=None):
         """Get response.
         This method is used in the lifecycle decorators
 
@@ -329,7 +373,7 @@ class AioHttpApi(AbstractAPI):
         :rtype: aiohttp.web.Response
         """
         while asyncio.iscoroutine(response):
-            response = yield from response
+            response = await response
 
         url = str(request.url) if request else ''
 
@@ -343,12 +387,15 @@ class AioHttpApi(AbstractAPI):
     @classmethod
     def _framework_to_connexion_response(cls, response, mimetype):
         """ Cast framework response class to ConnexionResponse used for schema validation """
+        body = None
+        if hasattr(response, "body"):  # StreamResponse and FileResponse don't have body
+            body = response.body
         return ConnexionResponse(
             status_code=response.status,
             mimetype=mimetype,
             content_type=response.content_type,
             headers=response.headers,
-            body=response.body
+            body=body
         )
 
     @classmethod

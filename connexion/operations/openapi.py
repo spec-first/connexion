@@ -1,3 +1,7 @@
+"""
+This module defines an OpenAPIOperation class, a Connexion operation specific for OpenAPI 3 specs.
+"""
+
 import logging
 from copy import copy, deepcopy
 
@@ -52,12 +56,12 @@ class OpenAPIOperation(AbstractOperation):
         :param validator_map: Custom validators for the types "parameter", "body" and "response".
         :type validator_map: dict
         :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended
-        to any shadowed built-ins
+            to any shadowed built-ins
         :type pythonic_params: bool
-        :param uri_parser_class: class to use for uri parseing
+        :param uri_parser_class: class to use for uri parsing
         :type uri_parser_class: AbstractURIParser
         :param pass_context_arg_name: If not None will try to inject the request context to the function using this
-        name.
+            name.
         :type pass_context_arg_name: str|None
         """
         self.components = components or {}
@@ -72,7 +76,7 @@ class OpenAPIOperation(AbstractOperation):
 
         self._router_controller = operation.get('x-openapi-router-controller')
 
-        super(OpenAPIOperation, self).__init__(
+        super().__init__(
             api=api,
             method=method,
             path=path,
@@ -268,10 +272,19 @@ class OpenAPIOperation(AbstractOperation):
         return {}
 
     def _get_body_argument(self, body, arguments, has_kwargs, sanitize):
-        x_body_name = sanitize(self.body_schema.get('x-body-name', 'body'))
-        if is_nullable(self.body_schema) and is_null(body):
-            return {x_body_name: None}
+        if len(arguments) <= 0 and not has_kwargs:
+            return {}
 
+        x_body_name = sanitize(self.body_schema.get('x-body-name', 'body'))
+
+        # if the body came in null, and the schema says it can be null, we decide
+        # to include no value for the body argument, rather than the default body
+        if is_nullable(self.body_schema) and is_null(body):
+            if x_body_name in arguments or has_kwargs:
+                return {x_body_name: None}
+            return {}
+
+        # now determine the actual value for the body (whether it came in or is default)
         default_body = self.body_schema.get('default', {})
         body_props = {k: {"schema": v} for k, v
                       in self.body_schema.get("properties", {}).items()}
@@ -283,11 +296,13 @@ class OpenAPIOperation(AbstractOperation):
         if body is None:
             body = deepcopy(default_body)
 
+        # if the body isn't even an object, then none of the concerns below matter
         if self.body_schema.get("type") != "object":
             if x_body_name in arguments or has_kwargs:
                 return {x_body_name: body}
             return {}
 
+        # supply the initial defaults and convert all values to the proper types by schema
         body_arg = deepcopy(default_body)
         body_arg.update(body or {})
 
@@ -319,7 +334,7 @@ class OpenAPIOperation(AbstractOperation):
                 res[key] = self._get_val_from_param(value, prop_defn)
             except KeyError:  # pragma: no cover
                 if not additional_props:
-                    logger.error("Body property '{}' not defined in body schema".format(key))
+                    logger.error(f"Body property '{key}' not defined in body schema")
                     continue
                 if additional_props_defn is not None:
                     value = self._get_val_from_param(value, additional_props_defn)
@@ -358,7 +373,7 @@ class OpenAPIOperation(AbstractOperation):
         return defaults
 
     def _get_query_arguments(self, query, arguments, has_kwargs, sanitize):
-        query_defns = {sanitize(p["name"]): p
+        query_defns = {p["name"]: p
                        for p in self.parameters
                        if p["in"] == "query"}
         default_query_params = self._get_query_defaults(query_defns)

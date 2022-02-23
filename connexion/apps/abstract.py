@@ -1,3 +1,8 @@
+"""
+This module defines an AbstractApp, which defines a standardized user interface for a Connexion
+application.
+"""
+
 import abc
 import logging
 import pathlib
@@ -10,7 +15,7 @@ logger = logging.getLogger('connexion.app')
 
 class AbstractApp(metaclass=abc.ABCMeta):
     def __init__(self, import_name, api_cls, port=None, specification_dir='',
-                 host=None, server=None, arguments=None, auth_all_paths=False, debug=None,
+                 host=None, server=None, server_args=None, arguments=None, auth_all_paths=False, debug=None,
                  resolver=None, options=None, skip_error_handlers=False):
         """
         :param import_name: the name of the application package
@@ -23,6 +28,8 @@ class AbstractApp(metaclass=abc.ABCMeta):
         :type specification_dir: pathlib.Path | str
         :param server: which wsgi server to use
         :type server: str | None
+        :param server_args: dictionary of arguments which are then passed to appropriate http server (Flask or aio_http)
+        :type server_args: dict | None
         :param arguments: arguments to replace on the specification
         :type arguments: dict | None
         :param auth_all_paths: whether to authenticate not defined paths
@@ -45,8 +52,9 @@ class AbstractApp(metaclass=abc.ABCMeta):
 
         self.options = ConnexionOptions(options)
 
-        self.app = self.create_app()
         self.server = server
+        self.server_args = dict() if server_args is None else server_args
+        self.app = self.create_app()
 
         # we get our application root path to avoid duplicating logic
         self.root_path = self.get_root_path()
@@ -129,7 +137,7 @@ class AbstractApp(metaclass=abc.ABCMeta):
         auth_all_paths = auth_all_paths if auth_all_paths is not None else self.auth_all_paths
         # TODO test if base_path starts with an / (if not none)
         arguments = arguments or dict()
-        arguments = dict(self.arguments, **arguments)  # copy global arguments and update with api specfic
+        arguments = dict(self.arguments, **arguments)  # copy global arguments and update with api specific
 
         if isinstance(specification, dict):
             specification = specification

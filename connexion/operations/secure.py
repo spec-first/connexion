@@ -1,20 +1,18 @@
+"""
+This module defines a SecureOperation class, which implements the security handler for an operation.
+"""
+
 import functools
 import logging
 
 from ..decorators.decorator import RequestResponseDecorator
-from ..decorators.security import (get_apikeyinfo_func, get_basicinfo_func,
-                                   get_bearerinfo_func,
-                                   get_scope_validate_func, get_tokeninfo_func,
-                                   security_deny, security_passthrough,
-                                   verify_apikey, verify_basic, verify_bearer,
-                                   verify_none, verify_oauth, verify_security)
 
 logger = logging.getLogger("connexion.operations.secure")
 
 DEFAULT_MIMETYPE = 'application/json'
 
 
-class SecureOperation(object):
+class SecureOperation:
 
     def __init__(self, api, security, security_schemes):
         """
@@ -74,80 +72,94 @@ class SecureOperation(object):
         """
         logger.debug('... Security: %s', self.security, extra=vars(self))
         if not self.security:
-            return security_passthrough
+            return self._api.security_handler_factory.security_passthrough
 
         auth_funcs = []
         required_scopes = None
         for security_req in self.security:
             if not security_req:
-                auth_funcs.append(verify_none())
+                auth_funcs.append(self._api.security_handler_factory.verify_none())
                 continue
-            elif len(security_req) > 1:
-                logger.warning("... More than one security scheme in security requirement defined. "
-                               "**DENYING ALL REQUESTS**", extra=vars(self))
-                return security_deny
 
-            scheme_name, scopes = next(iter(security_req.items()))
-            security_scheme = self.security_schemes[scheme_name]
+            sec_req_funcs = {}
+            oauth = False
+            for scheme_name, scopes in security_req.items():
+                security_scheme = self.security_schemes[scheme_name]
 
-            if security_scheme['type'] == 'oauth2':
-                required_scopes = scopes
-                token_info_func = get_tokeninfo_func(security_scheme)
-                scope_validate_func = get_scope_validate_func(security_scheme)
-                if not token_info_func:
-                    logger.warning("... x-tokenInfoFunc missing", extra=vars(self))
-                    continue
+                if security_scheme['type'] == 'oauth2':
+                    if oauth:
+                        logger.warning("... multiple OAuth2 security schemes in AND fashion not supported", extra=vars(self))
+                        break
+                    oauth = True
+                    required_scopes = scopes
+                    token_info_func = self._api.security_handler_factory.get_tokeninfo_func(security_scheme)
+                    scope_validate_func = self._api.security_handler_factory.get_scope_validate_func(security_scheme)
+                    if not token_info_func:
+                        logger.warning("... x-tokenInfoFunc missing", extra=vars(self))
+                        break
 
-                auth_funcs.append(verify_oauth(token_info_func, scope_validate_func))
+                    sec_req_funcs[scheme_name] = self._api.security_handler_factory.verify_oauth(
+                        token_info_func, scope_validate_func)
 
-            # Swagger 2.0
-            elif security_scheme['type'] == 'basic':
-                basic_info_func = get_basicinfo_func(security_scheme)
-                if not basic_info_func:
-                    logger.warning("... x-basicInfoFunc missing", extra=vars(self))
-                    continue
-
-                auth_funcs.append(verify_basic(basic_info_func))
-
-            # OpenAPI 3.0.0
-            elif security_scheme['type'] == 'http':
-                scheme = security_scheme['scheme'].lower()
-                if scheme == 'basic':
-                    basic_info_func = get_basicinfo_func(security_scheme)
+                # Swagger 2.0
+                elif security_scheme['type'] == 'basic':
+                    basic_info_func = self._api.security_handler_factory.get_basicinfo_func(security_scheme)
                     if not basic_info_func:
                         logger.warning("... x-basicInfoFunc missing", extra=vars(self))
-                        continue
+                        break
 
-                    auth_funcs.append(verify_basic(basic_info_func))
-                elif scheme == 'bearer':
-                    bearer_info_func = get_bearerinfo_func(security_scheme)
-                    if not bearer_info_func:
-                        logger.warning("... x-bearerInfoFunc missing", extra=vars(self))
-                        continue
-                    auth_funcs.append(verify_bearer(bearer_info_func))
+                    sec_req_funcs[scheme_name] = self._api.security_handler_factory.verify_basic(basic_info_func)
+
+                # OpenAPI 3.0.0
+                elif security_scheme['type'] == 'http':
+                    scheme = security_scheme['scheme'].lower()
+                    if scheme == 'basic':
+                        basic_info_func = self._api.security_handler_factory.get_basicinfo_func(security_scheme)
+                        if not basic_info_func:
+                            logger.warning("... x-basicInfoFunc missing", extra=vars(self))
+                            break
+
+                        sec_req_funcs[scheme_name] = self._api.security_handler_factory.verify_basic(basic_info_func)
+                    elif scheme == 'bearer':
+                        bearer_info_func = self._api.security_handler_factory.get_bearerinfo_func(security_scheme)
+                        if not bearer_info_func:
+                            logger.warning("... x-bearerInfoFunc missing", extra=vars(self))
+                            break
+                        sec_req_funcs[scheme_name] = self._api.security_handler_factory.verify_bearer(bearer_info_func)
+                    else:
+                        logger.warning("... Unsupported http authorization scheme %s" % scheme, extra=vars(self))
+                        break
+
+                elif security_scheme['type'] == 'apiKey':
+                    scheme = security_scheme.get('x-authentication-scheme', '').lower()
+                    if scheme == 'bearer':
+                        bearer_info_func = self._api.security_handler_factory.get_bearerinfo_func(security_scheme)
+                        if not bearer_info_func:
+                            logger.warning("... x-bearerInfoFunc missing", extra=vars(self))
+                            break
+                        sec_req_funcs[scheme_name] = self._api.security_handler_factory.verify_bearer(bearer_info_func)
+                    else:
+                        apikey_info_func = self._api.security_handler_factory.get_apikeyinfo_func(security_scheme)
+                        if not apikey_info_func:
+                            logger.warning("... x-apikeyInfoFunc missing", extra=vars(self))
+                            break
+
+                        sec_req_funcs[scheme_name] = self._api.security_handler_factory.verify_api_key(
+                            apikey_info_func, security_scheme['in'], security_scheme['name']
+                        )
+
                 else:
-                    logger.warning("... Unsupported http authorization scheme %s" % scheme, extra=vars(self))
-
-            elif security_scheme['type'] == 'apiKey':
-                scheme = security_scheme.get('x-authentication-scheme', '').lower()
-                if scheme == 'bearer':
-                    bearer_info_func = get_bearerinfo_func(security_scheme)
-                    if not bearer_info_func:
-                        logger.warning("... x-bearerInfoFunc missing", extra=vars(self))
-                        continue
-                    auth_funcs.append(verify_bearer(bearer_info_func))
-                else:
-                    apikey_info_func = get_apikeyinfo_func(security_scheme)
-                    if not apikey_info_func:
-                        logger.warning("... x-apikeyInfoFunc missing", extra=vars(self))
-                        continue
-
-                    auth_funcs.append(verify_apikey(apikey_info_func, security_scheme['in'], security_scheme['name']))
-
+                    logger.warning("... Unsupported security scheme type %s" % security_scheme['type'], extra=vars(self))
+                    break
             else:
-                logger.warning("... Unsupported security scheme type %s" % security_scheme['type'], extra=vars(self))
+                # No break encountered: no missing funcs
+                if len(sec_req_funcs) == 1:
+                    (func,) = sec_req_funcs.values()
+                    auth_funcs.append(func)
+                else:
+                    auth_funcs.append(self._api.security_handler_factory.verify_multiple_schemes(sec_req_funcs))
 
-        return functools.partial(verify_security, auth_funcs, required_scopes)
+        return functools.partial(self._api.security_handler_factory.verify_security, auth_funcs, required_scopes)
 
     def get_mimetype(self):
         return DEFAULT_MIMETYPE

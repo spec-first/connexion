@@ -1,3 +1,8 @@
+"""
+This module provides general utility functions used within Connexion.
+"""
+
+import asyncio
 import functools
 import importlib
 
@@ -5,7 +10,7 @@ import yaml
 
 
 def boolean(s):
-    '''
+    """
     Convert JSON/Swagger boolean value to Python, raise ValueError otherwise
 
     >>> boolean('true')
@@ -13,7 +18,7 @@ def boolean(s):
 
     >>> boolean('false')
     False
-    '''
+    """
     if isinstance(s, bool):
         return s
     elif not hasattr(s, 'lower'):
@@ -61,10 +66,11 @@ def deep_merge(a, b):
 def deep_getattr(obj, attr):
     """
     Recurses through an attribute chain to get the ultimate value.
-
-    Stolen from http://pingfive.typepad.com/blog/2010/04/deep-getattr-python-function.html
     """
-    return functools.reduce(getattr, attr.split('.'), obj)
+
+    attrs = attr.split('.')
+
+    return functools.reduce(getattr, attrs, obj)
 
 
 def deep_get(obj, keys):
@@ -112,7 +118,7 @@ def get_function_from_name(function_name):
             last_import_error = import_error
             if '.' in module_name:
                 module_name, attr_path1 = module_name.rsplit('.', 1)
-                attr_path = '{0}.{1}'.format(attr_path1, attr_path)
+                attr_path = f'{attr_path1}.{attr_path}'
             else:
                 raise
     try:
@@ -182,8 +188,6 @@ def has_coroutine(function, api=None):
     If ``function`` is a decorator (has a ``__wrapped__`` attribute)
     this function will also look at the wrapped function.
     """
-    import asyncio
-
     def iscorofunc(func):
         iscorofunc = asyncio.iscoroutinefunction(func)
         while not iscorofunc and hasattr(func, '__wrapped__'):
@@ -210,14 +214,14 @@ def yamldumper(openapi):
     """
     def should_use_block(value):
         char_list = (
-          u"\u000a"  # line feed
-          u"\u000d"  # carriage return
-          u"\u001c"  # file separator
-          u"\u001d"  # group separator
-          u"\u001e"  # record separator
-          u"\u0085"  # next line
-          u"\u2028"  # line separator
-          u"\u2029"  # paragraph separator
+          "\u000a"  # line feed
+          "\u000d"  # carriage return
+          "\u001c"  # file separator
+          "\u001d"  # group separator
+          "\u001e"  # record separator
+          "\u0085"  # next line
+          "\u2028"  # line separator
+          "\u2029"  # paragraph separator
         )
         for c in char_list:
             if c in value:
@@ -247,3 +251,12 @@ def yamldumper(openapi):
     yaml.representer.SafeRepresenter.represent_scalar = my_represent_scalar
 
     return yaml.dump(openapi, allow_unicode=True, Dumper=NoAnchorDumper)
+
+
+def not_installed_error(exc):  # pragma: no cover
+    """Raises the ImportError when the module/object is actually called."""
+
+    def _required_lib(exc, *args, **kwargs):
+        raise exc
+
+    return functools.partial(_required_lib, exc)

@@ -4,8 +4,8 @@ import pathlib
 import sys
 
 import pytest
-
 from connexion import App
+from connexion.security import FlaskSecurityHandlerFactory
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -17,7 +17,7 @@ OPENAPI3_SPEC = ["openapi.yaml"]
 SPECS = OPENAPI2_SPEC + OPENAPI3_SPEC
 
 
-class FakeResponse(object):
+class FakeResponse:
     def __init__(self, status_code, text):
         """
         :type status_code: int
@@ -57,7 +57,13 @@ def oauth_requests(monkeypatch):
                 return FakeResponse(200, '{"uid": "test-user", "scopes": ["myscope", "otherscope"]}')
         return url
 
-    monkeypatch.setattr('connexion.decorators.security.session.get', fake_get)
+    monkeypatch.setattr('connexion.security.flask_security_handler_factory.session.get', fake_get)
+
+
+@pytest.fixture
+def security_handler_factory():
+    security_handler_factory = FlaskSecurityHandlerFactory(None)
+    yield security_handler_factory
 
 
 @pytest.fixture
@@ -132,7 +138,7 @@ def simple_openapi_app(request):
 def reverse_proxied_app(request):
 
     # adapted from http://flask.pocoo.org/snippets/35/
-    class ReverseProxied(object):
+    class ReverseProxied:
 
         def __init__(self, app, script_name=None, scheme=None, server=None):
             self.app = app
