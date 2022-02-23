@@ -275,7 +275,7 @@ paths:
         content:
           application/json:
             schema:
-              # should be ignored because the preferred location is at the media-type level above
+              # should be ignored because the preferred location is at the requestBody level above
               x-body-name: this_should_be_ignored
               $ref: '#/components/schemas/new_stack'
               default:
