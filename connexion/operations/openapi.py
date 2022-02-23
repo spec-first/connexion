@@ -3,6 +3,7 @@ This module defines an OpenAPIOperation class, a Connexion operation specific fo
 """
 
 import logging
+import warnings
 from copy import copy, deepcopy
 
 from connexion.operations.abstract import AbstractOperation
@@ -280,6 +281,9 @@ class OpenAPIOperation(AbstractOperation):
 
         if not x_body_name:
             # x-body-name also accepted in the schema field for legacy connexion compat
+            warnings.warn('x-body-name within the requestBody schema will be deprecated in the '
+                          'next major version. It should be provided directly under '
+                          'the requestBody instead.', DeprecationWarning)
             x_body_name = sanitize(self.body_schema.get('x-body-name', 'body'))
 
         # if the body came in null, and the schema says it can be null, we decide
