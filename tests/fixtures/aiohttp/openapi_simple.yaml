@@ -20,3 +20,16 @@ paths:
         '200':
           description: ok
       security: []
+  /test-cookie-param:
+    get:
+      summary: Test cookie parameter support.
+      operationId: fakeapi.aiohttp_handlers.test_cookie_param
+      parameters:
+        - name: test_cookie
+          in: cookie
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK

@@ -147,3 +147,7 @@ async def aiohttp_multipart_mixed_many_files(myfiles, body):
             'myfiles_content': [ f.file.read().decode('utf8') for f in myfiles ]
         },
     )
+
+
+async def test_cookie_param(request):
+    return {"cookie_value": request.cookies["test_cookie"]}

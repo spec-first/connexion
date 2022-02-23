@@ -663,6 +663,19 @@ paths:
       responses:
         '200':
           description: OK
+  /test-cookie-param:
+    get:
+      summary: Test cookie parameter support.
+      operationId: fakeapi.hello.test_cookie_param
+      parameters:
+        - name: test_cookie
+          in: cookie
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
   /parameters-in-root-path:
     parameters:
       - in: query

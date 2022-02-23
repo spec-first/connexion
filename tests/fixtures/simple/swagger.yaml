@@ -518,6 +518,15 @@ paths:
         200:
           description: OK
 
+  /test-cookie-param:
+    get:
+      summary: Test cookie parameter support.
+      operationId: fakeapi.hello.test_cookie_param
+      # No parameters because swagger / openapi 2.0 does not support describing cookie parameters.
+      responses:
+        200:
+          description: OK
+
   /parameters-in-root-path:
     parameters:
       - in: query

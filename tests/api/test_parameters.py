@@ -509,3 +509,11 @@ def test_get_unicode_request(simple_app):
     resp = app_client.get('/v1.0/get_unicode_request?price=%C2%A319.99')  # £19.99
     assert resp.status_code == 200
     assert json.loads(resp.data.decode('utf-8'))['price'] == '£19.99'
+
+
+def test_cookie_param(simple_app):
+    app_client = simple_app.app.test_client()
+    app_client.set_cookie("localhost", "test_cookie", "hello")
+    response = app_client.get("/v1.0/test-cookie-param")
+    assert response.status_code == 200
+    assert response.json == {"cookie_value": "hello"}

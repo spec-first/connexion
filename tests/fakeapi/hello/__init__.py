@@ -330,6 +330,10 @@ def test_required_param(simple):
     return simple
 
 
+def test_cookie_param():
+    return {"cookie_value": request.cookies["test_cookie"]}
+
+
 def test_exploded_deep_object_param(id):
     return id
 
