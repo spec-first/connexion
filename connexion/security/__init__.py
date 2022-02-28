@@ -21,3 +21,8 @@ try:
     from .aiohttp_security_handler_factory import AioHttpSecurityHandlerFactory
 except ImportError as err:  # pragma: no cover
     AioHttpSecurityHandlerFactory = not_installed_error(err)
+
+try:
+    from .middleware_security_handler_factory import MiddlewareSecurityHandlerFactory
+except ImportError as err:  # pragma: no cover
+    MiddlewareSecurityHandlerFactory = not_installed_error(err)
