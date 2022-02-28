@@ -1,0 +1,4 @@
+Flask==2.0.3
+quart==0.16.3
+sanic==20.12.6  # Bug in newer versions
+starlette==0.18.0
