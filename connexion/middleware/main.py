@@ -5,6 +5,7 @@ from starlette.exceptions import ExceptionMiddleware
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from connexion.middleware.routing import RoutingMiddleware
+from connexion.middleware.swagger_ui import SwaggerUIMiddleware
 
 
 class MissingMiddlewareError(Exception):
@@ -15,6 +16,7 @@ class ConnexionMiddleware:
 
     default_middlewares = [
         ExceptionMiddleware,
+        SwaggerUIMiddleware,
         RoutingMiddleware,
     ]
 
@@ -35,6 +37,7 @@ class ConnexionMiddleware:
         self.app, self.apps = self._apply_middlewares(app, middlewares)
 
         self._routing_middleware = None
+        self._swagger_ui_middleware = None
 
     @staticmethod
     def _apply_middlewares(app: ASGIApp, middlewares: t.List[t.Type[ASGIApp]]) \
@@ -70,6 +73,23 @@ class ConnexionMiddleware:
                 )
         return self._routing_middleware
 
+    @property
+    def swagger_ui_middleware(self) -> RoutingMiddleware:
+        """Instance of RoutingMiddleware applied to app.
+
+        :raises: MissingMiddlewareError if no routing middleware is applied.
+        """
+        if self._swagger_ui_middleware is None:
+            for app in self.apps:
+                if isinstance(app, SwaggerUIMiddleware):
+                    self._swagger_ui_middleware = app
+                    break
+            else:
+                raise MissingMiddlewareError(
+                    "No Swagger UI middleware is applied"
+                )
+        return self._swagger_ui_middleware
+
     def add_api(
             self,
             specification: t.Union[pathlib.Path, str, dict],
@@ -83,6 +103,7 @@ class ConnexionMiddleware:
         :param arguments: Jinja arguments to replace in the spec.
         """
         self.routing_middleware.add_api(specification, base_path, arguments)
+        self.swagger_ui_middleware.add_api(specification, base_path, arguments)
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         await self.app(scope, receive, send)

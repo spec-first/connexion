@@ -34,40 +34,21 @@ class AbstractAPIMeta(abc.ABCMeta):
         cls._set_jsonifier()
 
 
-class AbstractMinimalAPI:
+class AbstractSpecAPI(metaclass=AbstractAPIMeta):
 
     def __init__(
             self,
             specification: t.Union[pathlib.Path, str, dict],
             base_path: t.Optional[str] = None,
             arguments: t.Optional[dict] = None,
-            resolver: t.Optional[Resolver] = None,
-            auth_all_paths: bool = False,
-            resolver_error_handler: t.Optional[t.Callable] = None,
-            debug: bool = False,
-            pass_context_arg_name: t.Optional[str] = None,
             options: t.Optional[dict] = None,
+            *args,
             **kwargs
-    ) -> None:
-        """Minimal interface of an API, with only functionality related to routing.
-
-        :param specification: OpenAPI specification. Can be provided either as dict, or as path
-        to file.
-        :param base_path: Base path to host the API.
-        :param arguments: Jinja arguments to resolve in specification.
-        :param resolver: Callable that maps operationID to a function
-        :param resolver_error_handler: Callable that generates an Operation used for handling
-        ResolveErrors
-        :param debug: Flag to run in debug mode
-        """
-        self.debug = debug
-        self.resolver_error_handler = resolver_error_handler
-
+    ):
         logger.debug('Loading specification: %s', specification,
                      extra={'swagger_yaml': specification,
                             'base_path': base_path,
-                            'arguments': arguments,
-                            'auth_all_paths': auth_all_paths})
+                            'arguments': arguments})
 
         # Avoid validator having ability to modify specification
         self.specification = Specification.load(specification, arguments=arguments)
@@ -83,6 +64,45 @@ class AbstractMinimalAPI:
 
         self._set_base_path(base_path)
 
+    def _set_base_path(self, base_path: t.Optional[str] = None) -> None:
+        if base_path is not None:
+            # update spec to include user-provided base_path
+            self.specification.base_path = base_path
+            self.base_path = base_path
+        else:
+            self.base_path = self.specification.base_path
+
+    @classmethod
+    def _set_jsonifier(cls):
+        cls.jsonifier = Jsonifier()
+
+
+class AbstractMinimalAPI(AbstractSpecAPI):
+
+    def __init__(
+            self,
+            *args,
+            resolver: t.Optional[Resolver] = None,
+            resolver_error_handler: t.Optional[t.Callable] = None,
+            debug: bool = False,
+            pass_context_arg_name: t.Optional[str] = None,
+            **kwargs
+    ) -> None:
+        """Minimal interface of an API, with only functionality related to routing.
+
+        :param specification: OpenAPI specification. Can be provided either as dict, or as path
+        to file.
+        :param base_path: Base path to host the API.
+        :param arguments: Jinja arguments to resolve in specification.
+        :param resolver: Callable that maps operationID to a function
+        :param resolver_error_handler: Callable that generates an Operation used for handling
+        ResolveErrors
+        :param debug: Flag to run in debug mode
+        """
+        super().__init__(*args, **kwargs)
+        self.debug = debug
+        self.resolver_error_handler = resolver_error_handler
+
         logger.debug('Security Definitions: %s', self.specification.security_definitions)
 
         self.resolver = resolver or Resolver()
@@ -93,14 +113,6 @@ class AbstractMinimalAPI:
         self.security_handler_factory = self.make_security_handler_factory(pass_context_arg_name)
 
         self.add_paths()
-
-    def _set_base_path(self, base_path: t.Optional[str] = None) -> None:
-        if base_path is not None:
-            # update spec to include user-provided base_path
-            self.specification.base_path = base_path
-            self.base_path = base_path
-        else:
-            self.base_path = self.specification.base_path
 
     @staticmethod
     @abc.abstractmethod
@@ -165,7 +177,40 @@ class AbstractMinimalAPI:
             raise value.with_traceback(traceback)
 
 
-class AbstractAPI(AbstractMinimalAPI, metaclass=AbstractAPIMeta):
+class AbstractSwaggerUIAPI(AbstractSpecAPI):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if self.options.openapi_spec_available:
+            self.add_openapi_json()
+            self.add_openapi_yaml()
+
+        if self.options.openapi_console_ui_available:
+            self.add_swagger_ui()
+
+    @abc.abstractmethod
+    def add_openapi_json(self):
+        """
+        Adds openapi spec to {base_path}/openapi.json
+             (or {base_path}/swagger.json for swagger2)
+        """
+
+    @abc.abstractmethod
+    def add_openapi_yaml(self):
+        """
+        Adds openapi spec to {base_path}/openapi.yaml
+             (or {base_path}/swagger.yaml for swagger2)
+        """
+
+    @abc.abstractmethod
+    def add_swagger_ui(self):
+        """
+        Adds swagger ui to {base_path}/ui/
+        """
+
+
+class AbstractAPI(AbstractSwaggerUIAPI, AbstractMinimalAPI):
     """
     Defines an abstract interface for a Swagger API
     """
@@ -207,31 +252,11 @@ class AbstractAPI(AbstractMinimalAPI, metaclass=AbstractAPIMeta):
                          resolver_error_handler=resolver_error_handler,
                          debug=debug, pass_context_arg_name=pass_context_arg_name, options=options)
 
-        if self.options.openapi_spec_available:
-            self.add_openapi_json()
-            self.add_openapi_yaml()
-
-        if self.options.openapi_console_ui_available:
-            self.add_swagger_ui()
-
         if auth_all_paths:
             self.add_auth_on_not_found(
                 self.specification.security,
                 self.specification.security_definitions
             )
-
-    @abc.abstractmethod
-    def add_openapi_json(self):
-        """
-        Adds openapi spec to {base_path}/openapi.json
-             (or {base_path}/swagger.json for swagger2)
-        """
-
-    @abc.abstractmethod
-    def add_swagger_ui(self):
-        """
-        Adds swagger ui to {base_path}/ui/
-        """
 
     @abc.abstractmethod
     def add_auth_on_not_found(self, security, security_definitions):
@@ -481,7 +506,3 @@ class AbstractAPI(AbstractMinimalAPI, metaclass=AbstractAPIMeta):
 
     def json_loads(self, data):
         return self.jsonifier.loads(data)
-
-    @classmethod
-    def _set_jsonifier(cls):
-        cls.jsonifier = Jsonifier()
