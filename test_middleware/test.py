@@ -37,7 +37,8 @@ def test_app(app):
     server = Server(config=config)
 
     with server.run_in_thread():
-        response = requests.get('http://localhost:8000/test', params={'int': 1})
+        response = requests.get('http://localhost:8000/test', params={'int': 1,
+                                                                      'key': 'abc'})
 
     assert response.headers.get('operation_id') == 'success'
     print(response.headers.get('operation_id'))

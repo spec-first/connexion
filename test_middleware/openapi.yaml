@@ -21,7 +21,16 @@ paths:
                 properties:
                   int:
                     type: integer
-
+components:
+  securitySchemes:
+    api_key:
+      type: apiKey
+      name: key
+      in: query
+      x-apikeyInfoFunc: security.apikey_info
+      
+security:
+  - api_key: []
 
 
 

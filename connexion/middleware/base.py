@@ -1,4 +1,6 @@
+import json
 import typing
+from urllib.parse import parse_qs
 
 import anyio
 from starlette.requests import Request as StarletteRequest
@@ -67,6 +69,8 @@ class BaseHTTPMiddleware:
 
         async with anyio.create_task_group() as task_group:
             request = StarletteRequest(scope, receive=receive)
+            # request = await self.starlette_to_connexion_request(request)
+            request = transform_request(request)
             operation = scope["operation"]
             response = await self.dispatch_func(request, operation, call_next)
             await response(scope, receive, send)
@@ -93,3 +97,10 @@ class BaseHTTPMiddleware:
         :return: Manipulated response
         """
         raise NotImplementedError()  # pragma: no cover
+
+
+def transform_request(req: StarletteRequest) -> StarletteRequest:
+    # TODO: cast to connexion request instead
+    req.query = parse_qs(req.url.query)
+    req.context = {}
+    return req
