@@ -215,6 +215,11 @@ OPERATION10 = {'description': 'operation secured with 2 oauth schemes combined u
                 'responses': {'200': {'description': 'OK'}},
                 'security': [{'oauth_1': ['uid'], 'oauth_2': ['uid']}]}
 
+OPERATION11 = {'description': 'operation secured with an oauth schemes with 2 possible scopes (in OR)',
+                'operationId': 'fakeapi.hello.post_greeting',
+                'responses': {'200': {'description': 'OK'}},
+                'security': [{'oauth': ['myscope']}, {'oauth': ['myscope2']}]}
+
 SECURITY_DEFINITIONS_REMOTE = {'oauth': {'type': 'oauth2',
                                          'flow': 'password',
                                          'x-tokenInfoUrl': 'https://oauth.example/token_info',
@@ -223,7 +228,8 @@ SECURITY_DEFINITIONS_REMOTE = {'oauth': {'type': 'oauth2',
 SECURITY_DEFINITIONS_LOCAL = {'oauth': {'type': 'oauth2',
                                         'flow': 'password',
                                         'x-tokenInfoFunc': 'math.ceil',
-                                        'scopes': {'myscope': 'can do stuff'}}}
+                                        'scopes': {'myscope': 'can do stuff',
+                                                   'myscope2': 'can do other stuff'}}}
 
 SECURITY_DEFINITIONS_BOTH = {'oauth': {'type': 'oauth2',
                                        'flow': 'password',
@@ -612,3 +618,37 @@ def test_get_path_parameter_types(api):
     )
 
     assert {'int_path': 'int', 'string_path': 'string', 'path_path': 'path'} == operation.get_path_parameter_types()
+
+
+def test_oauth_scopes_in_or(api):
+    """Tests whether an OAuth security scheme with 2 different possible scopes is correctly handled."""
+    verify_oauth = mock.MagicMock(return_value='verify_oauth_result')
+    api.security_handler_factory.verify_oauth = verify_oauth
+
+    op_spec = make_operation(OPERATION11)
+    operation = Swagger2Operation(api=api,
+                                  method='GET',
+                                  path='endpoint',
+                                  path_parameters=[],
+                                  operation=op_spec,
+                                  app_produces=['application/json'],
+                                  app_consumes=['application/json'],
+                                  app_security=[],
+                                  security_definitions=SECURITY_DEFINITIONS_LOCAL,
+                                  definitions=DEFINITIONS,
+                                  parameter_definitions=PARAMETER_DEFINITIONS,
+                                  resolver=Resolver())
+    assert isinstance(operation.function, types.FunctionType)
+    security_decorator = operation.security_decorator
+    assert len(security_decorator.args[0]) == 2
+    assert security_decorator.args[0][0] == 'verify_oauth_result'
+    assert security_decorator.args[0][1] == 'verify_oauth_result'
+    verify_oauth.assert_has_calls([
+        mock.call(math.ceil, api.security_handler_factory.validate_scope, ['myscope']),
+        mock.call(math.ceil, api.security_handler_factory.validate_scope, ['myscope2']),
+    ])
+
+    assert operation.method == 'GET'
+    assert operation.produces == ['application/json']
+    assert operation.consumes == ['application/json']
+    assert operation.security == [{'oauth': ['myscope']}, {'oauth': ['myscope2']}]
