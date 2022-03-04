@@ -296,8 +296,7 @@ def test_operation(api, security_handler_factory):
     security_decorator = operation.security_decorator
     assert len(security_decorator.args[0]) == 1
     assert security_decorator.args[0][0] == 'verify_oauth_result'
-    assert security_decorator.args[1] == ['uid']
-    verify_oauth.assert_called_with('get_token_info_remote_result',security_handler_factory.validate_scope)
+    verify_oauth.assert_called_with('get_token_info_remote_result', security_handler_factory.validate_scope, ['uid'])
     security_handler_factory.get_token_info_remote.assert_called_with('https://oauth.example/token_info')
 
     assert operation.method == 'GET'
@@ -384,8 +383,7 @@ def test_operation_local_security_oauth2(api):
     security_decorator = operation.security_decorator
     assert len(security_decorator.args[0]) == 1
     assert security_decorator.args[0][0] == 'verify_oauth_result'
-    assert security_decorator.args[1] == ['uid']
-    verify_oauth.assert_called_with(math.ceil, api.security_handler_factory.validate_scope)
+    verify_oauth.assert_called_with(math.ceil, api.security_handler_factory.validate_scope, ['uid'])
 
     assert operation.method == 'GET'
     assert operation.produces == ['application/json']
@@ -418,8 +416,7 @@ def test_operation_local_security_duplicate_token_info(api):
     security_decorator = operation.security_decorator
     assert len(security_decorator.args[0]) == 1
     assert security_decorator.args[0][0] == 'verify_oauth_result'
-    assert security_decorator.args[1] == ['uid']
-    verify_oauth.call_args.assert_called_with(math.ceil, api.security_handler_factory.validate_scope)
+    verify_oauth.call_args.assert_called_with(math.ceil, api.security_handler_factory.validate_scope, ['uid'])
 
     assert operation.method == 'GET'
     assert operation.produces == ['application/json']
@@ -514,7 +511,6 @@ def test_multiple_security_schemes_and(api):
     security_decorator = operation.security_decorator
     assert len(security_decorator.args[0]) == 1
     assert security_decorator.args[0][0] == 'verify_multiple_result'
-    assert security_decorator.args[1] is None
 
     assert operation.method == 'GET'
     assert operation.produces == ['application/json']
@@ -548,7 +544,6 @@ def test_multiple_oauth_in_and(api, caplog):
     security_decorator = operation.security_decorator
     assert len(security_decorator.args[0]) == 0
     assert security_decorator.args[0] == []
-    assert security_decorator.args[1] == ['uid']
 
     assert '... multiple OAuth2 security schemes in AND fashion not supported' in caplog.text
 
