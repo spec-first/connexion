@@ -34,11 +34,6 @@ flask_require = [
     'flask>=1.0.4,<3',
     'itsdangerous>=0.24',
 ]
-aiohttp_require = [
-    'aiohttp>=2.3.10,<4',
-    'aiohttp-jinja2>=0.14.0,<2',
-    'MarkupSafe>=0.23',
-]
 
 tests_require = [
     'decorator>=5,<6',
@@ -48,10 +43,6 @@ tests_require = [
     *flask_require,
     swagger_ui_require
 ]
-
-tests_require.extend(aiohttp_require)
-tests_require.append('pytest-aiohttp')
-tests_require.append('aiohttp-remotes')
 
 docs_require = [
     'sphinx-autoapi==1.8.1'
@@ -106,7 +97,6 @@ setup(
         'tests': tests_require,
         'flask': flask_require,
         'swagger-ui': swagger_ui_require,
-        'aiohttp': aiohttp_require,
         'docs': docs_require
     },
     cmdclass={'test': PyTest},

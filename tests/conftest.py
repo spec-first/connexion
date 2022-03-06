@@ -78,11 +78,6 @@ def simple_api_spec_dir():
     return FIXTURES_FOLDER / 'simple'
 
 
-@pytest.fixture(scope='session')
-def aiohttp_api_spec_dir():
-    return FIXTURES_FOLDER / 'aiohttp'
-
-
 @pytest.fixture
 def problem_api_spec_dir():
     return FIXTURES_FOLDER / 'problem'
@@ -227,8 +222,3 @@ def bad_operations_app(request):
     return build_app_from_fixture('bad_operations', request.param,
                                   resolver_error=501)
 
-
-if sys.version_info < (3, 5, 3) and sys.version_info[0] == 3:
-    @pytest.fixture
-    def aiohttp_client(test_client):
-        return test_client

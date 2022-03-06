@@ -11,8 +11,7 @@ This document describes the high-level architecture of Connexion.
 Apps
 ----
 
-A Connexion ``App`` or application wraps a specific framework application (currently Flask or
-AioHttp) and exposes a standardized interface for users to create and configure their Connexion
+A Connexion ``App`` or application wraps a specific framework application (currently Flask) and exposes a standardized interface for users to create and configure their Connexion
 application.
 
 While a Connexion app implements the WSGI interface, it only acts ass a pass-through and doesn't
