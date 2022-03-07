@@ -70,7 +70,7 @@ async def test_swagger_yaml(aiohttp_api_spec_dir, aiohttp_client):
     data_ = await spec_response.read()
 
     assert spec_response.status == 200
-    assert api.specification.raw == yaml.load(data_)
+    assert api.specification.raw == yaml.load(data_, yaml.FullLoader)
 
 
 async def test_no_swagger_json(aiohttp_api_spec_dir, aiohttp_client):
