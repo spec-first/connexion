@@ -3,6 +3,7 @@ This module defines an OpenAPIOperation class, a Connexion operation specific fo
 """
 
 import logging
+import warnings
 from copy import copy, deepcopy
 
 from connexion.operations.abstract import AbstractOperation
@@ -275,7 +276,15 @@ class OpenAPIOperation(AbstractOperation):
         if len(arguments) <= 0 and not has_kwargs:
             return {}
 
-        x_body_name = sanitize(self.body_schema.get('x-body-name', 'body'))
+        # prefer the x-body-name as an extension of requestBody
+        x_body_name = sanitize(self.request_body.get('x-body-name', None))
+
+        if not x_body_name:
+            # x-body-name also accepted in the schema field for legacy connexion compat
+            warnings.warn('x-body-name within the requestBody schema will be deprecated in the '
+                          'next major version. It should be provided directly under '
+                          'the requestBody instead.', DeprecationWarning)
+            x_body_name = sanitize(self.body_schema.get('x-body-name', 'body'))
 
         # if the body came in null, and the schema says it can be null, we decide
         # to include no value for the body argument, rather than the default body

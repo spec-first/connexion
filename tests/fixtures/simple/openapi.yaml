@@ -271,10 +271,12 @@ paths:
         '200':
           description: OK
       requestBody:
+        x-body-name: stack
         content:
           application/json:
             schema:
-              x-body-name: stack
+              # should be ignored because the preferred location is at the requestBody level above
+              x-body-name: this_should_be_ignored
               $ref: '#/components/schemas/new_stack'
               default:
                 image_version: default_image
