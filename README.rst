@@ -5,12 +5,12 @@ Connexion
    :alt: Join the chat at https://gitter.im/zalando/connexion
    :target: https://gitter.im/zalando/connexion?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 
-.. image:: https://travis-ci.org/zalando/connexion.svg?branch=master
-   :target: https://travis-ci.org/zalando/connexion
-   :alt: Travis CI build status
+.. image:: https://github.com/zalando/connexion/actions/workflows/pipeline.yml/badge.svg
+   :alt: Build status
+   :target: https://github.com/zalando/connexion/actions/workflows/pipeline.yml
 
-.. image:: https://coveralls.io/repos/zalando/connexion/badge.svg?branch=master
-   :target: https://coveralls.io/r/zalando/connexion?branch=master
+.. image:: https://coveralls.io/repos/github/zalando/connexion/badge.svg?branch=main
+   :target: https://coveralls.io/github/zalando/connexion?branch=main
    :alt: Coveralls status
 
 .. image:: https://img.shields.io/pypi/v/connexion.svg
@@ -26,7 +26,7 @@ Connexion
    :alt: Python Versions
 
 .. image:: https://img.shields.io/pypi/l/connexion.svg
-   :target: https://github.com/zalando/connexion/blob/master/LICENSE
+   :target: https://github.com/zalando/connexion/blob/main/LICENSE.txt
    :alt: License
 
 Connexion is a framework that automagically handles HTTP requests based on `OpenAPI Specification`_
@@ -266,9 +266,24 @@ of the endpoint parameter ``message`` to your view function.
 
 .. note:: In the OpenAPI 3.x.x spec, the requestBody does not have a name.
           By default it will be passed in as 'body'. You can optionally
-          provide the x-body-name parameter in your requestBody schema
+          provide the x-body-name parameter in your requestBody
+          (or legacy position within the requestBody schema)
           to override the name of the parameter that will be passed to your
           handler function.
+
+.. code-block:: yaml
+
+
+    /path
+      post:
+        requestBody:
+          x-body-name: body
+          content:
+            application/json:
+              schema:
+                # legacy location here should be ignored because the preferred location for x-body-name is at the requestBody level above
+                x-body-name: this_should_be_ignored
+                $ref: '#/components/schemas/someComponent'
 
 .. warning:: When you define a parameter at your endpoint as *not* required, and
     this argument does not have default value in your Python view, you will get
@@ -567,6 +582,9 @@ Contributing to Connexion/TODOs
 
 We welcome your ideas, issues, and pull requests. Just follow the
 usual/standard GitHub practices.
+
+You can find out more about how Connexion works and where to apply your changes by having a look
+at our `ARCHITECTURE.rst <ARCHITECTURE.rst>`_.
 
 Unless you explicitly state otherwise in advance, any non trivial
 contribution intentionally submitted for inclusion in this project by you

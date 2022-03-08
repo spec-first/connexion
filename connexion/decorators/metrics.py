@@ -1,9 +1,16 @@
+"""
+This module defines view function decorator to collect UWSGI metrics and expose them via an
+endpoint.
+"""
+
 import functools
 import os
 import time
 
 from werkzeug.exceptions import HTTPException
+
 from connexion.exceptions import ProblemException
+
 try:
     import uwsgi_metrics
     HAS_UWSGI_METRICS = True  # pragma: no cover
@@ -12,12 +19,12 @@ except ImportError:
     HAS_UWSGI_METRICS = False
 
 
-class UWSGIMetricsCollector(object):
+class UWSGIMetricsCollector:
     def __init__(self, path, method):
         self.path = path
         self.method = method
         swagger_path = path.strip('/').replace('/', '.').replace('<', '{').replace('>', '}')
-        self.key_suffix = '{method}.{path}'.format(path=swagger_path, method=method.upper())
+        self.key_suffix = f'{method.upper()}.{swagger_path}'
         self.prefix = os.getenv('HTTP_METRICS_PREFIX', 'connexion.response')
 
     @staticmethod
@@ -47,7 +54,7 @@ class UWSGIMetricsCollector(object):
                 end_time_s = time.time()
                 delta_s = end_time_s - start_time_s
                 delta_ms = delta_s * 1000
-                key = '{status}.{suffix}'.format(status=status, suffix=self.key_suffix)
+                key = f'{status}.{self.key_suffix}'
                 uwsgi_metrics.timer(self.prefix, key, delta_ms)
             return response
 

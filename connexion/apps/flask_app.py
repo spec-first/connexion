@@ -1,3 +1,7 @@
+"""
+This module defines a FlaskApp, a Connexion application to wrap a Flask application.
+"""
+
 import datetime
 import logging
 import pathlib
@@ -6,7 +10,7 @@ from types import FunctionType  # NOQA
 
 import flask
 import werkzeug.exceptions
-from flask import json
+from flask import json, signals
 
 from ..apis.flask_api import FlaskApi
 from ..exceptions import ProblemException
@@ -17,12 +21,21 @@ logger = logging.getLogger('connexion.app')
 
 
 class FlaskApp(AbstractApp):
-    def __init__(self, import_name, server='flask', **kwargs):
-        super(FlaskApp, self).__init__(import_name, FlaskApi, server=server, **kwargs)
+    def __init__(self, import_name, server='flask', extra_files=None, **kwargs):
+        """
+        :param extra_files: additional files to be watched by the reloader, defaults to the swagger specs of added apis
+        :type extra_files: list[str | pathlib.Path], optional
+
+        See :class:`~connexion.AbstractApp` for additional parameters.
+        """
+        super().__init__(import_name, FlaskApi, server=server, **kwargs)
+        self.extra_files = extra_files or []
 
     def create_app(self):
         app = flask.Flask(self.import_name, **self.server_args)
         app.json_encoder = FlaskJSONEncoder
+        app.url_map.converters['float'] = NumberConverter
+        app.url_map.converters['int'] = IntegerConverter
         return app
 
     def get_root_path(self):
@@ -34,11 +47,11 @@ class FlaskApp(AbstractApp):
 
         self.add_error_handler(ProblemException, self.common_error_handler)
 
-    @staticmethod
-    def common_error_handler(exception):
+    def common_error_handler(self, exception):
         """
         :type exception: Exception
         """
+        signals.got_request_exception.send(self.app, exception=exception)
         if isinstance(exception, ProblemException):
             response = problem(
                 status=exception.status, title=exception.title, detail=exception.detail,
@@ -48,23 +61,34 @@ class FlaskApp(AbstractApp):
             if not isinstance(exception, werkzeug.exceptions.HTTPException):
                 exception = werkzeug.exceptions.InternalServerError()
 
-            response = problem(title=exception.name, detail=exception.description,
-                               status=exception.code)
+            response = problem(title=exception.name,
+                               detail=exception.description,
+                               status=exception.code,
+                               headers=exception.get_headers())
 
         return FlaskApi.get_response(response)
 
     def add_api(self, specification, **kwargs):
-        api = super(FlaskApp, self).add_api(specification, **kwargs)
+        api = super().add_api(specification, **kwargs)
         self.app.register_blueprint(api.blueprint)
+        if isinstance(specification, (str, pathlib.Path)):
+            self.extra_files.append(self.specification_dir / specification)
         return api
 
     def add_error_handler(self, error_code, function):
         # type: (int, FunctionType) -> None
         self.app.register_error_handler(error_code, function)
 
-    def run(self, port=None, server=None, debug=None, host=None, **options):  # pragma: no cover
+    def run(self,
+            port=None,
+            server=None,
+            debug=None,
+            host=None,
+            extra_files=None,
+            **options):  # pragma: no cover
         """
         Runs the application on a local development server.
+
         :param host: the host interface to bind on.
         :type host: str
         :param port: port to listen to
@@ -73,6 +97,8 @@ class FlaskApp(AbstractApp):
         :type server: str | None
         :param debug: include debugging information
         :type debug: bool
+        :param extra_files: additional files to be watched by the reloader.
+        :type extra_files: Iterable[str | pathlib.Path]
         :param options: options to be forwarded to the underlying server
         """
         # this functions is not covered in unit tests because we would effectively testing the mocks
@@ -91,14 +117,18 @@ class FlaskApp(AbstractApp):
         if debug is not None:
             self.debug = debug
 
+        if extra_files is not None:
+            self.extra_files.extend(extra_files)
+
         logger.debug('Starting %s HTTP server..', self.server, extra=vars(self))
         if self.server == 'flask':
-            self.app.run(self.host, port=self.port, debug=self.debug, **options)
+            self.app.run(self.host, port=self.port, debug=self.debug,
+                         extra_files=self.extra_files, **options)
         elif self.server == 'tornado':
             try:
-                import tornado.wsgi
                 import tornado.httpserver
                 import tornado.ioloop
+                import tornado.wsgi
             except ImportError:
                 raise Exception('tornado library not installed')
             wsgi_container = tornado.wsgi.WSGIContainer(self.app)
@@ -115,7 +145,7 @@ class FlaskApp(AbstractApp):
             logger.info('Listening on %s:%s..', self.host, self.port)
             http_server.serve_forever()
         else:
-            raise Exception('Server {} not recognized'.format(self.server))
+            raise Exception(f'Server {self.server} not recognized')
 
 
 class FlaskJSONEncoder(json.JSONEncoder):
@@ -136,3 +166,19 @@ class FlaskJSONEncoder(json.JSONEncoder):
             return float(o)
 
         return json.JSONEncoder.default(self, o)
+
+
+class NumberConverter(werkzeug.routing.BaseConverter):
+    """ Flask converter for OpenAPI number type """
+    regex = r"[+-]?[0-9]*(\.[0-9]*)?"
+
+    def to_python(self, value):
+        return float(value)
+
+
+class IntegerConverter(werkzeug.routing.BaseConverter):
+    """ Flask converter for OpenAPI integer type """
+    regex = r"[+-]?[0-9]+"
+
+    def to_python(self, value):
+        return int(value)

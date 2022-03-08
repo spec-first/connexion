@@ -1,7 +1,14 @@
+"""
+This module defines a decorator to convert request parameters to arguments for the view function.
+"""
+
+import builtins
 import functools
 import inspect
+import keyword
 import logging
 import re
+from typing import Any
 
 import inflection
 
@@ -9,19 +16,7 @@ from ..http_facts import FORM_CONTENT_TYPES
 from ..lifecycle import ConnexionRequest  # NOQA
 from ..utils import all_json
 
-try:
-    import builtins
-except ImportError:  # pragma: no cover
-    import __builtin__ as builtins
-
-
 logger = logging.getLogger(__name__)
-
-# Python 2/3 compatibility:
-try:
-    py_string = unicode
-except NameError:  # pragma: no cover
-    py_string = str  # pragma: no cover
 
 
 def inspect_function_arguments(function):  # pragma: no cover
@@ -48,8 +43,8 @@ def snake_and_shadow(name):
     :return:
     """
     snake = inflection.underscore(name)
-    if snake in builtins.__dict__.keys():
-        return "{}_".format(snake)
+    if snake in builtins.__dict__ or keyword.iskeyword(snake):
+        return f"{snake}_"
     return snake
 
 
@@ -71,7 +66,7 @@ def parameter_to_arg(operation, function, pythonic_params=False,
     consumes = operation.consumes
 
     def sanitized(name):
-        return name and re.sub('^[^a-zA-Z_]+', '', re.sub('[^0-9a-zA-Z_]', '', name))
+        return name and re.sub('^[^a-zA-Z_]+', '', re.sub('[^0-9a-zA-Z[_]', '', re.sub(r'[\[]', '_', name)))
 
     def pythonic(name):
         name = name and snake_and_shadow(name)
@@ -89,7 +84,7 @@ def parameter_to_arg(operation, function, pythonic_params=False,
         if all_json(consumes):
             request_body = request.json
         elif consumes[0] in FORM_CONTENT_TYPES:
-            request_body = {sanitize(k): v for k, v in request.form.items()}
+            request_body = request.form
         else:
             request_body = request.body
 

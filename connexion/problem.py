@@ -1,3 +1,9 @@
+"""
+This module contains a Python interface for Problem Details for HTTP APIs
+<https://tools.ietf.org/html/draft-ietf-appsawg-http-problem-00>, which is a standardized format
+to communicate distinct "problem types" to non-human consumers.
+"""
+
 from .lifecycle import ConnexionResponse
 
 

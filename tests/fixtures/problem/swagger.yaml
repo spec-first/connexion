@@ -101,3 +101,19 @@ paths:
       responses:
         200:
           description: Problem exception
+
+  /post_wrong_content_type:
+    post:
+      description: Unsupported media type
+      operationId: fakeapi.hello.post_wrong_content_type
+      consumes:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: The request body
+          schema:
+            type: object
+      responses:
+        200:
+          description: OK

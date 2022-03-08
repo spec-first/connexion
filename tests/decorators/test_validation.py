@@ -1,10 +1,11 @@
-import pytest
-from jsonschema import ValidationError
 from unittest.mock import MagicMock
 
+import pytest
+from connexion.apis.flask_api import FlaskApi
 from connexion.decorators.validation import ParameterValidator
 from connexion.json_schema import (Draft4RequestValidator,
                                    Draft4ResponseValidator)
+from jsonschema import ValidationError
 
 
 def test_get_valid_parameter():
@@ -180,3 +181,21 @@ def test_writeonly_required_error():
     }
     with pytest.raises(ValidationError):
         Draft4RequestValidator(schema).validate({"bar": "baz"})
+
+
+def test_formdata_extra_parameter_strict():
+    """Tests that connexion handles explicitly defined formData parameters well across Swagger 2
+    and OpenApi 3. In Swagger 2, any formData parameter should be defined explicitly, while in
+    OpenAPI 3 this is not allowed. See issues #1020 #1160 #1340 #1343."""
+    request = MagicMock(form={'param': 'value', 'extra_param': 'extra_value'})
+
+    # OAS3
+    validator = ParameterValidator([], FlaskApi, strict_validation=True)
+    errors = validator.validate_formdata_parameter_list(request)
+    assert not errors
+
+    # Swagger 2
+    validator = ParameterValidator([{'in': 'formData', 'name': 'param'}], FlaskApi,
+                                   strict_validation=True)
+    errors = validator.validate_formdata_parameter_list(request)
+    assert errors

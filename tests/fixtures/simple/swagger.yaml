@@ -518,6 +518,15 @@ paths:
         200:
           description: OK
 
+  /test-cookie-param:
+    get:
+      summary: Test cookie parameter support.
+      operationId: fakeapi.hello.test_cookie_param
+      # No parameters because swagger / openapi 2.0 does not support describing cookie parameters.
+      responses:
+        200:
+          description: OK
+
   /parameters-in-root-path:
     parameters:
       - in: query
@@ -555,21 +564,6 @@ paths:
           description: Name of the person to greet.
           required: true
           type: string
-
-  /goodday/noheader:
-    post:
-      summary: Generate good day greeting
-      description: Generates a good day message.
-      operationId: fakeapi.hello.post_goodday_no_header
-      responses:
-        201:
-          description: gooday response
-          headers:
-            Location:
-              type: string
-              description: The URI of the created resource
-          schema:
-            type: object
 
   /goodevening/{name}:
     post:
@@ -692,6 +686,26 @@ paths:
         200:
           description: OK
 
+  /nullable-parameters-noargs:
+    put:
+      operationId: fakeapi.hello.test_nullable_param_put_noargs
+      produces:
+        - application/json
+      parameters:
+        - name: contents
+          description: Just a testing parameter.
+          in: body
+          x-nullable: true
+          required: true
+          schema:
+              type: object
+              properties:
+                name:
+                  type: string
+      responses:
+        200:
+          description: OK
+
   /custom-json-response:
     get:
       operationId: fakeapi.hello.test_custom_json_response
@@ -740,6 +754,30 @@ paths:
           description: Just a testing parameter.
           in: query
           type: string
+      responses:
+        200:
+          description: Return kwargs
+          schema:
+            type: object
+
+  /body-params-as-kwargs:
+    post:
+      operationId: fakeapi.hello.test_args_kwargs_post
+      produces:
+        - application/json
+      parameters:
+        - name: $body
+          description: Just a testing parameter in the body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              foo:
+                type: string
+              bar:
+                type: string
+            additionalProperties: true
       responses:
         200:
           description: Return kwargs
@@ -996,6 +1034,15 @@ paths:
             The response containing the same data as were present in request body.
           schema:
             type: object
+
+  /get_streaming_response:
+    get:
+      operationId: fakeapi.hello.get_streaming_response
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: file
 
 definitions:
   new_stack:

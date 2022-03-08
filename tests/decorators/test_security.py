@@ -1,10 +1,10 @@
 import json
+from unittest.mock import MagicMock
 
 import pytest
 import requests
-from unittest.mock import MagicMock
-
-from connexion.exceptions import OAuthResponseProblem, OAuthScopeProblem
+from connexion.exceptions import (OAuthProblem, OAuthResponseProblem,
+                                  OAuthScopeProblem)
 
 
 def test_get_tokeninfo_url(monkeypatch, security_handler_factory):
@@ -165,3 +165,58 @@ def test_verify_apikey_header(security_handler_factory):
     request.headers = {"X-Auth": 'foobar'}
 
     assert wrapped_func(request, ['admin']) is not None
+
+
+def test_multiple_schemes(security_handler_factory):
+    def apikey1_info(apikey, required_scopes=None):
+        if apikey == 'foobar':
+            return {'sub': 'foo'}
+        return None
+    def apikey2_info(apikey, required_scopes=None):
+        if apikey == 'bar':
+            return {'sub': 'bar'}
+        return None
+
+    wrapped_func_key1 = security_handler_factory.verify_api_key(apikey1_info, 'header', 'X-Auth-1')
+    wrapped_func_key2 = security_handler_factory.verify_api_key(apikey2_info, 'header', 'X-Auth-2')
+    schemes = {
+        'key1': wrapped_func_key1,
+        'key2': wrapped_func_key2,
+    }
+    wrapped_func = security_handler_factory.verify_multiple_schemes(schemes)
+
+    # Single key does not succeed
+    request = MagicMock()
+    request.headers = {"X-Auth-1": 'foobar'}
+
+    assert wrapped_func(request, ['admin']) is security_handler_factory.no_value
+
+    request = MagicMock()
+    request.headers = {"X-Auth-2": 'bar'}
+
+    assert wrapped_func(request, ['admin']) is security_handler_factory.no_value
+
+    # Supplying both keys does succeed
+    request = MagicMock()
+    request.headers = {
+        "X-Auth-1": 'foobar',
+        "X-Auth-2": 'bar'
+    }
+
+    expected_token_info = {
+        'key1': {'sub': 'foo'},
+        'key2': {'sub': 'bar'},
+    }
+    assert wrapped_func(request, ['admin']) == expected_token_info
+
+
+def test_verify_security_oauthproblem(security_handler_factory):
+    """Tests whether verify_security raises an OAuthProblem if there are no auth_funcs."""
+    func_to_secure = MagicMock(return_value='func')
+    secured_func = security_handler_factory.verify_security([], [], func_to_secure)
+
+    request = MagicMock()
+    with pytest.raises(OAuthProblem) as exc_info:
+        secured_func(request)
+
+    assert str(exc_info.value) == '401 Unauthorized: No authorization token provided'

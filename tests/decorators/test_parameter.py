@@ -14,7 +14,7 @@ def test_injection():
     def handler(**kwargs):
         func(**kwargs)
 
-    class Op(object):
+    class Op:
         consumes = ['application/json']
 
         def get_arguments(self, *args, **kwargs):

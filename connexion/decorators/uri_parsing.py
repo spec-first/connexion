@@ -1,11 +1,14 @@
-# Decorators to split query and path parameters
+"""
+This module defines view function decorators to split query and path parameters.
+"""
+
 import abc
 import functools
+import json
 import logging
 import re
-import json
-from .. import utils
 
+from .. import utils
 from .decorator import BaseDecorator
 
 logger = logging.getLogger('connexion.decorators.uri_parsing')
@@ -27,10 +30,10 @@ class AbstractURIParser(BaseDecorator, metaclass=abc.ABCMeta):
         When called with a request object, it handles array types in the URI
         both in the path and query according to the spec.
         Some examples include:
-         - https://mysite.fake/in/path/1,2,3/            # path parameters
-         - https://mysite.fake/?in_query=a,b,c           # simple query params
-         - https://mysite.fake/?in_query=a|b|c           # various separators
-         - https://mysite.fake/?in_query=a&in_query=b,c  # complex query params
+        - https://mysite.fake/in/path/1,2,3/            # path parameters
+        - https://mysite.fake/?in_query=a,b,c           # simple query params
+        - https://mysite.fake/?in_query=a|b|c           # various separators
+        - https://mysite.fake/?in_query=a&in_query=b,c  # complex query params
         """
         self._param_defns = {p["name"]: p
                              for p in param_defns
@@ -38,13 +41,15 @@ class AbstractURIParser(BaseDecorator, metaclass=abc.ABCMeta):
         self._body_schema = body_defn.get("schema", {})
         self._body_encoding = body_defn.get("encoding", {})
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def param_defns(self):
         """
         returns the parameter definitions by name
         """
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def param_schemas(self):
         """
         returns the parameter schemas by name
@@ -108,7 +113,7 @@ class AbstractURIParser(BaseDecorator, metaclass=abc.ABCMeta):
                 # multiple values in a path is impossible
                 values = [values]
 
-            if (param_schema is not None and param_schema['type'] == 'array'):
+            if param_schema and param_schema['type'] == 'array':
                 # resolve variable re-assignment, handle explode
                 values = self._resolve_param_duplicates(values, param_defn, _in)
                 # handle array styles
@@ -179,14 +184,24 @@ class OpenAPIURIParser(AbstractURIParser):
                 form_data[k] = json.loads(form_data[k])
         return form_data
 
-    @staticmethod
-    def _make_deep_object(k, v):
+    def _make_deep_object(self, k, v):
         """ consumes keys, value pairs like (a[foo][bar], "baz")
             returns (a, {"foo": {"bar": "baz"}}}, is_deep_object)
         """
-        root_key = k.split("[", 1)[0]
-        if k == root_key:
-            return (k, v, False)
+        root_key = None
+        if k in self.param_schemas.keys():
+            return k, v, False
+        else:
+            for keys in self.param_schemas.keys():
+                if k.startswith(keys):
+                    rest = keys.replace(k, '')
+                    root_key = rest
+
+        if not root_key:
+            root_key = k.split("[", 1)[0]
+            if k == root_key:
+                return k, v, False
+
         key_path = re.findall(r'\[([^\[\]]*)\]', k)
         root = prev = node = {}
         for k in key_path:
@@ -194,7 +209,7 @@ class OpenAPIURIParser(AbstractURIParser):
             prev = node
             node = node[k]
         prev[k] = v[0]
-        return (root_key, [root], True)
+        return root_key, [root], True
 
     def _preprocess_deep_objects(self, query_data):
         """ deep objects provide a way of rendering nested objects using query

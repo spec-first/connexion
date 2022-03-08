@@ -1,14 +1,12 @@
 import logging
-
-import pytest
-from click.testing import CliRunner
 from unittest.mock import MagicMock
-from unittest.mock import call as mock_call
 
 import connexion
-from conftest import FIXTURES_FOLDER
+import pytest
+from click.testing import CliRunner
 from connexion.cli import main
-from connexion.exceptions import ResolverError
+
+from conftest import FIXTURES_FOLDER
 
 
 @pytest.fixture()
@@ -55,7 +53,7 @@ def spec_file():
 def test_print_version():
     runner = CliRunner()
     result = runner.invoke(main, ['--version'], catch_exceptions=False)
-    assert "Connexion {}".format(connexion.__version__) in result.output
+    assert f"Connexion {connexion.__version__}" in result.output
 
 
 def test_run_missing_spec():

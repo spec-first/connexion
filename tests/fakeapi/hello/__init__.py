@@ -2,12 +2,11 @@
 import datetime
 import uuid
 
-from flask import jsonify, redirect
-
 from connexion import NoContent, ProblemException, context, request
+from flask import jsonify, redirect, send_file
 
 
-class DummyClass(object):
+class DummyClass:
     @classmethod
     def test_classmethod(cls):
         return cls.__name__
@@ -35,7 +34,7 @@ def post():
 
 
 def post_greeting(name, **kwargs):
-    data = {'greeting': 'Hello {name}'.format(name=name)}
+    data = {'greeting': f'Hello {name}'}
     return data
 
 def post_greeting3(body, **kwargs):
@@ -43,11 +42,11 @@ def post_greeting3(body, **kwargs):
     return data
 
 def post_greeting_url(name, remainder, **kwargs):
-    data = {'greeting': 'Hello {name} thanks for {remainder}'.format(name=name,remainder=remainder)}
+    data = {'greeting': f'Hello {name} thanks for {remainder}'}
     return data
 
 def post_goodday(name):
-    data = {'greeting': 'Hello {name}'.format(name=name)}
+    data = {'greeting': f'Hello {name}'}
     headers = {"Location": "/my/uri"}
     return data, 201, headers
 
@@ -57,7 +56,7 @@ def post_goodday_no_header():
 
 
 def post_goodevening(name):
-    data = 'Good evening {name}'.format(name=name)
+    data = f'Good evening {name}'
     headers = {"Location": "/my/uri"}
     return data, 201, headers
 
@@ -68,7 +67,7 @@ def get_list(name):
 
 
 def get_bye(name):
-    return 'Goodbye {name}'.format(name=name)
+    return f'Goodbye {name}'
 
 
 def get_flask_response_tuple():
@@ -76,7 +75,7 @@ def get_flask_response_tuple():
 
 
 def get_bye_secure(name, user, token_info):
-    return 'Goodbye {name} (Secure: {user})'.format(name=name, user=user)
+    return f'Goodbye {name} (Secure: {user})'
 
 
 def get_bye_secure_from_flask():
@@ -88,10 +87,10 @@ def get_bye_secure_from_connexion(req_context):
 
 
 def get_bye_secure_ignoring_context(name):
-    return 'Goodbye {name} (Secure!)'.format(name=name)
+    return f'Goodbye {name} (Secure!)'
 
 def get_bye_secure_jwt(name, user, token_info):
-    return 'Goodbye {name} (Secure: {user})'.format(name=name, user=user)
+    return f'Goodbye {name} (Secure: {user})'
 
 def with_problem():
     raise ProblemException(type='http://www.example.com/error',
@@ -117,7 +116,7 @@ def get_greetings(name):
     """
     Used to test custom mimetypes
     """
-    data = {'greetings': 'Hello {name}'.format(name=name)}
+    data = {'greetings': f'Hello {name}'}
     return data
 
 
@@ -267,11 +266,11 @@ def test_schema_int(test_int):
 
 
 def test_get_someint(someint):
-    return type(someint).__name__
+    return f'{type(someint).__name__} {someint:g}'
 
 
 def test_get_somefloat(somefloat):
-    return type(somefloat).__name__
+    return f'{type(somefloat).__name__} {somefloat:g}'
 
 
 def test_default_param(name):
@@ -329,6 +328,10 @@ def test_bool_array_param(thruthiness=None):
 
 def test_required_param(simple):
     return simple
+
+
+def test_cookie_param():
+    return {"cookie_value": request.cookies["test_cookie"]}
 
 
 def test_exploded_deep_object_param(id):
@@ -403,6 +406,9 @@ def test_nullable_param_put(contents):
         return 'it was None'
     return contents
 
+def test_nullable_param_put_noargs(dummy=''):
+    return 'hello'
+
 
 def test_custom_json_response():
     return {'theResult': DummyClass()}, 200
@@ -460,6 +466,9 @@ def optional_auth(**kwargs):
 def test_args_kwargs(*args, **kwargs):
     return kwargs
 
+def test_args_kwargs_post(*args, **kwargs):
+    return kwargs
+
 
 def test_param_sanitization(query=None, form=None):
     result = {}
@@ -475,7 +484,7 @@ def test_param_sanitization3(query=None, body=None):
     if query:
         result['query'] = query
     if body:
-        result['form'] = body["form"]
+        result['form'] = body["$form"]
     return result
 
 
@@ -500,7 +509,7 @@ def get_unicode_query(price=None):
 
 
 def get_unicode_data():
-    jsonResponse = {u'currency': u'\xa3', u'key': u'leena'}
+    jsonResponse = {'currency': '\xa3', 'key': 'leena'}
     return jsonResponse
 
 
@@ -602,3 +611,15 @@ def get_date():
 
 def get_uuid():
     return {'value': uuid.UUID(hex='e7ff66d0-3ec2-4c4e-bed0-6e4723c24c51')}
+
+
+def test_optional_headers():
+    return {}, 200
+
+
+def nullable_default(test):
+    return
+
+
+def get_streaming_response():
+    return send_file(__file__)

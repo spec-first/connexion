@@ -1,3 +1,8 @@
+"""
+This module defines an AioHttp Connexion API which implements translations between AioHttp and
+Connexion requests / responses.
+"""
+
 import asyncio
 import logging
 import re
@@ -11,16 +16,16 @@ import jinja2
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPNotFound, HTTPPermanentRedirect
 from aiohttp.web_middlewares import normalize_path_middleware
+from werkzeug.exceptions import HTTPException as werkzeug_HTTPException
+
 from connexion.apis.abstract import AbstractAPI
 from connexion.exceptions import ProblemException
 from connexion.handlers import AuthErrorHandler
 from connexion.jsonifier import JSONEncoder, Jsonifier
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.problem import problem
-from connexion.utils import yamldumper
 from connexion.security import AioHttpSecurityHandlerFactory
-from werkzeug.exceptions import HTTPException as werkzeug_HTTPException
-
+from connexion.utils import yamldumper
 
 logger = logging.getLogger('connexion.apis.aiohttp_api')
 
@@ -54,7 +59,7 @@ async def problems_middleware(request, handler):
     except (werkzeug_HTTPException, _HttpNotFoundError) as exc:
         response = problem(status=exc.code, title=exc.name, detail=exc.description)
     except web.HTTPError as exc:
-        if exc.text == "{}: {}".format(exc.status, exc.reason):
+        if exc.text == f"{exc.status}: {exc.reason}":
             detail = HTTPStatus(exc.status).description
         else:
             detail = exc.text
@@ -237,7 +242,8 @@ class AioHttpApi(AbstractAPI):
     async def _get_swagger_ui_home(self, req):
         base_path = self._base_path_for_prefix(req)
         template_variables = {
-            'openapi_spec_url': (base_path + self.options.openapi_spec_path)
+            'openapi_spec_url': (base_path + self.options.openapi_spec_path),
+            **self.options.openapi_console_ui_index_template_variables,
         }
         if self.options.openapi_console_ui_config is not None:
             template_variables['configUrl'] = 'swagger-ui-config.json'
@@ -260,7 +266,7 @@ class AioHttpApi(AbstractAPI):
             security=security,
             security_definitions=security_definitions
         )
-        endpoint_name = "{}_not_found".format(self._api_name)
+        endpoint_name = f"{self._api_name}_not_found"
         self.subapp.router.add_route(
             '*',
             '/{not_found_path}',
@@ -299,13 +305,52 @@ class AioHttpApi(AbstractAPI):
         :rtype: ConnexionRequest
         """
         url = str(req.url)
-        logger.debug('Getting data and status code',
-                     extra={'has_body': req.has_body, 'url': url})
+
+        logger.debug(
+            'Getting data and status code',
+            extra={
+                # has_body | can_read_body report if
+                # body has been read or not
+                # body_exists refers to underlying stream of data
+                'body_exists': req.body_exists,
+                'can_read_body': req.can_read_body,
+                'content_type': req.content_type,
+                'url': url,
+            },
+        )
 
         query = parse_qs(req.rel_url.query_string)
         headers = req.headers
         body = None
-        if req.body_exists:
+
+        # Note: if request is not 'application/x-www-form-urlencoded' nor 'multipart/form-data',
+        #       then `post_data` will be left an empty dict and the stream will not be consumed.
+        post_data = await req.post()
+
+        files = {}
+        form = {}
+
+        if post_data:
+            logger.debug('Reading multipart data from request')
+            for k, v in post_data.items():
+                if isinstance(v, web.FileField):
+                    if k in files:
+                        # if multiple files arrive under the same name in the
+                        # request, downstream requires that we put them all into
+                        # a list under the same key in the files dict.
+                        if isinstance(files[k], list):
+                            files[k].append(v)
+                        else:
+                            files[k] = [files[k], v]
+                    else:
+                        files[k] = v
+                else:
+                    # put normal fields as an array, that's how werkzeug does that for Flask
+                    # and that's what Connexion expects in its processing functions
+                    form[k] = [v]
+            body = b''
+        else:
+            logger.debug('Reading data from request')
             body = await req.read()
 
         return ConnexionRequest(url=url,
@@ -315,8 +360,10 @@ class AioHttpApi(AbstractAPI):
                                 headers=headers,
                                 body=body,
                                 json_getter=lambda: cls.jsonifier.loads(body),
-                                files={},
-                                context=req)
+                                form=form,
+                                files=files,
+                                context=req,
+                                cookies=req.cookies)
 
     @classmethod
     async def get_response(cls, response, mimetype=None, request=None):
