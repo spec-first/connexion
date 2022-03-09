@@ -320,9 +320,6 @@ class AbstractSecurityHandlerFactory(abc.ABC):
             if need_to_add_required_scopes:
                 kwargs[self.required_scopes_kw] = required_scopes
             token_info = func(*args, **kwargs)
-            # TODO: Multiple OAuth schemes defined in OR fashion
-            # This currently doesn't work because if the first one doesn't apply, it will raise an error
-            # and the second OAuth security func is never checked
             if token_info is self.no_value:
                 return self.no_value
             if token_info is None:
@@ -375,7 +372,6 @@ class AbstractSecurityHandlerFactory(abc.ABC):
                     token_info = func(request)
                     if token_info is not cls.no_value:
                         break
-                # TODO: Catch any error that might be raised instead of specific ones?
                 except (OAuthProblem, OAuthResponseProblem, OAuthScopeProblem) as err:
                     problem = err
 
