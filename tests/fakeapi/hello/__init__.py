@@ -96,7 +96,7 @@ def with_problem():
     raise ProblemException(type='http://www.example.com/error',
                            title='Some Error',
                            detail='Something went wrong somewhere',
-                           status=418,
+                           status=402,
                            instance='instance1',
                            headers={'x-Test-Header': 'In Test'})
 
@@ -104,7 +104,7 @@ def with_problem():
 def with_problem_txt():
     raise ProblemException(title='Some Error',
                            detail='Something went wrong somewhere',
-                           status=418,
+                           status=402,
                            instance='instance1')
 
 
