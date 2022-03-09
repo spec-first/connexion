@@ -55,6 +55,7 @@ class AbstractApp(metaclass=abc.ABCMeta):
         self.server = server
         self.server_args = dict() if server_args is None else server_args
         self.app = self.create_app()
+        self.apply_middleware()
 
         # we get our application root path to avoid duplicating logic
         self.root_path = self.get_root_path()
@@ -76,6 +77,12 @@ class AbstractApp(metaclass=abc.ABCMeta):
     def create_app(self):
         """
         Creates the user framework application
+        """
+
+    @abc.abstractmethod
+    def apply_middleware(self):
+        """
+        Apply middleware to application
         """
 
     @abc.abstractmethod
@@ -243,12 +250,3 @@ class AbstractApp(metaclass=abc.ABCMeta):
         :type debug: bool
         :param options: options to be forwarded to the underlying server
         """
-
-    def __call__(self, environ, start_response):  # pragma: no cover
-        """
-        Makes the class callable to be WSGI-compliant. As Flask is used to handle requests,
-        this is a passthrough-call to the Flask callable class.
-        This is an abstraction to avoid directly referencing the app attribute from outside the
-        class and protect it from unwanted modification.
-        """
-        return self.app(environ, start_response)
