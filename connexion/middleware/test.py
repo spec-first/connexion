@@ -1,7 +1,8 @@
 from starlette.requests import Request as StarletteRequest
 from starlette.responses import Response as StarletteResponse
 
-from connexion.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
+from connexion.middleware.base import (BaseHTTPMiddleware,
+                                       RequestResponseEndpoint)
 from connexion.operations import AbstractOperation
 
 

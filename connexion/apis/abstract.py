@@ -15,7 +15,7 @@ from ..exceptions import ResolverError
 from ..http_facts import METHODS
 from ..jsonifier import Jsonifier
 from ..lifecycle import ConnexionResponse
-from ..operations import make_operation, AbstractOperation
+from ..operations import AbstractOperation, make_operation
 from ..options import ConnexionOptions
 from ..resolver import Resolver
 from ..spec import Specification
@@ -91,12 +91,12 @@ class AbstractMinimalAPI(AbstractSpecAPI):
         """Minimal interface of an API, with only functionality related to routing.
 
         :param specification: OpenAPI specification. Can be provided either as dict, or as path
-        to file.
+                              to file.
         :param base_path: Base path to host the API.
         :param arguments: Jinja arguments to resolve in specification.
         :param resolver: Callable that maps operationID to a function
         :param resolver_error_handler: Callable that generates an Operation used for handling
-        ResolveErrors
+                                       ResolveErrors
         :param debug: Flag to run in debug mode
         """
         super().__init__(*args, **kwargs)

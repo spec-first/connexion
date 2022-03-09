@@ -3,18 +3,18 @@ import pathlib
 import re
 import typing as t
 
-from starlette.responses import RedirectResponse, Response as StarletteResponse
+from starlette.responses import RedirectResponse
+from starlette.responses import Response as StarletteResponse
 from starlette.routing import Router
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 from starlette.types import ASGIApp
 
 from connexion.apis import AbstractMinimalAPI, AbstractSwaggerUIAPI
-from connexion.operations import make_operation, AbstractOperation
+from connexion.operations import AbstractOperation, make_operation
 from connexion.resolver import Resolver
 from connexion.security import MiddlewareSecurityHandlerFactory
 from connexion.utils import yamldumper
-
 
 logger = logging.getLogger('connexion.apis.middleware')
 

@@ -1,18 +1,18 @@
-import json
 import typing
 from urllib.parse import parse_qs
 
 import anyio
 from starlette.requests import Request as StarletteRequest
-from starlette.responses import Response as StarletteResponse, StreamingResponse
+from starlette.responses import Response as StarletteResponse
+from starlette.responses import StreamingResponse
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from connexion.operations import AbstractOperation
 
-
 RequestResponseEndpoint = typing.Callable[[StarletteRequest], typing.Awaitable[StreamingResponse]]
 DispatchFunction = typing.Callable[
-    [StarletteRequest, 'Operation', RequestResponseEndpoint], typing.Awaitable[StarletteResponse]
+    [StarletteRequest, AbstractOperation, RequestResponseEndpoint],
+    typing.Awaitable[StarletteResponse]
 ]
 
 

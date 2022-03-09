@@ -5,8 +5,8 @@ from starlette.exceptions import ExceptionMiddleware
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from connexion.middleware.routing import RoutingMiddleware
-from connexion.middleware.swagger_ui import SwaggerUIMiddleware
 from connexion.middleware.security import SecurityMiddleware
+from connexion.middleware.swagger_ui import SwaggerUIMiddleware
 
 
 class MissingMiddlewareError(Exception):
@@ -32,7 +32,7 @@ class ConnexionMiddleware:
 
         :param app: App to wrap middleware around.
         :param middlewares: List of middlewares to wrap around app. The list should be ordered
-        from outer to inner middleware.
+                            from outer to inner middleware.
         """
         if middlewares is None:
             middlewares = self.default_middlewares
@@ -48,7 +48,7 @@ class ConnexionMiddleware:
 
         :param app: App to wrap in middlewares.
         :param middlewares: List of middlewares to wrap around app. The list should be ordered
-        from outer to inner middleware.
+                            from outer to inner middleware.
 
         :return: App with all middlewares applied.
         """

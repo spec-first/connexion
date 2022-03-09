@@ -1,18 +1,18 @@
 import pathlib
 import typing as t
-from functools import partial
 from contextvars import ContextVar
+from functools import partial
 
 import anyio
 from starlette.requests import Request as StarletteRequest
-from starlette.responses import Response as StarletteResponse, StreamingResponse
+from starlette.responses import Response as StarletteResponse
+from starlette.responses import StreamingResponse
 from starlette.routing import Router
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from connexion.apis.middleware_api import MiddlewareAPI
 from connexion.operations import AbstractOperation
 from connexion.resolver import Resolver
-
 
 # Context variable that is set to starlette call_next function with current request
 _call_next_fn: ContextVar[t.Callable] = ContextVar('CALL_NEXT')
