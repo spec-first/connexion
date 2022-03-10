@@ -59,7 +59,7 @@ def test_openapi_yaml_behind_proxy(reverse_proxied_app):
         headers=headers
     )
     assert openapi_yaml.status_code == 200
-    assert openapi_yaml.headers.get('Content-Type') == 'text/yaml'
+    assert openapi_yaml.headers.get('Content-Type').startswith('text/yaml')
     spec = yaml.load(openapi_yaml.data.decode('utf-8'), Loader=yaml.BaseLoader)
 
     if reverse_proxied_app._spec_file == 'swagger.yaml':

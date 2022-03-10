@@ -108,7 +108,7 @@ class AbstractSwaggerUIAPI(AbstractSpecAPI):
         """
 
 
-class AbstractAPI(AbstractSwaggerUIAPI):
+class AbstractAPI(AbstractSpecAPI):
     """
     Defines an abstract interface for a Swagger API
     """

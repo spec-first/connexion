@@ -55,7 +55,7 @@ class AbstractApp(metaclass=abc.ABCMeta):
         self.server = server
         self.server_args = dict() if server_args is None else server_args
         self.app = self.create_app()
-        self._apply_middleware()
+        self.middleware = self._apply_middleware()
 
         # we get our application root path to avoid duplicating logic
         self.root_path = self.get_root_path()
@@ -152,6 +152,22 @@ class AbstractApp(metaclass=abc.ABCMeta):
             specification = self.specification_dir / specification
 
         api_options = self.options.extend(options)
+
+        self.middleware.add_api(
+            specification,
+            base_path=base_path,
+            arguments=arguments,
+            resolver=resolver,
+            resolver_error_handler=resolver_error_handler,
+            validate_responses=validate_responses,
+            strict_validation=strict_validation,
+            auth_all_paths=auth_all_paths,
+            debug=self.debug,
+            validator_map=validator_map,
+            pythonic_params=pythonic_params,
+            pass_context_arg_name=pass_context_arg_name,
+            options=api_options.as_dict()
+        )
 
         api = self.api_cls(specification,
                            base_path=base_path,

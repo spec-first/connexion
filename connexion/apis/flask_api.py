@@ -4,7 +4,6 @@ Connexion requests / responses.
 """
 
 import logging
-import pathlib
 import warnings
 from typing import Any
 
@@ -18,7 +17,7 @@ from connexion.handlers import AuthErrorHandler
 from connexion.jsonifier import Jsonifier
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.security import FlaskSecurityHandlerFactory
-from connexion.utils import is_json_mimetype, yamldumper
+from connexion.utils import is_json_mimetype
 
 logger = logging.getLogger('connexion.apis.flask_api')
 
@@ -40,72 +39,6 @@ class FlaskApi(AbstractAPI):
         self.blueprint = flask.Blueprint(endpoint, __name__, url_prefix=self.base_path,
                                          template_folder=str(self.options.openapi_console_ui_from_dir))
 
-    def add_openapi_json(self):
-        """
-        Adds spec json to {base_path}/swagger.json
-        or {base_path}/openapi.json (for oas3)
-        """
-        logger.debug('Adding spec json: %s/%s', self.base_path,
-                     self.options.openapi_spec_path)
-        endpoint_name = f"{self.blueprint.name}_openapi_json"
-
-        self.blueprint.add_url_rule(self.options.openapi_spec_path,
-                                    endpoint_name,
-                                    self._handlers.get_json_spec)
-
-    def add_openapi_yaml(self):
-        """
-        Adds spec yaml to {base_path}/swagger.yaml
-        or {base_path}/openapi.yaml (for oas3)
-        """
-        if not self.options.openapi_spec_path.endswith("json"):
-            return
-
-        openapi_spec_path_yaml = \
-            self.options.openapi_spec_path[:-len("json")] + "yaml"
-        logger.debug('Adding spec yaml: %s/%s', self.base_path,
-                     openapi_spec_path_yaml)
-        endpoint_name = f"{self.blueprint.name}_openapi_yaml"
-        self.blueprint.add_url_rule(
-            openapi_spec_path_yaml,
-            endpoint_name,
-            self._handlers.get_yaml_spec
-        )
-
-    def add_swagger_ui(self):
-        """
-        Adds swagger ui to {base_path}/ui/
-        """
-        console_ui_path = self.options.openapi_console_ui_path.strip('/')
-        logger.debug('Adding swagger-ui: %s/%s/',
-                     self.base_path,
-                     console_ui_path)
-
-        if self.options.openapi_console_ui_config is not None:
-            config_endpoint_name = f"{self.blueprint.name}_swagger_ui_config"
-            config_file_url = '/{console_ui_path}/swagger-ui-config.json'.format(
-                console_ui_path=console_ui_path)
-
-            self.blueprint.add_url_rule(config_file_url,
-                                        config_endpoint_name,
-                                        lambda: flask.jsonify(self.options.openapi_console_ui_config))
-
-        static_endpoint_name = f"{self.blueprint.name}_swagger_ui_static"
-        static_files_url = '/{console_ui_path}/<path:filename>'.format(
-            console_ui_path=console_ui_path)
-
-        self.blueprint.add_url_rule(static_files_url,
-                                    static_endpoint_name,
-                                    self._handlers.console_ui_static_files)
-
-        index_endpoint_name = f"{self.blueprint.name}_swagger_ui_index"
-        console_ui_url = '/{console_ui_path}/'.format(
-            console_ui_path=console_ui_path)
-
-        self.blueprint.add_url_rule(console_ui_url,
-                                    index_endpoint_name,
-                                    self._handlers.console_ui_home)
-
     def add_auth_on_not_found(self, security, security_definitions):
         """
         Adds a 404 error handler to authenticate and only expose the 404 status if the security validation pass.
@@ -126,13 +59,6 @@ class FlaskApi(AbstractAPI):
                                                       operation.randomize_endpoint)
         function = operation.function
         self.blueprint.add_url_rule(flask_path, endpoint_name, function, methods=[method])
-
-    @property
-    def _handlers(self):
-        # type: () -> InternalHandlers
-        if not hasattr(self, '_internal_handlers'):
-            self._internal_handlers = InternalHandlers(self.base_path, self.options, self.specification)
-        return self._internal_handlers
 
     @classmethod
     def get_response(cls, response, mimetype=None, request=None):
@@ -267,65 +193,3 @@ def _get_context():
 
 
 context = LocalProxy(_get_context)
-
-
-class InternalHandlers:
-    """
-    Flask handlers for internally registered endpoints.
-    """
-
-    def __init__(self, base_path, options, specification):
-        self.base_path = base_path
-        self.options = options
-        self.specification = specification
-
-    def console_ui_home(self):
-        """
-        Home page of the OpenAPI Console UI.
-
-        :return:
-        """
-        openapi_json_route_name = "{blueprint}.{prefix}_openapi_json"
-        escaped = flask_utils.flaskify_endpoint(self.base_path)
-        openapi_json_route_name = openapi_json_route_name.format(
-            blueprint=escaped,
-            prefix=escaped
-        )
-        template_variables = {
-            'openapi_spec_url': flask.url_for(openapi_json_route_name),
-            **self.options.openapi_console_ui_index_template_variables,
-        }
-        if self.options.openapi_console_ui_config is not None:
-            template_variables['configUrl'] = 'swagger-ui-config.json'
-
-        # Use `render_template_string` instead of `render_template` to circumvent the flask
-        # template lookup mechanism and explicitly render the template of the current blueprint.
-        # https://github.com/zalando/connexion/issues/1289#issuecomment-884105076
-        template_dir = pathlib.Path(self.options.openapi_console_ui_from_dir)
-        index_path = template_dir / 'index.j2'
-        return flask.render_template_string(index_path.read_text(), **template_variables)
-
-    def console_ui_static_files(self, filename):
-        """
-        Servers the static files for the OpenAPI Console UI.
-
-        :param filename: Requested file contents.
-        :return:
-        """
-        # convert PosixPath to str
-        static_dir = str(self.options.openapi_console_ui_from_dir)
-        return flask.send_from_directory(static_dir, filename)
-
-    def get_json_spec(self):
-        return flask.jsonify(self._spec_for_prefix())
-
-    def get_yaml_spec(self):
-        return yamldumper(self._spec_for_prefix()), 200, {"Content-Type": "text/yaml"}
-
-    def _spec_for_prefix(self):
-        """
-        Modify base_path in the spec based on incoming url
-        This fixes problems with reverse proxies changing the path.
-        """
-        base_path = flask.url_for(flask.request.endpoint).rsplit("/", 1)[0]
-        return self.specification.with_base_path(base_path).raw
