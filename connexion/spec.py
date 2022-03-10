@@ -208,6 +208,7 @@ class Swagger2Specification(Specification):
 
     schema_string = pkg_resources.resource_string('connexion', 'resources/schemas/v2.0/schema.json')
     openapi_schema = json.loads(schema_string.decode('utf-8'))
+    del schema_string
 
     @classmethod
     def _set_defaults(cls, spec):
@@ -260,6 +261,7 @@ class OpenAPISpecification(Specification):
 
     schema_string = pkg_resources.resource_string('connexion', 'resources/schemas/v3.0/schema.json')
     openapi_schema = json.loads(schema_string.decode('utf-8'))
+    del schema_string
 
     @classmethod
     def _set_defaults(cls, spec):
