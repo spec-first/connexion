@@ -5,7 +5,6 @@ handlers for operations.
 
 import abc
 import base64
-import functools
 import http.cookies
 import logging
 import os
@@ -13,8 +12,7 @@ import textwrap
 import typing as t
 
 from ..decorators.parameter import inspect_function_arguments
-from ..exceptions import (ConnexionException, OAuthProblem,
-                          OAuthResponseProblem, OAuthScopeProblem)
+from ..exceptions import ConnexionException, OAuthProblem
 from ..utils import get_function_from_name
 
 logger = logging.getLogger('connexion.api.security')
@@ -310,23 +308,9 @@ class AbstractSecurityHandlerFactory(abc.ABC):
         need_required_scopes = has_kwargs or self.required_scopes_kw in arguments
         return need_context, need_required_scopes
 
+    @abc.abstractmethod
     def _generic_check(self, func, exception_msg):
-        need_to_add_context, need_to_add_required_scopes = self._need_to_add_context_or_scopes(func)
-
-        def wrapper(request, *args, required_scopes=None):
-            kwargs = {}
-            if need_to_add_context:
-                kwargs[self.pass_context_arg_name] = request.context
-            if need_to_add_required_scopes:
-                kwargs[self.required_scopes_kw] = required_scopes
-            token_info = func(*args, **kwargs)
-            if token_info is self.no_value:
-                return self.no_value
-            if token_info is None:
-                raise OAuthResponseProblem(description=exception_msg, token_response=None)
-            return token_info
-
-        return wrapper
+        pass
 
     def check_bearer_token(self, token_info_func):
         return self._generic_check(token_info_func, 'Provided token is not valid')
@@ -337,50 +321,14 @@ class AbstractSecurityHandlerFactory(abc.ABC):
     def check_api_key(self, api_key_info_func):
         return self._generic_check(api_key_info_func, 'Provided apikey is not valid')
 
+    @abc.abstractmethod
     def check_oauth_func(self, token_info_func, scope_validate_func):
-        get_token_info = self._generic_check(token_info_func, 'Provided token is not valid')
-        need_to_add_context, _ = self._need_to_add_context_or_scopes(scope_validate_func)
-
-        def wrapper(request, token, required_scopes):
-            token_info = get_token_info(request, token, required_scopes=required_scopes)
-
-            # Fallback to 'scopes' for backward compatibility
-            token_scopes = token_info.get('scope', token_info.get('scopes', ''))
-
-            kwargs = {}
-            if need_to_add_context:
-                kwargs[self.pass_context_arg_name] = request.context
-            validation = scope_validate_func(required_scopes, token_scopes, **kwargs)
-            if not validation:
-                raise OAuthScopeProblem(
-                    description='Provided token doesn\'t have the required scope',
-                    required_scopes=required_scopes,
-                    token_scopes=token_scopes
-                    )
-
-            return token_info
-        return wrapper
+        pass
 
     @classmethod
+    @abc.abstractmethod
     def verify_security(cls, auth_funcs, required_scopes, function):
-        @functools.wraps(function)
-        def wrapper(request):
-            token_info = cls.no_value
-            for func in auth_funcs:
-                token_info = func(request, required_scopes)
-                if token_info is not cls.no_value:
-                    break
-
-            if token_info is cls.no_value:
-                logger.info("... No auth provided. Aborting with 401.")
-                raise OAuthProblem(description='No authorization token provided')
-
-            # Fallback to 'uid' for backward compatibility
-            request.context['user'] = token_info.get('sub', token_info.get('uid'))
-            request.context['token_info'] = token_info
-            return function(request)
-
-        return wrapper
+        pass
 
     @abc.abstractmethod
     def get_token_info_remote(self, token_info_url):

@@ -59,7 +59,7 @@ def test_verify_oauth_scopes_remote(monkeypatch, security_handler_factory):
 
     session = MagicMock()
     session.get = get_tokeninfo_response
-    monkeypatch.setattr('connexion.security.flask_security_handler_factory.session', session)
+    monkeypatch.setattr('connexion.security.sync_security_handler_factory.session', session)
 
     with pytest.raises(OAuthScopeProblem, match="Provided token doesn't have the required scope"):
         wrapped_func(request, ['admin'])

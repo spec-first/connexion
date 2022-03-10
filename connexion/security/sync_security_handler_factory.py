@@ -1,38 +1,36 @@
 """
-This module defines an abstract asynchronous SecurityHandlerFactory which supports the creation of
-asynchronous security handlers for coroutine operations.
+This module defines a Flask-specific SecurityHandlerFactory.
 """
 
-import asyncio
 import functools
 import logging
 
-import httpx
+import requests
 
 from ..exceptions import OAuthProblem, OAuthResponseProblem, OAuthScopeProblem
 from .security_handler_factory import AbstractSecurityHandlerFactory
 
 logger = logging.getLogger('connexion.api.security')
 
+# use connection pool for OAuth tokeninfo
+adapter = requests.adapters.HTTPAdapter(pool_connections=100, pool_maxsize=100)
+session = requests.Session()
+session.mount('http://', adapter)
+session.mount('https://', adapter)
 
-class AsyncSecurityHandlerFactory(AbstractSecurityHandlerFactory):
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.client = None
+class SyncSecurityHandlerFactory(AbstractSecurityHandlerFactory):
 
     def _generic_check(self, func, exception_msg):
         need_to_add_context, need_to_add_required_scopes = self._need_to_add_context_or_scopes(func)
 
-        async def wrapper(request, *args, required_scopes=None):
+        def wrapper(request, *args, required_scopes=None):
             kwargs = {}
             if need_to_add_context:
                 kwargs[self.pass_context_arg_name] = request.context
             if need_to_add_required_scopes:
                 kwargs[self.required_scopes_kw] = required_scopes
             token_info = func(*args, **kwargs)
-            while asyncio.iscoroutine(token_info):
-                token_info = await token_info
             if token_info is self.no_value:
                 return self.no_value
             if token_info is None:
@@ -45,8 +43,8 @@ class AsyncSecurityHandlerFactory(AbstractSecurityHandlerFactory):
         get_token_info = self._generic_check(token_info_func, 'Provided token is not valid')
         need_to_add_context, _ = self._need_to_add_context_or_scopes(scope_validate_func)
 
-        async def wrapper(request, token, required_scopes):
-            token_info = await get_token_info(request, token, required_scopes=required_scopes)
+        def wrapper(request, token, required_scopes):
+            token_info = get_token_info(request, token, required_scopes=required_scopes)
 
             # Fallback to 'scopes' for backward compatibility
             token_scopes = token_info.get('scope', token_info.get('scopes', ''))
@@ -55,27 +53,24 @@ class AsyncSecurityHandlerFactory(AbstractSecurityHandlerFactory):
             if need_to_add_context:
                 kwargs[self.pass_context_arg_name] = request.context
             validation = scope_validate_func(required_scopes, token_scopes, **kwargs)
-            while asyncio.iscoroutine(validation):
-                validation = await validation
             if not validation:
                 raise OAuthScopeProblem(
                     description='Provided token doesn\'t have the required scope',
                     required_scopes=required_scopes,
                     token_scopes=token_scopes
-                    )
+                )
 
             return token_info
         return wrapper
 
     @classmethod
     def verify_security(cls, auth_funcs, required_scopes, function):
+
         @functools.wraps(function)
-        async def wrapper(request):
+        def wrapper(request):
             token_info = cls.no_value
             for func in auth_funcs:
                 token_info = func(request, required_scopes)
-                while asyncio.iscoroutine(token_info):
-                    token_info = await token_info
                 if token_info is not cls.no_value:
                     break
 
@@ -101,12 +96,16 @@ class AsyncSecurityHandlerFactory(AbstractSecurityHandlerFactory):
         :type token_info_url: str
         :rtype: types.FunctionType
         """
-        async def wrapper(token):
-            if self.client is None:
-                self.client = httpx.AsyncClient()
+        def wrapper(token):
+            """
+            Retrieve oauth token_info remotely using HTTP
+            :param token: oauth token from authorization header
+            :type token: str
+            :rtype: dict
+            """
             headers = {'Authorization': f'Bearer {token}'}
-            token_request = await self.client.get(token_info_url, headers=headers, timeout=5)
-            if token_request.status_code != 200:
-                return
+            token_request = session.get(token_info_url, headers=headers, timeout=5)
+            if not token_request.ok:
+                return None
             return token_request.json()
         return wrapper

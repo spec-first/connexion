@@ -6,13 +6,17 @@ isort:skip_file
 """
 
 # abstract
-from .async_security_handler_factory import AbstractAsyncSecurityHandlerFactory  # NOQA
 from .security_handler_factory import AbstractSecurityHandlerFactory  # NOQA
 
 from ..utils import not_installed_error
 
 # concrete
 try:
-    from .flask_security_handler_factory import FlaskSecurityHandlerFactory
+    from .sync_security_handler_factory import SyncSecurityHandlerFactory
 except ImportError as err:  # pragma: no cover
-    FlaskSecurityHandlerFactory = not_installed_error(err)
+    SyncSecurityHandlerFactory = not_installed_error(err)
+
+try:
+    from .async_security_handler_factory import AsyncSecurityHandlerFactory
+except ImportError as err:  # pragma: no cover
+    AsyncSecurityHandlerFactory = not_installed_error(err)
