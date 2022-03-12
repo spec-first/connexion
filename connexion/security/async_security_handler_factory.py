@@ -66,16 +66,23 @@ class AbstractAsyncSecurityHandlerFactory(AbstractSecurityHandlerFactory):
         @functools.wraps(function)
         async def wrapper(request):
             token_info = cls.no_value
+            problem = None
             for func in auth_funcs:
-                token_info = func(request)
-                while asyncio.iscoroutine(token_info):
-                    token_info = await token_info
-                if token_info is not cls.no_value:
-                    break
+                try:
+                    token_info = func(request)
+                    while asyncio.iscoroutine(token_info):
+                        token_info = await token_info
+                    if token_info is not cls.no_value:
+                        break
+                except (OAuthProblem, OAuthResponseProblem, OAuthScopeProblem) as err:
+                    problem = err
 
             if token_info is cls.no_value:
-                logger.info("... No auth provided. Aborting with 401.")
-                raise OAuthProblem(description='No authorization token provided')
+                if problem is not None:
+                    raise problem
+                else:
+                    logger.info("... No auth provided. Aborting with 401.")
+                    raise OAuthProblem(description='No authorization token provided')
 
             # Fallback to 'uid' for backward compatibility
             request.context['user'] = token_info.get('sub', token_info.get('uid'))
