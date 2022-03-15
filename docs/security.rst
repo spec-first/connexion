@@ -19,8 +19,8 @@ field that is either a space-separated list or an array of scopes belonging to
 the supplied token. This list of scopes will be validated against the scopes
 required by the API security definition to determine if the user is authorized.
 You can supply a custom scope validation func with ``x-scopeValidateFunc``
-or set ``SCOPEVALIDATE_FUNC`` env var, otherwise
-``connexion.decorators.security.validate_scope`` will be used as default.
+or set ``SCOPEVALIDATE_FUNC`` env var, otherwise default scope validation function
+``connexion.security.security_handler_factory.validate_scope`` will be used automatically.
 
 
 The recommended approach is to return a dict which complies with
