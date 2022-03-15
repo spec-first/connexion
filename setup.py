@@ -25,7 +25,7 @@ install_requires = [
     'PyYAML>=5.1,<7',
     'requests>=2.9.1,<3',
     'inflection>=0.3.1,<0.6',
-    'setuptools',
+    'setuptools>=42,<61',
     'werkzeug>=1.0,<3',
 ]
 
