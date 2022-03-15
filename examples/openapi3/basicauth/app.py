@@ -10,7 +10,7 @@ PASSWD={
     'foo': 'bar'
 }
 
-def basic_auth(username, password, required_scopes=None):
+def basic_auth(username, password, required_scopes=None) -> dict:
     if PASSWD.get(username) == password:
         return {'sub': username}
     return None
