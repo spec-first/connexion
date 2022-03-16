@@ -20,6 +20,10 @@ instance `json_encoder` (`connexion.App:app`). If you wanna reuse the
 Connexion's date-time serialization, inherit your custom encoder from
 `connexion.apps.flask_app.FlaskJSONEncoder`.
 
+For more information on the `JSONEncoder`, see the `Flask documentation`_.
+
+.. _Flask Documentation: https://flask.palletsprojects.com/en/2.0.x/api/#flask.json.JSONEncoder
+
 Returning status codes
 ----------------------
 There are two ways of returning a specific status code.
