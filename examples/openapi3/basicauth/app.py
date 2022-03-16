@@ -5,14 +5,15 @@ Basic example of a resource server
 
 import connexion
 
-PASSWD={
+PASSWD = {
     'admin': 'secret',
     'foo': 'bar'
 }
 
-def basic_auth(username, password, required_scopes=None):
+def basic_auth(username, password):
     if PASSWD.get(username) == password:
         return {'sub': username}
+    # optional: raise exception for custom error response
     return None
 
 def get_secret(user) -> str:
