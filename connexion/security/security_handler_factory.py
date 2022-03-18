@@ -373,7 +373,7 @@ class AbstractSecurityHandlerFactory(abc.ABC):
                     if token_info is not cls.no_value:
                         break
                 except Exception as err:
-                    errors += err
+                    errors.append(err)
 
             if token_info is cls.no_value:
                 if errors != []:
