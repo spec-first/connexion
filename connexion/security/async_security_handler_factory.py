@@ -66,7 +66,7 @@ class AbstractAsyncSecurityHandlerFactory(AbstractSecurityHandlerFactory):
         @functools.wraps(function)
         async def wrapper(request):
             token_info = cls.no_value
-            problem = None
+            errors = []
             for func in auth_funcs:
                 try:
                     token_info = func(request)
@@ -74,12 +74,12 @@ class AbstractAsyncSecurityHandlerFactory(AbstractSecurityHandlerFactory):
                         token_info = await token_info
                     if token_info is not cls.no_value:
                         break
-                except (OAuthProblem, OAuthResponseProblem, OAuthScopeProblem) as err:
-                    problem = err
+                except Exception as err:
+                    errors += err
 
             if token_info is cls.no_value:
-                if problem is not None:
-                    raise problem
+                if errors != []:
+                    cls._raise_most_specific(errors)
                 else:
                     logger.info("... No auth provided. Aborting with 401.")
                     raise OAuthProblem(description='No authorization token provided')
