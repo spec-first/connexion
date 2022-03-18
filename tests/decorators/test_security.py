@@ -4,7 +4,8 @@ from unittest.mock import MagicMock
 import pytest
 import requests
 from connexion.exceptions import (OAuthProblem, OAuthResponseProblem,
-                                  OAuthScopeProblem)
+                                  OAuthScopeProblem, BadRequestProblem,
+                                  ConnexionException)
 
 
 def test_get_tokeninfo_url(monkeypatch, security_handler_factory):
@@ -220,3 +221,20 @@ def test_verify_security_oauthproblem(security_handler_factory):
         secured_func(request)
 
     assert str(exc_info.value) == '401 Unauthorized: No authorization token provided'
+
+@pytest.mark.parametrize(
+    'errors, most_specific',
+    [
+        ([OAuthProblem()], OAuthProblem),
+        ([OAuthProblem(), OAuthScopeProblem([], [])], OAuthScopeProblem),
+        ([OAuthProblem(), OAuthScopeProblem([], []), BadRequestProblem], OAuthScopeProblem),
+        ([OAuthProblem(), OAuthScopeProblem([], []), BadRequestProblem, ConnexionException], OAuthScopeProblem),
+        ([BadRequestProblem(), ConnexionException()], BadRequestProblem),
+        ([ConnexionException()], ConnexionException),
+    ]
+)
+def test_raise_most_specific(errors, most_specific, security_handler_factory):
+    """Tests whether most specific exception is raised from a list."""
+
+    with pytest.raises(most_specific):
+        security_handler_factory._raise_most_specific(errors)
