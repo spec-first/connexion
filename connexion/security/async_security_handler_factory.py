@@ -62,20 +62,27 @@ class AbstractAsyncSecurityHandlerFactory(AbstractSecurityHandlerFactory):
         return wrapper
 
     @classmethod
-    def verify_security(cls, auth_funcs, required_scopes, function):
+    def verify_security(cls, auth_funcs, function):
         @functools.wraps(function)
         async def wrapper(request):
             token_info = cls.no_value
+            errors = []
             for func in auth_funcs:
-                token_info = func(request, required_scopes)
-                while asyncio.iscoroutine(token_info):
-                    token_info = await token_info
-                if token_info is not cls.no_value:
-                    break
+                try:
+                    token_info = func(request)
+                    while asyncio.iscoroutine(token_info):
+                        token_info = await token_info
+                    if token_info is not cls.no_value:
+                        break
+                except Exception as err:
+                    errors.append(err)
 
             if token_info is cls.no_value:
-                logger.info("... No auth provided. Aborting with 401.")
-                raise OAuthProblem(description='No authorization token provided')
+                if errors != []:
+                    cls._raise_most_specific(errors)
+                else:
+                    logger.info("... No auth provided. Aborting with 401.")
+                    raise OAuthProblem(description='No authorization token provided')
 
             # Fallback to 'uid' for backward compatibility
             request.context['user'] = token_info.get('sub', token_info.get('uid'))

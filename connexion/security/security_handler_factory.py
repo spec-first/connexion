@@ -173,10 +173,10 @@ class AbstractSecurityHandlerFactory(abc.ABC):
             raise OAuthProblem(description='Invalid authorization header')
         return auth_type.lower(), value
 
-    def verify_oauth(self, token_info_func, scope_validate_func):
+    def verify_oauth(self, token_info_func, scope_validate_func, required_scopes):
         check_oauth_func = self.check_oauth_func(token_info_func, scope_validate_func)
 
-        def wrapper(request, required_scopes):
+        def wrapper(request):
             auth_type, token = self.get_auth_header_value(request)
             if auth_type != 'bearer':
                 return self.no_value
@@ -188,7 +188,7 @@ class AbstractSecurityHandlerFactory(abc.ABC):
     def verify_basic(self, basic_info_func):
         check_basic_info_func = self.check_basic_auth(basic_info_func)
 
-        def wrapper(request, required_scopes):
+        def wrapper(request):
             auth_type, user_pass = self.get_auth_header_value(request)
             if auth_type != 'basic':
                 return self.no_value
@@ -198,7 +198,7 @@ class AbstractSecurityHandlerFactory(abc.ABC):
             except Exception:
                 raise OAuthProblem(description='Invalid authorization header')
 
-            return check_basic_info_func(request, username, password, required_scopes=required_scopes)
+            return check_basic_info_func(request, username, password)
 
         return wrapper
 
@@ -221,7 +221,7 @@ class AbstractSecurityHandlerFactory(abc.ABC):
     def verify_api_key(self, api_key_info_func, loc, name):
         check_api_key_func = self.check_api_key(api_key_info_func)
 
-        def wrapper(request, required_scopes):
+        def wrapper(request):
 
             def _immutable_pop(_dict, key):
                 """
@@ -252,7 +252,7 @@ class AbstractSecurityHandlerFactory(abc.ABC):
             if api_key is None:
                 return self.no_value
 
-            return check_api_key_func(request, api_key, required_scopes=required_scopes)
+            return check_api_key_func(request, api_key)
 
         return wrapper
 
@@ -263,11 +263,11 @@ class AbstractSecurityHandlerFactory(abc.ABC):
         """
         check_bearer_func = self.check_bearer_token(token_info_func)
 
-        def wrapper(request, required_scopes):
+        def wrapper(request):
             auth_type, token = self.get_auth_header_value(request)
             if auth_type != 'bearer':
                 return self.no_value
-            return check_bearer_func(request, token, required_scopes=required_scopes)
+            return check_bearer_func(request, token)
 
         return wrapper
 
@@ -281,10 +281,10 @@ class AbstractSecurityHandlerFactory(abc.ABC):
         :rtype: types.FunctionType
         """
 
-        def wrapper(request, required_scopes):
+        def wrapper(request):
             token_info = {}
             for scheme_name, func in schemes.items():
-                result = func(request, required_scopes)
+                result = func(request)
                 if result is self.no_value:
                     return self.no_value
                 token_info[scheme_name] = result
@@ -299,7 +299,7 @@ class AbstractSecurityHandlerFactory(abc.ABC):
         :rtype: types.FunctionType
         """
 
-        def wrapper(request, required_scopes):
+        def wrapper(request):
             return {}
 
         return wrapper
@@ -362,18 +362,25 @@ class AbstractSecurityHandlerFactory(abc.ABC):
         return wrapper
 
     @classmethod
-    def verify_security(cls, auth_funcs, required_scopes, function):
+    def verify_security(cls, auth_funcs, function):
         @functools.wraps(function)
         def wrapper(request):
             token_info = cls.no_value
+            errors = []
             for func in auth_funcs:
-                token_info = func(request, required_scopes)
-                if token_info is not cls.no_value:
-                    break
+                try:
+                    token_info = func(request)
+                    if token_info is not cls.no_value:
+                        break
+                except Exception as err:
+                    errors.append(err)
 
             if token_info is cls.no_value:
-                logger.info("... No auth provided. Aborting with 401.")
-                raise OAuthProblem(description='No authorization token provided')
+                if errors != []:
+                    cls._raise_most_specific(errors)
+                else:
+                    logger.info("... No auth provided. Aborting with 401.")
+                    raise OAuthProblem(description='No authorization token provided')
 
             # Fallback to 'uid' for backward compatibility
             request.context['user'] = token_info.get('sub', token_info.get('uid'))
@@ -381,6 +388,37 @@ class AbstractSecurityHandlerFactory(abc.ABC):
             return function(request)
 
         return wrapper
+
+    @staticmethod
+    def _raise_most_specific(exceptions: t.List[Exception]) -> None:
+        """Raises the most specific error from a list of exceptions by status code.
+
+        The status codes are expected to be either in the `code`
+        or in the `status` attribute of the exceptions.
+
+        The order is as follows:
+            - 403: valid credentials but not enough privileges
+            - 401: no or invalid credentials
+            - for other status codes, the smallest one is selected
+
+        :param errors: List of exceptions.
+        :type errors: t.List[Exception]
+        """
+        if not exceptions:
+            return
+        # We only use status code attributes from exceptions
+        # We use 600 as default because 599 is highest valid status code
+        status_to_exc = {
+            getattr(exc, 'code', getattr(exc, 'status', 600)): exc
+            for exc in exceptions
+        }
+        if 403 in status_to_exc:
+            raise status_to_exc[403]
+        elif 401 in status_to_exc:
+            raise status_to_exc[401]
+        else:
+            lowest_status_code = min(status_to_exc)
+            raise status_to_exc[lowest_status_code]
 
     @abc.abstractmethod
     def get_token_info_remote(self, token_info_url):

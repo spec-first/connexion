@@ -96,7 +96,8 @@ def test_security(oauth_requests, secure_endpoint_app):
     assert response.data == b'"Authenticated"\n'
     headers = {"X-AUTH": "wrong-key"}
     response = app_client.get('/v1.0/optional-auth', headers=headers)  # type: flask.Response
-    assert response.status_code == 401
+    assert response.data == b'"Unauthenticated"\n'
+    assert response.status_code == 200
 
 
 def test_checking_that_client_token_has_all_necessary_scopes(
