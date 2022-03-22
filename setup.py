@@ -26,6 +26,8 @@ install_requires = [
     'requests>=2.9.1,<3',
     'inflection>=0.3.1,<0.6',
     'werkzeug>=1.0,<3',
+    'importlib-metadata>=1 ; python_version<"3.8"',
+    'packaging>=20',
 ]
 
 swagger_ui_require = 'swagger-ui-bundle>=0.0.2,<0.1'

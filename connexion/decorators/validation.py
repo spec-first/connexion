@@ -8,9 +8,14 @@ import functools
 import logging
 from typing import AnyStr, Union
 
-import pkg_resources
+try:
+    from importlib.metadata import version
+except ImportError:
+    from importlib_metadata import version
+
 from jsonschema import Draft4Validator, ValidationError, draft4_format_checker
 from jsonschema.validators import extend
+from packaging.version import Version
 from werkzeug.datastructures import FileStorage
 
 from ..exceptions import (BadRequestProblem, ExtraParameterProblem,
@@ -20,9 +25,7 @@ from ..json_schema import Draft4RequestValidator, Draft4ResponseValidator
 from ..lifecycle import ConnexionResponse
 from ..utils import all_json, boolean, is_json_mimetype, is_null, is_nullable
 
-_jsonschema_3_or_newer = pkg_resources.parse_version(
-        pkg_resources.get_distribution("jsonschema").version) >= \
-    pkg_resources.parse_version("3.0.0")
+_jsonschema_3_or_newer = Version(version("jsonschema")) >= Version("3.0.0")
 
 logger = logging.getLogger('connexion.decorators.validation')
 
