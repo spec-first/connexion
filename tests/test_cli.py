@@ -257,23 +257,6 @@ def test_run_with_wsgi_containers(mock_app_run, spec_file):
     assert result.exit_code == 0
 
 
-def test_run_with_aiohttp_not_installed(mock_app_run, spec_file):
-    import sys
-    aiohttp_bkp = sys.modules.pop('aiohttp', None)
-    sys.modules['aiohttp'] = None
-
-    runner = CliRunner()
-
-    # missing aiohttp
-    result = runner.invoke(main,
-                           ['run', spec_file, '-f', 'aiohttp'],
-                           catch_exceptions=False)
-    sys.modules['aiohttp'] = aiohttp_bkp
-
-    assert 'aiohttp library is not installed' in result.output
-    assert result.exit_code == 1
-
-
 def test_run_with_wsgi_server_and_server_opts(mock_app_run, spec_file):
     runner = CliRunner()
 
@@ -283,27 +266,4 @@ def test_run_with_wsgi_server_and_server_opts(mock_app_run, spec_file):
                             '-s', 'flask'],
                            catch_exceptions=False)
     assert "these options are mutually exclusive" in result.output
-    assert result.exit_code == 2
-
-
-def test_run_with_incompatible_server_and_default_framework(mock_app_run, spec_file):
-    runner = CliRunner()
-
-    result = runner.invoke(main,
-                           ['run', spec_file,
-                           '-s', 'aiohttp'],
-                           catch_exceptions=False)
-    assert "Invalid server 'aiohttp' for app-framework 'flask'" in result.output
-    assert result.exit_code == 2
-
-
-def test_run_with_incompatible_server_and_framework(mock_app_run, spec_file):
-    runner = CliRunner()
-
-    result = runner.invoke(main,
-                           ['run', spec_file,
-                           '-s', 'flask',
-                           '-f', 'aiohttp'],
-                           catch_exceptions=False)
-    assert "Invalid server 'flask' for app-framework 'aiohttp'" in result.output
     assert result.exit_code == 2

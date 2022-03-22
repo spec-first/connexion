@@ -38,13 +38,5 @@ except ImportError as e:  # pragma: no cover
 App = FlaskApp
 Api = FlaskApi
 
-try:
-    from .apis.aiohttp_api import AioHttpApi
-    from .apps.aiohttp_app import AioHttpApp
-except ImportError as e:  # pragma: no cover
-    _aiohttp_not_installed_error = not_installed_error(e)
-    AioHttpApi = _aiohttp_not_installed_error
-    AioHttpApp = _aiohttp_not_installed_error
-
 # This version is replaced during release process.
 __version__ = '2020.0.dev1'

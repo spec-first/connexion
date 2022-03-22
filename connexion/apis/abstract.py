@@ -7,7 +7,6 @@ import logging
 import pathlib
 import sys
 import typing as t
-import warnings
 from enum import Enum
 
 from ..decorators.produces import NoContent
@@ -19,7 +18,6 @@ from ..operations import make_operation
 from ..options import ConnexionOptions
 from ..resolver import Resolver
 from ..spec import Specification
-from ..utils import is_json_mimetype
 
 MODULE_PATH = pathlib.Path(__file__).absolute().parent.parent
 SWAGGER_UI_URL = 'ui'
@@ -256,7 +254,6 @@ class AbstractAPI(metaclass=AbstractAPIMeta):
         """
         This method converts a handler response to a framework response.
         This method should just retrieve response from handler then call `cls._get_response`.
-        It is mainly here to handle AioHttp async handler.
         :param response: A response to cast (tuple, framework response, etc).
         :param mimetype: The response mimetype.
         :type mimetype: Union[None, str]
@@ -348,18 +345,7 @@ class AbstractAPI(metaclass=AbstractAPIMeta):
     def get_connexion_response(cls, response, mimetype=None):
         """ Cast framework dependent response to ConnexionResponse used for schema validation """
         if isinstance(response, ConnexionResponse):
-            # If body in ConnexionResponse is not byte, it may not pass schema validation.
-            # In this case, rebuild response with aiohttp to have consistency
-            if response.body is None or isinstance(response.body, bytes):
-                return response
-            else:
-                response = cls._build_response(
-                    data=response.body,
-                    mimetype=mimetype,
-                    content_type=response.content_type,
-                    headers=response.headers,
-                    status_code=response.status_code
-                )
+            return response
 
         if not cls._is_framework_response(response):
             response = cls._response_from_handler(response, mimetype)
@@ -430,27 +416,9 @@ class AbstractAPI(metaclass=AbstractAPIMeta):
         return body, status_code, mimetype
 
     @classmethod
+    @abc.abstractmethod
     def _serialize_data(cls, data, mimetype):
-        # TODO: Harmonize with flask_api. Currently this is the backwards compatible with aiohttp_api._cast_body.
-        if not isinstance(data, bytes):
-            if isinstance(mimetype, str) and is_json_mimetype(mimetype):
-                body = cls.jsonifier.dumps(data)
-            elif isinstance(data, str):
-                body = data
-            else:
-                warnings.warn(
-                    "Implicit (aiohttp) serialization with str() will change in the next major version. "
-                    "This is triggered because a non-JSON response body is being stringified. "
-                    "This will be replaced by something that is mimetype-specific and may "
-                    "serialize some things as JSON or throw an error instead of silently "
-                    "stringifying unknown response bodies. "
-                    "Please make sure to specify media/mime types in your specs.",
-                    FutureWarning  # a Deprecation targeted at application users.
-                )
-                body = str(data)
-        else:
-            body = data
-        return body, mimetype
+        pass
 
     def json_loads(self, data):
         return self.jsonifier.loads(data)
