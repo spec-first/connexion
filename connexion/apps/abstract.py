@@ -55,7 +55,7 @@ class AbstractApp(metaclass=abc.ABCMeta):
         self.server = server
         self.server_args = dict() if server_args is None else server_args
         self.app = self.create_app()
-        self.apply_middleware()
+        self._apply_middleware()
 
         # we get our application root path to avoid duplicating logic
         self.root_path = self.get_root_path()
@@ -80,7 +80,7 @@ class AbstractApp(metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def apply_middleware(self):
+    def _apply_middleware(self):
         """
         Apply middleware to application
         """

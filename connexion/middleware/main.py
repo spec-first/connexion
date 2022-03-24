@@ -4,10 +4,6 @@ import typing as t
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 
-class MissingMiddlewareError(Exception):
-    pass
-
-
 class ConnexionMiddleware:
 
     default_middlewares = [
@@ -33,7 +29,7 @@ class ConnexionMiddleware:
 
     @staticmethod
     def _apply_middlewares(app: ASGIApp, middlewares: t.List[t.Type[ASGIApp]]) \
-            -> t.Tuple[ASGIApp, t.List[ASGIApp]]:
+            -> t.Tuple[ASGIApp, t.Iterable[ASGIApp]]:
         """Apply all middlewares to the provided app.
 
         :param app: App to wrap in middlewares.
@@ -46,7 +42,7 @@ class ConnexionMiddleware:
         for middleware in reversed(middlewares):
             app = middleware(app)
             apps.append(app)
-        return app, apps
+        return app, reversed(apps)
 
     def add_api(
             self,
