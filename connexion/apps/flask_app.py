@@ -42,7 +42,7 @@ class FlaskApp(AbstractApp):
         app.url_map.converters['int'] = IntegerConverter
         return app
 
-    def apply_middleware(self):
+    def _apply_middleware(self):
         middlewares = [*ConnexionMiddleware.default_middlewares,
                        a2wsgi.WSGIMiddleware]
         self.middleware = ConnexionMiddleware(self.app.wsgi_app, middlewares=middlewares)
