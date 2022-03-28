@@ -6,7 +6,8 @@ def test_headers_jsonifier(simple_app):
 
     response = app_client.post('/v1.0/goodday/dan', data={})  # type: flask.Response
     assert response.status_code == 201
-    assert response.headers["Location"] == "http://localhost/my/uri"
+    # Default Werkzeug behavior was changed in 2.1 (https://github.com/pallets/werkzeug/issues/2352)
+    assert response.headers["Location"] in ["http://localhost/my/uri", "/my/uri"]
 
 
 def test_headers_produces(simple_app):
@@ -14,7 +15,8 @@ def test_headers_produces(simple_app):
 
     response = app_client.post('/v1.0/goodevening/dan', data={})  # type: flask.Response
     assert response.status_code == 201
-    assert response.headers["Location"] == "http://localhost/my/uri"
+    # Default Werkzeug behavior was changed in 2.1 (https://github.com/pallets/werkzeug/issues/2352)
+    assert response.headers["Location"] in ["http://localhost/my/uri", "/my/uri"]
 
 
 def test_header_not_returned(simple_openapi_app):
