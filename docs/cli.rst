@@ -1,30 +1,30 @@
 Command-Line Interface
 ======================
-For convenience Connexion provides a command-line interface
+For convenience Específico provides a command-line interface
 (CLI). This interface aims to be a starting point in developing or
-testing OpenAPI specifications with Connexion.
+testing OpenAPI specifications with Específico.
 
 The available commands are:
 
-- ``connexion run``
+- ``especifico run``
 
 All commands can run with -h or --help to list more information.
 
 Running an OpenAPI specification
 --------------------------------
 
-The subcommand ``run`` of Connexion's CLI makes it easy to run OpenAPI
+The subcommand ``run`` of Específico's CLI makes it easy to run OpenAPI
 specifications directly even before any operation handler function gets
 implemented. This allows you to verify and inspect how your API will
-work with Connexion.
+work with Específico.
 
 To run your specification, execute in your shell:
 
 .. code-block:: bash
 
-     $ connexion run your_api.yaml --stub --debug
+     $ especifico run your_api.yaml --stub --debug
 
-This command will tell Connexion to run the ``your_api.yaml``
+This command will tell Específico to run the ``your_api.yaml``
 specification file attaching a stub operation (``--stub``) to the
 unavailable operations/functions of your API and in debug mode
 (``--debug``).
@@ -33,7 +33,7 @@ The basic usage of this command is:
 
 .. code-block:: bash
 
-    $ connexion run [OPTIONS] SPEC_FILE [BASE_MODULE_PATH]
+    $ especifico run [OPTIONS] SPEC_FILE [BASE_MODULE_PATH]
 
 Where:
 
@@ -47,7 +47,7 @@ list run:
 
 .. code-block:: bash
 
-     $ connexion run --help
+     $ especifico run --help
 
 Running a mock server
 ---------------------
@@ -58,4 +58,4 @@ Your API specification file is not required to have any ``operationId``.
 
 .. code-block:: bash
 
-    $ connexion run your_api.yaml --mock=all -v
+    $ especifico run your_api.yaml --mock=all -v

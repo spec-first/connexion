@@ -13,7 +13,7 @@ def test_get_tokeninfo_url(monkeypatch, security_handler_factory):
     env = {}
     monkeypatch.setattr('os.environ', env)
     logger = MagicMock()
-    monkeypatch.setattr('connexion.security.security_handler_factory.logger', logger)
+    monkeypatch.setattr('especifico.security.security_handler_factory.logger', logger)
 
     security_def = {}
     assert security_handler_factory.get_tokeninfo_func(security_def) is None
@@ -60,7 +60,7 @@ def test_verify_oauth_scopes_remote(monkeypatch, security_handler_factory):
 
     session = MagicMock()
     session.get = get_tokeninfo_response
-    monkeypatch.setattr('connexion.security.flask_security_handler_factory.session', session)
+    monkeypatch.setattr('especifico.security.flask_security_handler_factory.session', session)
 
     with pytest.raises(OAuthScopeProblem, match="Provided token doesn't have the required scope"):
         wrapped_func(request)

@@ -2,12 +2,12 @@ Exception Handling
 ==================
 Rendering Exceptions through the Flask Handler
 ----------------------------------------------
-Flask by default contains an exception handler, which connexion's app can proxy
+Flask by default contains an exception handler, which especifico's app can proxy
 to with the ``add_error_handler`` method. You can hook either on status codes
 or on a specific exception type.
 
-Connexion is moving from returning flask responses on errors to throwing exceptions
-that are a subclass of ``connexion.problem``. So far exceptions thrown in the OAuth
+Específico is moving from returning flask responses on errors to throwing exceptions
+that are a subclass of ``especifico.problem``. So far exceptions thrown in the OAuth
 decorator have been converted.
 
 Flask Error Handler Example
@@ -38,7 +38,7 @@ Firstly, it's possible to declare what Exception must be handled
 
 
     # init flask app
-    import connexion
+    import especifico
 
     def not_found_handler(error):
         return {
@@ -49,17 +49,17 @@ Firstly, it's possible to declare what Exception must be handled
 
     def create_app():
 
-        connexion_app = connexion.FlaskApp(
+        especifico_app = especifico.FlaskApp(
             __name__, specification_dir="../api/")
-        connexion_app.add_api(
+        especifico_app.add_api(
             "openapi.yaml", validate_responses=True,
             base_path="/")
 
         # Handle NotFoundException
-        connexion_app.add_error_handler(
+        especifico_app.add_error_handler(
             NotFoundException, not_found_handler)
 
-        app = connexion_app.app
+        app = especifico_app.app
         return app
 
 In this way, it's possible to raise anywhere the NotFoundException or its subclasses
@@ -88,12 +88,12 @@ and we know the API will return 404 status code.
 
 Default Exception Handling
 --------------------------
-By default connexion exceptions are JSON serialized according to
+By default especifico exceptions are JSON serialized according to
 `Problem Details for HTTP APIs`_
 
-Application can return errors using ``connexion.problem`` or exceptions that inherit from both
-``connexion.ProblemException`` and a ``werkzeug.exceptions.HttpException`` subclass (for example
-``werkzeug.exceptions.Forbidden``). An example of this is the ``connexion.exceptions.OAuthProblem``
+Application can return errors using ``especifico.problem`` or exceptions that inherit from both
+``especifico.ProblemException`` and a ``werkzeug.exceptions.HttpException`` subclass (for example
+``werkzeug.exceptions.Forbidden``). An example of this is the ``especifico.exceptions.OAuthProblem``
 exception
 
 .. code-block:: python
@@ -106,25 +106,25 @@ exception
 
 Examples of Custom Rendering Exceptions
 ---------------------------------------
-To custom render an exception when you boot your connexion application you can hook into a custom
+To custom render an exception when you boot your especifico application you can hook into a custom
 exception and render it in some sort of custom format. For example
 
 
 .. code-block:: python
 
     from flask import Response
-    import connexion
-    from connexion.exceptions import OAuthResponseProblem
+    import especifico
+    from especifico.exceptions import OAuthResponseProblem
 
     def render_unauthorized(exception):
         return Response(response=json.dumps({'error': 'There is an error in the oAuth token supplied'}), status=401, mimetype="application/json")
 
-    app = connexion.FlaskApp(__name__, specification_dir='./../swagger/', debug=False, swagger_ui=False)
+    app = especifico.FlaskApp(__name__, specification_dir='./../swagger/', debug=False, swagger_ui=False)
     app.add_error_handler(OAuthResponseProblem, render_unauthorized)
 
 Custom Exceptions
 -----------------
-There are several exception types in connexion that contain extra information to help you render appropriate
+There are several exception types in especifico that contain extra information to help you render appropriate
 messages to your user beyond the default description and status code:
 
 OAuthProblem

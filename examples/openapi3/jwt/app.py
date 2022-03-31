@@ -9,7 +9,7 @@ import connexion
 from jose import JWTError, jwt
 from werkzeug.exceptions import Unauthorized
 
-JWT_ISSUER = 'com.zalando.connexion'
+JWT_ISSUER = 'com.zalando.especifico'
 JWT_SECRET = 'change_this'
 JWT_LIFETIME_SECONDS = 600
 JWT_ALGORITHM = 'HS256'

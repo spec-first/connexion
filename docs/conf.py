@@ -39,7 +39,7 @@ autoapi_options = ['members',
                    'imported-members']
 autoapi_python_class_content = 'both'
 autoapi_dirs = [
-    '../connexion'
+    '../especifico'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -246,7 +246,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'connexion', 'Connexion Documentation',
+    ('index', 'especifico', 'Connexion Documentation',
      ['Zalando SE'], 1)
 ]
 

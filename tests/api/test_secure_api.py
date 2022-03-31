@@ -79,7 +79,7 @@ def test_security(oauth_requests, secure_endpoint_app):
     assert get_bye_from_flask.data == b'Goodbye test-user (Secure!)'
 
     headers = {"Authorization": "Bearer 100"}
-    get_bye_from_connexion = app_client.get('/v1.0/byesecure-from-connexion', headers=headers)  # type: flask.Response
+    get_bye_from_connexion = app_client.get('/v1.0/byesecure-from-especifico', headers=headers)  # type: flask.Response
     assert get_bye_from_connexion.data == b'Goodbye test-user (Secure!)'
 
     headers = {"Authorization": "Bearer 100"}

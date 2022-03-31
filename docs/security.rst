@@ -4,8 +4,8 @@ Security
 OAuth 2 Authentication and Authorization
 ----------------------------------------
 
-Connexion supports one of the three OAuth 2 handling methods.
-With Connexion, the API security definition **must** include a
+Específico supports one of the three OAuth 2 handling methods.
+With Específico, the API security definition **must** include a
 ``x-tokenInfoFunc`` or set ``TOKENINFO_FUNC`` env var.
 
 ``x-tokenInfoFunc`` must contain a reference to a function
@@ -20,7 +20,7 @@ the supplied token. This list of scopes will be validated against the scopes
 required by the API security definition to determine if the user is authorized.
 You can supply a custom scope validation func with ``x-scopeValidateFunc``
 or set ``SCOPEVALIDATE_FUNC`` env var, otherwise default scope validation function
-``connexion.security.security_handler_factory.validate_scope`` will be used automatically.
+``especifico.security.security_handler_factory.validate_scope`` will be used automatically.
 
 
 The recommended approach is to return a dict which complies with
@@ -36,8 +36,8 @@ Deprecated features, retained for backward compatibility:
 - As alternative to ``x-tokenInfoFunc``, you can set ``x-tokenInfoUrl`` or
   ``TOKENINFO_URL`` env var. It must contain a URL to validate and get the token
   information which complies with `RFC 6749 <rfc6749_>`_.
-  When both ``x-tokenInfoUrl`` and ``x-tokenInfoFunc`` are used, Connexion
-  will prioritize the function method. Connexion expects the authorization
+  When both ``x-tokenInfoUrl`` and ``x-tokenInfoFunc`` are used, Específico
+  will prioritize the function method. Específico expects the authorization
   server to receive the OAuth token in the ``Authorization`` header field in the
   format described in `RFC 6750 <rfc6750_>`_ section 2.1. This aspect represents
   a significant difference from the usual OAuth flow.
@@ -46,47 +46,47 @@ Deprecated features, retained for backward compatibility:
 
 You can find a `minimal OAuth example application`_ showing the use of
 ``x-tokenInfoUrl``, and `another OAuth example`_ showing the use of
-``x-tokenInfoFunc`` in Connexion's "examples" folder.
+``x-tokenInfoFunc`` in Específico's "examples" folder.
 
-.. _minimal OAuth example application: https://github.com/zalando/connexion/tree/main/examples/swagger2/oauth2
-.. _another OAuth example: https://github.com/zalando/connexion/tree/main/examples/swagger2/oauth2_local_tokeninfo
+.. _minimal OAuth example application: https://github.com/athenianco/especifico/tree/main/examples/swagger2/oauth2
+.. _another OAuth example: https://github.com/athenianco/especifico/tree/main/examples/swagger2/oauth2_local_tokeninfo
 
 Basic Authentication
 --------------------
 
-With Connexion, the API security definition **must** include a
+With Específico, the API security definition **must** include a
 ``x-basicInfoFunc`` or set ``BASICINFO_FUNC`` env var. It uses the same
 semantics as for ``x-tokenInfoFunc``, but the function accepts three
 parameters: username, password and required_scopes.
 
-You can find a `minimal Basic Auth example application`_ in Connexion's "examples" folder.
+You can find a `minimal Basic Auth example application`_ in Específico's "examples" folder.
 
 .. _oauth scope: https://oauth.net/2/scope/
-.. _minimal Basic Auth example application: https://github.com/zalando/connexion/tree/main/examples/openapi3/basicauth
+.. _minimal Basic Auth example application: https://github.com/athenianco/especifico/tree/main/examples/openapi3/basicauth
 
 ApiKey Authentication
 ---------------------
 
-With Connexion, the API security definition **must** include a
+With Específico, the API security definition **must** include a
 ``x-apikeyInfoFunc`` or set ``APIKEYINFO_FUNC`` env var. It uses the same
 semantics as for ``x-basicInfoFunc``, but the function accepts two
 parameters: apikey and required_scopes.
 
-You can find a `minimal API Key example application`_ in Connexion's "examples" folder.
+You can find a `minimal API Key example application`_ in Específico's "examples" folder.
 
 Bearer Authentication (JWT)
 ---------------------------
 
-With Connexion, the API security definition **must** include a
+With Específico, the API security definition **must** include a
 ``x-bearerInfoFunc`` or set ``BEARERINFO_FUNC`` env var. It uses the same
 semantics as for ``x-tokenInfoFunc``, but the function accepts one parameter: token.
 
-You can find a `minimal JWT example application`_ in Connexion's "examples/openapi3" folder.
+You can find a `minimal JWT example application`_ in Específico's "examples/openapi3" folder.
 
 Multiple Authentication Schemes
 -------------------------------
 
-With Connexion, it is also possible to combine multiple authentication schemes
+With Específico, it is also possible to combine multiple authentication schemes
 as described in the `OpenAPI specification`_. When multiple authentication
 schemes are combined using logical AND, the ``token_info`` argument will
 consist of a dictionary mapping the names of the security scheme to their
@@ -100,7 +100,7 @@ Deploying Authentication
 ------------------------
 
 Some production hosting environments, such as Apache with modwsgi, do not by default pass
-authentication headers to WSGI applications.  Therefore, to allow connexion to handle
+authentication headers to WSGI applications.  Therefore, to allow especifico to handle
 authentication, you will need to enable passthrough.
 
 Instructions for `enabling authentication passthrough in modwsgi`_ are available as
@@ -113,7 +113,7 @@ When specifying HTTPS as the scheme in the API YAML file, all the URIs
 in the served Swagger UI are HTTPS endpoints. The problem: The default
 server that runs is a "normal" HTTP server. This means that the
 Swagger UI cannot be used to play with the API. What is the correct
-way to start a HTTPS server when using Connexion?
+way to start a HTTPS server when using Específico?
 
 One way, `described by Flask`_, looks like this:
 
@@ -127,14 +127,14 @@ One way, `described by Flask`_, looks like this:
    app.run(host='127.0.0.1', port='12344',
            debug=False/True, ssl_context=context)
 
-However, Connexion doesn't provide an ssl_context parameter. This is
+However, Específico doesn't provide an ssl_context parameter. This is
 because Flask doesn't, either--but it uses ``**kwargs`` to send the
 parameters to the underlying `werkzeug`_ server.
 
 .. _rfc6750: https://tools.ietf.org/html/rfc6750
 .. _rfc6749: https://tools.ietf.org/html/rfc6749
 .. _rfc7662: https://tools.ietf.org/html/rfc7662
-.. _minimal API Key example application: https://github.com/zalando/connexion/blob/main/examples/openapi3/apikey
-.. _minimal JWT example application: https://github.com/zalando/connexion/tree/main/examples/openapi3/jwt
+.. _minimal API Key example application: https://github.com/athenianco/especifico/blob/main/examples/openapi3/apikey
+.. _minimal JWT example application: https://github.com/athenianco/especifico/tree/main/examples/openapi3/jwt
 .. _enabling authentication passthrough in modwsgi: https://modwsgi.readthedocs.io/en/develop/configuration-directives/WSGIPassAuthorization.html
 .. _modwsgi documentation: https://modwsgi.readthedocs.io/en/develop/index.html

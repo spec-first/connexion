@@ -4,7 +4,7 @@ Routing
 Endpoint Routing to Your Python Views
 -------------------------------------
 
-Connexion uses the ``operationId`` from each `Operation Object`_ to
+Específico uses the ``operationId`` from each `Operation Object`_ to
 identify which Python function should handle each URL.
 
 **Explicit Routing**:
@@ -48,28 +48,28 @@ instead of repeating the same ``x-swagger-router-controller`` or
 
 .. code-block:: python
 
-    from connexion.resolver import RelativeResolver
+    from especifico.resolver import RelativeResolver
       
-    app = connexion.FlaskApp(__name__)
+    app = especifico.FlaskApp(__name__)
     app.add_api('swagger.yaml', resolver=RelativeResolver('api'))
 
 
-Keep in mind that Connexion follows how `HTTP methods work in Flask`_
+Keep in mind that Específico follows how `HTTP methods work in Flask`_
 and therefore HEAD requests will be handled by the ``operationId`` specified
 under GET in the specification. If both methods are supported,
-``connexion.request.method`` can be used to determine which request was made.
+``especifico.request.method`` can be used to determine which request was made.
 
-By default, Connexion strictly enforces the presence of a handler
+By default, Específico strictly enforces the presence of a handler
 function for any path defined in your specification. Because of this, adding
 new paths without implementing a corresponding handler function will produce
 runtime errors and your application will not start. To allow new paths to be
 added to your specification, e.g. in an API design first workflow, set the
-``resolver_error`` to configure Connexion to provide an error response for
+``resolver_error`` to configure Específico to provide an error response for
 paths that are not yet implemented:
 
 .. code-block:: python
 
-    app = connexion.FlaskApp(__name__)
+    app = especifico.FlaskApp(__name__)
     app.add_api('swagger.yaml', resolver_error=501)
 
 .. code-block:: yaml
@@ -77,16 +77,16 @@ paths that are not yet implemented:
 Automatic Routing
 -----------------
 
-To customize this behavior, Connexion can use alternative
+To customize this behavior, Específico can use alternative
 ``Resolvers``—for example, ``RestyResolver``. The ``RestyResolver``
 will compose an ``operationId`` based on the path and HTTP method of
 the endpoints in your specification:
 
 .. code-block:: python
 
-    from connexion.resolver import RestyResolver
+    from especifico.resolver import RestyResolver
 
-    app = connexion.FlaskApp(__name__)
+    app = especifico.FlaskApp(__name__)
     app.add_api('swagger.yaml', resolver=RestyResolver('api'))
 
 .. code-block:: yaml
@@ -121,7 +121,7 @@ the endpoints in your specification:
 ``RestyResolver`` will give precedence to any ``operationId``
 encountered in the specification. It will also respect
 ``x-swagger-router-controller`` and ``x-openapi-router-controller``.
-You may import and extend ``connexion.resolver.Resolver`` to implement your own
+You may import and extend ``especifico.resolver.Resolver`` to implement your own
 ``operationId`` (and function) resolution algorithm.
 Note that when using multiple parameters in the path, they will be
 collected and all passed to the endpoint handlers.
@@ -136,9 +136,9 @@ the endpoints in your specification. The path will be based on the path you prov
 
 .. code-block:: python
 
-    from connexion.resolver import MethodViewResolver
+    from especifico.resolver import MethodViewResolver
 
-    app = connexion.FlaskApp(__name__)
+    app = especifico.FlaskApp(__name__)
     app.add_api('swagger.yaml', resolver=MethodViewResolver('api'))
 
 And associated YAML
@@ -170,7 +170,7 @@ In the above yaml the necessary MethodView implementation is as follows:
 
   import datetime
 
-  from connexion import NoContent
+  from especifico import NoContent
   from flask import request
   from flask.views import MethodView
 
@@ -232,7 +232,7 @@ and a __init__.py file to make the Class visible in the api directory.
 ``MethodViewResolver`` will give precedence to any ``operationId``
 encountered in the specification. It will also respect
 ``x-swagger-router-controller`` and ``x-openapi-router-controller``.
-You may import and extend ``connexion.resolver.MethodViewResolver`` to implement
+You may import and extend ``especifico.resolver.MethodViewResolver`` to implement
 your own ``operationId`` (and function) resolution algorithm.
 
 Parameter Name Sanitation
@@ -257,17 +257,17 @@ You can also convert *CamelCase* parameters to *snake_case* automatically using 
 
 .. code-block:: python
 
-    app = connexion.FlaskApp(__name__)
+    app = especifico.FlaskApp(__name__)
     app.add_api('api.yaml', ..., pythonic_params=True)
 
-With this option enabled, Connexion firstly converts *CamelCase* names
+With this option enabled, Específico firstly converts *CamelCase* names
 to *snake_case*. Secondly it looks to see if the name matches a known built-in
 and if it does it appends an underscore to the name.
 
 Parameter Variable Converters
 -----------------------------
 
-Connexion supports Flask's ``int``, ``float``, and ``path`` route parameter
+Específico supports Flask's ``int``, ``float``, and ``path`` route parameter
 `variable converters
 <http://flask.pocoo.org/docs/0.12/quickstart/#variable-rules>`_.
 Specify a route parameter's type as ``integer`` or ``number`` or its type as
@@ -336,18 +336,18 @@ You can choose another path through options:
 .. code-block:: python
 
     options = {'swagger_url': '/'}
-    app = connexion.App(__name__, options=options)
+    app = especifico.App(__name__, options=options)
 
 Swagger JSON
 ------------
-Connexion makes the OpenAPI/Swagger specification in JSON format
+Específico makes the OpenAPI/Swagger specification in JSON format
 available from ``swagger.json`` in the base path of the API.
 
 You can disable the Swagger JSON at the application level:
 
 .. code-block:: python
 
-    app = connexion.FlaskApp(__name__, specification_dir='swagger/',
+    app = especifico.FlaskApp(__name__, specification_dir='swagger/',
                         swagger_json=False)
     app.add_api('my_api.yaml')
 
@@ -355,7 +355,7 @@ You can also disable it at the API level:
 
 .. code-block:: python
 
-    app = connexion.FlaskApp(__name__, specification_dir='swagger/')
+    app = especifico.FlaskApp(__name__, specification_dir='swagger/')
     app.add_api('my_api.yaml', swagger_json=False)
 
 .. _Operation Object: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#operation-object

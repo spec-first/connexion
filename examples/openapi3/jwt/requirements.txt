@@ -1,4 +1,4 @@
-# Install swagger-ui before connexion.
+# Install swagger-ui before especifico.
 connexion[swagger-ui]
 
 connexion>=2.2.0

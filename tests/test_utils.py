@@ -25,13 +25,13 @@ def test_get_function_from_name_attr_error(monkeypatch):
     """
     deep_attr_mock = MagicMock()
     deep_attr_mock.side_effect = AttributeError
-    monkeypatch.setattr("connexion.utils.deep_getattr", deep_attr_mock)
+    monkeypatch.setattr("especifico.utils.deep_getattr", deep_attr_mock)
     with pytest.raises(AttributeError):
         utils.get_function_from_name('math.ceil')
 
 
 def test_get_function_from_name_for_class_method():
-    function = utils.get_function_from_name('connexion.FlaskApp.common_error_handler')
+    function = utils.get_function_from_name('especifico.FlaskApp.common_error_handler')
     assert function == connexion.FlaskApp.common_error_handler
 
 

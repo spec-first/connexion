@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 '''
-example of connexion running behind a path-altering reverse-proxy
+example of especifico running behind a path-altering reverse-proxy
 
 NOTE this demo is not secure by default!!
 You'll want to make sure these headers are coming from your proxy, and not

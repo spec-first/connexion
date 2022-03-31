@@ -17,7 +17,7 @@ def read_version(package):
                 return line.split()[-1].strip().strip("'")
 
 
-version = read_version('connexion')
+version = read_version('especifico')
 
 install_requires = [
     'clickclick>=1.2,<21',
@@ -67,7 +67,7 @@ class PyTest(TestCommand):
     def initialize_options(self):
         TestCommand.initialize_options(self)
         self.cov = None
-        self.pytest_args = ['--cov', 'connexion', '--cov-report', 'term-missing', '-v']
+        self.pytest_args = ['--cov', 'especifico', '--cov-report', 'term-missing', '-v']
         self.cov_html = False
 
     def finalize_options(self):
@@ -91,7 +91,7 @@ def readme():
 
 
 setup(
-    name='connexion',
+    name='especifico',
     packages=find_packages(),
     version=version,
     description='Connexion - API first applications with OpenAPI/Swagger and Flask',
@@ -126,5 +126,5 @@ setup(
         'Topic :: Software Development :: Libraries :: Application Frameworks'
     ],
     include_package_data=True,  # needed to include swagger-ui (see MANIFEST.in)
-    entry_points={'console_scripts': ['connexion = connexion.cli:main']}
+    entry_points={'console_scripts': ['especifico = especifico.cli:main']}
 )

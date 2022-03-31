@@ -22,7 +22,7 @@ def mock_app_run(mock_get_function_from_name):
 def mock_get_function_from_name(monkeypatch):
     get_function_from_name = MagicMock()
     monkeypatch.setattr(
-        'connexion.cli.connexion.utils.get_function_from_name',
+        'especifico.cli.especifico.utils.get_function_from_name',
         get_function_from_name
     )
     return get_function_from_name
@@ -31,7 +31,7 @@ def mock_get_function_from_name(monkeypatch):
 @pytest.fixture()
 def expected_arguments():
     """
-    Default values arguments used to call `connexion.App` by cli.
+    Default values arguments used to call `especifico.App` by cli.
     """
     return {
         "options": {
@@ -91,7 +91,7 @@ def test_run_spec_with_host(mock_app_run, spec_file):
 def test_run_no_options_all_default(mock_app_run, expected_arguments, spec_file):
     runner = CliRunner()
     runner.invoke(main, ['run', spec_file], catch_exceptions=False)
-    mock_app_run.assert_called_with('connexion.cli', **expected_arguments)
+    mock_app_run.assert_called_with('especifico.cli', **expected_arguments)
 
 
 def test_run_using_option_hide_spec(mock_app_run, expected_arguments,
@@ -101,7 +101,7 @@ def test_run_using_option_hide_spec(mock_app_run, expected_arguments,
                   catch_exceptions=False)
 
     expected_arguments['options']['serve_spec'] = False
-    mock_app_run.assert_called_with('connexion.cli', **expected_arguments)
+    mock_app_run.assert_called_with('especifico.cli', **expected_arguments)
 
 
 def test_run_using_option_hide_console_ui(mock_app_run, expected_arguments,
@@ -111,7 +111,7 @@ def test_run_using_option_hide_console_ui(mock_app_run, expected_arguments,
                   catch_exceptions=False)
 
     expected_arguments['options']['swagger_ui'] = False
-    mock_app_run.assert_called_with('connexion.cli', **expected_arguments)
+    mock_app_run.assert_called_with('especifico.cli', **expected_arguments)
 
 
 def test_run_using_option_console_ui_from(mock_app_run, expected_arguments,
@@ -122,7 +122,7 @@ def test_run_using_option_console_ui_from(mock_app_run, expected_arguments,
                   catch_exceptions=False)
 
     expected_arguments['options']['swagger_path'] = user_path
-    mock_app_run.assert_called_with('connexion.cli', **expected_arguments)
+    mock_app_run.assert_called_with('especifico.cli', **expected_arguments)
 
 
 def test_run_using_option_console_ui_url(mock_app_run, expected_arguments,
@@ -133,7 +133,7 @@ def test_run_using_option_console_ui_url(mock_app_run, expected_arguments,
                   catch_exceptions=False)
 
     expected_arguments['options']['swagger_url'] = user_url
-    mock_app_run.assert_called_with('connexion.cli', **expected_arguments)
+    mock_app_run.assert_called_with('especifico.cli', **expected_arguments)
 
 
 def test_run_using_option_auth_all_paths(mock_app_run, expected_arguments,
@@ -143,13 +143,13 @@ def test_run_using_option_auth_all_paths(mock_app_run, expected_arguments,
                   catch_exceptions=False)
 
     expected_arguments['auth_all_paths'] = True
-    mock_app_run.assert_called_with('connexion.cli', **expected_arguments)
+    mock_app_run.assert_called_with('especifico.cli', **expected_arguments)
 
 
 def test_run_in_debug_mode(mock_app_run, expected_arguments, spec_file,
                            monkeypatch):
-    logging_config = MagicMock(name='connexion.cli.logging.basicConfig')
-    monkeypatch.setattr('connexion.cli.logging.basicConfig',
+    logging_config = MagicMock(name='especifico.cli.logging.basicConfig')
+    monkeypatch.setattr('especifico.cli.logging.basicConfig',
                         logging_config)
 
     runner = CliRunner()
@@ -158,13 +158,13 @@ def test_run_in_debug_mode(mock_app_run, expected_arguments, spec_file,
     logging_config.assert_called_with(level=logging.DEBUG)
 
     expected_arguments['debug'] = True
-    mock_app_run.assert_called_with('connexion.cli', **expected_arguments)
+    mock_app_run.assert_called_with('especifico.cli', **expected_arguments)
 
 
 def test_run_in_very_verbose_mode(mock_app_run, expected_arguments, spec_file,
                            monkeypatch):
-    logging_config = MagicMock(name='connexion.cli.logging.basicConfig')
-    monkeypatch.setattr('connexion.cli.logging.basicConfig',
+    logging_config = MagicMock(name='especifico.cli.logging.basicConfig')
+    monkeypatch.setattr('especifico.cli.logging.basicConfig',
                         logging_config)
 
     runner = CliRunner()
@@ -173,13 +173,13 @@ def test_run_in_very_verbose_mode(mock_app_run, expected_arguments, spec_file,
     logging_config.assert_called_with(level=logging.DEBUG)
 
     expected_arguments['debug'] = True
-    mock_app_run.assert_called_with('connexion.cli', **expected_arguments)
+    mock_app_run.assert_called_with('especifico.cli', **expected_arguments)
 
 
 def test_run_in_verbose_mode(mock_app_run, expected_arguments, spec_file,
                            monkeypatch):
-    logging_config = MagicMock(name='connexion.cli.logging.basicConfig')
-    monkeypatch.setattr('connexion.cli.logging.basicConfig',
+    logging_config = MagicMock(name='especifico.cli.logging.basicConfig')
+    monkeypatch.setattr('especifico.cli.logging.basicConfig',
                         logging_config)
 
     runner = CliRunner()
@@ -188,7 +188,7 @@ def test_run_in_verbose_mode(mock_app_run, expected_arguments, spec_file,
     logging_config.assert_called_with(level=logging.INFO)
 
     expected_arguments['debug'] = False
-    mock_app_run.assert_called_with('connexion.cli', **expected_arguments)
+    mock_app_run.assert_called_with('especifico.cli', **expected_arguments)
 
 
 def test_run_using_option_base_path(mock_app_run, expected_arguments,

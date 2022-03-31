@@ -8,17 +8,17 @@ PARAMETER_DEFINITIONS = {'myparam': {'in': 'path', 'type': 'integer'}}
 
 
 def test_standard_get_function():
-    function = Resolver().resolve_function_from_operation_id('connexion.FlaskApp.common_error_handler')
+    function = Resolver().resolve_function_from_operation_id('especifico.FlaskApp.common_error_handler')
     assert function == connexion.FlaskApp.common_error_handler
 
 
 def test_relative_get_function():
-    function = RelativeResolver('connexion').resolve_function_from_operation_id('connexion.FlaskApp.common_error_handler')
+    function = RelativeResolver('especifico').resolve_function_from_operation_id('especifico.FlaskApp.common_error_handler')
     assert function == connexion.FlaskApp.common_error_handler
 
 
 def test_resty_get_function():
-    function = RestyResolver('connexion').resolve_function_from_operation_id('connexion.FlaskApp.common_error_handler')
+    function = RestyResolver('especifico').resolve_function_from_operation_id('especifico.FlaskApp.common_error_handler')
     assert function == connexion.FlaskApp.common_error_handler
 
 
@@ -28,9 +28,9 @@ def test_missing_operation_id():
     with pytest.raises(ResolverError):
         Resolver().resolve_function_from_operation_id(None)
     with pytest.raises(ResolverError):
-        RelativeResolver('connexion').resolve_function_from_operation_id(None)
+        RelativeResolver('especifico').resolve_function_from_operation_id(None)
     with pytest.raises(ResolverError):
-        RestyResolver('connexion').resolve_function_from_operation_id(None)
+        RestyResolver('especifico').resolve_function_from_operation_id(None)
 
 
 def test_bad_operation_id():
@@ -39,9 +39,9 @@ def test_bad_operation_id():
     with pytest.raises(ResolverError):
         Resolver().resolve_function_from_operation_id('ohai.I.do.not.exist')
     with pytest.raises(ResolverError):
-        RelativeResolver('connexion').resolve_function_from_operation_id('ohai.I.do.not.exist')
+        RelativeResolver('especifico').resolve_function_from_operation_id('ohai.I.do.not.exist')
     with pytest.raises(ResolverError):
-        RestyResolver('connexion').resolve_function_from_operation_id('ohai.I.do.not.exist')
+        RestyResolver('especifico').resolve_function_from_operation_id('ohai.I.do.not.exist')
 
 
 def test_standard_resolve_x_router_controller():

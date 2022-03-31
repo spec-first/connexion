@@ -14,7 +14,7 @@ In your command line, type this:
 
 .. code-block:: bash
 
-    $ pip install connexion[swagger-ui]
+    $ pip install especifico[swagger-ui]
 
 
 Running It
@@ -24,9 +24,9 @@ Put your API YAML inside a folder in the root path of your application (e.g ``op
 
 .. code-block:: python
 
-    import connexion
+    import especifico
 
-    app = connexion.FlaskApp(__name__, specification_dir='openapi/')
+    app = especifico.FlaskApp(__name__, specification_dir='openapi/')
     app.add_api('my_api.yaml')
     app.run(port=8080)
 
@@ -34,14 +34,14 @@ Put your API YAML inside a folder in the root path of your application (e.g ``op
 Dynamic Rendering of Your Specification
 ---------------------------------------
 
-Connexion uses Jinja2_ to allow specification parameterization through
+Específico uses Jinja2_ to allow specification parameterization through
 `arguments` parameter. You can either define specification arguments
-globally for the application in the `connexion.App` constructor, or
-for each specific API in the `connexion.App#add_api` method:
+globally for the application in the `especifico.App` constructor, or
+for each specific API in the `especifico.App#add_api` method:
 
 .. code-block:: python
 
-    app = connexion.FlaskApp(__name__, specification_dir='openapi/',
+    app = especifico.FlaskApp(__name__, specification_dir='openapi/',
                         arguments={'global': 'global_value'})
     app.add_api('my_api.yaml', arguments={'api_local': 'local_value'})
     app.run(port=8080)
@@ -59,7 +59,7 @@ You can disable the Swagger UI at the application level:
 .. code-block:: python
 
     options = {"swagger_ui": False}
-    app = connexion.FlaskApp(__name__, specification_dir='openapi/',
+    app = especifico.FlaskApp(__name__, specification_dir='openapi/',
                         options=options)
     app.add_api('my_api.yaml')
 
@@ -69,7 +69,7 @@ You can also disable it at the API level:
 .. code-block:: python
 
     options = {"swagger_ui": False}
-    app = connexion.FlaskApp(__name__, specification_dir='openapi/')
+    app = especifico.FlaskApp(__name__, specification_dir='openapi/')
     app.add_api('my_api.yaml', options=options)
 
 You can pass custom Swagger UI `Configuration Parameters`_ like e.g.
@@ -78,7 +78,7 @@ You can pass custom Swagger UI `Configuration Parameters`_ like e.g.
 .. code-block:: python
 
     options = {"swagger_ui_config": {"displayOperationId": True}}
-    app = connexion.FlaskApp(__name__, specification_dir='openapi/',
+    app = especifico.FlaskApp(__name__, specification_dir='openapi/',
                         options=options)
 
 
@@ -86,23 +86,23 @@ You can pass custom Swagger UI `Configuration Parameters`_ like e.g.
 
 Server Backend
 --------------
-By default connexion uses the default flask server but you can also use Tornado_ or gevent_ as the HTTP server, to do so set server
+By default especifico uses the default flask server but you can also use Tornado_ or gevent_ as the HTTP server, to do so set server
 to ``tornado`` or ``gevent``:
 
 .. code-block:: python
 
-    import connexion
+    import especifico
 
-    app = connexion.FlaskApp(__name__, port = 8080, specification_dir='openapi/', server='tornado')
+    app = especifico.FlaskApp(__name__, port = 8080, specification_dir='openapi/', server='tornado')
 
 
-Connexion has the ``aiohttp`` framework as server backend too:
+Específico has the ``aiohttp`` framework as server backend too:
 
 .. code-block:: python
 
-    import connexion
+    import especifico
 
-    app = connexion.AioHttpApp(__name__, port = 8080, specification_dir='openapi/')
+    app = especifico.AioHttpApp(__name__, port = 8080, specification_dir='openapi/')
 
 
 .. _Jinja2: http://jinja.pocoo.org/

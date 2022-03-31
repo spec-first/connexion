@@ -528,7 +528,7 @@ def test_multiple_oauth_in_and(api, caplog):
     """Tests an operation with multiple oauth security schemes in AND fashion.
     These should be ignored and raise a warning.
     """
-    caplog.set_level(logging.WARNING, logger="connexion.operations.secure")
+    caplog.set_level(logging.WARNING, logger="especifico.operations.secure")
     verify_oauth = mock.MagicMock(return_value='verify_oauth_result')
     api.security_handler_factory.verify_oauth = verify_oauth
 

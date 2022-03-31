@@ -6,19 +6,19 @@ Response Serialization
 If the endpoint returns a `Response` object this response will be used as is.
 
 Otherwise, and by default and if the specification defines that an endpoint
-produces only JSON, connexion will automatically serialize the return value
+produces only JSON, especifico will automatically serialize the return value
 for you and set the right content type in the HTTP header.
 
-If the endpoint produces a single non-JSON mimetype then Connexion will
+If the endpoint produces a single non-JSON mimetype then Específico will
 automatically set the right content type in the HTTP header.
 
 Customizing JSON encoder
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-Connexion allows you to customize the `JSONEncoder` class in the Flask app
-instance `json_encoder` (`connexion.App:app`). If you wanna reuse the
-Connexion's date-time serialization, inherit your custom encoder from
-`connexion.apps.flask_app.FlaskJSONEncoder`.
+Específico allows you to customize the `JSONEncoder` class in the Flask app
+instance `json_encoder` (`especifico.App:app`). If you wanna reuse the
+Específico's date-time serialization, inherit your custom encoder from
+`especifico.apps.flask_app.FlaskJSONEncoder`.
 
 For more information on the `JSONEncoder`, see the `Flask documentation`_.
 
@@ -56,14 +56,14 @@ For example
 
 Response Validation
 -------------------
-While, by default Connexion doesn't validate the responses it's possible to
+While, by default Específico doesn't validate the responses it's possible to
 do so by opting in when adding the API:
 
 .. code-block:: python
 
-    import connexion
+    import especifico
 
-    app = connexion.FlaskApp(__name__, specification_dir='swagger/')
+    app = especifico.FlaskApp(__name__, specification_dir='swagger/')
     app.add_api('my_api.yaml', validate_responses=True)
     app.run(port=8080)
 
@@ -75,7 +75,7 @@ Custom Validator
 -----------------
 
 By default, response body contents are validated against OpenAPI schema
-via ``connexion.decorators.response.ResponseValidator``, if you want to change
+via ``especifico.decorators.response.ResponseValidator``, if you want to change
 the validation, you can override the default class with:
 
 .. code-block:: python
@@ -83,15 +83,15 @@ the validation, you can override the default class with:
     validator_map = {
         'response': CustomResponseValidator
     }
-    app = connexion.FlaskApp(__name__)
+    app = especifico.FlaskApp(__name__)
     app.add_api('api.yaml', ..., validator_map=validator_map)
 
 
 Error Handling
 --------------
-By default connexion error messages are JSON serialized according to
+By default especifico error messages are JSON serialized according to
 `Problem Details for HTTP APIs`_
 
-Application can return errors using ``connexion.problem``.
+Application can return errors using ``especifico.problem``.
 
 .. _Problem Details for HTTP APIs: https://tools.ietf.org/html/draft-ietf-appsawg-http-problem-00

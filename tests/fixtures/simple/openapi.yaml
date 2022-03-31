@@ -537,7 +537,7 @@ paths:
           in: query
           schema:
             type: string
-            default: connexion
+            default: especifico
       responses:
         '200':
           description: OK

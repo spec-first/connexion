@@ -13,13 +13,13 @@ from conftest import TEST_FOLDER
 @pytest.fixture
 def web_run_app_mock(monkeypatch):
     mock_ = mock.MagicMock()
-    monkeypatch.setattr('connexion.apps.aiohttp_app.web.run_app', mock_)
+    monkeypatch.setattr('especifico.apps.aiohttp_app.web.run_app', mock_)
     return mock_
 
 
 @pytest.fixture
 def sys_modules_mock(monkeypatch):
-    monkeypatch.setattr('connexion.apps.aiohttp_app.sys.modules', {})
+    monkeypatch.setattr('especifico.apps.aiohttp_app.sys.modules', {})
 
 
 def test_app_run(web_run_app_mock, aiohttp_api_spec_dir):
@@ -27,7 +27,7 @@ def test_app_run(web_run_app_mock, aiohttp_api_spec_dir):
                      specification_dir=aiohttp_api_spec_dir,
                      debug=True)
     app.run(use_default_access_log=True)
-    logger = logging.getLogger('connexion.aiohttp_app')
+    logger = logging.getLogger('especifico.aiohttp_app')
     assert web_run_app_mock.call_args_list == [
         mock.call(app.app, port=5001, host='0.0.0.0', access_log=logger)
     ]
@@ -67,7 +67,7 @@ def test_app_run_access_log(web_run_app_mock, aiohttp_api_spec_dir):
     app = AioHttpApp(__name__, port=5001,
                      specification_dir=aiohttp_api_spec_dir,
                      debug=True)
-    logger = logging.getLogger('connexion.aiohttp_app')
+    logger = logging.getLogger('especifico.aiohttp_app')
     app.run(access_log=logger)
     assert web_run_app_mock.call_args_list == [
         mock.call(app.app, port=5001, host='0.0.0.0', access_log=logger)
@@ -104,10 +104,10 @@ def test_app_get_root_path(aiohttp_api_spec_dir):
 
 
 def test_app_get_root_path_not_in_sys_modules(sys_modules_mock, aiohttp_api_spec_dir):
-    app = AioHttpApp('connexion', port=5001,
+    app = AioHttpApp('especifico', port=5001,
                      specification_dir=aiohttp_api_spec_dir)
     root_path = app.get_root_path()
-    assert str(root_path).endswith(os.sep + 'connexion') == True
+    assert str(root_path).endswith(os.sep + 'especifico') == True
 
 
 def test_app_get_root_path_invalid(sys_modules_mock, aiohttp_api_spec_dir):

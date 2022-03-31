@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 '''
-example of aiohttp connexion running behind a path-altering reverse-proxy
+example of aiohttp especifico running behind a path-altering reverse-proxy
 '''
 
 import json

@@ -130,5 +130,5 @@ def test_validation_error_on_completely_invalid_swagger_spec():
 @pytest.fixture
 def mock_api_logger(monkeypatch):
     mocked_logger = MagicMock(name='mocked_logger')
-    monkeypatch.setattr('connexion.apis.abstract.logger', mocked_logger)
+    monkeypatch.setattr('especifico.apis.abstract.logger', mocked_logger)
     return mocked_logger
