@@ -8,12 +8,14 @@ import pathlib
 from decimal import Decimal
 from types import FunctionType  # NOQA
 
+import a2wsgi
 import flask
 import werkzeug.exceptions
 from flask import json, signals
 
 from ..apis.flask_api import FlaskApi
 from ..exceptions import ProblemException
+from ..middleware import ConnexionMiddleware
 from ..problem import problem
 from .abstract import AbstractApp
 
@@ -28,8 +30,10 @@ class FlaskApp(AbstractApp):
 
         See :class:`~connexion.AbstractApp` for additional parameters.
         """
-        super().__init__(import_name, FlaskApi, server=server, **kwargs)
         self.extra_files = extra_files or []
+        self.middleware = None
+
+        super().__init__(import_name, FlaskApi, server=server, **kwargs)
 
     def create_app(self):
         app = flask.Flask(self.import_name, **self.server_args)
@@ -37,6 +41,14 @@ class FlaskApp(AbstractApp):
         app.url_map.converters['float'] = NumberConverter
         app.url_map.converters['int'] = IntegerConverter
         return app
+
+    def _apply_middleware(self):
+        middlewares = [*ConnexionMiddleware.default_middlewares,
+                       a2wsgi.WSGIMiddleware]
+        self.middleware = ConnexionMiddleware(self.app.wsgi_app, middlewares=middlewares)
+
+        # Wrap with ASGI to WSGI middleware for usage with development server and test client
+        self.app.wsgi_app = a2wsgi.ASGIMiddleware(self.middleware)
 
     def get_root_path(self):
         return pathlib.Path(self.app.root_path)
@@ -146,6 +158,12 @@ class FlaskApp(AbstractApp):
             http_server.serve_forever()
         else:
             raise Exception(f'Server {self.server} not recognized')
+
+    def __call__(self, scope, receive, send):  # pragma: no cover
+        """
+        ASGI interface. Calls the middleware wrapped around the wsgi app.
+        """
+        return self.middleware(scope, receive, send)
 
 
 class FlaskJSONEncoder(json.JSONEncoder):
