@@ -2,3 +2,4 @@ set -x
 flake8
 isort --reverse-relative --dont-order-by-type --fss --project especifico --check-only --diff .
 mypy --ignore-missing-imports especifico
+semgrep --config p/r2c-security-audit --severity ERROR --disable-version-check --error

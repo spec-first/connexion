@@ -39,7 +39,7 @@ class FileHandler:
     def __call__(self, uri):
         filepath = self._uri_to_path(uri)
         with open(filepath) as fh:
-            return yaml.load(fh, ExtendedSafeLoader)
+            return yaml.load(fh, ExtendedSafeLoader)  # nosemgrep
 
     @staticmethod
     def _uri_to_path(uri):
@@ -58,7 +58,7 @@ class URLHandler:
 
         data = io.StringIO(response.text)
         with contextlib.closing(data) as fh:
-            return yaml.load(fh, ExtendedSafeLoader)
+            return yaml.load(fh, ExtendedSafeLoader)  # nosemgrep
 
 
 default_handlers = {
