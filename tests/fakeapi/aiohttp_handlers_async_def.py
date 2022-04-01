@@ -1,5 +1,5 @@
-from connexion.lifecycle import ConnexionResponse
+from especifico.lifecycle import EspecificoResponse
 
 
 async def aiohttp_validate_responses():
-    return ConnexionResponse(body=b'{"validate": true}')
+    return EspecificoResponse(body=b'{"validate": true}')

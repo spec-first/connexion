@@ -68,11 +68,11 @@ paths:
           schema:
             type: string
 
-  /byesecure-from-connexion:
+  /byesecure-from-especifico:
     get:
       summary: Generate goodbye
       description: ""
-      operationId: fakeapi.hello.get_bye_secure_from_connexion
+      operationId: fakeapi.hello.get_bye_secure_from_especifico
       security:
         - oauth:
           - myscope
@@ -144,7 +144,7 @@ paths:
     get:
       summary: Test more than one scope
       description: |
-        Test that connexion handles scopes properly by verifying that user has
+        Test that especifico handles scopes properly by verifying that user has
         all scopes necessary to call the endpoint.
       operationId: fakeapi.hello.more_than_one_scope_defined
       security:
@@ -161,7 +161,7 @@ paths:
     get:
       summary: Test empty security definition
       description: |
-        Test that connexion handles an empty security definition correctly.
+        Test that especifico handles an empty security definition correctly.
         In case an empty definition is provided, the user is required to
         apply proper authentication and authorization techniques.
       operationId: fakeapi.hello.optional_auth

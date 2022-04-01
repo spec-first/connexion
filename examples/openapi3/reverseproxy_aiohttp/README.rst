@@ -2,7 +2,7 @@
 Reverse Proxy Example
 =====================
 
-This example demonstrates how to run a connexion application behind a path-altering reverse proxy.
+This example demonstrates how to run a especifico application behind a path-altering reverse proxy.
 
 You can either set the path in your app, or set the ``X-Forwarded-Path`` header.
 
@@ -10,7 +10,7 @@ Running:
 
 .. code-block:: bash
 
-    $ sudo pip3 install --upgrade connexion[swagger-ui] aiohttp-remotes  
+    $ sudo pip3 install --upgrade especifico[swagger-ui] aiohttp-remotes  
     $ ./app.py
 
 Now open your browser and go to http://localhost:8080/reverse_proxied/ui/ to see the Swagger UI.

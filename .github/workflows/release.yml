@@ -1,42 +1,26 @@
-name: Publish Python 🐍 distributions 📦 to PyPI and TestPyPI
+name: Publish Python 🐍 packages 📦 to PyPI
 on:
   push:
     tags:
       - '[0-9]+.[0-9]+.[0-9]+'
-  release:
-    types:
-      - published
 jobs:
   build-n-publish:
-    name: Build and publish Python 🐍 distributions 📦 to PyPI and TestPyPI
+    name: Build and publish Python 🐍 packages 📦 to PyPI
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@v3
 
     - name: Set up Python 3.9
       uses: actions/setup-python@v1
       with:
         python-version: 3.9
 
-    - name: Update version
-      run: sed -i "s/__version__ = .*/__version__ = '${{github.ref_name}}'/" */__init__.py
-
     - name: Build a binary wheel and a source tarball
       run: |
-        pip install --upgrade pip 
-        pip install wheel
+        pip install --upgrade pip
         python setup.py sdist bdist_wheel
 
-    - name: Publish distribution 📦 to Test PyPI
-      if: github.event_name == 'push'
-      uses: pypa/gh-action-pypi-publish@v1.5.0
-      with:
-        user: __token__
-        password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-        repository_url: https://test.pypi.org/legacy/
-
-    - name: Publish distribution 📦 to PyPI if triggered by release
-      if: github.event_name == 'release'
+    - name: Publish package 📦 to PyPI
       uses: pypa/gh-action-pypi-publish@v1.5.0
       with:
         user: __token__

@@ -1,0 +1,13 @@
+[flake8]
+ignore=SFS101,SFS301,D100,D200,D104,D301,W503,W504,D
+max-line-length=99
+inline-quotes="
+import-order-style=appnexus
+application-package-names=especifico,tests
+rst-roles=class
+per-file-ignores=
+    setup.py:D
+    tests/*:D
+    examples/*:D
+    **/__init__.py:F401
+    docs/conf.py:B,D,E,F

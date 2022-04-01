@@ -28,16 +28,18 @@ def inspect_function_arguments(function):  # pragma: no cover
     :rtype: tuple[list[str], bool]
     """
     parameters = inspect.signature(function).parameters
-    bound_arguments = [name for name, p in parameters.items()
-                       if p.kind not in (p.VAR_POSITIONAL, p.VAR_KEYWORD)]
+    bound_arguments = [
+        name for name, p in parameters.items() if p.kind not in (p.VAR_POSITIONAL, p.VAR_KEYWORD)
+    ]
     has_kwargs = any(p.kind == p.VAR_KEYWORD for p in parameters.values())
     return list(bound_arguments), has_kwargs
 
 
 def snake_and_shadow(name):
     """
-    Converts the given name into Pythonic form. Firstly it converts CamelCase names to snake_case. Secondly it looks to
-    see if the name matches a known built-in and if it does it appends an underscore to the name.
+    Converts the given name into Pythonic form. Firstly it converts CamelCase names to snake_case.
+    Secondly it looks to see if the name matches a known built-in and if it does it appends
+    an underscore to the name.
     :param name: The parameter name
     :type name: str
     :return:
@@ -48,25 +50,27 @@ def snake_and_shadow(name):
     return snake
 
 
-def parameter_to_arg(operation, function, pythonic_params=False,
-                     pass_context_arg_name=None):
+def parameter_to_arg(operation, function, pythonic_params=False, pass_context_arg_name=None):
     """
     Pass query and body parameters as keyword arguments to handler function.
 
     See (https://github.com/zalando/especifico/issues/59)
     :param operation: The operation being called
     :type operation: especifico.operations.AbstractOperation
-    :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended to
-    any shadowed built-ins
+    :param pythonic_params: When True CamelCase parameters are converted to snake_case and\
+    an underscore is appended to any shadowed built-ins
     :type pythonic_params: bool
-    :param pass_context_arg_name: If not None URL and function has an argument matching this name, the framework's
+    :param pass_context_arg_name: If not None URL and function has an argument matching this name,\
+    the framework's
     request context will be passed as that argument.
     :type pass_context_arg_name: str|None
     """
     consumes = operation.consumes
 
     def sanitized(name):
-        return name and re.sub('^[^a-zA-Z_]+', '', re.sub('[^0-9a-zA-Z[_]', '', re.sub(r'[\[]', '_', name)))
+        return name and re.sub(
+            "^[^a-zA-Z_]+", "", re.sub("[^0-9a-zA-Z[_]", "", re.sub(r"[\[]", "_", name)),
+        )
 
     def pythonic(name):
         name = name and snake_and_shadow(name)
@@ -78,7 +82,7 @@ def parameter_to_arg(operation, function, pythonic_params=False,
     @functools.wraps(function)
     def wrapper(request):
         # type: (EspecificoRequest) -> Any
-        logger.debug('Function Arguments: %s', arguments)
+        logger.debug("Function Arguments: %s", arguments)
         kwargs = {}
 
         if all_json(consumes):
@@ -94,8 +98,15 @@ def parameter_to_arg(operation, function, pythonic_params=False,
             query = dict(request.query.items())
 
         kwargs.update(
-            operation.get_arguments(request.path_params, query, request_body,
-                                    request.files, arguments, has_kwargs, sanitize)
+            operation.get_arguments(
+                request.path_params,
+                query,
+                request_body,
+                request.files,
+                arguments,
+                has_kwargs,
+                sanitize,
+            ),
         )
 
         # optionally convert parameter variable names to un-shadowed, snake_case form

@@ -1,15 +1,15 @@
 import datetime
 
-from connexion import NoContent
+from especifico import NoContent
 
 pets = {}
 
 
 def post(pet):
     count = len(pets)
-    pet['id'] = count + 1
-    pet['registered'] = datetime.datetime.now()
-    pets[pet['id']] = pet
+    pet["id"] = count + 1
+    pet["registered"] = datetime.datetime.now()
+    pets[pet["id"]] = pet
     return pet, 201
 
 

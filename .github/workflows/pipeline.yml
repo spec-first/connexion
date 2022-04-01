@@ -5,13 +5,28 @@ on:
       - main
   pull_request:
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.10'
+    - name: Install dependencies
+      run: |
+        pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -r requirements-lint.txt
+    - name: Lint
+      run: scripts/lint
   test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.7', '3.8', '3.9', '3.10']
+        python-version: ['3.8', '3.9', '3.10']
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
@@ -19,23 +34,8 @@ jobs:
     - name: Install dependencies
       run: |
         pip install --upgrade pip
-        pip install "tox<4" "tox-gh-actions<3" "setuptools<58" "coveralls<4"
-    - name: Test with tox
-      run: tox
-    - name: Coveralls
-      run: coveralls --service github
-      env:
-        COVERALLS_PARALLEL: true
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        COVERALLS_FLAG_NAME: test-${{ matrix.python-version }}
-
-  finish-coveralls:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-    - name: Install "coveralls<4"
-      run: pip install coveralls
-    - name: Coveralls Finished
-      run: coveralls --service github --finish
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        pip install -r requirements.txt
+        pip install -r requirements-test.txt
+        pip install .[cli,tests,flask,aiohttp,swagger-ui]
+    - name: Unit tests
+      run: scripts/test

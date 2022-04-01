@@ -1,0 +1,6 @@
+pytest-aiohttp==1.0.3
+aiohttp-remotes==1.2.0
+decorator==4.4.2
+pytest==7.1.1
+pytest-cov==3.0.0
+testfixtures==6.18.5

@@ -13,6 +13,7 @@ from especifico.exceptions import ProblemException
 
 try:
     import uwsgi_metrics
+
     HAS_UWSGI_METRICS = True  # pragma: no cover
 except ImportError:
     uwsgi_metrics = None
@@ -23,9 +24,9 @@ class UWSGIMetricsCollector:
     def __init__(self, path, method):
         self.path = path
         self.method = method
-        swagger_path = path.strip('/').replace('/', '.').replace('<', '{').replace('>', '}')
-        self.key_suffix = f'{method.upper()}.{swagger_path}'
-        self.prefix = os.getenv('HTTP_METRICS_PREFIX', 'especifico.response')
+        swagger_path = path.strip("/").replace("/", ".").replace("<", "{").replace(">", "}")
+        self.key_suffix = f"{method.upper()}.{swagger_path}"
+        self.prefix = os.getenv("HTTP_METRICS_PREFIX", "especifico.response")
 
     @staticmethod
     def is_available():
@@ -54,7 +55,7 @@ class UWSGIMetricsCollector:
                 end_time_s = time.time()
                 delta_s = end_time_s - start_time_s
                 delta_ms = delta_s * 1000
-                key = f'{status}.{self.key_suffix}'
+                key = f"{status}.{self.key_suffix}"
                 uwsgi_metrics.timer(self.prefix, key, delta_ms)
             return response
 

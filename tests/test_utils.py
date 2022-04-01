@@ -1,20 +1,21 @@
 import math
 from unittest.mock import MagicMock
 
-import connexion.apps
 import pytest
-from connexion import utils
+
+from especifico import utils
+import especifico.apps
 
 
 def test_get_function_from_name():
-    function = utils.get_function_from_name('math.ceil')
+    function = utils.get_function_from_name("math.ceil")
     assert function == math.ceil
     assert function(2.7) == 3
 
 
 def test_get_function_from_name_no_module():
     with pytest.raises(ValueError):
-        utils.get_function_from_name('math')
+        utils.get_function_from_name("math")
 
 
 def test_get_function_from_name_attr_error(monkeypatch):
@@ -27,36 +28,36 @@ def test_get_function_from_name_attr_error(monkeypatch):
     deep_attr_mock.side_effect = AttributeError
     monkeypatch.setattr("especifico.utils.deep_getattr", deep_attr_mock)
     with pytest.raises(AttributeError):
-        utils.get_function_from_name('math.ceil')
+        utils.get_function_from_name("math.ceil")
 
 
 def test_get_function_from_name_for_class_method():
-    function = utils.get_function_from_name('especifico.FlaskApp.common_error_handler')
-    assert function == connexion.FlaskApp.common_error_handler
+    function = utils.get_function_from_name("especifico.FlaskApp.common_error_handler")
+    assert function == especifico.FlaskApp.common_error_handler
 
 
 def test_boolean():
-    assert utils.boolean('true')
-    assert utils.boolean('True')
-    assert utils.boolean('TRUE')
+    assert utils.boolean("true")
+    assert utils.boolean("True")
+    assert utils.boolean("TRUE")
     assert utils.boolean(True)
-    assert not utils.boolean('false')
-    assert not utils.boolean('False')
-    assert not utils.boolean('FALSE')
+    assert not utils.boolean("false")
+    assert not utils.boolean("False")
+    assert not utils.boolean("FALSE")
     assert not utils.boolean(False)
 
     with pytest.raises(ValueError):
-        utils.boolean('foo')
+        utils.boolean("foo")
 
     with pytest.raises(ValueError):
         utils.boolean(None)
 
 
 def test_deep_get_dict():
-    obj = {'type': 'object', 'properties': {'id': {'type': 'string'}}}
-    assert utils.deep_get(obj, ['properties', 'id']) == {'type': 'string'}
+    obj = {"type": "object", "properties": {"id": {"type": "string"}}}
+    assert utils.deep_get(obj, ["properties", "id"]) == {"type": "string"}
 
 
 def test_deep_get_list():
-    obj = [{'type': 'object', 'properties': {'id': {'type': 'string'}}}]
-    assert utils.deep_get(obj, ['0', 'properties', 'id']) == {'type': 'string'}
+    obj = [{"type": "object", "properties": {"id": {"type": "string"}}}]
+    assert utils.deep_get(obj, ["0", "properties", "id"]) == {"type": "string"}

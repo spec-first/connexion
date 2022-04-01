@@ -1,0 +1,2 @@
+set -x
+pytest --cov especifico --cov-report term-missing -v tests/

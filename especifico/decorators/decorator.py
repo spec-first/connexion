@@ -9,11 +9,10 @@ import logging
 
 from ..utils import has_coroutine
 
-logger = logging.getLogger('especifico.decorators.decorator')
+logger = logging.getLogger("especifico.decorators.decorator")
 
 
 class BaseDecorator:
-
     def __call__(self, function):
         """
         :type function: types.FunctionType
@@ -25,7 +24,7 @@ class BaseDecorator:
         """
         :rtype: str
         """
-        return '<BaseDecorator>'
+        return "<BaseDecorator>"
 
 
 class RequestResponseDecorator(BaseDecorator):
@@ -44,6 +43,7 @@ class RequestResponseDecorator(BaseDecorator):
         :rtype: types.FunctionType
         """
         if has_coroutine(function, self.api):
+
             @functools.wraps(function)
             async def wrapper(*args, **kwargs):
                 especifico_request = self.api.get_request(*args, **kwargs)
@@ -54,14 +54,16 @@ class RequestResponseDecorator(BaseDecorator):
                 while asyncio.iscoroutine(especifico_response):
                     especifico_response = await especifico_response
 
-                framework_response = self.api.get_response(especifico_response, self.mimetype,
-                                                           especifico_request)
+                framework_response = self.api.get_response(
+                    especifico_response, self.mimetype, especifico_request,
+                )
                 while asyncio.iscoroutine(framework_response):
                     framework_response = await framework_response
 
                 return framework_response
 
         else:  # pragma: no cover
+
             @functools.wraps(function)
             def wrapper(*args, **kwargs):
                 request = self.api.get_request(*args, **kwargs)

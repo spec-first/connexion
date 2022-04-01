@@ -1,0 +1,4 @@
+set -x
+flake8
+isort --reverse-relative --dont-order-by-type --fss --project especifico --check-only --diff .
+mypy --ignore-missing-imports especifico

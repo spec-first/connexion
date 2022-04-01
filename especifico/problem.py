@@ -3,11 +3,20 @@ This module contains a Python interface for Problem Details for HTTP APIs
 <https://tools.ietf.org/html/draft-ietf-appsawg-http-problem-00>, which is a standardized format
 to communicate distinct "problem types" to non-human consumers.
 """
+from typing import Optional
 
 from .lifecycle import EspecificoResponse
 
 
-def problem(status, title, detail, type=None, instance=None, headers=None, ext=None):
+def problem(
+    status: int,
+    title: str,
+    detail: str,
+    type: Optional[str] = None,
+    instance: Optional[str] = None,
+    headers: Optional[dict] = None,
+    ext: Optional[dict] = None,
+) -> EspecificoResponse:
     """
     Returns a `Problem Details <https://tools.ietf.org/html/draft-ietf-appsawg-http-problem-00>`_ error response.
 
@@ -32,17 +41,22 @@ def problem(status, title, detail, type=None, instance=None, headers=None, ext=N
     :type ext: dict | None
     :return: error response
     :rtype: EspecificoResponse
-    """
+    """  # noqa
     if not type:
-        type = 'about:blank'
+        type = "about:blank"
 
-    problem_response = {'type': type, 'title': title, 'detail': detail, 'status': status}
+    problem_response = {
+        "type": type,
+        "title": title,
+        "detail": detail,
+        "status": status,
+    }
     if instance:
-        problem_response['instance'] = instance
+        problem_response["instance"] = instance
     if ext:
         problem_response.update(ext)
 
-    mimetype = content_type = 'application/problem+json'
-    return EspecificoResponse(status, mimetype, content_type,
-                             body=problem_response,
-                             headers=headers)
+    mimetype = content_type = "application/problem+json"
+    return EspecificoResponse(
+        status, mimetype, content_type, body=problem_response, headers=headers,
+    )

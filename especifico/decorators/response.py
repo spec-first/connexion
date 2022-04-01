@@ -8,13 +8,13 @@ import logging
 
 from jsonschema import ValidationError
 
+from .decorator import BaseDecorator
+from .validation import ResponseBodyValidator
 from ..exceptions import (NonConformingResponseBody,
                           NonConformingResponseHeaders)
 from ..utils import all_json, has_coroutine
-from .decorator import BaseDecorator
-from .validation import ResponseBodyValidator
 
-logger = logging.getLogger('especifico.decorators.response')
+logger = logging.getLogger("especifico.decorators.response")
 
 
 class ResponseValidator(BaseDecorator):
@@ -55,14 +55,17 @@ class ResponseValidator(BaseDecorator):
                 raise NonConformingResponseBody(message=str(e))
 
         if response_definition and response_definition.get("headers"):
-            required_header_keys = {k for (k, v) in response_definition.get("headers").items()
-                                    if v.get("required", False)}
+            required_header_keys = {
+                k
+                for (k, v) in response_definition.get("headers").items()
+                if v.get("required", False)
+            }
             header_keys = set(headers.keys())
             missing_keys = required_header_keys - header_keys
             if missing_keys:
-                pretty_list = ', '.join(missing_keys)
-                msg = ("Keys in header don't match response specification. "
-                       "Difference: {}").format(pretty_list)
+                pretty_list = ", ".join(missing_keys)
+                msg = f"Keys in header don't match response specification. " \
+                      f"Difference: {pretty_list}"
                 raise NonConformingResponseHeaders(message=msg)
         return True
 
@@ -77,7 +80,7 @@ class ResponseValidator(BaseDecorator):
         """
         if not response_schema:
             return False
-        return all_json([self.mimetype]) or self.mimetype == 'text/plain'
+        return all_json([self.mimetype]) or self.mimetype == "text/plain"
 
     def __call__(self, function):
         """
@@ -86,18 +89,23 @@ class ResponseValidator(BaseDecorator):
         """
 
         def _wrapper(request, response):
-            especifico_response = \
-                self.operation.api.get_especifico_response(response, self.mimetype)
+            especifico_response = self.operation.api.get_especifico_response(
+                response, self.mimetype,
+            )
             if not especifico_response.is_streamed:
                 self.validate_response(
-                    especifico_response.body, especifico_response.status_code,
-                    especifico_response.headers, request.url)
+                    especifico_response.body,
+                    especifico_response.status_code,
+                    especifico_response.headers,
+                    request.url,
+                )
             else:
                 logger.warning("Skipping response validation for streamed response.")
 
             return response
 
         if has_coroutine(function):
+
             @functools.wraps(function)
             async def wrapper(request):
                 response = function(request)
@@ -107,6 +115,7 @@ class ResponseValidator(BaseDecorator):
                 return _wrapper(request, response)
 
         else:  # pragma: no cover
+
             @functools.wraps(function)
             def wrapper(request):
                 response = function(request)
@@ -118,4 +127,4 @@ class ResponseValidator(BaseDecorator):
         """
         :rtype: str
         """
-        return '<ResponseValidator>'  # pragma: no cover
+        return "<ResponseValidator>"  # pragma: no cover

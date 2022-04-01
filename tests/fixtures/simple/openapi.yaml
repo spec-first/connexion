@@ -57,7 +57,7 @@ paths:
         '200':
           description: greeting response
           content:
-            application/x.connexion+json:
+            application/x.especifico+json:
               schema:
                 type: object
       parameters:

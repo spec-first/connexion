@@ -1,4 +1,4 @@
-### Description
+### Description and steps to reproduce
 
 
 
@@ -10,13 +10,9 @@
 
 
 
-### Steps to reproduce
-
-
-
 ### Additional info:
 
 Output of the commands:
 
 - `python --version`
-- `pip show connexion | grep "^Version\:"`
+- `pip show especifico | grep "^Version\:"`

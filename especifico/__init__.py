@@ -21,19 +21,19 @@ from .problem import problem  # NOQA
 from .resolver import Resolution, Resolver, RestyResolver  # NOQA
 from .utils import not_installed_error  # NOQA
 
-full_name = f'{__package__}.operation'
+full_name = f"{__package__}.operation"
 sys.modules[full_name] = sys.modules[compat.__name__]
 
 
 try:
     from flask import request  # NOQA
 
-    from .apis.flask_api import FlaskApi, context  # NOQA
+    from .apis.flask_api import context, FlaskApi  # NOQA
     from .apps.flask_app import FlaskApp
 except ImportError as e:  # pragma: no cover
     _flask_not_installed_error = not_installed_error(e)
-    FlaskApi = _flask_not_installed_error
-    FlaskApp = _flask_not_installed_error
+    FlaskApi = _flask_not_installed_error  # type: ignore
+    FlaskApp = _flask_not_installed_error  # type: ignore
 
 App = FlaskApp
 Api = FlaskApi
@@ -42,9 +42,9 @@ try:
     from .apis.aiohttp_api import AioHttpApi
     from .apps.aiohttp_app import AioHttpApp
 except ImportError as e:  # pragma: no cover
-    _aiohttp_not_installed_error = not_installed_error(e)
-    AioHttpApi = _aiohttp_not_installed_error
-    AioHttpApp = _aiohttp_not_installed_error
+    _aiohttp_not_installed_error = not_installed_error(e)  # type: ignore
+    AioHttpApi = _aiohttp_not_installed_error  # type: ignore
+    AioHttpApp = _aiohttp_not_installed_error  # type: ignore
 
 # This version is replaced during release process.
-__version__ = '2020.0.dev1'
+__version__ = "3.0.0"

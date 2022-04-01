@@ -2,14 +2,14 @@
 OAuth2 Example
 ==============
 
-This example demonstrates how to implement a resource server with Connexion.
+This example demonstrates how to implement a resource server with especifico.
 The app will lookup OAuth2 Bearer tokens with the given token info function.
 
 Running:
 
 .. code-block:: bash
 
-    $ sudo pip3 install --upgrade connexion  # install Connexion from PyPI
+    $ sudo pip3 install --upgrade especifico  # install especifico from PyPI
     $ ./mock_tokeninfo.py &                  # start mock in background
     $ ./app.py
 

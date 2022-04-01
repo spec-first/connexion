@@ -8,15 +8,18 @@ import asyncio
 import functools
 import logging
 
-from ..exceptions import OAuthProblem, OAuthResponseProblem, OAuthScopeProblem
 from .security_handler_factory import AbstractSecurityHandlerFactory
+from ..exceptions import OAuthProblem, OAuthResponseProblem, OAuthScopeProblem
 
-logger = logging.getLogger('especifico.api.security')
+logger = logging.getLogger("especifico.api.security")
 
 
 class AbstractAsyncSecurityHandlerFactory(AbstractSecurityHandlerFactory):
     def _generic_check(self, func, exception_msg):
-        need_to_add_context, need_to_add_required_scopes = self._need_to_add_context_or_scopes(func)
+        (
+            need_to_add_context,
+            need_to_add_required_scopes,
+        ) = self._need_to_add_context_or_scopes(func)
 
         async def wrapper(request, *args, required_scopes=None):
             kwargs = {}
@@ -36,14 +39,14 @@ class AbstractAsyncSecurityHandlerFactory(AbstractSecurityHandlerFactory):
         return wrapper
 
     def check_oauth_func(self, token_info_func, scope_validate_func):
-        get_token_info = self._generic_check(token_info_func, 'Provided token is not valid')
+        get_token_info = self._generic_check(token_info_func, "Provided token is not valid")
         need_to_add_context, _ = self._need_to_add_context_or_scopes(scope_validate_func)
 
         async def wrapper(request, token, required_scopes):
             token_info = await get_token_info(request, token, required_scopes=required_scopes)
 
             # Fallback to 'scopes' for backward compatibility
-            token_scopes = token_info.get('scope', token_info.get('scopes', ''))
+            token_scopes = token_info.get("scope", token_info.get("scopes", ""))
 
             kwargs = {}
             if need_to_add_context:
@@ -53,12 +56,13 @@ class AbstractAsyncSecurityHandlerFactory(AbstractSecurityHandlerFactory):
                 validation = await validation
             if not validation:
                 raise OAuthScopeProblem(
-                    description='Provided token doesn\'t have the required scope',
+                    description="Provided token doesn't have the required scope",
                     required_scopes=required_scopes,
-                    token_scopes=token_scopes
-                    )
+                    token_scopes=token_scopes,
+                )
 
             return token_info
+
         return wrapper
 
     @classmethod
@@ -82,11 +86,11 @@ class AbstractAsyncSecurityHandlerFactory(AbstractSecurityHandlerFactory):
                     cls._raise_most_specific(errors)
                 else:
                     logger.info("... No auth provided. Aborting with 401.")
-                    raise OAuthProblem(description='No authorization token provided')
+                    raise OAuthProblem(description="No authorization token provided")
 
             # Fallback to 'uid' for backward compatibility
-            request.context['user'] = token_info.get('sub', token_info.get('uid'))
-            request.context['token_info'] = token_info
+            request.context["user"] = token_info.get("sub", token_info.get("uid"))
+            request.context["token_info"] = token_info
             return function(request)
 
         return wrapper

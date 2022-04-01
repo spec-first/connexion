@@ -2,20 +2,20 @@
 Module containing all code related to json schema validation.
 """
 
+from collections.abc import Mapping
 import contextlib
+from copy import deepcopy
 import io
 import os
 import typing as t
 import urllib.parse
 import urllib.request
-from collections.abc import Mapping
-from copy import deepcopy
 
-import requests
-import yaml
 from jsonschema import Draft4Validator, RefResolver
 from jsonschema.exceptions import RefResolutionError, ValidationError  # noqa
 from jsonschema.validators import extend
+import requests
+import yaml
 
 from .utils import deep_get
 
@@ -44,10 +44,9 @@ class FileHandler:
     @staticmethod
     def _uri_to_path(uri):
         parsed = urllib.parse.urlparse(uri)
-        host = "{0}{0}{mnt}{0}".format(os.path.sep, mnt=parsed.netloc)
-        return os.path.abspath(
-            os.path.join(host, urllib.request.url2pathname(parsed.path))
-        )
+        sep = os.path.sep
+        host = f"{sep}{sep}{parsed.netloc}{sep}"
+        return os.path.abspath(os.path.join(host, urllib.request.url2pathname(parsed.path)))
 
 
 class URLHandler:
@@ -63,9 +62,9 @@ class URLHandler:
 
 
 default_handlers = {
-    'http': URLHandler(),
-    'https': URLHandler(),
-    'file': FileHandler(),
+    "http": URLHandler(),
+    "https": URLHandler(),
+    "file": FileHandler(),
 }
 
 
@@ -78,19 +77,19 @@ def resolve_refs(spec, store=None, handlers=None):
     spec = deepcopy(spec)
     store = store or {}
     handlers = handlers or default_handlers
-    resolver = RefResolver('', spec, store, handlers=handlers)
+    resolver = RefResolver("", spec, store, handlers=handlers)
 
     def _do_resolve(node):
-        if isinstance(node, Mapping) and '$ref' in node:
-            path = node['$ref'][2:].split("/")
+        if isinstance(node, Mapping) and "$ref" in node:
+            path = node["$ref"][2:].split("/")
             try:
                 # resolve known references
                 node.update(deep_get(spec, path))
-                del node['$ref']
+                del node["$ref"]
                 return node
             except KeyError:
                 # resolve external references
-                with resolver.resolving(node['$ref']) as resolved:
+                with resolver.resolving(node["$ref"]) as resolved:
                     return resolved
         elif isinstance(node, Mapping):
             for k, v in node.items():
@@ -108,7 +107,7 @@ def allow_nullable(validation_fn: t.Callable) -> t.Callable:
     """Extend an existing validation function, so it allows nullable values to be null."""
 
     def nullable_validation_fn(validator, to_validate, instance, schema):
-        if instance is None and (schema.get('x-nullable') is True or schema.get('nullable')):
+        if instance is None and (schema.get("x-nullable") is True or schema.get("nullable")):
             return
 
         yield from validation_fn(validator, to_validate, instance, schema)
@@ -122,15 +121,18 @@ def validate_required(validator, required, instance, schema):
 
     for prop in required:
         if prop not in instance:
-            properties = schema.get('properties')
+            properties = schema.get("properties")
             if properties is not None:
                 subschema = properties.get(prop)
                 if subschema is not None:
-                    if 'readOnly' in validator.VALIDATORS and subschema.get('readOnly'):
+                    if "readOnly" in validator.VALIDATORS and subschema.get("readOnly"):
                         continue
-                    if 'writeOnly' in validator.VALIDATORS and subschema.get('writeOnly'):
+                    if "writeOnly" in validator.VALIDATORS and subschema.get("writeOnly"):
                         continue
-                    if 'x-writeOnly' in validator.VALIDATORS and subschema.get('x-writeOnly') is True:
+                    if (
+                        "x-writeOnly" in validator.VALIDATORS
+                        and subschema.get("x-writeOnly") is True
+                    ):
                         continue
             yield ValidationError("%r is a required property" % prop)
 
@@ -143,18 +145,26 @@ def validate_writeOnly(validator, wo, instance, schema):
     yield ValidationError("Property is write-only")
 
 
-NullableTypeValidator = allow_nullable(Draft4Validator.VALIDATORS['type'])
-NullableEnumValidator = allow_nullable(Draft4Validator.VALIDATORS['enum'])
+NullableTypeValidator = allow_nullable(Draft4Validator.VALIDATORS["type"])
+NullableEnumValidator = allow_nullable(Draft4Validator.VALIDATORS["enum"])
 
-Draft4RequestValidator = extend(Draft4Validator, {
-                                'type': NullableTypeValidator,
-                                'enum': NullableEnumValidator,
-                                'required': validate_required,
-                                'readOnly': validate_readOnly})
+Draft4RequestValidator = extend(
+    Draft4Validator,
+    {
+        "type": NullableTypeValidator,
+        "enum": NullableEnumValidator,
+        "required": validate_required,
+        "readOnly": validate_readOnly,
+    },
+)
 
-Draft4ResponseValidator = extend(Draft4Validator, {
-                                 'type': NullableTypeValidator,
-                                 'enum': NullableEnumValidator,
-                                 'required': validate_required,
-                                 'writeOnly': validate_writeOnly,
-                                 'x-writeOnly': validate_writeOnly})
+Draft4ResponseValidator = extend(
+    Draft4Validator,
+    {
+        "type": NullableTypeValidator,
+        "enum": NullableEnumValidator,
+        "required": validate_required,
+        "writeOnly": validate_writeOnly,
+        "x-writeOnly": validate_writeOnly,
+    },
+)

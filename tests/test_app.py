@@ -1,12 +1,13 @@
-from connexion.apis.flask_api import FlaskApi
-from connexion.apps.flask_app import FlaskApp
 from flask import Flask
+
+from especifico.apis.flask_api import FlaskApi
+from especifico.apps.flask_app import FlaskApp
 
 
 def test_flask_app_default_params():
-    app = FlaskApp('MyApp')
-    assert app.import_name == 'MyApp'
-    assert app.server == 'flask'
+    app = FlaskApp("MyApp")
+    assert app.import_name == "MyApp"
+    assert app.server == "flask"
     assert app.api_cls == FlaskApi
     assert app.arguments == {}
     # debug should be None so that user can use Flask environment variables to set it

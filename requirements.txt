@@ -1,0 +1,13 @@
+clickclick==20.10.2
+jsonschema==3.2.0
+PyYAML==5.4.1
+requests==2.27.1
+inflection==0.5.1
+werkzeug==1.0.1
+packaging==20.9
+swagger-ui-bundle==0.0.8
+flask==1.1.2
+itsdangerous==1.1.0
+aiohttp==3.8.1
+aiohttp-jinja2==1.4.2
+MarkupSafe==1.1.1

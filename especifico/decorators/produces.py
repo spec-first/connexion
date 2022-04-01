@@ -7,7 +7,7 @@ import logging
 
 from .decorator import BaseDecorator
 
-logger = logging.getLogger('especifico.decorators.produces')
+logger = logging.getLogger("especifico.decorators.produces")
 
 # special marker object to return empty content for any status code
 # e.g. in app method do "return NoContent, 201"
@@ -15,7 +15,7 @@ NoContent = object()
 
 
 class BaseSerializer(BaseDecorator):
-    def __init__(self, mimetype='text/plain'):
+    def __init__(self, mimetype="text/plain"):
         """
         :type mimetype: str
         """
@@ -25,7 +25,7 @@ class BaseSerializer(BaseDecorator):
         """
         :rtype: str
         """
-        return f'<BaseSerializer: {self.mimetype}>'  # pragma: no cover
+        return f"<BaseSerializer: {self.mimetype}>"  # pragma: no cover
 
 
 class Produces(BaseSerializer):
@@ -39,8 +39,7 @@ class Produces(BaseSerializer):
         def wrapper(request):
             url = request.url
             response = function(request)
-            logger.debug('Returning %s', url,
-                         extra={'url': url, 'mimetype': self.mimetype})
+            logger.debug("Returning %s", url, extra={"url": url, "mimetype": self.mimetype})
             return response
 
         return wrapper
@@ -49,4 +48,4 @@ class Produces(BaseSerializer):
         """
         :rtype: str
         """
-        return f'<Produces: {self.mimetype}>'  # pragma: no cover
+        return f"<Produces: {self.mimetype}>"  # pragma: no cover
