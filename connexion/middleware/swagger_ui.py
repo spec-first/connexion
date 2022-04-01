@@ -13,9 +13,8 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 
 from connexion.apis import AbstractSwaggerUIAPI
 from connexion.jsonifier import JSONEncoder, Jsonifier
+from connexion.middleware import AppMiddleware
 from connexion.utils import yamldumper
-
-from .base import AppMiddleware
 
 logger = logging.getLogger('connexion.middleware.swagger_ui')
 

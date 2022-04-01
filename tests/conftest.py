@@ -1,7 +1,6 @@
 import json
 import logging
 import pathlib
-import sys
 
 import pytest
 from connexion import App
@@ -136,7 +135,7 @@ def json_datetime_dir():
     return FIXTURES_FOLDER / 'datetime_support'
 
 
-def build_app_from_fixture(api_spec_folder, spec_file='openapi.yaml', **kwargs):
+def build_app_from_fixture(api_spec_folder, spec_file='openapi.yaml', middlewares=None, **kwargs):
     debug = True
     if 'debug' in kwargs:
         debug = kwargs['debug']
@@ -145,6 +144,7 @@ def build_app_from_fixture(api_spec_folder, spec_file='openapi.yaml', **kwargs):
     cnx_app = App(__name__,
                   port=5001,
                   specification_dir=FIXTURES_FOLDER / api_spec_folder,
+                  middlewares=middlewares,
                   debug=debug)
 
     cnx_app.add_api(spec_file, **kwargs)
@@ -254,4 +254,3 @@ def unordered_definition_app(request):
 def bad_operations_app(request):
     return build_app_from_fixture('bad_operations', request.param,
                                   resolver_error=501)
-

@@ -27,7 +27,6 @@ def test_errors(problem_app):
     error405 = json.loads(get_greeting.data.decode('utf-8', 'replace'))
     assert error405['type'] == 'about:blank'
     assert error405['title'] == 'Method Not Allowed'
-    assert error405['detail'] == 'The method is not allowed for the requested URL.'
     assert error405['status'] == 405
     assert 'instance' not in error405
 

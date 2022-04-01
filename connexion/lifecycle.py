@@ -2,6 +2,8 @@
 This module defines interfaces for requests and responses used in Connexion for authentication,
 validation, serialization, etc.
 """
+from starlette.requests import Request as StarletteRequest
+from starlette.responses import StreamingResponse as StarletteStreamingResponse
 
 
 class ConnexionRequest:
@@ -52,3 +54,11 @@ class ConnexionResponse:
         self.body = body
         self.headers = headers or {}
         self.is_streamed = is_streamed
+
+
+class MiddlewareRequest(StarletteRequest):
+    """Wraps starlette Request so it can easily be extended."""
+
+
+class MiddlewareResponse(StarletteStreamingResponse):
+    """Wraps starlette StreamingResponse so it can easily be extended."""

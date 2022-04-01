@@ -14,7 +14,7 @@ from ..exceptions import ResolverError
 from ..http_facts import METHODS
 from ..jsonifier import Jsonifier
 from ..lifecycle import ConnexionResponse
-from ..operations import make_operation
+from ..operations import AbstractOperation, make_operation
 from ..options import ConnexionOptions
 from ..resolver import Resolver
 from ..spec import Specification
@@ -109,7 +109,106 @@ class AbstractSwaggerUIAPI(AbstractSpecAPI):
         """
 
 
-class AbstractAPI(AbstractSpecAPI):
+class AbstractMinimalAPI(AbstractSpecAPI):
+
+    def __init__(
+            self,
+            *args,
+            resolver: t.Optional[Resolver] = None,
+            resolver_error_handler: t.Optional[t.Callable] = None,
+            debug: bool = False,
+            pass_context_arg_name: t.Optional[str] = None,
+            **kwargs
+    ) -> None:
+        """Minimal interface of an API, with only functionality related to routing.
+        :param specification: OpenAPI specification. Can be provided either as dict, or as path
+        to file.
+        :param base_path: Base path to host the API.
+        :param arguments: Jinja arguments to resolve in specification.
+        :param resolver: Callable that maps operationID to a function
+        :param resolver_error_handler: Callable that generates an Operation used for handling
+        ResolveErrors
+        :param debug: Flag to run in debug mode
+        """
+        super().__init__(*args, **kwargs)
+        self.debug = debug
+        self.resolver_error_handler = resolver_error_handler
+
+        logger.debug('Security Definitions: %s', self.specification.security_definitions)
+
+        self.resolver = resolver or Resolver()
+
+        logger.debug('pass_context_arg_name: %s', pass_context_arg_name)
+        self.pass_context_arg_name = pass_context_arg_name
+
+        self.security_handler_factory = self.make_security_handler_factory(pass_context_arg_name)
+
+        self.add_paths()
+
+    @staticmethod
+    @abc.abstractmethod
+    def make_security_handler_factory(pass_context_arg_name):
+        """ Create SecurityHandlerFactory to create all security check handlers """
+
+    def add_paths(self, paths: t.Optional[dict] = None) -> None:
+        """
+        Adds the paths defined in the specification as endpoints
+        """
+        paths = paths or self.specification.get('paths', dict())
+        for path, methods in paths.items():
+            logger.debug('Adding %s%s...', self.base_path, path)
+
+            for method in methods:
+                if method not in METHODS:
+                    continue
+                try:
+                    self.add_operation(path, method)
+                except ResolverError as err:
+                    # If we have an error handler for resolver errors, add it as an operation.
+                    # Otherwise treat it as any other error.
+                    if self.resolver_error_handler is not None:
+                        self._add_resolver_error_handler(method, path, err)
+                    else:
+                        self._handle_add_operation_error(path, method, err.exc_info)
+                except Exception:
+                    # All other relevant exceptions should be handled as well.
+                    self._handle_add_operation_error(path, method, sys.exc_info())
+
+    def add_operation(self, path: str, method: str) -> None:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def _add_operation_internal(self, method: str, path: str, operation: AbstractOperation) -> None:
+        """
+        Adds the operation according to the user framework in use.
+        It will be used to register the operation on the user framework router.
+        """
+
+    def _add_resolver_error_handler(self, method: str, path: str, err: ResolverError):
+        """
+        Adds a handler for ResolverError for the given method and path.
+        """
+        operation = self.resolver_error_handler(
+            err,
+            security=self.specification.security,
+            security_definitions=self.specification.security_definitions
+        )
+        self._add_operation_internal(method, path, operation)
+
+    def _handle_add_operation_error(self, path: str, method: str, exc_info: tuple):
+        url = f'{self.base_path}{path}'
+        error_msg = 'Failed to add operation for {method} {url}'.format(
+            method=method.upper(),
+            url=url)
+        if self.debug:
+            logger.exception(error_msg)
+        else:
+            logger.error(error_msg)
+            _type, value, traceback = exc_info
+            raise value.with_traceback(traceback)
+
+
+class AbstractAPI(AbstractMinimalAPI, metaclass=AbstractAPIMeta):
     """
     Defines an abstract interface for a Swagger API
     """
@@ -120,18 +219,11 @@ class AbstractAPI(AbstractSpecAPI):
                  validator_map=None, pythonic_params=False, pass_context_arg_name=None, options=None,
                  ):
         """
-        :type specification: pathlib.Path | dict
-        :type base_path: str | None
-        :type arguments: dict | None
         :type validate_responses: bool
         :type strict_validation: bool
         :type auth_all_paths: bool
-        :type debug: bool
         :param validator_map: Custom validators for the types "parameter", "body" and "response".
         :type validator_map: dict
-        :param resolver: Callable that maps operationID to a function
-        :param resolver_error_handler: If given, a callable that generates an
-            Operation used for handling ResolveErrors
         :type resolver_error_handler: callable | None
         :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended
             to any shadowed built-ins
@@ -142,33 +234,7 @@ class AbstractAPI(AbstractSpecAPI):
             will be passed the framework's request context.
         :type pass_context_arg_name: str | None
         """
-        self.debug = debug
         self.validator_map = validator_map
-        self.resolver_error_handler = resolver_error_handler
-
-        logger.debug('Loading specification: %s', specification,
-                     extra={'swagger_yaml': specification,
-                            'base_path': base_path,
-                            'arguments': arguments,
-                            'auth_all_paths': auth_all_paths})
-
-        # Avoid validator having ability to modify specification
-        self.specification = Specification.load(specification, arguments=arguments)
-
-        logger.debug('Read specification', extra={'spec': self.specification})
-
-        self.options = ConnexionOptions(options, oas_version=self.specification.version)
-
-        logger.debug('Options Loaded',
-                     extra={'swagger_ui': self.options.openapi_console_ui_available,
-                            'swagger_path': self.options.openapi_console_ui_from_dir,
-                            'swagger_url': self.options.openapi_console_ui_path})
-
-        self._set_base_path(base_path)
-
-        logger.debug('Security Definitions: %s', self.specification.security_definitions)
-
-        self.resolver = resolver or Resolver()
 
         logger.debug('Validate Responses: %s', str(validate_responses))
         self.validate_responses = validate_responses
@@ -179,14 +245,10 @@ class AbstractAPI(AbstractSpecAPI):
         logger.debug('Pythonic params: %s', str(pythonic_params))
         self.pythonic_params = pythonic_params
 
-        logger.debug('pass_context_arg_name: %s', pass_context_arg_name)
-        self.pass_context_arg_name = pass_context_arg_name
-
-        self.security_handler_factory = self.make_security_handler_factory(pass_context_arg_name)
-
-        super().__init__(specification, base_path=base_path, arguments=arguments, options=options)
-
-        self.add_paths()
+        super().__init__(specification, base_path=base_path, arguments=arguments,
+                         resolver=resolver, auth_all_paths=auth_all_paths,
+                         resolver_error_handler=resolver_error_handler,
+                         debug=debug, pass_context_arg_name=pass_context_arg_name, options=options)
 
         if auth_all_paths:
             self.add_auth_on_not_found(
@@ -199,11 +261,6 @@ class AbstractAPI(AbstractSpecAPI):
         """
         Adds a 404 error handler to authenticate and only expose the 404 status if the security validation pass.
         """
-
-    @staticmethod
-    @abc.abstractmethod
-    def make_security_handler_factory(pass_context_arg_name):
-        """ Create SecurityHandlerFactory to create all security check handlers """
 
     def add_operation(self, path, method):
         """
@@ -235,62 +292,6 @@ class AbstractAPI(AbstractSpecAPI):
             pass_context_arg_name=self.pass_context_arg_name
         )
         self._add_operation_internal(method, path, operation)
-
-    @abc.abstractmethod
-    def _add_operation_internal(self, method, path, operation):
-        """
-        Adds the operation according to the user framework in use.
-        It will be used to register the operation on the user framework router.
-        """
-
-    def _add_resolver_error_handler(self, method, path, err):
-        """
-        Adds a handler for ResolverError for the given method and path.
-        """
-        operation = self.resolver_error_handler(
-            err,
-            security=self.specification.security,
-            security_definitions=self.specification.security_definitions
-        )
-        self._add_operation_internal(method, path, operation)
-
-    def add_paths(self, paths=None):
-        """
-        Adds the paths defined in the specification as endpoints
-
-        :type paths: list
-        """
-        paths = paths or self.specification.get('paths', dict())
-        for path, methods in paths.items():
-            logger.debug('Adding %s%s...', self.base_path, path)
-
-            for method in methods:
-                if method not in METHODS:
-                    continue
-                try:
-                    self.add_operation(path, method)
-                except ResolverError as err:
-                    # If we have an error handler for resolver errors, add it as an operation.
-                    # Otherwise treat it as any other error.
-                    if self.resolver_error_handler is not None:
-                        self._add_resolver_error_handler(method, path, err)
-                    else:
-                        self._handle_add_operation_error(path, method, err.exc_info)
-                except Exception:
-                    # All other relevant exceptions should be handled as well.
-                    self._handle_add_operation_error(path, method, sys.exc_info())
-
-    def _handle_add_operation_error(self, path, method, exc_info):
-        url = f'{self.base_path}{path}'
-        error_msg = 'Failed to add operation for {method} {url}'.format(
-            method=method.upper(),
-            url=url)
-        if self.debug:
-            logger.exception(error_msg)
-        else:
-            logger.error(error_msg)
-            _type, value, traceback = exc_info
-            raise value.with_traceback(traceback)
 
     @classmethod
     @abc.abstractmethod

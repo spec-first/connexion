@@ -7,6 +7,7 @@ import abc
 import logging
 import pathlib
 
+from ..middleware import ConnexionMiddleware
 from ..options import ConnexionOptions
 from ..resolver import Resolver
 
@@ -16,7 +17,7 @@ logger = logging.getLogger('connexion.app')
 class AbstractApp(metaclass=abc.ABCMeta):
     def __init__(self, import_name, api_cls, port=None, specification_dir='',
                  host=None, server=None, server_args=None, arguments=None, auth_all_paths=False, debug=None,
-                 resolver=None, options=None, skip_error_handlers=False):
+                 resolver=None, options=None, skip_error_handlers=False, middlewares=None):
         """
         :param import_name: the name of the application package
         :type import_name: str
@@ -54,8 +55,11 @@ class AbstractApp(metaclass=abc.ABCMeta):
 
         self.server = server
         self.server_args = dict() if server_args is None else server_args
+
         self.app = self.create_app()
-        self.middleware = self._apply_middleware()
+
+        middlewares = middlewares or ConnexionMiddleware.default_middlewares
+        self.middleware = self._apply_middleware(middlewares)
 
         # we get our application root path to avoid duplicating logic
         self.root_path = self.get_root_path()
@@ -80,7 +84,7 @@ class AbstractApp(metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def _apply_middleware(self):
+    def _apply_middleware(self, middlewares):
         """
         Apply middleware to application
         """

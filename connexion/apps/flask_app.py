@@ -23,6 +23,7 @@ logger = logging.getLogger('connexion.app')
 
 
 class FlaskApp(AbstractApp):
+
     def __init__(self, import_name, server='flask', extra_files=None, **kwargs):
         """
         :param extra_files: additional files to be watched by the reloader, defaults to the swagger specs of added apis
@@ -41,8 +42,8 @@ class FlaskApp(AbstractApp):
         app.url_map.converters['int'] = IntegerConverter
         return app
 
-    def _apply_middleware(self):
-        middlewares = [*ConnexionMiddleware.default_middlewares,
+    def _apply_middleware(self, middlewares):
+        middlewares = [*middlewares,
                        a2wsgi.WSGIMiddleware]
         middleware = ConnexionMiddleware(self.app.wsgi_app, middlewares=middlewares)
 
