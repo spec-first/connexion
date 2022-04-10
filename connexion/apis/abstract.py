@@ -43,6 +43,7 @@ class AbstractSpecAPI(metaclass=AbstractAPIMeta):
             *args,
             **kwargs
     ):
+        """Base API class with only minimal behavior related to the specification."""
         logger.debug('Loading specification: %s', specification,
                      extra={'swagger_yaml': specification,
                             'base_path': base_path,

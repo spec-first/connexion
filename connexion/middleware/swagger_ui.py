@@ -31,7 +31,7 @@ class SwaggerUIMiddleware(AppMiddleware):
         :param app: app to wrap in middleware.
         """
         self.app = app
-        # Pass unknown routes to next app
+        # Set default to pass unknown routes to next app
         self.router = Router(default=self.default_fn)
 
     def add_api(
@@ -62,6 +62,8 @@ class SwaggerUIMiddleware(AppMiddleware):
         Unfortunately we cannot just pass the next app as default, since the router manipulates
         the scope when descending into mounts, losing information about the base path. Therefore,
         we use the original scope instead.
+
+        This is caused by https://github.com/encode/starlette/issues/1336.
         """
         original_scope = _original_scope.get()
         await self.app(original_scope, receive, send)
