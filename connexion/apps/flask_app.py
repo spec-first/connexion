@@ -31,7 +31,6 @@ class FlaskApp(AbstractApp):
         See :class:`~connexion.AbstractApp` for additional parameters.
         """
         self.extra_files = extra_files or []
-        self.middleware = None
 
         super().__init__(import_name, FlaskApi, server=server, **kwargs)
 
@@ -45,10 +44,12 @@ class FlaskApp(AbstractApp):
     def _apply_middleware(self):
         middlewares = [*ConnexionMiddleware.default_middlewares,
                        a2wsgi.WSGIMiddleware]
-        self.middleware = ConnexionMiddleware(self.app.wsgi_app, middlewares=middlewares)
+        middleware = ConnexionMiddleware(self.app.wsgi_app, middlewares=middlewares)
 
         # Wrap with ASGI to WSGI middleware for usage with development server and test client
-        self.app.wsgi_app = a2wsgi.ASGIMiddleware(self.middleware)
+        self.app.wsgi_app = a2wsgi.ASGIMiddleware(middleware)
+
+        return middleware
 
     def get_root_path(self):
         return pathlib.Path(self.app.root_path)
