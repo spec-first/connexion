@@ -39,10 +39,9 @@ flask_require = [
 ]
 
 tests_require = [
-    'decorator>=5,<6',
     'pytest>=6,<7',
+    'pre-commit>=2,<3',
     'pytest-cov>=2,<3',
-    'testfixtures>=6,<7',
     *flask_require,
     swagger_ui_require
 ]
@@ -92,7 +91,6 @@ setup(
     url='https://github.com/zalando/connexion',
     keywords='openapi oai swagger rest api oauth flask microservice framework',
     license='Apache License Version 2.0',
-    setup_requires=['flake8'],
     python_requires=">=3.6",
     install_requires=install_requires + flask_require,
     tests_require=tests_require,
