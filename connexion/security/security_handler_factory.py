@@ -375,7 +375,7 @@ class AbstractSecurityHandlerFactory(abc.ABC):
                 except Exception as err:
                     errors.append(err)
 
-            if token_info is cls.no_value:
+            else:
                 if errors != []:
                     cls._raise_most_specific(errors)
                 else:
