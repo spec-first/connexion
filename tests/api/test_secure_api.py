@@ -99,6 +99,10 @@ def test_security(oauth_requests, secure_endpoint_app):
     assert response.data == b'"Unauthenticated"\n'
     assert response.status_code == 200
 
+    # security function throws exception
+    response = app_client.get('/v1.0/auth-exception', headers={'X-Api-Key': 'foo'})
+    assert response.status_code == 401
+
 
 def test_checking_that_client_token_has_all_necessary_scopes(
         oauth_requests, secure_endpoint_app):
