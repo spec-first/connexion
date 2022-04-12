@@ -583,6 +583,14 @@ Contributing to Connexion/TODOs
 We welcome your ideas, issues, and pull requests. Just follow the
 usual/standard GitHub practices.
 
+For easy development, please install connexion in editable mode with the :code:`tests` extra, and
+install the pre-commit hooks.
+
+.. code-block:: bash
+
+    pip install -e .[tests]
+    pre-commit install
+
 You can find out more about how Connexion works and where to apply your changes by having a look
 at our `ARCHITECTURE.rst <ARCHITECTURE.rst>`_.
 
