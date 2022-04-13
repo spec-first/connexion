@@ -43,7 +43,14 @@ class AbstractSpecAPI(metaclass=AbstractAPIMeta):
             *args,
             **kwargs
     ):
-        """Base API class with only minimal behavior related to the specification."""
+        """Base API class with only minimal behavior related to the specification.
+
+        :param specification: OpenAPI specification. Can be provided either as dict, or as path
+            to file.
+        :param base_path: Base path to host the API.
+        :param arguments: Jinja arguments to resolve in specification.
+        :param options: New style options dictionary.
+        """
         logger.debug('Loading specification: %s', specification,
                      extra={'swagger_yaml': specification,
                             'base_path': base_path,
@@ -121,14 +128,13 @@ class AbstractMinimalAPI(AbstractSpecAPI):
             **kwargs
     ) -> None:
         """Minimal interface of an API, with only functionality related to routing.
-        :param specification: OpenAPI specification. Can be provided either as dict, or as path
-        to file.
-        :param base_path: Base path to host the API.
-        :param arguments: Jinja arguments to resolve in specification.
+
         :param resolver: Callable that maps operationID to a function
         :param resolver_error_handler: Callable that generates an Operation used for handling
-        ResolveErrors
+            ResolveErrors
         :param debug: Flag to run in debug mode
+        :param pass_context_arg_name: If not None URL request handling functions with an argument
+            matching this name will be passed the framework's request context.
         """
         super().__init__(*args, **kwargs)
         self.debug = debug
@@ -228,11 +234,6 @@ class AbstractAPI(AbstractMinimalAPI, metaclass=AbstractAPIMeta):
         :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended
             to any shadowed built-ins
         :type pythonic_params: bool
-        :param options: New style options dictionary.
-        :type options: dict | None
-        :param pass_context_arg_name: If not None URL request handling functions with an argument matching this name
-            will be passed the framework's request context.
-        :type pass_context_arg_name: str | None
         """
         self.validator_map = validator_map
 
