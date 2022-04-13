@@ -13,7 +13,7 @@ class TestMiddleware:
         self.app = app
 
     async def __call__(self, scope, receive, send):
-        operation_id = scope[CONNEXION_CONTEXT]['operation_id']
+        operation_id = scope['extensions'][CONNEXION_CONTEXT]['operation_id']
 
         async def patched_send(message):
             if message["type"] != "http.response.start":

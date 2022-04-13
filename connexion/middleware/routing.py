@@ -13,7 +13,7 @@ from connexion.middleware import AppMiddleware
 from connexion.operations import AbstractOperation, make_operation
 from connexion.resolver import Resolver
 
-CONNEXION_CONTEXT = 'CONNEXION_CONTEXT'
+CONNEXION_CONTEXT = 'connexion.context'
 
 
 _scope_receive_send: ContextVar[tuple] = ContextVar('SCOPE_RECEIVE_SEND')
@@ -83,10 +83,9 @@ class RoutingMiddleware(AppMiddleware):
 
         api_base_path = scope.get('root_path', '')[len(original_scope.get('root_path', '')):]
 
-        if CONNEXION_CONTEXT not in original_scope:
-            original_scope[CONNEXION_CONTEXT] = {}
-
-        original_scope[CONNEXION_CONTEXT].update({
+        extensions = original_scope.setdefault('extensions', {})
+        connexion_context = extensions.setdefault(CONNEXION_CONTEXT, {})
+        connexion_context.update({
             'api_base_path': api_base_path
         })
         await self.app(original_scope, receive, send)
@@ -102,10 +101,9 @@ class RoutingMiddleware(AppMiddleware):
 
             api_base_path = request.scope.get('root_path', '')[len(scope.get('root_path', '')):]
 
-            if CONNEXION_CONTEXT not in scope:
-                scope[CONNEXION_CONTEXT] = {}
-
-            scope[CONNEXION_CONTEXT].update({
+            extensions = scope.setdefault('extensions', {})
+            connexion_context = extensions.setdefault(CONNEXION_CONTEXT, {})
+            connexion_context.update({
                 'api_base_path': api_base_path,
                 'operation_id': operation.operation_id
             })
