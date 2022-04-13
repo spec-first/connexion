@@ -38,6 +38,8 @@ class AbstractApp(metaclass=abc.ABCMeta):
         :param debug: include debugging information
         :type debug: bool
         :param resolver: Callable that maps operationID to a function
+        :param middlewares: Callable that maps operationID to a function
+        :type middlewares: list | None
         """
         self.port = port
         self.host = host
@@ -58,7 +60,8 @@ class AbstractApp(metaclass=abc.ABCMeta):
 
         self.app = self.create_app()
 
-        middlewares = middlewares or ConnexionMiddleware.default_middlewares
+        if middlewares is None:
+            middlewares = ConnexionMiddleware.default_middlewares
         self.middleware = self._apply_middleware(middlewares)
 
         # we get our application root path to avoid duplicating logic
