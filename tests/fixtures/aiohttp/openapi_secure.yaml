@@ -47,6 +47,15 @@ paths:
       responses:
         '200':
           $ref: "#/components/responses/Success"
+  '/fail_auth':
+    get:
+      summary: Authentication will always fail
+      operationId: fakeapi.aiohttp_handlers.aiohttp_async_auth_exception
+      responses:
+        '200':
+          $ref: "#/components/responses/Success"
+      security:
+        - api_key_fail: []
 components:
   responses:
     Success:
@@ -97,3 +106,9 @@ components:
       type: http
       scheme: bearer
       x-bearerInfoFunc: fakeapi.auth.async_json_auth
+
+    api_key_fail:
+      type: apiKey
+      in: header
+      name: X-API-Key-2
+      x-apikeyInfoFunc: fakeapi.auth.async_auth_exception

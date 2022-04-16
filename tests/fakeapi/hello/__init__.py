@@ -3,6 +3,7 @@ import datetime
 import uuid
 
 from connexion import NoContent, ProblemException, context, request
+from connexion.exceptions import OAuthProblem
 from flask import jsonify, redirect, send_file
 
 
@@ -463,6 +464,9 @@ def optional_auth(**kwargs):
         return "Authenticated"
 
 
+def auth_exception():
+    return 'foo'
+
 def test_args_kwargs(*args, **kwargs):
     return kwargs
 
@@ -567,6 +571,10 @@ def jwt_info(token):
     if token == '100':
         return {'sub': '100'}
     return None
+
+
+def apikey_exception(token):
+    raise OAuthProblem()
 
 
 def get_add_operation_on_http_methods_only():

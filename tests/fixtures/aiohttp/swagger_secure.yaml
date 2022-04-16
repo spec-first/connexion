@@ -22,6 +22,11 @@ securityDefinitions:
       in: header
       name: X-API-Key
       x-apikeyInfoFunc: fakeapi.auth.fake_json_auth
+    api_key_fail:
+      type: apiKey
+      in: header
+      name: X-API-Key-2
+      x-apikeyInfoFunc: fakeapi.auth.async_auth_exception
 
 security:
   - oauth:
@@ -38,3 +43,12 @@ paths:
           description: greeting response
           schema:
             type: object
+  /fail_auth:
+    get:
+      summary: Authentication will always fail
+      operationId: fakeapi.aiohttp_handlers.aiohttp_async_auth_exception
+      responses:
+        200:
+          description: response
+      security:
+        - api_key_fail: []

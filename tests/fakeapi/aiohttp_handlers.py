@@ -94,6 +94,8 @@ async def aiohttp_bearer_auth(token_info):
 async def aiohttp_async_bearer_auth(token_info):
     return await aiohttp_token_info(token_info)
 
+async def aiohttp_async_auth_exception(token_info):
+    return await aiohttp_token_info(token_info)
 
 async def get_datetime():
     return ConnexionResponse(body={'value': datetime.datetime(2000, 1, 2, 3, 4, 5, 6)})

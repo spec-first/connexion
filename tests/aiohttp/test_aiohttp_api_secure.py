@@ -159,3 +159,17 @@ async def test_async_secure(aiohttp_api_spec_dir, aiohttp_client):
     response = await app_client.get('/v1.0/async_bearer_auth', headers={'Authorization': bearer_header})
     assert response.status == 200
     assert (await response.json()) == {"scope": ['myscope'], "uid": 'test-user'}
+
+@pytest.mark.parametrize('spec', ['swagger_secure.yaml', 'openapi_secure.yaml'])
+async def test_auth_exception_swagger(oauth_aiohttp_client, aiohttp_api_spec_dir, aiohttp_client, spec):
+    app = AioHttpApp(__name__, port=5001, specification_dir=aiohttp_api_spec_dir, debug=True)
+    app.add_api(spec)
+
+    app_client = await aiohttp_client(app.app)
+
+    response = await app_client.get(
+        '/v1.0/fail_auth',
+        headers={'X-API-Key-2': 'foo'}
+    )
+    assert response.status == 401
+    assert response.content_type == 'application/problem+json'
