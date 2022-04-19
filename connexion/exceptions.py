@@ -96,6 +96,17 @@ class BadRequestProblem(ProblemException):
         super().__init__(status=400, title=title, detail=detail)
 
 
+class NotFoundProblem(ProblemException):
+
+    description = (
+        'The requested URL was not found on the server. If you entered the URL manually please '
+        'check your spelling and try again.'
+    )
+
+    def __init__(self, title="Not Found", detail=description):
+        super().__init__(status=404, title=title, detail=detail)
+
+
 class UnsupportedMediaTypeProblem(ProblemException):
 
     def __init__(self, title="Unsupported Media Type", detail=None):
