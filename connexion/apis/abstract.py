@@ -140,21 +140,12 @@ class AbstractMinimalAPI(AbstractSpecAPI):
         self.debug = debug
         self.resolver_error_handler = resolver_error_handler
 
-        logger.debug('Security Definitions: %s', self.specification.security_definitions)
-
         self.resolver = resolver or Resolver()
 
         logger.debug('pass_context_arg_name: %s', pass_context_arg_name)
         self.pass_context_arg_name = pass_context_arg_name
 
-        self.security_handler_factory = self.make_security_handler_factory(pass_context_arg_name)
-
         self.add_paths()
-
-    @staticmethod
-    @abc.abstractmethod
-    def make_security_handler_factory(pass_context_arg_name):
-        """ Create SecurityHandlerFactory to create all security check handlers """
 
     def add_paths(self, paths: t.Optional[dict] = None) -> None:
         """
@@ -196,8 +187,6 @@ class AbstractMinimalAPI(AbstractSpecAPI):
         """
         operation = self.resolver_error_handler(
             err,
-            security=self.specification.security,
-            security_definitions=self.specification.security_definitions
         )
         self._add_operation_internal(method, path, operation)
 
@@ -221,13 +210,11 @@ class AbstractAPI(AbstractMinimalAPI, metaclass=AbstractAPIMeta):
 
     def __init__(self, specification, base_path=None, arguments=None,
                  validate_responses=False, strict_validation=False, resolver=None,
-                 auth_all_paths=False, debug=False, resolver_error_handler=None,
-                 validator_map=None, pythonic_params=False, pass_context_arg_name=None, options=None,
-                 ):
+                 debug=False, resolver_error_handler=None, validator_map=None,
+                 pythonic_params=False, pass_context_arg_name=None, options=None, **kwargs):
         """
         :type validate_responses: bool
         :type strict_validation: bool
-        :type auth_all_paths: bool
         :param validator_map: Custom validators for the types "parameter", "body" and "response".
         :type validator_map: dict
         :type resolver_error_handler: callable | None
@@ -247,21 +234,8 @@ class AbstractAPI(AbstractMinimalAPI, metaclass=AbstractAPIMeta):
         self.pythonic_params = pythonic_params
 
         super().__init__(specification, base_path=base_path, arguments=arguments,
-                         resolver=resolver, auth_all_paths=auth_all_paths,
-                         resolver_error_handler=resolver_error_handler,
+                         resolver=resolver, resolver_error_handler=resolver_error_handler,
                          debug=debug, pass_context_arg_name=pass_context_arg_name, options=options)
-
-        if auth_all_paths:
-            self.add_auth_on_not_found(
-                self.specification.security,
-                self.specification.security_definitions
-            )
-
-    @abc.abstractmethod
-    def add_auth_on_not_found(self, security, security_definitions):
-        """
-        Adds a 404 error handler to authenticate and only expose the 404 status if the security validation pass.
-        """
 
     def add_operation(self, path, method):
         """

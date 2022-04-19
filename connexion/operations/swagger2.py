@@ -27,8 +27,7 @@ class Swagger2Operation(AbstractOperation):
     """
 
     def __init__(self, api, method, path, operation, resolver, app_produces, app_consumes,
-                 path_parameters=None, app_security=None, security_definitions=None,
-                 definitions=None, parameter_definitions=None,
+                 path_parameters=None, definitions=None, parameter_definitions=None,
                  response_definitions=None, validate_responses=False, strict_validation=False,
                  randomize_endpoint=None, validator_map=None, pythonic_params=False,
                  uri_parser_class=None, pass_context_arg_name=None):
@@ -49,11 +48,6 @@ class Swagger2Operation(AbstractOperation):
         :type app_consumes: list
         :param path_parameters: Parameters defined in the path level
         :type path_parameters: list
-        :param app_security: list of security rules the application uses by default
-        :type app_security: list
-        :param security_definitions: `Security Definitions Object
-            <https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-definitions-object>`_
-        :type security_definitions: dict
         :param definitions: `Definitions Object
             <https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#definitionsObject>`_
         :type definitions: dict
@@ -78,7 +72,6 @@ class Swagger2Operation(AbstractOperation):
             name.
         :type pass_context_arg_name: str|None
         """
-        app_security = operation.get('security', app_security)
         uri_parser_class = uri_parser_class or Swagger2URIParser
 
         self._router_controller = operation.get('x-swagger-router-controller')
@@ -89,8 +82,6 @@ class Swagger2Operation(AbstractOperation):
             path=path,
             operation=operation,
             resolver=resolver,
-            app_security=app_security,
-            security_schemes=security_definitions,
             validate_responses=validate_responses,
             strict_validation=strict_validation,
             randomize_endpoint=randomize_endpoint,
@@ -130,10 +121,8 @@ class Swagger2Operation(AbstractOperation):
             spec.get_operation(path, method),
             resolver=resolver,
             path_parameters=spec.get_path_params(path),
-            app_security=spec.security,
             app_produces=spec.produces,
             app_consumes=spec.consumes,
-            security_definitions=spec.security_definitions,
             definitions=spec.definitions,
             parameter_definitions=spec.parameter_definitions,
             response_definitions=spec.response_definitions,

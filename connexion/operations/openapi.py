@@ -70,9 +70,6 @@ class OpenAPIOperation(AbstractOperation):
         def component_get(oas3_name):
             return self.components.get(oas3_name, {})
 
-        # operation overrides globals
-        security_schemes = component_get('securitySchemes')
-        app_security = operation.get('security', app_security)
         uri_parser_class = uri_parser_class or OpenAPIURIParser
 
         self._router_controller = operation.get('x-openapi-router-controller')
@@ -83,8 +80,6 @@ class OpenAPIOperation(AbstractOperation):
             path=path,
             operation=operation,
             resolver=resolver,
-            app_security=app_security,
-            security_schemes=security_schemes,
             validate_responses=validate_responses,
             strict_validation=strict_validation,
             randomize_endpoint=randomize_endpoint,

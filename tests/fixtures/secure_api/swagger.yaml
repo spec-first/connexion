@@ -36,3 +36,4 @@ paths:
           description: Name of the person to greet.
           required: true
           type: string
+          format: path

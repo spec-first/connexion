@@ -29,13 +29,14 @@ install_requires = [
     'importlib-metadata>=1 ; python_version<"3.8"',
     'packaging>=20',
     'starlette>=0.15,<1',
+    'httpx>=0.15,<1'
 ]
 
 swagger_ui_require = 'swagger-ui-bundle>=0.0.2,<0.1'
 
 flask_require = [
     'flask>=2,<3',
-    'a2wsgi>=1.1,<2',
+    'a2wsgi>=1.4,<2',
 ]
 
 tests_require = [

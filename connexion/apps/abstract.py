@@ -193,7 +193,7 @@ class AbstractApp(metaclass=abc.ABCMeta):
 
     def _resolver_error_handler(self, *args, **kwargs):
         from connexion.handlers import ResolverErrorHandler
-        return ResolverErrorHandler(self.api_cls, self.resolver_error, *args, **kwargs)
+        return ResolverErrorHandler(self.resolver_error, *args, **kwargs)
 
     def add_url_rule(self, rule, endpoint=None, view_func=None, **options):
         """

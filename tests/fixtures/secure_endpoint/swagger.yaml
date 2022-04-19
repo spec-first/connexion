@@ -106,7 +106,7 @@ paths:
           required: true
           type: string
 
-  /byesecure-jwt/<name>:
+  /byesecure-jwt/{name}:
     get:
       summary: Generate goodbye
       description: ""

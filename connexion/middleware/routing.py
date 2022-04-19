@@ -163,8 +163,3 @@ class MiddlewareAPI(AbstractMinimalAPI):
 
     def _add_operation_internal(self, method: str, path: str, operation: AbstractOperation) -> None:
         self.router.add_route(path, operation.function, methods=[method])
-
-    @staticmethod
-    def make_security_handler_factory(pass_context_arg_name):
-        """ Create default SecurityHandlerFactory to create all security check handlers """
-        pass
