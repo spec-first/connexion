@@ -21,8 +21,7 @@ class SecurityMiddleware(AppMiddleware):
 
     def __init__(self, app: ASGIApp) -> None:
         self.app = app
-        self.apis = {}
-        self.operations = {}
+        self.apis: t.Dict[str, SecurityAPI] = {}
 
     def add_api(self, specification: t.Union[pathlib.Path, str, dict], **kwargs) -> None:
         api = SecurityAPI(specification, **kwargs)
@@ -71,7 +70,7 @@ class SecurityAPI(AbstractSpecAPI):
         if auth_all_paths:
             self.add_auth_on_not_found()
         else:
-            self.operations = {}
+            self.operations: t.Dict[str, SecurityOperation] = {}
 
         self.add_paths()
 
