@@ -4,10 +4,7 @@ import pathlib
 
 import pytest
 from connexion import App
-from connexion.middleware import ConnexionMiddleware
-from connexion.middleware.routing import CONNEXION_CONTEXT
 from connexion.security import SecurityHandlerFactory
-from starlette.datastructures import MutableHeaders
 from werkzeug.test import Client, EnvironBuilder
 
 logging.basicConfig(level=logging.DEBUG)

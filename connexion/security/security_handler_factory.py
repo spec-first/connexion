@@ -386,11 +386,11 @@ class SecurityHandlerFactory:
                     logger.info("... No auth provided. Aborting with 401.")
                     raise OAuthProblem(detail='No authorization token provided')
 
-            # Fallback to 'uid' for backward compatibility
-            request.scope['context'] = {
+            request.context.update({
+                # Fallback to 'uid' for backward compatibility
                 'user': token_info.get('sub', token_info.get('uid')),
                 'token_info': token_info
-            }
+            })
 
         return verify_fn
 

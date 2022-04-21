@@ -139,7 +139,8 @@ class FlaskApi(AbstractAPI):
         :rtype: ConnexionRequest
         """
         flask_request = flask.request
-        context_dict = flask_request.environ['asgi.scope'].get('context', {})
+        scope = flask_request.environ['asgi.scope']
+        context_dict = scope.get('extensions', {}).get('connexion_context', {})
         setattr(flask._request_ctx_stack.top, 'connexion_context', context_dict)
         request = ConnexionRequest(
             flask_request.url,
