@@ -6,6 +6,7 @@ from collections import defaultdict
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from connexion.apis.abstract import AbstractSpecAPI
+from connexion.exceptions import MissingMiddleware
 from connexion.http_facts import METHODS
 from connexion.lifecycle import MiddlewareRequest
 from connexion.middleware import AppMiddleware
@@ -35,7 +36,8 @@ class SecurityMiddleware(AppMiddleware):
         try:
             connexion_context = scope['extensions'][CONNEXION_CONTEXT]
         except KeyError:
-            raise  # TODO
+            raise MissingMiddleware('Could not find operation_id in scope. Please make sure '
+                                    'you have a routing middleware registered upstream. ')
 
         api_base_path = connexion_context.get('api_base_path')
         if api_base_path:

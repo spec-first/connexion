@@ -61,6 +61,10 @@ class InvalidSpecification(ConnexionException, ValidationError):
     pass
 
 
+class MissingMiddleware(ConnexionException):
+    pass
+
+
 class NonConformingResponse(ProblemException):
     def __init__(self, reason='Unknown Reason', message=None):
         """
