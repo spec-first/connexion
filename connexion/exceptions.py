@@ -136,9 +136,8 @@ class Unauthorized(HTTPException):
         " how to supply the credentials required."
     )
 
-    def __init__(self, **kwargs):
-        kwargs.setdefault('detail', self.description)
-        super().__init__(401, **kwargs)
+    def __init__(self, detail: str = description, **kwargs):
+        super().__init__(401, detail=detail, **kwargs)
 
 
 class OAuthProblem(Unauthorized):
@@ -159,9 +158,8 @@ class Forbidden(HTTPException):
         " server."
     )
 
-    def __init__(self, **kwargs):
-        kwargs.setdefault('detail', self.description)
-        super().__init__(403, **kwargs)
+    def __init__(self, detail: str = description, **kwargs):
+        super().__init__(403, detail=detail, **kwargs)
 
 
 class OAuthScopeProblem(Forbidden):
