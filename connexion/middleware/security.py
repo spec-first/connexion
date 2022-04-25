@@ -34,7 +34,7 @@ class SecurityMiddleware(AppMiddleware):
         try:
             connexion_context = scope['extensions']['connexion_routing']
         except KeyError:
-            raise MissingMiddleware('Could not find operation_id in scope. Please make sure '
+            raise MissingMiddleware('Could not find routing information in scope. Please make sure '
                                     'you have a routing middleware registered upstream. ')
 
         api_base_path = connexion_context.get('api_base_path')
@@ -43,8 +43,13 @@ class SecurityMiddleware(AppMiddleware):
             operation_id = connexion_context.get('operation_id')
             try:
                 operation = api.operations[operation_id]
-            except KeyError:
-                pass
+            except KeyError as e:
+                if operation_id is None:
+                    logger.debug('Skipping security check for operation without id. Enable '
+                                 '`auth_all_paths` to check security for unknown operations.')
+                else:
+                    raise MissingSecurityOperation('Encountered unknown operation_id.') from e
+
             else:
                 request = MiddlewareRequest(scope)
                 await operation(request)
@@ -227,3 +232,7 @@ class SecurityOperation:
 
     async def __call__(self, request: MiddlewareRequest):
         await self.verification_fn(request)
+
+
+class MissingSecurityOperation(Exception):
+    pass
