@@ -10,6 +10,7 @@ from connexion.exceptions import MissingMiddleware
 from connexion.http_facts import METHODS
 from connexion.lifecycle import MiddlewareRequest
 from connexion.middleware import AppMiddleware
+from connexion.middleware.routing import ROUTING_CONTEXT
 from connexion.security import SecurityHandlerFactory
 
 logger = logging.getLogger("connexion.middleware.security")
@@ -32,7 +33,7 @@ class SecurityMiddleware(AppMiddleware):
             return
 
         try:
-            connexion_context = scope['extensions']['connexion_routing']
+            connexion_context = scope['extensions'][ROUTING_CONTEXT]
         except KeyError:
             raise MissingMiddleware('Could not find routing information in scope. Please make sure '
                                     'you have a routing middleware registered upstream. ')

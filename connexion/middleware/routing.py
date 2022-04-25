@@ -13,6 +13,9 @@ from connexion.middleware import AppMiddleware
 from connexion.operations import AbstractOperation, make_operation
 from connexion.resolver import Resolver
 
+ROUTING_CONTEXT = 'connexion_routing'
+
+
 _scope_receive_send: ContextVar[tuple] = ContextVar('SCOPE_RECEIVE_SEND')
 
 
@@ -81,7 +84,7 @@ class RoutingMiddleware(AppMiddleware):
         api_base_path = scope.get('root_path', '')[len(original_scope.get('root_path', '')):]
 
         extensions = original_scope.setdefault('extensions', {})
-        connexion_routing = extensions.setdefault('connexion_routing', {})
+        connexion_routing = extensions.setdefault(ROUTING_CONTEXT, {})
         connexion_routing.update({
             'api_base_path': api_base_path
         })
@@ -99,7 +102,7 @@ class RoutingMiddleware(AppMiddleware):
             api_base_path = request.scope.get('root_path', '')[len(scope.get('root_path', '')):]
 
             extensions = scope.setdefault('extensions', {})
-            connexion_routing = extensions.setdefault('connexion_routing', {})
+            connexion_routing = extensions.setdefault(ROUTING_CONTEXT, {})
             connexion_routing.update({
                 'api_base_path': api_base_path,
                 'operation_id': operation.operation_id
