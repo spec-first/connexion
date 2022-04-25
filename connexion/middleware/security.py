@@ -80,9 +80,8 @@ class SecurityAPI(AbstractSpecAPI):
 
     def add_auth_on_not_found(self):
         """Register a default SecurityOperation for routes that are not found."""
-        self.operations = defaultdict()
         default_operation = self.make_operation()
-        self.operations.default_factory = lambda: default_operation
+        self.operations = defaultdict(lambda: default_operation)
 
     def add_paths(self):
         paths = self.specification.get('paths', {})
