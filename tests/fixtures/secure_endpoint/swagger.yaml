@@ -29,6 +29,12 @@ securityDefinitions:
       x-authentication-scheme: Bearer
       x-bearerInfoFunc: fakeapi.hello.jwt_info
 
+    auth_exception:
+      type: apiKey
+      name: X-Api-Key
+      in: header
+      x-apikeyInfoFunc: fakeapi.hello.apikey_exception
+
 paths:
   /byesecure/{name}:
     get:
@@ -168,6 +174,17 @@ paths:
       security:
         - api_key: []
         - {}
+      responses:
+        '200':
+          description: some response
+
+  /auth-exception:
+    get:
+      summary: Test security handler function that raises an exception
+      description: Throw error from security function
+      operationId: fakeapi.hello.auth_exception
+      security:
+        - auth_exception: []
       responses:
         '200':
           description: some response

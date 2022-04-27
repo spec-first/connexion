@@ -138,6 +138,17 @@ paths:
       responses:
         '200':
           description: some response
+  /auth-exception:
+    get:
+      summary: Test security handler function that raises an exception
+      description: Throw error from security function
+      operationId: fakeapi.hello.auth_exception
+      security:
+        - auth_exception: []
+      responses:
+        '200':
+          description: some response
+
 servers:
   - url: /v1.0
 components:
@@ -161,3 +172,8 @@ components:
       scheme: bearer
       bearerFormat: JWT
       x-bearerInfoFunc: fakeapi.hello.jwt_info
+    auth_exception:
+      type: apiKey
+      name: X-Api-Key
+      in: header
+      x-apikeyInfoFunc: fakeapi.hello.apikey_exception
