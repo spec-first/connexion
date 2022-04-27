@@ -4,7 +4,7 @@ import pathlib
 
 import pytest
 from connexion import App
-from connexion.security import FlaskSecurityHandlerFactory
+from connexion.security import SecurityHandlerFactory
 from werkzeug.test import Client, EnvironBuilder
 
 logging.basicConfig(level=logging.DEBUG)
@@ -69,32 +69,36 @@ Client.open = buffered_open()
 
 @pytest.fixture
 def oauth_requests(monkeypatch):
-    def fake_get(url, params=None, headers=None, timeout=None):
-        """
-        :type url: str
-        :type params: dict| None
-        """
-        headers = headers or {}
-        if url == "https://oauth.example/token_info":
-            token = headers.get('Authorization', 'invalid').split()[-1]
-            if token in ["100", "has_myscope"]:
-                return FakeResponse(200, '{"uid": "test-user", "scope": ["myscope"]}')
-            if token in ["200", "has_wrongscope"]:
-                return FakeResponse(200, '{"uid": "test-user", "scope": ["wrongscope"]}')
-            if token == "has_myscope_otherscope":
-                return FakeResponse(200, '{"uid": "test-user", "scope": ["myscope", "otherscope"]}')
-            if token in ["300", "is_not_invalid"]:
-                return FakeResponse(404, '')
-            if token == "has_scopes_in_scopes_with_s":
-                return FakeResponse(200, '{"uid": "test-user", "scopes": ["myscope", "otherscope"]}')
-        return url
 
-    monkeypatch.setattr('connexion.security.flask_security_handler_factory.session.get', fake_get)
+    class FakeClient:
+
+        @staticmethod
+        async def get(url, params=None, headers=None, timeout=None):
+            """
+            :type url: str
+            :type params: dict| None
+            """
+            headers = headers or {}
+            if url == "https://oauth.example/token_info":
+                token = headers.get('Authorization', 'invalid').split()[-1]
+                if token in ["100", "has_myscope"]:
+                    return FakeResponse(200, '{"uid": "test-user", "scope": ["myscope"]}')
+                if token in ["200", "has_wrongscope"]:
+                    return FakeResponse(200, '{"uid": "test-user", "scope": ["wrongscope"]}')
+                if token == "has_myscope_otherscope":
+                    return FakeResponse(200, '{"uid": "test-user", "scope": ["myscope", "otherscope"]}')
+                if token in ["300", "is_not_invalid"]:
+                    return FakeResponse(404, '')
+                if token == "has_scopes_in_scopes_with_s":
+                    return FakeResponse(200, '{"uid": "test-user", "scopes": ["myscope", "otherscope"]}')
+            return url
+
+    monkeypatch.setattr(SecurityHandlerFactory, 'client', FakeClient())
 
 
 @pytest.fixture
 def security_handler_factory():
-    security_handler_factory = FlaskSecurityHandlerFactory(None)
+    security_handler_factory = SecurityHandlerFactory(None)
     yield security_handler_factory
 
 

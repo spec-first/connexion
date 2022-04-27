@@ -6,6 +6,7 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 from connexion.middleware.abstract import AppMiddleware
 from connexion.middleware.exceptions import ExceptionMiddleware
 from connexion.middleware.routing import RoutingMiddleware
+from connexion.middleware.security import SecurityMiddleware
 from connexion.middleware.swagger_ui import SwaggerUIMiddleware
 
 
@@ -15,6 +16,7 @@ class ConnexionMiddleware:
         ExceptionMiddleware,
         SwaggerUIMiddleware,
         RoutingMiddleware,
+        SecurityMiddleware,
     ]
 
     def __init__(

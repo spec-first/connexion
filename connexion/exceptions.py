@@ -5,7 +5,7 @@ This module defines Exception classes used by Connexion to generate a proper res
 import warnings
 
 from jsonschema.exceptions import ValidationError
-from werkzeug.exceptions import Forbidden, Unauthorized
+from starlette.exceptions import HTTPException
 
 from .problem import problem
 
@@ -58,6 +58,10 @@ class ResolverError(LookupError):
 
 
 class InvalidSpecification(ConnexionException, ValidationError):
+    pass
+
+
+class MissingMiddleware(ConnexionException):
     pass
 
 
@@ -123,6 +127,19 @@ class NonConformingResponseHeaders(NonConformingResponse):
         super().__init__(reason=reason, message=message)
 
 
+class Unauthorized(HTTPException):
+
+    description = (
+        "The server could not verify that you are authorized to access"
+        " the URL requested. You either supplied the wrong credentials"
+        " (e.g. a bad password), or your browser doesn't understand"
+        " how to supply the credentials required."
+    )
+
+    def __init__(self, detail: str = description, **kwargs):
+        super().__init__(401, detail=detail, **kwargs)
+
+
 class OAuthProblem(Unauthorized):
     pass
 
@@ -131,6 +148,18 @@ class OAuthResponseProblem(OAuthProblem):
     def __init__(self, token_response, **kwargs):
         self.token_response = token_response
         super().__init__(**kwargs)
+
+
+class Forbidden(HTTPException):
+
+    description = (
+        "You don't have the permission to access the requested"
+        " resource. It is either read-protected or not readable by the"
+        " server."
+    )
+
+    def __init__(self, detail: str = description, **kwargs):
+        super().__init__(403, detail=detail, **kwargs)
 
 
 class OAuthScopeProblem(Forbidden):

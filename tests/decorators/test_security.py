@@ -6,6 +6,7 @@ import requests
 from connexion.exceptions import (BadRequestProblem, ConnexionException,
                                   OAuthProblem, OAuthResponseProblem,
                                   OAuthScopeProblem)
+from connexion.security import SecurityHandlerFactory
 
 
 def test_get_tokeninfo_url(monkeypatch, security_handler_factory):
@@ -43,10 +44,10 @@ def test_verify_oauth_missing_auth_header(security_handler_factory):
     assert wrapped_func(request) is security_handler_factory.no_value
 
 
-def test_verify_oauth_scopes_remote(monkeypatch, security_handler_factory):
+async def test_verify_oauth_scopes_remote(monkeypatch, security_handler_factory):
     tokeninfo = dict(uid="foo", scope="scope1 scope2")
 
-    def get_tokeninfo_response(*args, **kwargs):
+    async def get_tokeninfo_response(*args, **kwargs):
         tokeninfo_response = requests.Response()
         tokeninfo_response.status_code = requests.codes.ok
         tokeninfo_response._content = json.dumps(tokeninfo).encode()
@@ -58,25 +59,25 @@ def test_verify_oauth_scopes_remote(monkeypatch, security_handler_factory):
     request = MagicMock()
     request.headers = {"Authorization": "Bearer 123"}
 
-    session = MagicMock()
-    session.get = get_tokeninfo_response
-    monkeypatch.setattr('connexion.security.flask_security_handler_factory.session', session)
+    client = MagicMock()
+    client.get = get_tokeninfo_response
+    monkeypatch.setattr(SecurityHandlerFactory, 'client', client)
 
     with pytest.raises(OAuthScopeProblem, match="Provided token doesn't have the required scope"):
-        wrapped_func(request)
+        await wrapped_func(request)
 
     tokeninfo["scope"] += " admin"
-    assert wrapped_func(request) is not None
+    assert await wrapped_func(request) is not None
 
     tokeninfo["scope"] = ["foo", "bar"]
     with pytest.raises(OAuthScopeProblem, match="Provided token doesn't have the required scope"):
-        wrapped_func(request)
+        await wrapped_func(request)
 
     tokeninfo["scope"].append("admin")
-    assert wrapped_func(request) is not None
+    assert await wrapped_func(request) is not None
 
 
-def test_verify_oauth_invalid_local_token_response_none(security_handler_factory):
+async def test_verify_oauth_invalid_local_token_response_none(security_handler_factory):
     def somefunc(token):
         return None
 
@@ -86,10 +87,10 @@ def test_verify_oauth_invalid_local_token_response_none(security_handler_factory
     request.headers = {"Authorization": "Bearer 123"}
 
     with pytest.raises(OAuthResponseProblem):
-        wrapped_func(request)
+        await wrapped_func(request)
 
 
-def test_verify_oauth_scopes_local(security_handler_factory):
+async def test_verify_oauth_scopes_local(security_handler_factory):
     tokeninfo = dict(uid="foo", scope="scope1 scope2")
 
     def token_info(token):
@@ -101,17 +102,17 @@ def test_verify_oauth_scopes_local(security_handler_factory):
     request.headers = {"Authorization": "Bearer 123"}
 
     with pytest.raises(OAuthScopeProblem, match="Provided token doesn't have the required scope"):
-        wrapped_func(request)
+        await wrapped_func(request)
 
     tokeninfo["scope"] += " admin"
-    assert wrapped_func(request) is not None
+    assert await wrapped_func(request) is not None
 
     tokeninfo["scope"] = ["foo", "bar"]
     with pytest.raises(OAuthScopeProblem, match="Provided token doesn't have the required scope"):
-        wrapped_func(request)
+        await wrapped_func(request)
 
     tokeninfo["scope"].append("admin")
-    assert wrapped_func(request) is not None
+    assert await wrapped_func(request) is not None
 
 
 def test_verify_basic_missing_auth_header(security_handler_factory):
@@ -168,7 +169,7 @@ def test_verify_apikey_header(security_handler_factory):
     assert wrapped_func(request) is not None
 
 
-def test_multiple_schemes(security_handler_factory):
+async def test_multiple_schemes(security_handler_factory):
     def apikey1_info(apikey, required_scopes=None):
         if apikey == 'foobar':
             return {'sub': 'foo'}
@@ -195,7 +196,7 @@ def test_multiple_schemes(security_handler_factory):
     request = MagicMock()
     request.headers = {"X-Auth-2": 'bar'}
 
-    assert wrapped_func(request) is security_handler_factory.no_value
+    assert await wrapped_func(request) is security_handler_factory.no_value
 
     # Supplying both keys does succeed
     request = MagicMock()
@@ -208,17 +209,16 @@ def test_multiple_schemes(security_handler_factory):
         'key1': {'sub': 'foo'},
         'key2': {'sub': 'bar'},
     }
-    assert wrapped_func(request) == expected_token_info
+    assert await wrapped_func(request) == expected_token_info
 
 
-def test_verify_security_oauthproblem(security_handler_factory):
+async def test_verify_security_oauthproblem(security_handler_factory):
     """Tests whether verify_security raises an OAuthProblem if there are no auth_funcs."""
-    func_to_secure = MagicMock(return_value='func')
-    secured_func = security_handler_factory.verify_security([], func_to_secure)
+    security_func = security_handler_factory.verify_security([], [])
 
     request = MagicMock()
     with pytest.raises(OAuthProblem) as exc_info:
-        secured_func(request)
+        await security_func(request)
 
     assert str(exc_info.value) == '401 Unauthorized: No authorization token provided'
 

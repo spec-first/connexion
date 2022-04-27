@@ -13,7 +13,7 @@ from connexion.middleware import AppMiddleware
 from connexion.operations import AbstractOperation, make_operation
 from connexion.resolver import Resolver
 
-CONNEXION_CONTEXT = 'connexion.context'
+ROUTING_CONTEXT = 'connexion_routing'
 
 
 _scope_receive_send: ContextVar[tuple] = ContextVar('SCOPE_RECEIVE_SEND')
@@ -84,8 +84,8 @@ class RoutingMiddleware(AppMiddleware):
         api_base_path = scope.get('root_path', '')[len(original_scope.get('root_path', '')):]
 
         extensions = original_scope.setdefault('extensions', {})
-        connexion_context = extensions.setdefault(CONNEXION_CONTEXT, {})
-        connexion_context.update({
+        connexion_routing = extensions.setdefault(ROUTING_CONTEXT, {})
+        connexion_routing.update({
             'api_base_path': api_base_path
         })
         await self.app(original_scope, receive, send)
@@ -102,8 +102,8 @@ class RoutingMiddleware(AppMiddleware):
             api_base_path = request.scope.get('root_path', '')[len(scope.get('root_path', '')):]
 
             extensions = scope.setdefault('extensions', {})
-            connexion_context = extensions.setdefault(CONNEXION_CONTEXT, {})
-            connexion_context.update({
+            connexion_routing = extensions.setdefault(ROUTING_CONTEXT, {})
+            connexion_routing.update({
                 'api_base_path': api_base_path,
                 'operation_id': operation.operation_id
             })
@@ -163,8 +163,3 @@ class MiddlewareAPI(AbstractMinimalAPI):
 
     def _add_operation_internal(self, method: str, path: str, operation: AbstractOperation) -> None:
         self.router.add_route(path, operation.function, methods=[method])
-
-    @staticmethod
-    def make_security_handler_factory(pass_context_arg_name):
-        """ Create default SecurityHandlerFactory to create all security check handlers """
-        pass

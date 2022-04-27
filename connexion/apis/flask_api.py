@@ -8,26 +8,18 @@ import warnings
 from typing import Any
 
 import flask
-import werkzeug.exceptions
 from werkzeug.local import LocalProxy
 
 from connexion.apis import flask_utils
 from connexion.apis.abstract import AbstractAPI
-from connexion.handlers import AuthErrorHandler
 from connexion.jsonifier import Jsonifier
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
-from connexion.security import FlaskSecurityHandlerFactory
 from connexion.utils import is_json_mimetype
 
 logger = logging.getLogger('connexion.apis.flask_api')
 
 
 class FlaskApi(AbstractAPI):
-
-    @staticmethod
-    def make_security_handler_factory(pass_context_arg_name):
-        """ Create default SecurityHandlerFactory to create all security check handlers """
-        return FlaskSecurityHandlerFactory(pass_context_arg_name)
 
     def _set_base_path(self, base_path):
         super()._set_base_path(base_path)
@@ -38,16 +30,6 @@ class FlaskApi(AbstractAPI):
         endpoint = flask_utils.flaskify_endpoint(self.base_path)
         self.blueprint = flask.Blueprint(endpoint, __name__, url_prefix=self.base_path,
                                          template_folder=str(self.options.openapi_console_ui_from_dir))
-
-    def add_auth_on_not_found(self, security, security_definitions):
-        """
-        Adds a 404 error handler to authenticate and only expose the 404 status if the security validation pass.
-        """
-        logger.debug('Adding path not found authentication')
-        not_found_error = AuthErrorHandler(self, werkzeug.exceptions.NotFound(), security=security,
-                                           security_definitions=security_definitions)
-        endpoint_name = f"{self.blueprint.name}_not_found"
-        self.blueprint.add_url_rule('/<path:invalid_path>', endpoint_name, not_found_error.function)
 
     def _add_operation_internal(self, method, path, operation):
         operation_id = operation.operation_id
@@ -156,9 +138,10 @@ class FlaskApi(AbstractAPI):
 
         :rtype: ConnexionRequest
         """
-        context_dict = {}
-        setattr(flask._request_ctx_stack.top, 'connexion_context', context_dict)
         flask_request = flask.request
+        scope = flask_request.environ['asgi.scope']
+        context_dict = scope.get('extensions', {}).get('connexion_context', {})
+        setattr(flask._request_ctx_stack.top, 'connexion_context', context_dict)
         request = ConnexionRequest(
             flask_request.url,
             flask_request.method,

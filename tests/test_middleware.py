@@ -1,6 +1,5 @@
 import pytest
 from connexion.middleware import ConnexionMiddleware
-from connexion.middleware.routing import CONNEXION_CONTEXT
 from starlette.datastructures import MutableHeaders
 
 from conftest import SPECS, build_app_from_fixture
@@ -13,7 +12,7 @@ class TestMiddleware:
         self.app = app
 
     async def __call__(self, scope, receive, send):
-        operation_id = scope['extensions'][CONNEXION_CONTEXT]['operation_id']
+        operation_id = scope['extensions']['connexion_routing']['operation_id']
 
         async def patched_send(message):
             if message["type"] != "http.response.start":

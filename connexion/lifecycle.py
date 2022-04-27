@@ -59,6 +59,18 @@ class ConnexionResponse:
 class MiddlewareRequest(StarletteRequest):
     """Wraps starlette Request so it can easily be extended."""
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._context = None
+
+    @property
+    def context(self):
+        if self._context is None:
+            extensions = self.scope.setdefault('extensions', {})
+            self._context = extensions.setdefault('connexion_context', {})
+
+        return self._context
+
 
 class MiddlewareResponse(StarletteStreamingResponse):
     """Wraps starlette StreamingResponse so it can easily be extended."""
