@@ -9,6 +9,7 @@ repos:
         files: "^connexion/"
         additional_dependencies:
           - flake8-rst-docstrings==0.2.3
+
   - repo: https://github.com/PyCQA/isort
     rev: 5.10.1
     hooks:
@@ -24,3 +25,19 @@ repos:
         name: isort tests
         files: "^tests/"
         args: ["--project", "conftest", "--thirdparty", "connexion", "--check-only", "--diff"]
+
+  - repo: https://github.com/psf/black
+    rev: 22.3.0
+    hooks:
+      - id: black
+        name: black
+        files: "^connexion/"
+        args: ["connexion"]
+      - id: black
+        name: black examples
+        files: "^examples/"
+        args: ["examples"]
+      - id: black
+        name: black tests
+        files: "^tests/"
+        args: ["tests"]
