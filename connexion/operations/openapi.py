@@ -9,6 +9,7 @@ from copy import copy, deepcopy
 from connexion.operations.abstract import AbstractOperation
 
 from ..decorators.uri_parsing import OpenAPIURIParser
+from ..http_facts import FORM_CONTENT_TYPES
 from ..utils import deep_get, deep_merge, is_null, is_nullable, make_type
 
 logger = logging.getLogger("connexion.operations.openapi3")
@@ -286,13 +287,28 @@ class OpenAPIOperation(AbstractOperation):
                           'the requestBody instead.', DeprecationWarning)
             x_body_name = sanitize(self.body_schema.get('x-body-name', 'body'))
 
+        if self.consumes[0] in FORM_CONTENT_TYPES:
+            result = self._get_body_argument_form(body)
+        else:
+            result = self._get_body_argument_json(body)
+
+        if x_body_name in arguments or has_kwargs:
+            return {x_body_name: result}
+        return {}
+
+    def _get_body_argument_json(self, body):
         # if the body came in null, and the schema says it can be null, we decide
         # to include no value for the body argument, rather than the default body
         if is_nullable(self.body_schema) and is_null(body):
-            if x_body_name in arguments or has_kwargs:
-                return {x_body_name: None}
-            return {}
+            return None
 
+        if body is None:
+            default_body = self.body_schema.get('default', {})
+            return deepcopy(default_body)
+
+        return body
+
+    def _get_body_argument_form(self, body):
         # now determine the actual value for the body (whether it came in or is default)
         default_body = self.body_schema.get('default', {})
         body_props = {k: {"schema": v} for k, v
@@ -302,25 +318,11 @@ class OpenAPIOperation(AbstractOperation):
         # see: https://github.com/OAI/OpenAPI-Specification/blame/3.0.2/versions/3.0.2.md#L2305
         additional_props = self.body_schema.get("additionalProperties", True)
 
-        if body is None:
-            body = deepcopy(default_body)
-
-        # if the body isn't even an object, then none of the concerns below matter
-        if self.body_schema.get("type") != "object":
-            if x_body_name in arguments or has_kwargs:
-                return {x_body_name: body}
-            return {}
-
-        # supply the initial defaults and convert all values to the proper types by schema
         body_arg = deepcopy(default_body)
         body_arg.update(body or {})
 
-        res = {}
         if body_props or additional_props:
-            res = self._get_typed_body_values(body_arg, body_props, additional_props)
-
-        if x_body_name in arguments or has_kwargs:
-            return {x_body_name: res}
+            return self._get_typed_body_values(body_arg, body_props, additional_props)
         return {}
 
     def _get_typed_body_values(self, body_arg, body_props, additional_props):
