@@ -388,3 +388,34 @@ def test_streaming_response(simple_app):
     app_client = simple_app.app.test_client()
     resp = app_client.get('/v1.0/get_streaming_response')
     assert resp.status_code == 200
+
+
+def test_oneof(simple_openapi_app):
+    app_client = simple_openapi_app.app.test_client()
+
+    post_greeting = app_client.post(  # type: flask.Response
+        '/v1.0/oneof_greeting',
+        data=json.dumps({"name": 3}),
+        content_type="application/json"
+    )
+    assert post_greeting.status_code == 200
+    assert post_greeting.content_type == 'application/json'
+    greeting_reponse = json.loads(post_greeting.data.decode('utf-8', 'replace'))
+    assert greeting_reponse['greeting'] == 'Hello 3'
+
+    post_greeting = app_client.post(  # type: flask.Response
+        '/v1.0/oneof_greeting',
+        data=json.dumps({"name": True}),
+        content_type="application/json"
+    )
+    assert post_greeting.status_code == 200
+    assert post_greeting.content_type == 'application/json'
+    greeting_reponse = json.loads(post_greeting.data.decode('utf-8', 'replace'))
+    assert greeting_reponse['greeting'] == 'Hello True'
+
+    post_greeting = app_client.post(  # type: flask.Response
+        '/v1.0/oneof_greeting',
+        data=json.dumps({"name": "jsantos"}),
+        content_type="application/json"
+    )
+    assert post_greeting.status_code == 400

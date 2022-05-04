@@ -1222,6 +1222,23 @@ paths:
               schema:
                 type: string
                 format: binary
+  /oneof_greeting:
+    post:
+      operationId: fakeapi.hello.post_greeting3
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  oneOf:
+                    - {type: boolean}
+                    - {type: number}
+              additionalProperties: false
+      responses:
+        '200':
+          description: Echo the validated request.
 
 servers:
   - url: http://localhost:{port}/{basePath}
