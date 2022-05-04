@@ -282,10 +282,12 @@ class OpenAPIOperation(AbstractOperation):
 
         if not x_body_name:
             # x-body-name also accepted in the schema field for legacy connexion compat
-            warnings.warn('x-body-name within the requestBody schema will be deprecated in the '
-                          'next major version. It should be provided directly under '
-                          'the requestBody instead.', DeprecationWarning)
             x_body_name = sanitize(self.body_schema.get('x-body-name', 'body'))
+
+            if x_body_name:
+                warnings.warn('x-body-name within the requestBody schema will be deprecated in the '
+                              'next major version. It should be provided directly under '
+                              'the requestBody instead.', DeprecationWarning)
 
         if self.consumes[0] in FORM_CONTENT_TYPES:
             result = self._get_body_argument_form(body)
