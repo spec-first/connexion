@@ -116,7 +116,7 @@ class AbstractSwaggerUIAPI(AbstractSpecAPI):
         """
 
 
-class AbstractMinimalAPI(AbstractSpecAPI):
+class AbstractRoutingAPI(AbstractSpecAPI):
 
     def __init__(
             self,
@@ -203,7 +203,7 @@ class AbstractMinimalAPI(AbstractSpecAPI):
             raise value.with_traceback(traceback)
 
 
-class AbstractAPI(AbstractMinimalAPI, metaclass=AbstractAPIMeta):
+class AbstractAPI(AbstractRoutingAPI, metaclass=AbstractAPIMeta):
     """
     Defines an abstract interface for a Swagger API
     """

@@ -7,7 +7,7 @@ from starlette.requests import Request as StarletteRequest
 from starlette.routing import Router
 from starlette.types import ASGIApp, Receive, Scope, Send
 
-from connexion.apis import AbstractMinimalAPI
+from connexion.apis import AbstractRoutingAPI
 from connexion.exceptions import NotFoundProblem
 from connexion.middleware import AppMiddleware
 from connexion.operations import AbstractOperation, make_operation
@@ -57,8 +57,8 @@ class RoutingMiddleware(AppMiddleware):
         """
         kwargs.pop("resolver", None)
         resolver = MiddlewareResolver(self.create_call_next())
-        api = MiddlewareAPI(specification, base_path=base_path, arguments=arguments,
-                            resolver=resolver, default=self.default_fn, **kwargs)
+        api = RoutingAPI(specification, base_path=base_path, arguments=arguments,
+                         resolver=resolver, default=self.default_fn, **kwargs)
         self.router.mount(api.base_path, app=api.router)
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
@@ -112,7 +112,7 @@ class RoutingMiddleware(AppMiddleware):
         return call_next
 
 
-class MiddlewareAPI(AbstractMinimalAPI):
+class RoutingAPI(AbstractRoutingAPI):
 
     def __init__(
             self,
