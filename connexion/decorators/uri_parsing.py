@@ -192,10 +192,9 @@ class OpenAPIURIParser(AbstractURIParser):
         if k in self.param_schemas.keys():
             return k, v, False
         else:
-            for keys in self.param_schemas.keys():
-                if k.startswith(keys):
-                    rest = keys.replace(k, '')
-                    root_key = rest
+            for key in self.param_schemas.keys():
+                if k.startswith(key) and "[" in k:
+                    root_key = key.replace(k, '')
 
         if not root_key:
             root_key = k.split("[", 1)[0]
