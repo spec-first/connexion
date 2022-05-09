@@ -41,3 +41,10 @@ class ResolverErrorHandler:
 
     def get_path_parameter_types(self):
         return {}
+
+    async def __call__(self, *args, **kwargs):
+        raise ResolverProblem(
+            title='Not Implemented',
+            detail=self.exception.reason,
+            status=self.status_code
+        )
