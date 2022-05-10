@@ -14,7 +14,6 @@ def test_standard_resolve_x_router_controller():
             'x-openapi-router-controller': 'fakeapi.hello',
             'operationId': 'post_greeting',
         },
-        app_security=[],
         components=COMPONENTS,
         resolver=Resolver()
     )
@@ -29,7 +28,6 @@ def test_methodview_resolve_operation_id():
         operation={
             'operationId': 'fakeapi.hello.post_greeting',
         },
-        app_security=[],
         components=COMPONENTS,
         resolver=MethodViewResolver('fakeapi')
     )
@@ -46,7 +44,6 @@ def test_methodview_resolve_x_router_controller_with_operation_id():
             'x-openapi-router-controller': 'fakeapi.ExampleMethodView',
             'operationId': 'post_greeting',
         },
-        app_security=[],
         components=COMPONENTS,
         resolver=MethodViewResolver('fakeapi')
     )
@@ -59,7 +56,6 @@ def test_methodview_resolve_x_router_controller_without_operation_id():
                           path='/hello/{id}',
                           path_parameters=[],
                           operation={'x-openapi-router-controller': 'fakeapi.example_method'},
-                          app_security=[],
                           components=COMPONENTS,
                           resolver=MethodViewResolver('fakeapi'))
     assert operation.operation_id == 'fakeapi.ExampleMethodView.get'
@@ -72,7 +68,6 @@ def test_methodview_resolve_with_default_module_name():
         path='/example_method/{id}',
         path_parameters=[],
         operation={},
-        app_security=[],
         components=COMPONENTS,
         resolver=MethodViewResolver('fakeapi')
     )
@@ -86,7 +81,6 @@ def test_methodview_resolve_with_default_module_name_lowercase_verb():
         path='/example_method/{id}',
         path_parameters=[],
         operation={},
-        app_security=[],
         components=COMPONENTS,
         resolver=MethodViewResolver('fakeapi')
     )
@@ -100,7 +94,6 @@ def test_methodview_resolve_with_default_module_name_will_translate_dashes_in_re
         path='/example-method',
         path_parameters=[],
         operation={},
-        app_security=[],
         components=COMPONENTS,
         resolver=MethodViewResolver('fakeapi')
     )
@@ -114,7 +107,6 @@ def test_methodview_resolve_with_default_module_name_can_resolve_api_root():
         path='/',
         path_parameters=[],
         operation={},
-        app_security=[],
         components=COMPONENTS,
         resolver=MethodViewResolver('fakeapi.example_method',)
     )
@@ -128,7 +120,6 @@ def test_methodview_resolve_with_default_module_name_will_resolve_resource_root_
         path='/example_method',
         path_parameters=[],
         operation={},
-        app_security=[],
         components=COMPONENTS,
         resolver=MethodViewResolver('fakeapi')
     )
@@ -144,7 +135,6 @@ def test_methodview_resolve_with_default_module_name_and_x_router_controller_wil
         operation={
             'x-openapi-router-controller': 'fakeapi.example_method',
         },
-        app_security=[],
         components=COMPONENTS,
         resolver=MethodViewResolver('fakeapi')
     )
@@ -158,7 +148,6 @@ def test_methodview_resolve_with_default_module_name_will_resolve_resource_root_
         path='/example_method',
         path_parameters=[],
         operation={},
-        app_security=[],
         components=COMPONENTS,
         resolver=MethodViewResolver('fakeapi', 'api_list')
     )
@@ -172,7 +161,6 @@ def test_methodview_resolve_with_default_module_name_will_resolve_resource_root_
         path='/example_method',
         path_parameters=[],
         operation={},
-        app_security=[],
         components=COMPONENTS,
         resolver=MethodViewResolver('fakeapi')
     )
