@@ -56,6 +56,7 @@ class TypeValidationError(Exception):
         return msg.format(**vars(self))
 
 
+# Parsing
 def coerce_type(param, value, parameter_type, parameter_name=None):
 
     def make_type(value, type_literal):
@@ -250,7 +251,7 @@ class ResponseBodyValidator:
 
 
 class ParameterValidator:
-    def __init__(self, parameters, api, strict_validation=False):
+    def __init__(self, parameters, strict_validation=False):
         """
         :param parameters: List of request parameter dictionaries
         :param api: api that the validator is attached to
@@ -260,7 +261,6 @@ class ParameterValidator:
         for p in parameters:
             self.parameters[p['in']].append(p)
 
-        self.api = api
         self.strict_validation = strict_validation
 
     @staticmethod

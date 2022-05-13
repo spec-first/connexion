@@ -22,9 +22,8 @@ class OpenAPIOperation(AbstractOperation):
     """
 
     def __init__(self, api, method, path, operation, resolver, path_parameters=None,
-                 components=None, validate_responses=False, strict_validation=False,
-                 randomize_endpoint=None, validator_map=None,
-                 pythonic_params=False, uri_parser_class=None, pass_context_arg_name=None):
+                 components=None, randomize_endpoint=None,
+                 pythonic_params=False, pass_context_arg_name=None):
         """
         This class uses the OperationID identify the module and function that will handle the operation
 
@@ -58,15 +57,11 @@ class OpenAPIOperation(AbstractOperation):
         :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended
             to any shadowed built-ins
         :type pythonic_params: bool
-        :param uri_parser_class: class to use for uri parsing
-        :type uri_parser_class: AbstractURIParser
         :param pass_context_arg_name: If not None will try to inject the request context to the function using this
             name.
         :type pass_context_arg_name: str|None
         """
         self.components = components or {}
-
-        uri_parser_class = uri_parser_class or OpenAPIURIParser
 
         self._router_controller = operation.get('x-openapi-router-controller')
 
@@ -76,12 +71,8 @@ class OpenAPIOperation(AbstractOperation):
             path=path,
             operation=operation,
             resolver=resolver,
-            validate_responses=validate_responses,
-            strict_validation=strict_validation,
             randomize_endpoint=randomize_endpoint,
-            validator_map=validator_map,
             pythonic_params=pythonic_params,
-            uri_parser_class=uri_parser_class,
             pass_context_arg_name=pass_context_arg_name
         )
 
@@ -104,9 +95,6 @@ class OpenAPIOperation(AbstractOperation):
         request_content = self._request_body.get('content', {})
         self._consumes = list(request_content.keys()) or ['application/json']
 
-        logger.debug('consumes: %s' % self.consumes)
-        logger.debug('produces: %s' % self.produces)
-
     @classmethod
     def from_spec(cls, spec, api, path, method, resolver, *args, **kwargs):
         return cls(
@@ -121,9 +109,9 @@ class OpenAPIOperation(AbstractOperation):
             **kwargs
         )
 
-    @property
-    def request_body(self):
-        return self._request_body
+    # @property
+    # def request_body(self):
+    #     return self._request_body
 
     @property
     def parameters(self):
@@ -137,20 +125,20 @@ class OpenAPIOperation(AbstractOperation):
     def produces(self):
         return self._produces
 
-    def with_definitions(self, schema):
-        if self.components:
-            schema['schema']['components'] = self.components
-        return schema
+    # def with_definitions(self, schema):
+    #     if self.components:
+    #         schema['schema']['components'] = self.components
+    #     return schema
 
-    def response_schema(self, status_code=None, content_type=None):
-        response_definition = self.response_definition(
-            status_code, content_type
-        )
-        content_definition = response_definition.get("content", response_definition)
-        content_definition = content_definition.get(content_type, content_definition)
-        if "schema" in content_definition:
-            return self.with_definitions(content_definition).get("schema", {})
-        return {}
+    # def response_schema(self, status_code=None, content_type=None):
+    #     response_definition = self.response_definition(
+    #         status_code, content_type
+    #     )
+    #     content_definition = response_definition.get("content", response_definition)
+    #     content_definition = content_definition.get(content_type, content_definition)
+    #     if "schema" in content_definition:
+    #         return self.with_definitions(content_definition).get("schema", {})
+    #     return {}
 
     def example_response(self, status_code=None, content_type=None):
         """
@@ -225,30 +213,30 @@ class OpenAPIOperation(AbstractOperation):
             types[path_defn['name']] = path_type
         return types
 
-    @property
-    def body_schema(self):
-        """
-        The body schema definition for this operation.
-        """
-        return self.body_definition.get('schema', {})
+    # @property
+    # def body_schema(self):
+    #     """
+    #     The body schema definition for this operation.
+    #     """
+    #     return self.body_definition.get('schema', {})
 
-    @property
-    def body_definition(self):
-        """
-        The body complete definition for this operation.
+    # @property
+    # def body_definition(self):
+    #     """
+    #     The body complete definition for this operation.
 
-        **There can be one "body" parameter at most.**
+    #     **There can be one "body" parameter at most.**
 
-        :rtype: dict
-        """
-        if self._request_body:
-            if len(self.consumes) > 1:
-                logger.warning(
-                    'this operation accepts multiple content types, using %s',
-                    self.consumes[0])
-            res = self._request_body.get('content', {}).get(self.consumes[0], {})
-            return self.with_definitions(res)
-        return {}
+    #     :rtype: dict
+    #     """
+    #     if self._request_body:
+    #         if len(self.consumes) > 1:
+    #             logger.warning(
+    #                 'this operation accepts multiple content types, using %s',
+    #                 self.consumes[0])
+    #         res = self._request_body.get('content', {}).get(self.consumes[0], {})
+    #         return self.with_definitions(res)
+    #     return {}
 
     def _get_body_argument(self, body, arguments, has_kwargs, sanitize):
         if len(arguments) <= 0 and not has_kwargs:

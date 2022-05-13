@@ -27,9 +27,8 @@ class Swagger2Operation(AbstractOperation):
     """
 
     def __init__(self, api, method, path, operation, resolver, app_produces, app_consumes,
-                 path_parameters=None, definitions=None, validate_responses=False,
-                 strict_validation=False, randomize_endpoint=None, validator_map=None,
-                 pythonic_params=False, uri_parser_class=None, pass_context_arg_name=None):
+                 path_parameters=None, definitions=None, randomize_endpoint=None,
+                 pythonic_params=False, pass_context_arg_name=None):
         """
         :param api: api that this operation is attached to
         :type api: apis.AbstractAPI
@@ -50,25 +49,15 @@ class Swagger2Operation(AbstractOperation):
         :param definitions: `Definitions Object
             <https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#definitionsObject>`_
         :type definitions: dict
-        :param validate_responses: True enables validation. Validation errors generate HTTP 500 responses.
-        :type validate_responses: bool
-        :param strict_validation: True enables validation on invalid request parameters
-        :type strict_validation: bool
         :param randomize_endpoint: number of random characters to append to operation name
         :type randomize_endpoint: integer
-        :param validator_map: Custom validators for the types "parameter", "body" and "response".
-        :type validator_map: dict
         :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended
             to any shadowed built-ins
         :type pythonic_params: bool
-        :param uri_parser_class: class to use for uri parsing
-        :type uri_parser_class: AbstractURIParser
         :param pass_context_arg_name: If not None will try to inject the request context to the function using this
             name.
         :type pass_context_arg_name: str|None
         """
-        uri_parser_class = uri_parser_class or Swagger2URIParser
-
         self._router_controller = operation.get('x-swagger-router-controller')
 
         super().__init__(
@@ -77,19 +66,15 @@ class Swagger2Operation(AbstractOperation):
             path=path,
             operation=operation,
             resolver=resolver,
-            validate_responses=validate_responses,
-            strict_validation=strict_validation,
             randomize_endpoint=randomize_endpoint,
-            validator_map=validator_map,
             pythonic_params=pythonic_params,
-            uri_parser_class=uri_parser_class,
             pass_context_arg_name=pass_context_arg_name
         )
 
         self._produces = operation.get('produces', app_produces)
         self._consumes = operation.get('consumes', app_consumes)
 
-        self.definitions = definitions or {}
+        # self.definitions = definitions or {}
 
         self._parameters = operation.get('parameters', [])
         if path_parameters:
@@ -98,8 +83,8 @@ class Swagger2Operation(AbstractOperation):
         self._responses = operation.get('responses', {})
         logger.debug(self._responses)
 
-        logger.debug('consumes: %s', self.consumes)
-        logger.debug('produces: %s', self.produces)
+        # logger.debug('consumes: %s', self.consumes)
+        # logger.debug('produces: %s', self.produces)
 
     @classmethod
     def from_spec(cls, spec, api, path, method, resolver, *args, **kwargs):
@@ -141,16 +126,16 @@ class Swagger2Operation(AbstractOperation):
             types[path_defn['name']] = path_type
         return types
 
-    def with_definitions(self, schema):
-        if "schema" in schema:
-            schema['schema']['definitions'] = self.definitions
-        return schema
+    # def with_definitions(self, schema):
+    #     if "schema" in schema:
+    #         schema['schema']['definitions'] = self.definitions
+    #     return schema
 
-    def response_schema(self, status_code=None, content_type=None):
-        response_definition = self.response_definition(
-            status_code, content_type
-        )
-        return self.with_definitions(response_definition.get("schema", {}))
+    # def response_schema(self, status_code=None, content_type=None):
+    #     response_definition = self.response_definition(
+    #         status_code, content_type
+    #     )
+    #     return self.with_definitions(response_definition.get("schema", {}))
 
     def example_response(self, status_code=None, *args, **kwargs):
         """
@@ -202,29 +187,29 @@ class Swagger2Operation(AbstractOperation):
         except KeyError:
             raise
 
-    @property
-    def body_schema(self):
-        """
-        The body schema definition for this operation.
-        """
-        return self.with_definitions(self.body_definition).get('schema', {})
+    # @property
+    # def body_schema(self):
+    #     """
+    #     The body schema definition for this operation.
+    #     """
+    #     return self.with_definitions(self.body_definition).get('schema', {})
 
-    @property
-    def body_definition(self):
-        """
-        The body complete definition for this operation.
+    # @property
+    # def body_definition(self):
+    #     """
+    #     The body complete definition for this operation.
 
-        **There can be one "body" parameter at most.**
+    #     **There can be one "body" parameter at most.**
 
-        :rtype: dict
-        """
-        body_parameters = [p for p in self.parameters if p['in'] == 'body']
-        if len(body_parameters) > 1:
-            raise InvalidSpecification(
-                "{method} {path} There can be one 'body' parameter at most".format(
-                    method=self.method,
-                    path=self.path))
-        return body_parameters[0] if body_parameters else {}
+    #     :rtype: dict
+    #     """
+    #     body_parameters = [p for p in self.parameters if p['in'] == 'body']
+    #     if len(body_parameters) > 1:
+    #         raise InvalidSpecification(
+    #             "{method} {path} There can be one 'body' parameter at most".format(
+    #                 method=self.method,
+    #                 path=self.path))
+    #     return body_parameters[0] if body_parameters else {}
 
     def _get_query_arguments(self, query, arguments, has_kwargs, sanitize):
         query_defns = {p["name"]: p

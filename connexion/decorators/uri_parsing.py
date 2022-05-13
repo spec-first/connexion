@@ -326,6 +326,7 @@ class FirstValueURIParser(Swagger2URIParser):
         return values[0]
 
 
+# TODO: Remove for 3.0?
 class AlwaysMultiURIParser(Swagger2URIParser):
     """
     Does not adhere to the Swagger2 spec, but is backwards compatible with

@@ -28,6 +28,7 @@ class BaseSerializer(BaseDecorator):
         return f'<BaseSerializer: {self.mimetype}>'  # pragma: no cover
 
 
+# TODO: Remove? Doesn't do anything besides logging
 class Produces(BaseSerializer):
     def __call__(self, function):
         """
@@ -37,10 +38,7 @@ class Produces(BaseSerializer):
 
         @functools.wraps(function)
         def wrapper(request):
-            url = request.url
             response = function(request)
-            logger.debug('Returning %s', url,
-                         extra={'url': url, 'mimetype': self.mimetype})
             return response
 
         return wrapper

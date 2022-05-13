@@ -168,6 +168,7 @@ class FlaskApp(AbstractApp):
         return self.middleware(scope, receive, send)
 
 
+# TODO: Parsing middleware + change name
 class FlaskJSONEncoder(json.JSONEncoder):
     def default(self, o):
         if isinstance(o, datetime.datetime):
@@ -188,6 +189,7 @@ class FlaskJSONEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, o)
 
 
+# TODO: Parsing Middleware + change baseclass
 class NumberConverter(werkzeug.routing.BaseConverter):
     """ Flask converter for OpenAPI number type """
     regex = r"[+-]?[0-9]*(\.[0-9]*)?"
@@ -195,7 +197,7 @@ class NumberConverter(werkzeug.routing.BaseConverter):
     def to_python(self, value):
         return float(value)
 
-
+# TODO: Parsing Middleware + change base class
 class IntegerConverter(werkzeug.routing.BaseConverter):
     """ Flask converter for OpenAPI integer type """
     regex = r"[+-]?[0-9]+"
