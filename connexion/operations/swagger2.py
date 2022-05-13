@@ -27,10 +27,9 @@ class Swagger2Operation(AbstractOperation):
     """
 
     def __init__(self, api, method, path, operation, resolver, app_produces, app_consumes,
-                 path_parameters=None, definitions=None, parameter_definitions=None,
-                 response_definitions=None, validate_responses=False, strict_validation=False,
-                 randomize_endpoint=None, validator_map=None, pythonic_params=False,
-                 uri_parser_class=None, pass_context_arg_name=None):
+                 path_parameters=None, definitions=None, validate_responses=False,
+                 strict_validation=False, randomize_endpoint=None, validator_map=None,
+                 pythonic_params=False, uri_parser_class=None, pass_context_arg_name=None):
         """
         :param api: api that this operation is attached to
         :type api: apis.AbstractAPI
@@ -51,10 +50,6 @@ class Swagger2Operation(AbstractOperation):
         :param definitions: `Definitions Object
             <https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#definitionsObject>`_
         :type definitions: dict
-        :param parameter_definitions: Global parameter definitions
-        :type parameter_definitions: dict
-        :param response_definitions: Global response definitions
-        :type response_definitions: dict
         :param validate_responses: True enables validation. Validation errors generate HTTP 500 responses.
         :type validate_responses: bool
         :param strict_validation: True enables validation on invalid request parameters
@@ -96,12 +91,6 @@ class Swagger2Operation(AbstractOperation):
 
         self.definitions = definitions or {}
 
-        self.definitions_map = {
-            'definitions': self.definitions,
-            'parameters': parameter_definitions,
-            'responses': response_definitions
-        }
-
         self._parameters = operation.get('parameters', [])
         if path_parameters:
             self._parameters += path_parameters
@@ -124,8 +113,6 @@ class Swagger2Operation(AbstractOperation):
             app_produces=spec.produces,
             app_consumes=spec.consumes,
             definitions=spec.definitions,
-            parameter_definitions=spec.parameter_definitions,
-            response_definitions=spec.response_definitions,
             *args,
             **kwargs
         )

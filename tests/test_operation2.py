@@ -290,7 +290,6 @@ def test_operation(api, security_handler_factory):
                                   app_produces=['application/json'],
                                   app_consumes=['application/json'],
                                   definitions=DEFINITIONS,
-                                  parameter_definitions=PARAMETER_DEFINITIONS,
                                   resolver=Resolver())
 
     assert operation.method == 'GET'
@@ -327,7 +326,6 @@ def test_operation_array(api):
                                   app_produces=['application/json'],
                                   app_consumes=['application/json'],
                                   definitions=DEFINITIONS,
-                                  parameter_definitions=PARAMETER_DEFINITIONS,
                                   resolver=Resolver())
     assert isinstance(operation.function, types.FunctionType)
 
@@ -353,7 +351,6 @@ def test_operation_composed_definition(api):
                                   app_produces=['application/json'],
                                   app_consumes=['application/json'],
                                   definitions=DEFINITIONS,
-                                  parameter_definitions=PARAMETER_DEFINITIONS,
                                   resolver=Resolver())
     assert isinstance(operation.function, types.FunctionType)
 
@@ -399,7 +396,6 @@ def test_multi_body(api):
                                       app_produces=['application/json'],
                                       app_consumes=['application/json'],
                                       definitions=DEFINITIONS,
-                                      parameter_definitions=PARAMETER_DEFINITIONS,
                                       resolver=Resolver())
         operation.body_schema
 
@@ -464,7 +460,6 @@ def test_parameter_reference(api):
                                   app_produces=['application/json'],
                                   app_consumes=['application/json'],
                                   definitions={},
-                                  parameter_definitions=PARAMETER_DEFINITIONS,
                                   resolver=Resolver())
     assert operation.parameters == [{'in': 'path', 'type': 'integer'}]
 
@@ -476,7 +471,7 @@ def test_default(api):
         api=api, method='GET', path='endpoint', path_parameters=[],
         operation=op_spec, app_produces=['application/json'],
         app_consumes=['application/json'], definitions=DEFINITIONS,
-        parameter_definitions=PARAMETER_DEFINITIONS, resolver=Resolver()
+        resolver=Resolver()
     )
     op_spec = make_operation(OPERATION6, parameters=False)
     op_spec['parameters'][0]['default'] = {
@@ -489,7 +484,7 @@ def test_default(api):
         api=api, method='POST', path='endpoint', path_parameters=[],
         operation=op_spec, app_produces=['application/json'],
         app_consumes=['application/json'], definitions=DEFINITIONS,
-        parameter_definitions={}, resolver=Resolver()
+        resolver=Resolver()
     )
 
 

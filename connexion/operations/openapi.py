@@ -22,8 +22,8 @@ class OpenAPIOperation(AbstractOperation):
     """
 
     def __init__(self, api, method, path, operation, resolver, path_parameters=None,
-                 app_security=None, components=None, validate_responses=False,
-                 strict_validation=False, randomize_endpoint=None, validator_map=None,
+                 components=None, validate_responses=False, strict_validation=False,
+                 randomize_endpoint=None, validator_map=None,
                  pythonic_params=False, uri_parser_class=None, pass_context_arg_name=None):
         """
         This class uses the OperationID identify the module and function that will handle the operation
@@ -44,8 +44,6 @@ class OpenAPIOperation(AbstractOperation):
         :param resolver: Callable that maps operationID to a function
         :param path_parameters: Parameters defined in the path level
         :type path_parameters: list
-        :param app_security: list of security rules the application uses by default
-        :type app_security: list
         :param components: `Components Object
             <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#componentsObject>`_
         :type components: dict
@@ -68,9 +66,6 @@ class OpenAPIOperation(AbstractOperation):
         """
         self.components = components or {}
 
-        def component_get(oas3_name):
-            return self.components.get(oas3_name, {})
-
         uri_parser_class = uri_parser_class or OpenAPIURIParser
 
         self._router_controller = operation.get('x-openapi-router-controller')
@@ -89,18 +84,6 @@ class OpenAPIOperation(AbstractOperation):
             uri_parser_class=uri_parser_class,
             pass_context_arg_name=pass_context_arg_name
         )
-
-        self._definitions_map = {
-            'components': {
-                'schemas': component_get('schemas'),
-                'examples': component_get('examples'),
-                'requestBodies': component_get('requestBodies'),
-                'parameters': component_get('parameters'),
-                'securitySchemes': component_get('securitySchemes'),
-                'responses': component_get('responses'),
-                'headers': component_get('headers'),
-            }
-        }
 
         self._request_body = operation.get('requestBody', {})
 
@@ -133,7 +116,6 @@ class OpenAPIOperation(AbstractOperation):
             spec.get_operation(path, method),
             resolver=resolver,
             path_parameters=spec.get_path_params(path),
-            app_security=spec.security,
             components=spec.components,
             *args,
             **kwargs
