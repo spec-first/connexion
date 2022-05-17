@@ -8,14 +8,8 @@ import functools
 import logging
 from typing import AnyStr, Union
 
-try:
-    from importlib.metadata import version
-except ImportError:
-    from importlib_metadata import version
-
 from jsonschema import Draft4Validator, ValidationError, draft4_format_checker
 from jsonschema.validators import extend
-from packaging.version import Version
 from werkzeug.datastructures import FileStorage
 
 from ..exceptions import (BadRequestProblem, ExtraParameterProblem,
@@ -24,8 +18,6 @@ from ..http_facts import FORM_CONTENT_TYPES
 from ..json_schema import Draft4RequestValidator, Draft4ResponseValidator
 from ..lifecycle import ConnexionResponse
 from ..utils import all_json, boolean, is_json_mimetype, is_null, is_nullable
-
-_jsonschema_3_or_newer = Version(version("jsonschema")) >= Version("3.0.0")
 
 logger = logging.getLogger('connexion.decorators.validation')
 
@@ -280,19 +272,13 @@ class ParameterValidator:
                 del param['required']
             try:
                 if parameter_type == 'formdata' and param.get('type') == 'file':
-                    if _jsonschema_3_or_newer:
-                        extend(
-                            Draft4Validator,
-                            type_checker=Draft4Validator.TYPE_CHECKER.redefine(
-                                "file",
-                                lambda checker, instance: isinstance(instance, FileStorage)
-                            )
-                        )(param, format_checker=draft4_format_checker).validate(converted_value)
-                    else:
-                        Draft4Validator(
-                            param,
-                            format_checker=draft4_format_checker,
-                            types={'file': FileStorage}).validate(converted_value)
+                    extend(
+                        Draft4Validator,
+                        type_checker=Draft4Validator.TYPE_CHECKER.redefine(
+                            "file",
+                            lambda checker, instance: isinstance(instance, FileStorage)
+                        )
+                    )(param, format_checker=draft4_format_checker).validate(converted_value)
                 else:
                     Draft4Validator(
                         param, format_checker=draft4_format_checker).validate(converted_value)
