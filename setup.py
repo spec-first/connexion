@@ -26,7 +26,6 @@ install_requires = [
     'requests>=2.27,<3',
     'inflection>=0.3.1,<0.6',
     'werkzeug>=2,<3',
-    'packaging>=20',
     'starlette>=0.15,<1',
     'httpx>=0.15,<1',
 ]
