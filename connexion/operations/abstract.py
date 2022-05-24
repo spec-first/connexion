@@ -379,10 +379,6 @@ class AbstractOperation(metaclass=abc.ABCMeta):
 
         function = self._request_response_decorator(function)
 
-        if UWSGIMetricsCollector.is_available():  # pragma: no cover
-            decorator = UWSGIMetricsCollector(self.path, self.method)
-            function = decorator(function)
-
         return function
 
     @property
