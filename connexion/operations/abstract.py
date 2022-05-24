@@ -7,7 +7,6 @@ import abc
 import logging
 
 from ..decorators.decorator import RequestResponseDecorator
-from ..decorators.metrics import UWSGIMetricsCollector
 from ..decorators.parameter import parameter_to_arg
 from ..decorators.produces import BaseSerializer, Produces
 from ..decorators.response import ResponseValidator
@@ -378,10 +377,6 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         function = uri_parsing_decorator(function)
 
         function = self._request_response_decorator(function)
-
-        if UWSGIMetricsCollector.is_available():  # pragma: no cover
-            decorator = UWSGIMetricsCollector(self.path, self.method)
-            function = decorator(function)
 
         return function
 
