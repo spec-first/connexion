@@ -7,7 +7,6 @@ import abc
 import logging
 
 from ..decorators.decorator import RequestResponseDecorator
-from ..decorators.metrics import UWSGIMetricsCollector
 from ..decorators.parameter import parameter_to_arg
 from ..decorators.produces import BaseSerializer, Produces
 from ..decorators.response import ResponseValidator
