@@ -1,8 +1,8 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 import json
 from io import BytesIO
+from typing import List
+
+import pytest
 
 
 def test_parameter_validation(simple_app):
@@ -44,31 +44,31 @@ def test_array_query_param(simple_app):
     headers = {'Content-type': 'application/json'}
     url = '/v1.0/test_array_csv_query_param'
     response = app_client.get(url, headers=headers)
-    array_response = json.loads(response.data.decode('utf-8', 'replace'))  # type: [str]
+    array_response: List[str] = json.loads(response.data.decode('utf-8', 'replace'))
     assert array_response == ['squash', 'banana']
     url = '/v1.0/test_array_csv_query_param?items=one,two,three'
     response = app_client.get(url, headers=headers)
-    array_response = json.loads(response.data.decode('utf-8', 'replace'))  # type: [str]
+    array_response: List[str] = json.loads(response.data.decode('utf-8', 'replace'))
     assert array_response == ['one', 'two', 'three']
     url = '/v1.0/test_array_pipes_query_param?items=1|2|3'
     response = app_client.get(url, headers=headers)
-    array_response = json.loads(response.data.decode('utf-8', 'replace'))  # type: [int]
+    array_response: List[int] = json.loads(response.data.decode('utf-8', 'replace'))
     assert array_response == [1, 2, 3]
     url = '/v1.0/test_array_unsupported_query_param?items=1;2;3'
     response = app_client.get(url, headers=headers)
-    array_response = json.loads(response.data.decode('utf-8', 'replace'))  # [str] unsupported collectionFormat
+    array_response: List[str] = json.loads(response.data.decode('utf-8', 'replace'))  # unsupported collectionFormat
     assert array_response == ["1;2;3"]
     url = '/v1.0/test_array_csv_query_param?items=A&items=B&items=C&items=D,E,F'
     response = app_client.get(url, headers=headers)
-    array_response = json.loads(response.data.decode('utf-8', 'replace'))  # type: [str] multi array with csv format
+    array_response: List[str] = json.loads(response.data.decode('utf-8', 'replace'))  # multi array with csv format
     assert array_response == ['D', 'E', 'F']
     url = '/v1.0/test_array_multi_query_param?items=A&items=B&items=C&items=D,E,F'
     response = app_client.get(url, headers=headers)
-    array_response = json.loads(response.data.decode('utf-8', 'replace'))  # type: [str] multi array with csv format
+    array_response: List[str] = json.loads(response.data.decode('utf-8', 'replace'))  # multi array with csv format
     assert array_response == ['A', 'B', 'C', 'D', 'E', 'F']
     url = '/v1.0/test_array_pipes_query_param?items=4&items=5&items=6&items=7|8|9'
     response = app_client.get(url, headers=headers)
-    array_response = json.loads(response.data.decode('utf-8', 'replace'))  # type: [int] multi array with pipes format
+    array_response: List[int] = json.loads(response.data.decode('utf-8', 'replace'))  # multi array with pipes format
     assert array_response == [7, 8, 9]
 
 
@@ -77,25 +77,25 @@ def test_array_form_param(simple_app):
     headers = {'Content-type': 'application/x-www-form-urlencoded'}
     url = '/v1.0/test_array_csv_form_param'
     response = app_client.post(url, headers=headers)
-    array_response = json.loads(response.data.decode('utf-8', 'replace'))  # type: [str]
+    array_response: List[str] = json.loads(response.data.decode('utf-8', 'replace'))
     assert array_response == ['squash', 'banana']
     url = '/v1.0/test_array_csv_form_param'
     response = app_client.post(url, headers=headers, data={"items": "one,two,three"})
-    array_response = json.loads(response.data.decode('utf-8', 'replace'))  # type: [str]
+    array_response: List[str] = json.loads(response.data.decode('utf-8', 'replace'))
     assert array_response == ['one', 'two', 'three']
     url = '/v1.0/test_array_pipes_form_param'
     response = app_client.post(url, headers=headers, data={"items": "1|2|3"})
-    array_response = json.loads(response.data.decode('utf-8', 'replace'))  # type: [int]
+    array_response: List[int] = json.loads(response.data.decode('utf-8', 'replace'))
     assert array_response == [1, 2, 3]
     url = '/v1.0/test_array_csv_form_param'
     data = 'items=A&items=B&items=C&items=D,E,F'
     response = app_client.post(url, headers=headers, data=data)
-    array_response = json.loads(response.data.decode('utf-8', 'replace'))  # type: [str] multi array with csv format
+    array_response: List[str] = json.loads(response.data.decode('utf-8', 'replace'))  # multi array with csv format
     assert array_response == ['D', 'E', 'F']
     url = '/v1.0/test_array_pipes_form_param'
     data = 'items=4&items=5&items=6&items=7|8|9'
     response = app_client.post(url, headers=headers, data=data)
-    array_response = json.loads(response.data.decode('utf-8', 'replace'))  # type: [int] multi array with pipes format
+    array_response: List[int] = json.loads(response.data.decode('utf-8', 'replace'))  # multi array with pipes format
     assert array_response == [7, 8, 9]
 
 
@@ -127,22 +127,57 @@ def test_strict_formdata_param(strict_app):
     assert resp.status_code == 200
 
 
-def test_path_parameter_someint(simple_app):
+@pytest.mark.parametrize('arg, result', [
+    # The cases accepted by the Flask/Werkzeug converter
+    ['123', 'int 123'],
+    ['0', 'int 0'],
+    ['0000', 'int 0'],
+    # Additional cases that we want to support
+    ['+123', 'int 123'],
+    ['+0', 'int 0'],
+    ['-0', 'int 0'],
+    ['-123', 'int -123'],
+])
+def test_path_parameter_someint(simple_app, arg, result):
+    assert isinstance(arg, str)  # sanity check
     app_client = simple_app.app.test_client()
-    resp = app_client.get('/v1.0/test-int-path/123')  # type: flask.Response
-    assert resp.data.decode('utf-8', 'replace') == '"int"\n'
+    resp = app_client.get(f'/v1.0/test-int-path/{arg}')  # type: flask.Response
+    assert resp.data.decode('utf-8', 'replace') == f'"{result}"\n'
 
+
+def test_path_parameter_someint__bad(simple_app):
     # non-integer values will not match Flask route
+    app_client = simple_app.app.test_client()
     resp = app_client.get('/v1.0/test-int-path/foo')  # type: flask.Response
     assert resp.status_code == 404
 
 
-def test_path_parameter_somefloat(simple_app):
+@pytest.mark.parametrize('arg, result', [
+    # The cases accepted by the Flask/Werkzeug converter
+    ['123.45', 'float 123.45'],
+    ['123.0', 'float 123'],
+    ['0.999999999999999999', 'float 1'],
+    # Additional cases that we want to support
+    ['+123.45', 'float 123.45'],
+    ['-123.45', 'float -123.45'],
+    ['123.', 'float 123'],
+    ['.45', 'float 0.45'],
+    ['123', 'float 123'],
+    ['0', 'float 0'],
+    ['0000', 'float 0'],
+    ['-0.000000001', 'float -1e-09'],
+    ['100000000000', 'float 1e+11'],
+])
+def test_path_parameter_somefloat(simple_app, arg, result):
+    assert isinstance(arg, str)  # sanity check
     app_client = simple_app.app.test_client()
-    resp = app_client.get('/v1.0/test-float-path/123.45')  # type: flask.Response
-    assert resp.data.decode('utf-8' , 'replace') == '"float"\n'
+    resp = app_client.get(f'/v1.0/test-float-path/{arg}')  # type: flask.Response
+    assert resp.data.decode('utf-8', 'replace') == f'"{result}"\n'
 
+
+def test_path_parameter_somefloat__bad(simple_app):
     # non-float values will not match Flask route
+    app_client = simple_app.app.test_client()
     resp = app_client.get('/v1.0/test-float-path/123,45')  # type: flask.Response
     assert resp.status_code == 404
 
@@ -336,7 +371,7 @@ def test_nullable_parameter(simple_app):
 
     time_start = 1010
     resp = app_client.get(
-        '/v1.0/nullable-parameters?time_start={}'.format(time_start))
+        f'/v1.0/nullable-parameters?time_start={time_start}')
     assert json.loads(resp.data.decode('utf-8', 'replace')) == time_start
 
     resp = app_client.post('/v1.0/nullable-parameters', data={"post_param": 'None'})
@@ -352,6 +387,9 @@ def test_nullable_parameter(simple_app):
     resp = app_client.put('/v1.0/nullable-parameters', data="None", headers=headers)
     assert json.loads(resp.data.decode('utf-8', 'replace')) == 'it was None'
 
+    resp = app_client.put('/v1.0/nullable-parameters-noargs', data="None", headers=headers)
+    assert json.loads(resp.data.decode('utf-8', 'replace')) == 'hello'
+
 
 def test_args_kwargs(simple_app):
     app_client = simple_app.app.test_client()
@@ -362,6 +400,16 @@ def test_args_kwargs(simple_app):
     resp = app_client.get('/v1.0/query-params-as-kwargs?foo=a&bar=b')
     assert resp.status_code == 200
     assert json.loads(resp.data.decode('utf-8', 'replace')) == {'foo': 'a'}
+
+    if simple_app._spec_file == 'openapi.yaml':
+        body = { 'foo': 'a', 'bar': 'b' }
+        resp = app_client.post(
+            '/v1.0/body-params-as-kwargs',
+            data=json.dumps(body),
+            headers={'Content-Type': 'application/json'})
+        assert resp.status_code == 200
+        # having only kwargs, the handler would have been passed 'body'
+        assert json.loads(resp.data.decode('utf-8', 'replace')) == {'body': {'foo': 'a', 'bar': 'b'}, }
 
 
 def test_param_sanitization(simple_app):
@@ -427,7 +475,7 @@ def test_parameters_snake_case(snake_case_app):
     assert resp.status_code == 200
     resp = app_client.post('/v1.0/test-post-query-snake?someId=123', headers=headers, data=json.dumps({"a": "test"}))
     assert resp.status_code == 200
-    resp = app_client.post('/v1.0/test-post-query-shadow?id=123', headers=headers, data=json.dumps({"a": "test"}))
+    resp = app_client.post('/v1.0/test-post-query-shadow?id=123&class=header', headers=headers, data=json.dumps({"a": "test"}))
     assert resp.status_code == 200
     resp = app_client.get('/v1.0/test-get-path-snake/123')
     assert resp.status_code == 200
@@ -437,6 +485,22 @@ def test_parameters_snake_case(snake_case_app):
     assert resp.status_code == 200
     resp = app_client.get('/v1.0/test-get-query-shadow?list=123')
     assert resp.status_code == 200
+    # Tests for when CamelCase parameter is supplied, of which the snake_case version
+    # matches an existing parameter and view func argument, or vice versa
+    resp = app_client.get('/v1.0/test-get-camel-case-version?truthiness=true&orderBy=asc')
+    assert resp.status_code == 200
+    assert resp.get_json() == {'truthiness': True, 'order_by': 'asc'}
+    resp = app_client.get('/v1.0/test-get-camel-case-version?truthiness=5')
+    assert resp.status_code == 400
+    assert resp.get_json()['detail'] == "Wrong type, expected 'boolean' for query parameter 'truthiness'"
+    # Incorrectly cased params should be ignored
+    resp = app_client.get('/v1.0/test-get-camel-case-version?Truthiness=true&order_by=asc')
+    assert resp.status_code == 200
+    assert resp.get_json() == {'truthiness': False, 'order_by': None}  # default values
+    resp = app_client.get('/v1.0/test-get-camel-case-version?Truthiness=5&order_by=4')
+    assert resp.status_code == 200
+    assert resp.get_json() == {'truthiness': False, 'order_by': None}  # default values
+    # TODO: Add tests for body parameters
 
 
 def test_get_unicode_request(simple_app):
@@ -445,3 +509,11 @@ def test_get_unicode_request(simple_app):
     resp = app_client.get('/v1.0/get_unicode_request?price=%C2%A319.99')  # £19.99
     assert resp.status_code == 200
     assert json.loads(resp.data.decode('utf-8'))['price'] == '£19.99'
+
+
+def test_cookie_param(simple_app):
+    app_client = simple_app.app.test_client()
+    app_client.set_cookie("localhost", "test_cookie", "hello")
+    response = app_client.get("/v1.0/test-cookie-param")
+    assert response.status_code == 200
+    assert response.json == {"cookie_value": "hello"}

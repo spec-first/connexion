@@ -1,0 +1,26 @@
+ci:
+  autoupdate_branch: "main"
+  autoupdate_schedule: monthly
+repos:
+  - repo: https://github.com/PyCQA/flake8
+    rev: 4.0.1
+    hooks:
+      - id: flake8
+        files: "^connexion/"
+        additional_dependencies:
+          - flake8-rst-docstrings==0.2.3
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.10.1
+    hooks:
+      - id: isort
+        name: isort
+        files: "^connexion/"
+        args: ["--project", "connexion", "--check-only", "--diff"]
+      - id: isort
+        name: isort examples
+        files: "^examples/"
+        args: ["--thirdparty", "connexion", "--check-only", "--diff"]
+      - id: isort
+        name: isort tests
+        files: "^tests/"
+        args: ["--project", "conftest", "--thirdparty", "connexion", "--check-only", "--diff"]

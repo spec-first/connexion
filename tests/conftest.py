@@ -1,12 +1,11 @@
 import json
 import logging
 import pathlib
-import sys
 
 import pytest
-
 from connexion import App
-from connexion.security import FlaskSecurityHandlerFactory
+from connexion.security import SecurityHandlerFactory
+from werkzeug.test import Client, EnvironBuilder
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -18,7 +17,7 @@ OPENAPI3_SPEC = ["openapi.yaml"]
 SPECS = OPENAPI2_SPEC + OPENAPI3_SPEC
 
 
-class FakeResponse(object):
+class FakeResponse:
     def __init__(self, status_code, text):
         """
         :type status_code: int
@@ -32,38 +31,74 @@ class FakeResponse(object):
         return json.loads(self.text)
 
 
+def fixed_get_environ():
+    """See https://github.com/pallets/werkzeug/issues/2347"""
+
+    original_get_environ = EnvironBuilder.get_environ
+
+    def f(self):
+        result = original_get_environ(self)
+        result.pop("HTTP_CONTENT_TYPE", None)
+        result.pop("HTTP_CONTENT_LENGTH", None)
+        return result
+
+    return f
+
+
+EnvironBuilder.get_environ = fixed_get_environ()
+
+
+def buffered_open():
+    """For use with ASGI middleware"""
+
+    original_open = Client.open
+
+    def f(*args, **kwargs):
+        kwargs["buffered"] = True
+        return original_open(*args, **kwargs)
+
+    return f
+
+
+Client.open = buffered_open()
+
+
 # Helper fixtures functions
 # =========================
 
 
 @pytest.fixture
 def oauth_requests(monkeypatch):
-    def fake_get(url, params=None, headers=None, timeout=None):
-        """
-        :type url: str
-        :type params: dict| None
-        """
-        headers = headers or {}
-        if url == "https://oauth.example/token_info":
-            token = headers.get('Authorization', 'invalid').split()[-1]
-            if token in ["100", "has_myscope"]:
-                return FakeResponse(200, '{"uid": "test-user", "scope": ["myscope"]}')
-            if token in ["200", "has_wrongscope"]:
-                return FakeResponse(200, '{"uid": "test-user", "scope": ["wrongscope"]}')
-            if token == "has_myscope_otherscope":
-                return FakeResponse(200, '{"uid": "test-user", "scope": ["myscope", "otherscope"]}')
-            if token in ["300", "is_not_invalid"]:
-                return FakeResponse(404, '')
-            if token == "has_scopes_in_scopes_with_s":
-                return FakeResponse(200, '{"uid": "test-user", "scopes": ["myscope", "otherscope"]}')
-        return url
 
-    monkeypatch.setattr('connexion.security.flask_security_handler_factory.session.get', fake_get)
+    class FakeClient:
+
+        @staticmethod
+        async def get(url, params=None, headers=None, timeout=None):
+            """
+            :type url: str
+            :type params: dict| None
+            """
+            headers = headers or {}
+            if url == "https://oauth.example/token_info":
+                token = headers.get('Authorization', 'invalid').split()[-1]
+                if token in ["100", "has_myscope"]:
+                    return FakeResponse(200, '{"uid": "test-user", "scope": ["myscope"]}')
+                if token in ["200", "has_wrongscope"]:
+                    return FakeResponse(200, '{"uid": "test-user", "scope": ["wrongscope"]}')
+                if token == "has_myscope_otherscope":
+                    return FakeResponse(200, '{"uid": "test-user", "scope": ["myscope", "otherscope"]}')
+                if token in ["300", "is_not_invalid"]:
+                    return FakeResponse(404, '')
+                if token == "has_scopes_in_scopes_with_s":
+                    return FakeResponse(200, '{"uid": "test-user", "scopes": ["myscope", "otherscope"]}')
+            return url
+
+    monkeypatch.setattr(SecurityHandlerFactory, 'client', FakeClient())
 
 
 @pytest.fixture
 def security_handler_factory():
-    security_handler_factory = FlaskSecurityHandlerFactory(None)
+    security_handler_factory = SecurityHandlerFactory(None)
     yield security_handler_factory
 
 
@@ -77,11 +112,6 @@ def app():
 @pytest.fixture
 def simple_api_spec_dir():
     return FIXTURES_FOLDER / 'simple'
-
-
-@pytest.fixture(scope='session')
-def aiohttp_api_spec_dir():
-    return FIXTURES_FOLDER / 'aiohttp'
 
 
 @pytest.fixture
@@ -109,7 +139,7 @@ def json_datetime_dir():
     return FIXTURES_FOLDER / 'datetime_support'
 
 
-def build_app_from_fixture(api_spec_folder, spec_file='openapi.yaml', **kwargs):
+def build_app_from_fixture(api_spec_folder, spec_file='openapi.yaml', middlewares=None, **kwargs):
     debug = True
     if 'debug' in kwargs:
         debug = kwargs['debug']
@@ -118,6 +148,7 @@ def build_app_from_fixture(api_spec_folder, spec_file='openapi.yaml', **kwargs):
     cnx_app = App(__name__,
                   port=5001,
                   specification_dir=FIXTURES_FOLDER / api_spec_folder,
+                  middlewares=middlewares,
                   debug=debug)
 
     cnx_app.add_api(spec_file, **kwargs)
@@ -139,7 +170,7 @@ def simple_openapi_app(request):
 def reverse_proxied_app(request):
 
     # adapted from http://flask.pocoo.org/snippets/35/
-    class ReverseProxied(object):
+    class ReverseProxied:
 
         def __init__(self, app, script_name=None, scheme=None, server=None):
             self.app = app
@@ -227,9 +258,3 @@ def unordered_definition_app(request):
 def bad_operations_app(request):
     return build_app_from_fixture('bad_operations', request.param,
                                   resolver_error=501)
-
-
-if sys.version_info < (3, 5, 3) and sys.version_info[0] == 3:
-    @pytest.fixture
-    def aiohttp_client(test_client):
-        return test_client

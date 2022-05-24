@@ -1,29 +1,31 @@
+"""
+This module defines a command-line interface (CLI) that runs an OpenAPI specification to be a
+starting point for developing your API with Connexion.
+"""
+
 import logging
 import sys
 from os import path
 
 import click
-import connexion
 from clickclick import AliasedGroup, fatal_error
+
+import connexion
 from connexion.mock import MockResolver
 
 logger = logging.getLogger('connexion.cli')
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 FLASK_APP = 'flask'
-AIOHTTP_APP = 'aiohttp'
 AVAILABLE_SERVERS = {
     'flask': [FLASK_APP],
     'gevent': [FLASK_APP],
     'tornado': [FLASK_APP],
-    'aiohttp': [AIOHTTP_APP]
 }
 AVAILABLE_APPS = {
     FLASK_APP: 'connexion.apps.flask_app.FlaskApp',
-    AIOHTTP_APP: 'connexion.apps.aiohttp_app.AioHttpApp'
 }
 DEFAULT_SERVERS = {
     FLASK_APP: FLASK_APP,
-    AIOHTTP_APP: AIOHTTP_APP
 }
 
 
@@ -45,7 +47,7 @@ def validate_server_requirements(ctx, param, value):
 def print_version(ctx, param, value):
     if not value or ctx.resilient_parsing:
         return
-    click.echo('Connexion {}'.format(connexion.__version__))
+    click.echo(f'Connexion {connexion.__version__}')
     ctx.exit()
 
 
@@ -147,12 +149,6 @@ def run(spec_file,
         )
         raise click.UsageError(message)
 
-    if app_framework == AIOHTTP_APP:
-        try:
-            import aiohttp  # NOQA
-        except Exception:
-            fatal_error('aiohttp library is not installed')
-
     logging_level = logging.WARN
     if verbose > 0:
         logging_level = logging.INFO
@@ -166,7 +162,7 @@ def run(spec_file,
     spec_file_full_path = path.abspath(spec_file)
     py_module_path = base_module_path or path.dirname(spec_file_full_path)
     sys.path.insert(1, path.abspath(py_module_path))
-    logger.debug('Added {} to system path.'.format(py_module_path))
+    logger.debug(f'Added {py_module_path} to system path.')
 
     resolver_error = None
     if stub:

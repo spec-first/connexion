@@ -1,5 +1,5 @@
 from connexion.mock import MockResolver
-from connexion.operations import Swagger2Operation, OpenAPIOperation
+from connexion.operations import OpenAPIOperation, Swagger2Operation
 
 
 def test_mock_resolver_default():
@@ -24,10 +24,7 @@ def test_mock_resolver_default():
                                   },
                                   app_produces=['application/json'],
                                   app_consumes=['application/json'],
-                                  app_security=[],
-                                  security_definitions={},
                                   definitions={},
-                                  parameter_definitions={},
                                   resolver=resolver)
     assert operation.operation_id == 'mock-1'
 
@@ -57,10 +54,7 @@ def test_mock_resolver_numeric():
                                   },
                                   app_produces=['application/json'],
                                   app_consumes=['application/json'],
-                                  app_security=[],
-                                  security_definitions={},
                                   definitions={},
-                                  parameter_definitions={},
                                   resolver=resolver)
     assert operation.operation_id == 'mock-1'
 
@@ -96,10 +90,7 @@ def test_mock_resolver_example():
                                   },
                                   app_produces=['application/json'],
                                   app_consumes=['application/json'],
-                                  app_security=[],
-                                  security_definitions={},
                                   definitions={},
-                                  parameter_definitions={},
                                   resolver=resolver)
     assert operation.operation_id == 'mock-1'
 
@@ -133,10 +124,7 @@ def test_mock_resolver_example_nested_in_object():
                                   },
                                   app_produces=['application/json'],
                                   app_consumes=['application/json'],
-                                  app_security=[],
-                                  security_definitions={},
                                   definitions={},
-                                  parameter_definitions={},
                                   resolver=resolver)
     assert operation.operation_id == 'mock-1'
 
@@ -168,10 +156,7 @@ def test_mock_resolver_example_nested_in_list():
                                   },
                                   app_produces=['application/json'],
                                   app_consumes=['application/json'],
-                                  app_security=[],
-                                  security_definitions={},
                                   definitions={},
-                                  parameter_definitions={},
                                   resolver=resolver)
     assert operation.operation_id == 'mock-1'
 
@@ -207,7 +192,6 @@ def test_mock_resolver_example_nested_in_object_openapi():
                                  operation={
                                      'responses': responses
                                  },
-                                 app_security=[],
                                  resolver=resolver)
     assert operation.operation_id == 'mock-1'
 
@@ -241,7 +225,6 @@ def test_mock_resolver_example_nested_in_list_openapi():
                                  operation={
                                      'responses': responses
                                  },
-                                 app_security=[],
                                  resolver=resolver)
     assert operation.operation_id == 'mock-1'
 
@@ -274,10 +257,7 @@ def test_mock_resolver_no_example_nested_in_object():
                                   },
                                   app_produces=['application/json'],
                                   app_consumes=['application/json'],
-                                  app_security=[],
-                                  security_definitions={},
                                   definitions={},
-                                  parameter_definitions={},
                                   resolver=resolver)
     assert operation.operation_id == 'mock-1'
 
@@ -310,7 +290,6 @@ def test_mock_resolver_no_example_nested_in_list_openapi():
                                  operation={
                                      'responses': responses
                                  },
-                                 app_security=[],
                                  resolver=resolver)
     assert operation.operation_id == 'mock-1'
 
@@ -334,10 +313,7 @@ def test_mock_resolver_no_examples():
                                   },
                                   app_produces=['application/json'],
                                   app_consumes=['application/json'],
-                                  app_security=[],
-                                  security_definitions={},
                                   definitions={},
-                                  parameter_definitions={},
                                   resolver=resolver)
     assert operation.operation_id == 'mock-1'
 
@@ -363,10 +339,7 @@ def test_mock_resolver_notimplemented():
                                   },
                                   app_produces=['application/json'],
                                   app_consumes=['application/json'],
-                                  app_security=[],
-                                  security_definitions={},
                                   definitions={},
-                                  parameter_definitions={},
                                   resolver=resolver)
     assert operation.operation_id == 'fakeapi.hello.get'
 
@@ -381,10 +354,7 @@ def test_mock_resolver_notimplemented():
                                   },
                                   app_produces=['application/json'],
                                   app_consumes=['application/json'],
-                                  app_security=[],
-                                  security_definitions={},
                                   definitions={},
-                                  parameter_definitions={},
                                   resolver=resolver)
 
     # check if it is using the mock function

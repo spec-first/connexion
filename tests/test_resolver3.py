@@ -1,5 +1,5 @@
 from connexion.operations import OpenAPIOperation
-from connexion.resolver import Resolver, RestyResolver
+from connexion.resolver import RelativeResolver, Resolver, RestyResolver
 
 COMPONENTS = {'parameters': {'myparam': {'in': 'path', 'schema': {'type': 'integer'}}}}
 
@@ -14,9 +14,55 @@ def test_standard_resolve_x_router_controller():
             'x-openapi-router-controller': 'fakeapi.hello',
             'operationId': 'post_greeting',
         },
-        app_security=[],
         components=COMPONENTS,
         resolver=Resolver()
+    )
+    assert operation.operation_id == 'fakeapi.hello.post_greeting'
+
+
+def test_relative_resolve_x_router_controller():
+    operation = OpenAPIOperation(
+        api=None,
+        method='GET',
+        path='endpoint',
+        path_parameters=[],
+        operation={
+            'x-openapi-router-controller': 'fakeapi.hello',
+            'operationId': 'post_greeting',
+        },
+        components=COMPONENTS,
+        resolver=RelativeResolver('root_path')
+    )
+    assert operation.operation_id == 'fakeapi.hello.post_greeting'
+
+
+def test_relative_resolve_operation_id():
+    operation = OpenAPIOperation(
+        api=None,
+        method='GET',
+        path='endpoint',
+        path_parameters=[],
+        operation={
+            'operationId': 'hello.post_greeting',
+        },
+        components=COMPONENTS,
+        resolver=RelativeResolver('fakeapi')
+    )
+    assert operation.operation_id == 'fakeapi.hello.post_greeting'
+
+
+def test_relative_resolve_operation_id_with_module():
+    import fakeapi
+    operation = OpenAPIOperation(
+        api=None,
+        method='GET',
+        path='endpoint',
+        path_parameters=[],
+        operation={
+            'operationId': 'hello.post_greeting',
+        },
+        components=COMPONENTS,
+        resolver=RelativeResolver(fakeapi)
     )
     assert operation.operation_id == 'fakeapi.hello.post_greeting'
 
@@ -30,7 +76,6 @@ def test_resty_resolve_operation_id():
         operation={
             'operationId': 'fakeapi.hello.post_greeting',
         },
-        app_security=[],
         components=COMPONENTS,
         resolver=RestyResolver('fakeapi')
     )
@@ -47,7 +92,6 @@ def test_resty_resolve_x_router_controller_with_operation_id():
             'x-openapi-router-controller': 'fakeapi.hello',
             'operationId': 'post_greeting',
         },
-        app_security=[],
         components=COMPONENTS,
         resolver=RestyResolver('fakeapi')
     )
@@ -61,7 +105,6 @@ def test_resty_resolve_x_router_controller_without_operation_id():
         path='/hello/{id}',
         path_parameters=[],
         operation={'x-openapi-router-controller': 'fakeapi.hello'},
-        app_security=[],
         components=COMPONENTS,
         resolver=RestyResolver('fakeapi'))
     assert operation.operation_id == 'fakeapi.hello.get'
@@ -74,7 +117,6 @@ def test_resty_resolve_with_default_module_name():
         path='/hello/{id}',
         path_parameters=[],
         operation={},
-        app_security=[],
         components=COMPONENTS,
         resolver=RestyResolver('fakeapi')
     )
@@ -88,7 +130,6 @@ def test_resty_resolve_with_default_module_name():
         path='/hello/{id}/world',
         path_parameters=[],
         operation={},
-        app_security=[],
         components=COMPONENTS,
         resolver=RestyResolver('fakeapi')
     )
@@ -102,7 +143,6 @@ def test_resty_resolve_with_default_module_name_lowercase_verb():
         path='/hello/{id}',
         path_parameters=[],
         operation={},
-        app_security=[],
         components=COMPONENTS,
         resolver=RestyResolver('fakeapi')
     )
@@ -116,7 +156,6 @@ def test_resty_resolve_with_default_module_name_lowercase_verb_nested():
         path='/hello/world/{id}',
         path_parameters=[],
         operation={},
-        app_security=[],
         components=COMPONENTS,
         resolver=RestyResolver('fakeapi')
     )
@@ -130,7 +169,6 @@ def test_resty_resolve_with_default_module_name_will_translate_dashes_in_resourc
         path='/foo-bar',
         path_parameters=[],
         operation={},
-        app_security=[],
         components=COMPONENTS,
         resolver=RestyResolver('fakeapi')
     )
@@ -144,7 +182,6 @@ def test_resty_resolve_with_default_module_name_can_resolve_api_root():
         path='/',
         path_parameters=[],
         operation={},
-        app_security=[],
         components=COMPONENTS,
         resolver=RestyResolver('fakeapi')
     )
@@ -158,7 +195,6 @@ def test_resty_resolve_with_default_module_name_will_resolve_resource_root_get_a
         path='/hello',
         path_parameters=[],
         operation={},
-        app_security=[],
         components=COMPONENTS,
         resolver=RestyResolver('fakeapi')
     )
@@ -174,7 +210,6 @@ def test_resty_resolve_with_default_module_name_and_x_router_controller_will_res
         operation={
             'x-openapi-router-controller': 'fakeapi.hello',
         },
-        app_security=[],
         components=COMPONENTS,
         resolver=RestyResolver('fakeapi')
     )
@@ -188,7 +223,6 @@ def test_resty_resolve_with_default_module_name_will_resolve_resource_root_as_co
         path='/hello',
         path_parameters=[],
         operation={},
-        app_security=[],
         components=COMPONENTS,
         resolver=RestyResolver('fakeapi', 'api_list')
     )
@@ -202,7 +236,6 @@ def test_resty_resolve_with_default_module_name_will_resolve_resource_root_post_
         path='/hello',
         path_parameters=[],
         operation={},
-        app_security=[],
         components=COMPONENTS,
         resolver=RestyResolver('fakeapi')
     )

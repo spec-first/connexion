@@ -15,7 +15,7 @@ paths:
               schema:
                 type: string
       security:
-        - basic: ['secret']
+        - basic: []
 components:
   securitySchemes:
     basic:

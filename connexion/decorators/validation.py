@@ -1,21 +1,23 @@
+"""
+This module defines view function decorators to validate request and response parameters and bodies.
+"""
+
 import collections
 import copy
 import functools
 import logging
+from typing import AnyStr, Union
 
-import pkg_resources
 from jsonschema import Draft4Validator, ValidationError, draft4_format_checker
 from jsonschema.validators import extend
 from werkzeug.datastructures import FileStorage
 
-from ..exceptions import ExtraParameterProblem, BadRequestProblem, UnsupportedMediaTypeProblem
+from ..exceptions import (BadRequestProblem, ExtraParameterProblem,
+                          UnsupportedMediaTypeProblem)
 from ..http_facts import FORM_CONTENT_TYPES
 from ..json_schema import Draft4RequestValidator, Draft4ResponseValidator
+from ..lifecycle import ConnexionResponse
 from ..utils import all_json, boolean, is_json_mimetype, is_null, is_nullable
-
-_jsonschema_3_or_newer = pkg_resources.parse_version(
-        pkg_resources.get_distribution("jsonschema").version) >= \
-    pkg_resources.parse_version("3.0.0")
 
 logger = logging.getLogger('connexion.decorators.validation')
 
@@ -100,7 +102,7 @@ def validate_parameter_list(request_params, spec_params):
     return request_params.difference(spec_params)
 
 
-class RequestBodyValidator(object):
+class RequestBodyValidator:
 
     def __init__(self, schema, consumes, api, is_null_value_valid=False, validator=None,
                  strict_validation=False):
@@ -151,7 +153,7 @@ class RequestBodyValidator(object):
                     else:
                         # the body has contents that were not parsed as JSON
                         raise UnsupportedMediaTypeProblem(
-                                       "Invalid Content-type ({content_type}), expected JSON data".format(
+                                       detail="Invalid Content-type ({content_type}), expected JSON data".format(
                                            content_type=request.headers.get("Content-Type", "")
                                        ))
 
@@ -188,6 +190,12 @@ class RequestBodyValidator(object):
 
         return wrapper
 
+    @classmethod
+    def _error_path_message(cls, exception):
+        error_path = '.'.join(str(item) for item in exception.path)
+        error_path_msg = f" - '{error_path}'" if error_path else ""
+        return error_path_msg
+
     def validate_schema(self, data, url):
         # type: (dict, AnyStr) -> Union[ConnexionResponse, None]
         if self.is_null_value_valid and is_null(data):
@@ -196,9 +204,7 @@ class RequestBodyValidator(object):
         try:
             self.validator.validate(data)
         except ValidationError as exception:
-            error_path = '.'.join(str(item) for item in exception.path)
-            error_path_msg = " - '{path}'".format(path=error_path) \
-                if error_path else ""
+            error_path_msg = self._error_path_message(exception=exception)
             logger.error(
                 "{url} validation error: {error}{error_path_msg}".format(
                     url=url, error=exception.message,
@@ -211,7 +217,7 @@ class RequestBodyValidator(object):
         return None
 
 
-class ResponseBodyValidator(object):
+class ResponseBodyValidator:
     def __init__(self, schema, validator=None):
         """
         :param schema: The schema of the response body
@@ -235,7 +241,7 @@ class ResponseBodyValidator(object):
         return None
 
 
-class ParameterValidator(object):
+class ParameterValidator:
     def __init__(self, parameters, api, strict_validation=False):
         """
         :param parameters: List of request parameter dictionaries
@@ -266,19 +272,13 @@ class ParameterValidator(object):
                 del param['required']
             try:
                 if parameter_type == 'formdata' and param.get('type') == 'file':
-                    if _jsonschema_3_or_newer:
-                        extend(
-                            Draft4Validator,
-                            type_checker=Draft4Validator.TYPE_CHECKER.redefine(
-                                "file",
-                                lambda checker, instance: isinstance(instance, FileStorage)
-                            )
-                        )(param, format_checker=draft4_format_checker).validate(converted_value)
-                    else:
-                        Draft4Validator(
-                            param,
-                            format_checker=draft4_format_checker,
-                            types={'file': FileStorage}).validate(converted_value)
+                    extend(
+                        Draft4Validator,
+                        type_checker=Draft4Validator.TYPE_CHECKER.redefine(
+                            "file",
+                            lambda checker, instance: isinstance(instance, FileStorage)
+                        )
+                    )(param, format_checker=draft4_format_checker).validate(converted_value)
                 else:
                     Draft4Validator(
                         param, format_checker=draft4_format_checker).validate(converted_value)
@@ -304,10 +304,9 @@ class ParameterValidator(object):
 
     def validate_formdata_parameter_list(self, request):
         request_params = request.form.keys()
-        try:
+        if 'formData' in self.parameters:  # Swagger 2:
             spec_params = [x['name'] for x in self.parameters['formData']]
-        except KeyError:
-            # OAS 3
+        else:  # OAS 3
             return set()
         return validate_parameter_list(request_params, spec_params)
 

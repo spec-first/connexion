@@ -14,7 +14,6 @@ def test_standard_resolve_x_router_controller():
             'x-openapi-router-controller': 'fakeapi.hello',
             'operationId': 'post_greeting',
         },
-        app_security=[],
         components=COMPONENTS,
         resolver=Resolver()
     )
@@ -29,7 +28,6 @@ def test_methodview_resolve_operation_id():
         operation={
             'operationId': 'fakeapi.hello.post_greeting',
         },
-        app_security=[],
         components=COMPONENTS,
         resolver=MethodViewResolver('fakeapi')
     )
@@ -43,14 +41,13 @@ def test_methodview_resolve_x_router_controller_with_operation_id():
         path='endpoint',
         path_parameters=[],
         operation={
-            'x-openapi-router-controller': 'fakeapi.Example_methodView',
+            'x-openapi-router-controller': 'fakeapi.ExampleMethodView',
             'operationId': 'post_greeting',
         },
-        app_security=[],
         components=COMPONENTS,
         resolver=MethodViewResolver('fakeapi')
     )
-    assert operation.operation_id == 'fakeapi.Example_methodView.post_greeting'
+    assert operation.operation_id == 'fakeapi.ExampleMethodView.post_greeting'
 
 
 def test_methodview_resolve_x_router_controller_without_operation_id():
@@ -58,11 +55,10 @@ def test_methodview_resolve_x_router_controller_without_operation_id():
                           method='GET',
                           path='/hello/{id}',
                           path_parameters=[],
-                          operation={'x-openapi-router-controller': 'fakeapi.Example_method'},
-                          app_security=[],
+                          operation={'x-openapi-router-controller': 'fakeapi.example_method'},
                           components=COMPONENTS,
                           resolver=MethodViewResolver('fakeapi'))
-    assert operation.operation_id == 'fakeapi.Example_methodView.get'
+    assert operation.operation_id == 'fakeapi.ExampleMethodView.get'
 
 
 def test_methodview_resolve_with_default_module_name():
@@ -72,11 +68,10 @@ def test_methodview_resolve_with_default_module_name():
         path='/example_method/{id}',
         path_parameters=[],
         operation={},
-        app_security=[],
         components=COMPONENTS,
         resolver=MethodViewResolver('fakeapi')
     )
-    assert operation.operation_id == 'fakeapi.Example_methodView.get'
+    assert operation.operation_id == 'fakeapi.ExampleMethodView.get'
 
 
 def test_methodview_resolve_with_default_module_name_lowercase_verb():
@@ -86,11 +81,10 @@ def test_methodview_resolve_with_default_module_name_lowercase_verb():
         path='/example_method/{id}',
         path_parameters=[],
         operation={},
-        app_security=[],
         components=COMPONENTS,
         resolver=MethodViewResolver('fakeapi')
     )
-    assert operation.operation_id == 'fakeapi.Example_methodView.get'
+    assert operation.operation_id == 'fakeapi.ExampleMethodView.get'
 
 
 def test_methodview_resolve_with_default_module_name_will_translate_dashes_in_resource_name():
@@ -100,11 +94,10 @@ def test_methodview_resolve_with_default_module_name_will_translate_dashes_in_re
         path='/example-method',
         path_parameters=[],
         operation={},
-        app_security=[],
         components=COMPONENTS,
         resolver=MethodViewResolver('fakeapi')
     )
-    assert operation.operation_id == 'fakeapi.Example_methodView.search'
+    assert operation.operation_id == 'fakeapi.ExampleMethodView.search'
 
 
 def test_methodview_resolve_with_default_module_name_can_resolve_api_root():
@@ -114,11 +107,10 @@ def test_methodview_resolve_with_default_module_name_can_resolve_api_root():
         path='/',
         path_parameters=[],
         operation={},
-        app_security=[],
         components=COMPONENTS,
-        resolver=MethodViewResolver('fakeapi.Example_method',)
+        resolver=MethodViewResolver('fakeapi.example_method',)
     )
-    assert operation.operation_id == 'fakeapi.Example_methodView.get'
+    assert operation.operation_id == 'fakeapi.ExampleMethodView.get'
 
 
 def test_methodview_resolve_with_default_module_name_will_resolve_resource_root_get_as_search():
@@ -128,11 +120,10 @@ def test_methodview_resolve_with_default_module_name_will_resolve_resource_root_
         path='/example_method',
         path_parameters=[],
         operation={},
-        app_security=[],
         components=COMPONENTS,
         resolver=MethodViewResolver('fakeapi')
     )
-    assert operation.operation_id == 'fakeapi.Example_methodView.search'
+    assert operation.operation_id == 'fakeapi.ExampleMethodView.search'
 
 
 def test_methodview_resolve_with_default_module_name_and_x_router_controller_will_resolve_resource_root_get_as_search():
@@ -144,11 +135,10 @@ def test_methodview_resolve_with_default_module_name_and_x_router_controller_wil
         operation={
             'x-openapi-router-controller': 'fakeapi.example_method',
         },
-        app_security=[],
         components=COMPONENTS,
         resolver=MethodViewResolver('fakeapi')
     )
-    assert operation.operation_id == 'fakeapi.Example_methodView.search'
+    assert operation.operation_id == 'fakeapi.ExampleMethodView.search'
 
 
 def test_methodview_resolve_with_default_module_name_will_resolve_resource_root_as_configured():
@@ -158,11 +148,10 @@ def test_methodview_resolve_with_default_module_name_will_resolve_resource_root_
         path='/example_method',
         path_parameters=[],
         operation={},
-        app_security=[],
         components=COMPONENTS,
         resolver=MethodViewResolver('fakeapi', 'api_list')
     )
-    assert operation.operation_id == 'fakeapi.Example_methodView.api_list'
+    assert operation.operation_id == 'fakeapi.ExampleMethodView.api_list'
 
 
 def test_methodview_resolve_with_default_module_name_will_resolve_resource_root_post_as_post():
@@ -172,8 +161,7 @@ def test_methodview_resolve_with_default_module_name_will_resolve_resource_root_
         path='/example_method',
         path_parameters=[],
         operation={},
-        app_security=[],
         components=COMPONENTS,
         resolver=MethodViewResolver('fakeapi')
     )
-    assert operation.operation_id == 'fakeapi.Example_methodView.post'
+    assert operation.operation_id == 'fakeapi.ExampleMethodView.post'

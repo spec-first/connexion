@@ -1,9 +1,15 @@
+"""
+This module defines an OpenAPIOperation class, a Connexion operation specific for OpenAPI 3 specs.
+"""
+
 import logging
+import warnings
 from copy import copy, deepcopy
 
 from connexion.operations.abstract import AbstractOperation
 
 from ..decorators.uri_parsing import OpenAPIURIParser
+from ..http_facts import FORM_CONTENT_TYPES
 from ..utils import deep_get, deep_merge, is_null, is_nullable, make_type
 
 logger = logging.getLogger("connexion.operations.openapi3")
@@ -16,8 +22,8 @@ class OpenAPIOperation(AbstractOperation):
     """
 
     def __init__(self, api, method, path, operation, resolver, path_parameters=None,
-                 app_security=None, components=None, validate_responses=False,
-                 strict_validation=False, randomize_endpoint=None, validator_map=None,
+                 components=None, validate_responses=False, strict_validation=False,
+                 randomize_endpoint=None, validator_map=None,
                  pythonic_params=False, uri_parser_class=None, pass_context_arg_name=None):
         """
         This class uses the OperationID identify the module and function that will handle the operation
@@ -38,8 +44,6 @@ class OpenAPIOperation(AbstractOperation):
         :param resolver: Callable that maps operationID to a function
         :param path_parameters: Parameters defined in the path level
         :type path_parameters: list
-        :param app_security: list of security rules the application uses by default
-        :type app_security: list
         :param components: `Components Object
             <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#componentsObject>`_
         :type components: dict
@@ -52,34 +56,26 @@ class OpenAPIOperation(AbstractOperation):
         :param validator_map: Custom validators for the types "parameter", "body" and "response".
         :type validator_map: dict
         :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended
-        to any shadowed built-ins
+            to any shadowed built-ins
         :type pythonic_params: bool
         :param uri_parser_class: class to use for uri parsing
         :type uri_parser_class: AbstractURIParser
         :param pass_context_arg_name: If not None will try to inject the request context to the function using this
-        name.
+            name.
         :type pass_context_arg_name: str|None
         """
         self.components = components or {}
 
-        def component_get(oas3_name):
-            return self.components.get(oas3_name, {})
-
-        # operation overrides globals
-        security_schemes = component_get('securitySchemes')
-        app_security = operation.get('security', app_security)
         uri_parser_class = uri_parser_class or OpenAPIURIParser
 
         self._router_controller = operation.get('x-openapi-router-controller')
 
-        super(OpenAPIOperation, self).__init__(
+        super().__init__(
             api=api,
             method=method,
             path=path,
             operation=operation,
             resolver=resolver,
-            app_security=app_security,
-            security_schemes=security_schemes,
             validate_responses=validate_responses,
             strict_validation=strict_validation,
             randomize_endpoint=randomize_endpoint,
@@ -88,18 +84,6 @@ class OpenAPIOperation(AbstractOperation):
             uri_parser_class=uri_parser_class,
             pass_context_arg_name=pass_context_arg_name
         )
-
-        self._definitions_map = {
-            'components': {
-                'schemas': component_get('schemas'),
-                'examples': component_get('examples'),
-                'requestBodies': component_get('requestBodies'),
-                'parameters': component_get('parameters'),
-                'securitySchemes': component_get('securitySchemes'),
-                'responses': component_get('responses'),
-                'headers': component_get('headers'),
-            }
-        }
 
         self._request_body = operation.get('requestBody', {})
 
@@ -132,7 +116,6 @@ class OpenAPIOperation(AbstractOperation):
             spec.get_operation(path, method),
             resolver=resolver,
             path_parameters=spec.get_path_params(path),
-            app_security=spec.security,
             components=spec.components,
             *args,
             **kwargs
@@ -268,10 +251,42 @@ class OpenAPIOperation(AbstractOperation):
         return {}
 
     def _get_body_argument(self, body, arguments, has_kwargs, sanitize):
-        x_body_name = sanitize(self.body_schema.get('x-body-name', 'body'))
-        if is_nullable(self.body_schema) and is_null(body):
-            return {x_body_name: None}
+        if len(arguments) <= 0 and not has_kwargs:
+            return {}
 
+        # prefer the x-body-name as an extension of requestBody
+        x_body_name = sanitize(self.request_body.get('x-body-name', None))
+
+        if not x_body_name:
+            # x-body-name also accepted in the schema field for legacy connexion compat
+            warnings.warn('x-body-name within the requestBody schema will be deprecated in the '
+                          'next major version. It should be provided directly under '
+                          'the requestBody instead.', DeprecationWarning)
+            x_body_name = sanitize(self.body_schema.get('x-body-name', 'body'))
+
+        if self.consumes[0] in FORM_CONTENT_TYPES:
+            result = self._get_body_argument_form(body)
+        else:
+            result = self._get_body_argument_json(body)
+
+        if x_body_name in arguments or has_kwargs:
+            return {x_body_name: result}
+        return {}
+
+    def _get_body_argument_json(self, body):
+        # if the body came in null, and the schema says it can be null, we decide
+        # to include no value for the body argument, rather than the default body
+        if is_nullable(self.body_schema) and is_null(body):
+            return None
+
+        if body is None:
+            default_body = self.body_schema.get('default', {})
+            return deepcopy(default_body)
+
+        return body
+
+    def _get_body_argument_form(self, body):
+        # now determine the actual value for the body (whether it came in or is default)
         default_body = self.body_schema.get('default', {})
         body_props = {k: {"schema": v} for k, v
                       in self.body_schema.get("properties", {}).items()}
@@ -280,23 +295,11 @@ class OpenAPIOperation(AbstractOperation):
         # see: https://github.com/OAI/OpenAPI-Specification/blame/3.0.2/versions/3.0.2.md#L2305
         additional_props = self.body_schema.get("additionalProperties", True)
 
-        if body is None:
-            body = deepcopy(default_body)
-
-        if self.body_schema.get("type") != "object":
-            if x_body_name in arguments or has_kwargs:
-                return {x_body_name: body}
-            return {}
-
         body_arg = deepcopy(default_body)
         body_arg.update(body or {})
 
-        res = {}
         if body_props or additional_props:
-            res = self._get_typed_body_values(body_arg, body_props, additional_props)
-
-        if x_body_name in arguments or has_kwargs:
-            return {x_body_name: res}
+            return self._get_typed_body_values(body_arg, body_props, additional_props)
         return {}
 
     def _get_typed_body_values(self, body_arg, body_props, additional_props):
@@ -319,7 +322,7 @@ class OpenAPIOperation(AbstractOperation):
                 res[key] = self._get_val_from_param(value, prop_defn)
             except KeyError:  # pragma: no cover
                 if not additional_props:
-                    logger.error("Body property '{}' not defined in body schema".format(key))
+                    logger.error(f"Body property '{key}' not defined in body schema")
                     continue
                 if additional_props_defn is not None:
                     value = self._get_val_from_param(value, additional_props_defn)
@@ -358,7 +361,7 @@ class OpenAPIOperation(AbstractOperation):
         return defaults
 
     def _get_query_arguments(self, query, arguments, has_kwargs, sanitize):
-        query_defns = {sanitize(p["name"]): p
+        query_defns = {p["name"]: p
                        for p in self.parameters
                        if p["in"] == "query"}
         default_query_params = self._get_query_defaults(query_defns)

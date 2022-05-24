@@ -2,9 +2,8 @@ import json
 from struct import unpack
 
 import yaml
-from werkzeug.test import Client, EnvironBuilder
-
 from connexion.apps.flask_app import FlaskJSONEncoder
+from werkzeug.test import Client, EnvironBuilder
 
 
 def test_app(simple_app):
@@ -60,7 +59,7 @@ def test_openapi_yaml_behind_proxy(reverse_proxied_app):
         headers=headers
     )
     assert openapi_yaml.status_code == 200
-    assert openapi_yaml.headers.get('Content-Type') == 'text/yaml'
+    assert openapi_yaml.headers.get('Content-Type').startswith('text/yaml')
     spec = yaml.load(openapi_yaml.data.decode('utf-8'), Loader=yaml.BaseLoader)
 
     if reverse_proxied_app._spec_file == 'swagger.yaml':
@@ -360,7 +359,7 @@ def test_post_wrong_content_type(simple_app):
 def test_get_unicode_response(simple_app):
     app_client = simple_app.app.test_client()
     resp = app_client.get('/v1.0/get_unicode_response')
-    actualJson = {u'currency': u'\xa3', u'key': u'leena'}
+    actualJson = {'currency': '\xa3', 'key': 'leena'}
     assert json.loads(resp.data.decode('utf-8','replace')) == actualJson
 
 
@@ -383,3 +382,40 @@ def test_get_bad_default_response(simple_app):
 
     resp = app_client.get('/v1.0/get_bad_default_response/202')
     assert resp.status_code == 500
+
+
+def test_streaming_response(simple_app):
+    app_client = simple_app.app.test_client()
+    resp = app_client.get('/v1.0/get_streaming_response')
+    assert resp.status_code == 200
+
+
+def test_oneof(simple_openapi_app):
+    app_client = simple_openapi_app.app.test_client()
+
+    post_greeting = app_client.post(  # type: flask.Response
+        '/v1.0/oneof_greeting',
+        data=json.dumps({"name": 3}),
+        content_type="application/json"
+    )
+    assert post_greeting.status_code == 200
+    assert post_greeting.content_type == 'application/json'
+    greeting_reponse = json.loads(post_greeting.data.decode('utf-8', 'replace'))
+    assert greeting_reponse['greeting'] == 'Hello 3'
+
+    post_greeting = app_client.post(  # type: flask.Response
+        '/v1.0/oneof_greeting',
+        data=json.dumps({"name": True}),
+        content_type="application/json"
+    )
+    assert post_greeting.status_code == 200
+    assert post_greeting.content_type == 'application/json'
+    greeting_reponse = json.loads(post_greeting.data.decode('utf-8', 'replace'))
+    assert greeting_reponse['greeting'] == 'Hello True'
+
+    post_greeting = app_client.post(  # type: flask.Response
+        '/v1.0/oneof_greeting',
+        data=json.dumps({"name": "jsantos"}),
+        content_type="application/json"
+    )
+    assert post_greeting.status_code == 400

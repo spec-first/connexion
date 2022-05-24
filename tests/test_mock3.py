@@ -29,7 +29,6 @@ def test_mock_resolver_default():
         operation={
             'responses': responses
         },
-        app_security=[],
         resolver=resolver
     )
     assert operation.operation_id == 'mock-1'
@@ -66,7 +65,6 @@ def test_mock_resolver_numeric():
         operation={
             'responses': responses
         },
-        app_security=[],
         resolver=resolver
     )
     assert operation.operation_id == 'mock-1'
@@ -109,7 +107,6 @@ def test_mock_resolver_inline_schema_example():
         operation={
             'responses': responses
         },
-        app_security=[],
         resolver=resolver
     )
     assert operation.operation_id == 'mock-1'
@@ -133,7 +130,6 @@ def test_mock_resolver_no_examples():
         operation={
             'responses': responses
         },
-        app_security=[],
         resolver=resolver
     )
     assert operation.operation_id == 'mock-1'
@@ -158,7 +154,6 @@ def test_mock_resolver_notimplemented():
         operation={
             'operationId': 'fakeapi.hello.get'
         },
-        app_security=[],
         resolver=resolver
     )
     assert operation.operation_id == 'fakeapi.hello.get'
@@ -173,7 +168,6 @@ def test_mock_resolver_notimplemented():
             'operationId': 'fakeapi.hello.nonexistent_function',
             'responses': responses
         },
-        app_security=[],
         resolver=resolver
     )
     # check if it is using the mock function

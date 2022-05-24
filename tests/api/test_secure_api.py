@@ -36,7 +36,6 @@ def test_security(oauth_requests, secure_endpoint_app):
     assert get_bye_no_auth.status_code == 401
     assert get_bye_no_auth.content_type == 'application/problem+json'
     get_bye_no_auth_reponse = json.loads(get_bye_no_auth.data.decode('utf-8', 'replace'))  # type: dict
-    assert get_bye_no_auth_reponse['title'] == 'Unauthorized'
     assert get_bye_no_auth_reponse['detail'] == "No authorization token provided"
 
     headers = {"Authorization": "Bearer 100"}
@@ -49,7 +48,6 @@ def test_security(oauth_requests, secure_endpoint_app):
     assert get_bye_wrong_scope.status_code == 403
     assert get_bye_wrong_scope.content_type == 'application/problem+json'
     get_bye_wrong_scope_reponse = json.loads(get_bye_wrong_scope.data.decode('utf-8', 'replace'))  # type: dict
-    assert get_bye_wrong_scope_reponse['title'] == 'Forbidden'
     assert get_bye_wrong_scope_reponse['detail'] == "Provided token doesn't have the required scope"
 
     headers = {"Authorization": "Bearer 300"}
@@ -57,7 +55,6 @@ def test_security(oauth_requests, secure_endpoint_app):
     assert get_bye_bad_token.status_code == 401
     assert get_bye_bad_token.content_type == 'application/problem+json'
     get_bye_bad_token_reponse = json.loads(get_bye_bad_token.data.decode('utf-8', 'replace'))  # type: dict
-    assert get_bye_bad_token_reponse['title'] == 'Unauthorized'
     assert get_bye_bad_token_reponse['detail'] == "Provided token is not valid"
 
     response = app_client.get('/v1.0/more-than-one-security-definition')  # type: flask.Response
@@ -96,6 +93,11 @@ def test_security(oauth_requests, secure_endpoint_app):
     assert response.data == b'"Authenticated"\n'
     headers = {"X-AUTH": "wrong-key"}
     response = app_client.get('/v1.0/optional-auth', headers=headers)  # type: flask.Response
+    assert response.data == b'"Unauthenticated"\n'
+    assert response.status_code == 200
+
+    # security function throws exception
+    response = app_client.get('/v1.0/auth-exception', headers={'X-Api-Key': 'foo'})
     assert response.status_code == 401
 
 

@@ -13,4 +13,6 @@ htmlcov/
 .idea/
 .vscode/
 venv/
+.venv/
 src/
+*.un~

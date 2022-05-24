@@ -1,7 +1,8 @@
-# abstract
-from .security_handler_factory import AbstractSecurityHandlerFactory  # NOQA
-from .async_security_handler_factory import AbstractAsyncSecurityHandlerFactory  # NOQA
+"""
+This module defines SecurityHandlerFactories which support the creation of security
+handlers for operations.
 
-# concrete
-from .flask_security_handler_factory import FlaskSecurityHandlerFactory  # NOQA
-from .aiohttp_security_handler_factory import AioHttpSecurityHandlerFactory  # NOQA
+isort:skip_file
+"""
+
+from .security_handler_factory import SecurityHandlerFactory  # NOQA

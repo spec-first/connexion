@@ -19,8 +19,8 @@ field that is either a space-separated list or an array of scopes belonging to
 the supplied token. This list of scopes will be validated against the scopes
 required by the API security definition to determine if the user is authorized.
 You can supply a custom scope validation func with ``x-scopeValidateFunc``
-or set ``SCOPEVALIDATE_FUNC`` env var, otherwise
-``connexion.decorators.security.validate_scope`` will be used as default.
+or set ``SCOPEVALIDATE_FUNC`` env var, otherwise default scope validation function
+``connexion.security.security_handler_factory.validate_scope`` will be used automatically.
 
 
 The recommended approach is to return a dict which complies with
@@ -48,8 +48,8 @@ You can find a `minimal OAuth example application`_ showing the use of
 ``x-tokenInfoUrl``, and `another OAuth example`_ showing the use of
 ``x-tokenInfoFunc`` in Connexion's "examples" folder.
 
-.. _minimal OAuth example application: https://github.com/zalando/connexion/tree/master/examples/swagger2/oauth2
-.. _another OAuth example: https://github.com/zalando/connexion/tree/master/examples/swagger2/oauth2_local_tokeninfo
+.. _minimal OAuth example application: https://github.com/zalando/connexion/tree/main/examples/swagger2/oauth2
+.. _another OAuth example: https://github.com/zalando/connexion/tree/main/examples/swagger2/oauth2_local_tokeninfo
 
 Basic Authentication
 --------------------
@@ -57,16 +57,12 @@ Basic Authentication
 With Connexion, the API security definition **must** include a
 ``x-basicInfoFunc`` or set ``BASICINFO_FUNC`` env var. It uses the same
 semantics as for ``x-tokenInfoFunc``, but the function accepts three
-parameters: username, password and required_scopes. If the security declaration
-of the operation also has an oauth security requirement, required_scopes is
-taken from there, otherwise it's None. This allows authorizing individual
-operations with `oauth scope`_ while using basic authentication for
-authentication.
+parameters: username, password and required_scopes.
 
 You can find a `minimal Basic Auth example application`_ in Connexion's "examples" folder.
 
 .. _oauth scope: https://oauth.net/2/scope/
-.. _minimal Basic Auth example application: https://github.com/zalando/connexion/tree/master/examples/openapi3/basicauth
+.. _minimal Basic Auth example application: https://github.com/zalando/connexion/tree/main/examples/openapi3/basicauth
 
 ApiKey Authentication
 ---------------------
@@ -86,6 +82,19 @@ With Connexion, the API security definition **must** include a
 semantics as for ``x-tokenInfoFunc``, but the function accepts one parameter: token.
 
 You can find a `minimal JWT example application`_ in Connexion's "examples/openapi3" folder.
+
+Multiple Authentication Schemes
+-------------------------------
+
+With Connexion, it is also possible to combine multiple authentication schemes
+as described in the `OpenAPI specification`_. When multiple authentication
+schemes are combined using logical AND, the ``token_info`` argument will
+consist of a dictionary mapping the names of the security scheme to their
+corresponding ``token_info``.
+
+Multiple OAuth2 security schemes in AND fashion are not supported.
+
+.. _OpenAPI specification: https://swagger.io/docs/specification/authentication/#multiple
 
 Deploying Authentication
 ------------------------
@@ -125,7 +134,7 @@ parameters to the underlying `werkzeug`_ server.
 .. _rfc6750: https://tools.ietf.org/html/rfc6750
 .. _rfc6749: https://tools.ietf.org/html/rfc6749
 .. _rfc7662: https://tools.ietf.org/html/rfc7662
-.. _minimal API Key example application: https://github.com/zalando/connexion/blob/master/examples/openapi3/apikey
-.. _minimal JWT example application: https://github.com/zalando/connexion/tree/master/examples/openapi3/jwt
+.. _minimal API Key example application: https://github.com/zalando/connexion/blob/main/examples/openapi3/apikey
+.. _minimal JWT example application: https://github.com/zalando/connexion/tree/main/examples/openapi3/jwt
 .. _enabling authentication passthrough in modwsgi: https://modwsgi.readthedocs.io/en/develop/configuration-directives/WSGIPassAuthorization.html
 .. _modwsgi documentation: https://modwsgi.readthedocs.io/en/develop/index.html

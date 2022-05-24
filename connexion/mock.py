@@ -1,3 +1,7 @@
+"""
+This module contains a mock resolver that returns mock functions for operations it cannot resolve.
+"""
+
 import functools
 import logging
 
@@ -9,7 +13,7 @@ logger = logging.getLogger(__name__)
 class MockResolver(Resolver):
 
     def __init__(self, mock_all):
-        super(MockResolver, self).__init__()
+        super().__init__()
         self.mock_all = mock_all
         self._operation_id_counter = 1
 
@@ -22,7 +26,7 @@ class MockResolver(Resolver):
         operation_id = self.resolve_operation_id(operation)
         if not operation_id:
             # just generate an unique operation ID
-            operation_id = 'mock-{}'.format(self._operation_id_counter)
+            operation_id = f'mock-{self._operation_id_counter}'
             self._operation_id_counter += 1
 
         mock_func = functools.partial(self.mock_operation, operation=operation)

@@ -1,8 +1,12 @@
+"""
+This module defines an AbstractOperation class which implements an abstract Operation interface
+and functionality shared between Swagger 2 and OpenAPI 3 specifications.
+"""
+
 import abc
 import logging
 
-from connexion.operations.secure import SecureOperation
-
+from ..decorators.decorator import RequestResponseDecorator
 from ..decorators.metrics import UWSGIMetricsCollector
 from ..decorators.parameter import parameter_to_arg
 from ..decorators.produces import BaseSerializer, Produces
@@ -21,14 +25,14 @@ VALIDATOR_MAP = {
 }
 
 
-class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
+class AbstractOperation(metaclass=abc.ABCMeta):
 
     """
     An API routes requests to an Operation by a (path, method) pair.
     The operation uses a resolver to resolve its handler function.
     We use the provided spec to do a bunch of heavy lifting before
     (and after) we call security_schemes handler.
-    The registered handler function ends up looking something like:
+    The registered handler function ends up looking something like::
 
         @secure_endpoint
         @validate_inputs
@@ -40,7 +44,6 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
                 serious_business(stuff)
     """
     def __init__(self, api, method, path, operation, resolver,
-                 app_security=None, security_schemes=None,
                  validate_responses=False, strict_validation=False,
                  randomize_endpoint=None, validator_map=None,
                  pythonic_params=False, uri_parser_class=None,
@@ -70,12 +73,12 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
         :param validator_map: Custom validators for the types "parameter", "body" and "response".
         :type validator_map: dict
         :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended
-        to any shadowed built-ins
+            to any shadowed built-ins
         :type pythonic_params: bool
         :param uri_parser_class: class to use for uri parsing
         :type uri_parser_class: AbstractURIParser
         :param pass_context_arg_name: If not None will try to inject the request context to the function using this
-        name.
+            name.
         :type pass_context_arg_name: str|None
         """
         self._api = api
@@ -83,8 +86,6 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
         self._path = path
         self._operation = operation
         self._resolver = resolver
-        self._security = app_security
-        self._security_schemes = security_schemes
         self._validate_responses = validate_responses
         self._strict_validation = strict_validation
         self._pythonic_params = pythonic_params
@@ -100,6 +101,10 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
 
         self._validator_map = dict(VALIDATOR_MAP)
         self._validator_map.update(validator_map or {})
+
+    @property
+    def api(self):
+        return self._api
 
     @property
     def method(self):
@@ -132,7 +137,7 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
     @property
     def operation_id(self):
         """
-        The operation id used to indentify the operation internally to the app
+        The operation id used to identify the operation internally to the app
         """
         return self._operation_id
 
@@ -186,18 +191,21 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
                            function_arguments, has_kwargs, sanitize):
         res = {}
         for key, value in query_arguments.items():
-            key = sanitize(key)
-            if not has_kwargs and key not in function_arguments:
-                logger.debug("Query Parameter '%s' not in function arguments", key)
+            sanitized_key = sanitize(key)
+            if not has_kwargs and sanitized_key not in function_arguments:
+                logger.debug("Query Parameter '%s' (sanitized: '%s') not in function arguments",
+                             key, sanitized_key)
             else:
-                logger.debug("Query Parameter '%s' in function arguments", key)
+                logger.debug("Query Parameter '%s' (sanitized: '%s') in function arguments",
+                             key, sanitized_key)
                 try:
                     query_defn = query_defns[key]
                 except KeyError:  # pragma: no cover
-                    logger.error("Function argument '{}' not defined in specification".format(key))
+                    logger.error("Function argument '%s' (non-sanitized: %s) not defined in specification",
+                                 sanitized_key, key)
                 else:
                     logger.debug('%s is a %s', key, query_defn)
-                    res.update({key: self._get_val_from_param(value, query_defn)})
+                    res.update({sanitized_key: self._get_val_from_param(value, query_defn)})
         return res
 
     @abc.abstractmethod
@@ -226,31 +234,36 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
                 kwargs[sanitized_key] = value
         return kwargs
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def parameters(self):
         """
         Returns the parameters for this operation
         """
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def produces(self):
         """
         Content-Types that the operation produces
         """
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def consumes(self):
         """
         Content-Types that the operation consumes
         """
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def body_schema(self):
         """
         The body schema definition for this operation.
         """
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def body_definition(self):
         """
         The body definition for this operation.
@@ -364,11 +377,6 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
         uri_parsing_decorator = self._uri_parsing_decorator
         function = uri_parsing_decorator(function)
 
-        # NOTE: the security decorator should be applied last to check auth before anything else :-)
-        security_decorator = self.security_decorator
-        logger.debug('... Adding security decorator (%r)', security_decorator)
-        function = security_decorator(function)
-
         function = self._request_response_decorator(function)
 
         if UWSGIMetricsCollector.is_available():  # pragma: no cover
@@ -376,6 +384,17 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
             function = decorator(function)
 
         return function
+
+    @property
+    def _request_response_decorator(self):
+        """
+        Guarantees that instead of the internal representation of the
+        operation handler response
+        (connexion.lifecycle.ConnexionRequest) a framework specific
+        object is returned.
+        :rtype: types.FunctionType
+        """
+        return RequestResponseDecorator(self.api, self.get_mimetype())
 
     @property
     def __content_type_decorator(self):

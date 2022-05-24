@@ -96,15 +96,6 @@ to ``tornado`` or ``gevent``:
     app = connexion.FlaskApp(__name__, port = 8080, specification_dir='openapi/', server='tornado')
 
 
-Connexion has the ``aiohttp`` framework as server backend too:
-
-.. code-block:: python
-
-    import connexion
-
-    app = connexion.AioHttpApp(__name__, port = 8080, specification_dir='openapi/')
-
-
 .. _Jinja2: http://jinja.pocoo.org/
 .. _Tornado: http://www.tornadoweb.org/en/stable/
 .. _gevent: http://www.gevent.org/

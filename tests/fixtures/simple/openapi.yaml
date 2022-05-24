@@ -271,10 +271,12 @@ paths:
         '200':
           description: OK
       requestBody:
+        x-body-name: stack
         content:
           application/json:
             schema:
-              x-body-name: stack
+              # should be ignored because the preferred location is at the requestBody level above
+              x-body-name: this_should_be_ignored
               $ref: '#/components/schemas/new_stack'
               default:
                 image_version: default_image
@@ -663,6 +665,19 @@ paths:
       responses:
         '200':
           description: OK
+  /test-cookie-param:
+    get:
+      summary: Test cookie parameter support.
+      operationId: fakeapi.hello.test_cookie_param
+      parameters:
+        - name: test_cookie
+          in: cookie
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
   /parameters-in-root-path:
     parameters:
       - in: query
@@ -690,6 +705,7 @@ paths:
               description: The URI of the created resource
               schema:
                 type: string
+              required: true
           content:
             'application/json':
               schema:
@@ -714,6 +730,7 @@ paths:
               description: The URI of the created resource
               schema:
                 type: string
+              required: true
           content:
             'application/json':
               schema:
@@ -731,6 +748,7 @@ paths:
               description: The URI of the created resource
               schema:
                 type: string
+              required: true
           content:
             text/plain:
               schema:
@@ -842,6 +860,24 @@ paths:
       responses:
         '200':
           description: OK
+  /nullable-parameters-noargs:
+    put:
+      operationId: fakeapi.hello.test_nullable_param_put_noargs
+      responses:
+        '200':
+          description: OK
+      requestBody:
+        content:
+          application/json:
+            schema:
+              nullable: true
+              x-body-name: contents
+              type: object
+              properties:
+                name:
+                  type: string
+        description: Just a testing parameter.
+        required: true
   /custom-json-response:
     get:
       operationId: fakeapi.hello.test_custom_json_response
@@ -893,6 +929,25 @@ paths:
             application/json:
               schema:
                 type: object
+  /body-params-as-kwargs:
+    post:
+      operationId: fakeapi.hello.test_args_kwargs_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                foo:
+                  type: string
+              additionalProperties: true
+      responses:
+        '200':
+          description: Return kwargs
+          content:
+            application/json:
+              schema:
+                type: object
   /text-request:
     post:
       operationId: fakeapi.hello.get_data_as_text
@@ -929,7 +984,7 @@ paths:
             schema:
               type: object
               properties:
-                'form$':
+                '$form':
                   description: Just a testing parameter in the form data
                   type: string
   /body-sanitization:
@@ -1140,6 +1195,50 @@ paths:
             application/json:
               schema:
                 type: object
+  /test-optional-headers:
+    get:
+      operationId: fakeapi.hello.test_optional_headers
+      responses:
+        '200':
+          description: Some object response
+          content:
+            application/json:
+              schema:
+                type: object
+          headers:
+            X-Optional-Header:
+              description: Optional header
+              schema:
+                type: string
+              required: false
+  /get_streaming_response:
+    get:
+      operationId: fakeapi.hello.get_streaming_response
+      responses:
+        '200':
+          description: OK
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+  /oneof_greeting:
+    post:
+      operationId: fakeapi.hello.post_greeting3
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  oneOf:
+                    - {type: boolean}
+                    - {type: number}
+              additionalProperties: false
+      responses:
+        '200':
+          description: Echo the validated request.
 
 servers:
   - url: http://localhost:{port}/{basePath}

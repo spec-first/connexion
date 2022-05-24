@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 import inspect
 import os
@@ -12,7 +11,7 @@ __location__ = os.path.join(os.getcwd(), os.path.dirname(inspect.getfile(inspect
 
 
 def read_version(package):
-    with open(os.path.join(package, '__init__.py'), 'r') as fd:
+    with open(os.path.join(package, '__init__.py')) as fd:
         for line in fd:
             if line.startswith('__version__ = '):
                 return line.split()[-1].strip().strip("'")
@@ -21,34 +20,34 @@ def read_version(package):
 version = read_version('connexion')
 
 install_requires = [
-    'clickclick>=1.2',
-    'jsonschema>=2.5.1',
-    'PyYAML>=5.1',
-    'requests>=2.9.1',
-    'inflection>=0.3.1',
-    'openapi-spec-validator>=0.2.4',
-    'werkzeug>=1.0,<2.0',
+    'clickclick>=1.2,<21',
+    'jsonschema>=4.0.1,<5',
+    'PyYAML>=5.1,<7',
+    'requests>=2.27,<3',
+    'inflection>=0.3.1,<0.6',
+    'werkzeug>=2,<3',
+    'starlette>=0.15,<1',
+    'httpx>=0.15,<1',
 ]
 
-swagger_ui_require = 'swagger-ui-bundle>=0.0.2'
-flask_require = 'flask>=1.0.4'
-aiohttp_require = [
-    'aiohttp>=2.3.10',
-    'aiohttp-jinja2>=0.14.0'
+swagger_ui_require = 'swagger-ui-bundle>=0.0.2,<0.1'
+
+flask_require = [
+    'flask>=2,<3',
+    'a2wsgi>=1.4,<2',
 ]
 
 tests_require = [
-    'decorator',
-    'pytest',
-    'pytest-cov',
-    'testfixtures',
-    flask_require,
+    'pytest>=6,<7',
+    'pre-commit>=2,<3',
+    'pytest-cov>=2,<3',
+    *flask_require,
     swagger_ui_require
 ]
 
-tests_require.extend(aiohttp_require)
-tests_require.append('pytest-aiohttp')
-tests_require.append('aiohttp-remotes')
+docs_require = [
+    'sphinx-autoapi==1.8.1'
+]
 
 
 class PyTest(TestCommand):
@@ -58,8 +57,7 @@ class PyTest(TestCommand):
     def initialize_options(self):
         TestCommand.initialize_options(self)
         self.cov = None
-        self.pytest_args = ['--cov', 'connexion', '--cov-report', 'term-missing',
-                            '--cov-config=py3-coveragerc', '-v']
+        self.pytest_args = ['--cov', 'connexion', '--cov-report', 'term-missing', '-v']
         self.cov_html = False
 
     def finalize_options(self):
@@ -92,23 +90,23 @@ setup(
     url='https://github.com/zalando/connexion',
     keywords='openapi oai swagger rest api oauth flask microservice framework',
     license='Apache License Version 2.0',
-    setup_requires=['flake8'],
     python_requires=">=3.6",
-    install_requires=install_requires + [flask_require],
+    install_requires=install_requires + flask_require,
     tests_require=tests_require,
     extras_require={
         'tests': tests_require,
         'flask': flask_require,
         'swagger-ui': swagger_ui_require,
-        'aiohttp': aiohttp_require
+        'docs': docs_require
     },
     cmdclass={'test': PyTest},
     test_suite='tests',
     classifiers=[
         'Programming Language :: Python',
-        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
         'Operating System :: OS Independent',

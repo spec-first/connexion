@@ -1,3 +1,7 @@
+"""
+This module defines a Swagger2Operation class, a Connexion operation specific for Swagger 2 specs.
+"""
+
 import logging
 from copy import deepcopy
 
@@ -23,11 +27,9 @@ class Swagger2Operation(AbstractOperation):
     """
 
     def __init__(self, api, method, path, operation, resolver, app_produces, app_consumes,
-                 path_parameters=None, app_security=None, security_definitions=None,
-                 definitions=None, parameter_definitions=None,
-                 response_definitions=None, validate_responses=False, strict_validation=False,
-                 randomize_endpoint=None, validator_map=None, pythonic_params=False,
-                 uri_parser_class=None, pass_context_arg_name=None):
+                 path_parameters=None, definitions=None, validate_responses=False,
+                 strict_validation=False, randomize_endpoint=None, validator_map=None,
+                 pythonic_params=False, uri_parser_class=None, pass_context_arg_name=None):
         """
         :param api: api that this operation is attached to
         :type api: apis.AbstractAPI
@@ -45,18 +47,9 @@ class Swagger2Operation(AbstractOperation):
         :type app_consumes: list
         :param path_parameters: Parameters defined in the path level
         :type path_parameters: list
-        :param app_security: list of security rules the application uses by default
-        :type app_security: list
-        :param security_definitions: `Security Definitions Object
-            <https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-definitions-object>`_
-        :type security_definitions: dict
         :param definitions: `Definitions Object
             <https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#definitionsObject>`_
         :type definitions: dict
-        :param parameter_definitions: Global parameter definitions
-        :type parameter_definitions: dict
-        :param response_definitions: Global response definitions
-        :type response_definitions: dict
         :param validate_responses: True enables validation. Validation errors generate HTTP 500 responses.
         :type validate_responses: bool
         :param strict_validation: True enables validation on invalid request parameters
@@ -66,27 +59,24 @@ class Swagger2Operation(AbstractOperation):
         :param validator_map: Custom validators for the types "parameter", "body" and "response".
         :type validator_map: dict
         :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended
-        to any shadowed built-ins
+            to any shadowed built-ins
         :type pythonic_params: bool
         :param uri_parser_class: class to use for uri parsing
         :type uri_parser_class: AbstractURIParser
         :param pass_context_arg_name: If not None will try to inject the request context to the function using this
-        name.
+            name.
         :type pass_context_arg_name: str|None
         """
-        app_security = operation.get('security', app_security)
         uri_parser_class = uri_parser_class or Swagger2URIParser
 
         self._router_controller = operation.get('x-swagger-router-controller')
 
-        super(Swagger2Operation, self).__init__(
+        super().__init__(
             api=api,
             method=method,
             path=path,
             operation=operation,
             resolver=resolver,
-            app_security=app_security,
-            security_schemes=security_definitions,
             validate_responses=validate_responses,
             strict_validation=strict_validation,
             randomize_endpoint=randomize_endpoint,
@@ -100,12 +90,6 @@ class Swagger2Operation(AbstractOperation):
         self._consumes = operation.get('consumes', app_consumes)
 
         self.definitions = definitions or {}
-
-        self.definitions_map = {
-            'definitions': self.definitions,
-            'parameters': parameter_definitions,
-            'responses': response_definitions
-        }
 
         self._parameters = operation.get('parameters', [])
         if path_parameters:
@@ -126,13 +110,9 @@ class Swagger2Operation(AbstractOperation):
             spec.get_operation(path, method),
             resolver=resolver,
             path_parameters=spec.get_path_params(path),
-            app_security=spec.security,
             app_produces=spec.produces,
             app_consumes=spec.consumes,
-            security_definitions=spec.security_definitions,
             definitions=spec.definitions,
-            parameter_definitions=spec.parameter_definitions,
-            response_definitions=spec.response_definitions,
             *args,
             **kwargs
         )
@@ -247,7 +227,7 @@ class Swagger2Operation(AbstractOperation):
         return body_parameters[0] if body_parameters else {}
 
     def _get_query_arguments(self, query, arguments, has_kwargs, sanitize):
-        query_defns = {sanitize(p["name"]): p
+        query_defns = {p["name"]: p
                        for p in self.parameters
                        if p["in"] == "query"}
         default_query_params = {k: v['default']
@@ -265,7 +245,7 @@ class Swagger2Operation(AbstractOperation):
             body = deepcopy(body_parameters[0].get('schema', {}).get('default'))
         body_name = sanitize(body_parameters[0].get('name'))
 
-        form_defns = {sanitize(p['name']): p
+        form_defns = {p['name']: p
                       for p in self.parameters
                       if p['in'] == 'formData'}
 
@@ -286,16 +266,20 @@ class Swagger2Operation(AbstractOperation):
         if form_defns and body:
             form_arguments.update(body)
         for key, value in form_arguments.items():
-            if not has_kwargs and key not in arguments:
-                logger.debug("FormData parameter '%s' not in function arguments", key)
+            sanitized_key = sanitize(key)
+            if not has_kwargs and sanitized_key not in arguments:
+                logger.debug("FormData parameter '%s' (sanitized: '%s') not in function arguments",
+                             key, sanitized_key)
             else:
-                logger.debug("FormData parameter '%s' in function arguments", key)
+                logger.debug("FormData parameter '%s' (sanitized: '%s') in function arguments",
+                             key, sanitized_key)
                 try:
                     form_defn = form_defns[key]
                 except KeyError:  # pragma: no cover
-                    logger.error("Function argument '{}' not defined in specification".format(key))
+                    logger.error("Function argument '%s' (non-sanitized: %s) not defined in specification",
+                                 key, sanitized_key)
                 else:
-                    kwargs[key] = self._get_val_from_param(value, form_defn)
+                    kwargs[sanitized_key] = self._get_val_from_param(value, form_defn)
         return kwargs
 
     def _get_val_from_param(self, value, query_defn):
