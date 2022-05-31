@@ -60,3 +60,11 @@ def test_deep_get_dict():
 def test_deep_get_list():
     obj = [{'type': 'object', 'properties': {'id': {'type': 'string'}}}]
     assert utils.deep_get(obj, ['0', 'properties', 'id']) == {'type': 'string'}
+
+
+def test_is_json_mimetype():
+    assert utils.is_json_mimetype('application/json')
+    assert utils.is_json_mimetype('application/vnd.com.myEntreprise.v6+json')
+    assert utils.is_json_mimetype('application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0')
+    assert utils.is_json_mimetype('application/vnd.com.myEntreprise.v6+json; charset=UTF-8')
+    assert not utils.is_json_mimetype('text/html')

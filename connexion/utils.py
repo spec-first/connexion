@@ -136,7 +136,10 @@ def is_json_mimetype(mimetype):
     :type mimetype: str
     :rtype: bool
     """
+
     maintype, subtype = mimetype.split('/')  # type: str, str
+    if ';' in subtype:
+        subtype, parameter = subtype.split(';', maxsplit=1)
     return maintype == 'application' and (subtype == 'json' or subtype.endswith('+json'))
 
 
