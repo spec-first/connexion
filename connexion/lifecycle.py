@@ -72,5 +72,7 @@ class MiddlewareRequest(StarletteRequest):
         return self._context
 
 
+# TODO: Need other kind of response class to easily retrieve response body?
+#   The regular starlette Response class?
 class MiddlewareResponse(StarletteStreamingResponse):
     """Wraps starlette StreamingResponse so it can easily be extended."""

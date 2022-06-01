@@ -37,7 +37,7 @@ class AbstractOperation(metaclass=abc.ABCMeta):
                 serious_business(stuff)
     """
     def __init__(self, api, method, path, operation, resolver,
-                 randomize_endpoint=None,
+                 validate_responses=False, randomize_endpoint=None,
                  pythonic_params=False,
                  pass_context_arg_name=None):
         """
@@ -64,6 +64,7 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         self._path = path
         self._operation = operation
         self._resolver = resolver
+        self._validate_responses = validate_responses
         self._pythonic_params = pythonic_params
         self._pass_context_arg_name = pass_context_arg_name
         self._randomize_endpoint = randomize_endpoint
@@ -141,13 +142,13 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         """
         return self._pythonic_params
 
-    # @property
-    # def validate_responses(self):
-    #     """
-    #     If True, check the response against the response schema, and return an
-    #     error if the response does not validate.
-    #     """
-    #     return self._validate_responses
+    @property
+    def validate_responses(self):
+        """
+        If True, check the response against the response schema, and return an
+        error if the response does not validate.
+        """
+        return self._validate_responses
 
     @staticmethod
     def _get_file_arguments(files, arguments, has_kwargs=False):
@@ -319,11 +320,11 @@ class AbstractOperation(metaclass=abc.ABCMeta):
             self._pass_context_arg_name
         )
 
-        # if self.validate_responses:
-        #     logger.debug('... Response validation enabled.')
-        #     response_decorator = self.__response_validation_decorator
-        #     logger.debug('... Adding response decorator (%r)', response_decorator)
-        #     function = response_decorator(function)
+        if self.validate_responses:
+            logger.debug('... Response validation enabled.')
+            response_decorator = self.__response_validation_decorator
+            logger.debug('... Adding response decorator (%r)', response_decorator)
+            function = response_decorator(function)
 
         produces_decorator = self.__content_type_decorator
         logger.debug('... Adding produces decorator (%r)', produces_decorator)

@@ -27,8 +27,8 @@ class Swagger2Operation(AbstractOperation):
     """
 
     def __init__(self, api, method, path, operation, resolver, app_produces, app_consumes,
-                 path_parameters=None, definitions=None, randomize_endpoint=None,
-                 pythonic_params=False, pass_context_arg_name=None):
+                 path_parameters=None, definitions=None, validate_responses=False,
+                 randomize_endpoint=None, pythonic_params=False, pass_context_arg_name=None):
         """
         :param api: api that this operation is attached to
         :type api: apis.AbstractAPI
@@ -66,6 +66,7 @@ class Swagger2Operation(AbstractOperation):
             path=path,
             operation=operation,
             resolver=resolver,
+            validate_responses=validate_responses,
             randomize_endpoint=randomize_endpoint,
             pythonic_params=pythonic_params,
             pass_context_arg_name=pass_context_arg_name

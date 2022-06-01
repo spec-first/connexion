@@ -27,7 +27,7 @@ logger = logging.getLogger("connexion.middleware.validation")
 VALIDATOR_MAP = {
     'parameter': ParameterValidator,
     'body': RequestBodyValidator,
-    'response': ResponseValidator,
+    # 'response': ResponseValidator,
 }
 
 
@@ -69,7 +69,6 @@ class ValidationMiddleware(AppMiddleware):
                 await operation(request)
 
 
-# TODO: Which base class? AbstractAPI vs AbstractSpecAPI vs AbstractRoutingAPI
 class ValidationAPI(AbstractSpecAPI):
 
     def __init__(
@@ -108,11 +107,6 @@ class ValidationAPI(AbstractSpecAPI):
 
         self.operations: t.Dict[str, AbstractValidationOperation] = {}
 
-        if self.specification.version < (3, 0, 0):
-            self.operation_cls = Swagger2ValidationOperation
-        else:
-            self.operation_cls = OpenAPIValidationOperation
-
         self.add_paths()
 
     def add_paths(self):
@@ -126,27 +120,35 @@ class ValidationAPI(AbstractSpecAPI):
                     self.operations[operation_id] = self.make_operation(operation)
 
     def make_operation(self, operation_spec: dict = None):
-        return self.operation_cls(
-            operation=operation_spec,
-            validate_responses=self.validate_responses,
-            strict_validation=self.strict_validation,
-            validator_map=self.validator_map,
-            uri_parser_class=self.uri_parser_class,
-        )
+        if self.specification.version < (3, 0, 0):
+            return Swagger2ValidationOperation(
+                api=self,
+                app_consumes=[],
+                app_produces=[],
+                operation=operation_spec,
+                strict_validation=self.strict_validation,
+                validator_map=self.validator_map,
+                uri_parser_class=self.uri_parser_class,
+            )
+        else:
+            return OpenAPIValidationOperation(
+                api=self,
+                operation=operation_spec,
+                strict_validation=self.strict_validation,
+                validator_map=self.validator_map,
+                uri_parser_class=self.uri_parser_class,
+            )
 
 class AbstractValidationOperation:
     def __init__(
             self,
+            api,
             operation,
-            app_consumes=[],
-            app_produces=[],
-            validate_responses: bool = False,
             strict_validation=False,
             validator_map: t.Optional[dict] = None,
             uri_parser_class: t.Optional[t.Type[AbstractURIParser]] = None,
     ) -> None:
-        logger.debug('Validate Responses: %s', str(validate_responses))
-        self._validate_responses = validate_responses
+        self._api = api
 
         logger.debug('Strict Request Validation: %s', str(strict_validation))
         self._strict_validation = strict_validation
@@ -157,6 +159,10 @@ class AbstractValidationOperation:
         self._validator_map.update(validator_map or {})
 
         self._validation_fn = self._get_validation_fn()
+
+    @property
+    def api(self):
+        return self._api
 
     # TODO: Remove properties and use ordinary attributes?
     @property
@@ -173,23 +179,9 @@ class AbstractValidationOperation:
         """
         return self._strict_validation
 
-    @property
-    def validate_responses(self):
-        """
-        If True, check the response against the response schema, and return an
-        error if the response does not validate.
-        """
-        return self._validate_responses
-
     def _get_validation_fn(self):
-        def function(request):
+        async def function(request):
             return request
-
-        if self.validate_responses:
-            logger.debug('... Response validation enabled.')
-            response_decorator = self.__response_validation_decorator
-            logger.debug('... Adding response decorator (%r)', response_decorator)
-            function = response_decorator(function)
 
         # produces_decorator = self.__content_type_decorator
         # logger.debug('... Adding produces decorator (%r)', produces_decorator)
@@ -198,11 +190,7 @@ class AbstractValidationOperation:
         for validation_decorator in self.__validation_decorators:
             function = validation_decorator(function)
 
-        # TODO: make underlying functions async instead of this outer wrapper
-        async def run_async(request):
-            return await run_in_threadpool(function, request)
-
-        return run_async
+        return function
 
     # @staticmethod
     # def _get_file_arguments(files, arguments, has_kwargs=False):
@@ -359,15 +347,6 @@ class AbstractValidationOperation:
                                        is_nullable(self.body_definition),
                                        strict_validation=self.strict_validation)
 
-    @property
-    def __response_validation_decorator(self):
-        """
-        Get a decorator for validating the generated Response.
-        :rtype: types.FunctionType
-        """
-        ResponseValidator = self.validator_map['response']
-        return ResponseValidator(self, self.get_mimetype())
-
     def json_loads(self, data):
         """
         A wrapper for calling the API specific JSON loader.
@@ -382,10 +361,10 @@ class Swagger2ValidationOperation(AbstractValidationOperation):
 
     def __init__(
         self,
-        operation,  # as object, or separate into multiple arguments?
-        app_consumes=[],
-        app_produces=[],
-        validate_responses: bool = False,
+        api,
+        operation,
+        app_consumes,
+        app_produces,
         strict_validation=False,
         validator_map: t.Optional[dict] = None,
         uri_parser_class: t.Optional[t.Type[AbstractURIParser]] = None,
@@ -408,8 +387,8 @@ class Swagger2ValidationOperation(AbstractValidationOperation):
         self._consumes = operation.get('consumes', app_consumes)
 
         super().__init__(
+            api=api,
             operation=operation,
-            validate_responses=validate_responses,
             strict_validation=strict_validation,
             validator_map=validator_map,
             uri_parser_class=uri_parser_class,
@@ -467,8 +446,8 @@ class OpenAPIValidationOperation(AbstractValidationOperation):
 
     def __init__(
         self,
+        api,
         operation,
-        validate_responses: bool = False,
         strict_validation=False,
         validator_map: t.Optional[dict] = None,
         uri_parser_class: t.Optional[t.Type[AbstractURIParser]] = None,
@@ -480,7 +459,13 @@ class OpenAPIValidationOperation(AbstractValidationOperation):
         if path_parameters:
             self._parameters += path_parameters
 
-        super().__init__(validate_responses, strict_validation, validator_map, uri_parser_class)
+        super().__init__(
+            api=api,
+            operation=operation,
+            strict_validation=strict_validation,
+            validator_map=validator_map,
+            uri_parser_class=uri_parser_class
+        )
 
     @property
     def request_body(self):

@@ -22,7 +22,7 @@ class OpenAPIOperation(AbstractOperation):
     """
 
     def __init__(self, api, method, path, operation, resolver, path_parameters=None,
-                 components=None, randomize_endpoint=None,
+                 components=None, validate_responses=False, randomize_endpoint=None,
                  pythonic_params=False, pass_context_arg_name=None):
         """
         This class uses the OperationID identify the module and function that will handle the operation
@@ -71,6 +71,7 @@ class OpenAPIOperation(AbstractOperation):
             path=path,
             operation=operation,
             resolver=resolver,
+            validate_responses=validate_responses,
             randomize_endpoint=randomize_endpoint,
             pythonic_params=pythonic_params,
             pass_context_arg_name=pass_context_arg_name

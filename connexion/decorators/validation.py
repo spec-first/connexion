@@ -133,23 +133,27 @@ class RequestBodyValidator:
         self.api = api
         self.strict_validation = strict_validation
 
-    def validate_formdata_parameter_list(self, request):
-        request_params = request.form.keys()
+    async def validate_formdata_parameter_list(self, request):
+        form = await request.form
+        request_params = form.keys()
         spec_params = self.schema.get('properties', {}).keys()
         return validate_parameter_list(request_params, spec_params)
 
-    def __call__(self, function):
+    async def __call__(self, function):
         """
         :type function: types.FunctionType
         :rtype: types.FunctionType
         """
 
         @functools.wraps(function)
-        def wrapper(request):
+        async def wrapper(request):
             if all_json(self.consumes):
-                data = request.json
+                data = await request.json
 
-                empty_body = not(request.body or request.form or request.files)
+                body = await request.body
+                form = await request.form
+                files = await request.files
+                empty_body = not(body or form or files)
                 if data is None and not empty_body and not self.is_null_value_valid:
                     try:
                         ctype_is_json = is_json_mimetype(request.headers.get("Content-Type", ""))
@@ -194,7 +198,7 @@ class RequestBodyValidator:
 
                 self.validate_schema(data, request.url)
 
-            response = function(request)
+            response = await function(request)
             return response
 
         return wrapper
@@ -312,12 +316,13 @@ class ParameterValidator:
             return "Missing {parameter_type} parameter '{param[name]}'".format(**locals())
 
     def validate_query_parameter_list(self, request):
-        request_params = request.query.keys()
+        request_params = request.query_params.keys()
         spec_params = [x['name'] for x in self.parameters.get('query', [])]
         return validate_parameter_list(request_params, spec_params)
 
-    def validate_formdata_parameter_list(self, request):
-        request_params = request.form.keys()
+    async def validate_formdata_parameter_list(self, request):
+        form = await request.form
+        request_params = form.keys()
         if 'formData' in self.parameters:  # Swagger 2:
             spec_params = [x['name'] for x in self.parameters['formData']]
         else:  # OAS 3
@@ -331,7 +336,7 @@ class ParameterValidator:
         :type param: dict
         :rtype: str
         """
-        val = request.query.get(param['name'])
+        val = request.query_params.get(param['name'])
         return self.validate_parameter('query', val, param)
 
     def validate_path_parameter(self, param, request):
@@ -346,27 +351,29 @@ class ParameterValidator:
         val = request.cookies.get(param['name'])
         return self.validate_parameter('cookie', val, param)
 
-    def validate_formdata_parameter(self, param_name, param, request):
-        if param.get('type') == 'file' or param.get('format') == 'binary':
-            val = request.files.get(param_name)
-        else:
-            val = request.form.get(param_name)
+    async def validate_formdata_parameter(self, param_name, param, request):
+        form = await request.form
+        val = form.get(param_name)
+        # if param.get('type') == 'file' or param.get('format') == 'binary':
+        #     val = request.files.get(param_name)
+        # else:
+        #     val = request.form.get(param_name)
 
         return self.validate_parameter('formdata', val, param)
 
-    def __call__(self, function):
+    async def __call__(self, function):
         """
         :type function: types.FunctionType
         :rtype: types.FunctionType
         """
 
         @functools.wraps(function)
-        def wrapper(request):
+        async def wrapper(request):
             logger.debug("%s validating parameters...", request.url)
 
             if self.strict_validation:
                 query_errors = self.validate_query_parameter_list(request)
-                formdata_errors = self.validate_formdata_parameter_list(request)
+                formdata_errors = await self.validate_formdata_parameter_list(request)
 
                 if formdata_errors or query_errors:
                     raise ExtraParameterProblem(formdata_errors, query_errors)
@@ -392,10 +399,10 @@ class ParameterValidator:
                     raise BadRequestProblem(detail=error)
 
             for param in self.parameters.get('formData', []):
-                error = self.validate_formdata_parameter(param["name"], param, request)
+                error = await self.validate_formdata_parameter(param["name"], param, request)
                 if error:
                     raise BadRequestProblem(detail=error)
 
-            return function(request)
+            return await function(request)
 
         return wrapper
