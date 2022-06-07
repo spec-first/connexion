@@ -139,7 +139,7 @@ class RequestBodyValidator:
         spec_params = self.schema.get('properties', {}).keys()
         return validate_parameter_list(request_params, spec_params)
 
-    async def __call__(self, function):
+    def __call__(self, function):
         """
         :type function: types.FunctionType
         :rtype: types.FunctionType
@@ -148,12 +148,13 @@ class RequestBodyValidator:
         @functools.wraps(function)
         async def wrapper(request):
             if all_json(self.consumes):
-                data = await request.json
+                data = await request.json()
 
-                body = await request.body
-                form = await request.form
-                files = await request.files
-                empty_body = not(body or form or files)
+                body = await request.body()
+                form = await request.form()
+                # Starlette doesn't make a difference between form parameters and files
+                # files = await request.files()
+                empty_body = not(body or form)
                 if data is None and not empty_body and not self.is_null_value_valid:
                     try:
                         ctype_is_json = is_json_mimetype(request.headers.get("Content-Type", ""))
@@ -321,7 +322,7 @@ class ParameterValidator:
         return validate_parameter_list(request_params, spec_params)
 
     async def validate_formdata_parameter_list(self, request):
-        form = await request.form
+        form = await request.form()
         request_params = form.keys()
         if 'formData' in self.parameters:  # Swagger 2:
             spec_params = [x['name'] for x in self.parameters['formData']]
@@ -352,7 +353,7 @@ class ParameterValidator:
         return self.validate_parameter('cookie', val, param)
 
     async def validate_formdata_parameter(self, param_name, param, request):
-        form = await request.form
+        form = await request.form()
         val = form.get(param_name)
         # if param.get('type') == 'file' or param.get('format') == 'binary':
         #     val = request.files.get(param_name)
@@ -361,7 +362,7 @@ class ParameterValidator:
 
         return self.validate_parameter('formdata', val, param)
 
-    async def __call__(self, function):
+    def __call__(self, function):
         """
         :type function: types.FunctionType
         :rtype: types.FunctionType

@@ -2,7 +2,9 @@
 This module defines interfaces for requests and responses used in Connexion for authentication,
 validation, serialization, etc.
 """
-from starlette.requests import Request as StarletteRequest
+import typing as t
+
+from starlette.requests import ClientDisconnect, Request as StarletteRequest
 from starlette.responses import StreamingResponse as StarletteStreamingResponse
 
 
@@ -71,6 +73,71 @@ class MiddlewareRequest(StarletteRequest):
 
         return self._context
 
+
+class BodyMiddlewareRequest(MiddlewareRequest):
+    """Middleware request that reads the body and stores it in the ASGI scope.
+    
+    See also: https://github.com/encode/starlette/pull/1519
+    """
+
+    # Not particularly graceful, but we store state around reading the request
+    # body in the ASGI scope, under the following...
+    #
+    # ['extensions']['starlette']['body']
+    # ['extensions']['starlette']['stream_consumed']
+    #
+    # This allows usages such as ASGI middleware to call the recieve and
+    # access the request body, and have that state persisted.
+    #
+    # Bit of an abuse of ASGI to take this approach. An alternate take would be
+    # that if you're going to use ASGI middleware it might be better to just
+    # accept the constraint that you *don't* get access to the request body in
+    # that context.
+    def _get_request_state(self, name: str, default: t.Any = None) -> t.Any:
+        return self.scope.get("extensions", {}).get("starlette", {}).get(name, default)
+
+    def _set_request_state(self, name: str, value: t.Any) -> None:
+        if "extensions" not in self.scope:
+            self.scope["extensions"] = {"starlette": {name: value}}
+        elif "starlette" not in self.scope["extensions"]:
+            self.scope["extensions"]["starlette"] = {name: value}
+        else:
+            self.scope["extensions"]["starlette"][name] = value
+
+    async def stream(self) -> t.AsyncGenerator[bytes, None]:
+        body = self._get_request_state("body")
+        if body is not None:
+            yield body
+            yield b""
+            return
+
+        stream_consumed = self._get_request_state("stream_consumed", default=False)
+        if stream_consumed:
+            raise RuntimeError("Stream consumed")
+
+        self._set_request_state("stream_consumed", True)
+        while True:
+            message = await self._receive()
+            if message["type"] == "http.request":
+                body = message.get("body", b"")
+                if body:
+                    yield body
+                if not message.get("more_body", False):
+                    break
+            elif message["type"] == "http.disconnect":
+                self._is_disconnected = True
+                raise ClientDisconnect()
+        yield b""
+
+    async def body(self) -> bytes:
+        body = self._get_request_state("body")
+        if body is None:
+            chunks = []
+            async for chunk in self.stream():
+                chunks.append(chunk)
+            body = b"".join(chunks)
+            self._set_request_state("body", body)
+        return body
 
 # TODO: Need other kind of response class to easily retrieve response body?
 #   The regular starlette Response class?

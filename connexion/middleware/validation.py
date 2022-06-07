@@ -65,8 +65,19 @@ class ValidationMiddleware(AppMiddleware):
                 raise ValueError('Encountered unknown operation_id.') from e
             else:
                 # TODO: Change because we need access to the request body and response body/headers
-                request = MiddlewareRequest(scope, receive, send)
+                messages = []
+                async def wrapped_receive():
+                    message = await receive()
+                    messages.append(message)
+                    return message
+                request = MiddlewareRequest(scope, wrapped_receive)
                 await operation(request)
+                # Redefine receive
+                async def new_receive():
+                    return messages.pop(0)
+                await self.app(scope, new_receive, send)
+        else:
+            await self.app(scope, receive, send)
 
 
 class ValidationAPI(AbstractSpecAPI):
@@ -138,6 +149,7 @@ class ValidationAPI(AbstractSpecAPI):
                 validator_map=self.validator_map,
                 uri_parser_class=self.uri_parser_class,
             )
+
 
 class AbstractValidationOperation:
     def __init__(
@@ -296,7 +308,7 @@ class AbstractValidationOperation:
         return self._uri_parser_class(self.parameters, self.body_definition)
 
     async def __call__(self, request: MiddlewareRequest):
-        return await self._validation_fn(request)
+        await self._validation_fn(request)
 
     @property
     def __content_type_decorator(self):
@@ -448,6 +460,7 @@ class OpenAPIValidationOperation(AbstractValidationOperation):
         self,
         api,
         operation,
+        components=None,
         strict_validation=False,
         validator_map: t.Optional[dict] = None,
         uri_parser_class: t.Optional[t.Type[AbstractURIParser]] = None,
@@ -455,9 +468,23 @@ class OpenAPIValidationOperation(AbstractValidationOperation):
     ) -> None:
         uri_parser_class = uri_parser_class or OpenAPIURIParser
 
+        self.components = components or {}
+
+        self._request_body = operation.get('requestBody', {})
+
         self._parameters = operation.get('parameters', [])
         if path_parameters:
             self._parameters += path_parameters
+
+        self._responses = operation.get('responses', {})
+
+        response_content_types = []
+        for _, defn in self._responses.items():
+            response_content_types += defn.get('content', {}).keys()
+        self._produces = response_content_types or ['application/json']
+
+        request_content = self._request_body.get('content', {})
+        self._consumes = list(request_content.keys()) or ['application/json']
 
         super().__init__(
             api=api,
@@ -475,13 +502,13 @@ class OpenAPIValidationOperation(AbstractValidationOperation):
     # def parameters(self):
     #     return self._parameters
 
-    # @property
-    # def consumes(self):
-    #     return self._consumes
+    @property
+    def consumes(self):
+        return self._consumes
 
-    # @property
-    # def produces(self):
-    #     return self._produces
+    @property
+    def produces(self):
+        return self._produces
 
     def with_definitions(self, schema):
         if self.components:
