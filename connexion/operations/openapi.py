@@ -254,15 +254,15 @@ class OpenAPIOperation(AbstractOperation):
         if len(arguments) <= 0 and not has_kwargs:
             return {}
 
-        # prefer the x-body-name as an extension of requestBody
-        x_body_name = sanitize(self.request_body.get('x-body-name', None))
-
-        if not x_body_name:
-            # x-body-name also accepted in the schema field for legacy connexion compat
+        # get the deprecated name from the body-schema for legacy connexion co
+        x_body_name = sanitize(self.body_schema.get('x-body-name'))
+        if x_body_name:
             warnings.warn('x-body-name within the requestBody schema will be deprecated in the '
                           'next major version. It should be provided directly under '
                           'the requestBody instead.', DeprecationWarning)
-            x_body_name = sanitize(self.body_schema.get('x-body-name', 'body'))
+
+        # prefer the x-body-name as an extension of requestBody, fallback to deprecated schema name, default 'body'
+        x_body_name = sanitize(self.request_body.get('x-body-name', x_body_name or 'body'))
 
         if self.consumes[0] in FORM_CONTENT_TYPES:
             result = self._get_body_argument_form(body)
