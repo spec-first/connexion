@@ -254,7 +254,7 @@ class OpenAPIOperation(AbstractOperation):
         if len(arguments) <= 0 and not has_kwargs:
             return {}
 
-        # get the deprecated name from the body-schema for legacy connexion co
+        # get the deprecated name from the body-schema for legacy connexion compat
         x_body_name = sanitize(self.body_schema.get('x-body-name'))
         if x_body_name:
             warnings.warn('x-body-name within the requestBody schema will be deprecated in the '
