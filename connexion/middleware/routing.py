@@ -8,6 +8,7 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 from connexion.apis import AbstractRoutingAPI
 from connexion.exceptions import NotFoundProblem
 from connexion.middleware import AppMiddleware
+from connexion.operations import AbstractOperation
 from connexion.resolver import Resolver
 
 ROUTING_CONTEXT = 'connexion_routing'
@@ -91,7 +92,7 @@ class RoutingAPI(AbstractRoutingAPI):
     def add_operation(self, path: str, method: str) -> None:
         operation_cls = self.specification.operation_cls
         operation = operation_cls.from_spec(self.specification, self, path, method, self.resolver)
-        routing_operation = RoutingOperation(operation.operation_id, next_app=self.next_app)
+        routing_operation = RoutingOperation.from_operation(operation, next_app=self.next_app)
         self._add_operation_internal(method, path, routing_operation)
 
     def _add_operation_internal(self, method: str, path: str, operation: 'RoutingOperation') -> None:
@@ -103,6 +104,10 @@ class RoutingOperation:
     def __init__(self, operation_id: t.Optional[str], next_app: ASGIApp) -> None:
         self.operation_id = operation_id
         self.next_app = next_app
+
+    @classmethod
+    def from_operation(cls, operation: AbstractOperation, next_app: ASGIApp):
+        return cls(operation.operation_id, next_app)
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         """Attach operation to scope and pass it to the next app"""

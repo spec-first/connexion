@@ -39,7 +39,6 @@ class AbstractSpecAPI(metaclass=AbstractAPIMeta):
             specification: t.Union[pathlib.Path, str, dict],
             base_path: t.Optional[str] = None,
             resolver: t.Optional[Resolver] = None,
-            resolver_error_handler: t.Optional[t.Callable] = None,
             arguments: t.Optional[dict] = None,
             options: t.Optional[dict] = None,
             *args,
@@ -75,7 +74,6 @@ class AbstractSpecAPI(metaclass=AbstractAPIMeta):
 
         self._set_base_path(base_path)
 
-        self.resolver_error_handler = resolver_error_handler
         self.resolver = resolver or Resolver()
 
     def _set_base_path(self, base_path: t.Optional[str] = None) -> None:
@@ -129,6 +127,7 @@ class AbstractRoutingAPI(AbstractSpecAPI):
     def __init__(
             self,
             *args,
+            resolver_error_handler: t.Optional[t.Callable] = None,
             debug: bool = False,
             pass_context_arg_name: t.Optional[str] = None,
             **kwargs
@@ -141,6 +140,7 @@ class AbstractRoutingAPI(AbstractSpecAPI):
         """
         super().__init__(*args, **kwargs)
         self.debug = debug
+        self.resolver_error_handler = resolver_error_handler
 
         logger.debug('pass_context_arg_name: %s', pass_context_arg_name)
         self.pass_context_arg_name = pass_context_arg_name
