@@ -1,1 +1,1 @@
-from .petsview import PetsView
+from .petsview import PetsView as PetsView
