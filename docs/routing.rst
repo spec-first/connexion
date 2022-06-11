@@ -129,6 +129,11 @@ collected and all passed to the endpoint handlers.
 Automatic Routing with MethodViewResolver
 -------------------------------------------
 
+Note: 
+If you migrate from connextion v2 you may want to use the `DeprecatedMethodViewResolver`
+in order to maintain the old behavior. The behavior described here is the new behavior,
+introduced in connextion v3.
+
 ``MethodViewResolver`` is an customised Resolver based on ``RestyResolver``
 to take advantage of MethodView structure of building Flask APIs.
 The ``MethodViewResolver`` will compose an ``operationId`` based on the path and HTTP method of
@@ -168,66 +173,112 @@ In the above yaml the necessary MethodView implementation is as follows:
 
 .. code-block:: python
 
-  import datetime
+    import datetime
 
-  from connexion import NoContent
-  from flask import request
-  from flask.views import MethodView
+    from connexion import NoContent
+    from flask.views import MethodView
 
 
-  class PetsView(MethodView):
-      """ Create Pets service
-      """
-      method_decorators = []
+    class PetsView(MethodView):
+      """Create Pets service"""
+
       pets = {}
 
-      def post(self):
-        body= request.json
+      def post(self, body: dict):
         name = body.get("name")
         tag = body.get("tag")
         count = len(self.pets)
         pet = {}
-        pet['id'] = count + 1
+        pet["id"] = count + 1
         pet["tag"] = tag
         pet["name"] = name
-        pet['last_updated'] = datetime.datetime.now()
-        self.pets[pet['id']] = pet
+        pet["last_updated"] = datetime.datetime.now()
+        self.pets[pet["id"]] = pet
         return pet, 201
 
-      def put(self, petId):
-        body = request.json
+      def put(self, petId, body: dict):
         name = body["name"]
         tag = body.get("tag")
-        id_ = int(petId)
-        pet = self.pets.get(petId, {"id": id_})
+        pet = self.pets.get(petId, {"id": petId})
         pet["name"] = name
         pet["tag"] = tag
-        pet['last_updated'] = datetime.datetime.now()
-        self.pets[id_] = pet
-        return self.pets[id_], 201
+        pet["last_updated"] = datetime.datetime.now()
+        self.pets[petId] = pet
+        return self.pets[petId], 201
 
       def delete(self, petId):
         id_ = int(petId)
         if self.pets.get(id_) is None:
-            return NoContent, 404
+          return NoContent, 404
         del self.pets[id_]
         return NoContent, 204
 
-      def get(self, petId):
-        id_ = int(petId)
-        if self.pets.get(id_) is None:
-            return NoContent, 404
-        return self.pets[id_]
+      def get(self, petId=None, limit=100):
+        if petId is None:
+          # NOTE: we need to wrap it with list for Python 3 as 
+          # dict_values is not JSON serializable
+          return list(self.pets.values())[0:limit]
+        if self.pets.get(petId) is None:
+          return NoContent, 404
+        return self.pets[petId]
 
-      def search(self, limit=100):
-        # NOTE: we need to wrap it with list for Python 3 as dict_values is not JSON serializable
-        return list(self.pets.values())[0:limit]
 
 and a __init__.py file to make the Class visible in the api directory.
 
-.. code-block:: Python
+.. code-block:: python
 
   from .petsview import PetsView
+
+
+the `as_view` method of the class is called. Its `dispatch_request` method is 
+used to route requests based on the HTTP method. 
+Therefore it is required to use the same `get` method for both, collection and 
+single resources. I.E. `/pets` and `/pets/{id}`.
+
+It is possible to use decorators for the Method view by listing them in the 
+decorator attribute of the class:
+
+.. code-block:: python
+
+    def example_decorator(f):
+        """
+        the returned view from <class>.as_view can be decorated
+        the decorator is initialized exactly once per class
+        """
+
+        def decorator(*args, **kwargs):
+            return f(*args, **kwargs)
+
+        return decorator
+
+    class PetsView(MethodView):
+      """Create Pets service"""
+
+      decorators = [example_decorator]
+
+      ...
+
+
+Additionally, you may inject dependencies into the class by declaring parameters 
+for this class in the `__init__` method and providing the arguments in the 
+`MethodViewResolver` call. The arguments are passed down to the class when 
+`as_view` is called.
+
+A class might look like this:
+
+.. code-block:: python
+  
+  class PetsView(MethodView):
+    def __init__(self, pets):
+      self.pets = pets
+
+
+And the arguments are provided like this:
+
+.. code-block:: python
+
+  MethodViewResolver("api", class_arguments={"PetsView": {"kwargs": {"pets": zoo}}})
+
 
 ``MethodViewResolver`` will give precedence to any ``operationId``
 encountered in the specification. It will also respect
