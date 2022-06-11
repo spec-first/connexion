@@ -230,18 +230,27 @@ class MethodViewResolver(RestyResolver):
 
             mod = __import__(module_name, fromlist=[view_name])
             view_cls = getattr(mod, view_name)
-            # Find the class and instantiate it
+            # Find the class and create a view function from it
             view = None
             for v in self.initialized_views:
-                if v.__class__ == view_cls:
+                # views returned by <class>.as_view
+                # have the origin class attached as .view_class
+                if v.view_class == view_cls:
                     view = v
                     break
             if view is None:
-                view = view_cls()
+                # call as_view to get a view function
+                # that is decoratated with the classes
+                # decorator list, if any
+                view = view_cls.as_view(view_name)
+                # add the view to the list of initialized views
+                # in order to call as_view only once
                 self.initialized_views.append(view)
-            func = getattr(view, meth_name)
-            # Return the method function of the class
-            return func
+            # Return the class as view function
+            # for each operation so that requests
+            # are dispatched with <class>.dispatch_request,
+            # when calling the view function
+            return view
         except ImportError as e:
             msg = 'Cannot resolve operationId "{}"! Import error was "{}"'.format(
                 operation_id, str(e))

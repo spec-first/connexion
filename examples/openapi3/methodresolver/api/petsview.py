@@ -5,10 +5,17 @@ from flask import request
 from flask.views import MethodView
 
 
+def example_decorator(f):
+    """the returned view from <class>.as_view can be decorated"""
+    def decorator(*args, **kwargs):
+        return f(*args, **kwargs)
+    return decorator
+
+
 class PetsView(MethodView):
     """ Create Pets service
     """
-    method_decorators = []
+    decorators = [example_decorator]
     pets = {}
 
     def post(self):
@@ -43,12 +50,11 @@ class PetsView(MethodView):
       del self.pets[id_]
       return NoContent, 204
 
-    def get(self, petId):
+    def get(self, petId = None, limit=100):
+      if petId is None:
+        # NOTE: we need to wrap it with list for Python 3 as dict_values is not JSON serializable
+        return list(self.pets.values())[0:limit]
       id_ = int(petId)
       if self.pets.get(id_) is None:
           return NoContent, 404
       return self.pets[id_]
-
-    def search(self, limit=100):
-      # NOTE: we need to wrap it with list for Python 3 as dict_values is not JSON serializable
-      return list(self.pets.values())[0:limit]
