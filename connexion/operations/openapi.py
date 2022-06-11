@@ -22,6 +22,7 @@ class OpenAPIOperation(AbstractOperation):
     """
 
     def __init__(self, api, method, path, operation, resolver, path_parameters=None,
+                 app_security=None, security_schemes=None,
                  components=None, validate_responses=False, strict_validation=False,
                  randomize_endpoint=None, validator_map=None,
                  pythonic_params=False, uri_parser_class=None, pass_context_arg_name=None):
@@ -44,6 +45,11 @@ class OpenAPIOperation(AbstractOperation):
         :param resolver: Callable that maps operationID to a function
         :param path_parameters: Parameters defined in the path level
         :type path_parameters: list
+        :param app_security: list of security rules the application uses by default
+        :type app_security: list
+        :param security_schemes: `Security Definitions Object
+            <https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-definitions-object>`_
+        :type security_schemes: dict
         :param components: `Components Object
             <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#componentsObject>`_
         :type components: dict
@@ -76,6 +82,8 @@ class OpenAPIOperation(AbstractOperation):
             path=path,
             operation=operation,
             resolver=resolver,
+            app_security=app_security,
+            security_schemes=security_schemes,
             validate_responses=validate_responses,
             strict_validation=strict_validation,
             randomize_endpoint=randomize_endpoint,
@@ -116,6 +124,8 @@ class OpenAPIOperation(AbstractOperation):
             spec.get_operation(path, method),
             resolver=resolver,
             path_parameters=spec.get_path_params(path),
+            app_security=spec.security,
+            security_schemes=spec.security_schemes,
             components=spec.components,
             *args,
             **kwargs

@@ -239,7 +239,7 @@ class Swagger2Specification(Specification):
         return self._spec['responses']
 
     @property
-    def security_definitions(self):
+    def security_schemes(self):
         return self._spec.get('securityDefinitions', {})
 
     @property
@@ -268,7 +268,7 @@ class OpenAPISpecification(Specification):
         spec.setdefault('components', {})
 
     @property
-    def security_definitions(self):
+    def security_schemes(self):
         return self._spec['components'].get('securitySchemes', {})
 
     @property

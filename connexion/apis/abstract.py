@@ -38,6 +38,8 @@ class AbstractSpecAPI(metaclass=AbstractAPIMeta):
             self,
             specification: t.Union[pathlib.Path, str, dict],
             base_path: t.Optional[str] = None,
+            resolver: t.Optional[Resolver] = None,
+            resolver_error_handler: t.Optional[t.Callable] = None,
             arguments: t.Optional[dict] = None,
             options: t.Optional[dict] = None,
             *args,
@@ -48,6 +50,9 @@ class AbstractSpecAPI(metaclass=AbstractAPIMeta):
         :param specification: OpenAPI specification. Can be provided either as dict, or as path
             to file.
         :param base_path: Base path to host the API.
+        :param resolver: Callable that maps operationID to a function
+        :param resolver_error_handler: Callable that generates an Operation used for handling
+            ResolveErrors
         :param arguments: Jinja arguments to resolve in specification.
         :param options: New style options dictionary.
         """
@@ -69,6 +74,9 @@ class AbstractSpecAPI(metaclass=AbstractAPIMeta):
                             'swagger_url': self.options.openapi_console_ui_path})
 
         self._set_base_path(base_path)
+
+        self.resolver_error_handler = resolver_error_handler
+        self.resolver = resolver or Resolver()
 
     def _set_base_path(self, base_path: t.Optional[str] = None) -> None:
         if base_path is not None:
@@ -121,26 +129,18 @@ class AbstractRoutingAPI(AbstractSpecAPI):
     def __init__(
             self,
             *args,
-            resolver: t.Optional[Resolver] = None,
-            resolver_error_handler: t.Optional[t.Callable] = None,
             debug: bool = False,
             pass_context_arg_name: t.Optional[str] = None,
             **kwargs
     ) -> None:
         """Minimal interface of an API, with only functionality related to routing.
 
-        :param resolver: Callable that maps operationID to a function
-        :param resolver_error_handler: Callable that generates an Operation used for handling
-            ResolveErrors
         :param debug: Flag to run in debug mode
         :param pass_context_arg_name: If not None URL request handling functions with an argument
             matching this name will be passed the framework's request context.
         """
         super().__init__(*args, **kwargs)
         self.debug = debug
-        self.resolver_error_handler = resolver_error_handler
-
-        self.resolver = resolver or Resolver()
 
         logger.debug('pass_context_arg_name: %s', pass_context_arg_name)
         self.pass_context_arg_name = pass_context_arg_name
