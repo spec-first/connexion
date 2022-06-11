@@ -4,6 +4,7 @@ import pathlib
 
 import pytest
 from connexion import App
+from connexion.resolver import DeprecatedMethodViewResolver, MethodViewResolver
 from connexion.security import SecurityHandlerFactory
 from werkzeug.test import Client, EnvironBuilder
 
@@ -15,6 +16,7 @@ SPEC_FOLDER = TEST_FOLDER / "fakeapi"
 OPENAPI2_SPEC = ["swagger.yaml"]
 OPENAPI3_SPEC = ["openapi.yaml"]
 SPECS = OPENAPI2_SPEC + OPENAPI3_SPEC
+METHOD_VIEW_RESOLVERS = [MethodViewResolver, DeprecatedMethodViewResolver]
 
 
 class FakeResponse:
@@ -258,3 +260,8 @@ def unordered_definition_app(request):
 def bad_operations_app(request):
     return build_app_from_fixture('bad_operations', request.param,
                                   resolver_error=501)
+
+
+@pytest.fixture(scope="session", params=METHOD_VIEW_RESOLVERS)
+def method_view_resolver(request):
+    return request.param

@@ -192,7 +192,15 @@ class MethodViewResolver(RestyResolver):
                     return ...
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args,  class_arguments={}, **kwargs):
+        """
+        :param class_arguments: args and kwargs to pass to the class constructor
+        :type class_arguments: dict[str, dict[str, tuple[Any] | dict[str, Any]]]
+        example:
+        >>> class_arguments = {'MyView': 'args': ('foo',), 'kwargs': {'bar': 'baz'}}
+        """
+
+        self.class_arguments = class_arguments
         super(MethodViewResolver, self).__init__(*args, **kwargs)
         self.initialized_views = []
 
@@ -230,30 +238,60 @@ class MethodViewResolver(RestyResolver):
 
             mod = __import__(module_name, fromlist=[view_name])
             view_cls = getattr(mod, view_name)
-            # Find the class and create a view function from it
-            view = None
-            for v in self.initialized_views:
-                # views returned by <class>.as_view
-                # have the origin class attached as .view_class
-                if v.view_class == view_cls:
-                    view = v
-                    break
-            if view is None:
-                # call as_view to get a view function
-                # that is decoratated with the classes
-                # decorator list, if any
-                view = view_cls.as_view(view_name)
-                # add the view to the list of initialized views
-                # in order to call as_view only once
-                self.initialized_views.append(view)
-            # Return the class as view function
-            # for each operation so that requests
-            # are dispatched with <class>.dispatch_request,
-            # when calling the view function
-            return view
+            # find the view and return it
+            return self.resolve_function_from_class(view_name, meth_name, view_cls)
+
         except ImportError as e:
             msg = 'Cannot resolve operationId "{}"! Import error was "{}"'.format(
                 operation_id, str(e))
             raise ResolverError(msg, sys.exc_info())
         except (AttributeError, ValueError) as e:
             raise ResolverError(str(e), sys.exc_info())
+
+    def resolve_function_from_class(self, view_name, meth_name, view_cls):
+        """
+        Returns the view function for the given view class.
+        """
+        view = None
+        for v in self.initialized_views:
+            # views returned by <class>.as_view
+            # have the origin class attached as .view_class
+            if v.view_class == view_cls:
+                view = v
+                break
+        if view is None:
+            # get the args and kwargs for this view
+            cls_arguments = self.class_arguments.get(view_name, {})
+            cls_args = cls_arguments.get('args', ())
+            cls_kwargs= cls_arguments.get('kwargs', {})
+            # call as_view to get a view function
+            # that is decorated with the classes
+            # decorator list, if any
+            view = view_cls.as_view(view_name, *cls_args, **cls_kwargs)
+            # add the view to the list of initialized views
+            # in order to call as_view only once
+            self.initialized_views.append(view)
+        # return the class as view function
+        # for each operation so that requests
+        # are dispatched with <class>.dispatch_request,
+        # when calling the view function
+        return view
+
+
+class DeprecatedMethodViewResolver(MethodViewResolver):
+    """
+    deprecated:
+    connexion v2.x.x MethodViewResolver
+    """
+    def resolve_function_from_class(self, view_name, meth_name, view_cls):
+        view = None
+        for v in self.initialized_views:
+            if v.__class__ == view_cls:
+                view = v
+                break
+        if view is None:
+            view = view_cls()
+            self.initialized_views.append(view)
+        func = getattr(view, meth_name)
+        # Return the method function of the class
+        return func

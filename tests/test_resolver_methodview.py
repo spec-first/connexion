@@ -1,8 +1,7 @@
 from connexion.operations import OpenAPIOperation
-from connexion.resolver import MethodViewResolver, Resolver
+from connexion.resolver import Resolver
 
 COMPONENTS = {'parameters': {'myparam': {'in': 'path', 'schema': {'type': 'integer'}}}}
-
 
 def test_standard_resolve_x_router_controller():
     operation = OpenAPIOperation(
@@ -19,7 +18,7 @@ def test_standard_resolve_x_router_controller():
     )
     assert operation.operation_id == 'fakeapi.hello.post_greeting'
 
-def test_methodview_resolve_operation_id():
+def test_methodview_resolve_operation_id(method_view_resolver):
     operation = OpenAPIOperation(
         api=None,
         method='GET',
@@ -29,12 +28,11 @@ def test_methodview_resolve_operation_id():
             'operationId': 'fakeapi.hello.post_greeting',
         },
         components=COMPONENTS,
-        resolver=MethodViewResolver('fakeapi')
+        resolver=method_view_resolver('fakeapi')
     )
     assert operation.operation_id == 'fakeapi.hello.post_greeting'
 
-
-def test_methodview_resolve_x_router_controller_with_operation_id():
+def test_methodview_resolve_x_router_controller_with_operation_id(method_view_resolver):
     operation = OpenAPIOperation(
         api=None,
         method='GET',
@@ -45,23 +43,23 @@ def test_methodview_resolve_x_router_controller_with_operation_id():
             'operationId': 'post_greeting',
         },
         components=COMPONENTS,
-        resolver=MethodViewResolver('fakeapi')
+        resolver=method_view_resolver('fakeapi')
     )
     assert operation.operation_id == 'fakeapi.ExampleMethodView.post_greeting'
 
 
-def test_methodview_resolve_x_router_controller_without_operation_id():
+def test_methodview_resolve_x_router_controller_without_operation_id(method_view_resolver):
     operation = OpenAPIOperation(api=None,
                           method='GET',
                           path='/hello/{id}',
                           path_parameters=[],
                           operation={'x-openapi-router-controller': 'fakeapi.example_method'},
                           components=COMPONENTS,
-                          resolver=MethodViewResolver('fakeapi'))
+                          resolver=method_view_resolver('fakeapi'))
     assert operation.operation_id == 'fakeapi.ExampleMethodView.get'
 
 
-def test_methodview_resolve_with_default_module_name():
+def test_methodview_resolve_with_default_module_name(method_view_resolver):
     operation = OpenAPIOperation(
         api=None,
         method='GET',
@@ -69,12 +67,12 @@ def test_methodview_resolve_with_default_module_name():
         path_parameters=[],
         operation={},
         components=COMPONENTS,
-        resolver=MethodViewResolver('fakeapi')
+        resolver=method_view_resolver('fakeapi')
     )
     assert operation.operation_id == 'fakeapi.ExampleMethodView.get'
 
 
-def test_methodview_resolve_with_default_module_name_lowercase_verb():
+def test_methodview_resolve_with_default_module_name_lowercase_verb(method_view_resolver):
     operation = OpenAPIOperation(
         api=None,
         method='get',
@@ -82,12 +80,12 @@ def test_methodview_resolve_with_default_module_name_lowercase_verb():
         path_parameters=[],
         operation={},
         components=COMPONENTS,
-        resolver=MethodViewResolver('fakeapi')
+        resolver=method_view_resolver('fakeapi')
     )
     assert operation.operation_id == 'fakeapi.ExampleMethodView.get'
 
 
-def test_methodview_resolve_with_default_module_name_will_translate_dashes_in_resource_name():
+def test_methodview_resolve_with_default_module_name_will_translate_dashes_in_resource_name(method_view_resolver):
     operation = OpenAPIOperation(
         api=None,
         method='GET',
@@ -95,12 +93,12 @@ def test_methodview_resolve_with_default_module_name_will_translate_dashes_in_re
         path_parameters=[],
         operation={},
         components=COMPONENTS,
-        resolver=MethodViewResolver('fakeapi')
+        resolver=method_view_resolver('fakeapi')
     )
     assert operation.operation_id == 'fakeapi.ExampleMethodView.search'
 
 
-def test_methodview_resolve_with_default_module_name_can_resolve_api_root():
+def test_methodview_resolve_with_default_module_name_can_resolve_api_root(method_view_resolver):
     operation = OpenAPIOperation(
         api=None,
         method='GET',
@@ -108,12 +106,12 @@ def test_methodview_resolve_with_default_module_name_can_resolve_api_root():
         path_parameters=[],
         operation={},
         components=COMPONENTS,
-        resolver=MethodViewResolver('fakeapi.example_method',)
+        resolver=method_view_resolver('fakeapi.example_method',)
     )
     assert operation.operation_id == 'fakeapi.ExampleMethodView.get'
 
 
-def test_methodview_resolve_with_default_module_name_will_resolve_resource_root_get_as_search():
+def test_methodview_resolve_with_default_module_name_will_resolve_resource_root_get_as_search(method_view_resolver):
     operation = OpenAPIOperation(
         api=None,
         method='GET',
@@ -121,12 +119,12 @@ def test_methodview_resolve_with_default_module_name_will_resolve_resource_root_
         path_parameters=[],
         operation={},
         components=COMPONENTS,
-        resolver=MethodViewResolver('fakeapi')
+        resolver=method_view_resolver('fakeapi')
     )
     assert operation.operation_id == 'fakeapi.ExampleMethodView.search'
 
 
-def test_methodview_resolve_with_default_module_name_and_x_router_controller_will_resolve_resource_root_get_as_search():
+def test_methodview_resolve_with_default_module_name_and_x_router_controller_will_resolve_resource_root_get_as_search(method_view_resolver):
     operation = OpenAPIOperation(
         api=None,
         method='GET',
@@ -136,12 +134,12 @@ def test_methodview_resolve_with_default_module_name_and_x_router_controller_wil
             'x-openapi-router-controller': 'fakeapi.example_method',
         },
         components=COMPONENTS,
-        resolver=MethodViewResolver('fakeapi')
+        resolver=method_view_resolver('fakeapi')
     )
     assert operation.operation_id == 'fakeapi.ExampleMethodView.search'
 
 
-def test_methodview_resolve_with_default_module_name_will_resolve_resource_root_as_configured():
+def test_methodview_resolve_with_default_module_name_will_resolve_resource_root_as_configured(method_view_resolver):
     operation = OpenAPIOperation(
         api=None,
         method='GET',
@@ -149,12 +147,12 @@ def test_methodview_resolve_with_default_module_name_will_resolve_resource_root_
         path_parameters=[],
         operation={},
         components=COMPONENTS,
-        resolver=MethodViewResolver('fakeapi', 'api_list')
+        resolver=method_view_resolver('fakeapi', 'api_list')
     )
     assert operation.operation_id == 'fakeapi.ExampleMethodView.api_list'
 
 
-def test_methodview_resolve_with_default_module_name_will_resolve_resource_root_post_as_post():
+def test_methodview_resolve_with_default_module_name_will_resolve_resource_root_post_as_post(method_view_resolver):
     operation = OpenAPIOperation(
         api=None,
         method='POST',
@@ -162,6 +160,6 @@ def test_methodview_resolve_with_default_module_name_will_resolve_resource_root_
         path_parameters=[],
         operation={},
         components=COMPONENTS,
-        resolver=MethodViewResolver('fakeapi')
+        resolver=method_view_resolver('fakeapi')
     )
     assert operation.operation_id == 'fakeapi.ExampleMethodView.post'
