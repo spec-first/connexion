@@ -228,20 +228,20 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         Content-Types that the operation consumes
         """
 
-    # @property
-    # @abc.abstractmethod
-    # def body_schema(self):
-    #     """
-    #     The body schema definition for this operation.
-    #     """
+    @property
+    @abc.abstractmethod
+    def body_schema(self):
+        """
+        The body schema definition for this operation.
+        """
 
-    # @property
-    # @abc.abstractmethod
-    # def body_definition(self):
-    #     """
-    #     The body definition for this operation.
-    #     :rtype: dict
-    #     """
+    @property
+    @abc.abstractmethod
+    def body_definition(self):
+        """
+        The body definition for this operation.
+        :rtype: dict
+        """
 
     def get_arguments(self, path_params, query_params, body, files, arguments,
                       has_kwargs, sanitize):

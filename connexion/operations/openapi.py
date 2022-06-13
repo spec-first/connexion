@@ -110,9 +110,9 @@ class OpenAPIOperation(AbstractOperation):
             **kwargs
         )
 
-    # @property
-    # def request_body(self):
-    #     return self._request_body
+    @property
+    def request_body(self):
+        return self._request_body
 
     @property
     def parameters(self):
@@ -126,10 +126,10 @@ class OpenAPIOperation(AbstractOperation):
     def produces(self):
         return self._produces
 
-    # def with_definitions(self, schema):
-    #     if self.components:
-    #         schema['schema']['components'] = self.components
-    #     return schema
+    def with_definitions(self, schema):
+        if self.components:
+            schema['schema']['components'] = self.components
+        return schema
 
     # def response_schema(self, status_code=None, content_type=None):
     #     response_definition = self.response_definition(
@@ -214,30 +214,30 @@ class OpenAPIOperation(AbstractOperation):
             types[path_defn['name']] = path_type
         return types
 
-    # @property
-    # def body_schema(self):
-    #     """
-    #     The body schema definition for this operation.
-    #     """
-    #     return self.body_definition.get('schema', {})
+    @property
+    def body_schema(self):
+        """
+        The body schema definition for this operation.
+        """
+        return self.body_definition.get('schema', {})
 
-    # @property
-    # def body_definition(self):
-    #     """
-    #     The body complete definition for this operation.
+    @property
+    def body_definition(self):
+        """
+        The body complete definition for this operation.
 
-    #     **There can be one "body" parameter at most.**
+        **There can be one "body" parameter at most.**
 
-    #     :rtype: dict
-    #     """
-    #     if self._request_body:
-    #         if len(self.consumes) > 1:
-    #             logger.warning(
-    #                 'this operation accepts multiple content types, using %s',
-    #                 self.consumes[0])
-    #         res = self._request_body.get('content', {}).get(self.consumes[0], {})
-    #         return self.with_definitions(res)
-    #     return {}
+        :rtype: dict
+        """
+        if self._request_body:
+            if len(self.consumes) > 1:
+                logger.warning(
+                    'this operation accepts multiple content types, using %s',
+                    self.consumes[0])
+            res = self._request_body.get('content', {}).get(self.consumes[0], {})
+            return self.with_definitions(res)
+        return {}
 
     def _get_body_argument(self, body, arguments, has_kwargs, sanitize):
         if len(arguments) <= 0 and not has_kwargs:

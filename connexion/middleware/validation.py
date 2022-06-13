@@ -75,7 +75,33 @@ class ValidationMiddleware(AppMiddleware):
                 # Redefine receive
                 async def new_receive():
                     return messages.pop(0)
-                await self.app(scope, new_receive, send)
+                # Redefine send to validate response
+                if api.validate_responses:
+                    # First, the response start is sent ("type", "status", "headers")
+                    # Then, the response body, possible in chunks ("type", "body", "more_body")
+                    # TODO: We can already validate headers, then body, instead of simultaneously
+                    response_headers = []
+                    header_event = []
+                    response_chunks = []
+                    response_events = []
+                    async def new_send(event):
+                        if event["type"] == "http.response.start":
+                            # Validate response headers
+                            response_headers.extend(event["headers"])
+                            header_event.append(event)
+                        # Need to read in entire body
+                        if event["type"] == "http.response.body":
+                            response_chunks.append(event["body"])
+                            response_events.append(event)
+                            if event.get("more_body", False):
+                                # Validate response body
+                                pass
+                        # If all OK, send headers and body
+                        await send(header_event)
+                        for resp_event in response_events:
+                            await send(resp_event)
+
+                await self.app(scope, new_receive, new_send)
         else:
             await self.app(scope, receive, send)
 
@@ -128,16 +154,18 @@ class ValidationAPI(AbstractSpecAPI):
                     continue
                 operation_id = operation.get('operationId')
                 if operation_id:
-                    self.operations[operation_id] = self.make_operation(operation)
+                    self.operations[operation_id] = self.make_operation(
+                        path, operation)
 
-    def make_operation(self, operation_spec: dict = None):
+    def make_operation(self, path, operation_spec: dict = None):
         if self.specification.version < (3, 0, 0):
             return Swagger2ValidationOperation(
                 api=self,
-                app_consumes=[],
-                app_produces=[],
+                app_produces=self.specification.produces,
+                app_consumes=self.specification.consumes,
                 operation=operation_spec,
                 strict_validation=self.strict_validation,
+                path_parameters=self.specification.get_path_params(path),
                 validator_map=self.validator_map,
                 uri_parser_class=self.uri_parser_class,
             )
@@ -148,6 +176,7 @@ class ValidationAPI(AbstractSpecAPI):
                 strict_validation=self.strict_validation,
                 validator_map=self.validator_map,
                 uri_parser_class=self.uri_parser_class,
+                path_parameters=self.specification.get_path_params(path),
             )
 
 
@@ -221,19 +250,19 @@ class AbstractValidationOperation:
         Returns the parameters for this operation
         """
 
-    # @property
-    # @abc.abstractmethod
-    # def produces(self):
-    #     """
-    #     Content-Types that the operation produces
-    #     """
+    @property
+    @abc.abstractmethod
+    def produces(self):
+        """
+        Content-Types that the operation produces
+        """
 
-    # @property
-    # @abc.abstractmethod
-    # def consumes(self):
-    #     """
-    #     Content-Types that the operation consumes
-    #     """
+    @property
+    @abc.abstractmethod
+    def consumes(self):
+        """
+        Content-Types that the operation consumes
+        """
 
     @property
     @abc.abstractmethod
@@ -375,8 +404,8 @@ class Swagger2ValidationOperation(AbstractValidationOperation):
         self,
         api,
         operation,
-        app_consumes,
         app_produces,
+        app_consumes,
         strict_validation=False,
         validator_map: t.Optional[dict] = None,
         uri_parser_class: t.Optional[t.Type[AbstractURIParser]] = None,
