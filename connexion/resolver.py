@@ -192,15 +192,8 @@ class MethodViewResolver(RestyResolver):
                     return ...
     """
 
-    def __init__(self, *args,  class_arguments={}, **kwargs):
-        """
-        :param class_arguments: args and kwargs to pass to the class constructor
-        :type class_arguments: dict[str, dict[str, tuple[Any] | dict[str, Any]]]
-        example:
-        >>> class_arguments = {'MyView': 'args': ('foo',), 'kwargs': {'bar': 'baz'}}
-        """
-
-        self.class_arguments = class_arguments
+    def __init__(self, *args,  class_arguments=None, **kwargs):
+        self.class_arguments = class_arguments or {}
         super(MethodViewResolver, self).__init__(*args, **kwargs)
         self.initialized_views = []
 
@@ -263,7 +256,7 @@ class MethodViewResolver(RestyResolver):
             # get the args and kwargs for this view
             cls_arguments = self.class_arguments.get(view_name, {})
             cls_args = cls_arguments.get('args', ())
-            cls_kwargs= cls_arguments.get('kwargs', {})
+            cls_kwargs = cls_arguments.get('kwargs', {})
             # call as_view to get a view function
             # that is decorated with the classes
             # decorator list, if any

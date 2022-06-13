@@ -129,10 +129,10 @@ collected and all passed to the endpoint handlers.
 Automatic Routing with MethodViewResolver
 -------------------------------------------
 
-Note: 
-If you migrate from connextion v2 you may want to use the `DeprecatedMethodViewResolver`
-in order to maintain the old behavior. The behavior described here is the new behavior,
-introduced in connextion v3.
+.. note::
+   If you migrate from connextion v2 you may want to use the `DeprecatedMethodViewResolver`
+   in order to maintain the old behavior. The behavior described here is the new behavior,
+   introduced in connextion v3.
 
 ``MethodViewResolver`` is an customised Resolver based on ``RestyResolver``
 to take advantage of MethodView structure of building Flask APIs.
@@ -227,11 +227,11 @@ and a __init__.py file to make the Class visible in the api directory.
 
 .. code-block:: python
 
-  from .petsview import PetsView
+    from .petsview import PetsView
 
 
-the `as_view` method of the class is called. Its `dispatch_request` method is 
-used to route requests based on the HTTP method. 
+The `as_view` method of the class is called to create the view function.
+Its `dispatch_request` method is used to route requests based on the HTTP method. 
 Therefore it is required to use the same `get` method for both, collection and 
 single resources. I.E. `/pets` and `/pets/{id}`.
 
@@ -241,10 +241,6 @@ decorator attribute of the class:
 .. code-block:: python
 
     def example_decorator(f):
-        """
-        the returned view from <class>.as_view can be decorated
-        the decorator is initialized exactly once per class
-        """
 
         def decorator(*args, **kwargs):
             return f(*args, **kwargs)
