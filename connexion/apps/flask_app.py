@@ -140,6 +140,7 @@ class FlaskApp(AbstractApp):
                          extra_files=self.extra_files, **options)
         elif self.server == 'tornado':
             try:
+                import tornado.autoreload
                 import tornado.httpserver
                 import tornado.ioloop
                 import tornado.wsgi
@@ -148,6 +149,8 @@ class FlaskApp(AbstractApp):
             wsgi_container = tornado.wsgi.WSGIContainer(self.app)
             http_server = tornado.httpserver.HTTPServer(wsgi_container, **options)
             http_server.listen(self.port, address=self.host)
+            if self.debug:
+                tornado.autoreload.start()
             logger.info('Listening on %s:%s..', self.host, self.port)
             tornado.ioloop.IOLoop.instance().start()
         elif self.server == 'gevent':
@@ -155,6 +158,8 @@ class FlaskApp(AbstractApp):
                 import gevent.pywsgi
             except ImportError:
                 raise Exception('gevent library not installed')
+            if self.debug:
+                logger.warning("gevent server doesn't support debug mode. Please switch to flask/tornado server.")
             http_server = gevent.pywsgi.WSGIServer((self.host, self.port), self.app, **options)
             logger.info('Listening on %s:%s..', self.host, self.port)
             http_server.serve_forever()
