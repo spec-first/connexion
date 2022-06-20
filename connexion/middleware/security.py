@@ -6,12 +6,15 @@ from collections import defaultdict
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from connexion.apis.abstract import AbstractSpecAPI
-from connexion.exceptions import MissingMiddleware
+from connexion.exceptions import MissingMiddleware, ProblemException
 from connexion.http_facts import METHODS
 from connexion.lifecycle import MiddlewareRequest
 from connexion.middleware import AppMiddleware
 from connexion.middleware.routing import ROUTING_CONTEXT
+from connexion.operations import AbstractOperation
+from connexion.resolver import ResolverError
 from connexion.security import SecurityHandlerFactory
+from connexion.spec import Specification
 
 logger = logging.getLogger("connexion.middleware.security")
 
@@ -69,8 +72,6 @@ class SecurityAPI(AbstractSpecAPI):
     ):
         super().__init__(specification, *args, **kwargs)
         self.security_handler_factory = SecurityHandlerFactory('context')
-        self.app_security = self.specification.security
-        self.security_schemes = self.specification.security_definitions
 
         if auth_all_paths:
             self.add_auth_on_not_found()
@@ -81,29 +82,35 @@ class SecurityAPI(AbstractSpecAPI):
 
     def add_auth_on_not_found(self):
         """Register a default SecurityOperation for routes that are not found."""
-        default_operation = self.make_operation()
+        default_operation = self.make_operation(self.specification)
         self.operations = defaultdict(lambda: default_operation)
 
     def add_paths(self):
         paths = self.specification.get('paths', {})
         for path, methods in paths.items():
-            for method, operation in methods.items():
+            for method in methods:
                 if method not in METHODS:
                     continue
-                operation_id = operation.get('operationId')
-                if operation_id:
-                    self.operations[operation_id] = self.make_operation(operation)
+                try:
+                    self.add_operation(path, method)
+                except ResolverError:
+                    # ResolverErrors are either raised or handled in routing middleware.
+                    pass
 
-    def make_operation(self, operation_spec: dict = None):
-        security = self.app_security
-        if operation_spec:
-            security = operation_spec.get('security', self.app_security)
+    def add_operation(self, path: str, method: str) -> None:
+        operation_cls = self.specification.operation_cls
+        operation = operation_cls.from_spec(self.specification, self, path, method, self.resolver)
+        security_operation = self.make_operation(operation)
+        self._add_operation_internal(operation.operation_id, security_operation)
 
-        return SecurityOperation(
-            self.security_handler_factory,
-            security=security,
-            security_schemes=self.specification.security_definitions
+    def make_operation(self, operation: t.Union[AbstractOperation, Specification]):
+        return SecurityOperation.from_operation(
+            operation,
+            security_handler_factory=self.security_handler_factory,
         )
+
+    def _add_operation_internal(self, operation_id: str, operation: 'SecurityOperation'):
+        self.operations[operation_id] = operation
 
 
 class SecurityOperation:
@@ -118,6 +125,18 @@ class SecurityOperation:
         self.security = security
         self.security_schemes = security_schemes
         self.verification_fn = self._get_verification_fn()
+
+    @classmethod
+    def from_operation(
+            cls,
+            operation: AbstractOperation,
+            security_handler_factory: SecurityHandlerFactory
+    ):
+        return cls(
+            security_handler_factory,
+            security=operation.security,
+            security_schemes=operation.security_schemes
+        )
 
     def _get_verification_fn(self):
         logger.debug('... Security: %s', self.security, extra=vars(self))
@@ -234,5 +253,5 @@ class SecurityOperation:
         await self.verification_fn(request)
 
 
-class MissingSecurityOperation(Exception):
+class MissingSecurityOperation(ProblemException):
     pass

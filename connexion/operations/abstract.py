@@ -43,6 +43,7 @@ class AbstractOperation(metaclass=abc.ABCMeta):
                 serious_business(stuff)
     """
     def __init__(self, api, method, path, operation, resolver,
+                 app_security=None, security_schemes=None,
                  validate_responses=False, strict_validation=False,
                  randomize_endpoint=None, validator_map=None,
                  pythonic_params=False, uri_parser_class=None,
@@ -57,7 +58,6 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         :param operation: swagger operation object
         :type operation: dict
         :param resolver: Callable that maps operationID to a function
-        :param app_produces: list of content types the application can return by default
         :param app_security: list of security rules the application uses by default
         :type app_security: list
         :param security_schemes: `Security Definitions Object
@@ -85,6 +85,8 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         self._path = path
         self._operation = operation
         self._resolver = resolver
+        self._security = operation.get('security', app_security)
+        self._security_schemes = security_schemes
         self._validate_responses = validate_responses
         self._strict_validation = strict_validation
         self._pythonic_params = pythonic_params
@@ -118,6 +120,14 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         The path of the operation, relative to the API base path
         """
         return self._path
+
+    @property
+    def security(self):
+        return self._security
+
+    @property
+    def security_schemes(self):
+        return self._security_schemes
 
     @property
     def responses(self):
