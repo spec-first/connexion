@@ -279,10 +279,12 @@ class SecurityHandlerFactory:
         :rtype: types.FunctionType
         """
 
-        def wrapper(request):
+        async def wrapper(request):
             token_info = {}
             for scheme_name, func in schemes.items():
                 result = func(request)
+                while asyncio.iscoroutine(result):
+                    result = await result
                 if result is self.no_value:
                     return self.no_value
                 token_info[scheme_name] = result

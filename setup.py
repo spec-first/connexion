@@ -39,6 +39,7 @@ flask_require = [
 
 tests_require = [
     'pytest>=6,<7',
+    'pytest-asyncio>=0.18,<0.19',
     'pre-commit>=2,<3',
     'pytest-cov>=2,<3',
     *flask_require,
@@ -57,7 +58,7 @@ class PyTest(TestCommand):
     def initialize_options(self):
         TestCommand.initialize_options(self)
         self.cov = None
-        self.pytest_args = ['--cov', 'connexion', '--cov-report', 'term-missing', '-v']
+        self.pytest_args = ['--cov', 'connexion', '--cov-report', 'term-missing', '-v', "--asyncio-mode", "auto"]
         self.cov_html = False
 
     def finalize_options(self):
