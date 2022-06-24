@@ -194,6 +194,11 @@ class MethodViewResolver(RestyResolver):
 
     def __init__(self, *args,  class_arguments=None, **kwargs):
         self.class_arguments = class_arguments or {}
+        if "collection_endpoint_name" in kwargs:
+            del kwargs["collection_endpoint_name"]
+            # Dispatch of request is done by Flask
+            logger.warning("collection_endpoint_name is ignored by the MethodViewResolver. "
+                           "Requests to a collection endpoint will be routed to .get()")
         super(MethodViewResolver, self).__init__(*args, **kwargs)
         self.initialized_views = []
 
