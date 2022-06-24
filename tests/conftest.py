@@ -262,6 +262,12 @@ def bad_operations_app(request):
                                   resolver_error=501)
 
 
+@pytest.fixture(scope="session", params=SPECS)
+def method_view_app(request):
+    return build_app_from_fixture('method_view', request.param,
+                                  resolver=MethodViewResolver('fakeapi.example_method_view'))
+
+
 @pytest.fixture(scope="session", params=METHOD_VIEW_RESOLVERS)
 def method_view_resolver(request):
     return request.param
