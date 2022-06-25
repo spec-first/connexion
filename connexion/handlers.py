@@ -6,7 +6,7 @@ import logging
 
 from .exceptions import ResolverProblem
 
-logger = logging.getLogger('connexion.handlers')
+logger = logging.getLogger("connexion.handlers")
 
 RESOLVER_ERROR_ENDPOINT_RANDOM_DIGITS = 6
 
@@ -26,9 +26,9 @@ class ResolverErrorHandler:
 
     def handle(self, *args, **kwargs):
         raise ResolverProblem(
-            title='Not Implemented',
+            title="Not Implemented",
             detail=self.exception.reason,
-            status=self.status_code
+            status=self.status_code,
         )
 
     @property
@@ -44,7 +44,7 @@ class ResolverErrorHandler:
 
     async def __call__(self, *args, **kwargs):
         raise ResolverProblem(
-            title='Not Implemented',
+            title="Not Implemented",
             detail=self.exception.reason,
-            status=self.status_code
+            status=self.status_code,
         )

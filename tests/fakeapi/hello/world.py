@@ -1,5 +1,6 @@
 def search(id):
-    return ''
+    return ""
+
 
 def get(id):
-    return ''
+    return ""

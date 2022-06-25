@@ -11,14 +11,13 @@ from connexion.middleware import AppMiddleware
 from connexion.operations import AbstractOperation
 from connexion.resolver import Resolver
 
-ROUTING_CONTEXT = 'connexion_routing'
+ROUTING_CONTEXT = "connexion_routing"
 
 
-_scope: ContextVar[dict] = ContextVar('SCOPE')
+_scope: ContextVar[dict] = ContextVar("SCOPE")
 
 
 class RoutingMiddleware(AppMiddleware):
-
     def __init__(self, app: ASGIApp) -> None:
         """Middleware that resolves the Operation for an incoming request and attaches it to the
         scope.
@@ -30,11 +29,11 @@ class RoutingMiddleware(AppMiddleware):
         self.router = Router(default=RoutingOperation(None, self.app))
 
     def add_api(
-            self,
-            specification: t.Union[pathlib.Path, str, dict],
-            base_path: t.Optional[str] = None,
-            arguments: t.Optional[dict] = None,
-            **kwargs
+        self,
+        specification: t.Union[pathlib.Path, str, dict],
+        base_path: t.Optional[str] = None,
+        arguments: t.Optional[dict] = None,
+        **kwargs
     ) -> None:
         """Add an API to the router based on a OpenAPI spec.
 
@@ -42,8 +41,13 @@ class RoutingMiddleware(AppMiddleware):
         :param base_path: Base path where to add this API.
         :param arguments: Jinja arguments to replace in the spec.
         """
-        api = RoutingAPI(specification, base_path=base_path, arguments=arguments,
-                         next_app=self.app, **kwargs)
+        api = RoutingAPI(
+            specification,
+            base_path=base_path,
+            arguments=arguments,
+            next_app=self.app,
+            **kwargs
+        )
         self.router.mount(api.base_path, app=api.router)
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
@@ -56,7 +60,7 @@ class RoutingMiddleware(AppMiddleware):
         _scope.set(scope.copy())
 
         # Needs to be set so starlette router throws exceptions instead of returning error responses
-        scope['app'] = self
+        scope["app"] = self
         try:
             await self.router(scope, receive, send)
         except ValueError:
@@ -64,17 +68,16 @@ class RoutingMiddleware(AppMiddleware):
 
 
 class RoutingAPI(AbstractRoutingAPI):
-
     def __init__(
-            self,
-            specification: t.Union[pathlib.Path, str, dict],
-            base_path: t.Optional[str] = None,
-            arguments: t.Optional[dict] = None,
-            resolver: t.Optional[Resolver] = None,
-            next_app: ASGIApp = None,
-            resolver_error_handler: t.Optional[t.Callable] = None,
-            debug: bool = False,
-            **kwargs
+        self,
+        specification: t.Union[pathlib.Path, str, dict],
+        base_path: t.Optional[str] = None,
+        arguments: t.Optional[dict] = None,
+        resolver: t.Optional[Resolver] = None,
+        next_app: ASGIApp = None,
+        resolver_error_handler: t.Optional[t.Callable] = None,
+        debug: bool = False,
+        **kwargs
     ) -> None:
         """API implementation on top of Starlette Router for Connexion middleware."""
         self.next_app = next_app
@@ -86,21 +89,26 @@ class RoutingAPI(AbstractRoutingAPI):
             arguments=arguments,
             resolver=resolver,
             resolver_error_handler=resolver_error_handler,
-            debug=debug
+            debug=debug,
         )
 
     def add_operation(self, path: str, method: str) -> None:
         operation_cls = self.specification.operation_cls
-        operation = operation_cls.from_spec(self.specification, self, path, method, self.resolver)
-        routing_operation = RoutingOperation.from_operation(operation, next_app=self.next_app)
+        operation = operation_cls.from_spec(
+            self.specification, self, path, method, self.resolver
+        )
+        routing_operation = RoutingOperation.from_operation(
+            operation, next_app=self.next_app
+        )
         self._add_operation_internal(method, path, routing_operation)
 
-    def _add_operation_internal(self, method: str, path: str, operation: 'RoutingOperation') -> None:
+    def _add_operation_internal(
+        self, method: str, path: str, operation: "RoutingOperation"
+    ) -> None:
         self.router.add_route(path, operation, methods=[method])
 
 
 class RoutingOperation:
-
     def __init__(self, operation_id: t.Optional[str], next_app: ASGIApp) -> None:
         self.operation_id = operation_id
         self.next_app = next_app
@@ -113,12 +121,13 @@ class RoutingOperation:
         """Attach operation to scope and pass it to the next app"""
         original_scope = _scope.get()
 
-        api_base_path = scope.get('root_path', '')[len(original_scope.get('root_path', '')):]
+        api_base_path = scope.get("root_path", "")[
+            len(original_scope.get("root_path", "")) :
+        ]
 
-        extensions = original_scope.setdefault('extensions', {})
+        extensions = original_scope.setdefault("extensions", {})
         connexion_routing = extensions.setdefault(ROUTING_CONTEXT, {})
-        connexion_routing.update({
-            'api_base_path': api_base_path,
-            'operation_id': self.operation_id
-        })
+        connexion_routing.update(
+            {"api_base_path": api_base_path, "operation_id": self.operation_id}
+        )
         await self.next_app(original_scope, receive, send)

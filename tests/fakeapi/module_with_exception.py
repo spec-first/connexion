@@ -3,4 +3,4 @@
 #  - `test_operation.py:test_invalid_operation_does_stop_application_to_setup`
 #  - `test_api.py:test_invalid_operation_does_stop_application_to_setup`
 #  - `test_api.py:test_invalid_operation_does_not_stop_application_in_debug_mode`
-raise ValueError('Forced exception!')
+raise ValueError("Forced exception!")

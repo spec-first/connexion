@@ -8,5 +8,7 @@ class AppMiddleware(abc.ABC):
     class"""
 
     @abc.abstractmethod
-    def add_api(self, specification: t.Union[pathlib.Path, str, dict], **kwargs) -> None:
+    def add_api(
+        self, specification: t.Union[pathlib.Path, str, dict], **kwargs
+    ) -> None:
         pass

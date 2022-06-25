@@ -12,7 +12,7 @@ class TestMiddleware:
         self.app = app
 
     async def __call__(self, scope, receive, send):
-        operation_id = scope['extensions']['connexion_routing']['operation_id']
+        operation_id = scope["extensions"]["connexion_routing"]["operation_id"]
 
         async def patched_send(message):
             if message["type"] != "http.response.start":
@@ -31,7 +31,7 @@ class TestMiddleware:
 @pytest.fixture(scope="session", params=SPECS)
 def middleware_app(request):
     middlewares = ConnexionMiddleware.default_middlewares + [TestMiddleware]
-    return build_app_from_fixture('simple', request.param, middlewares=middlewares)
+    return build_app_from_fixture("simple", request.param, middlewares=middlewares)
 
 
 def test_routing_middleware(middleware_app):
@@ -39,5 +39,6 @@ def test_routing_middleware(middleware_app):
 
     response = app_client.post("/v1.0/greeting/robbe")
 
-    assert response.headers.get('operation_id') == 'fakeapi.hello.post_greeting', \
-        response.status_code
+    assert (
+        response.headers.get("operation_id") == "fakeapi.hello.post_greeting"
+    ), response.status_code

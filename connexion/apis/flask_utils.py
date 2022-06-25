@@ -10,15 +10,11 @@ import string
 import flask
 import werkzeug.wrappers
 
-PATH_PARAMETER = re.compile(r'\{([^}]*)\}')
+PATH_PARAMETER = re.compile(r"\{([^}]*)\}")
 
 # map Swagger type to flask path converter
 # see http://flask.pocoo.org/docs/0.10/api/#url-route-registrations
-PATH_PARAMETER_CONVERTERS = {
-    'integer': 'int',
-    'number': 'float',
-    'path': 'path'
-}
+PATH_PARAMETER_CONVERTERS = {"integer": "int", "number": "float", "path": "path"}
 
 
 def flaskify_endpoint(identifier, randomize=None):
@@ -32,22 +28,25 @@ def flaskify_endpoint(identifier, randomize=None):
     :rtype: str
 
     """
-    result = identifier.replace('.', '_')
+    result = identifier.replace(".", "_")
     if randomize is None:
         return result
 
     chars = string.ascii_uppercase + string.digits
     return "{result}|{random_string}".format(
         result=result,
-        random_string=''.join(random.SystemRandom().choice(chars) for _ in range(randomize)))
+        random_string="".join(
+            random.SystemRandom().choice(chars) for _ in range(randomize)
+        ),
+    )
 
 
 def convert_path_parameter(match, types):
     name = match.group(1)
     swagger_type = types.get(name)
     converter = PATH_PARAMETER_CONVERTERS.get(swagger_type)
-    return '<{}{}{}>'.format(
-        converter or '', ':' if converter else '', name.replace('-', '_')
+    return "<{}{}{}>".format(
+        converter or "", ":" if converter else "", name.replace("-", "_")
     )
 
 
@@ -80,4 +79,6 @@ def is_flask_response(obj: object) -> bool:
     >>> is_flask_response(flask.Response())
     True
     """
-    return isinstance(obj, flask.Response) or isinstance(obj, werkzeug.wrappers.Response)
+    return isinstance(obj, flask.Response) or isinstance(
+        obj, werkzeug.wrappers.Response
+    )

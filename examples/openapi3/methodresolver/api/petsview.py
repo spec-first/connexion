@@ -59,7 +59,7 @@ class PetsView(MethodView):
 
     def get(self, petId=None, limit=100):
         if petId is None:
-            # NOTE: we need to wrap it with list for Python 3 as 
+            # NOTE: we need to wrap it with list for Python 3 as
             # dict_values is not JSON serializable
             return list(self.pets.values())[0:limit]
         if self.pets.get(petId) is None:
