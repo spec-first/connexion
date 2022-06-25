@@ -110,6 +110,11 @@ class Specification(Mapping):
     def security(self):
         return self._spec.get("security")
 
+    @property
+    @abc.abstractmethod
+    def security_schemes(self):
+        raise NotImplementedError
+
     def __getitem__(self, k):
         return self._spec[k]
 
@@ -207,7 +212,7 @@ class Swagger2Specification(Specification):
     operation_cls = Swagger2Operation
 
     openapi_schema = json.loads(
-        pkgutil.get_data("connexion", "resources/schemas/v2.0/schema.json")
+        pkgutil.get_data("connexion", "resources/schemas/v2.0/schema.json")  # type: ignore
     )
 
     @classmethod
@@ -260,7 +265,7 @@ class OpenAPISpecification(Specification):
     operation_cls = OpenAPIOperation
 
     openapi_schema = json.loads(
-        pkgutil.get_data("connexion", "resources/schemas/v3.0/schema.json")
+        pkgutil.get_data("connexion", "resources/schemas/v3.0/schema.json")  # type: ignore
     )
 
     @classmethod

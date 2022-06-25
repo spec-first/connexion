@@ -6,7 +6,7 @@ import collections
 import copy
 import functools
 import logging
-from typing import AnyStr, Union
+import typing as t
 
 from jsonschema import Draft4Validator, ValidationError, draft4_format_checker
 from jsonschema.validators import extend
@@ -209,8 +209,7 @@ class RequestBodyValidator:
         error_path_msg = f" - '{error_path}'" if error_path else ""
         return error_path_msg
 
-    def validate_schema(self, data, url):
-        # type: (dict, AnyStr) -> Union[ConnexionResponse, None]
+    def validate_schema(self, data: dict, url: str) -> t.Optional[ConnexionResponse]:
         if self.is_null_value_valid and is_null(data):
             return None
 
@@ -219,16 +218,10 @@ class RequestBodyValidator:
         except ValidationError as exception:
             error_path_msg = self._error_path_message(exception=exception)
             logger.error(
-                "{url} validation error: {error}{error_path_msg}".format(
-                    url=url, error=exception.message, error_path_msg=error_path_msg
-                ),
+                f"{str(url)} validation error: {exception.message}{error_path_msg}",
                 extra={"validator": "body"},
             )
-            raise BadRequestProblem(
-                detail="{message}{error_path_msg}".format(
-                    message=exception.message, error_path_msg=error_path_msg
-                )
-            )
+            raise BadRequestProblem(detail=f"{exception.message}{error_path_msg}")
 
         return None
 
@@ -244,14 +237,12 @@ class ResponseBodyValidator:
         ValidatorClass = validator or Draft4ResponseValidator
         self.validator = ValidatorClass(schema, format_checker=draft4_format_checker)
 
-    def validate_schema(self, data, url):
-        # type: (dict, AnyStr) -> Union[ConnexionResponse, None]
+    def validate_schema(self, data: dict, url: str) -> t.Optional[ConnexionResponse]:
         try:
             self.validator.validate(data)
         except ValidationError as exception:
             logger.error(
-                "{url} validation error: {error}".format(url=url, error=exception),
-                extra={"validator": "response"},
+                f"{url} validation error: {exception}", extra={"validator": "response"}
             )
             raise exception
 

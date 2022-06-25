@@ -24,8 +24,8 @@ try:
     from .apps.flask_app import FlaskApp
 except ImportError as e:  # pragma: no cover
     _flask_not_installed_error = not_installed_error(e)
-    FlaskApi = _flask_not_installed_error
-    FlaskApp = _flask_not_installed_error
+    FlaskApi = _flask_not_installed_error  # type: ignore
+    FlaskApp = _flask_not_installed_error  # type: ignore
 
 App = FlaskApp
 Api = FlaskApi

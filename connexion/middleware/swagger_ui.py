@@ -55,7 +55,7 @@ class SwaggerUIMiddleware(AppMiddleware):
         self.router.mount(api.base_path, app=api.router)
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        _original_scope.set(scope.copy())
+        _original_scope.set(scope.copy())  # type: ignore
         await self.router(scope, receive, send)
 
     async def default_fn(self, _scope: Scope, receive: Receive, send: Send) -> None:
