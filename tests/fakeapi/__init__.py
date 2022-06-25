@@ -1,4 +1,4 @@
-from .example_method_view import ExampleMethodView
+from .example_method_view import PetsView
 
 
 def get():

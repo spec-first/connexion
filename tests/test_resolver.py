@@ -187,6 +187,7 @@ def test_resty_resolve_with_default_module_name_lowercase_verb():
                                   resolver=RestyResolver('fakeapi'))
     assert operation.operation_id == 'fakeapi.hello.get'
 
+
 def test_resty_resolve_with_default_module_name_lowercase_verb_nested():
     operation = Swagger2Operation(api=None,
                                   method='get',

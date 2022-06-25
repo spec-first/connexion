@@ -6,6 +6,7 @@ from the operations defined in the OpenAPI spec.
 import inspect
 import logging
 import sys
+import typing as t
 
 from inflection import camelize
 
@@ -192,8 +193,26 @@ class MethodViewResolver(RestyResolver):
                     return ...
     """
 
-    def __init__(self, *args,  class_arguments=None, **kwargs):
+    _class_arguments_type = t.Dict[str, t.Dict[str, t.Union[t.Iterable, t.Dict[str, t.Any]]]]
+
+    def __init__(self, *args,  class_arguments: _class_arguments_type = None, **kwargs):
+        """
+        :param class_arguments: Arguments to instantiate the View Class in the format  # noqa
+                                {
+                                  "ViewName": {
+                                    "args": (positional arguments,)
+                                    "kwargs": {
+                                      "keyword": "argument"
+                                    }
+                                  }
+                                }
+        """
         self.class_arguments = class_arguments or {}
+        if "collection_endpoint_name" in kwargs:
+            del kwargs["collection_endpoint_name"]
+            # Dispatch of request is done by Flask
+            logger.warning("collection_endpoint_name is ignored by the MethodViewResolver. "
+                           "Requests to a collection endpoint will be routed to .get()")
         super(MethodViewResolver, self).__init__(*args, **kwargs)
         self.initialized_views = []
 

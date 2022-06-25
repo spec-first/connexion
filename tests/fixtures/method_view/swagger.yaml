@@ -1,0 +1,152 @@
+swagger: "2.0"
+
+info:
+  title: "{{title}}"
+  version: "1.0"
+
+basePath: /v1.0
+
+paths:
+  /pets:
+    get:
+      summary: List all pets
+      tags:
+        - pets
+      parameters:
+        - name: limit
+          in: query
+          description: How many items to return at one time (max 100)
+          required: false
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: An paged array of pets
+          schema:
+            $ref: "#/definitions/Pets"
+        default:
+          description: unexpected error
+          schema:
+            $ref: "#/definitions/Error"
+    post:
+      summary: Create a pet
+      tags:
+        - pets
+      parameters:
+        - name: body
+          in: body
+          required: true
+          description: Pet to add to the system
+          schema:
+            $ref: "#/definitions/Pet"
+      responses:
+        '201':
+          description: Pet record interpreted by backend
+          schema:
+            $ref: "#/definitions/Pet"
+        default:
+          description: unexpected error
+          schema:
+            $ref: "#/definitions/Error"
+
+  '/pets/{petId}':
+    get:
+      summary: Info for a specific pet
+      tags:
+        - pets
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          description: The id of the pet to retrieve
+          type: integer
+      responses:
+        '200':
+          description: Expected response to a valid request
+          schema:
+            $ref: "#/definitions/Pet"
+        default:
+          description: unexpected error
+          schema:
+            $ref: "#/definitions/Error"
+
+    put:
+      summary: Update a pet
+      tags:
+        - pets
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          description: The id of the pet to update
+          type: integer
+        - name: body
+          in: body
+          required: true
+          description: Pet to add to the system
+          schema:
+            $ref: "#/definitions/Pet"
+      responses:
+        '201':
+          description: Pet record interpreted by backend
+          schema:
+            $ref: "#/definitions/Pet"
+        default:
+          description: unexpected error
+          schema:
+            $ref: "#/definitions/Error"
+    delete:
+      summary: Update a pet
+      tags:
+        - pets
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          description: The id of the pet to update
+          type: integer
+      responses:
+        '204':
+          description: Null response
+        default:
+          description: unexpected error
+          schema:
+            $ref: "#/definitions/Error"
+
+
+definitions:
+  Pet:
+    required:
+      - name
+    properties:
+      name:
+        type: string
+        example: fluffy
+      tag:
+        type: string
+        example: red
+      id:
+        type: integer
+        format: int64
+        readOnly: true
+        example: 1
+      last_updated:
+        type: string
+        readOnly: true
+        example: 2019-01-16T23:52:54.309102Z
+
+  Pets:
+    type: array
+    items:
+      $ref: "#/definitions/Pet"
+
+  Error:
+    required:
+      - code
+      - message
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
