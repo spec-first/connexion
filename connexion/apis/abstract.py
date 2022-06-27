@@ -20,29 +20,27 @@ from ..resolver import Resolver
 from ..spec import Specification
 
 MODULE_PATH = pathlib.Path(__file__).absolute().parent.parent
-SWAGGER_UI_URL = 'ui'
+SWAGGER_UI_URL = "ui"
 
-logger = logging.getLogger('connexion.apis.abstract')
+logger = logging.getLogger("connexion.apis.abstract")
 
 
 class AbstractAPIMeta(abc.ABCMeta):
-
     def __init__(cls, name, bases, attrs):
         abc.ABCMeta.__init__(cls, name, bases, attrs)
         cls._set_jsonifier()
 
 
 class AbstractSpecAPI(metaclass=AbstractAPIMeta):
-
     def __init__(
-            self,
-            specification: t.Union[pathlib.Path, str, dict],
-            base_path: t.Optional[str] = None,
-            resolver: t.Optional[Resolver] = None,
-            arguments: t.Optional[dict] = None,
-            options: t.Optional[dict] = None,
-            *args,
-            **kwargs
+        self,
+        specification: t.Union[pathlib.Path, str, dict],
+        base_path: t.Optional[str] = None,
+        resolver: t.Optional[Resolver] = None,
+        arguments: t.Optional[dict] = None,
+        options: t.Optional[dict] = None,
+        *args,
+        **kwargs,
     ):
         """Base API class with only minimal behavior related to the specification.
 
@@ -55,22 +53,31 @@ class AbstractSpecAPI(metaclass=AbstractAPIMeta):
         :param arguments: Jinja arguments to resolve in specification.
         :param options: New style options dictionary.
         """
-        logger.debug('Loading specification: %s', specification,
-                     extra={'swagger_yaml': specification,
-                            'base_path': base_path,
-                            'arguments': arguments})
+        logger.debug(
+            "Loading specification: %s",
+            specification,
+            extra={
+                "swagger_yaml": specification,
+                "base_path": base_path,
+                "arguments": arguments,
+            },
+        )
 
         # Avoid validator having ability to modify specification
         self.specification = Specification.load(specification, arguments=arguments)
 
-        logger.debug('Read specification', extra={'spec': self.specification})
+        logger.debug("Read specification", extra={"spec": self.specification})
 
         self.options = ConnexionOptions(options, oas_version=self.specification.version)
 
-        logger.debug('Options Loaded',
-                     extra={'swagger_ui': self.options.openapi_console_ui_available,
-                            'swagger_path': self.options.openapi_console_ui_from_dir,
-                            'swagger_url': self.options.openapi_console_ui_path})
+        logger.debug(
+            "Options Loaded",
+            extra={
+                "swagger_ui": self.options.openapi_console_ui_available,
+                "swagger_path": self.options.openapi_console_ui_from_dir,
+                "swagger_url": self.options.openapi_console_ui_path,
+            },
+        )
 
         self._set_base_path(base_path)
 
@@ -90,7 +97,6 @@ class AbstractSpecAPI(metaclass=AbstractAPIMeta):
 
 
 class AbstractSwaggerUIAPI(AbstractSpecAPI):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -123,14 +129,13 @@ class AbstractSwaggerUIAPI(AbstractSpecAPI):
 
 
 class AbstractRoutingAPI(AbstractSpecAPI):
-
     def __init__(
-            self,
-            *args,
-            resolver_error_handler: t.Optional[t.Callable] = None,
-            debug: bool = False,
-            pass_context_arg_name: t.Optional[str] = None,
-            **kwargs
+        self,
+        *args,
+        resolver_error_handler: t.Optional[t.Callable] = None,
+        debug: bool = False,
+        pass_context_arg_name: t.Optional[str] = None,
+        **kwargs,
     ) -> None:
         """Minimal interface of an API, with only functionality related to routing.
 
@@ -142,7 +147,7 @@ class AbstractRoutingAPI(AbstractSpecAPI):
         self.debug = debug
         self.resolver_error_handler = resolver_error_handler
 
-        logger.debug('pass_context_arg_name: %s', pass_context_arg_name)
+        logger.debug("pass_context_arg_name: %s", pass_context_arg_name)
         self.pass_context_arg_name = pass_context_arg_name
 
         self.add_paths()
@@ -151,9 +156,9 @@ class AbstractRoutingAPI(AbstractSpecAPI):
         """
         Adds the paths defined in the specification as endpoints
         """
-        paths = paths or self.specification.get('paths', dict())
+        paths = paths or self.specification.get("paths", dict())
         for path, methods in paths.items():
-            logger.debug('Adding %s%s...', self.base_path, path)
+            logger.debug("Adding %s%s...", self.base_path, path)
 
             for method in methods:
                 if method not in METHODS:
@@ -175,7 +180,9 @@ class AbstractRoutingAPI(AbstractSpecAPI):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def _add_operation_internal(self, method: str, path: str, operation: AbstractOperation) -> None:
+    def _add_operation_internal(
+        self, method: str, path: str, operation: AbstractOperation
+    ) -> None:
         """
         Adds the operation according to the user framework in use.
         It will be used to register the operation on the user framework router.
@@ -191,10 +198,10 @@ class AbstractRoutingAPI(AbstractSpecAPI):
         self._add_operation_internal(method, path, operation)
 
     def _handle_add_operation_error(self, path: str, method: str, exc_info: tuple):
-        url = f'{self.base_path}{path}'
-        error_msg = 'Failed to add operation for {method} {url}'.format(
-            method=method.upper(),
-            url=url)
+        url = f"{self.base_path}{path}"
+        error_msg = "Failed to add operation for {method} {url}".format(
+            method=method.upper(), url=url
+        )
         if self.debug:
             logger.exception(error_msg)
         else:
@@ -208,10 +215,22 @@ class AbstractAPI(AbstractRoutingAPI, metaclass=AbstractAPIMeta):
     Defines an abstract interface for a Swagger API
     """
 
-    def __init__(self, specification, base_path=None, arguments=None,
-                 validate_responses=False, strict_validation=False, resolver=None,
-                 debug=False, resolver_error_handler=None, validator_map=None,
-                 pythonic_params=False, pass_context_arg_name=None, options=None, **kwargs):
+    def __init__(
+        self,
+        specification,
+        base_path=None,
+        arguments=None,
+        validate_responses=False,
+        strict_validation=False,
+        resolver=None,
+        debug=False,
+        resolver_error_handler=None,
+        validator_map=None,
+        pythonic_params=False,
+        pass_context_arg_name=None,
+        options=None,
+        **kwargs,
+    ):
         """
         :type validate_responses: bool
         :type strict_validation: bool
@@ -224,18 +243,25 @@ class AbstractAPI(AbstractRoutingAPI, metaclass=AbstractAPIMeta):
         """
         self.validator_map = validator_map
 
-        logger.debug('Validate Responses: %s', str(validate_responses))
+        logger.debug("Validate Responses: %s", str(validate_responses))
         self.validate_responses = validate_responses
 
-        logger.debug('Strict Request Validation: %s', str(strict_validation))
+        logger.debug("Strict Request Validation: %s", str(strict_validation))
         self.strict_validation = strict_validation
 
-        logger.debug('Pythonic params: %s', str(pythonic_params))
+        logger.debug("Pythonic params: %s", str(pythonic_params))
         self.pythonic_params = pythonic_params
 
-        super().__init__(specification, base_path=base_path, arguments=arguments,
-                         resolver=resolver, resolver_error_handler=resolver_error_handler,
-                         debug=debug, pass_context_arg_name=pass_context_arg_name, options=options)
+        super().__init__(
+            specification,
+            base_path=base_path,
+            arguments=arguments,
+            resolver=resolver,
+            resolver_error_handler=resolver_error_handler,
+            debug=debug,
+            pass_context_arg_name=pass_context_arg_name,
+            options=options,
+        )
 
     def add_operation(self, path, method):
         """
@@ -264,7 +290,7 @@ class AbstractAPI(AbstractRoutingAPI, metaclass=AbstractAPIMeta):
             strict_validation=self.strict_validation,
             pythonic_params=self.pythonic_params,
             uri_parser_class=self.options.uri_parser_class,
-            pass_context_arg_name=self.pass_context_arg_name
+            pass_context_arg_name=self.pass_context_arg_name,
         )
         self._add_operation_internal(method, path, operation)
 
@@ -301,32 +327,38 @@ class AbstractAPI(AbstractRoutingAPI, metaclass=AbstractAPIMeta):
         """
         if extra_context is None:
             extra_context = {}
-        logger.debug('Getting data and status code',
-                     extra={
-                         'data': response,
-                         'data_type': type(response),
-                         **extra_context
-                     })
+        logger.debug(
+            "Getting data and status code",
+            extra={"data": response, "data_type": type(response), **extra_context},
+        )
 
         if isinstance(response, ConnexionResponse):
-            framework_response = cls._connexion_to_framework_response(response, mimetype, extra_context)
+            framework_response = cls._connexion_to_framework_response(
+                response, mimetype, extra_context
+            )
         else:
-            framework_response = cls._response_from_handler(response, mimetype, extra_context)
+            framework_response = cls._response_from_handler(
+                response, mimetype, extra_context
+            )
 
-        logger.debug('Got framework response',
-                     extra={
-                         'response': framework_response,
-                         'response_type': type(framework_response),
-                         **extra_context
-                     })
+        logger.debug(
+            "Got framework response",
+            extra={
+                "response": framework_response,
+                "response_type": type(framework_response),
+                **extra_context,
+            },
+        )
         return framework_response
 
     @classmethod
     def _response_from_handler(
-            cls,
-            response: t.Union[t.Any, str, t.Tuple[str], t.Tuple[str, int], t.Tuple[str, int, dict]],
-            mimetype: str,
-            extra_context: t.Optional[dict] = None
+        cls,
+        response: t.Union[
+            t.Any, str, t.Tuple[str], t.Tuple[str, int], t.Tuple[str, int, dict]
+        ],
+        mimetype: str,
+        extra_context: t.Optional[dict] = None,
     ) -> t.Any:
         """
         Create a framework response from the operation handler data.
@@ -347,55 +379,85 @@ class AbstractAPI(AbstractRoutingAPI, metaclass=AbstractAPIMeta):
         if isinstance(response, tuple):
             len_response = len(response)
             if len_response == 1:
-                data, = response
-                return cls._build_response(mimetype=mimetype, data=data, extra_context=extra_context)
+                (data,) = response
+                return cls._build_response(
+                    mimetype=mimetype, data=data, extra_context=extra_context
+                )
             if len_response == 2:
                 if isinstance(response[1], (int, Enum)):
                     data, status_code = response
-                    return cls._build_response(mimetype=mimetype, data=data, status_code=status_code, extra_context=extra_context)
+                    return cls._build_response(
+                        mimetype=mimetype,
+                        data=data,
+                        status_code=status_code,
+                        extra_context=extra_context,
+                    )
                 else:
                     data, headers = response
-                return cls._build_response(mimetype=mimetype, data=data, headers=headers, extra_context=extra_context)
+                return cls._build_response(
+                    mimetype=mimetype,
+                    data=data,
+                    headers=headers,
+                    extra_context=extra_context,
+                )
             elif len_response == 3:
                 data, status_code, headers = response
-                return cls._build_response(mimetype=mimetype, data=data, status_code=status_code, headers=headers, extra_context=extra_context)
+                return cls._build_response(
+                    mimetype=mimetype,
+                    data=data,
+                    status_code=status_code,
+                    headers=headers,
+                    extra_context=extra_context,
+                )
             else:
                 raise TypeError(
-                    'The view function did not return a valid response tuple.'
-                    ' The tuple must have the form (body), (body, status, headers),'
-                    ' (body, status), or (body, headers).'
+                    "The view function did not return a valid response tuple."
+                    " The tuple must have the form (body), (body, status, headers),"
+                    " (body, status), or (body, headers)."
                 )
         else:
-            return cls._build_response(mimetype=mimetype, data=response, extra_context=extra_context)
+            return cls._build_response(
+                mimetype=mimetype, data=response, extra_context=extra_context
+            )
 
     @classmethod
     def get_connexion_response(cls, response, mimetype=None):
-        """ Cast framework dependent response to ConnexionResponse used for schema validation """
+        """Cast framework dependent response to ConnexionResponse used for schema validation"""
         if isinstance(response, ConnexionResponse):
             return response
 
         if not cls._is_framework_response(response):
             response = cls._response_from_handler(response, mimetype)
-        return cls._framework_to_connexion_response(response=response, mimetype=mimetype)
+        return cls._framework_to_connexion_response(
+            response=response, mimetype=mimetype
+        )
 
     @classmethod
     @abc.abstractmethod
     def _is_framework_response(cls, response):
-        """ Return True if `response` is a framework response class """
+        """Return True if `response` is a framework response class"""
 
     @classmethod
     @abc.abstractmethod
     def _framework_to_connexion_response(cls, response, mimetype):
-        """ Cast framework response class to ConnexionResponse used for schema validation """
+        """Cast framework response class to ConnexionResponse used for schema validation"""
 
     @classmethod
     @abc.abstractmethod
     def _connexion_to_framework_response(cls, response, mimetype, extra_context=None):
-        """ Cast ConnexionResponse to framework response class """
+        """Cast ConnexionResponse to framework response class"""
 
     @classmethod
     @abc.abstractmethod
-    def _build_response(cls, data, mimetype, content_type=None, status_code=None, headers=None, extra_context=None):
+    def _build_response(
+        cls,
+        data,
+        mimetype,
+        content_type=None,
+        status_code=None,
+        headers=None,
+        extra_context=None,
+    ):
         """
         Create a framework response from the provided arguments.
         :param data: Body data.
@@ -412,7 +474,9 @@ class AbstractAPI(AbstractRoutingAPI, metaclass=AbstractAPIMeta):
         """
 
     @classmethod
-    def _prepare_body_and_status_code(cls, data, mimetype, status_code=None, extra_context=None):
+    def _prepare_body_and_status_code(
+        cls, data, mimetype, status_code=None, extra_context=None
+    ):
         if data is NoContent:
             data = None
 
@@ -433,12 +497,11 @@ class AbstractAPI(AbstractRoutingAPI, metaclass=AbstractAPIMeta):
 
         if extra_context is None:
             extra_context = {}
-        logger.debug('Prepared body and status code (%d)',
-                     status_code,
-                     extra={
-                         'body': body,
-                         **extra_context
-                     })
+        logger.debug(
+            "Prepared body and status code (%d)",
+            status_code,
+            extra={"body": body, **extra_context},
+        )
 
         return body, status_code, mimetype
 

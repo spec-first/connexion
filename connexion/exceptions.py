@@ -15,8 +15,16 @@ class ConnexionException(Exception):
 
 
 class ProblemException(ConnexionException):
-    def __init__(self, status=400, title=None, detail=None, type=None,
-                 instance=None, headers=None, ext=None):
+    def __init__(
+        self,
+        status=400,
+        title=None,
+        detail=None,
+        type=None,
+        instance=None,
+        headers=None,
+        ext=None,
+    ):
         """
         This exception holds arguments that are going to be passed to the
         `connexion.problem` function to generate a proper response.
@@ -32,14 +40,22 @@ class ProblemException(ConnexionException):
     def to_problem(self):
         warnings.warn(
             "'to_problem' is planned to be removed in a future release. "
-            "Call connexion.problem.problem(..) instead to maintain the existing error response.", DeprecationWarning)
-        return problem(status=self.status, title=self.title, detail=self.detail,
-                       type=self.type, instance=self.instance, headers=self.headers,
-                       ext=self.ext)
+            "Call connexion.problem.problem(..) instead to maintain the existing error response.",
+            DeprecationWarning,
+        )
+        return problem(
+            status=self.status,
+            title=self.title,
+            detail=self.detail,
+            type=self.type,
+            instance=self.instance,
+            headers=self.headers,
+            ext=self.ext,
+        )
 
 
 class ResolverError(LookupError):
-    def __init__(self, reason='Unknown reason', exc_info=None):
+    def __init__(self, reason="Unknown reason", exc_info=None):
         """
         :param reason: Reason why the resolver failed.
         :type reason: str
@@ -51,10 +67,10 @@ class ResolverError(LookupError):
         self.exc_info = exc_info
 
     def __str__(self):  # pragma: no cover
-        return f'<ResolverError: {self.reason}>'
+        return f"<ResolverError: {self.reason}>"
 
     def __repr__(self):  # pragma: no cover
-        return f'<ResolverError: {self.reason}>'
+        return f"<ResolverError: {self.reason}>"
 
 
 class InvalidSpecification(ConnexionException, ValidationError):
@@ -66,7 +82,7 @@ class MissingMiddleware(ConnexionException):
 
 
 class NonConformingResponse(ProblemException):
-    def __init__(self, reason='Unknown Reason', message=None):
+    def __init__(self, reason="Unknown Reason", message=None):
         """
         :param reason: Reason why the response did not conform to the specification
         :type reason: str
@@ -76,35 +92,32 @@ class NonConformingResponse(ProblemException):
         self.message = message
 
     def __str__(self):  # pragma: no cover
-        return f'<NonConformingResponse: {self.reason}>'
+        return f"<NonConformingResponse: {self.reason}>"
 
     def __repr__(self):  # pragma: no cover
-        return f'<NonConformingResponse: {self.reason}>'
+        return f"<NonConformingResponse: {self.reason}>"
 
 
 class AuthenticationProblem(ProblemException):
-
     def __init__(self, status, title, detail):
         super().__init__(status=status, title=title, detail=detail)
 
 
 class ResolverProblem(ProblemException):
-
     def __init__(self, status, title, detail):
         super().__init__(status=status, title=title, detail=detail)
 
 
 class BadRequestProblem(ProblemException):
-
-    def __init__(self, title='Bad Request', detail=None):
+    def __init__(self, title="Bad Request", detail=None):
         super().__init__(status=400, title=title, detail=detail)
 
 
 class NotFoundProblem(ProblemException):
 
     description = (
-        'The requested URL was not found on the server. If you entered the URL manually please '
-        'check your spelling and try again.'
+        "The requested URL was not found on the server. If you entered the URL manually please "
+        "check your spelling and try again."
     )
 
     def __init__(self, title="Not Found", detail=description):
@@ -112,18 +125,21 @@ class NotFoundProblem(ProblemException):
 
 
 class UnsupportedMediaTypeProblem(ProblemException):
-
     def __init__(self, title="Unsupported Media Type", detail=None):
         super().__init__(status=415, title=title, detail=detail)
 
 
 class NonConformingResponseBody(NonConformingResponse):
-    def __init__(self, message, reason="Response body does not conform to specification"):
+    def __init__(
+        self, message, reason="Response body does not conform to specification"
+    ):
         super().__init__(reason=reason, message=message)
 
 
 class NonConformingResponseHeaders(NonConformingResponse):
-    def __init__(self, message, reason="Response headers do not conform to specification"):
+    def __init__(
+        self, message, reason="Response headers do not conform to specification"
+    ):
         super().__init__(reason=reason, message=message)
 
 
@@ -171,17 +187,22 @@ class OAuthScopeProblem(Forbidden):
 
 
 class ExtraParameterProblem(ProblemException):
-    def __init__(self, formdata_parameters, query_parameters, title=None, detail=None, **kwargs):
+    def __init__(
+        self, formdata_parameters, query_parameters, title=None, detail=None, **kwargs
+    ):
         self.extra_formdata = formdata_parameters
         self.extra_query = query_parameters
 
         # This keep backwards compatibility with the old returns
         if detail is None:
             if self.extra_query:
-                detail = "Extra {parameter_type} parameter(s) {extra_params} not in spec"\
-                    .format(parameter_type='query', extra_params=', '.join(self.extra_query))
+                detail = "Extra {parameter_type} parameter(s) {extra_params} not in spec".format(
+                    parameter_type="query", extra_params=", ".join(self.extra_query)
+                )
             elif self.extra_formdata:
-                detail = "Extra {parameter_type} parameter(s) {extra_params} not in spec"\
-                    .format(parameter_type='formData', extra_params=', '.join(self.extra_formdata))
+                detail = "Extra {parameter_type} parameter(s) {extra_params} not in spec".format(
+                    parameter_type="formData",
+                    extra_params=", ".join(self.extra_formdata),
+                )
 
         super().__init__(title=title, detail=detail, **kwargs)

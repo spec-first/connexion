@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-'''
+"""
 Basic example of a resource server
-'''
+"""
 
 import time
 
@@ -9,10 +9,10 @@ import connexion
 from jose import JWTError, jwt
 from werkzeug.exceptions import Unauthorized
 
-JWT_ISSUER = 'com.zalando.connexion'
-JWT_SECRET = 'change_this'
+JWT_ISSUER = "com.zalando.connexion"
+JWT_SECRET = "change_this"
 JWT_LIFETIME_SECONDS = 600
-JWT_ALGORITHM = 'HS256'
+JWT_ALGORITHM = "HS256"
 
 
 def generate_token(user_id):
@@ -35,17 +35,19 @@ def decode_token(token):
 
 
 def get_secret(user, token_info) -> str:
-    return '''
+    return """
     You are user_id {user} and the secret is 'wbevuec'.
     Decoded token claims: {token_info}.
-    '''.format(user=user, token_info=token_info)
+    """.format(
+        user=user, token_info=token_info
+    )
 
 
 def _current_timestamp() -> int:
     return int(time.time())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = connexion.FlaskApp(__name__)
-    app.add_api('openapi.yaml')
+    app.add_api("openapi.yaml")
     app.run(port=8080)

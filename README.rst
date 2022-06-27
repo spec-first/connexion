@@ -583,8 +583,8 @@ Contributing to Connexion/TODOs
 We welcome your ideas, issues, and pull requests. Just follow the
 usual/standard GitHub practices.
 
-For easy development, please install connexion in editable mode with the :code:`tests` extra, and
-install the pre-commit hooks.
+For easy development, install connexion in editable mode with the :code:`tests` extra, and
+install the pre-commit hooks to automatically run black formatting and static analysis checks.
 
 .. code-block:: bash
 

@@ -1,7 +1,6 @@
 import json
 
-from starlette.exceptions import \
-    ExceptionMiddleware as StarletteExceptionMiddleware
+from starlette.exceptions import ExceptionMiddleware as StarletteExceptionMiddleware
 from starlette.exceptions import HTTPException
 from starlette.requests import Request
 from starlette.responses import Response
@@ -28,14 +27,14 @@ class ExceptionMiddleware(StarletteExceptionMiddleware):
             type=exception.type,
             instance=exception.instance,
             headers=exception.headers,
-            ext=exception.ext
+            ext=exception.ext,
         )
 
         return Response(
             content=json.dumps(connexion_response.body),
             status_code=connexion_response.status_code,
             media_type=connexion_response.mimetype,
-            headers=connexion_response.headers
+            headers=connexion_response.headers,
         )
 
     def http_exception(self, request: Request, exc: HTTPException) -> Response:
@@ -45,14 +44,13 @@ class ExceptionMiddleware(StarletteExceptionMiddleware):
             # Starlette < 0.19
             headers = {}
 
-        connexion_response = problem(title=exc.detail,
-                                     detail=exc.detail,
-                                     status=exc.status_code,
-                                     headers=headers)
+        connexion_response = problem(
+            title=exc.detail, detail=exc.detail, status=exc.status_code, headers=headers
+        )
 
         return Response(
             content=json.dumps(connexion_response.body),
             status_code=connexion_response.status_code,
             media_type=connexion_response.mimetype,
-            headers=connexion_response.headers
+            headers=connexion_response.headers,
         )

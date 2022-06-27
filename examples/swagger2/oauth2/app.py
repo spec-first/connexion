@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-'''
+"""
 Basic example of a resource server
-'''
+"""
 
 import connexion
 
 
 def get_secret(user) -> str:
-    return f'You are: {user}'
+    return f"You are: {user}"
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = connexion.FlaskApp(__name__)
-    app.add_api('app.yaml')
+    app.add_api("app.yaml")
     app.run(port=8080)

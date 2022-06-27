@@ -27,9 +27,8 @@ if __name__ == "__main__":
         "pets-api.yaml",
         options=options,
         arguments={"title": "MethodViewResolver Example"},
-
         resolver=MethodViewResolver(
-            "api", 
+            "api",
             # class params are entirely optional
             # they allow to inject dependencies top down
             # so that the app can be wired, in the entrypoint

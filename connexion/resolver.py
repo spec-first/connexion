@@ -13,7 +13,7 @@ from inflection import camelize
 import connexion.utils as utils
 from connexion.exceptions import ResolverError
 
-logger = logging.getLogger('connexion.resolver')
+logger = logging.getLogger("connexion.resolver")
 
 
 class Resolution:
@@ -45,7 +45,9 @@ class Resolver:
         :type operation: connexion.operations.AbstractOperation
         """
         operation_id = self.resolve_operation_id(operation)
-        return Resolution(self.resolve_function_from_operation_id(operation_id), operation_id)
+        return Resolution(
+            self.resolve_function_from_operation_id(operation_id), operation_id
+        )
 
     def resolve_operation_id(self, operation):
         """
@@ -57,7 +59,7 @@ class Resolver:
         router_controller = operation.router_controller
         if router_controller is None:
             return operation_id
-        return f'{router_controller}.{operation_id}'
+        return f"{router_controller}.{operation_id}"
 
     def resolve_function_from_operation_id(self, operation_id):
         """
@@ -78,6 +80,7 @@ class RelativeResolver(Resolver):
     """
     Resolves endpoint functions relative to a given root path or module.
     """
+
     def __init__(self, root_path, function_resolver=utils.get_function_from_name):
         """
         :param root_path: The root path relative to which an operationId is resolved.
@@ -104,8 +107,8 @@ class RelativeResolver(Resolver):
         operation_id = operation.operation_id
         router_controller = operation.router_controller
         if router_controller is None:
-            return f'{self.root_path}.{operation_id}'
-        return f'{router_controller}.{operation_id}'
+            return f"{self.root_path}.{operation_id}"
+        return f"{router_controller}.{operation_id}"
 
 
 class RestyResolver(Resolver):
@@ -113,7 +116,7 @@ class RestyResolver(Resolver):
     Resolves endpoint functions using REST semantics (unless overridden by specifying operationId)
     """
 
-    def __init__(self, default_module_name, collection_endpoint_name='search'):
+    def __init__(self, default_module_name, collection_endpoint_name="search"):
         """
         :param default_module_name: Default module name for operations
         :type default_module_name: str
@@ -141,15 +144,15 @@ class RestyResolver(Resolver):
         """
 
         # Split the path into components delimited by '/'
-        path_components = [c for c in operation.path.split('/') if len(c)]
+        path_components = [c for c in operation.path.split("/") if len(c)]
 
         def is_var(component):
             """True if the path component is a var. eg, '{id}'"""
-            return (component[0] == '{') and (component[-1] == '}')
+            return (component[0] == "{") and (component[-1] == "}")
 
-        resource_name = '.'.join(
-            [c for c in path_components if not is_var(c)]
-        ).replace('-', '_')
+        resource_name = ".".join([c for c in path_components if not is_var(c)]).replace(
+            "-", "_"
+        )
 
         def get_controller_name():
             x_router_controller = operation.router_controller
@@ -160,21 +163,26 @@ class RestyResolver(Resolver):
                 name = x_router_controller
 
             elif resource_name:
-                name += '.' + resource_name
+                name += "." + resource_name
 
             return name
 
         def get_function_name():
             method = operation.method
 
-            is_collection_endpoint = \
-                method.lower() == 'get' \
-                and len(resource_name) \
+            is_collection_endpoint = (
+                method.lower() == "get"
+                and len(resource_name)
                 and not is_var(path_components[-1])
+            )
 
-            return self.collection_endpoint_name if is_collection_endpoint else method.lower()
+            return (
+                self.collection_endpoint_name
+                if is_collection_endpoint
+                else method.lower()
+            )
 
-        return f'{get_controller_name()}.{get_function_name()}'
+        return f"{get_controller_name()}.{get_function_name()}"
 
 
 class MethodViewResolver(RestyResolver):
@@ -193,9 +201,11 @@ class MethodViewResolver(RestyResolver):
                     return ...
     """
 
-    _class_arguments_type = t.Dict[str, t.Dict[str, t.Union[t.Iterable, t.Dict[str, t.Any]]]]
+    _class_arguments_type = t.Dict[
+        str, t.Dict[str, t.Union[t.Iterable, t.Dict[str, t.Any]]]
+    ]
 
-    def __init__(self, *args,  class_arguments: _class_arguments_type = None, **kwargs):
+    def __init__(self, *args, class_arguments: _class_arguments_type = None, **kwargs):
         """
         :param class_arguments: Arguments to instantiate the View Class in the format  # noqa
                                 {
@@ -211,8 +221,10 @@ class MethodViewResolver(RestyResolver):
         if "collection_endpoint_name" in kwargs:
             del kwargs["collection_endpoint_name"]
             # Dispatch of request is done by Flask
-            logger.warning("collection_endpoint_name is ignored by the MethodViewResolver. "
-                           "Requests to a collection endpoint will be routed to .get()")
+            logger.warning(
+                "collection_endpoint_name is ignored by the MethodViewResolver. "
+                "Requests to a collection endpoint will be routed to .get()"
+            )
         super(MethodViewResolver, self).__init__(*args, **kwargs)
         self.initialized_views = []
 
@@ -230,8 +242,8 @@ class MethodViewResolver(RestyResolver):
 
         # Use RestyResolver to get operation_id for us (follow their naming conventions/structure)
         operation_id = self.resolve_operation_id_using_rest_semantics(operation)
-        module_name, view_base, meth_name = operation_id.rsplit('.', 2)
-        view_name = camelize(view_base) + 'View'
+        module_name, view_base, meth_name = operation_id.rsplit(".", 2)
+        view_name = camelize(view_base) + "View"
 
         return f"{module_name}.{view_name}.{meth_name}"
 
@@ -243,8 +255,8 @@ class MethodViewResolver(RestyResolver):
         """
 
         try:
-            module_name, view_name, meth_name = operation_id.rsplit('.', 2)
-            if operation_id and not view_name.endswith('View'):
+            module_name, view_name, meth_name = operation_id.rsplit(".", 2)
+            if operation_id and not view_name.endswith("View"):
                 # If operation_id is not a view then assume it is a standard function
                 return self.function_resolver(operation_id)
 
@@ -255,7 +267,8 @@ class MethodViewResolver(RestyResolver):
 
         except ImportError as e:
             msg = 'Cannot resolve operationId "{}"! Import error was "{}"'.format(
-                operation_id, str(e))
+                operation_id, str(e)
+            )
             raise ResolverError(msg, sys.exc_info())
         except (AttributeError, ValueError) as e:
             raise ResolverError(str(e), sys.exc_info())
@@ -274,8 +287,8 @@ class MethodViewResolver(RestyResolver):
         if view is None:
             # get the args and kwargs for this view
             cls_arguments = self.class_arguments.get(view_name, {})
-            cls_args = cls_arguments.get('args', ())
-            cls_kwargs = cls_arguments.get('kwargs', {})
+            cls_args = cls_arguments.get("args", ())
+            cls_kwargs = cls_arguments.get("kwargs", {})
             # call as_view to get a view function
             # that is decorated with the classes
             # decorator list, if any
@@ -295,6 +308,7 @@ class DeprecatedMethodViewResolver(MethodViewResolver):
     deprecated:
     connexion v2.x.x MethodViewResolver
     """
+
     def resolve_function_from_class(self, view_name, meth_name, view_cls):
         view = None
         for v in self.initialized_views:

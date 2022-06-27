@@ -6,16 +6,10 @@ def test_mock_resolver_default():
     resolver = MockResolver(mock_all=True)
 
     responses = {
-        'default': {
-            'content': {
-                'application/json': {
-                    'examples': {
-                        "super_cool_example": {
-                            "value": {
-                                'foo': 'bar'
-                            }
-                        }
-                    }
+        "default": {
+            "content": {
+                "application/json": {
+                    "examples": {"super_cool_example": {"value": {"foo": "bar"}}}
                 }
             }
         }
@@ -23,35 +17,27 @@ def test_mock_resolver_default():
 
     operation = OpenAPIOperation(
         api=None,
-        method='GET',
-        path='endpoint',
+        method="GET",
+        path="endpoint",
         path_parameters=[],
-        operation={
-            'responses': responses
-        },
-        resolver=resolver
+        operation={"responses": responses},
+        resolver=resolver,
     )
-    assert operation.operation_id == 'mock-1'
+    assert operation.operation_id == "mock-1"
 
     response, status_code = resolver.mock_operation(operation)
     assert status_code == 200
-    assert response == {'foo': 'bar'}
+    assert response == {"foo": "bar"}
 
 
 def test_mock_resolver_numeric():
     resolver = MockResolver(mock_all=True)
 
     responses = {
-        '200': {
-            'content': {
-                'application/json': {
-                    'examples': {
-                        "super_cool_example": {
-                            "value": {
-                                'foo': 'bar'
-                            }
-                        }
-                    }
+        "200": {
+            "content": {
+                "application/json": {
+                    "examples": {"super_cool_example": {"value": {"foo": "bar"}}}
                 }
             }
         }
@@ -59,41 +45,31 @@ def test_mock_resolver_numeric():
 
     operation = OpenAPIOperation(
         api=None,
-        method='GET',
-        path='endpoint',
+        method="GET",
+        path="endpoint",
         path_parameters=[],
-        operation={
-            'responses': responses
-        },
-        resolver=resolver
+        operation={"responses": responses},
+        resolver=resolver,
     )
-    assert operation.operation_id == 'mock-1'
+    assert operation.operation_id == "mock-1"
 
     response, status_code = resolver.mock_operation(operation)
     assert status_code == 200
-    assert response == {'foo': 'bar'}
+    assert response == {"foo": "bar"}
 
 
 def test_mock_resolver_inline_schema_example():
     resolver = MockResolver(mock_all=True)
 
     responses = {
-        'default': {
-            'content': {
-                'application/json': {
-                    'schema': {
-                        'type': 'object',
-                        'properties': {
-                            'foo': {
-                                'schema': {
-                                    'type': 'string'
-                                }
-                            }
-                        }
+        "default": {
+            "content": {
+                "application/json": {
+                    "schema": {
+                        "type": "object",
+                        "properties": {"foo": {"schema": {"type": "string"}}},
                     },
-                    'example': {
-                        'foo': 'bar'
-                    }
+                    "example": {"foo": "bar"},
                 }
             }
         }
@@ -101,74 +77,66 @@ def test_mock_resolver_inline_schema_example():
 
     operation = OpenAPIOperation(
         api=None,
-        method='GET',
-        path='endpoint',
+        method="GET",
+        path="endpoint",
         path_parameters=[],
-        operation={
-            'responses': responses
-        },
-        resolver=resolver
+        operation={"responses": responses},
+        resolver=resolver,
     )
-    assert operation.operation_id == 'mock-1'
+    assert operation.operation_id == "mock-1"
 
     response, status_code = resolver.mock_operation(operation)
     assert status_code == 200
-    assert response == {'foo': 'bar'}
+    assert response == {"foo": "bar"}
+
 
 def test_mock_resolver_no_examples():
     resolver = MockResolver(mock_all=True)
 
-    responses = {
-        '418': {}
-    }
+    responses = {"418": {}}
 
     operation = OpenAPIOperation(
         api=None,
-        method='GET',
-        path='endpoint',
+        method="GET",
+        path="endpoint",
         path_parameters=[],
-        operation={
-            'responses': responses
-        },
-        resolver=resolver
+        operation={"responses": responses},
+        resolver=resolver,
     )
-    assert operation.operation_id == 'mock-1'
+    assert operation.operation_id == "mock-1"
 
     response, status_code = resolver.mock_operation(operation)
     assert status_code == 418
-    assert response == 'No example response was defined.'
+    assert response == "No example response was defined."
+
 
 def test_mock_resolver_notimplemented():
     resolver = MockResolver(mock_all=False)
 
-    responses = {
-        '418': {}
-    }
+    responses = {"418": {}}
 
     # do not mock the existent functions
     operation = OpenAPIOperation(
         api=None,
-        method='GET',
-        path='endpoint',
+        method="GET",
+        path="endpoint",
         path_parameters=[],
-        operation={
-            'operationId': 'fakeapi.hello.get'
-        },
-        resolver=resolver
+        operation={"operationId": "fakeapi.hello.get"},
+        resolver=resolver,
     )
-    assert operation.operation_id == 'fakeapi.hello.get'
+    assert operation.operation_id == "fakeapi.hello.get"
 
     # mock only the nonexistent ones
     operation = OpenAPIOperation(
         api=None,
-        method='GET',
-        path='endpoint',
+        method="GET",
+        path="endpoint",
         path_parameters=[],
         operation={
-            'operationId': 'fakeapi.hello.nonexistent_function',
-            'responses': responses
+            "operationId": "fakeapi.hello.nonexistent_function",
+            "responses": responses,
         },
-        resolver=resolver
+        resolver=resolver,
     )
     # check if it is using the mock function
-    assert operation._resolution.function() == ('No example response was defined.', 418)
+    assert operation._resolution.function() == ("No example response was defined.", 418)

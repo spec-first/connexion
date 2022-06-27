@@ -2,4 +2,4 @@
 
 
 def search():
-    return ''
+    return ""

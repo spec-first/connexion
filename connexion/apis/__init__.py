@@ -13,5 +13,4 @@ on the framework app.
 """
 
 
-from .abstract import (AbstractAPI, AbstractRoutingAPI,  # NOQA
-                       AbstractSwaggerUIAPI)
+from .abstract import AbstractAPI, AbstractRoutingAPI, AbstractSwaggerUIAPI  # NOQA

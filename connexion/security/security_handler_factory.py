@@ -14,11 +14,15 @@ import typing as t
 import httpx
 
 from ..decorators.parameter import inspect_function_arguments
-from ..exceptions import (ConnexionException, OAuthProblem,
-                          OAuthResponseProblem, OAuthScopeProblem)
+from ..exceptions import (
+    ConnexionException,
+    OAuthProblem,
+    OAuthResponseProblem,
+    OAuthScopeProblem,
+)
 from ..utils import get_function_from_name
 
-logger = logging.getLogger('connexion.api.security')
+logger = logging.getLogger("connexion.api.security")
 
 
 class SecurityHandlerFactory:
@@ -35,19 +39,24 @@ class SecurityHandlerFactory:
 
         verify helpers (used inside wrappers): get_auth_header_value, get_cookie_value
     """
+
     no_value = object()
-    required_scopes_kw = 'required_scopes'
+    required_scopes_kw = "required_scopes"
     client = None
 
     def __init__(self, pass_context_arg_name):
         self.pass_context_arg_name = pass_context_arg_name
 
     @staticmethod
-    def _get_function(security_definition, security_definition_key, environ_key, default=None):
+    def _get_function(
+        security_definition, security_definition_key, environ_key, default=None
+    ):
         """
         Return function by getting its name from security_definition or environment variable
         """
-        func = security_definition.get(security_definition_key) or os.environ.get(environ_key)
+        func = security_definition.get(security_definition_key) or os.environ.get(
+            environ_key
+        )
         if func:
             return get_function_from_name(func)
         return default
@@ -59,12 +68,15 @@ class SecurityHandlerFactory:
         >>> get_tokeninfo_url({'x-tokenInfoFunc': 'foo.bar'})
         '<function foo.bar>'
         """
-        token_info_func = self._get_function(security_definition, "x-tokenInfoFunc", 'TOKENINFO_FUNC')
+        token_info_func = self._get_function(
+            security_definition, "x-tokenInfoFunc", "TOKENINFO_FUNC"
+        )
         if token_info_func:
             return token_info_func
 
-        token_info_url = (security_definition.get('x-tokenInfoUrl') or
-                          os.environ.get('TOKENINFO_URL'))
+        token_info_url = security_definition.get("x-tokenInfoUrl") or os.environ.get(
+            "TOKENINFO_URL"
+        )
         if token_info_url:
             return self.get_token_info_remote(token_info_url)
 
@@ -79,7 +91,12 @@ class SecurityHandlerFactory:
         >>> get_scope_validate_func({'x-scopeValidateFunc': 'foo.bar'})
         '<function foo.bar>'
         """
-        return cls._get_function(security_definition, "x-scopeValidateFunc", 'SCOPEVALIDATE_FUNC', cls.validate_scope)
+        return cls._get_function(
+            security_definition,
+            "x-scopeValidateFunc",
+            "SCOPEVALIDATE_FUNC",
+            cls.validate_scope,
+        )
 
     @classmethod
     def get_basicinfo_func(cls, security_definition):
@@ -90,7 +107,9 @@ class SecurityHandlerFactory:
         >>> get_basicinfo_func({'x-basicInfoFunc': 'foo.bar'})
         '<function foo.bar>'
         """
-        return cls._get_function(security_definition, "x-basicInfoFunc", 'BASICINFO_FUNC')
+        return cls._get_function(
+            security_definition, "x-basicInfoFunc", "BASICINFO_FUNC"
+        )
 
     @classmethod
     def get_apikeyinfo_func(cls, security_definition):
@@ -101,7 +120,9 @@ class SecurityHandlerFactory:
         >>> get_apikeyinfo_func({'x-apikeyInfoFunc': 'foo.bar'})
         '<function foo.bar>'
         """
-        return cls._get_function(security_definition, "x-apikeyInfoFunc", 'APIKEYINFO_FUNC')
+        return cls._get_function(
+            security_definition, "x-apikeyInfoFunc", "APIKEYINFO_FUNC"
+        )
 
     @classmethod
     def get_bearerinfo_func(cls, security_definition):
@@ -112,7 +133,9 @@ class SecurityHandlerFactory:
         >>> get_bearerinfo_func({'x-bearerInfoFunc': 'foo.bar'})
         '<function foo.bar>'
         """
-        return cls._get_function(security_definition, "x-bearerInfoFunc", 'BEARERINFO_FUNC')
+        return cls._get_function(
+            security_definition, "x-bearerInfoFunc", "BEARERINFO_FUNC"
+        )
 
     @staticmethod
     async def security_passthrough(request):
@@ -145,10 +168,15 @@ class SecurityHandlerFactory:
         logger.debug("... Scopes required: %s", required_scopes)
         logger.debug("... Token scopes: %s", token_scopes)
         if not required_scopes <= token_scopes:
-            logger.info(textwrap.dedent("""
+            logger.info(
+                textwrap.dedent(
+                    """
                         ... Token scopes (%s) do not match the scopes necessary to call endpoint (%s).
-                         Aborting with 403.""").replace('\n', ''),
-                        token_scopes, required_scopes)
+                         Aborting with 403."""
+                ).replace("\n", ""),
+                token_scopes,
+                required_scopes,
+            )
             return False
         return True
 
@@ -161,14 +189,14 @@ class SecurityHandlerFactory:
         If not Authorization, return (None, None)
         Raise OAuthProblem for invalid Authorization header
         """
-        authorization = request.headers.get('Authorization')
+        authorization = request.headers.get("Authorization")
         if not authorization:
             return None, None
 
         try:
             auth_type, value = authorization.split(None, 1)
         except ValueError:
-            raise OAuthProblem(detail='Invalid authorization header')
+            raise OAuthProblem(detail="Invalid authorization header")
         return auth_type.lower(), value
 
     def verify_oauth(self, token_info_func, scope_validate_func, required_scopes):
@@ -176,7 +204,7 @@ class SecurityHandlerFactory:
 
         def wrapper(request):
             auth_type, token = self.get_auth_header_value(request)
-            if auth_type != 'bearer':
+            if auth_type != "bearer":
                 return self.no_value
 
             return check_oauth_func(request, token, required_scopes=required_scopes)
@@ -188,13 +216,15 @@ class SecurityHandlerFactory:
 
         def wrapper(request):
             auth_type, user_pass = self.get_auth_header_value(request)
-            if auth_type != 'basic':
+            if auth_type != "basic":
                 return self.no_value
 
             try:
-                username, password = base64.b64decode(user_pass).decode('latin1').split(':', 1)
+                username, password = (
+                    base64.b64decode(user_pass).decode("latin1").split(":", 1)
+                )
             except Exception:
-                raise OAuthProblem(detail='Invalid authorization header')
+                raise OAuthProblem(detail="Invalid authorization header")
 
             return check_basic_info_func(request, username, password)
 
@@ -202,13 +232,13 @@ class SecurityHandlerFactory:
 
     @staticmethod
     def get_cookie_value(cookies, name):
-        '''
+        """
         Called inside security wrapper functions
 
         Returns cookie value by its name. None if no such value.
         :param cookies: str: cookies raw data
         :param name: str: cookies key
-        '''
+        """
         cookie_parser = http.cookies.SimpleCookie()
         cookie_parser.load(str(cookies))
         try:
@@ -220,7 +250,6 @@ class SecurityHandlerFactory:
         check_api_key_func = self.check_api_key(api_key_info_func)
 
         def wrapper(request):
-
             def _immutable_pop(_dict, key):
                 """
                 Pops the key from an immutable dict and returns the value that was popped,
@@ -234,15 +263,15 @@ class SecurityHandlerFactory:
                     _dict = dict(_dict.items())
                     return _dict.pop(key), cls(_dict)
 
-            if loc == 'query':
+            if loc == "query":
                 try:
                     api_key, request.query = _immutable_pop(request.query, name)
                 except KeyError:
                     api_key = None
-            elif loc == 'header':
+            elif loc == "header":
                 api_key = request.headers.get(name)
-            elif loc == 'cookie':
-                cookie_list = request.headers.get('Cookie')
+            elif loc == "cookie":
+                cookie_list = request.headers.get("Cookie")
                 api_key = self.get_cookie_value(cookie_list, name)
             else:
                 return self.no_value
@@ -263,7 +292,7 @@ class SecurityHandlerFactory:
 
         def wrapper(request):
             auth_type, token = self.get_auth_header_value(request)
-            if auth_type != 'bearer':
+            if auth_type != "bearer":
                 return self.no_value
             return check_bearer_func(request, token)
 
@@ -306,12 +335,17 @@ class SecurityHandlerFactory:
 
     def _need_to_add_context_or_scopes(self, func):
         arguments, has_kwargs = inspect_function_arguments(func)
-        need_context = self.pass_context_arg_name and (has_kwargs or self.pass_context_arg_name in arguments)
+        need_context = self.pass_context_arg_name and (
+            has_kwargs or self.pass_context_arg_name in arguments
+        )
         need_required_scopes = has_kwargs or self.required_scopes_kw in arguments
         return need_context, need_required_scopes
 
     def _generic_check(self, func, exception_msg):
-        need_to_add_context, need_to_add_required_scopes = self._need_to_add_context_or_scopes(func)
+        (
+            need_to_add_context,
+            need_to_add_required_scopes,
+        ) = self._need_to_add_context_or_scopes(func)
 
         async def wrapper(request, *args, required_scopes=None):
             kwargs = {}
@@ -331,23 +365,31 @@ class SecurityHandlerFactory:
         return wrapper
 
     def check_bearer_token(self, token_info_func):
-        return self._generic_check(token_info_func, 'Provided token is not valid')
+        return self._generic_check(token_info_func, "Provided token is not valid")
 
     def check_basic_auth(self, basic_info_func):
-        return self._generic_check(basic_info_func, 'Provided authorization is not valid')
+        return self._generic_check(
+            basic_info_func, "Provided authorization is not valid"
+        )
 
     def check_api_key(self, api_key_info_func):
-        return self._generic_check(api_key_info_func, 'Provided apikey is not valid')
+        return self._generic_check(api_key_info_func, "Provided apikey is not valid")
 
     def check_oauth_func(self, token_info_func, scope_validate_func):
-        get_token_info = self._generic_check(token_info_func, 'Provided token is not valid')
-        need_to_add_context, _ = self._need_to_add_context_or_scopes(scope_validate_func)
+        get_token_info = self._generic_check(
+            token_info_func, "Provided token is not valid"
+        )
+        need_to_add_context, _ = self._need_to_add_context_or_scopes(
+            scope_validate_func
+        )
 
         async def wrapper(request, token, required_scopes):
-            token_info = await get_token_info(request, token, required_scopes=required_scopes)
+            token_info = await get_token_info(
+                request, token, required_scopes=required_scopes
+            )
 
             # Fallback to 'scopes' for backward compatibility
-            token_scopes = token_info.get('scope', token_info.get('scopes', ''))
+            token_scopes = token_info.get("scope", token_info.get("scopes", ""))
 
             kwargs = {}
             if need_to_add_context:
@@ -357,17 +399,17 @@ class SecurityHandlerFactory:
                 validation = await validation
             if not validation:
                 raise OAuthScopeProblem(
-                    detail='Provided token doesn\'t have the required scope',
+                    detail="Provided token doesn't have the required scope",
                     required_scopes=required_scopes,
-                    token_scopes=token_scopes
+                    token_scopes=token_scopes,
                 )
 
             return token_info
+
         return wrapper
 
     @classmethod
     def verify_security(cls, auth_funcs):
-
         async def verify_fn(request):
             token_info = cls.no_value
             errors = []
@@ -386,13 +428,15 @@ class SecurityHandlerFactory:
                     cls._raise_most_specific(errors)
                 else:
                     logger.info("... No auth provided. Aborting with 401.")
-                    raise OAuthProblem(detail='No authorization token provided')
+                    raise OAuthProblem(detail="No authorization token provided")
 
-            request.context.update({
-                # Fallback to 'uid' for backward compatibility
-                'user': token_info.get('sub', token_info.get('uid')),
-                'token_info': token_info
-            })
+            request.context.update(
+                {
+                    # Fallback to 'uid' for backward compatibility
+                    "user": token_info.get("sub", token_info.get("uid")),
+                    "token_info": token_info,
+                }
+            )
 
         return verify_fn
 
@@ -416,7 +460,7 @@ class SecurityHandlerFactory:
         # We only use status code attributes from exceptions
         # We use 600 as default because 599 is highest valid status code
         status_to_exc = {
-            getattr(exc, 'status_code', getattr(exc, 'status', 600)): exc
+            getattr(exc, "status_code", getattr(exc, "status", 600)): exc
             for exc in exceptions
         }
         if 403 in status_to_exc:
@@ -438,12 +482,16 @@ class SecurityHandlerFactory:
         :type token_info_url: str
         :rtype: types.FunctionType
         """
+
         async def wrapper(token):
             if self.client is None:
                 self.client = httpx.AsyncClient()
-            headers = {'Authorization': f'Bearer {token}'}
-            token_request = await self.client.get(token_info_url, headers=headers, timeout=5)
+            headers = {"Authorization": f"Bearer {token}"}
+            token_request = await self.client.get(
+                token_info_url, headers=headers, timeout=5
+            )
             if token_request.status_code != 200:
                 return
             return token_request.json()
+
         return wrapper

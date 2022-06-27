@@ -11,13 +11,27 @@ from ..middleware import ConnexionMiddleware
 from ..options import ConnexionOptions
 from ..resolver import Resolver
 
-logger = logging.getLogger('connexion.app')
+logger = logging.getLogger("connexion.app")
 
 
 class AbstractApp(metaclass=abc.ABCMeta):
-    def __init__(self, import_name, api_cls, port=None, specification_dir='',
-                 host=None, server=None, server_args=None, arguments=None, auth_all_paths=False, debug=None,
-                 resolver=None, options=None, skip_error_handlers=False, middlewares=None):
+    def __init__(
+        self,
+        import_name,
+        api_cls,
+        port=None,
+        specification_dir="",
+        host=None,
+        server=None,
+        server_args=None,
+        arguments=None,
+        auth_all_paths=False,
+        debug=None,
+        resolver=None,
+        options=None,
+        skip_error_handlers=False,
+        middlewares=None,
+    ):
         """
         :param import_name: the name of the application package
         :type import_name: str
@@ -66,18 +80,20 @@ class AbstractApp(metaclass=abc.ABCMeta):
 
         # we get our application root path to avoid duplicating logic
         self.root_path = self.get_root_path()
-        logger.debug('Root Path: %s', self.root_path)
+        logger.debug("Root Path: %s", self.root_path)
 
-        specification_dir = pathlib.Path(specification_dir)  # Ensure specification dir is a Path
+        specification_dir = pathlib.Path(
+            specification_dir
+        )  # Ensure specification dir is a Path
         if specification_dir.is_absolute():
             self.specification_dir = specification_dir
         else:
             self.specification_dir = self.root_path / specification_dir
 
-        logger.debug('Specification directory: %s', self.specification_dir)
+        logger.debug("Specification directory: %s", self.specification_dir)
 
         if not skip_error_handlers:
-            logger.debug('Setting error handlers')
+            logger.debug("Setting error handlers")
             self.set_errors_handlers()
 
     @abc.abstractmethod
@@ -104,11 +120,21 @@ class AbstractApp(metaclass=abc.ABCMeta):
         Sets all errors handlers of the user framework application
         """
 
-    def add_api(self, specification, base_path=None, arguments=None,
-                auth_all_paths=None, validate_responses=False,
-                strict_validation=False, resolver=None, resolver_error=None,
-                pythonic_params=False, pass_context_arg_name=None, options=None,
-                validator_map=None):
+    def add_api(
+        self,
+        specification,
+        base_path=None,
+        arguments=None,
+        auth_all_paths=None,
+        validate_responses=False,
+        strict_validation=False,
+        resolver=None,
+        resolver_error=None,
+        pythonic_params=False,
+        pass_context_arg_name=None,
+        options=None,
+        validator_map=None,
+    ):
         """
         Adds an API to the application based on a swagger file or API dict
 
@@ -146,12 +172,16 @@ class AbstractApp(metaclass=abc.ABCMeta):
             resolver_error_handler = self._resolver_error_handler
 
         resolver = resolver or self.resolver
-        resolver = Resolver(resolver) if hasattr(resolver, '__call__') else resolver
+        resolver = Resolver(resolver) if hasattr(resolver, "__call__") else resolver
 
-        auth_all_paths = auth_all_paths if auth_all_paths is not None else self.auth_all_paths
+        auth_all_paths = (
+            auth_all_paths if auth_all_paths is not None else self.auth_all_paths
+        )
         # TODO test if base_path starts with an / (if not none)
         arguments = arguments or dict()
-        arguments = dict(self.arguments, **arguments)  # copy global arguments and update with api specific
+        arguments = dict(
+            self.arguments, **arguments
+        )  # copy global arguments and update with api specific
 
         if isinstance(specification, dict):
             specification = specification
@@ -173,26 +203,29 @@ class AbstractApp(metaclass=abc.ABCMeta):
             validator_map=validator_map,
             pythonic_params=pythonic_params,
             pass_context_arg_name=pass_context_arg_name,
-            options=api_options.as_dict()
+            options=api_options.as_dict(),
         )
 
-        api = self.api_cls(specification,
-                           base_path=base_path,
-                           arguments=arguments,
-                           resolver=resolver,
-                           resolver_error_handler=resolver_error_handler,
-                           validate_responses=validate_responses,
-                           strict_validation=strict_validation,
-                           auth_all_paths=auth_all_paths,
-                           debug=self.debug,
-                           validator_map=validator_map,
-                           pythonic_params=pythonic_params,
-                           pass_context_arg_name=pass_context_arg_name,
-                           options=api_options.as_dict())
+        api = self.api_cls(
+            specification,
+            base_path=base_path,
+            arguments=arguments,
+            resolver=resolver,
+            resolver_error_handler=resolver_error_handler,
+            validate_responses=validate_responses,
+            strict_validation=strict_validation,
+            auth_all_paths=auth_all_paths,
+            debug=self.debug,
+            validator_map=validator_map,
+            pythonic_params=pythonic_params,
+            pass_context_arg_name=pass_context_arg_name,
+            options=api_options.as_dict(),
+        )
         return api
 
     def _resolver_error_handler(self, *args, **kwargs):
         from connexion.handlers import ResolverErrorHandler
+
         return ResolverErrorHandler(self.resolver_error, *args, **kwargs)
 
     def add_url_rule(self, rule, endpoint=None, view_func=None, **options):
@@ -231,9 +264,9 @@ class AbstractApp(metaclass=abc.ABCMeta):
                         limited to (`GET`, `POST` etc.).  By default a rule just listens for `GET` (and implicitly
                         `HEAD`).
         """
-        log_details = {'endpoint': endpoint, 'view_func': view_func.__name__}
+        log_details = {"endpoint": endpoint, "view_func": view_func.__name__}
         log_details.update(options)
-        logger.debug('Adding %s', rule, extra=log_details)
+        logger.debug("Adding %s", rule, extra=log_details)
         self.app.add_url_rule(rule, endpoint, view_func, **options)
 
     def route(self, rule, **options):
@@ -256,11 +289,13 @@ class AbstractApp(metaclass=abc.ABCMeta):
                         limited to (`GET`, `POST` etc.).  By default a rule just listens for `GET` (and implicitly
                         `HEAD`).
         """
-        logger.debug('Adding %s with decorator', rule, extra=options)
+        logger.debug("Adding %s with decorator", rule, extra=options)
         return self.app.route(rule, **options)
 
     @abc.abstractmethod
-    def run(self, port=None, server=None, debug=None, host=None, **options):  # pragma: no cover
+    def run(
+        self, port=None, server=None, debug=None, host=None, **options
+    ):  # pragma: no cover
         """
         Runs the application on a local development server.
         :param host: the host interface to bind on.
