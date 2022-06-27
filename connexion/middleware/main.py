@@ -8,6 +8,7 @@ from connexion.middleware.exceptions import ExceptionMiddleware
 from connexion.middleware.routing import RoutingMiddleware
 from connexion.middleware.security import SecurityMiddleware
 from connexion.middleware.swagger_ui import SwaggerUIMiddleware
+from connexion.middleware.validation import ValidationMiddleware
 
 
 class ConnexionMiddleware:
@@ -17,6 +18,7 @@ class ConnexionMiddleware:
         SwaggerUIMiddleware,
         RoutingMiddleware,
         SecurityMiddleware,
+        ValidationMiddleware,
     ]
 
     def __init__(
