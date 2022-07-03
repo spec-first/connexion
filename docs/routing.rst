@@ -130,9 +130,15 @@ Automatic Routing with MethodViewResolver
 -------------------------------------------
 
 .. note::
-   If you migrate from connextion v2 you may want to use the `DeprecatedMethodViewResolver`
+   If you migrate from connexion v2 you may want to use the `MethodResolver`
    in order to maintain the old behavior. The behavior described here is the new behavior,
-   introduced in connextion v3.
+   introduced in connexion v3. The difference is that the `MethodResolver` works with any
+   class, while the `MethodViewResolver` is specifically designed to work with flask's
+   `MethodView`. Previously, in v2, the `MethodViewResolver` worked like the `MethodResolver`
+   in v3. One consequence is that the `MethodResolver` will look for `search` and `get`
+   methods for list and single operations respectively, while `MethodViewResolver` uses
+   the `dispatch_request` method of the given class and therefore handles both, list and
+   single operations via the same `get` method.  
 
 ``MethodViewResolver`` is an customised Resolver based on ``RestyResolver``
 to take advantage of MethodView structure of building Flask APIs.

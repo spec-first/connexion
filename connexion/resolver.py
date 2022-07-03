@@ -185,7 +185,7 @@ class RestyResolver(Resolver):
         return f"{get_controller_name()}.{get_function_name()}"
 
 
-class MethodViewResolver(RestyResolver):
+class MethodResolverBase(RestyResolver):
     """
     Resolves endpoint functions based on Flask's MethodView semantics, e.g. ::
 
@@ -225,7 +225,7 @@ class MethodViewResolver(RestyResolver):
                 "collection_endpoint_name is ignored by the MethodViewResolver. "
                 "Requests to a collection endpoint will be routed to .get()"
             )
-        super(MethodViewResolver, self).__init__(*args, **kwargs)
+        super(MethodResolverBase, self).__init__(*args, **kwargs)
         self.initialized_views = []
 
     def resolve_operation_id(self, operation):
@@ -263,7 +263,7 @@ class MethodViewResolver(RestyResolver):
             mod = __import__(module_name, fromlist=[view_name])
             view_cls = getattr(mod, view_name)
             # find the view and return it
-            return self.resolve_function_from_class(view_name, meth_name, view_cls)
+            return self.resolve_method_from_class(view_name, meth_name, view_cls)
 
         except ImportError as e:
             msg = 'Cannot resolve operationId "{}"! Import error was "{}"'.format(
@@ -273,10 +273,46 @@ class MethodViewResolver(RestyResolver):
         except (AttributeError, ValueError) as e:
             raise ResolverError(str(e), sys.exc_info())
 
-    def resolve_function_from_class(self, view_name, meth_name, view_cls):
+    def resolve_method_from_class(self, view_name, meth_name, view_cls):
         """
         Returns the view function for the given view class.
         """
+        raise NotImplementedError()
+
+
+class MethodResolver(MethodResolverBase):
+    """
+    A generic method resolver that instantiates a class a extracts the method
+    from it, based on the operation id.
+    """
+
+    def resolve_method_from_class(self, view_name, meth_name, view_cls):
+        view = None
+        for v in self.initialized_views:
+            if v.__class__ == view_cls:
+                view = v
+                break
+        if view is None:
+            # get the args and kwargs for this view
+            cls_arguments = self.class_arguments.get(view_name, {})
+            cls_args = cls_arguments.get("args", ())
+            cls_kwargs = cls_arguments.get("kwargs", {})
+            # instantiate the class with the args and kwargs
+            view = view_cls(*cls_args, **cls_kwargs)
+            self.initialized_views.append(view)
+        # get the method if the class
+        func = getattr(view, meth_name)
+        # Return the method function of the class
+        return func
+
+
+class MethodViewResolver(MethodResolverBase):
+    """
+    A specialized method resolver that works with flask's method views.
+    It resolves the method by calling as_view on the class.
+    """
+
+    def resolve_method_from_class(self, view_name, meth_name, view_cls):
         view = None
         for v in self.initialized_views:
             # views returned by <class>.as_view
@@ -301,23 +337,3 @@ class MethodViewResolver(RestyResolver):
         # are dispatched with <class>.dispatch_request,
         # when calling the view function
         return view
-
-
-class DeprecatedMethodViewResolver(MethodViewResolver):
-    """
-    deprecated:
-    connexion v2.x.x MethodViewResolver
-    """
-
-    def resolve_function_from_class(self, view_name, meth_name, view_cls):
-        view = None
-        for v in self.initialized_views:
-            if v.__class__ == view_cls:
-                view = v
-                break
-        if view is None:
-            view = view_cls()
-            self.initialized_views.append(view)
-        func = getattr(view, meth_name)
-        # Return the method function of the class
-        return func

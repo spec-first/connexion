@@ -4,7 +4,7 @@ import pathlib
 
 import pytest
 from connexion import App
-from connexion.resolver import DeprecatedMethodViewResolver, MethodViewResolver
+from connexion.resolver import MethodResolver, MethodViewResolver
 from connexion.security import SecurityHandlerFactory
 from werkzeug.test import Client, EnvironBuilder
 
@@ -16,7 +16,7 @@ SPEC_FOLDER = TEST_FOLDER / "fakeapi"
 OPENAPI2_SPEC = ["swagger.yaml"]
 OPENAPI3_SPEC = ["openapi.yaml"]
 SPECS = OPENAPI2_SPEC + OPENAPI3_SPEC
-METHOD_VIEW_RESOLVERS = [MethodViewResolver, DeprecatedMethodViewResolver]
+METHOD_VIEW_RESOLVERS = [MethodResolver, MethodViewResolver]
 
 
 class FakeResponse:
