@@ -125,9 +125,11 @@ class RoutingOperation:
             len(original_scope.get("root_path", "")) :
         ]
 
-        extensions = original_scope.setdefault("extensions", {})
+        scope["root_path"] = original_scope.get("root_path")
+        scope["path"] = original_scope.get("path")
+        extensions = scope.setdefault("extensions", {})
         connexion_routing = extensions.setdefault(ROUTING_CONTEXT, {})
         connexion_routing.update(
             {"api_base_path": api_base_path, "operation_id": self.operation_id}
         )
-        await self.next_app(original_scope, receive, send)
+        await self.next_app(scope, receive, send)

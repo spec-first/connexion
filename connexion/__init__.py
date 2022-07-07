@@ -11,6 +11,7 @@ import werkzeug.exceptions as exceptions  # NOQA
 
 from .apis import AbstractAPI  # NOQA
 from .apps import AbstractApp  # NOQA
+from .apps.async_app import AsyncApp
 from .decorators.produces import NoContent  # NOQA
 from .exceptions import ProblemException  # NOQA
 from .problem import problem  # NOQA

@@ -127,6 +127,7 @@ components:
           format: int64
         name:
           type: string
+          format: date-time
         tag:
           type: string
       example:

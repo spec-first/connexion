@@ -2,8 +2,13 @@
 This module defines interfaces for requests and responses used in Connexion for authentication,
 validation, serialization, etc.
 """
+import typing as t
+
 from starlette.requests import Request as StarletteRequest
 from starlette.responses import StreamingResponse as StarletteStreamingResponse
+from starlette.types import Receive, Scope
+
+from connexion.decorators.uri_parsing import AbstractURIParser
 
 
 class ConnexionRequest:
@@ -62,20 +67,61 @@ class ConnexionResponse:
         self.is_streamed = is_streamed
 
 
-class MiddlewareRequest(StarletteRequest):
+class MiddlewareRequest:
     """Wraps starlette Request so it can easily be extended."""
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._context = None
+    def __init__(self, scope: Scope, receive: Receive = None, uri_parser: AbstractURIParser = None):
+        self._scope = scope
+        self._request = StarletteRequest(scope, receive)
+        self.uri_parser = uri_parser
+
+    @property
+    def query(self):
+        if not hasattr(self, "_query"):
+            query_params = dict(self._request.query_params.items())
+            self._query = self.uri_parser.resolve_query(query_params)
+        return self._query
+
+    @property
+    def path_params(self) -> dict:
+        if not hasattr(self, "_path_params"):
+            path_params = self._request.path_params
+            self._path_params = self.uri_parser.resolve_path(path_params)
+        return self._path_params
+
+    @property
+    async def body(self) -> bytes:
+        if not hasattr(self, "_body"):
+            self._body = await self._request.body()
+        return self._body
+
+    @property
+    async def form(self) -> dict:
+        if not hasattr(self, "_form"):
+            form_data = await self._request.form()
+            self._form = self.uri_parser.resolve_form(form_data)
+        return self._form
 
     @property
     def context(self):
-        if self._context is None:
-            extensions = self.scope.setdefault("extensions", {})
+        if not hasattr(self, "._context"):
+            extensions = self._scope.setdefault("extensions", {})
             self._context = extensions.setdefault("connexion_context", {})
-
         return self._context
+
+    @property
+    async def json(self):
+        if not hasattr(self, "_json"):
+            self._json = await self._request.json() if await self.body else None
+        return self._json
+
+    @property
+    def files(self):
+        return {}  # TODO
+
+    @property
+    def headers(self):
+        return self._request.headers
 
 
 class MiddlewareResponse(StarletteStreamingResponse):

@@ -1,7 +1,7 @@
 """
 This module defines a decorator to convert request parameters to arguments for the view function.
 """
-
+import asyncio
 import builtins
 import functools
 import inspect
@@ -83,18 +83,8 @@ def parameter_to_arg(
     sanitize = pythonic if pythonic_params else sanitized
     arguments, has_kwargs = inspect_function_arguments(function)
 
-    @functools.wraps(function)
-    def wrapper(request):
-        # type: (ConnexionRequest) -> Any
-        logger.debug("Function Arguments: %s", arguments)
+    def prep_kwargs(request, request_body):
         kwargs = {}
-
-        if all_json(consumes):
-            request_body = request.json
-        elif consumes[0] in FORM_CONTENT_TYPES:
-            request_body = request.form
-        else:
-            request_body = request.body
 
         try:
             query = request.query.to_dict(flat=False)
@@ -128,6 +118,42 @@ def parameter_to_arg(
         if pass_context_arg_name and (has_kwargs or pass_context_arg_name in arguments):
             kwargs[pass_context_arg_name] = request.context
 
-        return function(**kwargs)
+        return kwargs
+
+    if asyncio.iscoroutinefunction(function):
+
+        @functools.wraps(function)
+        async def wrapper(request):
+            # type: (ConnexionRequest) -> Any
+            logger.debug("Function Arguments: %s", arguments)
+
+            if all_json(consumes):
+                request_body = await request.json
+            elif consumes[0] in FORM_CONTENT_TYPES:
+                request_body = await request.form
+            else:
+                request_body = await request.body
+
+            kwargs = prep_kwargs(request, request_body)
+
+            return await function(**kwargs)
+
+    else:
+
+        @functools.wraps(function)
+        def wrapper(request):
+            # type: (ConnexionRequest) -> Any
+            logger.debug("Function Arguments: %s", arguments)
+
+            if all_json(consumes):
+                request_body = request.json
+            elif consumes[0] in FORM_CONTENT_TYPES:
+                request_body = request.form
+            else:
+                request_body = request.body
+
+            kwargs = prep_kwargs(request, request_body)
+
+            return function(**kwargs)
 
     return wrapper

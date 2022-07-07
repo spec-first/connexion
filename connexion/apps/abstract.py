@@ -22,8 +22,6 @@ class AbstractApp(metaclass=abc.ABCMeta):
         port=None,
         specification_dir="",
         host=None,
-        server=None,
-        server_args=None,
         arguments=None,
         auth_all_paths=False,
         debug=None,
@@ -69,11 +67,6 @@ class AbstractApp(metaclass=abc.ABCMeta):
 
         self.options = ConnexionOptions(options)
 
-        self.server = server
-        self.server_args = dict() if server_args is None else server_args
-
-        self.app = self.create_app()
-
         if middlewares is None:
             middlewares = ConnexionMiddleware.default_middlewares
         self.middleware = self._apply_middleware(middlewares)
@@ -95,12 +88,6 @@ class AbstractApp(metaclass=abc.ABCMeta):
         if not skip_error_handlers:
             logger.debug("Setting error handlers")
             self.set_errors_handlers()
-
-    @abc.abstractmethod
-    def create_app(self):
-        """
-        Creates the user framework application
-        """
 
     @abc.abstractmethod
     def _apply_middleware(self, middlewares):
@@ -269,6 +256,7 @@ class AbstractApp(metaclass=abc.ABCMeta):
         logger.debug("Adding %s", rule, extra=log_details)
         self.app.add_url_rule(rule, endpoint, view_func, **options)
 
+    @abc.abstractmethod
     def route(self, rule, **options):
         """
         A decorator that is used to register a view function for a
@@ -289,22 +277,10 @@ class AbstractApp(metaclass=abc.ABCMeta):
                         limited to (`GET`, `POST` etc.).  By default a rule just listens for `GET` (and implicitly
                         `HEAD`).
         """
-        logger.debug("Adding %s with decorator", rule, extra=options)
-        return self.app.route(rule, **options)
 
     @abc.abstractmethod
-    def run(
-        self, port=None, server=None, debug=None, host=None, **options
-    ):  # pragma: no cover
+    def __call__(self, scope, receive, send):
         """
-        Runs the application on a local development server.
-        :param host: the host interface to bind on.
-        :type host: str
-        :param port: port to listen to
-        :type port: int
-        :param server: which wsgi server to use
-        :type server: str | None
-        :param debug: include debugging information
-        :type debug: bool
-        :param options: options to be forwarded to the underlying server
+        ASGI interface.
         """
+        return self.middleware(scope, receive, send)
