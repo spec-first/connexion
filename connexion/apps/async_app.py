@@ -85,10 +85,9 @@ class AsyncAsgiApp:
 
 
 class AsyncApp(AsyncAsgiApp, AbstractApp):
-    
     def __init__(self, *args, **kwargs) -> None:
         super(AsyncApp, self).__init__(*args, api_cls=AsyncApi, **kwargs)
-    
+
     def _apply_middleware(self, middlewares):
         middleware = ConnexionMiddleware(self.asgi_app, middlewares=middlewares)
         self.asgi_app = middleware
@@ -97,7 +96,7 @@ class AsyncApp(AsyncAsgiApp, AbstractApp):
     def get_root_path(self):
         # Module already imported and has a file attribute.  Use that first.
         mod = sys.modules.get(self.import_name)
-        if mod is not None and hasattr(mod, '__file__'):
+        if mod is not None and hasattr(mod, "__file__"):
             return os.path.dirname(os.path.abspath(mod.__file__))
 
     def set_errors_handlers(self):
@@ -105,11 +104,10 @@ class AsyncApp(AsyncAsgiApp, AbstractApp):
 
 
 class AsyncApi(AsyncAsgiApp, AbstractRoutingAPI):
-    
     def __init__(self, *args, **kwargs) -> None:
         super(AsyncApi, self).__init__(*args, **kwargs)
         self.add_paths()
-        
+
     def add_operation(self, path: str, method: str) -> None:
         operation_cls = self.specification.operation_cls
         operation = operation_cls.from_spec(
@@ -125,15 +123,21 @@ class AsyncApi(AsyncAsgiApp, AbstractRoutingAPI):
 
 
 class AsyncOperation:
-    def __init__(self, fn: t.Union[t.Callable, t.Awaitable], uri_parser: AbstractURIParser,
-                 operation_id: str = None) -> None:
+    def __init__(
+        self,
+        fn: t.Union[t.Callable, t.Awaitable],
+        uri_parser: AbstractURIParser,
+        operation_id: str = None,
+    ) -> None:
         self.fn = fn
         self.uri_parser = uri_parser
         self.operation_id = operation_id
 
     @classmethod
     def from_operation(cls, operation: AbstractOperation) -> "AsyncOperation":
-        return cls(operation.function, operation._uri_parsing_decorator, operation.operation_id)
+        return cls(
+            operation.function, operation._uri_parsing_decorator, operation.operation_id
+        )
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         request = MiddlewareRequest(scope, receive, uri_parser=self.uri_parser)
@@ -144,6 +148,5 @@ class AsyncOperation:
 
 
 class MissingAsyncOperation(ProblemException):
-    
     def __init__(self, *args, **kwargs) -> None:
         super(MissingAsyncOperation, self).__init__(500, *args, **kwargs)

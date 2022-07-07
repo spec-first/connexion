@@ -23,8 +23,9 @@ logger = logging.getLogger("connexion.app")
 
 
 class FlaskApp(AbstractApp):
-    def __init__(self, import_name, server="flask",
-                 server_args=None, extra_files=None, **kwargs):
+    def __init__(
+        self, import_name, server="flask", server_args=None, extra_files=None, **kwargs
+    ):
         """
         :param extra_files: additional files to be watched by the reloader, defaults to the swagger specs of added apis
         :type extra_files: list[str | pathlib.Path], optional

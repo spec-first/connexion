@@ -70,7 +70,12 @@ class ConnexionResponse:
 class MiddlewareRequest:
     """Wraps starlette Request so it can easily be extended."""
 
-    def __init__(self, scope: Scope, receive: Receive = None, uri_parser: AbstractURIParser = None):
+    def __init__(
+        self,
+        scope: Scope,
+        receive: Receive = None,
+        uri_parser: AbstractURIParser = None,
+    ):
         self._scope = scope
         self._request = StarletteRequest(scope, receive)
         self.uri_parser = uri_parser
