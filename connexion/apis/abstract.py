@@ -134,21 +134,15 @@ class AbstractRoutingAPI(AbstractSpecAPI):
         *args,
         resolver_error_handler: t.Optional[t.Callable] = None,
         debug: bool = False,
-        pass_context_arg_name: t.Optional[str] = None,
         **kwargs,
     ) -> None:
         """Minimal interface of an API, with only functionality related to routing.
 
         :param debug: Flag to run in debug mode
-        :param pass_context_arg_name: If not None URL request handling functions with an argument
-            matching this name will be passed the framework's request context.
         """
         super().__init__(*args, **kwargs)
         self.debug = debug
         self.resolver_error_handler = resolver_error_handler
-
-        logger.debug("pass_context_arg_name: %s", pass_context_arg_name)
-        self.pass_context_arg_name = pass_context_arg_name
 
         self.add_paths()
 
@@ -227,7 +221,6 @@ class AbstractAPI(AbstractRoutingAPI, metaclass=AbstractAPIMeta):
         resolver_error_handler=None,
         validator_map=None,
         pythonic_params=False,
-        pass_context_arg_name=None,
         options=None,
         **kwargs,
     ):
@@ -259,7 +252,6 @@ class AbstractAPI(AbstractRoutingAPI, metaclass=AbstractAPIMeta):
             resolver=resolver,
             resolver_error_handler=resolver_error_handler,
             debug=debug,
-            pass_context_arg_name=pass_context_arg_name,
             options=options,
         )
 
@@ -290,7 +282,6 @@ class AbstractAPI(AbstractRoutingAPI, metaclass=AbstractAPIMeta):
             strict_validation=self.strict_validation,
             pythonic_params=self.pythonic_params,
             uri_parser_class=self.options.uri_parser_class,
-            pass_context_arg_name=self.pass_context_arg_name,
         )
         self._add_operation_internal(method, path, operation)
 

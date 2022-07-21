@@ -42,10 +42,8 @@ class SecurityHandlerFactory:
 
     no_value = object()
     required_scopes_kw = "required_scopes"
+    context_kw = "context"
     client = None
-
-    def __init__(self, pass_context_arg_name):
-        self.pass_context_arg_name = pass_context_arg_name
 
     @staticmethod
     def _get_function(
@@ -335,9 +333,7 @@ class SecurityHandlerFactory:
 
     def _need_to_add_context_or_scopes(self, func):
         arguments, has_kwargs = inspect_function_arguments(func)
-        need_context = self.pass_context_arg_name and (
-            has_kwargs or self.pass_context_arg_name in arguments
-        )
+        need_context = has_kwargs or self.context_kw in arguments
         need_required_scopes = has_kwargs or self.required_scopes_kw in arguments
         return need_context, need_required_scopes
 
@@ -350,7 +346,7 @@ class SecurityHandlerFactory:
         async def wrapper(request, *args, required_scopes=None):
             kwargs = {}
             if need_to_add_context:
-                kwargs[self.pass_context_arg_name] = request.context
+                kwargs[self.context_kw] = request.context
             if need_to_add_required_scopes:
                 kwargs[self.required_scopes_kw] = required_scopes
             token_info = func(*args, **kwargs)
@@ -393,7 +389,7 @@ class SecurityHandlerFactory:
 
             kwargs = {}
             if need_to_add_context:
-                kwargs[self.pass_context_arg_name] = request.context
+                kwargs[self.context_kw] = request.context
             validation = scope_validate_func(required_scopes, token_scopes, **kwargs)
             while asyncio.iscoroutine(validation):
                 validation = await validation

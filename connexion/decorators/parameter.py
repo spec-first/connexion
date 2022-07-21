@@ -62,9 +62,7 @@ def pythonic(name):
     return sanitized(name)
 
 
-def parameter_to_arg(
-    operation, function, pythonic_params=False, pass_context_arg_name=None
-):
+def parameter_to_arg(operation, function, pythonic_params=False):
     """
     Pass query and body parameters as keyword arguments to handler function.
 
@@ -74,9 +72,6 @@ def parameter_to_arg(
     :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended to
     any shadowed built-ins
     :type pythonic_params: bool
-    :param pass_context_arg_name: If not None URL and function has an argument matching this name, the framework's
-    request context will be passed as that argument.
-    :type pass_context_arg_name: str|None
     """
     consumes = operation.consumes
 
@@ -123,10 +118,6 @@ def parameter_to_arg(
                 kwargs[key] = value
             else:
                 logger.debug("Context parameter '%s' not in function arguments", key)
-
-        # attempt to provide the request context to the function
-        if pass_context_arg_name and (has_kwargs or pass_context_arg_name in arguments):
-            kwargs[pass_context_arg_name] = request.context
 
         return function(**kwargs)
 

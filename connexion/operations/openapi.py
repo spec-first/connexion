@@ -38,7 +38,6 @@ class OpenAPIOperation(AbstractOperation):
         validator_map=None,
         pythonic_params=False,
         uri_parser_class=None,
-        pass_context_arg_name=None,
     ):
         """
         This class uses the OperationID identify the module and function that will handle the operation
@@ -80,9 +79,6 @@ class OpenAPIOperation(AbstractOperation):
         :type pythonic_params: bool
         :param uri_parser_class: class to use for uri parsing
         :type uri_parser_class: AbstractURIParser
-        :param pass_context_arg_name: If not None will try to inject the request context to the function using this
-            name.
-        :type pass_context_arg_name: str|None
         """
         self.components = components or {}
 
@@ -104,7 +100,6 @@ class OpenAPIOperation(AbstractOperation):
             validator_map=validator_map,
             pythonic_params=pythonic_params,
             uri_parser_class=uri_parser_class,
-            pass_context_arg_name=pass_context_arg_name,
         )
 
         self._request_body = operation.get("requestBody", {})

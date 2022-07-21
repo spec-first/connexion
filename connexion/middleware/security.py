@@ -78,7 +78,7 @@ class SecurityAPI(AbstractSpecAPI):
         **kwargs
     ):
         super().__init__(specification, *args, **kwargs)
-        self.security_handler_factory = SecurityHandlerFactory("context")
+        self.security_handler_factory = SecurityHandlerFactory()
 
         if auth_all_paths:
             self.add_auth_on_not_found()

@@ -131,7 +131,6 @@ class AbstractApp(metaclass=abc.ABCMeta):
         resolver=None,
         resolver_error=None,
         pythonic_params=False,
-        pass_context_arg_name=None,
         options=None,
         validator_map=None,
     ):
@@ -159,8 +158,6 @@ class AbstractApp(metaclass=abc.ABCMeta):
         :type pythonic_params: bool
         :param options: New style options dictionary.
         :type options: dict | None
-        :param pass_context_arg_name: Name of argument in handler functions to pass request context to.
-        :type pass_context_arg_name: str | None
         :param validator_map: map of validators
         :type validator_map: dict
         :rtype: AbstractAPI
@@ -202,7 +199,6 @@ class AbstractApp(metaclass=abc.ABCMeta):
             debug=self.debug,
             validator_map=validator_map,
             pythonic_params=pythonic_params,
-            pass_context_arg_name=pass_context_arg_name,
             options=api_options.as_dict(),
         )
 
@@ -218,7 +214,6 @@ class AbstractApp(metaclass=abc.ABCMeta):
             debug=self.debug,
             validator_map=validator_map,
             pythonic_params=pythonic_params,
-            pass_context_arg_name=pass_context_arg_name,
             options=api_options.as_dict(),
         )
         return api
