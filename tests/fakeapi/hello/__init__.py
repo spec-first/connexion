@@ -645,5 +645,9 @@ def nullable_default(test):
     return
 
 
+def nullable_enum(test):
+    return
+
+
 def get_streaming_response():
     return send_file(__file__)

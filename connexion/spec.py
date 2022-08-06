@@ -17,7 +17,7 @@ from jsonschema import Draft4Validator
 from jsonschema.validators import extend as extend_validator
 
 from .exceptions import InvalidSpecification
-from .json_schema import NullableTypeValidator, resolve_refs
+from .json_schema import NullableEnumValidator, NullableTypeValidator, resolve_refs
 from .operations import OpenAPIOperation, Swagger2Operation
 from .utils import deep_get
 
@@ -32,7 +32,10 @@ def create_spec_validator(spec: dict) -> Draft4Validator:
     # Create an instance validator, which validates defaults against the spec itself instead of
     # against the OpenAPI schema.
     InstanceValidator = extend_validator(
-        Draft4Validator, {"type": NullableTypeValidator}
+        Draft4Validator, {
+            "type": NullableTypeValidator,
+            "enum": NullableEnumValidator,
+        }
     )
     instance_validator = InstanceValidator(spec)
 

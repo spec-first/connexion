@@ -97,6 +97,21 @@ paths:
         204:
           description: OK
 
+  /nullable_enum:
+    get:
+      operationId: fakeapi.hello.nullable_enum
+      parameters:
+        - name: test
+          in: query
+          schema:
+            type: string
+            enum: ["good", "bad"]
+            nullable: true
+            default: null
+      responses:
+        204:
+          description: OK
+
   /multipart_form_json:
     post:
       operationId: fakeapi.hello.post_multipart_form

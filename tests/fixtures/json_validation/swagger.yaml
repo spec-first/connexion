@@ -80,3 +80,16 @@ paths:
       responses:
         204:
           description: OK
+
+  /nullable_enum:
+    get:
+      operationId: fakeapi.hello.nullable_enum
+      parameters:
+        - name: test
+          in: query
+          type: string
+          x-nullable: true
+          default: null
+      responses:
+        204:
+          description: OK
