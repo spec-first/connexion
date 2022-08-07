@@ -32,10 +32,11 @@ def create_spec_validator(spec: dict) -> Draft4Validator:
     # Create an instance validator, which validates defaults against the spec itself instead of
     # against the OpenAPI schema.
     InstanceValidator = extend_validator(
-        Draft4Validator, {
+        Draft4Validator,
+        {
             "type": NullableTypeValidator,
             "enum": NullableEnumValidator,
-        }
+        },
     )
     instance_validator = InstanceValidator(spec)
 
