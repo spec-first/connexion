@@ -201,6 +201,9 @@ class OpenAPIURIParser(AbstractURIParser):
             if k == root_key:
                 return k, v, False
 
+        if not self._is_deep_object_style_param(root_key):
+            return k, v, False
+
         key_path = re.findall(r'\[([^\[\]]*)\]', k)
         root = prev = node = {}
         for k in key_path:
@@ -209,6 +212,11 @@ class OpenAPIURIParser(AbstractURIParser):
             node = node[k]
         prev[k] = v[0]
         return root_key, [root], True
+
+    def _is_deep_object_style_param(self, param_name):
+        default_style = self.style_defaults["query"]
+        style = self.param_defns.get(param_name, {}).get('style', default_style)
+        return style == "deepObject"
 
     def _preprocess_deep_objects(self, query_data):
         """ deep objects provide a way of rendering nested objects using query
