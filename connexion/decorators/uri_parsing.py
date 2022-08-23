@@ -212,9 +212,9 @@ class OpenAPIURIParser(AbstractURIParser):
             node = node[k]
         prev[k] = v[0]
         return root_key, [root], True
-    
+
     def _is_deep_object_style_param(self, param_name):
-        default_style = self.style_defaults["query"] 
+        default_style = self.style_defaults["query"]
         style = self.param_defns.get(param_name, {}).get('style', default_style)
         return style == "deepObject"
 
