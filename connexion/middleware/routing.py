@@ -57,7 +57,7 @@ class RoutingMiddleware(AppMiddleware):
             await self.app(scope, receive, send)
             return
 
-        _scope.set(scope.copy())
+        _scope.set(scope.copy())  # type: ignore
 
         # Needs to be set so starlette router throws exceptions instead of returning error responses
         scope["app"] = self
@@ -71,10 +71,11 @@ class RoutingAPI(AbstractRoutingAPI):
     def __init__(
         self,
         specification: t.Union[pathlib.Path, str, dict],
+        *,
+        next_app: ASGIApp,
         base_path: t.Optional[str] = None,
         arguments: t.Optional[dict] = None,
         resolver: t.Optional[Resolver] = None,
-        next_app: ASGIApp = None,
         resolver_error_handler: t.Optional[t.Callable] = None,
         debug: bool = False,
         **kwargs

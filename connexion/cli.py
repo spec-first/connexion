@@ -73,14 +73,14 @@ def main():
 @click.option(
     "--wsgi-server",
     "-w",
-    type=click.Choice(AVAILABLE_SERVERS.keys()),
+    type=click.Choice(AVAILABLE_SERVERS.keys()),  # type: ignore
     callback=validate_server_requirements,
     help="Which WSGI server container to use. (deprecated, use --server instead)",
 )
 @click.option(
     "--server",
     "-s",
-    type=click.Choice(AVAILABLE_SERVERS.keys()),
+    type=click.Choice(AVAILABLE_SERVERS.keys()),  # type: ignore
     callback=validate_server_requirements,
     help="Which server container to use.",
 )
@@ -147,7 +147,7 @@ def main():
     "--app-framework",
     "-f",
     default=FLASK_APP,
-    type=click.Choice(AVAILABLE_APPS.keys()),
+    type=click.Choice(AVAILABLE_APPS.keys()),  # type: ignore
     help="The app framework used to run the server",
 )
 def run(

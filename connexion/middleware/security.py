@@ -139,7 +139,7 @@ class SecurityOperation:
     @classmethod
     def from_operation(
         cls,
-        operation: AbstractOperation,
+        operation: t.Union[AbstractOperation, Specification],
         security_handler_factory: SecurityHandlerFactory,
     ):
         return cls(

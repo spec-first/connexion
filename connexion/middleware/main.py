@@ -47,7 +47,7 @@ class ConnexionMiddleware:
         """
         apps = []
         for middleware in reversed(middlewares):
-            app = middleware(app)
+            app = middleware(app)  # type: ignore
             apps.append(app)
         return app, reversed(apps)
 
