@@ -273,17 +273,19 @@ def test_swagger_json_content_type(simple_app):
     assert response.content_type == "application/json"
 
 
-def test_single_route(simple_app):
+def test_single_route():
+    app = App(__name__)
+
     def route1():
         return "single 1"
 
-    @simple_app.route("/single2", methods=["POST"])
+    @app.route("/single2", methods=["POST"])
     def route2():
         return "single 2"
 
-    app_client = simple_app.app.test_client()
+    app_client = app.app.test_client()
 
-    simple_app.add_url_rule("/single1", "single1", route1, methods=["GET"])
+    app.add_url_rule("/single1", "single1", route1, methods=["GET"])
 
     get_single1 = app_client.get("/single1")  # type: flask.Response
     assert get_single1.data == b"single 1"
