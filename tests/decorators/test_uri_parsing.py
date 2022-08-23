@@ -210,3 +210,49 @@ def test_uri_parser_query_params_with_underscores(
     p = parser_class(parameters, body_defn)
     res = p(lambda x: x)(request)
     assert res.query["letters_eq"] == expected
+
+
+@pytest.mark.parametrize(
+    "parser_class, query_in, collection_format, explode, expected",
+    [
+        (
+            OpenAPIURIParser,
+            MultiDict([("letters[eq]_unrelated", "a")]),
+            None,
+            False,
+            {"letters[eq]_unrelated": ["a"]},
+        ),
+        (
+            OpenAPIURIParser,
+            MultiDict([("letters[eq][unrelated]", "a")]),
+            "csv",
+            True,
+            {"letters[eq][unrelated]": ["a"]},
+        ),
+    ],
+)
+def test_uri_parser_query_params_with_malformed_names(
+    parser_class, query_in, collection_format, explode, expected
+):
+    class Request:
+        query = query_in
+        path_params = {}
+        form = {}
+
+    request = Request()
+    parameters = [
+        {
+            "name": "letters[eq]",
+            "in": "query",
+            "explode": explode,
+            "collectionFormat": collection_format,
+            "schema": {
+                "type": "array",
+                "items": {"type": "string"},
+            },
+        }
+    ]
+    body_defn = {}
+    p = parser_class(parameters, body_defn)
+    res = p(lambda x: x)(request)
+    assert res.query == expected
