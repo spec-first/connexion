@@ -14,7 +14,7 @@ from ..exceptions import ResolverError
 from ..http_facts import METHODS
 from ..jsonifier import Jsonifier
 from ..lifecycle import ConnexionResponse
-from ..operations import AbstractOperation, make_operation
+from ..operations import make_operation
 from ..options import ConnexionOptions
 from ..resolver import Resolver
 from ..spec import Specification
@@ -174,9 +174,7 @@ class AbstractRoutingAPI(AbstractSpecAPI):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def _add_operation_internal(
-        self, method: str, path: str, operation: AbstractOperation
-    ) -> None:
+    def _add_operation_internal(self, method: str, path: str, operation: t.Any) -> None:
         """
         Adds the operation according to the user framework in use.
         It will be used to register the operation on the user framework router.
@@ -186,6 +184,7 @@ class AbstractRoutingAPI(AbstractSpecAPI):
         """
         Adds a handler for ResolverError for the given method and path.
         """
+        self.resolver_error_handler = t.cast(t.Callable, self.resolver_error_handler)
         operation = self.resolver_error_handler(
             err,
         )
