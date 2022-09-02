@@ -2,7 +2,7 @@ import json
 from struct import unpack
 
 import yaml
-from connexion.apps.flask_app import FlaskJSONEncoder
+from connexion.apps.flask_app import FlaskJSONProvider
 from werkzeug.test import Client, EnvironBuilder
 
 
@@ -279,15 +279,15 @@ def test_nested_additional_properties(simple_openapi_app):
     assert response == {"nested": {"object": True}}
 
 
-def test_custom_encoder(simple_app):
-    class CustomEncoder(FlaskJSONEncoder):
+def test_custom_provider(simple_app):
+    class CustomProvider(FlaskJSONProvider):
         def default(self, o):
             if o.__class__.__name__ == "DummyClass":
                 return "cool result"
-            return FlaskJSONEncoder.default(self, o)
+            return super().default(o)
 
     flask_app = simple_app.app
-    flask_app.json_encoder = CustomEncoder
+    flask_app.json = CustomProvider(flask_app)
     app_client = flask_app.test_client()
 
     resp = app_client.get("/v1.0/custom-json-response")

@@ -3,21 +3,16 @@ This module centralizes all functionality related to json encoding and decoding 
 """
 
 import datetime
+import functools
 import json
+import typing as t
 import uuid
+from decimal import Decimal
 
 
-class JSONEncoder(json.JSONEncoder):
-    """The default Connexion JSON encoder. Handles extra types compared to the
-    built-in :class:`json.JSONEncoder`.
-
-    -   :class:`datetime.datetime` and :class:`datetime.date` are
-        serialized to :rfc:`822` strings. This is the same as the HTTP
-        date format.
-    -   :class:`uuid.UUID` is serialized to a string.
-    """
-
-    def default(self, o):
+def wrap_default(default_fn: t.Callable) -> t.Callable:
+    @functools.wraps(default_fn)
+    def wrapped_default(self, o):
         if isinstance(o, datetime.datetime):
             if o.tzinfo:
                 # eg: '2015-09-25T23:14:42.588601+00:00'
@@ -30,10 +25,30 @@ class JSONEncoder(json.JSONEncoder):
         if isinstance(o, datetime.date):
             return o.isoformat()
 
+        if isinstance(o, Decimal):
+            return float(o)
+
         if isinstance(o, uuid.UUID):
             return str(o)
 
-        return json.JSONEncoder.default(self, o)
+        return default_fn(o)
+
+    return wrapped_default
+
+
+class JSONEncoder(json.JSONEncoder):
+    """The default Connexion JSON encoder. Handles extra types compared to the
+    built-in :class:`json.JSONEncoder`.
+
+    -   :class:`datetime.datetime` and :class:`datetime.date` are
+        serialized to :rfc:`822` strings. This is the same as the HTTP
+        date format.
+    -   :class:`uuid.UUID` is serialized to a string.
+    """
+
+    @wrap_default
+    def default(self, o):
+        return super().default(o)
 
 
 class Jsonifier:
@@ -48,6 +63,7 @@ class Jsonifier:
         """
         self.json = json_
         self.dumps_args = kwargs
+        self.dumps_args.setdefault("cls", JSONEncoder)
 
     def dumps(self, data, **kwargs):
         """Central point where JSON serialization happens inside
