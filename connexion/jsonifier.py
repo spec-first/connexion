@@ -11,6 +11,16 @@ from decimal import Decimal
 
 
 def wrap_default(default_fn: t.Callable) -> t.Callable:
+    """The Connexion defaults for JSON encoding. Handles extra types compared to the
+    built-in :class:`json.JSONEncoder`.
+
+    -   :class:`datetime.datetime` and :class:`datetime.date` are
+        serialized to :rfc:`822` strings. This is the same as the HTTP
+        date format.
+    -   :class:`decimal.Decimal` is serialized to a float.
+    -   :class:`uuid.UUID` is serialized to a string.
+    """
+
     @functools.wraps(default_fn)
     def wrapped_default(self, o):
         if isinstance(o, datetime.datetime):
@@ -39,11 +49,6 @@ def wrap_default(default_fn: t.Callable) -> t.Callable:
 class JSONEncoder(json.JSONEncoder):
     """The default Connexion JSON encoder. Handles extra types compared to the
     built-in :class:`json.JSONEncoder`.
-
-    -   :class:`datetime.datetime` and :class:`datetime.date` are
-        serialized to :rfc:`822` strings. This is the same as the HTTP
-        date format.
-    -   :class:`uuid.UUID` is serialized to a string.
     """
 
     @wrap_default

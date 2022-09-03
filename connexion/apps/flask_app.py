@@ -184,6 +184,8 @@ class FlaskApp(AbstractApp):
 
 
 class FlaskJSONProvider(flask.json.provider.DefaultJSONProvider):
+    """Custom JSONProvider which adds connexion defaults on top of Flask's"""
+
     @jsonifier.wrap_default
     def default(self, o):
         return super().default(o)
