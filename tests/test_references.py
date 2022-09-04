@@ -97,3 +97,24 @@ def test_resolve_web_reference(api):
 
     spec = resolve_refs(op_spec, store=store)
     assert spec["parameters"][0]["name"] == "test"
+
+
+def test_resolve_ref_referring_to_another_ref(api):
+    expected = {"type": "string"}
+    op_spec = {
+        "parameters": [
+            {
+                "schema": {"$ref": "#/definitions/A"},
+            }
+        ],
+        "definitions": {
+            "A": {
+                "$ref": "#/definitions/B",
+            },
+            "B": expected,
+        }
+    }
+
+    spec = resolve_refs(op_spec)
+    assert spec["parameters"][0]["schema"] == expected
+    assert spec["definitions"]["A"] == expected

@@ -85,8 +85,11 @@ def resolve_refs(spec, store=None, handlers=None):
             path = node["$ref"][2:].split("/")
             try:
                 # resolve known references
-                node.update(deep_get(spec, path))
-                del node["$ref"]
+                retrieved = deep_get(spec, path)
+                node.update(retrieved)
+                if isinstance(retrieved, Mapping) and '$ref' in retrieved:
+                    node = _do_resolve(node)
+                node.pop('$ref', None)
                 return node
             except KeyError:
                 # resolve external references
