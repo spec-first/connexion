@@ -112,7 +112,7 @@ def test_resolve_ref_referring_to_another_ref(api):
                 "$ref": "#/definitions/B",
             },
             "B": expected,
-        }
+        },
     }
 
     spec = resolve_refs(op_spec)

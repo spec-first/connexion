@@ -87,9 +87,9 @@ def resolve_refs(spec, store=None, handlers=None):
                 # resolve known references
                 retrieved = deep_get(spec, path)
                 node.update(retrieved)
-                if isinstance(retrieved, Mapping) and '$ref' in retrieved:
+                if isinstance(retrieved, Mapping) and "$ref" in retrieved:
                     node = _do_resolve(node)
-                node.pop('$ref', None)
+                node.pop("$ref", None)
                 return node
             except KeyError:
                 # resolve external references
