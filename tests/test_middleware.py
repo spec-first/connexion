@@ -8,6 +8,8 @@ from conftest import SPECS, build_app_from_fixture
 class TestMiddleware:
     """Middleware to check if operation is accessible on scope."""
 
+    __test__ = False
+
     def __init__(self, app):
         self.app = app
 
