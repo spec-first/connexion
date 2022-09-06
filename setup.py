@@ -25,7 +25,7 @@ install_requires = [
     'PyYAML>=5.1,<7',
     'requests>=2.27,<3',
     'inflection>=0.3.1,<0.6',
-    'werkzeug>=2,<3',
+    'werkzeug>=2.2.1,<3',
     'starlette>=0.15,<1',
     'httpx>=0.15,<1',
 ]
@@ -33,7 +33,7 @@ install_requires = [
 swagger_ui_require = 'swagger-ui-bundle>=0.0.2,<0.1'
 
 flask_require = [
-    'flask>=2,<3',
+    'flask>=2.2,<3',
     'a2wsgi>=1.4,<2',
 ]
 

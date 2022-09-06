@@ -12,7 +12,6 @@ from starlette.templating import Jinja2Templates
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from connexion.apis import AbstractSwaggerUIAPI
-from connexion.jsonifier import JSONEncoder, Jsonifier
 from connexion.middleware import AppMiddleware
 from connexion.utils import yamldumper
 
@@ -207,7 +206,3 @@ class SwaggerUIAPI(AbstractSwaggerUIAPI):
             media_type="application/json",
             content=self.jsonifier.dumps(self.options.openapi_console_ui_config),
         )
-
-    @classmethod
-    def _set_jsonifier(cls):
-        cls.jsonifier = Jsonifier(cls=JSONEncoder)
