@@ -49,6 +49,11 @@ def wrap_default(default_fn: t.Callable) -> t.Callable:
 class JSONEncoder(json.JSONEncoder):
     """The default Connexion JSON encoder. Handles extra types compared to the
     built-in :class:`json.JSONEncoder`.
+
+    -   :class:`datetime.datetime` and :class:`datetime.date` are
+        serialized to :rfc:`822` strings. This is the same as the HTTP
+        date format.
+    -   :class:`uuid.UUID` is serialized to a string.
     """
 
     @wrap_default

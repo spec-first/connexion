@@ -165,7 +165,7 @@ class FlaskApi(AbstractAPI):
         flask_request = flask.request
         scope = flask_request.environ["asgi.scope"]
         context_dict = scope.get("extensions", {}).get("connexion_context", {})
-        setattr(flask._request_ctx_stack.top, "connexion_context", context_dict)
+        setattr(flask.globals.request_ctx, "connexion_context", context_dict)
         request = ConnexionRequest(
             flask_request.url,
             flask_request.method,
@@ -198,7 +198,7 @@ class FlaskApi(AbstractAPI):
 
 
 def _get_context():
-    return getattr(flask._request_ctx_stack.top, "connexion_context")
+    return getattr(flask.globals.request_ctx, "connexion_context")
 
 
 context = LocalProxy(_get_context)
