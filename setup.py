@@ -25,7 +25,7 @@ install_requires = [
     'PyYAML>=5.1,<7',
     'requests>=2.9.1,<3',
     'inflection>=0.3.1,<0.6',
-    'werkzeug>=1.0,<3',
+    'werkzeug>=1.0,<2.3',
     'importlib-metadata>=1 ; python_version<"3.8"',
     'packaging>=20',
 ]
@@ -33,7 +33,7 @@ install_requires = [
 swagger_ui_require = 'swagger-ui-bundle>=0.0.2,<0.1'
 
 flask_require = [
-    'flask>=1.0.4,<3',
+    'flask>=1.0.4,<2.3',
     'itsdangerous>=0.24',
 ]
 aiohttp_require = [
