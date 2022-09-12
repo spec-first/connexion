@@ -88,7 +88,7 @@ setup(
     description='Connexion - API first applications with OpenAPI/Swagger and Flask',
     long_description=readme(),
     author='Zalando SE',
-    url='https://github.com/zalando/connexion',
+    url='https://github.com/spec-first/connexion',
     keywords='openapi oai swagger rest api oauth flask microservice framework',
     license='Apache License Version 2.0',
     python_requires=">=3.6",
