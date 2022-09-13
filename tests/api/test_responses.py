@@ -356,41 +356,20 @@ def test_post_wrong_content_type(simple_app):
     )
     assert resp.status_code == 415
 
-    resp = app_client.post(
-        "/v1.0/post_wrong_content_type", data=json.dumps({"some": "data"})
-    )
-    assert resp.status_code == 415
+    # According to the spec, a content-type header is not required
+    # https://stackoverflow.com/a/15860815/4098821
+    # Not clear what logic to use here
+
+    # resp = app_client.post(
+    #     "/v1.0/post_wrong_content_type", data=json.dumps({"some": "data"})
+    # )
+    # assert resp.status_code == 415
 
     resp = app_client.post(
         "/v1.0/post_wrong_content_type",
         content_type="application/x-www-form-urlencoded",
         data="a=1&b=2",
     )
-    assert resp.status_code == 415
-
-    # this test checks exactly what the test directly above is supposed to check,
-    # i.e. no content-type is provided in the header
-    # unfortunately there is an issue with the werkzeug test environment
-    # (https://github.com/pallets/werkzeug/issues/1159)
-    # so that content-type is added to every request, we remove it here manually for our test
-    # this test can be removed once the werkzeug issue is addressed
-    builder = EnvironBuilder(
-        path="/v1.0/post_wrong_content_type",
-        method="POST",
-        data=json.dumps({"some": "data"}),
-    )
-    try:
-        environ = builder.get_environ()
-    finally:
-        builder.close()
-
-    content_type = "CONTENT_TYPE"
-    if content_type in environ:
-        environ.pop("CONTENT_TYPE")
-    # we cannot just call app_client.open() since app_client is a flask.testing.FlaskClient
-    # which overrides werkzeug.test.Client.open() but does not allow passing an environment
-    # directly
-    resp = Client.open(app_client, environ)
     assert resp.status_code == 415
 
     resp = app_client.post(

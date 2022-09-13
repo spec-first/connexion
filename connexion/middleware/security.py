@@ -142,6 +142,7 @@ class SecurityOperation:
         operation: t.Union[AbstractOperation, Specification],
         security_handler_factory: SecurityHandlerFactory,
     ):
+        # TODO: Turn Operation class into OperationSpec and use as init argument instead
         return cls(
             security_handler_factory,
             security=operation.security,

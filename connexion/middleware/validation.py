@@ -1,39 +1,36 @@
 """
 Validation Middleware.
 """
-import functools
 import logging
 import pathlib
 import typing as t
 
 from starlette.types import ASGIApp, Receive, Scope, Send
-from starlette.datastructures import ImmutableMultiDict, UploadFile
 
 from connexion.apis.abstract import AbstractSpecAPI
-from connexion.decorators.uri_parsing import AbstractURIParser, Swagger2URIParser, OpenAPIURIParser
-from connexion.exceptions import MissingMiddleware, ResolverError
+from connexion.decorators.uri_parsing import AbstractURIParser
+from connexion.exceptions import MissingMiddleware, UnsupportedMediaTypeProblem
 from connexion.http_facts import METHODS
-from connexion.lifecycle import ConnexionRequest, MiddlewareRequest
 from connexion.middleware import AppMiddleware
 from connexion.middleware.routing import ROUTING_CONTEXT
-from connexion.operations import AbstractOperation, OpenAPIOperation, Swagger2Operation
+from connexion.operations import AbstractOperation
+from connexion.resolver import ResolverError
+from connexion.utils import is_nullable
+from connexion.validators import JSONBodyValidator
 
 from ..decorators.response import ResponseValidator
-from ..decorators.validation import ParameterValidator, RequestBodyValidator
+from ..decorators.validation import ParameterValidator
 
 logger = logging.getLogger("connexion.middleware.validation")
 
 VALIDATOR_MAP = {
     "parameter": ParameterValidator,
-    "body": RequestBodyValidator,
+    "body": {"application/json": JSONBodyValidator},
     "response": ResponseValidator,
 }
 
 
-# TODO: split up Request parsing/validation and response parsing/validation?
-#   response validation as separate middleware to allow easy decoupling and disabling/enabling?
 class ValidationMiddleware(AppMiddleware):
-
     """Middleware for validating requests according to the API contract."""
 
     def __init__(self, app: ASGIApp) -> None:
@@ -43,7 +40,7 @@ class ValidationMiddleware(AppMiddleware):
     def add_api(
         self, specification: t.Union[pathlib.Path, str, dict], **kwargs
     ) -> None:
-        api = ValidationAPI(specification, **kwargs)
+        api = ValidationAPI(specification, next_app=self.app, **kwargs)
         self.apis[api.base_path] = api
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
@@ -74,26 +71,9 @@ class ValidationMiddleware(AppMiddleware):
                         "Encountered unknown operation_id."
                     ) from e
             else:
-                # TODO: Add validation logic
-                # messages = []
-                # async def wrapped_receive():
-                #     msg = await receive()
-                #     messages.append(msg)
-                #     return msg
-                # request = MiddlewareRequest(scope, wrapped_receive)
-                # if messages:
-                #     async def new_receive():
-                #         msg = messages.pop(0)
-                #         return msg
-                # else:
-                #     new_receive = receive
+                return await operation(scope, receive, send)
 
-                # await operation(request)
-                # await self.app(scope, new_receive, send)
-                await self.app(scope, receive, send)
-
-        else:
-            await self.app(scope, receive, send)
+        await self.app(scope, receive, send)
 
 
 class ValidationAPI(AbstractSpecAPI):
@@ -103,6 +83,7 @@ class ValidationAPI(AbstractSpecAPI):
         self,
         specification: t.Union[pathlib.Path, str, dict],
         *args,
+        next_app: ASGIApp,
         validate_responses=False,
         strict_validation=False,
         validator_map=None,
@@ -110,6 +91,7 @@ class ValidationAPI(AbstractSpecAPI):
         **kwargs,
     ):
         super().__init__(specification, *args, **kwargs)
+        self.next_app = next_app
 
         self.validator_map = validator_map
 
@@ -121,7 +103,7 @@ class ValidationAPI(AbstractSpecAPI):
 
         self.uri_parser_class = uri_parser_class
 
-        self.operations: t.Dict[str, AbstractValidationOperation] = {}
+        self.operations: t.Dict[str, ValidationOperation] = {}
         self.add_paths()
 
     def add_paths(self):
@@ -145,15 +127,9 @@ class ValidationAPI(AbstractSpecAPI):
         self._add_operation_internal(operation.operation_id, validation_operation)
 
     def make_operation(self, operation: AbstractOperation):
-        if isinstance(operation, Swagger2Operation):
-            validation_operation_cls = Swagger2ValidationOperation
-        elif isinstance(operation, OpenAPIOperation):
-            validation_operation_cls = OpenAPIValidationOperation
-        else:
-            raise ValueError(f"Invalid operation class: {type(operation)}")
-
-        return validation_operation_cls(
+        return ValidationOperation(
             operation,
+            self.next_app,
             validate_responses=self.validate_responses,
             strict_validation=self.strict_validation,
             validator_map=self.validator_map,
@@ -161,201 +137,96 @@ class ValidationAPI(AbstractSpecAPI):
         )
 
     def _add_operation_internal(
-        self, operation_id: str, operation: "AbstractValidationOperation"
+        self, operation_id: str, operation: "ValidationOperation"
     ):
         self.operations[operation_id] = operation
 
 
-class AbstractValidationOperation:
+class ValidationOperation:
     def __init__(
         self,
         operation: AbstractOperation,
+        next_app: ASGIApp,
         validate_responses: bool = False,
         strict_validation: bool = False,
         validator_map: t.Optional[dict] = None,
         uri_parser_class: t.Optional[AbstractURIParser] = None,
     ) -> None:
         self._operation = operation
-        validate_responses = validate_responses
-        strict_validation = strict_validation
-        self._validator_map = dict(VALIDATOR_MAP)
+        self.next_app = next_app
+        self.validate_responses = validate_responses
+        self.strict_validation = strict_validation
+        self._validator_map = VALIDATOR_MAP
         self._validator_map.update(validator_map or {})
-        # TODO: Change URI parser class for middleware
-        self._uri_parser_class = uri_parser_class
-        self._async_uri_parser_class = {
-            Swagger2URIParser: AsyncSwagger2URIParser,
-            OpenAPIURIParser: AsyncOpenAPIURIParser,
-        }.get(uri_parser_class, AsyncOpenAPIURIParser)
-        self.validation_fn = self._get_validation_fn()
+        self.uri_parser_class = uri_parser_class
 
-    @classmethod
-    def from_operation(
-        cls,
-        operation,
-        validate_responses=False,
-        strict_validation=False,
-        validator_map=None,
-        uri_parser_class=None,
-    ):
-        raise NotImplementedError
+    def extract_content_type(self, headers: dict) -> t.Tuple[str, str]:
+        """Extract the mime type and encoding from the content type headers.
 
-    @property
-    def validator_map(self):
+        :param headers: Header dict from ASGI scope
+
+        :return: A tuple of mime type, encoding
         """
-        Validators to use for parameter, body, and response validation
+        encoding = "utf-8"
+        for key, value in headers:
+            # Headers can always be decoded using latin-1:
+            # https://stackoverflow.com/a/27357138/4098821
+            key = key.decode("latin-1")
+            if key.lower() == "content-type":
+                content_type = value.decode("latin-1")
+                if ";" in content_type:
+                    mime_type, parameters = content_type.split(";", maxsplit=1)
+
+                    prefix = "charset="
+                    for parameter in parameters.split(";"):
+                        if parameter.startswith(prefix):
+                            encoding = parameter[len(prefix) :]
+                else:
+                    mime_type = content_type
+                break
+        else:
+            # Content-type header is not required. Take a best guess.
+            mime_type = self._operation.consumes[0]
+
+        return mime_type, encoding
+
+    def validate_mime_type(self, mime_type: str) -> None:
+        """Validate the mime type against the spec.
+
+        :param mime_type: mime type from content type header
         """
-        return self._validator_map
+        if mime_type.lower() not in [c.lower() for c in self._operation.consumes]:
+            raise UnsupportedMediaTypeProblem(
+                detail=f"Invalid Content-type ({mime_type}), "
+                f"expected {self._operation.consumes}"
+            )
 
-    @property
-    def strict_validation(self):
-        """
-        If True, validate all requests against the spec
-        """
-        return self._strict_validation
+    async def __call__(self, scope: Scope, receive: Receive, send: Send):
+        headers = scope["headers"]
+        mime_type, encoding = self.extract_content_type(headers)
+        self.validate_mime_type(mime_type)
 
-    @property
-    def validate_responses(self):
-        """
-        If True, check the response against the response schema, and return an
-        error if the response does not validate.
-        """
-        return self._validate_responses
+        # TODO: Validate parameters
 
-    def _get_validation_fn(self):
-        async def function(request):
-            pass
+        # Validate body
+        try:
+            body_validator = self._validator_map["body"][mime_type]  # type: ignore
+        except KeyError:
+            logging.info(
+                f"Skipping validation. No validator registered for content type: "
+                f"{mime_type}."
+            )
+        else:
+            validator = body_validator(
+                self.next_app,
+                schema=self._operation.body_schema,
+                nullable=is_nullable(self._operation.body_definition),
+                encoding=encoding,
+            )
+            return await validator(scope, receive, send)
 
-        # function = self._uri_parsing_decorator(function)
-
-        return function
-
-    @property
-    def _uri_parsing_decorator(self):
-        """
-        Returns a decorator that parses request data and handles things like
-        array types, and duplicate parameter definitions.
-        """
-        # TODO: Instantiate the class only once?
-        return self._async_uri_parser_class(self.parameters, self.body_definition)
-
-    async def __call__(self, request):
-        await self.validation_fn(request)
-
-    def __getattr__(self, name):
-        """For now, we just forward any missing methods to the other operation class."""
-        return getattr(self._operation, name)
-
-
-class Swagger2ValidationOperation(AbstractValidationOperation):
-    @classmethod
-    def from_operation(
-        cls,
-        operation,
-        validate_responses=False,
-        strict_validation=False,
-        validator_map=None,
-        uri_parser_class=None,
-    ):
-        return cls(
-            operation=operation,
-            validate_responses=validate_responses,
-            strict_validation=strict_validation,
-            validator_map=validator_map,
-            uri_parser_class=uri_parser_class,
-        )
-
-
-class OpenAPIValidationOperation(AbstractValidationOperation):
-    @classmethod
-    def from_operation(
-        cls,
-        operation,
-        validate_responses=False,
-        strict_validation=False,
-        validator_map=None,
-        uri_parser_class=None,
-    ):
-        return cls(
-            operation=operation,
-            validate_responses=validate_responses,
-            strict_validation=strict_validation,
-            validator_map=validator_map,
-            uri_parser_class=uri_parser_class,
-        )
+        await self.next_app(scope, receive, send)
 
 
 class MissingValidationOperation(Exception):
     """Missing validation operation"""
-
-
-class AbstractAsyncURIParser(AbstractURIParser):
-    """URI Parser with support for async requests."""
-
-    def __call__(self, function):
-        """
-        :type function: types.FunctionType
-        :rtype: types.FunctionType
-        """
-
-        @functools.wraps(function)
-        async def wrapper(request: MiddlewareRequest):
-            def coerce_dict(md):
-                """MultiDict -> dict of lists"""
-                if isinstance(md, ImmutableMultiDict):
-                    # Starlette MultiDict doesn't have same interface as werkzeug one
-                    return {k: md.getlist(k) for k in md}
-                try:
-                    return md.to_dict(flat=False)
-                except AttributeError:
-                    return dict(md.items())
-
-            query = coerce_dict(request.query_params)
-            path_params = coerce_dict(request.path_params)
-            # FIXME
-            # Read JSON first to try circumvent stream consumed error (because form doesn't story anything in self._body)
-            # Potential alternative: refactor such that parsing/validation only calls the methods/properties when necessary
-            try:
-                json = await request.json()
-            except ValueError as e:
-                json = None
-            # Flask splits up file uploads and text input in `files` and `form`,
-            # while starlette puts them both in `form`
-            form = await request.form()
-            form = coerce_dict(form)
-            form_parameters = {k: v for k, v in form.items() if isinstance(v, str)}
-            form_files = {k: v for k, v in form.items() if isinstance(v, UploadFile)}
-            for v in form.values():
-                if not isinstance(v, (list, str, UploadFile)):
-                    raise TypeError(f"Unexpected type in form: {type(v)} with value: {v}")
-
-            # Construct ConnexionRequest
-
-            request = ConnexionRequest(
-                url=str(request.url),
-                method=request.method,
-                path_params=self.resolve_path(path_params),
-                query=self.resolve_query(query),
-                headers=request.headers,
-                form=self.resolve_form(form_parameters),
-                body=await request.body(),
-                json_getter=lambda: json,
-                files=form_files,
-                context=request.context,
-                cookies=request.cookies,
-            )
-            request.query = self.resolve_query(query)
-            request.path_params = self.resolve_path(path_params)
-            request.form = self.resolve_form(form)
-
-            response = await function(request)
-            return response
-
-        return wrapper
-
-
-class AsyncSwagger2URIParser(AbstractAsyncURIParser, Swagger2URIParser):
-    """Swagger2URIParser with support for async requests."""
-
-
-class AsyncOpenAPIURIParser(AbstractAsyncURIParser, OpenAPIURIParser):
-    """OpenAPIURIParser with support for async requests."""

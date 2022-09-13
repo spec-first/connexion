@@ -465,12 +465,12 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         :rtype: types.FunctionType
         """
         ParameterValidator = self.validator_map["parameter"]
-        RequestBodyValidator = self.validator_map["body"]
         if self.parameters:
             yield ParameterValidator(
                 self.parameters, self.api, strict_validation=self.strict_validation
             )
         if self.body_schema:
+            # TODO: temporarily hardcoded, remove RequestBodyValidator completely
             yield RequestBodyValidator(
                 self.body_schema,
                 self.consumes,

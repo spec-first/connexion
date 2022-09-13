@@ -12,15 +12,11 @@ from jsonschema import Draft4Validator, ValidationError, draft4_format_checker
 from jsonschema.validators import extend
 from werkzeug.datastructures import FileStorage
 
-from ..exceptions import (
-    BadRequestProblem,
-    ExtraParameterProblem,
-    UnsupportedMediaTypeProblem,
-)
+from ..exceptions import BadRequestProblem, ExtraParameterProblem
 from ..http_facts import FORM_CONTENT_TYPES
 from ..json_schema import Draft4RequestValidator, Draft4ResponseValidator
 from ..lifecycle import ConnexionResponse
-from ..utils import all_json, boolean, is_json_mimetype, is_null, is_nullable
+from ..utils import boolean, is_null, is_nullable
 
 logger = logging.getLogger("connexion.decorators.validation")
 
@@ -141,33 +137,7 @@ class RequestBodyValidator:
 
         @functools.wraps(function)
         def wrapper(request):
-            if all_json(self.consumes):
-                data = request.json
-
-                empty_body = not (request.body or request.form or request.files)
-                if data is None and not empty_body and not self.is_null_value_valid:
-                    try:
-                        ctype_is_json = is_json_mimetype(
-                            request.headers.get("Content-Type", "")
-                        )
-                    except ValueError:
-                        ctype_is_json = False
-
-                    if ctype_is_json:
-                        # Content-Type is json but actual body was not parsed
-                        raise BadRequestProblem(detail="Request body is not valid JSON")
-                    else:
-                        # the body has contents that were not parsed as JSON
-                        raise UnsupportedMediaTypeProblem(
-                            detail="Invalid Content-type ({content_type}), expected JSON data".format(
-                                content_type=request.headers.get("Content-Type", "")
-                            )
-                        )
-
-                logger.debug("%s validating schema...", request.url)
-                if data is not None or not self.has_default:
-                    self.validate_schema(data, request.url)
-            elif self.consumes[0] in FORM_CONTENT_TYPES:
+            if self.consumes[0] in FORM_CONTENT_TYPES:
                 data = dict(request.form.items()) or (
                     request.body if len(request.body) > 0 else {}
                 )

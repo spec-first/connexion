@@ -6,7 +6,6 @@ from starlette.routing import Router
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from connexion.apis import AbstractRoutingAPI
-from connexion.exceptions import NotFoundProblem
 from connexion.middleware import AppMiddleware
 from connexion.operations import AbstractOperation
 from connexion.resolver import Resolver
@@ -61,10 +60,7 @@ class RoutingMiddleware(AppMiddleware):
 
         # Needs to be set so starlette router throws exceptions instead of returning error responses
         scope["app"] = self
-        try:
-            await self.router(scope, receive, send)
-        except ValueError:
-            raise NotFoundProblem
+        await self.router(scope, receive, send)
 
 
 class RoutingAPI(AbstractRoutingAPI):
