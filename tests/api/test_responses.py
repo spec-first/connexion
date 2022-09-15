@@ -356,15 +356,6 @@ def test_post_wrong_content_type(simple_app):
     )
     assert resp.status_code == 415
 
-    # According to the spec, a content-type header is not required
-    # https://stackoverflow.com/a/15860815/4098821
-    # Not clear what logic to use here
-
-    # resp = app_client.post(
-    #     "/v1.0/post_wrong_content_type", data=json.dumps({"some": "data"})
-    # )
-    # assert resp.status_code == 415
-
     resp = app_client.post(
         "/v1.0/post_wrong_content_type",
         content_type="application/x-www-form-urlencoded",
