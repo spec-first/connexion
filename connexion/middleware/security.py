@@ -1,136 +1,28 @@
 import logging
-import pathlib
 import typing as t
 from collections import defaultdict
 
 from starlette.types import ASGIApp, Receive, Scope, Send
 
-from connexion.apis.abstract import AbstractSpecAPI
-from connexion.exceptions import MissingMiddleware, ProblemException
-from connexion.http_facts import METHODS
+from connexion.exceptions import ProblemException
 from connexion.lifecycle import MiddlewareRequest
-from connexion.middleware import AppMiddleware
-from connexion.middleware.routing import ROUTING_CONTEXT
+from connexion.middleware.abstract import RoutedAPI, RoutedMiddleware
 from connexion.operations import AbstractOperation
-from connexion.resolver import ResolverError
 from connexion.security import SecurityHandlerFactory
-from connexion.spec import Specification
 
 logger = logging.getLogger("connexion.middleware.security")
-
-
-class SecurityMiddleware(AppMiddleware):
-    """Middleware to check if operation is accessible on scope."""
-
-    def __init__(self, app: ASGIApp) -> None:
-        self.app = app
-        self.apis: t.Dict[str, SecurityAPI] = {}
-
-    def add_api(
-        self, specification: t.Union[pathlib.Path, str, dict], **kwargs
-    ) -> None:
-        api = SecurityAPI(specification, **kwargs)
-        self.apis[api.base_path] = api
-
-    async def __call__(self, scope: Scope, receive: Receive, send: Send):
-        if scope["type"] != "http":
-            await self.app(scope, receive, send)
-            return
-
-        try:
-            connexion_context = scope["extensions"][ROUTING_CONTEXT]
-        except KeyError:
-            raise MissingMiddleware(
-                "Could not find routing information in scope. Please make sure "
-                "you have a routing middleware registered upstream. "
-            )
-
-        api_base_path = connexion_context.get("api_base_path")
-        if api_base_path:
-            api = self.apis[api_base_path]
-            operation_id = connexion_context.get("operation_id")
-            try:
-                operation = api.operations[operation_id]
-            except KeyError as e:
-                if operation_id is None:
-                    logger.debug(
-                        "Skipping security check for operation without id. Enable "
-                        "`auth_all_paths` to check security for unknown operations."
-                    )
-                else:
-                    raise MissingSecurityOperation(
-                        "Encountered unknown operation_id."
-                    ) from e
-
-            else:
-                request = MiddlewareRequest(scope)
-                await operation(request)
-
-        await self.app(scope, receive, send)
-
-
-class SecurityAPI(AbstractSpecAPI):
-    def __init__(
-        self,
-        specification: t.Union[pathlib.Path, str, dict],
-        auth_all_paths: bool = False,
-        *args,
-        **kwargs
-    ):
-        super().__init__(specification, *args, **kwargs)
-        self.security_handler_factory = SecurityHandlerFactory("context")
-
-        if auth_all_paths:
-            self.add_auth_on_not_found()
-        else:
-            self.operations: t.Dict[str, SecurityOperation] = {}
-
-        self.add_paths()
-
-    def add_auth_on_not_found(self):
-        """Register a default SecurityOperation for routes that are not found."""
-        default_operation = self.make_operation(self.specification)
-        self.operations = defaultdict(lambda: default_operation)
-
-    def add_paths(self):
-        paths = self.specification.get("paths", {})
-        for path, methods in paths.items():
-            for method in methods:
-                if method not in METHODS:
-                    continue
-                try:
-                    self.add_operation(path, method)
-                except ResolverError:
-                    # ResolverErrors are either raised or handled in routing middleware.
-                    pass
-
-    def add_operation(self, path: str, method: str) -> None:
-        operation_cls = self.specification.operation_cls
-        operation = operation_cls.from_spec(
-            self.specification, self, path, method, self.resolver
-        )
-        security_operation = self.make_operation(operation)
-        self._add_operation_internal(operation.operation_id, security_operation)
-
-    def make_operation(self, operation: t.Union[AbstractOperation, Specification]):
-        return SecurityOperation.from_operation(
-            operation,
-            security_handler_factory=self.security_handler_factory,
-        )
-
-    def _add_operation_internal(
-        self, operation_id: str, operation: "SecurityOperation"
-    ):
-        self.operations[operation_id] = operation
 
 
 class SecurityOperation:
     def __init__(
         self,
+        next_app: ASGIApp,
+        *,
         security_handler_factory: SecurityHandlerFactory,
         security: list,
         security_schemes: dict,
     ):
+        self.next_app = next_app
         self.security_handler_factory = security_handler_factory
         self.security = security
         self.security_schemes = security_schemes
@@ -139,12 +31,14 @@ class SecurityOperation:
     @classmethod
     def from_operation(
         cls,
-        operation: t.Union[AbstractOperation, Specification],
+        operation: AbstractOperation,
+        *,
+        next_app: ASGIApp,
         security_handler_factory: SecurityHandlerFactory,
-    ):
-        # TODO: Turn Operation class into OperationSpec and use as init argument instead
+    ) -> "SecurityOperation":
         return cls(
-            security_handler_factory,
+            next_app=next_app,
+            security_handler_factory=security_handler_factory,
             security=operation.security,
             security_schemes=operation.security_schemes,
         )
@@ -304,8 +198,47 @@ class SecurityOperation:
 
         return self.security_handler_factory.verify_security(auth_funcs)
 
-    async def __call__(self, request: MiddlewareRequest):
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        request = MiddlewareRequest(scope)
         await self.verification_fn(request)
+        await self.next_app(scope, receive, send)
+
+
+class SecurityAPI(RoutedAPI[SecurityOperation]):
+
+    operation_cls = SecurityOperation
+
+    def __init__(self, *args, auth_all_paths: bool = False, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.security_handler_factory = SecurityHandlerFactory("context")
+
+        if auth_all_paths:
+            self.add_auth_on_not_found()
+        else:
+            self.operations: t.MutableMapping[str, SecurityOperation] = {}
+
+        self.add_paths()
+
+    def add_auth_on_not_found(self) -> None:
+        """Register a default SecurityOperation for routes that are not found."""
+        default_operation = self.make_operation(self.specification)
+        self.operations = defaultdict(lambda: default_operation)
+
+    def make_operation(self, operation: AbstractOperation) -> SecurityOperation:
+        return SecurityOperation.from_operation(
+            operation,
+            next_app=self.next_app,
+            security_handler_factory=self.security_handler_factory,
+        )
+
+
+class SecurityMiddleware(RoutedMiddleware[SecurityAPI]):
+    """Middleware to check if operation is accessible on scope."""
+
+    @property
+    def api_cls(self) -> t.Type[SecurityAPI]:
+        return SecurityAPI
 
 
 class MissingSecurityOperation(ProblemException):
