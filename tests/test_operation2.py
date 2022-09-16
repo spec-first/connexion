@@ -3,8 +3,8 @@ import logging
 import math
 import pathlib
 import types
+from unittest import mock
 
-import mock
 import pytest
 from connexion.apis.flask_api import Jsonifier
 from connexion.exceptions import InvalidSpecification
@@ -425,7 +425,7 @@ def test_operation_remote_token_info(security_handler_factory):
     )
 
     SecurityOperation(
-        next_app=mock.AsyncMock,
+        next_app=mock.Mock,
         security_handler_factory=security_handler_factory,
         security=[{"oauth": ["uid"]}],
         security_schemes=SECURITY_DEFINITIONS_REMOTE,
@@ -495,7 +495,7 @@ def test_operation_local_security_oauth2(security_handler_factory):
     security_handler_factory.verify_oauth = verify_oauth
 
     SecurityOperation(
-        next_app=mock.AsyncMock,
+        next_app=mock.Mock,
         security_handler_factory=security_handler_factory,
         security=[{"oauth": ["uid"]}],
         security_schemes=SECURITY_DEFINITIONS_LOCAL,
@@ -511,7 +511,7 @@ def test_operation_local_security_duplicate_token_info(security_handler_factory)
     security_handler_factory.verify_oauth = verify_oauth
 
     SecurityOperation(
-        next_app=mock.AsyncMock,
+        next_app=mock.Mock,
         security_handler_factory=security_handler_factory,
         security=[{"oauth": ["uid"]}],
         security_schemes=SECURITY_DEFINITIONS_BOTH,
@@ -548,7 +548,7 @@ def test_multi_body(api):
 
 def test_no_token_info(security_handler_factory):
     SecurityOperation(
-        next_app=mock.AsyncMock,
+        next_app=mock.Mock,
         security_handler_factory=security_handler_factory,
         security=[{"oauth": ["uid"]}],
         security_schemes=SECURITY_DEFINITIONS_WO_INFO,
@@ -569,7 +569,7 @@ def test_multiple_security_schemes_and(security_handler_factory):
     security = [{"key1": [], "key2": []}]
 
     SecurityOperation(
-        next_app=mock.AsyncMock,
+        next_app=mock.Mock,
         security_handler_factory=security_handler_factory,
         security=security,
         security_schemes=SECURITY_DEFINITIONS_2_KEYS,
@@ -594,7 +594,7 @@ def test_multiple_oauth_in_and(security_handler_factory, caplog):
     security = [{"oauth_1": ["uid"], "oauth_2": ["uid"]}]
 
     SecurityOperation(
-        next_app=mock.AsyncMock,
+        next_app=mock.Mock,
         security_handler_factory=security_handler_factory,
         security=security,
         security_schemes=SECURITY_DEFINITIONS_2_OAUTH,
@@ -691,7 +691,7 @@ def test_oauth_scopes_in_or(security_handler_factory):
     security = [{"oauth": ["myscope"]}, {"oauth": ["myscope2"]}]
 
     SecurityOperation(
-        next_app=mock.AsyncMock,
+        next_app=mock.Mock,
         security_handler_factory=security_handler_factory,
         security=security,
         security_schemes=SECURITY_DEFINITIONS_LOCAL,
