@@ -3,6 +3,7 @@ import logging
 import pathlib
 import typing as t
 
+import typing_extensions as te
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from connexion.apis.abstract import AbstractSpecAPI
@@ -27,7 +28,7 @@ class AppMiddleware(abc.ABC):
         pass
 
 
-class RoutedOperation(t.Protocol):
+class RoutedOperation(te.Protocol):
     def __init__(self, next_app: ASGIApp, **kwargs) -> None:
         ...
 

@@ -28,6 +28,8 @@ install_requires = [
     'werkzeug>=2.2.1,<3',
     'starlette>=0.15,<1',
     'httpx>=0.15,<1',
+    'typing-extensions>=4,<5',
+    'mock>=3,<4'
 ]
 
 swagger_ui_require = 'swagger-ui-bundle>=0.0.2,<0.1'
