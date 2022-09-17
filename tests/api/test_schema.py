@@ -80,59 +80,59 @@ def test_schema_response(schema_app):
     request = app_client.get(
         "/v1.0/test_schema/response/object/valid", headers={}, data=None
     )  # type: flask.Response
-    assert request.status_code == 200
+    assert request.status_code == 200, request.text
     request = app_client.get(
         "/v1.0/test_schema/response/object/invalid_type", headers={}, data=None
     )  # type: flask.Response
-    assert request.status_code == 500
+    assert request.status_code == 500, request.text
     request = app_client.get(
         "/v1.0/test_schema/response/object/invalid_requirements", headers={}, data=None
     )  # type: flask.Response
-    assert request.status_code == 500
+    assert request.status_code == 500, request.text
     request = app_client.get(
         "/v1.0/test_schema/response/string/valid", headers={}, data=None
     )  # type: flask.Response
-    assert request.status_code == 200
+    assert request.status_code == 200, request.text
     request = app_client.get(
         "/v1.0/test_schema/response/string/invalid", headers={}, data=None
     )  # type: flask.Response
-    assert request.status_code == 500
+    assert request.status_code == 500, request.text
     request = app_client.get(
         "/v1.0/test_schema/response/integer/valid", headers={}, data=None
     )  # type: flask.Response
-    assert request.status_code == 200
+    assert request.status_code == 200, request.text
     request = app_client.get(
         "/v1.0/test_schema/response/integer/invalid", headers={}, data=None
     )  # type: flask.Response
-    assert request.status_code == 500
+    assert request.status_code == 500, request.text
     request = app_client.get(
         "/v1.0/test_schema/response/number/valid", headers={}, data=None
     )  # type: flask.Response
-    assert request.status_code == 200
+    assert request.status_code == 200, request.text
     request = app_client.get(
         "/v1.0/test_schema/response/number/invalid", headers={}, data=None
     )  # type: flask.Response
-    assert request.status_code == 500
+    assert request.status_code == 500, request.text
     request = app_client.get(
         "/v1.0/test_schema/response/boolean/valid", headers={}, data=None
     )  # type: flask.Response
-    assert request.status_code == 200
+    assert request.status_code == 200, request.text
     request = app_client.get(
         "/v1.0/test_schema/response/boolean/invalid", headers={}, data=None
     )  # type: flask.Response
-    assert request.status_code == 500
+    assert request.status_code == 500, request.text
     request = app_client.get(
         "/v1.0/test_schema/response/array/valid", headers={}, data=None
     )  # type: flask.Response
-    assert request.status_code == 200
+    assert request.status_code == 200, request.text
     request = app_client.get(
         "/v1.0/test_schema/response/array/invalid_dict", headers={}, data=None
     )  # type: flask.Response
-    assert request.status_code == 500
+    assert request.status_code == 500, request.text
     request = app_client.get(
         "/v1.0/test_schema/response/array/invalid_string", headers={}, data=None
     )  # type: flask.Response
-    assert request.status_code == 500
+    assert request.status_code == 500, request.text
 
 
 def test_schema_in_query(schema_app):

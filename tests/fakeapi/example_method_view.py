@@ -6,19 +6,22 @@ class PetsView(MethodView):
     mycontent = "demonstrate return from MethodView class"
 
     def get(self, **kwargs):
-        kwargs.update({"method": "get"})
-        return kwargs
+        if kwargs:
+            kwargs.update({"name": "get"})
+            return kwargs
+        else:
+            return [{"name": "get"}]
 
     def search(self):
-        return "search"
+        return [{"name": "search"}]
 
     def post(self, **kwargs):
-        kwargs.update({"method": "post"})
-        return kwargs
+        kwargs.update({"name": "post"})
+        return kwargs, 201
 
     def put(self, *args, **kwargs):
-        kwargs.update({"method": "put"})
-        return kwargs
+        kwargs.update({"name": "put"})
+        return kwargs, 201
 
     # Test that operation_id can still override resolver
 

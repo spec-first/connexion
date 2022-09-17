@@ -11,34 +11,23 @@ from connexion.exceptions import UnsupportedMediaTypeProblem
 from connexion.middleware.abstract import RoutedAPI, RoutedMiddleware
 from connexion.operations import AbstractOperation
 from connexion.utils import is_nullable
-from connexion.validators import JSONBodyValidator
-
-from ..decorators.response import ResponseValidator
-from ..decorators.validation import ParameterValidator
+from connexion.validators import VALIDATOR_MAP
 
 logger = logging.getLogger("connexion.middleware.validation")
 
-VALIDATOR_MAP = {
-    "parameter": ParameterValidator,
-    "body": {"application/json": JSONBodyValidator},
-    "response": ResponseValidator,
-}
 
-
-class ValidationOperation:
+class RequestValidationOperation:
     def __init__(
         self,
         next_app: ASGIApp,
         *,
         operation: AbstractOperation,
-        validate_responses: bool = False,
         strict_validation: bool = False,
         validator_map: t.Optional[dict] = None,
         uri_parser_class: t.Optional[AbstractURIParser] = None,
     ) -> None:
         self.next_app = next_app
         self._operation = operation
-        self.validate_responses = validate_responses
         self.strict_validation = strict_validation
         self._validator_map = VALIDATOR_MAP
         self._validator_map.update(validator_map or {})
@@ -112,15 +101,14 @@ class ValidationOperation:
         await self.next_app(scope, receive, send)
 
 
-class ValidationAPI(RoutedAPI[ValidationOperation]):
+class RequestValidationAPI(RoutedAPI[RequestValidationOperation]):
     """Validation API."""
 
-    operation_cls = ValidationOperation
+    operation_cls = RequestValidationOperation
 
     def __init__(
         self,
         *args,
-        validate_responses=False,
         strict_validation=False,
         validator_map=None,
         uri_parser_class=None,
@@ -129,9 +117,6 @@ class ValidationAPI(RoutedAPI[ValidationOperation]):
         super().__init__(*args, **kwargs)
         self.validator_map = validator_map
 
-        logger.debug("Validate Responses: %s", str(validate_responses))
-        self.validate_responses = validate_responses
-
         logger.debug("Strict Request Validation: %s", str(strict_validation))
         self.strict_validation = strict_validation
 
@@ -139,23 +124,24 @@ class ValidationAPI(RoutedAPI[ValidationOperation]):
 
         self.add_paths()
 
-    def make_operation(self, operation: AbstractOperation) -> ValidationOperation:
-        return ValidationOperation(
+    def make_operation(
+        self, operation: AbstractOperation
+    ) -> RequestValidationOperation:
+        return RequestValidationOperation(
             self.next_app,
             operation=operation,
-            validate_responses=self.validate_responses,
             strict_validation=self.strict_validation,
             validator_map=self.validator_map,
             uri_parser_class=self.uri_parser_class,
         )
 
 
-class ValidationMiddleware(RoutedMiddleware[ValidationAPI]):
+class RequestValidationMiddleware(RoutedMiddleware[RequestValidationAPI]):
     """Middleware for validating requests according to the API contract."""
 
     @property
-    def api_cls(self) -> t.Type[ValidationAPI]:
-        return ValidationAPI
+    def api_cls(self) -> t.Type[RequestValidationAPI]:
+        return RequestValidationAPI
 
 
 class MissingValidationOperation(Exception):

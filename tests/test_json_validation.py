@@ -3,10 +3,9 @@ import pathlib
 
 import pytest
 from connexion import App
-from connexion.decorators.validation import RequestBodyValidator
 from connexion.json_schema import Draft4RequestValidator
 from connexion.spec import Specification
-from connexion.validators import JSONBodyValidator
+from connexion.validators import JSONRequestBodyValidator
 from jsonschema.validators import _utils, extend
 
 from conftest import build_app_from_fixture
@@ -31,7 +30,7 @@ def test_validator_map(json_validation_spec_dir, spec):
 
     MinLengthRequestValidator = extend(Draft4RequestValidator, {"type": validate_type})
 
-    class MyJSONBodyValidator(JSONBodyValidator):
+    class MyJSONBodyValidator(JSONRequestBodyValidator):
         def __init__(self, *args, **kwargs):
             super().__init__(*args, validator=MinLengthRequestValidator, **kwargs)
 

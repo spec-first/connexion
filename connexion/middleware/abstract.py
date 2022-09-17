@@ -118,6 +118,7 @@ class RoutedMiddleware(AppMiddleware, t.Generic[API]):
         try:
             connexion_context = scope["extensions"][ROUTING_CONTEXT]
         except KeyError:
+            # TODO: update message
             raise MissingMiddleware(
                 "Could not find routing information in scope. Please make sure "
                 "you have a routing middleware registered upstream. "
