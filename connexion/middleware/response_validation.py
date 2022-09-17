@@ -70,8 +70,9 @@ class ResponseValidationOperation:
                 f"expected {self._operation.produces}",
             )
 
+    @staticmethod
     def validate_required_headers(
-        self, headers: t.List[tuple], response_definition: dict
+        headers: t.List[tuple], response_definition: dict
     ) -> None:
         required_header_keys = {
             k.lower()

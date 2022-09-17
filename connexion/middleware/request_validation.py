@@ -75,6 +75,8 @@ class RequestValidationOperation:
             )
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send):
+        receive_fn = receive
+
         headers = scope["headers"]
         mime_type, encoding = self.extract_content_type(headers)
         self.validate_mime_type(mime_type)
@@ -91,14 +93,15 @@ class RequestValidationOperation:
             )
         else:
             validator = body_validator(
-                self.next_app,
+                scope,
+                receive,
                 schema=self._operation.body_schema,
                 nullable=is_nullable(self._operation.body_definition),
                 encoding=encoding,
             )
-            return await validator(scope, receive, send)
+            receive_fn = validator.receive
 
-        await self.next_app(scope, receive, send)
+        await self.next_app(scope, receive_fn, send)
 
 
 class RequestValidationAPI(RoutedAPI[RequestValidationOperation]):
@@ -142,7 +145,3 @@ class RequestValidationMiddleware(RoutedMiddleware[RequestValidationAPI]):
     @property
     def api_cls(self) -> t.Type[RequestValidationAPI]:
         return RequestValidationAPI
-
-
-class MissingValidationOperation(Exception):
-    """Missing validation operation"""

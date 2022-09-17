@@ -118,7 +118,6 @@ class RoutedMiddleware(AppMiddleware, t.Generic[API]):
         try:
             connexion_context = scope["extensions"][ROUTING_CONTEXT]
         except KeyError:
-            # TODO: update message
             raise MissingMiddleware(
                 "Could not find routing information in scope. Please make sure "
                 "you have a routing middleware registered upstream. "
@@ -131,7 +130,10 @@ class RoutedMiddleware(AppMiddleware, t.Generic[API]):
                 operation = api.operations[operation_id]
             except KeyError as e:
                 if operation_id is None:
-                    logger.debug("Skipping validation check for operation without id.")
+                    logger.debug(
+                        f"Skipping {self.__class__.__name__} check for operation without "
+                        f"id."
+                    )
                     await self.app(scope, receive, send)
                     return
                 else:

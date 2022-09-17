@@ -6,7 +6,7 @@ import logging
 import typing as t
 
 from jsonschema import Draft4Validator, ValidationError, draft4_format_checker
-from starlette.types import ASGIApp, Receive, Scope, Send
+from starlette.types import Receive, Scope, Send
 
 from connexion.decorators.validation import ParameterValidator
 from connexion.exceptions import BadRequestProblem, NonConformingResponseBody
@@ -21,20 +21,23 @@ class JSONRequestBodyValidator:
 
     def __init__(
         self,
-        next_app: ASGIApp,
+        scope: Scope,
+        receive: Receive,
         *,
         schema: dict,
         validator: t.Type[Draft4Validator] = None,
         nullable=False,
         encoding: str,
     ) -> None:
-        self.next_app = next_app
+        self._scope = scope
+        self._receive = receive
         self.schema = schema
         self.has_default = schema.get("default", False)
         self.nullable = nullable
         validator_cls = validator or Draft4RequestValidator
         self.validator = validator_cls(schema, format_checker=draft4_format_checker)
         self.encoding = encoding
+        self._messages: t.List[t.MutableMapping[str, t.Any]] = []
 
     @classmethod
     def _error_path_message(cls, exception):
@@ -53,18 +56,15 @@ class JSONRequestBodyValidator:
             )
             raise BadRequestProblem(detail=f"{exception.message}{error_path_msg}")
 
-    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        # Based on https://github.com/encode/starlette/pull/1519#issuecomment-1060633787
-        # Ingest all body messages from the ASGI `receive` callable.
-        messages = []
+    async def receive(self) -> t.Optional[t.MutableMapping[str, t.Any]]:
         more_body = True
         while more_body:
-            message = await receive()
-            messages.append(message)
+            message = await self._receive()
+            self._messages.append(message)
             more_body = message.get("more_body", False)
 
         # TODO: make json library pluggable
-        bytes_body = b"".join([message.get("body", b"") for message in messages])
+        bytes_body = b"".join([message.get("body", b"") for message in self._messages])
         decoded_body = bytes_body.decode(self.encoding)
 
         if decoded_body and not (self.nullable and is_null(decoded_body)):
@@ -75,14 +75,9 @@ class JSONRequestBodyValidator:
 
             self.validate(body)
 
-        async def wrapped_receive():
-            # First up we want to return any messages we've stashed.
-            if messages:
-                return messages.pop(0)
-            # Once that's done we can just await any other messages.
-            return await receive()
-
-        await self.next_app(scope, wrapped_receive, send)
+        while self._messages:
+            return self._messages.pop(0)
+        return None
 
 
 class JSONResponseBodyValidator:
