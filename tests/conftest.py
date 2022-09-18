@@ -8,7 +8,7 @@ from connexion.resolver import MethodResolver, MethodViewResolver
 from connexion.security import SecurityHandlerFactory
 from werkzeug.test import Client, EnvironBuilder
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 TEST_FOLDER = pathlib.Path(__file__).parent
 FIXTURES_FOLDER = TEST_FOLDER / "fixtures"

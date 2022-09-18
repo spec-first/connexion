@@ -95,8 +95,7 @@ def test_errors(problem_app):
     )
     assert unsupported_media_type_body["type"] == "about:blank"
     assert unsupported_media_type_body["title"] == "Unsupported Media Type"
-    assert (
-        unsupported_media_type_body["detail"]
-        == "Invalid Content-type (text/html), expected JSON data"
+    assert unsupported_media_type_body["detail"].startswith(
+        "Invalid Content-type (text/html)"
     )
     assert unsupported_media_type_body["status"] == 415

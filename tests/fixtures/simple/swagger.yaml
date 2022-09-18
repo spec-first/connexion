@@ -437,6 +437,8 @@ paths:
 
   /test-formData-missing-param:
     post:
+      consumes:
+        - application/x-www-form-urlencoded
       summary: Test formData missing parameter in handler
       operationId: fakeapi.hello.test_formdata_missing_param
       parameters:
@@ -804,7 +806,7 @@ paths:
     post:
       operationId: fakeapi.hello.test_param_sanitization
       consumes:
-      - multipart/form-data
+        - application/x-www-form-urlencoded
       produces:
         - application/json
       parameters:
