@@ -96,38 +96,6 @@ class AbstractSpecAPI(metaclass=AbstractAPIMeta):
         cls.jsonifier = Jsonifier()
 
 
-class AbstractSwaggerUIAPI(AbstractSpecAPI):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        if self.options.openapi_spec_available:
-            self.add_openapi_json()
-            self.add_openapi_yaml()
-
-        if self.options.openapi_console_ui_available:
-            self.add_swagger_ui()
-
-    @abc.abstractmethod
-    def add_openapi_json(self):
-        """
-        Adds openapi spec to {base_path}/openapi.json
-             (or {base_path}/swagger.json for swagger2)
-        """
-
-    @abc.abstractmethod
-    def add_openapi_yaml(self):
-        """
-        Adds openapi spec to {base_path}/openapi.yaml
-             (or {base_path}/swagger.yaml for swagger2)
-        """
-
-    @abc.abstractmethod
-    def add_swagger_ui(self):
-        """
-        Adds swagger ui to {base_path}/ui/
-        """
-
-
 class AbstractRoutingAPI(AbstractSpecAPI):
     def __init__(
         self,
