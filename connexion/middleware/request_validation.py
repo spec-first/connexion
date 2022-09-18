@@ -6,11 +6,11 @@ import typing as t
 
 from starlette.types import ASGIApp, Receive, Scope, Send
 
+from connexion import utils
 from connexion.decorators.uri_parsing import AbstractURIParser
 from connexion.exceptions import UnsupportedMediaTypeProblem
 from connexion.middleware.abstract import RoutedAPI, RoutedMiddleware
 from connexion.operations import AbstractOperation
-from connexion.utils import is_nullable
 from connexion.validators import VALIDATOR_MAP
 
 logger = logging.getLogger("connexion.middleware.validation")
@@ -33,33 +33,24 @@ class RequestValidationOperation:
         self._validator_map.update(validator_map or {})
         self.uri_parser_class = uri_parser_class
 
-    def extract_content_type(self, headers: dict) -> t.Tuple[str, str]:
+    def extract_content_type(
+        self, headers: t.List[t.Tuple[bytes, bytes]]
+    ) -> t.Tuple[str, str]:
         """Extract the mime type and encoding from the content type headers.
 
-        :param headers: Header dict from ASGI scope
+        :param headers: Headers from ASGI scope
 
         :return: A tuple of mime type, encoding
         """
-        encoding = "utf-8"
-        for key, value in headers:
-            # Headers can always be decoded using latin-1:
-            # https://stackoverflow.com/a/27357138/4098821
-            key = key.decode("latin-1")
-            if key.lower() == "content-type":
-                content_type = value.decode("latin-1")
-                if ";" in content_type:
-                    mime_type, parameters = content_type.split(";", maxsplit=1)
-
-                    prefix = "charset="
-                    for parameter in parameters.split(";"):
-                        if parameter.startswith(prefix):
-                            encoding = parameter[len(prefix) :]
-                else:
-                    mime_type = content_type
-                break
-        else:
+        mime_type, encoding = utils.extract_content_type(headers)
+        if mime_type is None:
             # Content-type header is not required. Take a best guess.
-            mime_type = self._operation.consumes[0]
+            try:
+                mime_type = self._operation.consumes[0]
+            except IndexError:
+                mime_type = "application/octet-stream"
+        if encoding is None:
+            encoding = "utf-8"
 
         return mime_type, encoding
 
@@ -96,7 +87,7 @@ class RequestValidationOperation:
                 scope,
                 receive,
                 schema=self._operation.body_schema,
-                nullable=is_nullable(self._operation.body_definition),
+                nullable=utils.is_nullable(self._operation.body_definition),
                 encoding=encoding,
             )
             receive_fn = validator.receive

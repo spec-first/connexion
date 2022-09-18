@@ -5,6 +5,7 @@ This module provides general utility functions used within Connexion.
 import asyncio
 import functools
 import importlib
+import typing as t
 
 import yaml
 
@@ -266,3 +267,32 @@ def not_installed_error(exc):  # pragma: no cover
         raise exc
 
     return functools.partial(_required_lib, exc)
+
+
+def extract_content_type(
+    headers: t.List[t.Tuple[bytes, bytes]]
+) -> t.Tuple[t.Optional[str], t.Optional[str]]:
+    """Extract the mime type and encoding from the content type headers.
+
+    :param headers: Headers from ASGI scope
+
+    :return: A tuple of mime type, encoding
+    """
+    mime_type, encoding = None, None
+    for key, value in headers:
+        # Headers can always be decoded using latin-1:
+        # https://stackoverflow.com/a/27357138/4098821
+        decoded_key = key.decode("latin-1")
+        if decoded_key.lower() == "content-type":
+            content_type = value.decode("latin-1")
+            if ";" in content_type:
+                mime_type, parameters = content_type.split(";", maxsplit=1)
+
+                prefix = "charset="
+                for parameter in parameters.split(";"):
+                    if parameter.startswith(prefix):
+                        encoding = parameter[len(prefix) :]
+            else:
+                mime_type = content_type
+            break
+    return mime_type, encoding

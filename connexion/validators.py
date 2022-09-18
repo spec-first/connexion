@@ -81,6 +81,8 @@ class JSONRequestBodyValidator:
 
 
 class JSONResponseBodyValidator:
+    """Response body validator for json content types."""
+
     def __init__(
         self,
         scope: Scope,

@@ -4,7 +4,6 @@ from collections import defaultdict
 
 from starlette.types import ASGIApp, Receive, Scope, Send
 
-from connexion.exceptions import ProblemException
 from connexion.lifecycle import MiddlewareRequest
 from connexion.middleware.abstract import RoutedAPI, RoutedMiddleware
 from connexion.operations import AbstractOperation
@@ -239,7 +238,3 @@ class SecurityMiddleware(RoutedMiddleware[SecurityAPI]):
     @property
     def api_cls(self) -> t.Type[SecurityAPI]:
         return SecurityAPI
-
-
-class MissingSecurityOperation(ProblemException):
-    pass
