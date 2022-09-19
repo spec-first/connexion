@@ -1239,6 +1239,13 @@ paths:
       responses:
         '200':
           description: Echo the validated request.
+  /async-route:
+    get:
+      operationId: fakeapi.hello.async_route
+      responses:
+        200:
+          description: 'OK'
+
 
 servers:
   - url: http://localhost:{port}/{basePath}
