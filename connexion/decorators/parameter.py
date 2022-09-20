@@ -18,6 +18,8 @@ from ..utils import all_json
 
 logger = logging.getLogger(__name__)
 
+CONTEXT_NAME = "context_"
+
 
 def inspect_function_arguments(function):  # pragma: no cover
     """
@@ -63,7 +65,7 @@ def pythonic(name):
 
 
 def parameter_to_arg(
-    operation, function, pythonic_params=False, pass_context_arg_name=None
+    operation, function, pythonic_params=False, pass_context_arg=False
 ):
     """
     Pass query and body parameters as keyword arguments to handler function.
@@ -74,6 +76,9 @@ def parameter_to_arg(
     :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended to
     any shadowed built-ins
     :type pythonic_params: bool
+    :param pass_context_arg: If True URL and function has an argument `context_`, the framework's
+    request context will be passed as that argument.
+    :type pass_context_arg: bool
     """
     consumes = operation.consumes
 
@@ -121,8 +126,8 @@ def parameter_to_arg(
             else:
                 logger.debug("Context parameter '%s' not in function arguments", key)
         # attempt to provide the request context to the function
-        if pass_context_arg_name and (has_kwargs or pass_context_arg_name in arguments):
-            kwargs[pass_context_arg_name] = request.context
+        if pass_context_arg and (has_kwargs or CONTEXT_NAME in arguments):
+            kwargs[CONTEXT_NAME] = request.context
 
         return function(**kwargs)
 

@@ -131,6 +131,7 @@ class AbstractApp(metaclass=abc.ABCMeta):
         resolver=None,
         resolver_error=None,
         pythonic_params=False,
+        pass_context_arg=False,
         options=None,
         validator_map=None,
     ):
@@ -156,6 +157,9 @@ class AbstractApp(metaclass=abc.ABCMeta):
         :type resolver_error: int | None
         :param pythonic_params: When True CamelCase parameters are converted to snake_case
         :type pythonic_params: bool
+        :param pass_context_arg: When True `context_` in handler functions to pass request context to.
+        :type pass_context_arg: bool
+
         :param options: New style options dictionary.
         :type options: dict | None
         :param validator_map: map of validators
@@ -199,6 +203,7 @@ class AbstractApp(metaclass=abc.ABCMeta):
             debug=self.debug,
             validator_map=validator_map,
             pythonic_params=pythonic_params,
+            pass_context_arg=pass_context_arg,
             options=api_options.as_dict(),
         )
 
@@ -214,6 +219,7 @@ class AbstractApp(metaclass=abc.ABCMeta):
             debug=self.debug,
             validator_map=validator_map,
             pythonic_params=pythonic_params,
+            pass_context_arg=pass_context_arg,
             options=api_options.as_dict(),
         )
         return api
