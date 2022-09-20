@@ -249,6 +249,7 @@ def secure_endpoint_app(request):
         "secure_endpoint",
         request.param,
         validate_responses=True,
+        pass_context_arg=True,
     )
 
 

@@ -42,7 +42,7 @@ class SecurityHandlerFactory:
 
     no_value = object()
     required_scopes_kw = "required_scopes"
-    context_kw = "context"
+    context_kw = "context_"
     client = None
 
     @staticmethod
