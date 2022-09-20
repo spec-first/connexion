@@ -333,7 +333,7 @@ class SecurityHandlerFactory:
 
     def _need_to_add_context_or_scopes(self, func):
         arguments, has_kwargs = inspect_function_arguments(func)
-        need_context = has_kwargs or self.context_kw in arguments
+        need_context = self.context_kw in arguments
         need_required_scopes = has_kwargs or self.required_scopes_kw in arguments
         return need_context, need_required_scopes
 

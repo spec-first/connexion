@@ -57,7 +57,6 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         randomize_endpoint=None,
         validator_map=None,
         pythonic_params=False,
-        pass_context_arg=False,
         uri_parser_class=None,
     ):
         """
@@ -86,8 +85,6 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended
             to any shadowed built-ins
         :type pythonic_params: bool
-        :param pass_context_arg: If True will try to inject the request context to the function using the `context_` name.
-        :type pass_context_arg: bool
         :param uri_parser_class: class to use for uri parsing
         :type uri_parser_class: AbstractURIParser
         """
@@ -103,7 +100,6 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         self._pythonic_params = pythonic_params
         self._uri_parser_class = uri_parser_class
         self._randomize_endpoint = randomize_endpoint
-        self._pass_context_arg = pass_context_arg
         self._operation_id = self._operation.get("operationId")
 
         self._resolution = resolver.resolve(self)
@@ -391,7 +387,6 @@ class AbstractOperation(metaclass=abc.ABCMeta):
             self,
             self._resolution.function,
             self.pythonic_params,
-            self._pass_context_arg,
         )
 
         if self.validate_responses:
