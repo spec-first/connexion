@@ -62,7 +62,9 @@ def pythonic(name):
     return sanitized(name)
 
 
-def parameter_to_arg(operation, function, pythonic_params=False):
+def parameter_to_arg(
+    operation, function, pythonic_params=False, pass_context_arg_name=None
+):
     """
     Pass query and body parameters as keyword arguments to handler function.
 
@@ -118,6 +120,9 @@ def parameter_to_arg(operation, function, pythonic_params=False):
                 kwargs[key] = value
             else:
                 logger.debug("Context parameter '%s' not in function arguments", key)
+        # attempt to provide the request context to the function
+        if pass_context_arg_name and (has_kwargs or pass_context_arg_name in arguments):
+            kwargs[pass_context_arg_name] = request.context
 
         return function(**kwargs)
 
