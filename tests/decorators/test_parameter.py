@@ -25,25 +25,21 @@ def test_injection():
 
 
 def test_injection_with_context():
-    request = MagicMock(
-        name="request", path_params={"p1": "123"}, params={"context_": {"user": "456"}}
-    )
-    request.args = {}
-    request.headers = {}
+    request = MagicMock(name="request")
 
     func = MagicMock()
 
-    def handler(**kwargs):
-        func(**kwargs)
+    def handler(context_, **kwargs):
+        func(context_, **kwargs)
 
     class Op2:
         consumes = ["application/json"]
 
         def get_arguments(self, *args, **kwargs):
-            return {"p1": "123", "context_": {"user": "456"}}
+            return {"p1": "123"}
 
     parameter_to_arg(Op2(), handler)(request)
-    func.assert_called_with(p1="123", context_={"user": "456"})
+    func.assert_called_with(request.context, p1="123")
 
 
 def test_pythonic_params():
