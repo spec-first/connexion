@@ -87,8 +87,8 @@ def get_bye_secure_from_flask():
     return "Goodbye {user} (Secure!)".format(user=context["user"])
 
 
-def get_bye_secure_from_connexion(req_context):
-    return "Goodbye {user} (Secure!)".format(user=req_context["user"])
+def get_bye_secure_from_connexion(context_):
+    return "Goodbye {user} (Secure!)".format(user=context_["user"])
 
 
 def get_bye_secure_ignoring_context(name):
