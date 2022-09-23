@@ -147,7 +147,7 @@ class JSONResponseBodyValidator:
             await self._send(self._messages.pop(0))
 
 
-class TextResonseBodyValidator(JSONResponseBodyValidator):
+class TextResponseBodyValidator(JSONResponseBodyValidator):
     @staticmethod
     def parse(body: str) -> str:  # type: ignore
         try:
@@ -161,6 +161,6 @@ VALIDATOR_MAP = {
     "body": {"application/json": JSONRequestBodyValidator},
     "response": {
         "application/json": JSONResponseBodyValidator,
-        "text/plain": TextResonseBodyValidator,
+        "text/plain": TextResponseBodyValidator,
     },
 }
