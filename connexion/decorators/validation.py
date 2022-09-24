@@ -6,16 +6,12 @@ import collections
 import copy
 import functools
 import logging
-import typing as t
 
 from jsonschema import Draft4Validator, ValidationError, draft4_format_checker
 from jsonschema.validators import extend
 from werkzeug.datastructures import FileStorage
 
 from ..exceptions import BadRequestProblem, ExtraParameterProblem
-from ..http_facts import FORM_CONTENT_TYPES
-from ..json_schema import Draft4RequestValidator
-from ..lifecycle import ConnexionResponse
 from ..utils import boolean, is_null, is_nullable
 
 logger = logging.getLogger("connexion.decorators.validation")
@@ -94,106 +90,6 @@ def validate_parameter_list(request_params, spec_params):
     spec_params = set(spec_params)
 
     return request_params.difference(spec_params)
-
-
-class RequestBodyValidator:
-    def __init__(
-        self,
-        schema,
-        consumes,
-        api,
-        is_null_value_valid=False,
-        validator=None,
-        strict_validation=False,
-    ):
-        """
-        :param schema: The schema of the request body
-        :param consumes: The list of content types the operation consumes
-        :param is_null_value_valid: Flag to indicate if null is accepted as valid value.
-        :param validator: Validator class that should be used to validate passed data
-                          against API schema. Default is jsonschema.Draft4Validator.
-        :type validator: jsonschema.IValidator
-        :param strict_validation: Flag indicating if parameters not in spec are allowed
-        """
-        self.consumes = consumes
-        self.schema = schema
-        self.has_default = schema.get("default", False)
-        self.is_null_value_valid = is_null_value_valid
-        validatorClass = validator or Draft4RequestValidator
-        self.validator = validatorClass(schema, format_checker=draft4_format_checker)
-        self.api = api
-        self.strict_validation = strict_validation
-
-    def validate_formdata_parameter_list(self, request):
-        request_params = request.form.keys()
-        spec_params = self.schema.get("properties", {}).keys()
-        return validate_parameter_list(request_params, spec_params)
-
-    def __call__(self, function):
-        """
-        :type function: types.FunctionType
-        :rtype: types.FunctionType
-        """
-
-        @functools.wraps(function)
-        def wrapper(request):
-            if self.consumes[0] in FORM_CONTENT_TYPES:
-                data = dict(request.form.items()) or (
-                    request.body if len(request.body) > 0 else {}
-                )
-                data.update(
-                    dict.fromkeys(request.files, "")
-                )  # validator expects string..
-                logger.debug("%s validating schema...", request.url)
-
-                if self.strict_validation:
-                    formdata_errors = self.validate_formdata_parameter_list(request)
-                    if formdata_errors:
-                        raise ExtraParameterProblem(formdata_errors, [])
-
-                if data:
-                    props = self.schema.get("properties", {})
-                    errs = []
-                    for k, param_defn in props.items():
-                        if k in data:
-                            try:
-                                data[k] = coerce_type(
-                                    param_defn, data[k], "requestBody", k
-                                )
-                            except TypeValidationError as e:
-                                errs += [str(e)]
-                                print(errs)
-                    if errs:
-                        raise BadRequestProblem(detail=errs)
-
-                self.validate_schema(data, request.url)
-
-            response = function(request)
-            return response
-
-        return wrapper
-
-    @classmethod
-    def _error_path_message(cls, exception):
-        error_path = ".".join(str(item) for item in exception.path)
-        error_path_msg = f" - '{error_path}'" if error_path else ""
-        return error_path_msg
-
-    def validate_schema(self, data: dict, url: str) -> t.Optional[ConnexionResponse]:
-        if self.is_null_value_valid and is_null(data):
-            return None
-
-        try:
-            self.validator.validate(data)
-        except ValidationError as exception:
-            error_path_msg = self._error_path_message(exception=exception)
-            logger.error(
-                f"{str(url)} validation error: {exception.message}{error_path_msg}",
-                extra={"validator": "body"},
-            )
-            raise BadRequestProblem(detail=f"{exception.message}{error_path_msg}")
-
-        return None
 
 
 class ParameterValidator:

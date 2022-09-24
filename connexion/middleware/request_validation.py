@@ -89,8 +89,9 @@ class RequestValidationOperation:
                 schema=self._operation.body_schema,
                 nullable=utils.is_nullable(self._operation.body_definition),
                 encoding=encoding,
+                strict_validation=self.strict_validation,
             )
-            receive_fn = validator.receive
+            receive_fn = await validator.wrapped_receive()
 
         await self.next_app(scope, receive_fn, send)
 
