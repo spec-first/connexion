@@ -29,7 +29,7 @@ class RequestValidationOperation:
         self.next_app = next_app
         self._operation = operation
         self.strict_validation = strict_validation
-        self._validator_map = VALIDATOR_MAP
+        self._validator_map = VALIDATOR_MAP.copy()
         self._validator_map.update(validator_map or {})
         self.uri_parser_class = uri_parser_class
 
@@ -89,8 +89,9 @@ class RequestValidationOperation:
                 schema=self._operation.body_schema,
                 nullable=utils.is_nullable(self._operation.body_definition),
                 encoding=encoding,
+                strict_validation=self.strict_validation,
             )
-            receive_fn = validator.receive
+            receive_fn = await validator.wrapped_receive()
 
         await self.next_app(scope, receive_fn, send)
 
