@@ -29,7 +29,7 @@ class RequestValidationOperation:
         self.next_app = next_app
         self._operation = operation
         self.strict_validation = strict_validation
-        self._validator_map = VALIDATOR_MAP
+        self._validator_map = VALIDATOR_MAP.copy()
         self._validator_map.update(validator_map or {})
         self.uri_parser_class = uri_parser_class
 
