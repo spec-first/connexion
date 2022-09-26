@@ -39,7 +39,7 @@ class ExceptionMiddleware(StarletteExceptionMiddleware):
 
     def http_exception(self, request: Request, exc: HTTPException) -> Response:
         try:
-            headers = exc.headers
+            headers = exc.headers  # type: ignore
         except AttributeError:
             # Starlette < 0.19
             headers = {}

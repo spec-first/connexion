@@ -21,56 +21,6 @@ logger = logging.getLogger("connexion.middleware.swagger_ui")
 _original_scope: ContextVar[Scope] = ContextVar("SCOPE")
 
 
-class SwaggerUIMiddleware(AppMiddleware):
-    def __init__(self, app: ASGIApp) -> None:
-        """Middleware that hosts a swagger UI.
-
-        :param app: app to wrap in middleware.
-        """
-        self.app = app
-        # Set default to pass unknown routes to next app
-        self.router = Router(default=self.default_fn)
-
-    def add_api(
-        self,
-        specification: t.Union[pathlib.Path, str, dict],
-        base_path: t.Optional[str] = None,
-        arguments: t.Optional[dict] = None,
-        **kwargs
-    ) -> None:
-        """Add an API to the router based on a OpenAPI spec.
-
-        :param specification: OpenAPI spec as dict or path to file.
-        :param base_path: Base path where to add this API.
-        :param arguments: Jinja arguments to replace in the spec.
-        """
-        api = SwaggerUIAPI(
-            specification,
-            base_path=base_path,
-            arguments=arguments,
-            default=self.default_fn,
-            **kwargs
-        )
-        self.router.mount(api.base_path, app=api.router)
-
-    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        _original_scope.set(scope.copy())  # type: ignore
-        await self.router(scope, receive, send)
-
-    async def default_fn(self, _scope: Scope, receive: Receive, send: Send) -> None:
-        """
-        Callback to call next app as default when no matching route is found.
-
-        Unfortunately we cannot just pass the next app as default, since the router manipulates
-        the scope when descending into mounts, losing information about the base path. Therefore,
-        we use the original scope instead.
-
-        This is caused by https://github.com/encode/starlette/issues/1336.
-        """
-        original_scope = _original_scope.get()
-        await self.app(original_scope, receive, send)
-
-
 class SwaggerUIAPI(AbstractSpecAPI):
     def __init__(self, *args, default: ASGIApp, **kwargs):
         super().__init__(*args, **kwargs)
@@ -213,3 +163,53 @@ class SwaggerUIAPI(AbstractSpecAPI):
             media_type="application/json",
             content=self.jsonifier.dumps(self.options.openapi_console_ui_config),
         )
+
+
+class SwaggerUIMiddleware(AppMiddleware):
+    def __init__(self, app: ASGIApp) -> None:
+        """Middleware that hosts a swagger UI.
+
+        :param app: app to wrap in middleware.
+        """
+        self.app = app
+        # Set default to pass unknown routes to next app
+        self.router = Router(default=self.default_fn)
+
+    def add_api(
+        self,
+        specification: t.Union[pathlib.Path, str, dict],
+        base_path: t.Optional[str] = None,
+        arguments: t.Optional[dict] = None,
+        **kwargs
+    ) -> None:
+        """Add an API to the router based on a OpenAPI spec.
+
+        :param specification: OpenAPI spec as dict or path to file.
+        :param base_path: Base path where to add this API.
+        :param arguments: Jinja arguments to replace in the spec.
+        """
+        api = SwaggerUIAPI(
+            specification,
+            base_path=base_path,
+            arguments=arguments,
+            default=self.default_fn,
+            **kwargs
+        )
+        self.router.mount(api.base_path, app=api.router)
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        _original_scope.set(scope.copy())  # type: ignore
+        await self.router(scope, receive, send)
+
+    async def default_fn(self, _scope: Scope, receive: Receive, send: Send) -> None:
+        """
+        Callback to call next app as default when no matching route is found.
+
+        Unfortunately we cannot just pass the next app as default, since the router manipulates
+        the scope when descending into mounts, losing information about the base path. Therefore,
+        we use the original scope instead.
+
+        This is caused by https://github.com/encode/starlette/issues/1336.
+        """
+        original_scope = _original_scope.get()
+        await self.app(original_scope, receive, send)
