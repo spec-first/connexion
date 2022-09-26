@@ -93,11 +93,8 @@ class RoutedMiddleware(AppMiddleware, t.Generic[API]):
     operation_id lookup.
     """
 
-    @property
-    @abc.abstractmethod
-    def api_cls(self) -> t.Type[API]:
-        """The subclass of RoutedAPI this middleware uses."""
-        raise NotImplementedError
+    api_cls: t.Type[API]
+    """The subclass of RoutedAPI this middleware uses."""
 
     def __init__(self, app: ASGIApp) -> None:
         self.app = app
@@ -130,10 +127,7 @@ class RoutedMiddleware(AppMiddleware, t.Generic[API]):
                 operation = api.operations[operation_id]
             except KeyError as e:
                 if operation_id is None:
-                    logger.debug(
-                        f"Skipping {self.__class__.__name__} check for operation without "
-                        f"id."
-                    )
+                    logger.debug("Skipping validation check for operation without id.")
                     await self.app(scope, receive, send)
                     return
                 else:

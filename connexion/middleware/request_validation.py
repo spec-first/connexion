@@ -133,6 +133,8 @@ class RequestValidationAPI(RoutedAPI[RequestValidationOperation]):
 class RequestValidationMiddleware(RoutedMiddleware[RequestValidationAPI]):
     """Middleware for validating requests according to the API contract."""
 
-    @property
-    def api_cls(self) -> t.Type[RequestValidationAPI]:
-        return RequestValidationAPI
+    api_cls = RequestValidationAPI
+
+
+class MissingValidationOperation(Exception):
+    """Missing validation operation"""

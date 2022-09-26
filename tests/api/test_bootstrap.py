@@ -361,3 +361,9 @@ def test_using_all_fields_in_path_item(simple_api_spec_dir):
             continue
         test_methods.update({method.lower() for method in rule.methods})
     assert set(test_methods) == METHODS
+
+
+def test_async_route(simple_app):
+    app_client = simple_app.app.test_client()
+    resp = app_client.get("/v1.0/async-route")
+    assert resp.status_code == 200

@@ -4,6 +4,7 @@ from collections import defaultdict
 
 from starlette.types import ASGIApp, Receive, Scope, Send
 
+from connexion.exceptions import ProblemException
 from connexion.lifecycle import MiddlewareRequest
 from connexion.middleware.abstract import RoutedAPI, RoutedMiddleware
 from connexion.operations import AbstractOperation
@@ -210,7 +211,7 @@ class SecurityAPI(RoutedAPI[SecurityOperation]):
     def __init__(self, *args, auth_all_paths: bool = False, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.security_handler_factory = SecurityHandlerFactory("context")
+        self.security_handler_factory = SecurityHandlerFactory()
 
         if auth_all_paths:
             self.add_auth_on_not_found()
@@ -235,6 +236,8 @@ class SecurityAPI(RoutedAPI[SecurityOperation]):
 class SecurityMiddleware(RoutedMiddleware[SecurityAPI]):
     """Middleware to check if operation is accessible on scope."""
 
-    @property
-    def api_cls(self) -> t.Type[SecurityAPI]:
-        return SecurityAPI
+    api_cls = SecurityAPI
+
+
+class MissingSecurityOperation(ProblemException):
+    pass

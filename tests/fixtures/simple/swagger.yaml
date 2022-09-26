@@ -1046,6 +1046,13 @@ paths:
           schema:
             type: file
 
+  /async-route:
+    get:
+      operationId: fakeapi.hello.async_route
+      responses:
+        200:
+          description: 'OK'
+
 definitions:
   new_stack:
     type: object

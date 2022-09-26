@@ -153,6 +153,4 @@ class ResponseValidationAPI(RoutedAPI[ResponseValidationOperation]):
 class ResponseValidationMiddleware(RoutedMiddleware[ResponseValidationAPI]):
     """Middleware for validating requests according to the API contract."""
 
-    @property
-    def api_cls(self) -> t.Type[ResponseValidationAPI]:
-        return ResponseValidationAPI
+    api_cls = ResponseValidationAPI
