@@ -93,11 +93,8 @@ class RoutedMiddleware(AppMiddleware, t.Generic[API]):
     operation_id lookup.
     """
 
-    @property
-    @abc.abstractmethod
-    def api_cls(self) -> t.Type[API]:
-        """The subclass of RoutedAPI this middleware uses."""
-        raise NotImplementedError
+    api_cls: t.Type[API]
+    """The subclass of RoutedAPI this middleware uses."""
 
     def __init__(self, app: ASGIApp) -> None:
         self.app = app

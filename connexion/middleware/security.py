@@ -236,9 +236,7 @@ class SecurityAPI(RoutedAPI[SecurityOperation]):
 class SecurityMiddleware(RoutedMiddleware[SecurityAPI]):
     """Middleware to check if operation is accessible on scope."""
 
-    @property
-    def api_cls(self) -> t.Type[SecurityAPI]:
-        return SecurityAPI
+    api_cls = SecurityAPI
 
 
 class MissingSecurityOperation(ProblemException):
