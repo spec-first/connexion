@@ -75,7 +75,7 @@ class ResponseValidationOperation:
         if missing_keys:
             pretty_list = ", ".join(missing_keys)
             msg = (
-                "Keys in header don't match response specification. " "Difference: {}"
+                "Keys in header don't match response specification. Difference: {}"
             ).format(pretty_list)
             raise NonConformingResponseHeaders(message=msg)
 
