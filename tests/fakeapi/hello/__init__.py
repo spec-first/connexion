@@ -647,3 +647,7 @@ def nullable_default(test):
 
 def get_streaming_response():
     return send_file(__file__)
+
+
+async def async_route():
+    return {}, 200
