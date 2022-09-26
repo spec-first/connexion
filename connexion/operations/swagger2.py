@@ -45,7 +45,6 @@ class Swagger2Operation(AbstractOperation):
         validator_map=None,
         pythonic_params=False,
         uri_parser_class=None,
-        pass_context_arg_name=None,
     ):
         """
         :param api: api that this operation is attached to
@@ -85,9 +84,6 @@ class Swagger2Operation(AbstractOperation):
         :type pythonic_params: bool
         :param uri_parser_class: class to use for uri parsing
         :type uri_parser_class: AbstractURIParser
-        :param pass_context_arg_name: If not None will try to inject the request context to the function using this
-            name.
-        :type pass_context_arg_name: str|None
         """
         uri_parser_class = uri_parser_class or Swagger2URIParser
 
@@ -107,7 +103,6 @@ class Swagger2Operation(AbstractOperation):
             validator_map=validator_map,
             pythonic_params=pythonic_params,
             uri_parser_class=uri_parser_class,
-            pass_context_arg_name=pass_context_arg_name,
         )
 
         self._produces = operation.get("produces", app_produces)

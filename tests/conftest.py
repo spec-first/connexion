@@ -106,7 +106,7 @@ def oauth_requests(monkeypatch):
 
 @pytest.fixture
 def security_handler_factory():
-    security_handler_factory = SecurityHandlerFactory(None)
+    security_handler_factory = SecurityHandlerFactory()
     yield security_handler_factory
 
 
@@ -249,7 +249,6 @@ def secure_endpoint_app(request):
         "secure_endpoint",
         request.param,
         validate_responses=True,
-        pass_context_arg_name="req_context",
     )
 
 

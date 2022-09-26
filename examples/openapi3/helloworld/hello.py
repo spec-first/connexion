@@ -3,7 +3,12 @@
 import connexion
 
 
-def post_greeting(name: str) -> str:
+async def test():
+    pass
+
+
+async def post_greeting(name: str) -> str:
+    await test()
     return f"Hello {name}"
 
 

@@ -34,7 +34,7 @@ install_requires = [
 swagger_ui_require = 'swagger-ui-bundle>=0.0.2,<0.1'
 
 flask_require = [
-    'flask>=2.2,<3',
+    'flask[async]>=2.2,<3',
     'a2wsgi>=1.4,<2',
 ]
 

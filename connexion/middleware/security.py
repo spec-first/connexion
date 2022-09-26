@@ -211,7 +211,7 @@ class SecurityAPI(RoutedAPI[SecurityOperation]):
     def __init__(self, *args, auth_all_paths: bool = False, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.security_handler_factory = SecurityHandlerFactory("context")
+        self.security_handler_factory = SecurityHandlerFactory()
 
         if auth_all_paths:
             self.add_auth_on_not_found()

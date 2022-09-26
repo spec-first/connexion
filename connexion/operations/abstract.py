@@ -58,7 +58,6 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         validator_map=None,
         pythonic_params=False,
         uri_parser_class=None,
-        pass_context_arg_name=None,
     ):
         """
         :param api: api that this operation is attached to
@@ -88,9 +87,6 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         :type pythonic_params: bool
         :param uri_parser_class: class to use for uri parsing
         :type uri_parser_class: AbstractURIParser
-        :param pass_context_arg_name: If not None will try to inject the request context to the function using this
-            name.
-        :type pass_context_arg_name: str|None
         """
         self._api = api
         self._method = method
@@ -103,10 +99,9 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         self._strict_validation = strict_validation
         self._pythonic_params = pythonic_params
         self._uri_parser_class = uri_parser_class
-        self._pass_context_arg_name = pass_context_arg_name
         self._randomize_endpoint = randomize_endpoint
-
         self._operation_id = self._operation.get("operationId")
+
         self._resolution = resolver.resolve(self)
         self._operation_id = self._resolution.operation_id
 
@@ -392,7 +387,6 @@ class AbstractOperation(metaclass=abc.ABCMeta):
             self,
             self._resolution.function,
             self.pythonic_params,
-            self._pass_context_arg_name,
         )
 
         if self.validate_responses:
