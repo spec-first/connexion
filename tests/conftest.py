@@ -42,6 +42,11 @@ def json_validation_spec_dir():
     return FIXTURES_FOLDER / "json_validation"
 
 
+@pytest.fixture
+def multiple_yaml_same_basepath_dir():
+    return FIXTURES_FOLDER / "multiple_yaml_same_basepath"
+
+
 @pytest.fixture(scope="session")
 def json_datetime_dir():
     return FIXTURES_FOLDER / "datetime_support"
