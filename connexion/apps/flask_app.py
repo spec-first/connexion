@@ -4,7 +4,8 @@ This module defines a FlaskApp, a Connexion application to wrap a Flask applicat
 
 import logging
 import pathlib
-from types import FunctionType  # NOQA
+from types import FunctionType
+from typing import Optional  # NOQA
 
 import a2wsgi
 import flask
@@ -87,9 +88,16 @@ class FlaskApp(AbstractApp):
 
         return FlaskApi.get_response(response)
 
-    def add_api(self, specification, **kwargs):
+    def add_api(self, specification, name=None, **kwargs):
         api = super().add_api(specification, **kwargs)
-        self.app.register_blueprint(api.blueprint)
+
+        # if name is available, it will use the name passed,
+        # otherwise it will as name the base path, which is the default behaviour
+        if name:
+            self.app.register_blueprint(api.blueprint, name=name)
+        else:
+            self.app.register_blueprint(api.blueprint)
+
         if isinstance(specification, (str, pathlib.Path)):
             self.extra_files.append(self.specification_dir / specification)
         return api
