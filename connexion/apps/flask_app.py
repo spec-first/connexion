@@ -4,8 +4,7 @@ This module defines a FlaskApp, a Connexion application to wrap a Flask applicat
 
 import logging
 import pathlib
-from types import FunctionType
-from typing import Optional  # NOQA
+from types import FunctionType  # NOQA
 
 import a2wsgi
 import flask
