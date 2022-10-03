@@ -90,6 +90,7 @@ class RequestValidationOperation:
                 nullable=utils.is_nullable(self._operation.body_definition),
                 encoding=encoding,
                 strict_validation=self.strict_validation,
+                uri_parser=self._operation._uri_parsing_decorator,
             )
             receive_fn = await validator.wrapped_receive()
 

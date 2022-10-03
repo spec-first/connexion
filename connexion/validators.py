@@ -6,7 +6,7 @@ import logging
 import typing as t
 
 from jsonschema import Draft4Validator, ValidationError, draft4_format_checker
-from starlette.datastructures import FormData, Headers
+from starlette.datastructures import FormData, Headers, UploadFile
 from starlette.formparsers import FormParser, MultiPartParser
 from starlette.types import Receive, Scope, Send
 
@@ -22,6 +22,7 @@ from connexion.exceptions import (
 )
 from connexion.json_schema import Draft4RequestValidator, Draft4ResponseValidator
 from connexion.utils import is_null
+from connexion.decorators.uri_parsing import AbstractURIParser
 
 logger = logging.getLogger("connexion.middleware.validators")
 
@@ -180,6 +181,7 @@ class FormDataValidator:
         *,
         schema: dict,
         validator: t.Type[Draft4Validator] = None,
+        uri_parser: t.Optional[AbstractURIParser] = None,
         nullable=False,
         encoding: str,
         strict_validation: bool,
@@ -191,6 +193,7 @@ class FormDataValidator:
         self.nullable = nullable
         validator_cls = validator or Draft4RequestValidator
         self.validator = validator_cls(schema, format_checker=draft4_format_checker)
+        self.uri_parser = uri_parser
         self.encoding = encoding
         self._messages: t.List[t.MutableMapping[str, t.Any]] = []
         self.headers = Headers(scope=scope)
@@ -237,7 +240,20 @@ class FormDataValidator:
         if data:
             props = self.schema.get("properties", {})
             errs = []
-            data = dict(data)  # TODO: preserve multi-item?
+            if self.uri_parser is not None:
+                # TODO: Make more efficient
+                # Flask splits up file uploads and text input in `files` and `form`,
+                # while starlette puts them both in `form`
+                form_keys = {k for k, v in data.items() if isinstance(v, str)}
+                file_data = {k: v for k, v in data.items() if isinstance(v, UploadFile)}
+                data: t.Dict[str, t.List[str]] = {
+                    k: data.getlist(k) for k in form_keys
+                }
+                data = self.uri_parser.resolve_form(data)
+                # Add the files again
+                data.update(file_data)
+            else:
+                data = dict(data)  # TODO: preserve multi-item?
             for k, param_defn in props.items():
                 if k in data:
                     if param_defn.get("format", "") == "binary":
