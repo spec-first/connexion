@@ -14,7 +14,7 @@ from werkzeug.datastructures import FileStorage
 
 from ..exceptions import BadRequestProblem, ExtraParameterProblem
 from ..http_facts import FORM_CONTENT_TYPES
-from ..json_schema import Draft4RequestValidator, Draft4ResponseValidator
+from ..json_schema import Draft4RequestValidator
 from ..lifecycle import ConnexionResponse
 from ..utils import boolean, is_null, is_nullable
 
@@ -192,29 +192,6 @@ class RequestBodyValidator:
                 extra={"validator": "body"},
             )
             raise BadRequestProblem(detail=f"{exception.message}{error_path_msg}")
-
-        return None
-
-
-class ResponseBodyValidator:
-    def __init__(self, schema, validator=None):
-        """
-        :param schema: The schema of the response body
-        :param validator: Validator class that should be used to validate passed data
-                          against API schema. Default is Draft4ResponseValidator.
-        :type validator: jsonschema.IValidator
-        """
-        ValidatorClass = validator or Draft4ResponseValidator
-        self.validator = ValidatorClass(schema, format_checker=draft4_format_checker)
-
-    def validate_schema(self, data: dict, url: str) -> t.Optional[ConnexionResponse]:
-        try:
-            self.validator.validate(data)
-        except ValidationError as exception:
-            logger.error(
-                f"{url} validation error: {exception}", extra={"validator": "response"}
-            )
-            raise exception
 
         return None
 

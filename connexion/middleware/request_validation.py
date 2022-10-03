@@ -6,71 +6,51 @@ import typing as t
 
 from starlette.types import ASGIApp, Receive, Scope, Send
 
+from connexion import utils
 from connexion.decorators.uri_parsing import AbstractURIParser
 from connexion.exceptions import UnsupportedMediaTypeProblem
 from connexion.middleware.abstract import RoutedAPI, RoutedMiddleware
 from connexion.operations import AbstractOperation
-from connexion.utils import is_nullable
-from connexion.validators import JSONBodyValidator
-
-from ..decorators.response import ResponseValidator
-from ..decorators.validation import ParameterValidator
+from connexion.validators import VALIDATOR_MAP
 
 logger = logging.getLogger("connexion.middleware.validation")
 
-VALIDATOR_MAP = {
-    "parameter": ParameterValidator,
-    "body": {"application/json": JSONBodyValidator},
-    "response": ResponseValidator,
-}
 
-
-class ValidationOperation:
+class RequestValidationOperation:
     def __init__(
         self,
         next_app: ASGIApp,
         *,
         operation: AbstractOperation,
-        validate_responses: bool = False,
         strict_validation: bool = False,
         validator_map: t.Optional[dict] = None,
         uri_parser_class: t.Optional[AbstractURIParser] = None,
     ) -> None:
         self.next_app = next_app
         self._operation = operation
-        self.validate_responses = validate_responses
         self.strict_validation = strict_validation
         self._validator_map = VALIDATOR_MAP
         self._validator_map.update(validator_map or {})
         self.uri_parser_class = uri_parser_class
 
-    def extract_content_type(self, headers: dict) -> t.Tuple[str, str]:
+    def extract_content_type(
+        self, headers: t.List[t.Tuple[bytes, bytes]]
+    ) -> t.Tuple[str, str]:
         """Extract the mime type and encoding from the content type headers.
 
-        :param headers: Header dict from ASGI scope
+        :param headers: Headers from ASGI scope
 
         :return: A tuple of mime type, encoding
         """
-        encoding = "utf-8"
-        for key, value in headers:
-            # Headers can always be decoded using latin-1:
-            # https://stackoverflow.com/a/27357138/4098821
-            key = key.decode("latin-1")
-            if key.lower() == "content-type":
-                content_type = value.decode("latin-1")
-                if ";" in content_type:
-                    mime_type, parameters = content_type.split(";", maxsplit=1)
-
-                    prefix = "charset="
-                    for parameter in parameters.split(";"):
-                        if parameter.startswith(prefix):
-                            encoding = parameter[len(prefix) :]
-                else:
-                    mime_type = content_type
-                break
-        else:
+        mime_type, encoding = utils.extract_content_type(headers)
+        if mime_type is None:
             # Content-type header is not required. Take a best guess.
-            mime_type = self._operation.consumes[0]
+            try:
+                mime_type = self._operation.consumes[0]
+            except IndexError:
+                mime_type = "application/octet-stream"
+        if encoding is None:
+            encoding = "utf-8"
 
         return mime_type, encoding
 
@@ -86,6 +66,8 @@ class ValidationOperation:
             )
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send):
+        receive_fn = receive
+
         headers = scope["headers"]
         mime_type, encoding = self.extract_content_type(headers)
         self.validate_mime_type(mime_type)
@@ -102,25 +84,25 @@ class ValidationOperation:
             )
         else:
             validator = body_validator(
-                self.next_app,
+                scope,
+                receive,
                 schema=self._operation.body_schema,
-                nullable=is_nullable(self._operation.body_definition),
+                nullable=utils.is_nullable(self._operation.body_definition),
                 encoding=encoding,
             )
-            return await validator(scope, receive, send)
+            receive_fn = validator.receive
 
-        await self.next_app(scope, receive, send)
+        await self.next_app(scope, receive_fn, send)
 
 
-class ValidationAPI(RoutedAPI[ValidationOperation]):
+class RequestValidationAPI(RoutedAPI[RequestValidationOperation]):
     """Validation API."""
 
-    operation_cls = ValidationOperation
+    operation_cls = RequestValidationOperation
 
     def __init__(
         self,
         *args,
-        validate_responses=False,
         strict_validation=False,
         validator_map=None,
         uri_parser_class=None,
@@ -129,9 +111,6 @@ class ValidationAPI(RoutedAPI[ValidationOperation]):
         super().__init__(*args, **kwargs)
         self.validator_map = validator_map
 
-        logger.debug("Validate Responses: %s", str(validate_responses))
-        self.validate_responses = validate_responses
-
         logger.debug("Strict Request Validation: %s", str(strict_validation))
         self.strict_validation = strict_validation
 
@@ -139,21 +118,22 @@ class ValidationAPI(RoutedAPI[ValidationOperation]):
 
         self.add_paths()
 
-    def make_operation(self, operation: AbstractOperation) -> ValidationOperation:
-        return ValidationOperation(
+    def make_operation(
+        self, operation: AbstractOperation
+    ) -> RequestValidationOperation:
+        return RequestValidationOperation(
             self.next_app,
             operation=operation,
-            validate_responses=self.validate_responses,
             strict_validation=self.strict_validation,
             validator_map=self.validator_map,
             uri_parser_class=self.uri_parser_class,
         )
 
 
-class ValidationMiddleware(RoutedMiddleware[ValidationAPI]):
+class RequestValidationMiddleware(RoutedMiddleware[RequestValidationAPI]):
     """Middleware for validating requests according to the API contract."""
 
-    api_cls = ValidationAPI
+    api_cls = RequestValidationAPI
 
 
 class MissingValidationOperation(Exception):

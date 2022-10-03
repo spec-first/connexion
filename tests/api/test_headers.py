@@ -34,7 +34,7 @@ def test_header_not_returned(simple_openapi_app):
     assert data["title"] == "Response headers do not conform to specification"
     assert (
         data["detail"]
-        == "Keys in header don't match response specification. Difference: Location"
+        == "Keys in header don't match response specification. Difference: location"
     )
     assert data["status"] == 500
 

@@ -9,7 +9,6 @@ import logging
 from ..decorators.decorator import RequestResponseDecorator
 from ..decorators.parameter import parameter_to_arg
 from ..decorators.produces import BaseSerializer, Produces
-from ..decorators.response import ResponseValidator
 from ..decorators.validation import ParameterValidator, RequestBodyValidator
 from ..utils import all_json, is_nullable
 
@@ -20,7 +19,6 @@ DEFAULT_MIMETYPE = "application/json"
 VALIDATOR_MAP = {
     "parameter": ParameterValidator,
     "body": RequestBodyValidator,
-    "response": ResponseValidator,
 }
 
 
@@ -389,12 +387,6 @@ class AbstractOperation(metaclass=abc.ABCMeta):
             self.pythonic_params,
         )
 
-        if self.validate_responses:
-            logger.debug("... Response validation enabled.")
-            response_decorator = self.__response_validation_decorator
-            logger.debug("... Adding response decorator (%r)", response_decorator)
-            function = response_decorator(function)
-
         produces_decorator = self.__content_type_decorator
         logger.debug("... Adding produces decorator (%r)", produces_decorator)
         function = produces_decorator(function)
@@ -472,15 +464,6 @@ class AbstractOperation(metaclass=abc.ABCMeta):
                 is_nullable(self.body_definition),
                 strict_validation=self.strict_validation,
             )
-
-    @property
-    def __response_validation_decorator(self):
-        """
-        Get a decorator for validating the generated Response.
-        :rtype: types.FunctionType
-        """
-        ResponseValidator = self.validator_map["response"]
-        return ResponseValidator(self, self.get_mimetype())
 
     def json_loads(self, data):
         """
