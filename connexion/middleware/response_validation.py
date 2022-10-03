@@ -110,7 +110,9 @@ class ResponseValidationOperation:
                         scope,
                         send,
                         schema=self._operation.response_schema(status, mime_type),
-                        nullable=utils.is_nullable(self._operation.body_definition),
+                        nullable=utils.is_nullable(
+                            self._operation.response_definition(status, mime_type)
+                        ),
                         encoding=encoding,
                     )
                     send_fn = validator.send
