@@ -414,7 +414,7 @@ def test_operation(api, security_handler_factory):
 
     expected_body_schema = op_spec["parameters"][0]["schema"]
     expected_body_schema.update({"definitions": DEFINITIONS})
-    assert operation.body_schema == expected_body_schema
+    assert operation.body_schema() == expected_body_schema
 
 
 def test_operation_remote_token_info(security_handler_factory):
@@ -463,7 +463,7 @@ def test_operation_array(api):
         "items": DEFINITIONS["new_stack"],
         "definitions": DEFINITIONS,
     }
-    assert operation.body_schema == expected_body_schema
+    assert operation.body_schema() == expected_body_schema
 
 
 def test_operation_composed_definition(api):
@@ -487,7 +487,7 @@ def test_operation_composed_definition(api):
 
     expected_body_schema = op_spec["parameters"][0]["schema"]
     expected_body_schema.update({"definitions": DEFINITIONS})
-    assert operation.body_schema == expected_body_schema
+    assert operation.body_schema() == expected_body_schema
 
 
 def test_operation_local_security_oauth2(security_handler_factory):
@@ -536,7 +536,7 @@ def test_multi_body(api):
             definitions=DEFINITIONS,
             resolver=Resolver(),
         )
-        operation.body_schema
+        operation.body_schema()
 
     exception = exc_info.value
     assert str(exception) == "GET endpoint There can be one 'body' parameter at most"

@@ -10,6 +10,7 @@ from starlette.datastructures import FormData, Headers, UploadFile
 from starlette.formparsers import FormParser, MultiPartParser
 from starlette.types import Receive, Scope, Send
 
+from connexion.decorators.uri_parsing import AbstractURIParser
 from connexion.decorators.validation import (
     ParameterValidator,
     TypeValidationError,
@@ -22,7 +23,6 @@ from connexion.exceptions import (
 )
 from connexion.json_schema import Draft4RequestValidator, Draft4ResponseValidator
 from connexion.utils import is_null
-from connexion.decorators.uri_parsing import AbstractURIParser
 
 logger = logging.getLogger("connexion.middleware.validators")
 
@@ -246,9 +246,7 @@ class FormDataValidator:
                 # while starlette puts them both in `form`
                 form_keys = {k for k, v in data.items() if isinstance(v, str)}
                 file_data = {k: v for k, v in data.items() if isinstance(v, UploadFile)}
-                data: t.Dict[str, t.List[str]] = {
-                    k: data.getlist(k) for k in form_keys
-                }
+                data = {k: data.getlist(k) for k in form_keys}
                 data = self.uri_parser.resolve_form(data)
                 # Add the files again
                 data.update(file_data)
@@ -289,8 +287,8 @@ class FormDataValidator:
         form_parser = self.form_parser_cls(self.headers, stream())
         form = await form_parser.parse()
 
-        if form and not (self.nullable and is_null(form)):
-            self.validate(form)
+        if not (self.nullable and is_null(form)):
+            self.validate(form or {})
 
         async def receive() -> t.MutableMapping[str, t.Any]:
             while self._messages:

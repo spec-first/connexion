@@ -8,8 +8,6 @@ import functools
 import logging
 
 from jsonschema import Draft4Validator, ValidationError, draft4_format_checker
-from jsonschema.validators import extend
-from werkzeug.datastructures import FileStorage
 
 from ..exceptions import BadRequestProblem, ExtraParameterProblem
 from ..utils import boolean, is_null, is_nullable
@@ -122,20 +120,9 @@ class ParameterValidator:
             if "required" in param:
                 del param["required"]
             try:
-                if parameter_type == "formdata" and param.get("type") == "file":
-                    extend(
-                        Draft4Validator,
-                        type_checker=Draft4Validator.TYPE_CHECKER.redefine(
-                            "file",
-                            lambda checker, instance: isinstance(instance, FileStorage),
-                        ),
-                    )(param, format_checker=draft4_format_checker).validate(
-                        converted_value
-                    )
-                else:
-                    Draft4Validator(
-                        param, format_checker=draft4_format_checker
-                    ).validate(converted_value)
+                Draft4Validator(param, format_checker=draft4_format_checker).validate(
+                    converted_value
+                )
             except ValidationError as exception:
                 debug_msg = (
                     "Error while converting value {converted_value} from param "
@@ -160,14 +147,6 @@ class ParameterValidator:
         spec_params = [x["name"] for x in self.parameters.get("query", [])]
         return validate_parameter_list(request_params, spec_params)
 
-    def validate_formdata_parameter_list(self, request):
-        request_params = request.form.keys()
-        if "formData" in self.parameters:  # Swagger 2:
-            spec_params = [x["name"] for x in self.parameters["formData"]]
-        else:  # OAS 3
-            return set()
-        return validate_parameter_list(request_params, spec_params)
-
     def validate_query_parameter(self, param, request):
         """
         Validate a single query parameter (request.args in Flask)
@@ -190,14 +169,6 @@ class ParameterValidator:
         val = request.cookies.get(param["name"])
         return self.validate_parameter("cookie", val, param)
 
-    def validate_formdata_parameter(self, param_name, param, request):
-        if param.get("type") == "file" or param.get("format") == "binary":
-            val = request.files.get(param_name)
-        else:
-            val = request.form.get(param_name)
-
-        return self.validate_parameter("formdata", val, param)
-
     def __call__(self, function):
         """
         :type function: types.FunctionType
@@ -210,10 +181,9 @@ class ParameterValidator:
 
             if self.strict_validation:
                 query_errors = self.validate_query_parameter_list(request)
-                formdata_errors = self.validate_formdata_parameter_list(request)
 
-                if formdata_errors or query_errors:
-                    raise ExtraParameterProblem(formdata_errors, query_errors)
+                if query_errors:
+                    raise ExtraParameterProblem([], query_errors)
 
             for param in self.parameters.get("query", []):
                 error = self.validate_query_parameter(param, request)
@@ -232,11 +202,6 @@ class ParameterValidator:
 
             for param in self.parameters.get("cookie", []):
                 error = self.validate_cookie_parameter(param, request)
-                if error:
-                    raise BadRequestProblem(detail=error)
-
-            for param in self.parameters.get("formData", []):
-                error = self.validate_formdata_parameter(param["name"], param, request)
                 if error:
                     raise BadRequestProblem(detail=error)
 
