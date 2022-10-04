@@ -120,10 +120,10 @@ paths:
           schema:
             type: integer
       requestBody:
+        x-body-name: some_other_id
         content:
           application/json:
             schema:
-              x-body-name: some_other_id
               type: object
         description: SomeOtherId parameter
         required: true
@@ -147,10 +147,10 @@ paths:
           schema:
             type: integer
       requestBody:
+        x-body-name: round_
         content:
           application/json:
             schema:
-              x-body-name: round_
               type: object
         description: round parameter
         required: true
@@ -174,10 +174,10 @@ paths:
           schema:
             type: integer
       requestBody:
+        x-body-name: some_other_id
         content:
           application/json:
             schema:
-              x-body-name: some_other_id
               type: object
         description: someOtherId parameter
         required: true
@@ -207,10 +207,10 @@ paths:
           schema:
             type: string
       requestBody:
+        x-body-name: next_
         content:
           application/json:
             schema:
-              x-body-name: next_
               type: object
         description: next parameter
         required: true
