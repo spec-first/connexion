@@ -275,8 +275,6 @@ paths:
         content:
           application/json:
             schema:
-              # should be ignored because the preferred location is at the requestBody level above
-              x-body-name: this_should_be_ignored
               $ref: '#/components/schemas/new_stack'
               default:
                 image_version: default_image
@@ -306,10 +304,10 @@ paths:
         '200':
           description: OK
       requestBody:
+        x-body-name: stack_version
         content:
           application/json:
             schema:
-              x-body-name: stack_version
               type: integer
               format: int32
               example: 1
@@ -322,10 +320,10 @@ paths:
         '200':
           description: OK
       requestBody:
+        x-body-name: stack
         content:
           application/json:
             schema:
-              x-body-name: stack
               type: object
   /resolver-test/method:
     get:
@@ -391,13 +389,13 @@ paths:
     post:
       operationId: fakeapi.hello.test_array_csv_form_param3
       requestBody:
+        x-body-name: items
         content:
           application/x-www-form-urlencoded:
             schema:
               type: object
               default:
                 items: ["squash", "banana"]
-              x-body-name: items
               properties:
                 items:
                   type: array
@@ -415,11 +413,11 @@ paths:
     post:
       operationId: fakeapi.hello.test_array_pipes_form_param3
       requestBody:
+        x-body-name: items
         content:
           application/x-www-form-urlencoded:
             schema:
               type: object
-              x-body-name: items
               properties:
                 items:
                   type: array
@@ -596,10 +594,10 @@ paths:
         '200':
           description: OK
       requestBody:
+        x-body-name: formData
         content:
           multipart/form-data:
             schema:
-              x-body-name: formData
               type: object
               properties:
                 formData:
@@ -835,11 +833,11 @@ paths:
         '200':
           description: OK
       requestBody:
+        x-body-name: contents
         content:
           application/json:
             schema:
               nullable: true
-              x-body-name: contents
               type: object
               properties:
                 name:
@@ -867,11 +865,11 @@ paths:
         '200':
           description: OK
       requestBody:
+        x-body-name: contents
         content:
           application/json:
             schema:
               nullable: true
-              x-body-name: contents
               type: object
               properties:
                 name:
@@ -955,10 +953,10 @@ paths:
         '200':
           description: OK
       requestBody:
+        x-body-name: post_param
         content:
           text/plain:
             schema:
-              x-body-name: post_param
               type: string
         description: Just a testing parameter.
         required: true
