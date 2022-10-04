@@ -264,10 +264,10 @@ class Swagger2Operation(AbstractOperation):
         return body_definition
 
     def _transform_form(self, form_parameters: t.List[dict]) -> dict:
-        """Translate Swagger2 form parameters into OpenAPI 3 jsonschema spec"""
+        """Translate Swagger2 form parameters into OpenAPI 3 jsonschema spec."""
         properties = {}
         required = []
-        collection_formats = set()
+        encoding = {}
 
         for param in form_parameters:
             prop = {}
@@ -282,9 +282,9 @@ class Swagger2Operation(AbstractOperation):
             else:
                 prop["type"] = param["type"]
 
-            format_ = param.get("format")
-            if format_ is not None:
-                prop["format"] = format_
+                format_ = param.get("format")
+                if format_ is not None:
+                    prop["format"] = format_
 
             default = param.get("default")
             if default is not None:
@@ -296,14 +296,24 @@ class Swagger2Operation(AbstractOperation):
 
             if param["type"] == "array":
                 prop["items"] = param.get("items", {})
-                collection_formats.add(param.get("collectionFormat", "csv"))
+
+                collection_format = param.get("collectionFormat", "csv")
+                try:
+                    encoding[param["name"]] = COLLECTION_FORMAT_MAPPING[
+                        collection_format
+                    ]
+                except KeyError:
+                    raise InvalidSpecification(
+                        f"The collection format ({collection_format}) is not supported by "
+                        f"Connexion as it cannot be mapped to OpenAPI 3."
+                    )
 
             properties[param["name"]] = prop
 
             if param.get("required", False):
                 required.append(param["name"])
 
-        definition = {
+        definition: t.Dict[str, t.Any] = {
             "schema": {
                 "type": "object",
                 "properties": properties,
@@ -312,15 +322,8 @@ class Swagger2Operation(AbstractOperation):
             }
         }
 
-        if collection_formats:
-            if len(collection_formats) > 1:
-                raise InvalidSpecification(
-                    f"Spec defines multiple collection formats ({list(collection_formats)}) for "
-                    f"the same operation. This is not supported by Connexion as it cannot be "
-                    f"mapped to OpenAPI 3."
-                )
-
-            definition["encoding"] = COLLECTION_FORMAT_MAPPING[collection_formats.pop()]
+        if encoding:
+            definition["encoding"] = encoding
 
         return definition
 

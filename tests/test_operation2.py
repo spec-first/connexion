@@ -703,3 +703,61 @@ def test_oauth_scopes_in_or(security_handler_factory):
             mock.call(math.ceil, security_handler_factory.validate_scope, ["myscope2"]),
         ]
     )
+
+
+def test_form_transformation(api):
+    mock_self = mock.Mock(strict_validation=True)
+
+    swagger_form_parameters = [
+        {
+            "in": "formData",
+            "name": "param",
+            "type": "string",
+            "default": "foo@bar.com",
+            "required": True,
+            "format": "email",
+        },
+        {
+            "in": "formData",
+            "name": "array_param",
+            "type": "array",
+            "items": {
+                "type": "integer",
+            },
+            "collectionFormat": "multi",
+            "x-nullable": True,
+        },
+    ]
+
+    openapi_expected = {
+        "schema": {
+            "type": "object",
+            "properties": {
+                "param": {
+                    "type": "string",
+                    "default": "foo@bar.com",
+                    "format": "email",
+                },
+                "array_param": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer",
+                    },
+                    "nullable": True,
+                },
+            },
+            "required": ["param"],
+            "additionalProperties": False,
+        },
+        "encoding": {
+            "array_param": {
+                "style": "form",
+                "explode": True,
+            }
+        },
+    }
+
+    assert (
+        Swagger2Operation._transform_form(mock_self, swagger_form_parameters)
+        == openapi_expected
+    )
