@@ -86,8 +86,8 @@ class RequestValidationOperation:
             validator = body_validator(
                 scope,
                 receive,
-                schema=self._operation.body_schema,
-                nullable=utils.is_nullable(self._operation.body_definition),
+                schema=self._operation.body_schema(mime_type),
+                nullable=utils.is_nullable(self._operation.body_definition(mime_type)),
                 encoding=encoding,
                 strict_validation=self.strict_validation,
                 uri_parser=self._operation._uri_parsing_decorator,
