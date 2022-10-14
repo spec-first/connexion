@@ -389,6 +389,10 @@ def test_global_response_definition():
     return ["general", "list"], 200
 
 
+def test_media_range():
+    return "OK"
+
+
 def test_nullable_parameters(time_start):
     if time_start is None:
         return "it was None"

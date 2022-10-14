@@ -264,6 +264,18 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/GeneralList'
+  /media_range:
+    post:
+      description: Test media range
+      operationId: fakeapi.hello.test_media_range
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
 components:
   responses:
     GeneralList:

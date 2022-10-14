@@ -5,6 +5,7 @@ This module defines an OpenAPIOperation class, a Connexion operation specific fo
 import logging
 from copy import copy, deepcopy
 
+from connexion.datastructures import MediaTypeDict
 from connexion.operations.abstract import AbstractOperation
 
 from ..decorators.uri_parsing import OpenAPIURIParser
@@ -274,7 +275,8 @@ class OpenAPIOperation(AbstractOperation):
                     "this operation accepts multiple content types, using %s",
                     content_type,
                 )
-            res = self._request_body.get("content", {}).get(content_type, {})
+            content_type_dict = MediaTypeDict(self._request_body.get("content", {}))
+            res = content_type_dict.get(content_type, {})
             return self.with_definitions(res)
         return {}
 
