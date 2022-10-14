@@ -18,10 +18,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/new_stack'
       requestBody:
+        x-body-name: new_stack
         content:
           application/json:
             schema:
-              x-body-name: new_stack
               $ref: '#/components/schemas/new_stack'
         required: true
   '/test_schema/response/object/{valid}':
@@ -242,10 +242,10 @@ paths:
         '200':
           description: OK
       requestBody:
+        x-body-name: test_int
         content:
           application/json:
             schema:
-              x-body-name: test_int
               type: integer
         required: true
   /schema_array:
@@ -276,10 +276,10 @@ components:
               type: string
   requestBodies:
     fakeapi.hello.schema_listNewStack:
+      x-body-name: test_array
       content:
         application/json:
           schema:
-            x-body-name: test_array
             type: array
             items:
               type: string

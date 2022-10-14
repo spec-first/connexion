@@ -7,7 +7,7 @@ import copy
 import functools
 import logging
 
-from jsonschema import Draft4Validator, ValidationError, draft4_format_checker
+from jsonschema import Draft4Validator, ValidationError
 
 from ..exceptions import BadRequestProblem, ExtraParameterProblem
 from ..utils import boolean, is_null, is_nullable
@@ -15,6 +15,11 @@ from ..utils import boolean, is_null, is_nullable
 logger = logging.getLogger("connexion.decorators.validation")
 
 TYPE_MAP = {"integer": int, "number": float, "boolean": boolean, "object": dict}
+
+try:
+    draft4_format_checker = Draft4Validator.FORMAT_CHECKER  # type: ignore
+except AttributeError:  # jsonschema < 4.5.0
+    from jsonschema import draft4_format_checker
 
 
 class TypeValidationError(Exception):
