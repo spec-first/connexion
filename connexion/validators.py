@@ -69,6 +69,13 @@ class JSONRequestBodyValidator:
             )
             raise BadRequestProblem(detail=f"{exception.message}{error_path_msg}")
 
+    @staticmethod
+    def parse(body: str) -> dict:
+        try:
+            return json.loads(body)
+        except json.decoder.JSONDecodeError as e:
+            raise BadRequestProblem(str(e))
+
     async def wrapped_receive(self) -> Receive:
         more_body = True
         while more_body:
@@ -76,16 +83,11 @@ class JSONRequestBodyValidator:
             self._messages.append(message)
             more_body = message.get("more_body", False)
 
-        # TODO: make json library pluggable
         bytes_body = b"".join([message.get("body", b"") for message in self._messages])
         decoded_body = bytes_body.decode(self.encoding)
 
         if decoded_body and not (self.nullable and is_null(decoded_body)):
-            try:
-                body = json.loads(decoded_body)
-            except json.decoder.JSONDecodeError as e:
-                raise BadRequestProblem(str(e))
-
+            body = self.parse(decoded_body)
             self.validate(body)
 
         async def receive() -> t.MutableMapping[str, t.Any]:
@@ -151,7 +153,6 @@ class JSONResponseBodyValidator:
         if message["type"] == "http.response.start" or message.get("more_body", False):
             return
 
-        # TODO: make json library pluggable
         bytes_body = b"".join([message.get("body", b"") for message in self._messages])
         decoded_body = bytes_body.decode(self.encoding)
 
