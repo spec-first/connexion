@@ -37,7 +37,7 @@ class JSONRequestBodyValidator:
         receive: Receive,
         *,
         schema: dict,
-        validator: t.Type[Draft4Validator] = None,
+        validator: t.Type[Draft4Validator] = Draft4RequestValidator,
         nullable=False,
         encoding: str,
         **kwargs,
@@ -47,8 +47,7 @@ class JSONRequestBodyValidator:
         self.schema = schema
         self.has_default = schema.get("default", False)
         self.nullable = nullable
-        validator_cls = validator or Draft4RequestValidator
-        self.validator = validator_cls(schema, format_checker=draft4_format_checker)
+        self.validator = validator(schema, format_checker=draft4_format_checker)
         self.encoding = encoding
         self._messages: t.List[t.MutableMapping[str, t.Any]] = []
 
@@ -107,7 +106,7 @@ class JSONResponseBodyValidator:
         send: Send,
         *,
         schema: dict,
-        validator: t.Type[Draft4Validator] = None,
+        validator: t.Type[Draft4Validator] = Draft4ResponseValidator,
         nullable=False,
         encoding: str,
     ) -> None:
@@ -116,8 +115,7 @@ class JSONResponseBodyValidator:
         self.schema = schema
         self.has_default = schema.get("default", False)
         self.nullable = nullable
-        validator_cls = validator or Draft4ResponseValidator
-        self.validator = validator_cls(schema, format_checker=draft4_format_checker)
+        self.validator = validator(schema, format_checker=draft4_format_checker)
         self.encoding = encoding
         self._messages: t.List[t.MutableMapping[str, t.Any]] = []
 
