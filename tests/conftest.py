@@ -155,12 +155,18 @@ def build_app_from_fixture(
         debug = kwargs["debug"]
         del kwargs["debug"]
 
+    options = {}
+    if "pattern_routing_enabled" in kwargs:
+        options["pattern_routing_enabled"] = kwargs["pattern_routing_enabled"]
+        del kwargs["pattern_routing_enabled"]
+
     cnx_app = App(
         __name__,
         port=5001,
         specification_dir=FIXTURES_FOLDER / api_spec_folder,
         middlewares=middlewares,
         debug=debug,
+        options=options,
     )
 
     cnx_app.add_api(spec_file, **kwargs)
@@ -171,6 +177,13 @@ def build_app_from_fixture(
 @pytest.fixture(scope="session", params=SPECS)
 def simple_app(request):
     return build_app_from_fixture("simple", request.param, validate_responses=True)
+
+
+@pytest.fixture(scope="session", params=SPECS)
+def simple_pattern_routing_app(request):
+    return build_app_from_fixture(
+        "simple", request.param, validate_responses=True, pattern_routing_enabled=True
+    )
 
 
 @pytest.fixture(scope="session", params=OPENAPI3_SPEC)

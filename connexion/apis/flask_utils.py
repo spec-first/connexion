@@ -44,7 +44,10 @@ def flaskify_endpoint(identifier, randomize=None):
 def convert_path_parameter(match, types):
     name = match.group(1)
     swagger_type = types.get(name)
-    converter = PATH_PARAMETER_CONVERTERS.get(swagger_type)
+    if swagger_type and swagger_type.startswith("regex"):
+        converter = swagger_type
+    else:
+        converter = PATH_PARAMETER_CONVERTERS.get(swagger_type)
     return "<{}{}{}>".format(
         converter or "", ":" if converter else "", name.replace("-", "_")
     )
@@ -63,6 +66,9 @@ def flaskify_path(swagger_path, types=None):
 
     >>> flaskify_path('/foo/{someint}', {'someint': 'int'})
     '/foo/<int:someint>'
+
+    >>> flaskify_path('/foo/{somestring}', {'somestring': 'regex("[0-9a-z]{20}")'})
+    '/foo/<regex("[0-9a-z]{20}"):somestring>'
     """
     if types is None:
         types = {}

@@ -148,6 +148,15 @@ class ConnexionOptions:
         """
         return self._options.get("uri_parser_class", None)
 
+    @property
+    def pattern_routing_enabled(self):
+        # type: () -> bool
+        """
+        Whether the api will route requests using the regex pattern for a path property in the OpenAPI spec.
+        Default: False
+        """
+        return self._options.get("pattern_routing_enabled", False)
+
 
 def filter_values(dictionary):
     # type: (dict) -> dict

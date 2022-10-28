@@ -341,6 +341,67 @@ Specify a route parameter's type as ``integer`` or ``number`` or its type as
 will create an equivalent Flask route ``/greeting/<path:name>``, allowing
 requests to include forward slashes in the ``name`` url variable.
 
+Regex Routing with Path Parameter Patterns
+------------------------------------------
+
+In addition to validating string parameters with the ``pattern`` property, Connexion can also use it to
+route otherwise identical requests paths.
+
+You can enable this behavior in the app or api options.
+
+.. code-block:: python
+
+   options = {'pattern_routing_enabled': True}
+   app = connexion.App(__name__, specification_dir='swagger/', options=options)
+
+This allows routing between otherwise identical paths, for example:
+
+.. code-block:: yaml
+
+  paths:
+    /greeting/{identifier}:
+      # ...
+      parameters:
+        - name: identifier
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '[0-9a-z]{20}'
+    /greeting/{short_name}:
+      # ...
+      parameters:
+        - name: short_name
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '\w*{1,10}'
+    /greeting/{long_name}:
+      # ...
+      parameters:
+        - name: long_name
+          in: path
+          required: true
+          schema:
+            type: string
+
+``/greeting/123abc456def789ghijk`` will route to the first endpoint.
+
+``/greeting/Trillian`` will route to the second endpoint.
+
+``/greeting/Tricia McMillan`` will route the the third endpoint because it has no pattern defined,
+and therefore acts as a catch-all for requests that don't match any defined patterns for the same path.
+
+NOTE: Regex values for the same path must be mutually exclusive. If not, and the regex overlaps,
+the routing behavior will be undefined.
+
+NOTE: Enabling pattern routing can slightly change the behavior of existing endpoints.
+With pattern routing disabled, a request that provides a parameter that does not match
+the defined regex pattern will return a 400 error with a message about the pattern not matching.
+With pattern routing enabled, the same request will return a 404 error.
+
+
 API Versioning and basePath
 ---------------------------
 

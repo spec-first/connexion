@@ -1053,6 +1053,49 @@ paths:
         200:
           description: 'OK'
 
+  /unmatched_pattern_route/{name}:
+    get:
+      description: Getting a route with a pattern in the path that does not match
+      operationId: fakeapi.hello.unmatched_pattern_route
+      parameters:
+        - name: name
+          in: path
+          description: Name of the person to greet.
+          required: true
+          type: string
+          pattern: '[A-M]\w*'
+      responses:
+        '200':
+          description: OK
+  /matched_pattern_route/{shard_1}:
+    get:
+      description: Getting a route with a pattern in the path that does not match
+      operationId: fakeapi.hello.matched_pattern_route_shard_1
+      parameters:
+        - name: shard_1
+          in: path
+          description: Shard assigned to the person.
+          required: true
+          type: string
+          pattern: '[A-M]\w*'
+      responses:
+        '200':
+          description: OK
+  /matched_pattern_route/{shard_2}:
+    get:
+      description: Getting a route with a pattern in the path that does not match
+      operationId: fakeapi.hello.matched_pattern_route_shard_2
+      parameters:
+        - name: shard_2
+          in: path
+          description: Shard assigned to the person.
+          required: true
+          type: string
+          pattern: '[N-Z]\w*'
+      responses:
+        '200':
+          description: OK
+
 definitions:
   new_stack:
     type: object

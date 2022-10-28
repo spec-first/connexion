@@ -14,6 +14,10 @@ def test_flaskify_path():
     )
     assert flask_utils.flaskify_path("foo/{a}/{b}", {"a": "path"}) == "foo/<path:a>/<b>"
     assert flask_utils.flaskify_path("foo/{a}", {"a": "path"}) == "foo/<path:a>"
+    assert (
+        flask_utils.flaskify_path("/foo/{a}", {"a": 'regex("[0-9a-z]{20}")'})
+        == '/foo/<regex("[0-9a-z]{20}"):a>'
+    )
 
 
 def test_flaskify_endpoint():

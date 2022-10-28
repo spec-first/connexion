@@ -651,3 +651,15 @@ def get_streaming_response():
 
 async def async_route():
     return {}, 200
+
+
+def unmatched_pattern_route(name):
+    return name
+
+
+def matched_pattern_route_shard_1(shard_1):
+    return {"shard": 1}
+
+
+def matched_pattern_route_shard_2(shard_2):
+    return {"shard": 2}

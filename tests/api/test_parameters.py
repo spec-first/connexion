@@ -591,3 +591,25 @@ def test_cookie_param(simple_app):
     response = app_client.get("/v1.0/test-cookie-param")
     assert response.status_code == 200
     assert response.json == {"cookie_value": "hello"}
+
+
+def test_unmatched_path_param_pattern(simple_app, simple_pattern_routing_app):
+    app_client = simple_app.app.test_client()
+    response = app_client.get("/v1.0/unmatched_pattern_route/Zaphod")
+    assert response.status_code == 400
+
+    app_client = simple_pattern_routing_app.app.test_client()
+    response = app_client.get("/v1.0/unmatched_pattern_route/Zaphod")
+    assert response.status_code == 404
+
+
+def test_matched_path_param_pattern(simple_pattern_routing_app):
+    app_client = simple_pattern_routing_app.app.test_client()
+
+    response = app_client.get("/v1.0/matched_pattern_route/Arthur")
+    assert response.status_code == 200
+    assert response.json == {"shard": 1}
+
+    response = app_client.get("/v1.0/matched_pattern_route/Zaphod")
+    assert response.status_code == 200
+    assert response.json == {"shard": 2}

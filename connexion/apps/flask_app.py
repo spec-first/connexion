@@ -39,6 +39,7 @@ class FlaskApp(AbstractApp):
         app.json = FlaskJSONProvider(app)
         app.url_map.converters["float"] = NumberConverter
         app.url_map.converters["int"] = IntegerConverter
+        app.url_map.converters["regex"] = FlaskRegexConverter
         return app
 
     def _apply_middleware(self, middlewares):
@@ -207,3 +208,9 @@ class IntegerConverter(werkzeug.routing.BaseConverter):
 
     def to_python(self, value):
         return int(value)
+
+
+class FlaskRegexConverter(werkzeug.routing.BaseConverter):
+    def __init__(self, url_map, *items):
+        super(FlaskRegexConverter, self).__init__(url_map)
+        self.regex = items[0]

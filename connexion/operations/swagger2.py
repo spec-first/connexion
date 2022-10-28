@@ -135,7 +135,7 @@ class Swagger2Operation(AbstractOperation):
             security_schemes=spec.security_schemes,
             definitions=spec.definitions,
             *args,
-            **kwargs
+            **kwargs,
         )
 
     @property
@@ -157,6 +157,14 @@ class Swagger2Operation(AbstractOperation):
             if path_defn.get("type") == "string" and path_defn.get("format") == "path":
                 # path is special case for type 'string'
                 path_type = "path"
+            elif (
+                self.api.options.pattern_routing_enabled
+                and path_defn.get("type") == "string"
+                and path_defn.get("pattern")
+            ):
+                # regex patterns are also a special case for 'string'
+                pattern = path_defn.get("pattern")
+                path_type = f'regex("{pattern}")'
             else:
                 path_type = path_defn.get("type")
             types[path_defn["name"]] = path_type
