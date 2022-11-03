@@ -10,6 +10,7 @@ from starlette.datastructures import FormData, Headers, UploadFile
 from starlette.formparsers import FormParser, MultiPartParser
 from starlette.types import Receive, Scope, Send
 
+from connexion.datastructures import MediaTypeDict
 from connexion.decorators.uri_parsing import AbstractURIParser
 from connexion.decorators.validation import (
     ParameterValidator,
@@ -306,13 +307,17 @@ class MultiPartFormDataValidator(FormDataValidator):
 
 VALIDATOR_MAP = {
     "parameter": ParameterValidator,
-    "body": {
-        "application/json": JSONRequestBodyValidator,
-        "application/x-www-form-urlencoded": FormDataValidator,
-        "multipart/form-data": MultiPartFormDataValidator,
-    },
-    "response": {
-        "application/json": JSONResponseBodyValidator,
-        "text/plain": TextResponseBodyValidator,
-    },
+    "body": MediaTypeDict(
+        {
+            "*/*json": JSONRequestBodyValidator,
+            "application/x-www-form-urlencoded": FormDataValidator,
+            "multipart/form-data": MultiPartFormDataValidator,
+        }
+    ),
+    "response": MediaTypeDict(
+        {
+            "*/*json": JSONResponseBodyValidator,
+            "text/plain": TextResponseBodyValidator,
+        }
+    ),
 }

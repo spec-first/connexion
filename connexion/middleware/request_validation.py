@@ -7,6 +7,7 @@ import typing as t
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from connexion import utils
+from connexion.datastructures import MediaTypeDict
 from connexion.decorators.uri_parsing import AbstractURIParser
 from connexion.exceptions import UnsupportedMediaTypeProblem
 from connexion.middleware.abstract import RoutedAPI, RoutedMiddleware
@@ -59,7 +60,11 @@ class RequestValidationOperation:
 
         :param mime_type: mime type from content type header
         """
-        if mime_type.lower() not in [c.lower() for c in self._operation.consumes]:
+        # Convert to MediaTypeDict to handle media-ranges
+        media_type_dict = MediaTypeDict(
+            [(c.lower(), None) for c in self._operation.consumes]
+        )
+        if mime_type.lower() not in media_type_dict:
             raise UnsupportedMediaTypeProblem(
                 detail=f"Invalid Content-type ({mime_type}), "
                 f"expected {self._operation.consumes}"
