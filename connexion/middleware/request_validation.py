@@ -80,24 +80,28 @@ class RequestValidationOperation:
         # TODO: Validate parameters
 
         # Validate body
-        try:
-            body_validator = self._validator_map["body"][mime_type]  # type: ignore
-        except KeyError:
-            logging.info(
-                f"Skipping validation. No validator registered for content type: "
-                f"{mime_type}."
-            )
-        else:
-            validator = body_validator(
-                scope,
-                receive,
-                schema=self._operation.body_schema(mime_type),
-                nullable=utils.is_nullable(self._operation.body_definition(mime_type)),
-                encoding=encoding,
-                strict_validation=self.strict_validation,
-                uri_parser=self._operation._uri_parsing_decorator,
-            )
-            receive_fn = await validator.wrapped_receive()
+        schema = self._operation.body_schema(mime_type)
+        if schema:
+            try:
+                body_validator = self._validator_map["body"][mime_type]  # type: ignore
+            except KeyError:
+                logging.info(
+                    f"Skipping validation. No validator registered for content type: "
+                    f"{mime_type}."
+                )
+            else:
+                validator = body_validator(
+                    scope,
+                    receive,
+                    schema=schema,
+                    nullable=utils.is_nullable(
+                        self._operation.body_definition(mime_type)
+                    ),
+                    encoding=encoding,
+                    strict_validation=self.strict_validation,
+                    uri_parser=self._operation._uri_parsing_decorator,
+                )
+                receive_fn = await validator.wrapped_receive()
 
         await self.next_app(scope, receive_fn, send)
 

@@ -37,7 +37,7 @@ class JSONRequestBodyValidator:
         receive: Receive,
         *,
         schema: dict,
-        validator: t.Type[Draft4Validator] = None,
+        validator: t.Type[Draft4Validator] = Draft4RequestValidator,
         nullable=False,
         encoding: str,
         **kwargs,
@@ -47,8 +47,7 @@ class JSONRequestBodyValidator:
         self.schema = schema
         self.has_default = schema.get("default", False)
         self.nullable = nullable
-        validator_cls = validator or Draft4RequestValidator
-        self.validator = validator_cls(schema, format_checker=draft4_format_checker)
+        self.validator = validator(schema, format_checker=draft4_format_checker)
         self.encoding = encoding
         self._messages: t.List[t.MutableMapping[str, t.Any]] = []
 
@@ -69,6 +68,13 @@ class JSONRequestBodyValidator:
             )
             raise BadRequestProblem(detail=f"{exception.message}{error_path_msg}")
 
+    @staticmethod
+    def parse(body: str) -> dict:
+        try:
+            return json.loads(body)
+        except json.decoder.JSONDecodeError as e:
+            raise BadRequestProblem(str(e))
+
     async def wrapped_receive(self) -> Receive:
         more_body = True
         while more_body:
@@ -76,16 +82,11 @@ class JSONRequestBodyValidator:
             self._messages.append(message)
             more_body = message.get("more_body", False)
 
-        # TODO: make json library pluggable
         bytes_body = b"".join([message.get("body", b"") for message in self._messages])
         decoded_body = bytes_body.decode(self.encoding)
 
         if decoded_body and not (self.nullable and is_null(decoded_body)):
-            try:
-                body = json.loads(decoded_body)
-            except json.decoder.JSONDecodeError as e:
-                raise BadRequestProblem(str(e))
-
+            body = self.parse(decoded_body)
             self.validate(body)
 
         async def receive() -> t.MutableMapping[str, t.Any]:
@@ -105,7 +106,7 @@ class JSONResponseBodyValidator:
         send: Send,
         *,
         schema: dict,
-        validator: t.Type[Draft4Validator] = None,
+        validator: t.Type[Draft4Validator] = Draft4ResponseValidator,
         nullable=False,
         encoding: str,
     ) -> None:
@@ -114,8 +115,7 @@ class JSONResponseBodyValidator:
         self.schema = schema
         self.has_default = schema.get("default", False)
         self.nullable = nullable
-        validator_cls = validator or Draft4ResponseValidator
-        self.validator = validator_cls(schema, format_checker=draft4_format_checker)
+        self.validator = validator(schema, format_checker=draft4_format_checker)
         self.encoding = encoding
         self._messages: t.List[t.MutableMapping[str, t.Any]] = []
 
@@ -151,7 +151,6 @@ class JSONResponseBodyValidator:
         if message["type"] == "http.response.start" or message.get("more_body", False):
             return
 
-        # TODO: make json library pluggable
         bytes_body = b"".join([message.get("body", b"") for message in self._messages])
         decoded_body = bytes_body.decode(self.encoding)
 
@@ -238,44 +237,43 @@ class FormDataValidator:
             if errors:
                 raise ExtraParameterProblem(errors, [])
 
-        if data:
-            props = self.schema.get("properties", {})
-            errs = []
-            if self.uri_parser is not None:
-                # TODO: Make more efficient
-                # Flask splits up file uploads and text input in `files` and `form`,
-                # while starlette puts them both in `form`
-                form_keys = {k for k, v in data.items() if isinstance(v, str)}
-                file_data = {k: v for k, v in data.items() if isinstance(v, UploadFile)}
-                data = {k: data.getlist(k) for k in form_keys}
-                data = self.uri_parser.resolve_form(data)
-                # Add the files again
-                data.update(file_data)
-            else:
-                data = dict(data)  # TODO: preserve multi-item?
-            for k, param_defn in props.items():
-                if k in data:
-                    if param_defn.get("format", "") == "binary":
-                        # Replace files with empty strings for validation
-                        data[k] = ""
-                        continue
+        props = self.schema.get("properties", {})
+        errs = []
+        if self.uri_parser is not None:
+            # Don't parse file_data
+            form_data = {}
+            file_data = {}
+            for k, v in data.items():
+                if isinstance(v, str):
+                    form_data[k] = data.getlist(k)
+                elif isinstance(v, UploadFile):
+                    file_data[k] = data.getlist(k)
 
-                    try:
-                        data[k] = coerce_type(param_defn, data[k], "requestBody", k)
-                    except TypeValidationError as e:
-                        logger.exception(e)
-                        errs += [str(e)]
-            if errs:
-                raise BadRequestProblem(detail=errs)
+            data = self.uri_parser.resolve_form(form_data)
+            # Add the files again
+            data.update(file_data)
+        else:
+            data = {k: data.getlist(k) for k in data}
+
+        for k, param_defn in props.items():
+            if k in data:
+                if param_defn.get("format", "") == "binary":
+                    # Replace files with empty strings for validation
+                    data[k] = ""
+                    continue
+
+                try:
+                    data[k] = coerce_type(param_defn, data[k], "requestBody", k)
+                except TypeValidationError as e:
+                    logger.exception(e)
+                    errs += [str(e)]
+
+        if errs:
+            raise BadRequestProblem(detail=errs)
 
         self._validate(data)
 
     async def wrapped_receive(self) -> Receive:
-
-        if not self.schema:
-            # swagger 2
-            return self._receive
-
         async def stream() -> t.AsyncGenerator[bytes, None]:
             more_body = True
             while more_body:
@@ -288,8 +286,8 @@ class FormDataValidator:
         form_parser = self.form_parser_cls(self.headers, stream())
         form = await form_parser.parse()
 
-        if not (self.nullable and is_null(form)):
-            self.validate(form or {})
+        if form and not (self.nullable and is_null(form)):
+            self.validate(form)
 
         async def receive() -> t.MutableMapping[str, t.Any]:
             while self._messages:
