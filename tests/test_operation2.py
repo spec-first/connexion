@@ -414,7 +414,7 @@ def test_operation(api, security_handler_factory):
 
     expected_body_schema = op_spec["parameters"][0]["schema"]
     expected_body_schema.update({"definitions": DEFINITIONS})
-    assert operation.body_schema == expected_body_schema
+    assert operation.body_schema() == expected_body_schema
 
 
 def test_operation_remote_token_info(security_handler_factory):
@@ -463,7 +463,7 @@ def test_operation_array(api):
         "items": DEFINITIONS["new_stack"],
         "definitions": DEFINITIONS,
     }
-    assert operation.body_schema == expected_body_schema
+    assert operation.body_schema() == expected_body_schema
 
 
 def test_operation_composed_definition(api):
@@ -487,7 +487,7 @@ def test_operation_composed_definition(api):
 
     expected_body_schema = op_spec["parameters"][0]["schema"]
     expected_body_schema.update({"definitions": DEFINITIONS})
-    assert operation.body_schema == expected_body_schema
+    assert operation.body_schema() == expected_body_schema
 
 
 def test_operation_local_security_oauth2(security_handler_factory):
@@ -536,7 +536,7 @@ def test_multi_body(api):
             definitions=DEFINITIONS,
             resolver=Resolver(),
         )
-        operation.body_schema
+        operation.body_schema()
 
     exception = exc_info.value
     assert str(exception) == "GET endpoint There can be one 'body' parameter at most"
@@ -702,4 +702,62 @@ def test_oauth_scopes_in_or(security_handler_factory):
             mock.call(math.ceil, security_handler_factory.validate_scope, ["myscope"]),
             mock.call(math.ceil, security_handler_factory.validate_scope, ["myscope2"]),
         ]
+    )
+
+
+def test_form_transformation(api):
+    mock_self = mock.Mock(strict_validation=True)
+
+    swagger_form_parameters = [
+        {
+            "in": "formData",
+            "name": "param",
+            "type": "string",
+            "default": "foo@bar.com",
+            "required": True,
+            "format": "email",
+        },
+        {
+            "in": "formData",
+            "name": "array_param",
+            "type": "array",
+            "items": {
+                "type": "integer",
+            },
+            "collectionFormat": "multi",
+            "x-nullable": True,
+        },
+    ]
+
+    openapi_expected = {
+        "schema": {
+            "type": "object",
+            "properties": {
+                "param": {
+                    "type": "string",
+                    "default": "foo@bar.com",
+                    "format": "email",
+                },
+                "array_param": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer",
+                    },
+                    "nullable": True,
+                },
+            },
+            "required": ["param"],
+            "additionalProperties": False,
+        },
+        "encoding": {
+            "array_param": {
+                "style": "form",
+                "explode": True,
+            }
+        },
+    }
+
+    assert (
+        Swagger2Operation._transform_form(mock_self, swagger_form_parameters)
+        == openapi_expected
     )

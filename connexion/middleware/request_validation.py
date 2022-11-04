@@ -7,6 +7,7 @@ import typing as t
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from connexion import utils
+from connexion.datastructures import MediaTypeDict
 from connexion.decorators.uri_parsing import AbstractURIParser
 from connexion.exceptions import UnsupportedMediaTypeProblem
 from connexion.middleware.abstract import RoutedAPI, RoutedMiddleware
@@ -29,7 +30,7 @@ class RequestValidationOperation:
         self.next_app = next_app
         self._operation = operation
         self.strict_validation = strict_validation
-        self._validator_map = VALIDATOR_MAP
+        self._validator_map = VALIDATOR_MAP.copy()
         self._validator_map.update(validator_map or {})
         self.uri_parser_class = uri_parser_class
 
@@ -59,7 +60,11 @@ class RequestValidationOperation:
 
         :param mime_type: mime type from content type header
         """
-        if mime_type.lower() not in [c.lower() for c in self._operation.consumes]:
+        # Convert to MediaTypeDict to handle media-ranges
+        media_type_dict = MediaTypeDict(
+            [(c.lower(), None) for c in self._operation.consumes]
+        )
+        if mime_type.lower() not in media_type_dict:
             raise UnsupportedMediaTypeProblem(
                 detail=f"Invalid Content-type ({mime_type}), "
                 f"expected {self._operation.consumes}"
@@ -75,22 +80,28 @@ class RequestValidationOperation:
         # TODO: Validate parameters
 
         # Validate body
-        try:
-            body_validator = self._validator_map["body"][mime_type]  # type: ignore
-        except KeyError:
-            logging.info(
-                f"Skipping validation. No validator registered for content type: "
-                f"{mime_type}."
-            )
-        else:
-            validator = body_validator(
-                scope,
-                receive,
-                schema=self._operation.body_schema,
-                nullable=utils.is_nullable(self._operation.body_definition),
-                encoding=encoding,
-            )
-            receive_fn = validator.receive
+        schema = self._operation.body_schema(mime_type)
+        if schema:
+            try:
+                body_validator = self._validator_map["body"][mime_type]  # type: ignore
+            except KeyError:
+                logging.info(
+                    f"Skipping validation. No validator registered for content type: "
+                    f"{mime_type}."
+                )
+            else:
+                validator = body_validator(
+                    scope,
+                    receive,
+                    schema=schema,
+                    nullable=utils.is_nullable(
+                        self._operation.body_definition(mime_type)
+                    ),
+                    encoding=encoding,
+                    strict_validation=self.strict_validation,
+                    uri_parser=self._operation._uri_parsing_decorator,
+                )
+                receive_fn = await validator.wrapped_receive()
 
         await self.next_app(scope, receive_fn, send)
 

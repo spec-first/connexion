@@ -309,3 +309,13 @@ def test_global_response_definitions(schema_app):
     app_client = schema_app.app.test_client()
     resp = app_client.get("/v1.0/define_global_response")
     assert json.loads(resp.data.decode("utf-8", "replace")) == ["general", "list"]
+
+
+def test_media_range(schema_app):
+    app_client = schema_app.app.test_client()
+    headers = {"Content-type": "application/json"}
+
+    array_request = app_client.post(
+        "/v1.0/media_range", headers=headers, data=json.dumps({})
+    )
+    assert array_request.status_code == 200, array_request.text
