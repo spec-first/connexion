@@ -5,6 +5,7 @@ This module defines an OpenAPIOperation class, a Connexion operation specific fo
 import logging
 from copy import copy, deepcopy
 
+from connexion.datastructures import MediaTypeDict
 from connexion.operations.abstract import AbstractOperation
 
 from ..decorators.uri_parsing import OpenAPIURIParser
@@ -255,15 +256,13 @@ class OpenAPIOperation(AbstractOperation):
             types[path_defn["name"]] = path_type
         return types
 
-    @property
-    def body_schema(self):
+    def body_schema(self, content_type: str = None) -> dict:
         """
         The body schema definition for this operation.
         """
-        return self.body_definition.get("schema", {})
+        return self.body_definition(content_type).get("schema", {})
 
-    @property
-    def body_definition(self):
+    def body_definition(self, content_type: str = None) -> dict:
         """
         The body complete definition for this operation.
 
@@ -272,12 +271,16 @@ class OpenAPIOperation(AbstractOperation):
         :rtype: dict
         """
         if self._request_body:
+            if content_type is None:
+                # TODO: make content type required
+                content_type = self.consumes[0]
             if len(self.consumes) > 1:
                 logger.warning(
                     "this operation accepts multiple content types, using %s",
-                    self.consumes[0],
+                    content_type,
                 )
-            res = self._request_body.get("content", {}).get(self.consumes[0], {})
+            content_type_dict = MediaTypeDict(self._request_body.get("content", {}))
+            res = content_type_dict.get(content_type, {})
             return self.with_definitions(res)
         return {}
 
@@ -299,25 +302,26 @@ class OpenAPIOperation(AbstractOperation):
     def _get_body_argument_json(self, body):
         # if the body came in null, and the schema says it can be null, we decide
         # to include no value for the body argument, rather than the default body
-        if is_nullable(self.body_schema) and is_null(body):
+        if is_nullable(self.body_schema()) and is_null(body):
             return None
 
         if body is None:
-            default_body = self.body_schema.get("default", {})
+            default_body = self.body_schema().get("default", {})
             return deepcopy(default_body)
 
         return body
 
     def _get_body_argument_form(self, body):
         # now determine the actual value for the body (whether it came in or is default)
-        default_body = self.body_schema.get("default", {})
+        default_body = self.body_schema().get("default", {})
         body_props = {
-            k: {"schema": v} for k, v in self.body_schema.get("properties", {}).items()
+            k: {"schema": v}
+            for k, v in self.body_schema().get("properties", {}).items()
         }
 
         # by OpenAPI specification `additionalProperties` defaults to `true`
         # see: https://github.com/OAI/OpenAPI-Specification/blame/3.0.2/versions/3.0.2.md#L2305
-        additional_props = self.body_schema.get("additionalProperties", True)
+        additional_props = self.body_schema().get("additionalProperties", True)
 
         body_arg = deepcopy(default_body)
         body_arg.update(body or {})

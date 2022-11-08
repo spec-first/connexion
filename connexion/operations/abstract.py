@@ -9,8 +9,8 @@ import logging
 from ..decorators.decorator import RequestResponseDecorator
 from ..decorators.parameter import parameter_to_arg
 from ..decorators.produces import BaseSerializer, Produces
-from ..decorators.validation import ParameterValidator, RequestBodyValidator
-from ..utils import all_json, is_nullable
+from ..decorators.validation import ParameterValidator
+from ..utils import all_json
 
 logger = logging.getLogger("connexion.operations.abstract")
 
@@ -18,7 +18,6 @@ DEFAULT_MIMETYPE = "application/json"
 
 VALIDATOR_MAP = {
     "parameter": ParameterValidator,
-    "body": RequestBodyValidator,
 }
 
 
@@ -281,16 +280,14 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         Content-Types that the operation consumes
         """
 
-    @property
     @abc.abstractmethod
-    def body_schema(self):
+    def body_schema(self, content_type: str = None) -> dict:
         """
         The body schema definition for this operation.
         """
 
-    @property
     @abc.abstractmethod
-    def body_definition(self):
+    def body_definition(self, content_type: str = None) -> dict:
         """
         The body definition for this operation.
         :rtype: dict
@@ -372,7 +369,7 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         Returns a decorator that parses request data and handles things like
         array types, and duplicate parameter definitions.
         """
-        return self._uri_parser_class(self.parameters, self.body_definition)
+        return self._uri_parser_class(self.parameters, self.body_definition())
 
     @property
     def function(self):
@@ -454,15 +451,6 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         if self.parameters:
             yield ParameterValidator(
                 self.parameters, self.api, strict_validation=self.strict_validation
-            )
-        if self.body_schema:
-            # TODO: temporarily hardcoded, remove RequestBodyValidator completely
-            yield RequestBodyValidator(
-                self.body_schema,
-                self.consumes,
-                self.api,
-                is_nullable(self.body_definition),
-                strict_validation=self.strict_validation,
             )
 
     def json_loads(self, data):

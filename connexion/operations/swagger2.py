@@ -3,15 +3,25 @@ This module defines a Swagger2Operation class, a Connexion operation specific fo
 """
 
 import logging
+import typing as t
 from copy import deepcopy
 
 from connexion.operations.abstract import AbstractOperation
 
 from ..decorators.uri_parsing import Swagger2URIParser
 from ..exceptions import InvalidSpecification
+from ..http_facts import FORM_CONTENT_TYPES
 from ..utils import deep_get, is_null, is_nullable, make_type
 
 logger = logging.getLogger("connexion.operations.swagger2")
+
+
+COLLECTION_FORMAT_MAPPING = {
+    "multi": {"style": "form", "explode": True},
+    "csv": {"style": "form", "explode": False},
+    "ssv": {"style": "spaceDelimited", "explode": False},
+    "pipes": {"style": "pipeDelimited", "explode": False},
+}
 
 
 class Swagger2Operation(AbstractOperation):
@@ -228,15 +238,14 @@ class Swagger2Operation(AbstractOperation):
         except KeyError:
             raise
 
-    @property
-    def body_schema(self):
+    def body_schema(self, content_type: str = None) -> dict:
         """
         The body schema definition for this operation.
         """
-        return self.with_definitions(self.body_definition).get("schema", {})
+        body_definition = self.body_definition(content_type)
+        return self.with_definitions(body_definition).get("schema", {})
 
-    @property
-    def body_definition(self):
+    def body_definition(self, content_type: str = None) -> dict:
         """
         The body complete definition for this operation.
 
@@ -244,14 +253,83 @@ class Swagger2Operation(AbstractOperation):
 
         :rtype: dict
         """
-        body_parameters = [p for p in self.parameters if p["in"] == "body"]
-        if len(body_parameters) > 1:
-            raise InvalidSpecification(
-                "{method} {path} There can be one 'body' parameter at most".format(
-                    method=self.method, path=self.path
+        if content_type in FORM_CONTENT_TYPES:
+            form_parameters = [p for p in self.parameters if p["in"] == "formData"]
+            body_definition = self._transform_form(form_parameters)
+        else:
+            body_parameters = [p for p in self.parameters if p["in"] == "body"]
+            if len(body_parameters) > 1:
+                raise InvalidSpecification(
+                    "{method} {path} There can be one 'body' parameter at most".format(
+                        method=self.method, path=self.path
+                    )
                 )
-            )
-        return body_parameters[0] if body_parameters else {}
+            body_definition = body_parameters[0] if body_parameters else {}
+        return body_definition
+
+    def _transform_form(self, form_parameters: t.List[dict]) -> dict:
+        """Translate Swagger2 form parameters into OpenAPI 3 jsonschema spec."""
+        properties = {}
+        required = []
+        encoding = {}
+
+        for param in form_parameters:
+            prop = {}
+
+            if param["type"] == "file":
+                prop.update(
+                    {
+                        "type": "string",
+                        "format": "binary",
+                    }
+                )
+            else:
+                prop["type"] = param["type"]
+
+                format_ = param.get("format")
+                if format_ is not None:
+                    prop["format"] = format_
+
+            default = param.get("default")
+            if default is not None:
+                prop["default"] = default
+
+            nullable = param.get("x-nullable")
+            if nullable is not None:
+                prop["nullable"] = nullable
+
+            if param["type"] == "array":
+                prop["items"] = param.get("items", {})
+
+                collection_format = param.get("collectionFormat", "csv")
+                try:
+                    encoding[param["name"]] = COLLECTION_FORMAT_MAPPING[
+                        collection_format
+                    ]
+                except KeyError:
+                    raise InvalidSpecification(
+                        f"The collection format ({collection_format}) is not supported by "
+                        f"Connexion as it cannot be mapped to OpenAPI 3."
+                    )
+
+            properties[param["name"]] = prop
+
+            if param.get("required", False):
+                required.append(param["name"])
+
+        definition: t.Dict[str, t.Any] = {
+            "schema": {
+                "type": "object",
+                "properties": properties,
+                "required": required,
+                "additionalProperties": not self.strict_validation,
+            }
+        }
+
+        if encoding:
+            definition["encoding"] = encoding
+
+        return definition
 
     def _get_query_arguments(self, query, arguments, has_kwargs, sanitize):
         query_defns = {p["name"]: p for p in self.parameters if p["in"] == "query"}

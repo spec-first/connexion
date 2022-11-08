@@ -25,7 +25,7 @@ class ResponseValidationOperation:
     ) -> None:
         self.next_app = next_app
         self._operation = operation
-        self._validator_map = VALIDATOR_MAP
+        self._validator_map = VALIDATOR_MAP.copy()
         self._validator_map.update(validator_map or {})
 
     def extract_content_type(

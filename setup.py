@@ -29,6 +29,7 @@ install_requires = [
     'starlette>=0.15,<1',
     'httpx>=0.15,<1',
     'typing-extensions>=4,<5',
+    'python-multipart>=0.0.5',
 ]
 
 swagger_ui_require = 'swagger-ui-bundle>=0.0.2,<0.1'

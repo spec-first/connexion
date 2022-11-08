@@ -291,6 +291,21 @@ paths:
         200:
           $ref: '#/responses/GeneralList'
 
+  /media_range:
+    post:
+      description: Test media range
+      operationId: fakeapi.hello.test_media_range
+      consumes:
+        - '*/*'
+      parameters:
+        - name: body
+          in: body
+          schema:
+            type: object
+      responses:
+        '200':
+          description: OK
+
 definitions:
   new_stack:
     type: object
