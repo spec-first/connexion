@@ -345,16 +345,7 @@ Regex Routing with Path Parameter Patterns
 ------------------------------------------
 
 In addition to validating string parameters with the ``pattern`` property, Connexion can also use it to
-route otherwise identical requests paths.
-
-You can enable this behavior in the app or api options.
-
-.. code-block:: python
-
-   options = {'pattern_routing_enabled': True}
-   app = connexion.App(__name__, specification_dir='swagger/', options=options)
-
-This allows routing between otherwise identical paths, for example:
+route otherwise identical requests paths, for example:
 
 .. code-block:: yaml
 
@@ -396,10 +387,10 @@ and therefore acts as a catch-all for requests that don't match any defined patt
 NOTE: Regex values for the same path must be mutually exclusive. If not, and the regex overlaps,
 the routing behavior will be undefined.
 
-NOTE: Enabling pattern routing can slightly change the behavior of existing endpoints.
-With pattern routing disabled, a request that provides a parameter that does not match
+NOTE: Pattern routing in connexion v3 will slightly change the behavior of existing endpoints from connexion v2.
+In connexion v2, a request that provides a parameter that does not match
 the defined regex pattern will return a 400 error with a message about the pattern not matching.
-With pattern routing enabled, the same request will return a 404 error.
+In connexion v3, the same request will return a 404 error.
 
 
 API Versioning and basePath

@@ -157,11 +157,7 @@ class Swagger2Operation(AbstractOperation):
             if path_defn.get("type") == "string" and path_defn.get("format") == "path":
                 # path is special case for type 'string'
                 path_type = "path"
-            elif (
-                self.api.options.pattern_routing_enabled
-                and path_defn.get("type") == "string"
-                and path_defn.get("pattern")
-            ):
+            elif path_defn.get("type") == "string" and path_defn.get("pattern"):
                 # regex patterns are also a special case for 'string'
                 pattern = path_defn.get("pattern")
                 path_type = f'regex("{pattern}")'

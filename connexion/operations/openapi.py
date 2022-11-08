@@ -246,11 +246,7 @@ class OpenAPIOperation(AbstractOperation):
             ):
                 # path is special case for type 'string'
                 path_type = "path"
-            elif (
-                self.api.options.pattern_routing_enabled
-                and path_schema.get("type") == "string"
-                and path_schema.get("pattern")
-            ):
+            elif path_schema.get("type") == "string" and path_schema.get("pattern"):
                 # regex patterns are also a special case for 'string'
                 pattern = path_schema.get("pattern")
                 path_type = f'regex("{pattern}")'
