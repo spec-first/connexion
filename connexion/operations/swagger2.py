@@ -49,8 +49,6 @@ class Swagger2Operation(AbstractOperation):
         app_security=None,
         security_schemes=None,
         definitions=None,
-        validate_responses=False,
-        strict_validation=False,
         randomize_endpoint=None,
         pythonic_params=False,
         uri_parser_class=None,
@@ -80,10 +78,6 @@ class Swagger2Operation(AbstractOperation):
         :param definitions: `Definitions Object
             <https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#definitionsObject>`_
         :type definitions: dict
-        :param validate_responses: True enables validation. Validation errors generate HTTP 500 responses.
-        :type validate_responses: bool
-        :param strict_validation: True enables validation on invalid request parameters
-        :type strict_validation: bool
         :param randomize_endpoint: number of random characters to append to operation name
         :type randomize_endpoint: integer
         :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended
@@ -104,8 +98,6 @@ class Swagger2Operation(AbstractOperation):
             resolver=resolver,
             app_security=app_security,
             security_schemes=security_schemes,
-            validate_responses=validate_responses,
-            strict_validation=strict_validation,
             randomize_endpoint=randomize_endpoint,
             pythonic_params=pythonic_params,
             uri_parser_class=uri_parser_class,
@@ -314,7 +306,6 @@ class Swagger2Operation(AbstractOperation):
                 "type": "object",
                 "properties": properties,
                 "required": required,
-                "additionalProperties": not self.strict_validation,
             }
         }
 

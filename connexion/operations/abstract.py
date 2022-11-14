@@ -44,8 +44,6 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         resolver,
         app_security=None,
         security_schemes=None,
-        validate_responses=False,
-        strict_validation=False,
         randomize_endpoint=None,
         pythonic_params=False,
         uri_parser_class=None,
@@ -65,10 +63,6 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         :param security_schemes: `Security Definitions Object
             <https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-definitions-object>`_
         :type security_schemes: dict
-        :param validate_responses: True enables validation. Validation errors generate HTTP 500 responses.
-        :type validate_responses: bool
-        :param strict_validation: True enables validation on invalid request parameters
-        :type strict_validation: bool
         :param randomize_endpoint: number of random characters to append to operation name
         :type randomize_endpoint: integer
         :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended
@@ -84,8 +78,6 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         self._resolver = resolver
         self._security = operation.get("security", app_security)
         self._security_schemes = security_schemes
-        self._validate_responses = validate_responses
-        self._strict_validation = strict_validation
         self._pythonic_params = pythonic_params
         self._uri_parser_class = uri_parser_class
         self._randomize_endpoint = randomize_endpoint
@@ -151,26 +143,11 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         return self._router_controller
 
     @property
-    def strict_validation(self):
-        """
-        If True, validate all requests against the spec
-        """
-        return self._strict_validation
-
-    @property
     def pythonic_params(self):
         """
         If True, convert CamelCase into pythonic_variable_names
         """
         return self._pythonic_params
-
-    @property
-    def validate_responses(self):
-        """
-        If True, check the response against the response schema, and return an
-        error if the response does not validate.
-        """
-        return self._validate_responses
 
     @staticmethod
     def _get_file_arguments(files, arguments, has_kwargs=False):

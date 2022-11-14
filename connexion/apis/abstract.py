@@ -181,8 +181,6 @@ class AbstractAPI(AbstractRoutingAPI, metaclass=AbstractAPIMeta):
         specification,
         base_path=None,
         arguments=None,
-        validate_responses=False,
-        strict_validation=False,
         resolver=None,
         debug=False,
         resolver_error_handler=None,
@@ -191,19 +189,11 @@ class AbstractAPI(AbstractRoutingAPI, metaclass=AbstractAPIMeta):
         **kwargs,
     ):
         """
-        :type validate_responses: bool
-        :type strict_validation: bool
         :type resolver_error_handler: callable | None
         :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended
             to any shadowed built-ins
         :type pythonic_params: bool
         """
-        logger.debug("Validate Responses: %s", str(validate_responses))
-        self.validate_responses = validate_responses
-
-        logger.debug("Strict Request Validation: %s", str(strict_validation))
-        self.strict_validation = strict_validation
-
         logger.debug("Pythonic params: %s", str(pythonic_params))
         self.pythonic_params = pythonic_params
 
@@ -239,8 +229,6 @@ class AbstractAPI(AbstractRoutingAPI, metaclass=AbstractAPIMeta):
             path,
             method,
             self.resolver,
-            validate_responses=self.validate_responses,
-            strict_validation=self.strict_validation,
             pythonic_params=self.pythonic_params,
             uri_parser_class=self.options.uri_parser_class,
         )
