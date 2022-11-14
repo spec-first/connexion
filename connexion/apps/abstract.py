@@ -213,7 +213,6 @@ class AbstractApp(metaclass=abc.ABCMeta):
             strict_validation=strict_validation,
             auth_all_paths=auth_all_paths,
             debug=self.debug,
-            validator_map=validator_map,
             pythonic_params=pythonic_params,
             options=api_options.as_dict(),
         )

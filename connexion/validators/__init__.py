@@ -1,5 +1,4 @@
 from connexion.datastructures import MediaTypeDict
-from connexion.decorators.validation import ParameterValidator
 
 from .form_data import FormDataValidator, MultiPartFormDataValidator
 from .json import (
@@ -7,6 +6,7 @@ from .json import (
     JSONResponseBodyValidator,
     TextResponseBodyValidator,
 )
+from .parameter import ParameterValidator
 
 VALIDATOR_MAP = {
     "parameter": ParameterValidator,

@@ -186,7 +186,6 @@ class AbstractAPI(AbstractRoutingAPI, metaclass=AbstractAPIMeta):
         resolver=None,
         debug=False,
         resolver_error_handler=None,
-        validator_map=None,
         pythonic_params=False,
         options=None,
         **kwargs,
@@ -194,15 +193,11 @@ class AbstractAPI(AbstractRoutingAPI, metaclass=AbstractAPIMeta):
         """
         :type validate_responses: bool
         :type strict_validation: bool
-        :param validator_map: Custom validators for the types "parameter", "body" and "response".
-        :type validator_map: dict
         :type resolver_error_handler: callable | None
         :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended
             to any shadowed built-ins
         :type pythonic_params: bool
         """
-        self.validator_map = validator_map
-
         logger.debug("Validate Responses: %s", str(validate_responses))
         self.validate_responses = validate_responses
 
@@ -245,7 +240,6 @@ class AbstractAPI(AbstractRoutingAPI, metaclass=AbstractAPIMeta):
             method,
             self.resolver,
             validate_responses=self.validate_responses,
-            validator_map=self.validator_map,
             strict_validation=self.strict_validation,
             pythonic_params=self.pythonic_params,
             uri_parser_class=self.options.uri_parser_class,

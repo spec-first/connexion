@@ -52,7 +52,6 @@ class Swagger2Operation(AbstractOperation):
         validate_responses=False,
         strict_validation=False,
         randomize_endpoint=None,
-        validator_map=None,
         pythonic_params=False,
         uri_parser_class=None,
     ):
@@ -87,8 +86,6 @@ class Swagger2Operation(AbstractOperation):
         :type strict_validation: bool
         :param randomize_endpoint: number of random characters to append to operation name
         :type randomize_endpoint: integer
-        :param validator_map: Custom validators for the types "parameter", "body" and "response".
-        :type validator_map: dict
         :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended
             to any shadowed built-ins
         :type pythonic_params: bool
@@ -110,7 +107,6 @@ class Swagger2Operation(AbstractOperation):
             validate_responses=validate_responses,
             strict_validation=strict_validation,
             randomize_endpoint=randomize_endpoint,
-            validator_map=validator_map,
             pythonic_params=pythonic_params,
             uri_parser_class=uri_parser_class,
         )

@@ -9,16 +9,11 @@ import logging
 from ..decorators.decorator import RequestResponseDecorator
 from ..decorators.parameter import parameter_to_arg
 from ..decorators.produces import BaseSerializer, Produces
-from ..decorators.validation import ParameterValidator
 from ..utils import all_json
 
 logger = logging.getLogger("connexion.operations.abstract")
 
 DEFAULT_MIMETYPE = "application/json"
-
-VALIDATOR_MAP = {
-    "parameter": ParameterValidator,
-}
 
 
 class AbstractOperation(metaclass=abc.ABCMeta):
@@ -52,7 +47,6 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         validate_responses=False,
         strict_validation=False,
         randomize_endpoint=None,
-        validator_map=None,
         pythonic_params=False,
         uri_parser_class=None,
     ):
@@ -77,8 +71,6 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         :type strict_validation: bool
         :param randomize_endpoint: number of random characters to append to operation name
         :type randomize_endpoint: integer
-        :param validator_map: Custom validators for the types "parameter", "body" and "response".
-        :type validator_map: dict
         :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended
             to any shadowed built-ins
         :type pythonic_params: bool
@@ -103,9 +95,6 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         self._operation_id = self._resolution.operation_id
 
         self._responses = self._operation.get("responses", {})
-
-        self._validator_map = dict(VALIDATOR_MAP)
-        self._validator_map.update(validator_map or {})
 
     @property
     def api(self):
@@ -139,13 +128,6 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         Returns the responses for this operation
         """
         return self._responses
-
-    @property
-    def validator_map(self):
-        """
-        Validators to use for parameter, body, and response validation
-        """
-        return self._validator_map
 
     @property
     def operation_id(self):
@@ -388,9 +370,6 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         logger.debug("... Adding produces decorator (%r)", produces_decorator)
         function = produces_decorator(function)
 
-        for validation_decorator in self.__validation_decorators:
-            function = validation_decorator(function)
-
         uri_parsing_decorator = self._uri_parsing_decorator
         function = uri_parsing_decorator(function)
 
@@ -441,17 +420,6 @@ class AbstractOperation(metaclass=abc.ABCMeta):
 
         else:
             return BaseSerializer()
-
-    @property
-    def __validation_decorators(self):
-        """
-        :rtype: types.FunctionType
-        """
-        ParameterValidator = self.validator_map["parameter"]
-        if self.parameters:
-            yield ParameterValidator(
-                self.parameters, self.api, strict_validation=self.strict_validation
-            )
 
     def json_loads(self, data):
         """

@@ -8,8 +8,9 @@ import json
 import logging
 import re
 
-from .. import utils
-from .decorator import BaseDecorator
+from connexion.decorators.decorator import BaseDecorator
+from connexion.exceptions import TypeValidationError
+from connexion.utils import all_json, coerce_type, deep_merge, is_null, is_nullable
 
 logger = logging.getLogger("connexion.decorators.uri_parsing")
 
@@ -119,6 +120,15 @@ class AbstractURIParser(BaseDecorator, metaclass=abc.ABCMeta):
             else:
                 resolved_param[k] = values[-1]
 
+            if not (is_nullable(param_defn) and is_null(resolved_param[k])):
+                try:
+                    # TODO: coerce types in a single place
+                    resolved_param[k] = coerce_type(
+                        param_defn, resolved_param[k], "parameter", k
+                    )
+                except TypeValidationError:
+                    pass
+
         return resolved_param
 
     def __call__(self, function):
@@ -182,9 +192,7 @@ class OpenAPIURIParser(AbstractURIParser):
             )
             if defn and defn["type"] == "array":
                 form_data[k] = self._split(form_data[k], encoding, "form")
-            elif "contentType" in encoding and utils.all_json(
-                [encoding.get("contentType")]
-            ):
+            elif "contentType" in encoding and all_json([encoding.get("contentType")]):
                 form_data[k] = json.loads(form_data[k])
         return form_data
 
@@ -231,7 +239,7 @@ class OpenAPIURIParser(AbstractURIParser):
         ret = dict.fromkeys(root_keys, [{}])
         for k, v, is_deep_object in deep:
             if is_deep_object:
-                ret[k] = [utils.deep_merge(v[0], ret[k][0])]
+                ret[k] = [deep_merge(v[0], ret[k][0])]
             else:
                 ret[k] = v
         return ret
