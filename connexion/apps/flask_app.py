@@ -63,8 +63,8 @@ class FlaskApp(AbstractApp):
         """
         :type exception: Exception
         """
-        signals.got_request_exception.send(self.app, exception=exception)
         if isinstance(exception, ProblemException):
+            is_server_error = exception.status >= 500
             response = problem(
                 status=exception.status,
                 title=exception.title,
@@ -77,6 +77,9 @@ class FlaskApp(AbstractApp):
         else:
             if not isinstance(exception, werkzeug.exceptions.HTTPException):
                 exception = werkzeug.exceptions.InternalServerError()
+                is_server_error = True
+            else:
+                is_server_error = exception.code >= 500
 
             response = problem(
                 title=exception.name,
@@ -84,6 +87,9 @@ class FlaskApp(AbstractApp):
                 status=exception.code,
                 headers=exception.get_headers(),
             )
+
+        if is_server_error:
+            signals.got_request_exception.send(self.app, exception=exception)
 
         return FlaskApi.get_response(response)
 
