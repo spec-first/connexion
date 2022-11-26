@@ -6,7 +6,7 @@ and functionality shared between Swagger 2 and OpenAPI 3 specifications.
 import abc
 import logging
 
-from ..decorators.decorator import RequestResponseDecorator
+from ..decorators.lifecycle import RequestResponseDecorator
 from ..decorators.parameter import parameter_to_arg
 from ..utils import all_json
 
