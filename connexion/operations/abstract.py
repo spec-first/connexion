@@ -8,7 +8,6 @@ import logging
 
 from ..decorators.decorator import RequestResponseDecorator
 from ..decorators.parameter import parameter_to_arg
-from ..decorators.produces import BaseSerializer, Produces
 from ..utils import all_json
 
 logger = logging.getLogger("connexion.operations.abstract")
@@ -273,7 +272,6 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         """
         response definition for this endpoint
         """
-        content_type = content_type or self.get_mimetype()
         response_definition = self.responses.get(
             str(status_code), self.responses.get("default", {})
         )
@@ -343,10 +341,6 @@ class AbstractOperation(metaclass=abc.ABCMeta):
             self.pythonic_params,
         )
 
-        produces_decorator = self.__content_type_decorator
-        logger.debug("... Adding produces decorator (%r)", produces_decorator)
-        function = produces_decorator(function)
-
         uri_parsing_decorator = self._uri_parsing_decorator
         function = uri_parsing_decorator(function)
 
@@ -364,39 +358,6 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         :rtype: types.FunctionType
         """
         return RequestResponseDecorator(self.api, self.get_mimetype())
-
-    @property
-    def __content_type_decorator(self):
-        """
-        Get produces decorator.
-
-        If the operation mimetype format is json then the function return value is jsonified
-
-        From Swagger Specification:
-
-        **Produces**
-
-        A list of MIME types the operation can produce. This overrides the produces definition at the Swagger Object.
-        An empty value MAY be used to clear the global definition.
-
-        :rtype: types.FunctionType
-        """
-
-        logger.debug("... Produces: %s", self.produces, extra=vars(self))
-
-        mimetype = self.get_mimetype()
-        if all_json(self.produces):  # endpoint will return json
-            logger.debug("... Produces json", extra=vars(self))
-            # TODO: Refactor this.
-            return lambda f: f
-
-        elif len(self.produces) == 1:
-            logger.debug("... Produces %s", mimetype, extra=vars(self))
-            decorator = Produces(mimetype)
-            return decorator
-
-        else:
-            return BaseSerializer()
 
     def json_loads(self, data):
         """

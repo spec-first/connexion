@@ -1,5 +1,5 @@
 """
-This module defines a BaseDecorator to wrap a user view function and a RequestResponseDecorator
+This module defines a RequestResponseDecorator
 which manages the lifecycle of a request internally in Connexion.
 """
 
@@ -12,22 +12,7 @@ from ..utils import has_coroutine
 logger = logging.getLogger("connexion.decorators.decorator")
 
 
-class BaseDecorator:
-    def __call__(self, function):
-        """
-        :type function: types.FunctionType
-        :rtype: types.FunctionType
-        """
-        return function
-
-    def __repr__(self):  # pragma: no cover
-        """
-        :rtype: str
-        """
-        return "<BaseDecorator>"
-
-
-class RequestResponseDecorator(BaseDecorator):
+class RequestResponseDecorator:
     """Manages the lifecycle of the request internally in Connexion.
     Filter the ConnexionRequest instance to return the corresponding
     framework specific object.

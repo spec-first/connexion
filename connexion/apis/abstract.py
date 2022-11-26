@@ -9,7 +9,7 @@ import sys
 import typing as t
 from enum import Enum
 
-from ..decorators.produces import NoContent
+from ..datastructures import NoContent
 from ..exceptions import ResolverError
 from ..http_facts import METHODS
 from ..jsonifier import Jsonifier

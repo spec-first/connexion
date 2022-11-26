@@ -8,7 +8,6 @@ import json
 import logging
 import re
 
-from connexion.decorators.decorator import BaseDecorator
 from connexion.exceptions import TypeValidationError
 from connexion.utils import all_json, coerce_type, deep_merge, is_null, is_nullable
 
@@ -22,7 +21,7 @@ QUERY_STRING_DELIMITERS = {
 }
 
 
-class AbstractURIParser(BaseDecorator, metaclass=abc.ABCMeta):
+class AbstractURIParser(metaclass=abc.ABCMeta):
     parsable_parameters = ["query", "path"]
 
     def __init__(self, param_defns, body_defn):
