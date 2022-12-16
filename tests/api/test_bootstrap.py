@@ -65,7 +65,7 @@ def test_app_with_different_server_option(simple_api_spec_dir, spec):
 
 
 def test_app_with_different_uri_parser(simple_api_spec_dir):
-    from connexion.decorators.uri_parsing import FirstValueURIParser
+    from connexion.uri_parsing import FirstValueURIParser
 
     app = App(
         __name__,

@@ -20,7 +20,7 @@ from .utils import not_installed_error  # NOQA
 try:
     from flask import request  # NOQA
 
-    from .apis.flask_api import FlaskApi, context  # NOQA
+    from .apis.flask_api import FlaskApi  # NOQA
     from .apps.flask_app import FlaskApp
 except ImportError as e:  # pragma: no cover
     _flask_not_installed_error = not_installed_error(e)

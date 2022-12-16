@@ -2,13 +2,9 @@
 This module defines a Flask Connexion API which implements translations between Flask and
 Connexion requests / responses.
 """
-
 import logging
-import warnings
-from typing import Any
 
 import flask
-from werkzeug.local import LocalProxy
 
 from connexion.apis import flask_utils
 from connexion.apis.abstract import AbstractAPI
@@ -52,7 +48,7 @@ class FlaskApi(AbstractAPI):
         )
 
     @classmethod
-    def get_response(cls, response, mimetype=None, request=None):
+    def get_response(cls, response, mimetype=None):
         """Gets ConnexionResponse instance for the operation handler
         result. Status Code and Headers for response.  If only body
         data is returned by the endpoint function, then the status
@@ -64,9 +60,7 @@ class FlaskApi(AbstractAPI):
         :type response: flask.Response | (flask.Response,) | (flask.Response, int) | (flask.Response, dict) | (flask.Response, int, dict)
         :rtype: ConnexionResponse
         """
-        return cls._get_response(
-            response, mimetype=mimetype, extra_context={"url": flask.request.url}
-        )
+        return cls._get_response(response, mimetype=mimetype)
 
     @classmethod
     def _is_framework_response(cls, response):
@@ -86,7 +80,7 @@ class FlaskApi(AbstractAPI):
         )
 
     @classmethod
-    def _connexion_to_framework_response(cls, response, mimetype, extra_context=None):
+    def _connexion_to_framework_response(cls, response, mimetype):
         """Cast ConnexionResponse to framework response class"""
         flask_response = cls._build_response(
             mimetype=response.mimetype or mimetype,
@@ -94,7 +88,6 @@ class FlaskApi(AbstractAPI):
             headers=response.headers,
             status_code=response.status_code,
             data=response.body,
-            extra_context=extra_context,
         )
 
         return flask_response
@@ -107,7 +100,6 @@ class FlaskApi(AbstractAPI):
         headers=None,
         status_code=None,
         data=None,
-        extra_context=None,
     ):
         if cls._is_framework_response(data):
             return flask.current_app.make_response((data, status_code, headers))
@@ -116,7 +108,6 @@ class FlaskApi(AbstractAPI):
             data=data,
             mimetype=mimetype,
             status_code=status_code,
-            extra_context=extra_context,
         )
 
         kwargs = {
@@ -133,61 +124,14 @@ class FlaskApi(AbstractAPI):
     def _serialize_data(cls, data, mimetype):
         if isinstance(mimetype, str) and is_json_mimetype(mimetype):
             body = cls.jsonifier.dumps(data)
-        elif not (isinstance(data, bytes) or isinstance(data, str)):
-            warnings.warn(
-                "Implicit (flask) JSON serialization will change in the next major version. "
-                "This is triggered because a response body is being serialized as JSON "
-                "even though the mimetype is not a JSON type. "
-                "This will be replaced by something that is mimetype-specific and may "
-                "raise an error instead of silently converting everything to JSON. "
-                "Please make sure to specify media/mime types in your specs.",
-                FutureWarning,  # a Deprecation targeted at application users.
-            )
-            body = cls.jsonifier.dumps(data)
         else:
             body = data
 
         return body, mimetype
 
     @classmethod
-    def get_request(cls, *args, **params):
-        # type: (*Any, **Any) -> ConnexionRequest
-        """Gets ConnexionRequest instance for the operation handler
-        result. Status Code and Headers for response.  If only body
-        data is returned by the endpoint function, then the status
-        code will be set to 200 and no headers will be added.
-
-        If the returned object is a flask.Response then it will just
-        pass the information needed to recreate it.
-
-        :rtype: ConnexionRequest
-        """
-        flask_request = flask.request
-        scope = flask_request.environ["asgi.scope"]
-        context_dict = scope.get("extensions", {}).get("connexion_context", {})
-        setattr(flask.globals.request_ctx, "connexion_context", context_dict)
-        request = ConnexionRequest(
-            flask_request.url,
-            flask_request.method,
-            headers=flask_request.headers,
-            form=flask_request.form,
-            query=flask_request.args,
-            body=flask_request.get_data(),
-            json_getter=lambda: flask_request.get_json(silent=True),
-            files=flask_request.files,
-            path_params=params,
-            context=context_dict,
-            cookies=flask_request.cookies,
-        )
-        logger.debug(
-            "Getting data and status code",
-            extra={
-                "data": request.body,
-                "data_type": type(request.body),
-                "url": request.url,
-            },
-        )
-        return request
+    def get_request(cls, uri_parser) -> ConnexionRequest:
+        return ConnexionRequest(flask.request, uri_parser=uri_parser)
 
     @classmethod
     def _set_jsonifier(cls):
@@ -195,10 +139,3 @@ class FlaskApi(AbstractAPI):
         Use Flask specific JSON loader
         """
         cls.jsonifier = Jsonifier(flask.json, indent=2)
-
-
-def _get_context():
-    return getattr(flask.globals.request_ctx, "connexion_context")
-
-
-context = LocalProxy(_get_context)

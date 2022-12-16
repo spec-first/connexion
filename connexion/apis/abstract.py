@@ -1,7 +1,6 @@
 """
 This module defines an AbstractAPI, which defines a standardized interface for a Connexion API.
 """
-
 import abc
 import logging
 import pathlib
@@ -9,15 +8,18 @@ import sys
 import typing as t
 from enum import Enum
 
-from ..datastructures import NoContent
-from ..exceptions import ResolverError
-from ..http_facts import METHODS
-from ..jsonifier import Jsonifier
-from ..lifecycle import ConnexionResponse
-from ..operations import make_operation
-from ..options import ConnexionOptions
-from ..resolver import Resolver
-from ..spec import Specification
+from starlette.requests import Request
+
+from connexion.datastructures import NoContent
+from connexion.decorators.parameter import parameter_to_arg
+from connexion.exceptions import ResolverError
+from connexion.http_facts import METHODS
+from connexion.jsonifier import Jsonifier
+from connexion.lifecycle import ConnexionResponse
+from connexion.operations import make_operation
+from connexion.options import ConnexionOptions
+from connexion.resolver import Resolver
+from connexion.spec import Specification
 
 MODULE_PATH = pathlib.Path(__file__).absolute().parent.parent
 SWAGGER_UI_URL = "ui"
@@ -231,30 +233,19 @@ class AbstractAPI(AbstractRoutingAPI, metaclass=AbstractAPIMeta):
             self.resolver,
             pythonic_params=self.pythonic_params,
             uri_parser_class=self.options.uri_parser_class,
+            parameter_to_arg=parameter_to_arg,
         )
         self._add_operation_internal(method, path, operation)
 
     @classmethod
     @abc.abstractmethod
-    def get_request(self, *args, **kwargs):
+    def get_request(cls, uri_parser) -> Request:
         """
         This method converts the user framework request to a ConnexionRequest.
         """
 
     @classmethod
-    @abc.abstractmethod
-    def get_response(self, response, mimetype=None, request=None):
-        """
-        This method converts a handler response to a framework response.
-        This method should just retrieve response from handler then call `cls._get_response`.
-        :param response: A response to cast (tuple, framework response, etc).
-        :param mimetype: The response mimetype.
-        :type mimetype: Union[None, str]
-        :param request: The request associated with this response (the user framework request).
-        """
-
-    @classmethod
-    def _get_response(cls, response, mimetype=None, extra_context=None):
+    def _get_response(cls, response, mimetype=None):
         """
         This method converts a handler response to a framework response.
         The response can be a ConnexionResponse, an operation handler, a framework response or a tuple.
@@ -262,31 +253,24 @@ class AbstractAPI(AbstractRoutingAPI, metaclass=AbstractAPIMeta):
         :param response: A response to cast (tuple, framework response, etc).
         :param mimetype: The response mimetype.
         :type mimetype: Union[None, str]
-        :param extra_context: dict of extra details, like url, to include in logs
-        :type extra_context: Union[None, dict]
         """
-        if extra_context is None:
-            extra_context = {}
         logger.debug(
             "Getting data and status code",
-            extra={"data": response, "data_type": type(response), **extra_context},
+            extra={"data": response, "data_type": type(response)},
         )
 
         if isinstance(response, ConnexionResponse):
             framework_response = cls._connexion_to_framework_response(
-                response, mimetype, extra_context
+                response, mimetype
             )
         else:
-            framework_response = cls._response_from_handler(
-                response, mimetype, extra_context
-            )
+            framework_response = cls._response_from_handler(response, mimetype)
 
         logger.debug(
             "Got framework response",
             extra={
                 "response": framework_response,
                 "response_type": type(framework_response),
-                **extra_context,
             },
         )
         return framework_response
@@ -298,7 +282,6 @@ class AbstractAPI(AbstractRoutingAPI, metaclass=AbstractAPIMeta):
             t.Any, str, t.Tuple[str], t.Tuple[str, int], t.Tuple[str, int, dict]
         ],
         mimetype: str,
-        extra_context: t.Optional[dict] = None,
     ) -> t.Any:
         """
         Create a framework response from the operation handler data.
@@ -311,7 +294,6 @@ class AbstractAPI(AbstractRoutingAPI, metaclass=AbstractAPIMeta):
 
         :param response: A response from an operation handler.
         :param mimetype: The response mimetype.
-        :param extra_context: dict of extra details, like url, to include in logs
         """
         if cls._is_framework_response(response):
             return response
@@ -320,9 +302,7 @@ class AbstractAPI(AbstractRoutingAPI, metaclass=AbstractAPIMeta):
             len_response = len(response)
             if len_response == 1:
                 (data,) = response
-                return cls._build_response(
-                    mimetype=mimetype, data=data, extra_context=extra_context
-                )
+                return cls._build_response(mimetype=mimetype, data=data)
             if len_response == 2:
                 if isinstance(response[1], (int, Enum)):
                     data, status_code = response
@@ -330,7 +310,6 @@ class AbstractAPI(AbstractRoutingAPI, metaclass=AbstractAPIMeta):
                         mimetype=mimetype,
                         data=data,
                         status_code=status_code,
-                        extra_context=extra_context,
                     )
                 else:
                     data, headers = response
@@ -338,7 +317,6 @@ class AbstractAPI(AbstractRoutingAPI, metaclass=AbstractAPIMeta):
                     mimetype=mimetype,
                     data=data,
                     headers=headers,
-                    extra_context=extra_context,
                 )
             elif len_response == 3:
                 data, status_code, headers = response
@@ -347,7 +325,6 @@ class AbstractAPI(AbstractRoutingAPI, metaclass=AbstractAPIMeta):
                     data=data,
                     status_code=status_code,
                     headers=headers,
-                    extra_context=extra_context,
                 )
             else:
                 raise TypeError(
@@ -356,9 +333,7 @@ class AbstractAPI(AbstractRoutingAPI, metaclass=AbstractAPIMeta):
                     " (body, status), or (body, headers)."
                 )
         else:
-            return cls._build_response(
-                mimetype=mimetype, data=response, extra_context=extra_context
-            )
+            return cls._build_response(mimetype=mimetype, data=response)
 
     @classmethod
     def get_connexion_response(cls, response, mimetype=None):
@@ -384,7 +359,7 @@ class AbstractAPI(AbstractRoutingAPI, metaclass=AbstractAPIMeta):
 
     @classmethod
     @abc.abstractmethod
-    def _connexion_to_framework_response(cls, response, mimetype, extra_context=None):
+    def _connexion_to_framework_response(cls, response, mimetype):
         """Cast ConnexionResponse to framework response class"""
 
     @classmethod
@@ -396,7 +371,6 @@ class AbstractAPI(AbstractRoutingAPI, metaclass=AbstractAPIMeta):
         content_type=None,
         status_code=None,
         headers=None,
-        extra_context=None,
     ):
         """
         Create a framework response from the provided arguments.
@@ -407,16 +381,12 @@ class AbstractAPI(AbstractRoutingAPI, metaclass=AbstractAPIMeta):
         :type status_code: int
         :param headers: The response status code.
         :type headers: Union[Iterable[Tuple[str, str]], Dict[str, str]]
-        :param extra_context: dict of extra details, like url, to include in logs
-        :type extra_context: Union[None, dict]
         :return A framework response.
         :rtype Response
         """
 
     @classmethod
-    def _prepare_body_and_status_code(
-        cls, data, mimetype, status_code=None, extra_context=None
-    ):
+    def _prepare_body_and_status_code(cls, data, mimetype, status_code=None):
         if data is NoContent:
             data = None
 
@@ -435,12 +405,10 @@ class AbstractAPI(AbstractRoutingAPI, metaclass=AbstractAPIMeta):
         else:
             body = data
 
-        if extra_context is None:
-            extra_context = {}
         logger.debug(
             "Prepared body and status code (%d)",
             status_code,
-            extra={"body": body, **extra_context},
+            extra={"body": body},
         )
 
         return body, status_code, mimetype

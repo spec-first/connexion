@@ -1,5 +1,5 @@
 import pytest
-from connexion.decorators.uri_parsing import (
+from connexion.uri_parsing import (
     AlwaysMultiURIParser,
     FirstValueURIParser,
     OpenAPIURIParser,
@@ -46,7 +46,9 @@ MULTI = "multi"
         (AlwaysMultiURIParser, ["a", "b", "c", "d", "e", "f"], QUERY2, PIPES),
     ],
 )
-def test_uri_parser_query_params(parser_class, expected, query_in, collection_format):
+async def test_uri_parser_query_params(
+    parser_class, expected, query_in, collection_format
+):
     class Request:
         query = query_in
         path_params = {}
@@ -63,9 +65,9 @@ def test_uri_parser_query_params(parser_class, expected, query_in, collection_fo
         }
     ]
     body_defn = {}
-    p = parser_class(parameters, body_defn)
-    res = p(lambda x: x)(request)
-    assert res.query["letters"] == expected
+    parser = parser_class(parameters, body_defn)
+    res = parser.resolve_query(request.query.to_dict(flat=False))
+    assert res["letters"] == expected
 
 
 @pytest.mark.parametrize(
@@ -82,7 +84,9 @@ def test_uri_parser_query_params(parser_class, expected, query_in, collection_fo
         (AlwaysMultiURIParser, ["a", "b", "c", "d", "e", "f"], QUERY2, PIPES),
     ],
 )
-def test_uri_parser_form_params(parser_class, expected, query_in, collection_format):
+async def test_uri_parser_form_params(
+    parser_class, expected, query_in, collection_format
+):
     class Request:
         query = {}
         form = query_in
@@ -99,9 +103,9 @@ def test_uri_parser_form_params(parser_class, expected, query_in, collection_for
         }
     ]
     body_defn = {}
-    p = parser_class(parameters, body_defn)
-    res = p(lambda x: x)(request)
-    assert res.form["letters"] == expected
+    parser = parser_class(parameters, body_defn)
+    res = parser.resolve_form(request.form.to_dict(flat=False))
+    assert res["letters"] == expected
 
 
 @pytest.mark.parametrize(
@@ -115,7 +119,9 @@ def test_uri_parser_form_params(parser_class, expected, query_in, collection_for
         (AlwaysMultiURIParser, ["d", "e", "f"], PATH2, PIPES),
     ],
 )
-def test_uri_parser_path_params(parser_class, expected, query_in, collection_format):
+async def test_uri_parser_path_params(
+    parser_class, expected, query_in, collection_format
+):
     class Request:
         query = {}
         form = {}
@@ -132,9 +138,9 @@ def test_uri_parser_path_params(parser_class, expected, query_in, collection_for
         }
     ]
     body_defn = {}
-    p = parser_class(parameters, body_defn)
-    res = p(lambda x: x)(request)
-    assert res.path_params["letters"] == expected
+    parser = parser_class(parameters, body_defn)
+    res = parser.resolve_path(request.path_params)
+    assert res["letters"] == expected
 
 
 @pytest.mark.parametrize(
@@ -149,7 +155,7 @@ def test_uri_parser_path_params(parser_class, expected, query_in, collection_for
         (AlwaysMultiURIParser, ["a", "b", "c", "d", "e", "f"], QUERY4, PIPES),
     ],
 )
-def test_uri_parser_query_params_with_square_brackets(
+async def test_uri_parser_query_params_with_square_brackets(
     parser_class, expected, query_in, collection_format
 ):
     class Request:
@@ -168,9 +174,9 @@ def test_uri_parser_query_params_with_square_brackets(
         }
     ]
     body_defn = {}
-    p = parser_class(parameters, body_defn)
-    res = p(lambda x: x)(request)
-    assert res.query["letters[eq]"] == expected
+    parser = parser_class(parameters, body_defn)
+    res = parser.resolve_query(request.query.to_dict(flat=False))
+    assert res["letters[eq]"] == expected
 
 
 @pytest.mark.parametrize(
@@ -188,7 +194,7 @@ def test_uri_parser_query_params_with_square_brackets(
         (AlwaysMultiURIParser, ["a"], QUERY6, PIPES),
     ],
 )
-def test_uri_parser_query_params_with_underscores(
+async def test_uri_parser_query_params_with_underscores(
     parser_class, expected, query_in, collection_format
 ):
     class Request:
@@ -207,9 +213,9 @@ def test_uri_parser_query_params_with_underscores(
         }
     ]
     body_defn = {}
-    p = parser_class(parameters, body_defn)
-    res = p(lambda x: x)(request)
-    assert res.query["letters_eq"] == expected
+    parser = parser_class(parameters, body_defn)
+    res = parser.resolve_query(request.query.to_dict(flat=False))
+    assert res["letters_eq"] == expected
 
 
 @pytest.mark.parametrize(
@@ -231,7 +237,7 @@ def test_uri_parser_query_params_with_underscores(
         ),
     ],
 )
-def test_uri_parser_query_params_with_malformed_names(
+async def test_uri_parser_query_params_with_malformed_names(
     parser_class, query_in, collection_format, explode, expected
 ):
     class Request:
@@ -253,6 +259,6 @@ def test_uri_parser_query_params_with_malformed_names(
         }
     ]
     body_defn = {}
-    p = parser_class(parameters, body_defn)
-    res = p(lambda x: x)(request)
-    assert res.query == expected
+    parser = parser_class(parameters, body_defn)
+    res = parser.resolve_query(request.query.to_dict(flat=False))
+    assert res == expected

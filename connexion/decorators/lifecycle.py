@@ -22,7 +22,7 @@ class RequestResponseDecorator:
         self.api = api
         self.mimetype = mimetype
 
-    def __call__(self, function):
+    def __call__(self, function, uri_parser):
         """
         :type function: types.FunctionType
         :rtype: types.FunctionType
@@ -31,7 +31,7 @@ class RequestResponseDecorator:
 
             @functools.wraps(function)
             async def wrapper(*args, **kwargs):
-                connexion_request = self.api.get_request(*args, **kwargs)
+                connexion_request = self.api.get_request(uri_parser=uri_parser)
                 while asyncio.iscoroutine(connexion_request):
                     connexion_request = await connexion_request
 
@@ -40,7 +40,7 @@ class RequestResponseDecorator:
                     connexion_response = await connexion_response
 
                 framework_response = self.api.get_response(
-                    connexion_response, self.mimetype, connexion_request
+                    connexion_response, self.mimetype
                 )
                 while asyncio.iscoroutine(framework_response):
                     framework_response = await framework_response
@@ -51,8 +51,8 @@ class RequestResponseDecorator:
 
             @functools.wraps(function)
             def wrapper(*args, **kwargs):
-                request = self.api.get_request(*args, **kwargs)
+                request = self.api.get_request(uri_parser)
                 response = function(request)
-                return self.api.get_response(response, self.mimetype, request)
+                return self.api.get_response(response, self.mimetype)
 
         return wrapper

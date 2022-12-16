@@ -172,7 +172,7 @@ def test_path_parameter_someint__bad(simple_app):
     # non-integer values will not match Flask route
     app_client = simple_app.app.test_client()
     resp = app_client.get("/v1.0/test-int-path/foo")  # type: flask.Response
-    assert resp.status_code == 400, resp.text
+    assert resp.status_code == 404, resp.text
 
 
 @pytest.mark.parametrize(
@@ -205,7 +205,7 @@ def test_path_parameter_somefloat__bad(simple_app):
     # non-float values will not match Flask route
     app_client = simple_app.app.test_client()
     resp = app_client.get("/v1.0/test-float-path/123,45")  # type: flask.Response
-    assert resp.status_code == 400, resp.text
+    assert resp.status_code == 404, resp.text
 
 
 def test_default_param(strict_app):
@@ -280,7 +280,7 @@ def test_formdata_file_upload(simple_app):
     app_client = simple_app.app.test_client()
     resp = app_client.post(
         "/v1.0/test-formData-file-upload",
-        data={"formData": (BytesIO(b"file contents"), "filename.txt")},
+        data={"fileData": (BytesIO(b"file contents"), "filename.txt")},
     )
     assert resp.status_code == 200
     response = json.loads(resp.data.decode("utf-8", "replace"))
@@ -293,8 +293,8 @@ def test_formdata_file_upload_bad_request(simple_app):
     assert resp.status_code == 400
     response = json.loads(resp.data.decode("utf-8", "replace"))
     assert response["detail"] in [
-        "Missing formdata parameter 'formData'",
-        "'formData' is a required property",  # OAS3
+        "Missing formdata parameter 'fileData'",
+        "'fileData' is a required property",  # OAS3
     ]
 
 
@@ -302,7 +302,7 @@ def test_formdata_file_upload_missing_param(simple_app):
     app_client = simple_app.app.test_client()
     resp = app_client.post(
         "/v1.0/test-formData-file-upload-missing-param",
-        data={"missing_formData": (BytesIO(b"file contents"), "example.txt")},
+        data={"missing_fileData": (BytesIO(b"file contents"), "example.txt")},
     )
     assert resp.status_code == 200
 

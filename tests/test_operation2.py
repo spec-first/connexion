@@ -735,7 +735,6 @@ def test_form_transformation(api):
             "properties": {
                 "param": {
                     "type": "string",
-                    "default": "foo@bar.com",
                     "format": "email",
                 },
                 "array_param": {
@@ -746,6 +745,7 @@ def test_form_transformation(api):
                     "nullable": True,
                 },
             },
+            "default": {"param": "foo@bar.com"},
             "required": ["param"],
         },
         "encoding": {

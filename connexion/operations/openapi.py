@@ -3,14 +3,11 @@ This module defines an OpenAPIOperation class, a Connexion operation specific fo
 """
 
 import logging
-from copy import copy, deepcopy
 
 from connexion.datastructures import MediaTypeDict
 from connexion.operations.abstract import AbstractOperation
-
-from ..decorators.uri_parsing import OpenAPIURIParser
-from ..http_facts import FORM_CONTENT_TYPES
-from ..utils import deep_get, deep_merge, is_null, is_nullable, make_type
+from connexion.uri_parsing import OpenAPIURIParser
+from connexion.utils import deep_get
 
 logger = logging.getLogger("connexion.operations.openapi3")
 
@@ -35,6 +32,7 @@ class OpenAPIOperation(AbstractOperation):
         randomize_endpoint=None,
         pythonic_params=False,
         uri_parser_class=None,
+        parameter_to_arg=None,
     ):
         """
         This class uses the OperationID identify the module and function that will handle the operation
@@ -88,6 +86,7 @@ class OpenAPIOperation(AbstractOperation):
             randomize_endpoint=randomize_endpoint,
             pythonic_params=pythonic_params,
             uri_parser_class=uri_parser_class,
+            parameter_to_arg=parameter_to_arg,
         )
 
         self._request_body = operation.get("requestBody", {})
@@ -144,8 +143,9 @@ class OpenAPIOperation(AbstractOperation):
     def produces(self):
         return self._produces
 
-    def with_definitions(self, schema):
+    def with_definitions(self, schema: dict):
         if self.components:
+            schema.setdefault("schema", {})
             schema["schema"]["components"] = self.components
         return schema
 
@@ -240,6 +240,9 @@ class OpenAPIOperation(AbstractOperation):
             types[path_defn["name"]] = path_type
         return types
 
+    def body_name(self, _content_type: str) -> str:
+        return self.request_body.get("x-body-name", "body")
+
     def body_schema(self, content_type: str = None) -> dict:
         """
         The body schema definition for this operation.
@@ -267,131 +270,3 @@ class OpenAPIOperation(AbstractOperation):
             res = content_type_dict.get(content_type, {})
             return self.with_definitions(res)
         return {}
-
-    def _get_body_argument(self, body, arguments, has_kwargs, sanitize):
-        if len(arguments) <= 0 and not has_kwargs:
-            return {}
-
-        x_body_name = sanitize(self.request_body.get("x-body-name", "body"))
-
-        if self.consumes[0] in FORM_CONTENT_TYPES:
-            result = self._get_body_argument_form(body)
-        else:
-            result = self._get_body_argument_json(body)
-
-        if x_body_name in arguments or has_kwargs:
-            return {x_body_name: result}
-        return {}
-
-    def _get_body_argument_json(self, body):
-        # if the body came in null, and the schema says it can be null, we decide
-        # to include no value for the body argument, rather than the default body
-        if is_nullable(self.body_schema()) and is_null(body):
-            return None
-
-        if body is None:
-            default_body = self.body_schema().get("default", {})
-            return deepcopy(default_body)
-
-        return body
-
-    def _get_body_argument_form(self, body):
-        # now determine the actual value for the body (whether it came in or is default)
-        default_body = self.body_schema().get("default", {})
-        body_props = {
-            k: {"schema": v}
-            for k, v in self.body_schema().get("properties", {}).items()
-        }
-
-        # by OpenAPI specification `additionalProperties` defaults to `true`
-        # see: https://github.com/OAI/OpenAPI-Specification/blame/3.0.2/versions/3.0.2.md#L2305
-        additional_props = self.body_schema().get("additionalProperties", True)
-
-        body_arg = deepcopy(default_body)
-        body_arg.update(body or {})
-
-        if body_props or additional_props:
-            return self._get_typed_body_values(body_arg, body_props, additional_props)
-        return {}
-
-    def _get_typed_body_values(self, body_arg, body_props, additional_props):
-        """
-        Return a copy of the provided body_arg dictionary
-        whose values will have the appropriate types
-        as defined in the provided schemas.
-
-        :type body_arg: type dict
-        :type body_props: dict
-        :type additional_props: dict|bool
-        :rtype: dict
-        """
-        additional_props_defn = (
-            {"schema": additional_props} if isinstance(additional_props, dict) else None
-        )
-        res = {}
-
-        for key, value in body_arg.items():
-            try:
-                prop_defn = body_props[key]
-                res[key] = self._get_val_from_param(value, prop_defn)
-            except KeyError:  # pragma: no cover
-                if not additional_props:
-                    logger.error(f"Body property '{key}' not defined in body schema")
-                    continue
-                if additional_props_defn is not None:
-                    value = self._get_val_from_param(value, additional_props_defn)
-                res[key] = value
-
-        return res
-
-    def _build_default_obj_recursive(self, _properties, res):
-        """takes disparate and nested default keys, and builds up a default object"""
-        for key, prop in _properties.items():
-            if "default" in prop and key not in res:
-                res[key] = copy(prop["default"])
-            elif prop.get("type") == "object" and "properties" in prop:
-                res.setdefault(key, {})
-                res[key] = self._build_default_obj_recursive(
-                    prop["properties"], res[key]
-                )
-        return res
-
-    def _get_default_obj(self, schema):
-        try:
-            return deepcopy(schema["default"])
-        except KeyError:
-            _properties = schema.get("properties", {})
-            return self._build_default_obj_recursive(_properties, {})
-
-    def _get_query_defaults(self, query_defns):
-        defaults = {}
-        for k, v in query_defns.items():
-            try:
-                if v["schema"]["type"] == "object":
-                    defaults[k] = self._get_default_obj(v["schema"])
-                else:
-                    defaults[k] = v["schema"]["default"]
-            except KeyError:
-                pass
-        return defaults
-
-    def _get_query_arguments(self, query, arguments, has_kwargs, sanitize):
-        query_defns = {p["name"]: p for p in self.parameters if p["in"] == "query"}
-        default_query_params = self._get_query_defaults(query_defns)
-
-        query_arguments = deepcopy(default_query_params)
-        query_arguments = deep_merge(query_arguments, query)
-        return self._query_args_helper(
-            query_defns, query_arguments, arguments, has_kwargs, sanitize
-        )
-
-    def _get_val_from_param(self, value, query_defn):
-        query_schema = query_defn["schema"]
-
-        if is_nullable(query_schema) and is_null(value):
-            return None
-
-        if query_schema["type"] == "array":
-            return [make_type(part, query_schema["items"]["type"]) for part in value]
-        else:
-            return make_type(value, query_schema["type"])

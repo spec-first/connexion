@@ -7,6 +7,7 @@ import pathlib
 from types import FunctionType  # NOQA
 
 import a2wsgi
+import asgiref.wsgi
 import flask
 import werkzeug.exceptions
 from flask import signals

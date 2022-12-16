@@ -4,14 +4,12 @@ This module defines a Swagger2Operation class, a Connexion operation specific fo
 
 import logging
 import typing as t
-from copy import deepcopy
 
+from connexion.exceptions import InvalidSpecification
+from connexion.http_facts import FORM_CONTENT_TYPES
 from connexion.operations.abstract import AbstractOperation
-
-from ..decorators.uri_parsing import Swagger2URIParser
-from ..exceptions import InvalidSpecification
-from ..http_facts import FORM_CONTENT_TYPES
-from ..utils import deep_get, is_null, is_nullable, make_type
+from connexion.uri_parsing import Swagger2URIParser
+from connexion.utils import deep_get
 
 logger = logging.getLogger("connexion.operations.swagger2")
 
@@ -52,6 +50,7 @@ class Swagger2Operation(AbstractOperation):
         randomize_endpoint=None,
         pythonic_params=False,
         uri_parser_class=None,
+        parameter_to_arg=None,
     ):
         """
         :param api: api that this operation is attached to
@@ -101,6 +100,7 @@ class Swagger2Operation(AbstractOperation):
             randomize_endpoint=randomize_endpoint,
             pythonic_params=pythonic_params,
             uri_parser_class=uri_parser_class,
+            parameter_to_arg=parameter_to_arg,
         )
 
         self._produces = operation.get("produces", app_produces)
@@ -222,6 +222,9 @@ class Swagger2Operation(AbstractOperation):
         except KeyError:
             raise
 
+    def body_name(self, content_type: str = None) -> str:
+        return self.body_definition(content_type).get("name", "body")
+
     def body_schema(self, content_type: str = None) -> dict:
         """
         The body schema definition for this operation.
@@ -237,6 +240,7 @@ class Swagger2Operation(AbstractOperation):
 
         :rtype: dict
         """
+        # TODO: cache
         if content_type in FORM_CONTENT_TYPES:
             form_parameters = [p for p in self.parameters if p["in"] == "formData"]
             body_definition = self._transform_form(form_parameters)
@@ -248,12 +252,21 @@ class Swagger2Operation(AbstractOperation):
                         method=self.method, path=self.path
                     )
                 )
-            body_definition = body_parameters[0] if body_parameters else {}
+            body_parameter = body_parameters[0] if body_parameters else {}
+            body_definition = self._transform_json(body_parameter)
         return body_definition
+
+    def _transform_json(self, body_parameter: dict) -> dict:
+        """Translate Swagger2 json parameters into OpenAPI 3 jsonschema spec."""
+        nullable = body_parameter.get("x-nullable")
+        if nullable is not None:
+            body_parameter["schema"]["nullable"] = nullable
+        return body_parameter
 
     def _transform_form(self, form_parameters: t.List[dict]) -> dict:
         """Translate Swagger2 form parameters into OpenAPI 3 jsonschema spec."""
         properties = {}
+        defaults = {}
         required = []
         encoding = {}
 
@@ -276,7 +289,7 @@ class Swagger2Operation(AbstractOperation):
 
             default = param.get("default")
             if default is not None:
-                prop["default"] = default
+                defaults[param["name"]] = default
 
             nullable = param.get("x-nullable")
             if nullable is not None:
@@ -305,6 +318,7 @@ class Swagger2Operation(AbstractOperation):
             "schema": {
                 "type": "object",
                 "properties": properties,
+                "default": defaults,
                 "required": required,
             }
         }
@@ -313,76 +327,3 @@ class Swagger2Operation(AbstractOperation):
             definition["encoding"] = encoding
 
         return definition
-
-    def _get_query_arguments(self, query, arguments, has_kwargs, sanitize):
-        query_defns = {p["name"]: p for p in self.parameters if p["in"] == "query"}
-        default_query_params = {
-            k: v["default"] for k, v in query_defns.items() if "default" in v
-        }
-        query_arguments = deepcopy(default_query_params)
-        query_arguments.update(query)
-        return self._query_args_helper(
-            query_defns, query_arguments, arguments, has_kwargs, sanitize
-        )
-
-    def _get_body_argument(self, body, arguments, has_kwargs, sanitize):
-        kwargs = {}
-        body_parameters = [p for p in self.parameters if p["in"] == "body"] or [{}]
-        if body is None:
-            body = deepcopy(body_parameters[0].get("schema", {}).get("default"))
-        body_name = sanitize(body_parameters[0].get("name"))
-
-        form_defns = {p["name"]: p for p in self.parameters if p["in"] == "formData"}
-
-        default_form_params = {
-            k: v["default"] for k, v in form_defns.items() if "default" in v
-        }
-
-        # Add body parameters
-        if body_name:
-            if not has_kwargs and body_name not in arguments:
-                logger.debug("Body parameter '%s' not in function arguments", body_name)
-            else:
-                logger.debug("Body parameter '%s' in function arguments", body_name)
-                kwargs[body_name] = body
-
-        # Add formData parameters
-        form_arguments = deepcopy(default_form_params)
-        if form_defns and body:
-            form_arguments.update(body)
-        for key, value in form_arguments.items():
-            sanitized_key = sanitize(key)
-            if not has_kwargs and sanitized_key not in arguments:
-                logger.debug(
-                    "FormData parameter '%s' (sanitized: '%s') not in function arguments",
-                    key,
-                    sanitized_key,
-                )
-            else:
-                logger.debug(
-                    "FormData parameter '%s' (sanitized: '%s') in function arguments",
-                    key,
-                    sanitized_key,
-                )
-                try:
-                    form_defn = form_defns[key]
-                except KeyError:  # pragma: no cover
-                    logger.error(
-                        "Function argument '%s' (non-sanitized: %s) not defined in specification",
-                        key,
-                        sanitized_key,
-                    )
-                else:
-                    kwargs[sanitized_key] = self._get_val_from_param(value, form_defn)
-        return kwargs
-
-    def _get_val_from_param(self, value, query_defn):
-        if is_nullable(query_defn) and is_null(value):
-            return None
-
-        query_schema = query_defn
-
-        if query_schema["type"] == "array":
-            return [make_type(part, query_defn["items"]["type"]) for part in value]
-        else:
-            return make_type(value, query_defn["type"])

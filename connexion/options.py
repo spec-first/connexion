@@ -10,7 +10,7 @@ try:
 except ImportError:
     swagger_ui_2_path = swagger_ui_3_path = None
 
-from connexion.decorators.uri_parsing import AbstractURIParser
+from connexion.uri_parsing import AbstractURIParser
 
 NO_UI_MSG = """The swagger_ui directory could not be found.
     Please install connexion with extra install: pip install connexion[swagger-ui]

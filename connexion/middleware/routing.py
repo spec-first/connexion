@@ -1,7 +1,10 @@
+import functools
 import pathlib
+import re
 import typing as t
 from contextvars import ContextVar
 
+import starlette.convertors
 from starlette.routing import Router
 from starlette.types import ASGIApp, Receive, Scope, Send
 
@@ -53,7 +56,7 @@ class RoutingAPI(AbstractRoutingAPI):
         resolver: t.Optional[Resolver] = None,
         resolver_error_handler: t.Optional[t.Callable] = None,
         debug: bool = False,
-        **kwargs
+        **kwargs,
     ) -> None:
         """API implementation on top of Starlette Router for Connexion middleware."""
         self.next_app = next_app
@@ -76,6 +79,8 @@ class RoutingAPI(AbstractRoutingAPI):
         routing_operation = RoutingOperation.from_operation(
             operation, next_app=self.next_app
         )
+        types = operation.get_path_parameter_types()
+        path = starlettify_path(path, types)
         self._add_operation_internal(method, path, routing_operation)
 
     def _add_operation_internal(
@@ -94,13 +99,15 @@ class RoutingMiddleware(AppMiddleware):
         self.app = app
         # Pass unknown routes to next app
         self.router = Router(default=RoutingOperation(None, self.app))
+        starlette.convertors.register_url_convertor("float", FloatConverter())
+        starlette.convertors.register_url_convertor("int", IntegerConverter())
 
     def add_api(
         self,
         specification: t.Union[pathlib.Path, str, dict],
         base_path: t.Optional[str] = None,
         arguments: t.Optional[dict] = None,
-        **kwargs
+        **kwargs,
     ) -> None:
         """Add an API to the router based on a OpenAPI spec.
 
@@ -113,7 +120,7 @@ class RoutingMiddleware(AppMiddleware):
             base_path=base_path,
             arguments=arguments,
             next_app=self.app,
-            **kwargs
+            **kwargs,
         )
         self.router.mount(api.base_path, app=api.router)
 
@@ -129,3 +136,46 @@ class RoutingMiddleware(AppMiddleware):
         # Needs to be set so starlette router throws exceptions instead of returning error responses
         scope["app"] = self
         await self.router(scope, receive, send)
+
+
+PATH_PARAMETER = re.compile(r"\{([^}]*)\}")
+PATH_PARAMETER_CONVERTERS = {"integer": "int", "number": "float", "path": "path"}
+
+
+def convert_path_parameter(match, types):
+    name = match.group(1)
+    swagger_type = types.get(name)
+    converter = PATH_PARAMETER_CONVERTERS.get(swagger_type)
+    return f'{{{name.replace("-", "_")}{":" if converter else ""}{converter or ""}}}'
+
+
+def starlettify_path(swagger_path, types=None):
+    """
+    Convert swagger path templates to flask path templates
+
+    :type swagger_path: str
+    :type types: dict
+    :rtype: str
+
+    >>> starlettify_path('/foo-bar/{my-param}')
+    '/foo-bar/{my_param}'
+
+    >>> starlettify_path('/foo/{someint}', {'someint': 'int'})
+    '/foo/{someint:int}'
+    """
+    if types is None:
+        types = {}
+    convert_match = functools.partial(convert_path_parameter, types=types)
+    return PATH_PARAMETER.sub(convert_match, swagger_path)
+
+
+class FloatConverter(starlette.convertors.FloatConvertor):
+    """Starlette converter for OpenAPI number type"""
+
+    regex = r"[+-]?[0-9]*(\.[0-9]*)?"
+
+
+class IntegerConverter(starlette.convertors.IntegerConvertor):
+    """Starlette converter for OpenAPI integer type"""
+
+    regex = r"[+-]?[0-9]+"
