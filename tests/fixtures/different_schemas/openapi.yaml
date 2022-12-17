@@ -59,7 +59,7 @@ paths:
         '200':
           description: Requested new_stack data model
           content:
-            text/plain:
+            application/json:
               schema:
                 type: string
   '/test_schema/response/integer/{valid}':
@@ -78,7 +78,7 @@ paths:
         '200':
           description: Requested new_stack data model
           content:
-            text/plain:
+            application/json:
               schema:
                 type: integer
   '/test_schema/response/number/{valid}':
@@ -97,7 +97,7 @@ paths:
         '200':
           description: Requested new_stack data model
           content:
-            text/plain:
+            application/json:
               schema:
                 type: number
   '/test_schema/response/boolean/{valid}':
@@ -116,7 +116,7 @@ paths:
         '200':
           description: Requested new_stack data model
           content:
-            text/plain:
+            application/json:
               schema:
                 type: boolean
   '/test_schema/response/array/{valid}':
