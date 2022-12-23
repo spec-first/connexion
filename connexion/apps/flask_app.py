@@ -12,12 +12,12 @@ import werkzeug.exceptions
 from flask import signals
 
 from connexion import jsonifier
-
-from ..apis.flask_api import FlaskApi
-from ..exceptions import ProblemException
-from ..middleware import ConnexionMiddleware
-from ..problem import problem
-from .abstract import AbstractApp
+from connexion.apis.flask_api import FlaskApi
+from connexion.apps.abstract import AbstractApp
+from connexion.exceptions import ProblemException
+from connexion.middleware import ConnexionMiddleware
+from connexion.middleware.wsgi import WSGIMiddleware
+from connexion.problem import problem
 
 logger = logging.getLogger("connexion.app")
 
@@ -50,7 +50,7 @@ class FlaskApp(AbstractApp):
         return app
 
     def _apply_middleware(self, middlewares):
-        middlewares = [*middlewares, a2wsgi.WSGIMiddleware]
+        middlewares = [*middlewares, WSGIMiddleware]
         middleware = ConnexionMiddleware(self.app.wsgi_app, middlewares=middlewares)
 
         # Wrap with ASGI to WSGI middleware for usage with development server and test client
