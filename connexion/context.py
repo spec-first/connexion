@@ -1,9 +1,12 @@
-from asyncio import AbstractEventLoop
 from contextvars import ContextVar
 
-_context: ContextVar[AbstractEventLoop] = ContextVar("CONTEXT")
+from starlette.types import Scope
+
+_scope: ContextVar[Scope] = ContextVar("SCOPE")
 
 
 def __getattr__(name):
+    if name == "scope":
+        return _scope.get()
     if name == "context":
-        return _context.get()
+        return _scope.get().get("extensions", {}).get("connexion_context", {})

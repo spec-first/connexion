@@ -1,7 +1,7 @@
 """
-This module defines a utility functions to convert request parameters to arguments for the view
-function.
+This module defines a decorator to convert request parameters to arguments for the view function.
 """
+import asyncio
 import builtins
 import functools
 import inspect
@@ -14,7 +14,7 @@ from copy import copy, deepcopy
 import inflection
 
 from connexion.http_facts import FORM_CONTENT_TYPES
-from connexion.lifecycle import ConnexionRequest
+from connexion.lifecycle import ConnexionRequest, MiddlewareRequest
 from connexion.operations import AbstractOperation, Swagger2Operation
 from connexion.utils import (
     deep_merge,
@@ -34,60 +34,72 @@ def parameter_to_arg(
     function: t.Callable,
     pythonic_params: bool = False,
 ) -> t.Callable[[ConnexionRequest], t.Any]:
+
     sanitize = pythonic if pythonic_params else sanitized
     arguments, has_kwargs = inspect_function_arguments(function)
 
-    @functools.wraps(function)
-    def wrapper(request: ConnexionRequest) -> t.Any:
-        kwargs = {}
+    if asyncio.iscoroutinefunction(function):
 
-        body_name = sanitize(operation.body_name(request.content_type))
-        if body_name in arguments or has_kwargs:
-            request_body = get_body(request)
-        # Pass form contents separately for Swagger2 for backward compatibility with Connexion 2
-        # Checking for body_name is not enough
-        elif request.mimetype in FORM_CONTENT_TYPES and isinstance(
-            operation, Swagger2Operation
-        ):
-            request_body = get_body(request)
-        else:
+        @functools.wraps(function)
+        async def wrapper(
+            request: t.Union[ConnexionRequest, MiddlewareRequest]
+        ) -> t.Any:
+            body_name = sanitize(operation.body_name(request.content_type))
+            # Pass form contents separately for Swagger2 for backward compatibility with
+            # Connexion 2 Checking for body_name is not enough
             request_body = None
+            if (body_name in arguments or has_kwargs) or (
+                request.mimetype in FORM_CONTENT_TYPES
+                and isinstance(operation, Swagger2Operation)
+            ):
 
-        kwargs.update(
-            get_arguments(
-                operation,
-                path_params=request.view_args,
-                query_params=request.args,
-                body=request_body,
-                files=request.files,
+                if isinstance(request, ConnexionRequest):
+                    request_body = get_flask_body(request)
+                elif isinstance(request, MiddlewareRequest):
+                    request_body = await get_starlette_body(request)
+
+            kwargs = prep_kwargs(
+                request,
+                operation=operation,
+                request_body=request_body,
                 arguments=arguments,
                 has_kwargs=has_kwargs,
                 sanitize=sanitize,
-                content_type=request.content_type,
             )
-        )
 
-        # optionally convert parameter variable names to un-shadowed, snake_case form
-        if pythonic_params:
-            kwargs = {snake_and_shadow(k): v for k, v in kwargs.items()}
+            return await function(**kwargs)
 
-        # add context info (e.g. from security decorator)
-        for key, value in request.context.items():
-            if has_kwargs or key in arguments:
-                kwargs[key] = value
+    else:
+
+        @functools.wraps(function)
+        async def wrapper(request: ConnexionRequest) -> t.Any:
+            body_name = sanitize(operation.body_name(request.content_type))
+            # Pass form contents separately for Swagger2 for backward compatibility with
+            # Connexion 2 Checking for body_name is not enough
+            if (body_name in arguments or has_kwargs) or (
+                request.mimetype in FORM_CONTENT_TYPES
+                and isinstance(operation, Swagger2Operation)
+            ):
+                request_body = get_flask_body(request)
             else:
-                logger.debug("Context parameter '%s' not in function arguments", key)
-        # attempt to provide the request context to the function
-        if CONTEXT_NAME in arguments:
-            kwargs[CONTEXT_NAME] = request.context
+                request_body = None
 
-        return function(**kwargs)
+            kwargs = prep_kwargs(
+                request,
+                operation=operation,
+                request_body=request_body,
+                arguments=arguments,
+                has_kwargs=has_kwargs,
+                sanitize=sanitize,
+            )
+
+            return function(**kwargs)
 
     return wrapper
 
 
-def get_body(request: ConnexionRequest) -> t.Any:
-    """Get body from the request based on the content type."""
+def get_flask_body(request: ConnexionRequest) -> t.Any:
+    """Get body from a sync request based on the content type."""
     if is_json_mimetype(request.content_type):
         return request.get_json(silent=True)
     elif request.mimetype in FORM_CONTENT_TYPES:
@@ -95,6 +107,54 @@ def get_body(request: ConnexionRequest) -> t.Any:
     else:
         # Return explicit None instead of empty bytestring so it is handled as null downstream
         return request.get_data() or None
+
+
+async def get_starlette_body(request: MiddlewareRequest) -> t.Any:
+    """Get body from an async request based on the content type."""
+    if is_json_mimetype(request.content_type):
+        return await request.json()
+    elif request.mimetype in FORM_CONTENT_TYPES:
+        return await request.form()
+    else:
+        # Return explicit None instead of empty bytestring so it is handled as null downstream
+        return await request.data() or None
+
+
+def prep_kwargs(
+    request: t.Union[ConnexionRequest, MiddlewareRequest],
+    *,
+    operation: AbstractOperation,
+    request_body: t.Any,
+    arguments: t.List[str],
+    has_kwargs: bool,
+    sanitize: t.Callable,
+) -> dict:
+    kwargs = get_arguments(
+        operation,
+        path_params=request.path_params,
+        query_params=request.query_params,
+        body=request_body,
+        files=request.files,
+        arguments=arguments,
+        has_kwargs=has_kwargs,
+        sanitize=sanitize,
+        content_type=request.content_type,
+    )
+
+    # optionally convert parameter variable names to un-shadowed, snake_case form
+    kwargs = {sanitize(k): v for k, v in kwargs.items()}
+
+    # add context info (e.g. from security decorator)
+    for key, value in request.context.items():
+        if has_kwargs or key in arguments:
+            kwargs[key] = value
+        else:
+            logger.debug("Context parameter '%s' not in function arguments", key)
+    # attempt to provide the request context to the function
+    if CONTEXT_NAME in arguments:
+        kwargs[CONTEXT_NAME] = request.context
+
+    return kwargs
 
 
 def inspect_function_arguments(function: t.Callable) -> t.Tuple[t.List[str], bool]:

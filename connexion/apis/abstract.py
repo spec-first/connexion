@@ -20,6 +20,7 @@ from connexion.operations import make_operation
 from connexion.options import ConnexionOptions
 from connexion.resolver import Resolver
 from connexion.spec import Specification
+from connexion.utils import is_json_mimetype
 
 MODULE_PATH = pathlib.Path(__file__).absolute().parent.parent
 SWAGGER_UI_URL = "ui"
@@ -103,14 +104,19 @@ class AbstractRoutingAPI(AbstractSpecAPI):
         self,
         *args,
         resolver_error_handler: t.Optional[t.Callable] = None,
+        pythonic_params=False,
         debug: bool = False,
         **kwargs,
     ) -> None:
         """Minimal interface of an API, with only functionality related to routing.
 
+        :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended
+            to any shadowed built-ins
         :param debug: Flag to run in debug mode
         """
         super().__init__(*args, **kwargs)
+        logger.debug("Pythonic params: %s", str(pythonic_params))
+        self.pythonic_params = pythonic_params
         self.debug = debug
         self.resolver_error_handler = resolver_error_handler
 
@@ -186,18 +192,13 @@ class AbstractAPI(AbstractRoutingAPI, metaclass=AbstractAPIMeta):
         resolver=None,
         debug=False,
         resolver_error_handler=None,
-        pythonic_params=False,
         options=None,
         **kwargs,
     ):
         """
         :type resolver_error_handler: callable | None
-        :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended
-            to any shadowed built-ins
         :type pythonic_params: bool
         """
-        logger.debug("Pythonic params: %s", str(pythonic_params))
-        self.pythonic_params = pythonic_params
 
         super().__init__(
             specification,
@@ -207,6 +208,7 @@ class AbstractAPI(AbstractRoutingAPI, metaclass=AbstractAPIMeta):
             resolver_error_handler=resolver_error_handler,
             debug=debug,
             options=options,
+            **kwargs,
         )
 
     def add_operation(self, path, method):
@@ -239,9 +241,20 @@ class AbstractAPI(AbstractRoutingAPI, metaclass=AbstractAPIMeta):
 
     @classmethod
     @abc.abstractmethod
-    def get_request(cls, uri_parser) -> Request:
+    def get_request(cls, **kwargs) -> Request:
         """
         This method converts the user framework request to a ConnexionRequest.
+        """
+
+    @classmethod
+    @abc.abstractmethod
+    def get_response(cls, response, mimetype=None):
+        """
+        This method converts a handler response to a framework response.
+        This method should just retrieve response from handler then call `cls._get_response`.
+        :param response: A response to cast (tuple, framework response, etc).
+        :param mimetype: The response mimetype.
+        :type mimetype: Union[None, str]
         """
 
     @classmethod
@@ -414,9 +427,13 @@ class AbstractAPI(AbstractRoutingAPI, metaclass=AbstractAPIMeta):
         return body, status_code, mimetype
 
     @classmethod
-    @abc.abstractmethod
     def _serialize_data(cls, data, mimetype):
-        pass
+        if isinstance(mimetype, str) and is_json_mimetype(mimetype):
+            body = cls.jsonifier.dumps(data)
+        else:
+            body = data
+
+        return body, mimetype
 
     def json_loads(self, data):
         return self.jsonifier.loads(data)

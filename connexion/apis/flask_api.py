@@ -10,7 +10,6 @@ from connexion.apis import flask_utils
 from connexion.apis.abstract import AbstractAPI
 from connexion.jsonifier import Jsonifier
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
-from connexion.utils import is_json_mimetype
 
 logger = logging.getLogger("connexion.apis.flask_api")
 
@@ -121,16 +120,8 @@ class FlaskApi(AbstractAPI):
         return flask.current_app.response_class(**kwargs)
 
     @classmethod
-    def _serialize_data(cls, data, mimetype):
-        if isinstance(mimetype, str) and is_json_mimetype(mimetype):
-            body = cls.jsonifier.dumps(data)
-        else:
-            body = data
-
-        return body, mimetype
-
-    @classmethod
-    def get_request(cls, uri_parser) -> ConnexionRequest:
+    def get_request(cls, **kwargs) -> ConnexionRequest:
+        uri_parser = kwargs.pop("uri_parser")
         return ConnexionRequest(flask.request, uri_parser=uri_parser)
 
     @classmethod

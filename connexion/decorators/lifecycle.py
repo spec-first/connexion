@@ -6,8 +6,10 @@ which manages the lifecycle of a request internally in Connexion.
 import asyncio
 import functools
 import logging
+import typing as t
 
-from ..utils import has_coroutine
+from connexion.uri_parsing import AbstractURIParser
+from connexion.utils import has_coroutine
 
 logger = logging.getLogger("connexion.decorators.decorator")
 
@@ -22,16 +24,16 @@ class RequestResponseDecorator:
         self.api = api
         self.mimetype = mimetype
 
-    def __call__(self, function, uri_parser):
-        """
-        :type function: types.FunctionType
-        :rtype: types.FunctionType
-        """
+    def __call__(
+        self, function: t.Callable, uri_parser: AbstractURIParser = None
+    ) -> t.Callable:
         if has_coroutine(function, self.api):
 
             @functools.wraps(function)
             async def wrapper(*args, **kwargs):
-                connexion_request = self.api.get_request(uri_parser=uri_parser)
+                connexion_request = self.api.get_request(
+                    *args, uri_parser=uri_parser, **kwargs
+                )
                 while asyncio.iscoroutine(connexion_request):
                     connexion_request = await connexion_request
 
@@ -51,7 +53,7 @@ class RequestResponseDecorator:
 
             @functools.wraps(function)
             def wrapper(*args, **kwargs):
-                request = self.api.get_request(uri_parser)
+                request = self.api.get_request()
                 response = function(request)
                 return self.api.get_response(response, self.mimetype)
 
