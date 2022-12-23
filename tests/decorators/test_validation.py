@@ -1,9 +1,8 @@
 from unittest.mock import MagicMock
 
 import pytest
-from connexion.apis.flask_api import FlaskApi
-from connexion.decorators.validation import ParameterValidator
 from connexion.json_schema import Draft4RequestValidator, Draft4ResponseValidator
+from connexion.validators.parameter import ParameterValidator
 from jsonschema import ValidationError
 
 
@@ -75,7 +74,7 @@ def test_get_valid_parameter_with_enum_array_header():
 
 def test_invalid_type(monkeypatch):
     logger = MagicMock()
-    monkeypatch.setattr("connexion.decorators.validation.logger", logger)
+    monkeypatch.setattr("connexion.validators.parameter.logger", logger)
     result = ParameterValidator.validate_parameter(
         "formdata", 20, {"type": "string", "name": "foo"}
     )
@@ -91,8 +90,6 @@ On instance:
 
 
 def test_invalid_type_value_error(monkeypatch):
-    logger = MagicMock()
-    monkeypatch.setattr("connexion.decorators.validation.logger", logger)
     value = {"test": 1, "second": 2}
     result = ParameterValidator.validate_parameter(
         "formdata", value, {"type": "boolean", "name": "foo"}
@@ -101,8 +98,6 @@ def test_invalid_type_value_error(monkeypatch):
 
 
 def test_enum_error(monkeypatch):
-    logger = MagicMock()
-    monkeypatch.setattr("connexion.decorators.validation.logger", logger)
     value = "INVALID"
     param = {"schema": {"type": "string", "enum": ["valid"]}, "name": "test_path_param"}
     result = ParameterValidator.validate_parameter("path", value, param)

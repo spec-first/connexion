@@ -706,7 +706,7 @@ def test_oauth_scopes_in_or(security_handler_factory):
 
 
 def test_form_transformation(api):
-    mock_self = mock.Mock(strict_validation=True)
+    mock_self = mock.Mock()
 
     swagger_form_parameters = [
         {
@@ -747,7 +747,6 @@ def test_form_transformation(api):
                 },
             },
             "required": ["param"],
-            "additionalProperties": False,
         },
         "encoding": {
             "array_param": {

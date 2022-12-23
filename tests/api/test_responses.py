@@ -171,7 +171,7 @@ def test_exploded_deep_object_param_endpoint_openapi_multiple_data_types(
     response = app_client.get(
         "/v1.0/exploded-deep-object-param?id[foo]=bar&id[fooint]=2&id[fooboo]=false"
     )  # type: flask.Response
-    assert response.status_code == 200
+    assert response.status_code == 200, response.text
     response_data = json.loads(response.data.decode("utf-8", "replace"))
     assert response_data == {
         "foo": "bar",

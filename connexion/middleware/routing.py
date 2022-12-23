@@ -25,6 +25,10 @@ class RoutingOperation:
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         """Attach operation to scope and pass it to the next app"""
         original_scope = _scope.get()
+        # Pass resolved path params along
+        original_scope.setdefault("path_params", {}).update(
+            scope.get("path_params", {})
+        )
 
         api_base_path = scope.get("root_path", "")[
             len(original_scope.get("root_path", "")) :

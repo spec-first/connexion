@@ -172,7 +172,7 @@ def test_path_parameter_someint__bad(simple_app):
     # non-integer values will not match Flask route
     app_client = simple_app.app.test_client()
     resp = app_client.get("/v1.0/test-int-path/foo")  # type: flask.Response
-    assert resp.status_code == 404
+    assert resp.status_code == 400, resp.text
 
 
 @pytest.mark.parametrize(
@@ -205,7 +205,7 @@ def test_path_parameter_somefloat__bad(simple_app):
     # non-float values will not match Flask route
     app_client = simple_app.app.test_client()
     resp = app_client.get("/v1.0/test-float-path/123,45")  # type: flask.Response
-    assert resp.status_code == 404
+    assert resp.status_code == 400, resp.text
 
 
 def test_default_param(strict_app):
@@ -348,19 +348,19 @@ def test_bool_param(simple_app):
 def test_bool_array_param(simple_app):
     app_client = simple_app.app.test_client()
     resp = app_client.get("/v1.0/test-bool-array-param?thruthiness=true,true,true")
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
     response = json.loads(resp.data.decode("utf-8", "replace"))
     assert response is True
 
     app_client = simple_app.app.test_client()
     resp = app_client.get("/v1.0/test-bool-array-param?thruthiness=true,true,false")
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
     response = json.loads(resp.data.decode("utf-8", "replace"))
     assert response is False
 
     app_client = simple_app.app.test_client()
     resp = app_client.get("/v1.0/test-bool-array-param")
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
 
 
 def test_required_param_miss_config(simple_app):
@@ -557,7 +557,7 @@ def test_parameters_snake_case(snake_case_app):
     resp = app_client.get(
         "/v1.0/test-get-camel-case-version?truthiness=true&orderBy=asc"
     )
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
     assert resp.get_json() == {"truthiness": True, "order_by": "asc"}
     resp = app_client.get("/v1.0/test-get-camel-case-version?truthiness=5")
     assert resp.status_code == 400

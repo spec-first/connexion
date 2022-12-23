@@ -206,3 +206,22 @@ class ExtraParameterProblem(ProblemException):
                 )
 
         super().__init__(title=title, detail=detail, **kwargs)
+
+
+class TypeValidationError(Exception):
+    def __init__(self, schema_type, parameter_type, parameter_name):
+        """
+        Exception raise when type validation fails
+
+        :type schema_type: str
+        :type parameter_type: str
+        :type parameter_name: str
+        :return:
+        """
+        self.schema_type = schema_type
+        self.parameter_type = parameter_type
+        self.parameter_name = parameter_name
+
+    def __str__(self):
+        msg = "Wrong type, expected '{schema_type}' for {parameter_type} parameter '{parameter_name}'"
+        return msg.format(**vars(self))

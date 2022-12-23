@@ -8,7 +8,6 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 
 from connexion import utils
 from connexion.datastructures import MediaTypeDict
-from connexion.decorators.uri_parsing import AbstractURIParser
 from connexion.exceptions import UnsupportedMediaTypeProblem
 from connexion.middleware.abstract import RoutedAPI, RoutedMiddleware
 from connexion.operations import AbstractOperation
@@ -25,14 +24,12 @@ class RequestValidationOperation:
         operation: AbstractOperation,
         strict_validation: bool = False,
         validator_map: t.Optional[dict] = None,
-        uri_parser_class: t.Optional[AbstractURIParser] = None,
     ) -> None:
         self.next_app = next_app
         self._operation = operation
         self.strict_validation = strict_validation
         self._validator_map = VALIDATOR_MAP.copy()
         self._validator_map.update(validator_map or {})
-        self.uri_parser_class = uri_parser_class
 
     def extract_content_type(
         self, headers: t.List[t.Tuple[bytes, bytes]]
@@ -73,11 +70,23 @@ class RequestValidationOperation:
     async def __call__(self, scope: Scope, receive: Receive, send: Send):
         receive_fn = receive
 
+        # Validate parameters & headers
+        uri_parser_class = self._operation._uri_parser_class
+        uri_parser = uri_parser_class(
+            self._operation.parameters, self._operation.body_definition()
+        )
+        parameter_validator_cls = self._validator_map["parameter"]
+        parameter_validator = parameter_validator_cls(  # type: ignore
+            self._operation.parameters,
+            uri_parser=uri_parser,
+            strict_validation=self.strict_validation,
+        )
+        parameter_validator.validate(scope)
+
+        # Extract content type
         headers = scope["headers"]
         mime_type, encoding = self.extract_content_type(headers)
         self.validate_mime_type(mime_type)
-
-        # TODO: Validate parameters
 
         # Validate body
         schema = self._operation.body_schema(mime_type)
@@ -137,7 +146,6 @@ class RequestValidationAPI(RoutedAPI[RequestValidationOperation]):
             operation=operation,
             strict_validation=self.strict_validation,
             validator_map=self.validator_map,
-            uri_parser_class=self.uri_parser_class,
         )
 
 
