@@ -4,6 +4,7 @@ import re
 import typing as t
 from contextvars import ContextVar
 
+from starlette.requests import Request as StarletteRequest
 from starlette.responses import RedirectResponse
 from starlette.responses import Response as StarletteResponse
 from starlette.routing import Router
@@ -42,16 +43,11 @@ class SwaggerUIAPI(AbstractSpecAPI):
     def normalize_string(string):
         return re.sub(r"[^a-zA-Z0-9]", "_", string.strip("/"))
 
-    def _base_path_for_prefix(self, request):
+    def _base_path_for_prefix(self, request: StarletteRequest) -> str:
         """
-        returns a modified basePath which includes the incoming request's
-        path prefix.
+        returns a modified basePath which includes the incoming root_path.
         """
-        base_path = self.base_path
-        if not request.url.path.startswith(self.base_path):
-            prefix = request.url.path.split(self.base_path)[0]
-            base_path = prefix + base_path
-        return base_path
+        return request.scope.get("root_path", "").rstrip("/")
 
     def _spec_for_prefix(self, request):
         """
@@ -132,8 +128,11 @@ class SwaggerUIAPI(AbstractSpecAPI):
         # normalize_path_middleware because we also serve static files
         # from this dir (below)
 
-        async def redirect(_request):
-            return RedirectResponse(url=self.base_path + console_ui_path + "/")
+        async def redirect(request):
+            url = request.scope.get("root_path", "").rstrip("/")
+            url += console_ui_path
+            url += "/"
+            return RedirectResponse(url=url)
 
         self.router.add_route(methods=["GET"], path=console_ui_path, endpoint=redirect)
 

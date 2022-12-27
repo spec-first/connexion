@@ -55,7 +55,7 @@ class ConnexionMiddleware:
         for middleware in reversed(middlewares):
             app = middleware(app)  # type: ignore
             apps.append(app)
-        return app, reversed(apps)
+        return app, list(reversed(apps))
 
     def add_api(
         self,
