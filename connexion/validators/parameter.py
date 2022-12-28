@@ -102,6 +102,9 @@ class ParameterValidator:
         return self.validate_parameter("query", val, param)
 
     def validate_path_parameter(self, param, request):
+        # TODO: activate
+        # path_params = self.uri_parser.resolve_path(request.path_params)
+        # val = path_params.get(param["name"].replace("-", "_"))
         val = request.path_params.get(param["name"].replace("-", "_"))
         return self.validate_parameter("path", val, param)
 

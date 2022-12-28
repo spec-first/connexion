@@ -1,5 +1,9 @@
 from fnmatch import fnmatch
 
+# special marker object to return empty content for any status code
+# e.g. in app method do "return NoContent, 201"
+NoContent = object()
+
 
 class MediaTypeDict(dict):
     """

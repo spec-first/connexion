@@ -2,8 +2,8 @@ from unittest.mock import MagicMock
 from urllib.parse import quote_plus
 
 import pytest
-from connexion.decorators.uri_parsing import Swagger2URIParser
 from connexion.exceptions import BadRequestProblem
+from connexion.uri_parsing import Swagger2URIParser
 from connexion.validators.parameter import ParameterValidator
 from starlette.datastructures import QueryParams
 

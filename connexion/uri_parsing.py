@@ -1,14 +1,13 @@
 """
-This module defines view function decorators to split query and path parameters.
+This module defines URIParsers which parse query and path parameters according to OpenAPI
+serialization rules.
 """
 
 import abc
-import functools
 import json
 import logging
 import re
 
-from connexion.decorators.decorator import BaseDecorator
 from connexion.exceptions import TypeValidationError
 from connexion.utils import all_json, coerce_type, deep_merge, is_null, is_nullable
 
@@ -22,7 +21,7 @@ QUERY_STRING_DELIMITERS = {
 }
 
 
-class AbstractURIParser(BaseDecorator, metaclass=abc.ABCMeta):
+class AbstractURIParser(metaclass=abc.ABCMeta):
     parsable_parameters = ["query", "path"]
 
     def __init__(self, param_defns, body_defn):
@@ -130,33 +129,6 @@ class AbstractURIParser(BaseDecorator, metaclass=abc.ABCMeta):
                     pass
 
         return resolved_param
-
-    def __call__(self, function):
-        """
-        :type function: types.FunctionType
-        :rtype: types.FunctionType
-        """
-
-        @functools.wraps(function)
-        def wrapper(request):
-            def coerce_dict(md):
-                """MultiDict -> dict of lists"""
-                try:
-                    return md.to_dict(flat=False)
-                except AttributeError:
-                    return dict(md.items())
-
-            query = coerce_dict(request.query)
-            path_params = coerce_dict(request.path_params)
-            form = coerce_dict(request.form)
-
-            request.query = self.resolve_query(query)
-            request.path_params = self.resolve_path(path_params)
-            request.form = self.resolve_form(form)
-            response = function(request)
-            return response
-
-        return wrapper
 
 
 class OpenAPIURIParser(AbstractURIParser):
@@ -282,7 +254,7 @@ class OpenAPIURIParser(AbstractURIParser):
 class Swagger2URIParser(AbstractURIParser):
     """
     Adheres to the Swagger2 spec,
-    Assumes the the last defined query parameter should be used.
+    Assumes that the last defined query parameter should be used.
     """
 
     parsable_parameters = ["query", "path", "formData"]

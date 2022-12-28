@@ -84,7 +84,7 @@ def get_bye_secure(name, user, token_info):
 
 
 def get_bye_secure_from_flask():
-    return "Goodbye {user} (Secure!)".format(user=context["user"])
+    return "Goodbye {user} (Secure!)".format(user=context.context["user"])
 
 
 def get_bye_secure_from_connexion(context_):
@@ -314,9 +314,11 @@ def test_formdata_missing_param():
     return ""
 
 
-def test_formdata_file_upload(formData, **kwargs):
-    filename = formData.filename
-    contents = formData.read().decode("utf-8", "replace")
+def test_formdata_file_upload(fileData, **kwargs):
+    """In Swagger, form paramaeters and files are passed separately"""
+    filename = fileData.filename
+    contents = fileData.read()
+    contents = contents.decode("utf-8", "replace")
     return {filename: contents}
 
 

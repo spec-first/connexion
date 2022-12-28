@@ -1,33 +1,20 @@
 """
-This module defines a BaseDecorator to wrap a user view function and a RequestResponseDecorator
+This module defines a RequestResponseDecorator
 which manages the lifecycle of a request internally in Connexion.
 """
 
 import asyncio
 import functools
 import logging
+import typing as t
 
-from ..utils import has_coroutine
+from connexion.uri_parsing import AbstractURIParser
+from connexion.utils import has_coroutine
 
 logger = logging.getLogger("connexion.decorators.decorator")
 
 
-class BaseDecorator:
-    def __call__(self, function):
-        """
-        :type function: types.FunctionType
-        :rtype: types.FunctionType
-        """
-        return function
-
-    def __repr__(self):  # pragma: no cover
-        """
-        :rtype: str
-        """
-        return "<BaseDecorator>"
-
-
-class RequestResponseDecorator(BaseDecorator):
+class RequestResponseDecorator:
     """Manages the lifecycle of the request internally in Connexion.
     Filter the ConnexionRequest instance to return the corresponding
     framework specific object.
@@ -37,16 +24,16 @@ class RequestResponseDecorator(BaseDecorator):
         self.api = api
         self.mimetype = mimetype
 
-    def __call__(self, function):
-        """
-        :type function: types.FunctionType
-        :rtype: types.FunctionType
-        """
+    def __call__(
+        self, function: t.Callable, uri_parser: AbstractURIParser = None
+    ) -> t.Callable:
         if has_coroutine(function, self.api):
 
             @functools.wraps(function)
             async def wrapper(*args, **kwargs):
-                connexion_request = self.api.get_request(*args, **kwargs)
+                connexion_request = self.api.get_request(
+                    *args, uri_parser=uri_parser, **kwargs
+                )
                 while asyncio.iscoroutine(connexion_request):
                     connexion_request = await connexion_request
 
@@ -55,7 +42,7 @@ class RequestResponseDecorator(BaseDecorator):
                     connexion_response = await connexion_response
 
                 framework_response = self.api.get_response(
-                    connexion_response, self.mimetype, connexion_request
+                    connexion_response, self.mimetype
                 )
                 while asyncio.iscoroutine(framework_response):
                     framework_response = await framework_response
@@ -66,8 +53,8 @@ class RequestResponseDecorator(BaseDecorator):
 
             @functools.wraps(function)
             def wrapper(*args, **kwargs):
-                request = self.api.get_request(*args, **kwargs)
+                request = self.api.get_request()
                 response = function(request)
-                return self.api.get_response(response, self.mimetype, request)
+                return self.api.get_response(response, self.mimetype)
 
         return wrapper

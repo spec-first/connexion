@@ -13,14 +13,14 @@ import typing as t
 
 import httpx
 
-from ..decorators.parameter import inspect_function_arguments
-from ..exceptions import (
+from connexion.decorators.parameter import inspect_function_arguments
+from connexion.exceptions import (
     ConnexionException,
     OAuthProblem,
     OAuthResponseProblem,
     OAuthScopeProblem,
 )
-from ..utils import get_function_from_name
+from connexion.utils import get_function_from_name
 
 logger = logging.getLogger("connexion.api.security")
 

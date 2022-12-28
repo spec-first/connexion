@@ -3,11 +3,19 @@ from unittest.mock import MagicMock
 from connexion.decorators.parameter import parameter_to_arg, pythonic
 
 
-def test_injection():
-    request = MagicMock(name="request", path_params={"p1": "123"})
-    request.args = {}
+async def test_injection():
+    request = MagicMock(name="request")
+    request.query_params = {}
+    request.path_params = {"p1": "123"}
     request.headers = {}
-    request.params = {}
+    request.content_type = "application/json"
+
+    async def coro():
+        return
+
+    request.json = coro
+    request.loop = None
+    request.context = {}
 
     func = MagicMock()
 
@@ -16,16 +24,28 @@ def test_injection():
 
     class Op:
         consumes = ["application/json"]
+        parameters = []
+        method = "GET"
 
-        def get_arguments(self, *args, **kwargs):
-            return {"p1": "123"}
+        def body_name(self, *args, **kwargs):
+            return "body"
 
-    parameter_to_arg(Op(), handler)(request)
+    parameter_decorator = parameter_to_arg(Op(), handler)
+    await parameter_decorator(request)
     func.assert_called_with(p1="123")
 
 
-def test_injection_with_context():
+async def test_injection_with_context():
     request = MagicMock(name="request")
+
+    async def coro():
+        return
+
+    request.json = coro
+    request.loop = None
+    request.context = {}
+    request.content_type = "application/json"
+    request.path_params = {"p1": "123"}
 
     func = MagicMock()
 
@@ -34,11 +54,14 @@ def test_injection_with_context():
 
     class Op2:
         consumes = ["application/json"]
+        parameters = []
+        method = "GET"
 
-        def get_arguments(self, *args, **kwargs):
-            return {"p1": "123"}
+        def body_name(self, *args, **kwargs):
+            return "body"
 
-    parameter_to_arg(Op2(), handler)(request)
+    parameter_decorator = parameter_to_arg(Op2(), handler)
+    await parameter_decorator(request)
     func.assert_called_with(request.context, p1="123")
 
 

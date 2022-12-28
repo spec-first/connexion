@@ -6,10 +6,8 @@ and functionality shared between Swagger 2 and OpenAPI 3 specifications.
 import abc
 import logging
 
-from ..decorators.decorator import RequestResponseDecorator
-from ..decorators.parameter import parameter_to_arg
-from ..decorators.produces import BaseSerializer, Produces
-from ..utils import all_json
+from connexion.decorators.lifecycle import RequestResponseDecorator
+from connexion.utils import all_json
 
 logger = logging.getLogger("connexion.operations.abstract")
 
@@ -47,6 +45,7 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         randomize_endpoint=None,
         pythonic_params=False,
         uri_parser_class=None,
+        parameter_to_arg=None,
     ):
         """
         :param api: api that this operation is attached to
@@ -87,6 +86,8 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         self._operation_id = self._resolution.operation_id
 
         self._responses = self._operation.get("responses", {})
+
+        self.parameter_to_arg = parameter_to_arg
 
     @property
     def api(self):
@@ -149,75 +150,6 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         """
         return self._pythonic_params
 
-    @staticmethod
-    def _get_file_arguments(files, arguments, has_kwargs=False):
-        return {k: v for k, v in files.items() if k in arguments or has_kwargs}
-
-    @abc.abstractmethod
-    def _get_val_from_param(self, value, query_defn):
-        """
-        Convert input parameters into the correct type
-        """
-
-    def _query_args_helper(
-        self, query_defns, query_arguments, function_arguments, has_kwargs, sanitize
-    ):
-        res = {}
-        for key, value in query_arguments.items():
-            sanitized_key = sanitize(key)
-            if not has_kwargs and sanitized_key not in function_arguments:
-                logger.debug(
-                    "Query Parameter '%s' (sanitized: '%s') not in function arguments",
-                    key,
-                    sanitized_key,
-                )
-            else:
-                logger.debug(
-                    "Query Parameter '%s' (sanitized: '%s') in function arguments",
-                    key,
-                    sanitized_key,
-                )
-                try:
-                    query_defn = query_defns[key]
-                except KeyError:  # pragma: no cover
-                    logger.error(
-                        "Function argument '%s' (non-sanitized: %s) not defined in specification",
-                        sanitized_key,
-                        key,
-                    )
-                else:
-                    logger.debug("%s is a %s", key, query_defn)
-                    res.update(
-                        {sanitized_key: self._get_val_from_param(value, query_defn)}
-                    )
-        return res
-
-    @abc.abstractmethod
-    def _get_query_arguments(self, query, arguments, has_kwargs, sanitize):
-        """
-        extract handler function arguments from the query parameters
-        """
-
-    @abc.abstractmethod
-    def _get_body_argument(self, body, arguments, has_kwargs, sanitize):
-        """
-        extract handler function arguments from the request body
-        """
-
-    def _get_path_arguments(self, path_params, sanitize):
-        """
-        extract handler function arguments from path parameters
-        """
-        kwargs = {}
-        path_defns = {p["name"]: p for p in self.parameters if p["in"] == "path"}
-        for key, value in path_params.items():
-            sanitized_key = sanitize(key)
-            if key in path_defns:
-                kwargs[sanitized_key] = self._get_val_from_param(value, path_defns[key])
-            else:  # Assume path params mechanism used for injection
-                kwargs[sanitized_key] = value
-        return kwargs
-
     @property
     @abc.abstractmethod
     def parameters(self):
@@ -240,6 +172,12 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
+    def body_name(self, content_type: str) -> str:
+        """
+        Name of the body in the spec.
+        """
+
+    @abc.abstractmethod
     def body_schema(self, content_type: str = None) -> dict:
         """
         The body schema definition for this operation.
@@ -252,28 +190,10 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         :rtype: dict
         """
 
-    def get_arguments(
-        self, path_params, query_params, body, files, arguments, has_kwargs, sanitize
-    ):
-        """
-        get arguments for handler function
-        """
-        ret = {}
-        ret.update(self._get_path_arguments(path_params, sanitize))
-        ret.update(
-            self._get_query_arguments(query_params, arguments, has_kwargs, sanitize)
-        )
-
-        if self.method.upper() in ["PATCH", "POST", "PUT"]:
-            ret.update(self._get_body_argument(body, arguments, has_kwargs, sanitize))
-            ret.update(self._get_file_arguments(files, arguments, has_kwargs))
-        return ret
-
     def response_definition(self, status_code=None, content_type=None):
         """
         response definition for this endpoint
         """
-        content_type = content_type or self.get_mimetype()
         response_definition = self.responses.get(
             str(status_code), self.responses.get("default", {})
         )
@@ -337,20 +257,18 @@ class AbstractOperation(metaclass=abc.ABCMeta):
 
         :rtype: types.FunctionType
         """
-        function = parameter_to_arg(
-            self,
-            self._resolution.function,
-            self.pythonic_params,
+        function = self._resolution.function
+
+        if self.parameter_to_arg:
+            function = self.parameter_to_arg(
+                self,
+                function,
+                self.pythonic_params,
+            )
+
+        function = self._request_response_decorator(
+            function, self._uri_parsing_decorator
         )
-
-        produces_decorator = self.__content_type_decorator
-        logger.debug("... Adding produces decorator (%r)", produces_decorator)
-        function = produces_decorator(function)
-
-        uri_parsing_decorator = self._uri_parsing_decorator
-        function = uri_parsing_decorator(function)
-
-        function = self._request_response_decorator(function)
 
         return function
 
@@ -364,39 +282,6 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         :rtype: types.FunctionType
         """
         return RequestResponseDecorator(self.api, self.get_mimetype())
-
-    @property
-    def __content_type_decorator(self):
-        """
-        Get produces decorator.
-
-        If the operation mimetype format is json then the function return value is jsonified
-
-        From Swagger Specification:
-
-        **Produces**
-
-        A list of MIME types the operation can produce. This overrides the produces definition at the Swagger Object.
-        An empty value MAY be used to clear the global definition.
-
-        :rtype: types.FunctionType
-        """
-
-        logger.debug("... Produces: %s", self.produces, extra=vars(self))
-
-        mimetype = self.get_mimetype()
-        if all_json(self.produces):  # endpoint will return json
-            logger.debug("... Produces json", extra=vars(self))
-            # TODO: Refactor this.
-            return lambda f: f
-
-        elif len(self.produces) == 1:
-            logger.debug("... Produces %s", mimetype, extra=vars(self))
-            decorator = Produces(mimetype)
-            return decorator
-
-        else:
-            return BaseSerializer()
 
     def json_loads(self, data):
         """

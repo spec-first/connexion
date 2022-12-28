@@ -35,18 +35,24 @@ def boolean(s):
 
 
 # https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#data-types
-TYPE_MAP = {
+TYPE_MAP: t.Dict[str, t.Any] = {
     "integer": int,
     "number": float,
     "string": str,
     "boolean": boolean,
     "array": list,
     "object": dict,
+    "file": lambda x: x,  # Don't cast files
 }  # map of swagger types to python types
 
 
-def make_type(value, _type):
-    type_func = TYPE_MAP[_type]  # convert value to right type
+def make_type(value: t.Any, type_: str, format_: t.Optional[str]) -> t.Any:
+    """Cast a value to the type defined in the specification."""
+    # In OpenAPI, files are represented with string type and binary format
+    if type_ == "string" and format_ == "binary":
+        type_ = "file"
+
+    type_func = TYPE_MAP[type_]
     return type_func(value)
 
 
@@ -141,6 +147,8 @@ def is_json_mimetype(mimetype):
     :type mimetype: str
     :rtype: bool
     """
+    if mimetype is None:
+        return False
 
     maintype, subtype = mimetype.split("/")  # type: str, str
     if ";" in subtype:
@@ -209,9 +217,7 @@ def has_coroutine(function, api=None):
         return iscorofunc(function)
 
     else:
-        return any(
-            iscorofunc(func) for func in (function, api.get_request, api.get_response)
-        )
+        return any(iscorofunc(func) for func in (function, api.get_response))
 
 
 def yamldumper(openapi):

@@ -4,6 +4,7 @@ import typing as t
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from connexion.middleware.abstract import AppMiddleware
+from connexion.middleware.context import ContextMiddleware
 from connexion.middleware.exceptions import ExceptionMiddleware
 from connexion.middleware.request_validation import RequestValidationMiddleware
 from connexion.middleware.response_validation import ResponseValidationMiddleware
@@ -21,6 +22,7 @@ class ConnexionMiddleware:
         SecurityMiddleware,
         RequestValidationMiddleware,
         ResponseValidationMiddleware,
+        ContextMiddleware,
     ]
 
     def __init__(

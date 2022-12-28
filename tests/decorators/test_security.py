@@ -21,7 +21,7 @@ def test_get_tokeninfo_url(monkeypatch, security_handler_factory):
     env = {}
     monkeypatch.setattr("os.environ", env)
     logger = MagicMock()
-    monkeypatch.setattr("connexion.security.security_handler_factory.logger", logger)
+    monkeypatch.setattr("connexion.security.logger", logger)
 
     security_def = {}
     assert security_handler_factory.get_tokeninfo_func(security_def) is None

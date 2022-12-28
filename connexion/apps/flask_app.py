@@ -12,27 +12,35 @@ import werkzeug.exceptions
 from flask import signals
 
 from connexion import jsonifier
-
-from ..apis.flask_api import FlaskApi
-from ..exceptions import ProblemException
-from ..middleware import ConnexionMiddleware
-from ..problem import problem
-from .abstract import AbstractApp
+from connexion.apis.flask_api import FlaskApi
+from connexion.apps.abstract import AbstractApp
+from connexion.exceptions import ProblemException
+from connexion.middleware import ConnexionMiddleware
+from connexion.middleware.wsgi import WSGIMiddleware
+from connexion.problem import problem
 
 logger = logging.getLogger("connexion.app")
 
 
 class FlaskApp(AbstractApp):
-    def __init__(self, import_name, server="flask", extra_files=None, **kwargs):
+    def __init__(
+        self, import_name, server="flask", server_args=None, extra_files=None, **kwargs
+    ):
         """
         :param extra_files: additional files to be watched by the reloader, defaults to the swagger specs of added apis
         :type extra_files: list[str | pathlib.Path], optional
 
         See :class:`~connexion.AbstractApp` for additional parameters.
         """
+        self.import_name = import_name
+
+        self.server = server
+        self.server_args = dict() if server_args is None else server_args
         self.extra_files = extra_files or []
 
-        super().__init__(import_name, FlaskApi, server=server, **kwargs)
+        self.app = self.create_app()
+
+        super().__init__(import_name, FlaskApi, **kwargs)
 
     def create_app(self):
         app = flask.Flask(self.import_name, **self.server_args)
@@ -42,7 +50,7 @@ class FlaskApp(AbstractApp):
         return app
 
     def _apply_middleware(self, middlewares):
-        middlewares = [*middlewares, a2wsgi.WSGIMiddleware]
+        middlewares = [*middlewares, WSGIMiddleware]
         middleware = ConnexionMiddleware(self.app.wsgi_app, middlewares=middlewares)
 
         # Wrap with ASGI to WSGI middleware for usage with development server and test client
@@ -99,6 +107,22 @@ class FlaskApp(AbstractApp):
     def add_error_handler(self, error_code, function):
         # type: (int, FunctionType) -> None
         self.app.register_error_handler(error_code, function)
+
+    def route(self, rule: str, **kwargs):
+        """
+        A decorator that is used to register a view function for a
+        given URL rule.  This does the same thing as `add_url_rule`
+        but is intended for decorator usage::
+
+            @app.route('/')
+            def index():
+                return 'Hello World'
+
+        :param rule: the URL rule as string
+        :param kwargs: kwargs to be forwarded to the underlying `werkzeug.routing.Rule` object.
+        """
+        logger.debug("Adding %s with decorator", rule, extra=kwargs)
+        return self.app.route(rule, **kwargs)
 
     def run(
         self, port=None, server=None, debug=None, host=None, extra_files=None, **options
@@ -178,7 +202,7 @@ class FlaskApp(AbstractApp):
         else:
             raise Exception(f"Server {self.server} not recognized")
 
-    def __call__(self, scope, receive, send):  # pragma: no cover
+    def __call__(self, scope, receive, send):
         """
         ASGI interface. Calls the middleware wrapped around the wsgi app.
         """

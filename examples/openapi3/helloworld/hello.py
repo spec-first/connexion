@@ -1,14 +1,7 @@
-#!/usr/bin/env python3
-
 import connexion
 
 
-async def test():
-    pass
-
-
-async def post_greeting(name: str) -> str:
-    await test()
+def post_greeting(name: str) -> str:
     return f"Hello {name}"
 
 

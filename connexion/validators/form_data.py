@@ -6,13 +6,13 @@ from starlette.datastructures import FormData, Headers, UploadFile
 from starlette.formparsers import FormParser, MultiPartParser
 from starlette.types import Receive, Scope
 
-from connexion.decorators.uri_parsing import AbstractURIParser
 from connexion.exceptions import (
     BadRequestProblem,
     ExtraParameterProblem,
     TypeValidationError,
 )
 from connexion.json_schema import Draft4RequestValidator
+from connexion.uri_parsing import AbstractURIParser
 from connexion.utils import coerce_type, is_null
 
 logger = logging.getLogger("connexion.validators.form_data")
