@@ -23,7 +23,6 @@ class AbstractApp(metaclass=abc.ABCMeta):
         specification_dir="",
         arguments=None,
         auth_all_paths=False,
-        debug=None,
         resolver=None,
         options=None,
         skip_error_handlers=False,
@@ -38,13 +37,10 @@ class AbstractApp(metaclass=abc.ABCMeta):
         :type arguments: dict | None
         :param auth_all_paths: whether to authenticate not defined paths
         :type auth_all_paths: bool
-        :param debug: include debugging information
-        :type debug: bool
         :param resolver: Callable that maps operationID to a function
         :param middlewares: Callable that maps operationID to a function
         :type middlewares: list | None
         """
-        self.debug = debug
         self.resolver = resolver
         self.import_name = import_name
         self.arguments = arguments or {}
@@ -177,7 +173,6 @@ class AbstractApp(metaclass=abc.ABCMeta):
             validate_responses=validate_responses,
             strict_validation=strict_validation,
             auth_all_paths=auth_all_paths,
-            debug=self.debug,
             validator_map=validator_map,
             pythonic_params=pythonic_params,
             options=api_options.as_dict(),
@@ -192,7 +187,6 @@ class AbstractApp(metaclass=abc.ABCMeta):
             validate_responses=validate_responses,
             strict_validation=strict_validation,
             auth_all_paths=auth_all_paths,
-            debug=self.debug,
             pythonic_params=pythonic_params,
             options=api_options.as_dict(),
         )

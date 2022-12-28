@@ -7,8 +7,6 @@ from werkzeug.test import Client, EnvironBuilder
 
 
 def test_app(simple_app):
-    assert simple_app.port == 5001
-
     app_client = simple_app.app.test_client()
 
     # by default the Swagger UI is enabled
