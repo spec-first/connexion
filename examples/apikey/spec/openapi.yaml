@@ -1,0 +1,27 @@
+openapi: 3.0.0
+info:
+  title: API Key Example
+  version: '1.0'
+servers:
+  - url: /openapi
+paths:
+  /secret:
+    get:
+      summary: Return secret string
+      operationId: app.get_secret
+      responses:
+        '200':
+          description: secret response
+          content:
+            '*/*':
+              schema:
+                type: string
+      security:
+        - api_key: []
+components:
+  securitySchemes:
+    api_key:
+      type: apiKey
+      name: X-Auth
+      in: header
+      x-apikeyInfoFunc: app.apikey_auth

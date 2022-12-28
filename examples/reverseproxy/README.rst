@@ -31,7 +31,7 @@ To run this example, install Connexion from PyPI:
 
 .. code-block::
 
-    $ sudo pip3 install --upgrade connexion[swagger-ui]
+    $ pip install --upgrade connexion[swagger-ui]
 
 and then run it either directly
 .. code-block::

@@ -1,0 +1,26 @@
+openapi: 3.0.0
+info:
+  title: Basic Auth Example
+  version: '1.0'
+servers:
+  - url: /openapi
+paths:
+  /secret:
+    get:
+      summary: Return secret string
+      operationId: app.get_secret
+      responses:
+        '200':
+          description: secret response
+          content:
+            '*/*':
+              schema:
+                type: string
+      security:
+        - basic: []
+components:
+  securitySchemes:
+    basic:
+      type: http
+      scheme: basic
+      x-basicInfoFunc: app.basic_auth

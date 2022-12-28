@@ -1,0 +1,80 @@
+swagger: "2.0"
+
+info:
+  title: "{{title}}"
+  version: "1.0"
+
+basePath: /swagger
+
+paths:
+  /pets:
+    get:
+      responses:
+        '200':
+          description: 'Fetch a list of pets'
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Pet'
+    post:
+      parameters:
+        - in: body
+          name: pet
+          required: true
+          schema:
+            $ref: '#/definitions/PetRegistration'
+      responses:
+        '201':
+          description: 'Register a new pet'
+
+  '/pets/{id}':
+    put:
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: integer
+        - in: body
+          name: pet
+          required: true
+          schema:
+            $ref: '#/definitions/Pet'
+      responses:
+        '200':
+          description: 'Update a pet by ID'
+    delete:
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: integer
+      responses:
+        '204':
+          description: 'Delete a pet by ID'
+    get:
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: 'Fetch a pet by ID'
+          schema:
+            $ref: '#/definitions/Pet'
+            
+definitions:
+  PetRegistration:
+    type: object
+    properties:
+      name: { type: string }
+  Pet:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      name: { type: string }
+      registered:
+        type: string
+        format: date-time

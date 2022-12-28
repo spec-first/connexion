@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 example of connexion running behind a path-altering reverse-proxy
 
@@ -8,6 +7,7 @@ directly from users on the web!
 
 """
 import logging
+from pathlib import Path
 
 import connexion
 import uvicorn
@@ -78,4 +78,6 @@ def create_app():
 
 
 if __name__ == "__main__":
-    uvicorn.run(create_app(), port=8080, proxy_headers=True)
+    uvicorn.run(
+        f"{Path(__file__).stem}:create_app", factory=True, port=8080, proxy_headers=True
+    )

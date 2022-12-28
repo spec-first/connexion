@@ -64,7 +64,7 @@ class SwaggerUIAPI(AbstractSpecAPI):
              (or {base_path}/swagger.json for swagger2)
         """
         logger.info(
-            "Adding spec json: %s/%s", self.base_path, self.options.openapi_spec_path
+            "Adding spec json: %s%s", self.base_path, self.options.openapi_spec_path
         )
         self.router.add_route(
             methods=["GET"],
