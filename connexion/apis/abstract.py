@@ -105,19 +105,16 @@ class AbstractRoutingAPI(AbstractSpecAPI):
         *args,
         resolver_error_handler: t.Optional[t.Callable] = None,
         pythonic_params=False,
-        debug: bool = False,
         **kwargs,
     ) -> None:
         """Minimal interface of an API, with only functionality related to routing.
 
         :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended
             to any shadowed built-ins
-        :param debug: Flag to run in debug mode
         """
         super().__init__(*args, **kwargs)
         logger.debug("Pythonic params: %s", str(pythonic_params))
         self.pythonic_params = pythonic_params
-        self.debug = debug
         self.resolver_error_handler = resolver_error_handler
 
         self.add_paths()
@@ -171,12 +168,9 @@ class AbstractRoutingAPI(AbstractSpecAPI):
         error_msg = "Failed to add operation for {method} {url}".format(
             method=method.upper(), url=url
         )
-        if self.debug:
-            logger.exception(error_msg)
-        else:
-            logger.error(error_msg)
-            _type, value, traceback = exc_info
-            raise value.with_traceback(traceback)
+        logger.error(error_msg)
+        _type, value, traceback = exc_info
+        raise value.with_traceback(traceback)
 
 
 class AbstractAPI(AbstractRoutingAPI, metaclass=AbstractAPIMeta):
@@ -190,7 +184,6 @@ class AbstractAPI(AbstractRoutingAPI, metaclass=AbstractAPIMeta):
         base_path=None,
         arguments=None,
         resolver=None,
-        debug=False,
         resolver_error_handler=None,
         options=None,
         **kwargs,
@@ -206,7 +199,6 @@ class AbstractAPI(AbstractRoutingAPI, metaclass=AbstractAPIMeta):
             arguments=arguments,
             resolver=resolver,
             resolver_error_handler=resolver_error_handler,
-            debug=debug,
             options=options,
             **kwargs,
         )

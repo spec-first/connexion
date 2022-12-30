@@ -112,7 +112,7 @@ def security_handler_factory():
 
 @pytest.fixture
 def app():
-    cnx_app = App(__name__, port=5001, specification_dir=SPEC_FOLDER, debug=True)
+    cnx_app = App(__name__, specification_dir=SPEC_FOLDER)
     cnx_app.add_api("api.yaml", validate_responses=True)
     return cnx_app
 
@@ -157,10 +157,8 @@ def build_app_from_fixture(
 
     cnx_app = App(
         __name__,
-        port=5001,
         specification_dir=FIXTURES_FOLDER / api_spec_folder,
         middlewares=middlewares,
-        debug=debug,
     )
 
     cnx_app.add_api(spec_file, **kwargs)

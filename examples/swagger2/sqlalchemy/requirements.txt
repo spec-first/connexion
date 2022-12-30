@@ -1,3 +1,0 @@
-connexion>=1.0.97
-Flask>=0.10.1
-SQLAlchemy>=1.0.13

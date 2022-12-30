@@ -52,6 +52,10 @@ docs_require = [
     'sphinx-autoapi==1.8.1'
 ]
 
+uvicorn_requires = [
+    'uvicorn[standard]>=0.17.6'
+]
+
 
 class PyTest(TestCommand):
 
@@ -100,7 +104,8 @@ setup(
         'tests': tests_require,
         'flask': flask_require,
         'swagger-ui': swagger_ui_require,
-        'docs': docs_require
+        'docs': docs_require,
+        'uvicorn': uvicorn_requires,
     },
     cmdclass={'test': PyTest},
     test_suite='tests',

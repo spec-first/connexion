@@ -40,7 +40,6 @@ def expected_arguments():
             "swagger_url": None,
         },
         "auth_all_paths": False,
-        "debug": False,
     }
 
 
@@ -62,27 +61,21 @@ def test_run_missing_spec():
 
 
 def test_run_simple_spec(mock_app_run, spec_file):
-    default_port = 5000
     runner = CliRunner()
     runner.invoke(main, ["run", spec_file], catch_exceptions=False)
 
     app_instance = mock_app_run()
-    app_instance.run.assert_called_with(
-        port=default_port, host=None, server="flask", debug=False
-    )
+    app_instance.run.assert_called()
 
 
 def test_run_spec_with_host(mock_app_run, spec_file):
-    default_port = 5000
     runner = CliRunner()
     runner.invoke(
         main, ["run", spec_file, "--host", "custom.host"], catch_exceptions=False
     )
 
     app_instance = mock_app_run()
-    app_instance.run.assert_called_with(
-        port=default_port, host="custom.host", server="flask", debug=False
-    )
+    app_instance.run.assert_called()
 
 
 def test_run_no_options_all_default(mock_app_run, expected_arguments, spec_file):
@@ -137,19 +130,6 @@ def test_run_using_option_auth_all_paths(mock_app_run, expected_arguments, spec_
     mock_app_run.assert_called_with("connexion.cli", **expected_arguments)
 
 
-def test_run_in_debug_mode(mock_app_run, expected_arguments, spec_file, monkeypatch):
-    logging_config = MagicMock(name="connexion.cli.logging.basicConfig")
-    monkeypatch.setattr("connexion.cli.logging.basicConfig", logging_config)
-
-    runner = CliRunner()
-    runner.invoke(main, ["run", spec_file, "-d"], catch_exceptions=False)
-
-    logging_config.assert_called_with(level=logging.DEBUG)
-
-    expected_arguments["debug"] = True
-    mock_app_run.assert_called_with("connexion.cli", **expected_arguments)
-
-
 def test_run_in_very_verbose_mode(
     mock_app_run, expected_arguments, spec_file, monkeypatch
 ):
@@ -161,7 +141,6 @@ def test_run_in_very_verbose_mode(
 
     logging_config.assert_called_with(level=logging.DEBUG)
 
-    expected_arguments["debug"] = True
     mock_app_run.assert_called_with("connexion.cli", **expected_arguments)
 
 
@@ -174,7 +153,6 @@ def test_run_in_verbose_mode(mock_app_run, expected_arguments, spec_file, monkey
 
     logging_config.assert_called_with(level=logging.INFO)
 
-    expected_arguments["debug"] = False
     mock_app_run.assert_called_with("connexion.cli", **expected_arguments)
 
 

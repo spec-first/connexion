@@ -1,0 +1,35 @@
+openapi: 3.0.0
+
+info:
+  title: OAuth Example
+  version: "1.0"
+
+servers:
+  - url: /openapi
+
+paths:
+  /secret:
+    get:
+      summary: Return secret string
+      operationId: app.get_secret
+      responses:
+        200:
+          description: secret response
+          content:
+            text/plain:
+              schema:
+                type: string
+      security:
+        # enable authentication and require the "uid" scope for this endpoint
+        - oauth2: ['uid']
+
+components:
+  securitySchemes:
+    oauth2:
+      type: oauth2
+      x-tokenInfoFunc: app.token_info
+      flows:
+        implicit:
+          authorizationUrl: https://example.com/oauth2/dialog
+          scopes:
+            uid: Unique identifier of the user accessing the service.

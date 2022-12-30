@@ -53,7 +53,7 @@ class RequestResponseDecorator:
 
             @functools.wraps(function)
             def wrapper(*args, **kwargs):
-                request = self.api.get_request()
+                request = self.api.get_request(*args, uri_parser=uri_parser, **kwargs)
                 response = function(request)
                 return self.api.get_response(response, self.mimetype)
 

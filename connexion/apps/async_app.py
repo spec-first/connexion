@@ -83,7 +83,11 @@ class AsyncAsgiApp:
             )
 
         api_base_path = connexion_context.get("api_base_path")
-        if api_base_path and not api_base_path == self.base_path:
+        if (
+            api_base_path is not None
+            and api_base_path in self.apis
+            and not api_base_path == self.base_path
+        ):
             api = self.apis[api_base_path]
             return await api(scope, receive, send)
 

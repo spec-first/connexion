@@ -120,7 +120,7 @@ class RoutedMiddleware(AppMiddleware, t.Generic[API]):
                 "you have a routing middleware registered upstream. "
             )
         api_base_path = connexion_context.get("api_base_path")
-        if api_base_path:
+        if api_base_path is not None and api_base_path in self.apis:
             api = self.apis[api_base_path]
             operation_id = connexion_context.get("operation_id")
             try:

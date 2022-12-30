@@ -23,9 +23,7 @@ logger = logging.getLogger("connexion.app")
 
 
 class FlaskApp(AbstractApp):
-    def __init__(
-        self, import_name, server="flask", server_args=None, extra_files=None, **kwargs
-    ):
+    def __init__(self, import_name, server_args=None, **kwargs):
         """
         :param extra_files: additional files to be watched by the reloader, defaults to the swagger specs of added apis
         :type extra_files: list[str | pathlib.Path], optional
@@ -34,9 +32,7 @@ class FlaskApp(AbstractApp):
         """
         self.import_name = import_name
 
-        self.server = server
         self.server_args = dict() if server_args is None else server_args
-        self.extra_files = extra_files or []
 
         self.app = self.create_app()
 
@@ -100,8 +96,6 @@ class FlaskApp(AbstractApp):
     def add_api(self, specification, **kwargs):
         api = super().add_api(specification, **kwargs)
         self.app.register_blueprint(api.blueprint)
-        if isinstance(specification, (str, pathlib.Path)):
-            self.extra_files.append(self.specification_dir / specification)
         return api
 
     def add_error_handler(self, error_code, function):
@@ -124,89 +118,11 @@ class FlaskApp(AbstractApp):
         logger.debug("Adding %s with decorator", rule, extra=kwargs)
         return self.app.route(rule, **kwargs)
 
-    def run(
-        self, port=None, server=None, debug=None, host=None, extra_files=None, **options
-    ):  # pragma: no cover
-        """
-        Runs the application on a local development server.
-
-        :param host: the host interface to bind on.
-        :type host: str
-        :param port: port to listen to
-        :type port: int
-        :param server: which wsgi server to use
-        :type server: str | None
-        :param debug: include debugging information
-        :type debug: bool
-        :param extra_files: additional files to be watched by the reloader.
-        :type extra_files: Iterable[str | pathlib.Path]
-        :param options: options to be forwarded to the underlying server
-        """
-        # this functions is not covered in unit tests because we would effectively testing the mocks
-
-        # overwrite constructor parameter
-        if port is not None:
-            self.port = port
-        elif self.port is None:
-            self.port = 5000
-
-        self.host = host or self.host or "0.0.0.0"
-
-        if server is not None:
-            self.server = server
-
-        if debug is not None:
-            self.debug = debug
-
-        if extra_files is not None:
-            self.extra_files.extend(extra_files)
-
-        logger.debug("Starting %s HTTP server..", self.server, extra=vars(self))
-        if self.server == "flask":
-            self.app.run(
-                self.host,
-                port=self.port,
-                debug=self.debug,
-                extra_files=self.extra_files,
-                **options,
-            )
-        elif self.server == "tornado":
-            try:
-                import tornado.autoreload
-                import tornado.httpserver
-                import tornado.ioloop
-                import tornado.wsgi
-            except ImportError:
-                raise Exception("tornado library not installed")
-            wsgi_container = tornado.wsgi.WSGIContainer(self.app)
-            http_server = tornado.httpserver.HTTPServer(wsgi_container, **options)
-            http_server.listen(self.port, address=self.host)
-            if self.debug:
-                tornado.autoreload.start()
-            logger.info("Listening on %s:%s..", self.host, self.port)
-            tornado.ioloop.IOLoop.instance().start()
-        elif self.server == "gevent":
-            try:
-                import gevent.pywsgi
-            except ImportError:
-                raise Exception("gevent library not installed")
-            if self.debug:
-                logger.warning(
-                    "gevent server doesn't support debug mode. Please switch to flask/tornado server."
-                )
-            http_server = gevent.pywsgi.WSGIServer(
-                (self.host, self.port), self.app, **options
-            )
-            logger.info("Listening on %s:%s..", self.host, self.port)
-            http_server.serve_forever()
-        else:
-            raise Exception(f"Server {self.server} not recognized")
-
-    def __call__(self, scope, receive, send):
+    async def __call__(self, scope, receive, send):
         """
         ASGI interface. Calls the middleware wrapped around the wsgi app.
         """
-        return self.middleware(scope, receive, send)
+        return await self.middleware(scope, receive, send)
 
 
 class FlaskJSONProvider(flask.json.provider.DefaultJSONProvider):

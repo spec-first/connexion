@@ -38,6 +38,7 @@ def parameter_to_arg(
     sanitize = pythonic if pythonic_params else sanitized
     arguments, has_kwargs = inspect_function_arguments(function)
 
+    # TODO: should always be used for AsyncApp
     if asyncio.iscoroutinefunction(function):
 
         @functools.wraps(function)
@@ -72,7 +73,7 @@ def parameter_to_arg(
     else:
 
         @functools.wraps(function)
-        async def wrapper(request: ConnexionRequest) -> t.Any:
+        def wrapper(request: ConnexionRequest) -> t.Any:
             body_name = sanitize(operation.body_name(request.content_type))
             # Pass form contents separately for Swagger2 for backward compatibility with
             # Connexion 2 Checking for body_name is not enough

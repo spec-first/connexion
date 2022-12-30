@@ -1,0 +1,18 @@
+openapi: 3.0.0
+info:
+  title: Path-Altering Reverse Proxy Example
+  version: '1.0'
+servers:
+  - url: /openapi
+paths:
+  /hello:
+    get:
+      summary: say hi
+      operationId: app.hello
+      responses:
+        '200':
+          description: hello
+          content:
+            text/plain:
+              schema:
+                type: string

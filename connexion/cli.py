@@ -230,7 +230,7 @@ def run(
         "swagger_url": console_ui_url or None,
     }
 
-    app = app_cls(__name__, debug=debug, auth_all_paths=auth_all_paths, options=options)
+    app = app_cls(__name__, auth_all_paths=auth_all_paths, options=options)
 
     app.add_api(
         spec_file_full_path,

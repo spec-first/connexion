@@ -31,7 +31,7 @@ async def test_injection():
             return "body"
 
     parameter_decorator = parameter_to_arg(Op(), handler)
-    await parameter_decorator(request)
+    parameter_decorator(request)
     func.assert_called_with(p1="123")
 
 
@@ -61,7 +61,7 @@ async def test_injection_with_context():
             return "body"
 
     parameter_decorator = parameter_to_arg(Op2(), handler)
-    await parameter_decorator(request)
+    parameter_decorator(request)
     func.assert_called_with(request.context, p1="123")
 
 

@@ -20,12 +20,9 @@ class AbstractApp(metaclass=abc.ABCMeta):
         self,
         import_name,
         api_cls,
-        port=None,
         specification_dir="",
-        host=None,
         arguments=None,
         auth_all_paths=False,
-        debug=None,
         resolver=None,
         options=None,
         skip_error_handlers=False,
@@ -34,30 +31,22 @@ class AbstractApp(metaclass=abc.ABCMeta):
         """
         :param import_name: the name of the application package
         :type import_name: str
-        :param host: the host interface to bind on.
-        :type host: str
-        :param port: port to listen to
-        :type port: int
         :param specification_dir: directory where to look for specifications
         :type specification_dir: pathlib.Path | str
         :param arguments: arguments to replace on the specification
         :type arguments: dict | None
         :param auth_all_paths: whether to authenticate not defined paths
         :type auth_all_paths: bool
-        :param debug: include debugging information
-        :type debug: bool
         :param resolver: Callable that maps operationID to a function
         :param middlewares: Callable that maps operationID to a function
         :type middlewares: list | None
         """
-        self.port = port
-        self.host = host
-        self.debug = debug
         self.resolver = resolver
         self.import_name = import_name
         self.arguments = arguments or {}
         self.api_cls = api_cls
         self.resolver_error = None
+        self.extra_files = []
 
         # Options
         self.auth_all_paths = auth_all_paths
@@ -169,7 +158,9 @@ class AbstractApp(metaclass=abc.ABCMeta):
         if isinstance(specification, dict):
             specification = specification
         else:
-            specification = self.specification_dir / specification
+            specification = t.cast(pathlib.Path, self.specification_dir / specification)
+            # Add specification as file to watch for reloading
+            self.extra_files.append(str(specification.relative_to(pathlib.Path.cwd())))
 
         api_options = self.options.extend(options)
 
@@ -182,7 +173,6 @@ class AbstractApp(metaclass=abc.ABCMeta):
             validate_responses=validate_responses,
             strict_validation=strict_validation,
             auth_all_paths=auth_all_paths,
-            debug=self.debug,
             validator_map=validator_map,
             pythonic_params=pythonic_params,
             options=api_options.as_dict(),
@@ -197,7 +187,6 @@ class AbstractApp(metaclass=abc.ABCMeta):
             validate_responses=validate_responses,
             strict_validation=strict_validation,
             auth_all_paths=auth_all_paths,
-            debug=self.debug,
             pythonic_params=pythonic_params,
             options=api_options.as_dict(),
         )
@@ -266,6 +255,38 @@ class AbstractApp(metaclass=abc.ABCMeta):
                         limited to (`GET`, `POST` etc.).  By default a rule just listens for `GET` (and implicitly
                         `HEAD`).
         """
+
+    def run(self, import_string: str = None, **kwargs):
+        """Run the application using uvicorn.
+
+        :param import_string: application as import string (eg. "main:app"). This is needed to run
+                              using reload.
+        :param kwargs: kwargs to pass to `uvicorn.run`.
+        """
+        try:
+            import uvicorn
+        except ImportError:
+            raise RuntimeError(
+                "uvicorn is not installed. Please install connexion using the uvicorn extra "
+                "(connexion[uvicorn])"
+            )
+
+        logger.warning(
+            f"`{self.__class__.__name__}.run` is optimized for development. "
+            "For production, run using a dedicated ASGI server."
+        )
+
+        app: t.Union[str, AbstractApp]
+        if import_string is not None:
+            app = import_string
+            kwargs.setdefault("reload", True)
+            kwargs["reload_includes"] = self.extra_files + kwargs.get(
+                "reload_includes", []
+            )
+        else:
+            app = self
+
+        uvicorn.run(app, **kwargs)
 
     @abc.abstractmethod
     def __call__(self, scope, receive, send):

@@ -1,0 +1,23 @@
+swagger: "2.0"
+info:
+  title: API Key Example
+  version: '1.0'
+basePath: /swagger
+paths:
+  /secret:
+    get:
+      summary: Return secret string
+      operationId: app.get_secret
+      responses:
+        '200':
+          description: secret response
+          schema:
+            type: string
+      security:
+        - api_key: []
+securityDefinitions:
+   api_key:
+     type: apiKey
+     name: X-Auth
+     in: header
+     x-apikeyInfoFunc: app.apikey_auth
