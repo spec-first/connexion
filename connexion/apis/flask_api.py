@@ -3,13 +3,20 @@ This module defines a Flask Connexion API which implements translations between 
 Connexion requests / responses.
 """
 import logging
+import typing as t
 
 import flask
+from flask import Response as FlaskResponse
 
 from connexion.apis import flask_utils
 from connexion.apis.abstract import AbstractAPI
+from connexion.decorators import SyncDecorator
+from connexion.http_facts import FORM_CONTENT_TYPES
 from connexion.jsonifier import Jsonifier
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
+from connexion.operations import AbstractOperation
+from connexion.uri_parsing import AbstractURIParser
+from connexion.utils import is_json_mimetype
 
 logger = logging.getLogger("connexion.apis.flask_api")
 
@@ -41,9 +48,13 @@ class FlaskApi(AbstractAPI):
         endpoint_name = flask_utils.flaskify_endpoint(
             operation.operation_id, operation.randomize_endpoint
         )
-        function = operation.function
+
+        endpoint = FlaskOperation.from_operation(
+            operation, pythonic_params=self.pythonic_params
+        )
+
         self.blueprint.add_url_rule(
-            flask_path, endpoint_name, function, methods=[method]
+            flask_path, endpoint_name, endpoint, methods=[method]
         )
 
     @classmethod
@@ -119,10 +130,20 @@ class FlaskApi(AbstractAPI):
         kwargs = {k: v for k, v in kwargs.items() if v is not None}
         return flask.current_app.response_class(**kwargs)
 
-    @classmethod
-    def get_request(cls, **kwargs) -> ConnexionRequest:
-        uri_parser = kwargs.pop("uri_parser")
+    @staticmethod
+    def get_request(*, uri_parser: AbstractURIParser, **kwargs) -> ConnexionRequest:  # type: ignore
         return ConnexionRequest(flask.request, uri_parser=uri_parser)
+
+    @staticmethod
+    def get_body(request: ConnexionRequest) -> t.Any:
+        """Get body from a sync request based on the content type."""
+        if is_json_mimetype(request.content_type):
+            return request.get_json(silent=True)
+        elif request.mimetype in FORM_CONTENT_TYPES:
+            return request.form
+        else:
+            # Return explicit None instead of empty bytestring so it is handled as null downstream
+            return request.get_data() or None
 
     @classmethod
     def _set_jsonifier(cls):
@@ -130,3 +151,52 @@ class FlaskApi(AbstractAPI):
         Use Flask specific JSON loader
         """
         cls.jsonifier = Jsonifier(flask.json, indent=2)
+
+
+class FlaskOperation:
+    def __init__(
+        self,
+        operation: AbstractOperation,
+        fn: t.Callable,
+        uri_parser_class: t.Type[AbstractURIParser],
+        api: AbstractAPI,
+        mimetype: str,
+        operation_id: str,
+        pythonic_params: bool,
+    ) -> None:
+        self._operation = operation
+        self._fn = fn
+        self.uri_parser_class = uri_parser_class
+        self.api = api
+        self.mimetype = mimetype
+        self.operation_id = operation_id
+        self.pythonic_params = pythonic_params
+
+    @classmethod
+    def from_operation(
+        cls, operation: AbstractOperation, pythonic_params: bool
+    ) -> "FlaskOperation":
+        return cls(
+            operation,
+            fn=operation.function,
+            uri_parser_class=operation.uri_parser_class,
+            api=operation.api,
+            mimetype=operation.get_mimetype(),
+            operation_id=operation.operation_id,
+            pythonic_params=pythonic_params,
+        )
+
+    @property
+    def fn(self) -> t.Callable:
+        decorator = SyncDecorator(
+            self._operation,
+            uri_parser_cls=self.uri_parser_class,
+            framework=self.api,
+            parameter=True,
+            response=True,
+            pythonic_params=self.pythonic_params,
+        )
+        return decorator(self._fn)
+
+    def __call__(self, *args, **kwargs) -> FlaskResponse:
+        return self.fn(*args, **kwargs)

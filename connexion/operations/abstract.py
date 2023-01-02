@@ -6,7 +6,6 @@ and functionality shared between Swagger 2 and OpenAPI 3 specifications.
 import abc
 import logging
 
-from connexion.decorators.lifecycle import RequestResponseDecorator
 from connexion.utils import all_json
 
 logger = logging.getLogger("connexion.operations.abstract")
@@ -43,9 +42,7 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         app_security=None,
         security_schemes=None,
         randomize_endpoint=None,
-        pythonic_params=False,
         uri_parser_class=None,
-        parameter_to_arg=None,
     ):
         """
         :param api: api that this operation is attached to
@@ -64,9 +61,6 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         :type security_schemes: dict
         :param randomize_endpoint: number of random characters to append to operation name
         :type randomize_endpoint: integer
-        :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended
-            to any shadowed built-ins
-        :type pythonic_params: bool
         :param uri_parser_class: class to use for uri parsing
         :type uri_parser_class: AbstractURIParser
         """
@@ -77,7 +71,6 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         self._resolver = resolver
         self._security = operation.get("security", app_security)
         self._security_schemes = security_schemes
-        self._pythonic_params = pythonic_params
         self._uri_parser_class = uri_parser_class
         self._randomize_endpoint = randomize_endpoint
         self._operation_id = self._operation.get("operationId")
@@ -86,8 +79,6 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         self._operation_id = self._resolution.operation_id
 
         self._responses = self._operation.get("responses", {})
-
-        self.parameter_to_arg = parameter_to_arg
 
     @property
     def api(self):
@@ -142,13 +133,6 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         The router controller to use (python module where handler functions live)
         """
         return self._router_controller
-
-    @property
-    def pythonic_params(self):
-        """
-        If True, convert CamelCase into pythonic_variable_names
-        """
-        return self._pythonic_params
 
     @property
     @abc.abstractmethod
@@ -232,6 +216,7 @@ class AbstractOperation(metaclass=abc.ABCMeta):
 
         :rtype str
         """
+        # TODO: don't default
         if all_json(self.produces):
             try:
                 return self.produces[0]
@@ -243,45 +228,20 @@ class AbstractOperation(metaclass=abc.ABCMeta):
             return DEFAULT_MIMETYPE
 
     @property
-    def _uri_parsing_decorator(self):
+    def uri_parser_class(self):
         """
-        Returns a decorator that parses request data and handles things like
-        array types, and duplicate parameter definitions.
+        The uri parser class for this operation.
         """
-        return self._uri_parser_class(self.parameters, self.body_definition())
+        return self._uri_parser_class
 
     @property
     def function(self):
         """
-        Operation function with decorators
+        Resolved function.
 
         :rtype: types.FunctionType
         """
-        function = self._resolution.function
-
-        if self.parameter_to_arg:
-            function = self.parameter_to_arg(
-                self,
-                function,
-                self.pythonic_params,
-            )
-
-        function = self._request_response_decorator(
-            function, self._uri_parsing_decorator
-        )
-
-        return function
-
-    @property
-    def _request_response_decorator(self):
-        """
-        Guarantees that instead of the internal representation of the
-        operation handler response
-        (connexion.lifecycle.ConnexionRequest) a framework specific
-        object is returned.
-        :rtype: types.FunctionType
-        """
-        return RequestResponseDecorator(self.api, self.get_mimetype())
+        return self._resolution.function
 
     def json_loads(self, data):
         """

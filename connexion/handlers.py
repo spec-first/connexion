@@ -42,6 +42,17 @@ class ResolverErrorHandler:
     def get_path_parameter_types(self):
         return {}
 
+    @property
+    def uri_parser_class(self):
+        return "dummy"
+
+    @property
+    def api(self):
+        return "dummy"
+
+    def get_mimetype(self):
+        return "dummy"
+
     async def __call__(self, *args, **kwargs):
         raise ResolverProblem(
             title="Not Implemented",

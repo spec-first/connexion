@@ -160,7 +160,10 @@ class AbstractApp(metaclass=abc.ABCMeta):
         else:
             specification = t.cast(pathlib.Path, self.specification_dir / specification)
             # Add specification as file to watch for reloading
-            self.extra_files.append(str(specification.relative_to(pathlib.Path.cwd())))
+            if pathlib.Path.cwd() in specification.parents:
+                self.extra_files.append(
+                    str(specification.relative_to(pathlib.Path.cwd()))
+                )
 
         api_options = self.options.extend(options)
 

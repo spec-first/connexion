@@ -16,14 +16,15 @@ from starlette.types import Receive, Scope, Send
 
 from connexion.apis.abstract import AbstractAPI
 from connexion.apps.abstract import AbstractApp
-from connexion.decorators.lifecycle import RequestResponseDecorator
-from connexion.decorators.parameter import parameter_to_arg
+from connexion.decorators import AsyncDecorator
 from connexion.exceptions import MissingMiddleware, ProblemException
+from connexion.http_facts import FORM_CONTENT_TYPES
 from connexion.lifecycle import ConnexionResponse, MiddlewareRequest, MiddlewareResponse
 from connexion.middleware.main import ConnexionMiddleware
 from connexion.middleware.routing import ROUTING_CONTEXT
 from connexion.operations import AbstractOperation
 from connexion.uri_parsing import AbstractURIParser
+from connexion.utils import is_json_mimetype
 
 logger = logging.getLogger("Connexion.app")
 
@@ -161,11 +162,20 @@ class AsyncApi(AsyncAsgiApp, AbstractAPI):
     ) -> None:
         self.operations[operation.operation_id] = operation
 
-    @classmethod
-    def get_request(cls, **kwargs) -> MiddlewareRequest:
-        scope = kwargs.pop("scope")
-        receive = kwargs.pop("receive")
+    @staticmethod
+    def get_request(*, scope: Scope, receive: Receive, **kwargs) -> MiddlewareRequest:  # type: ignore
         return MiddlewareRequest(scope, receive)
+
+    @staticmethod
+    async def get_body(request: MiddlewareRequest) -> t.Any:
+        """Get body from an async request based on the content type."""
+        if is_json_mimetype(request.content_type):
+            return await request.json()
+        elif request.mimetype in FORM_CONTENT_TYPES:
+            return await request.form()
+        else:
+            # Return explicit None instead of empty bytestring so it is handled as null downstream
+            return await request.data() or None
 
     @classmethod
     async def get_response(cls, response, mimetype=None):
@@ -265,10 +275,9 @@ class AsyncOperation:
     ) -> "AsyncOperation":
         return cls(
             operation,
-            fn=operation._resolution.function,
-            uri_parser=operation._uri_parsing_decorator,
+            fn=operation.function,
+            uri_parser=operation.uri_parser_class,
             api=operation.api,
-            # TODO: this should be the response mimetype
             mimetype=operation.get_mimetype(),
             operation_id=operation.operation_id,
             pythonic_params=pythonic_params,
@@ -276,18 +285,20 @@ class AsyncOperation:
 
     @property
     def fn(self) -> t.Callable:
-        fn = parameter_to_arg(self._operation, self._fn, self.pythonic_params)
-        return RequestResponseDecorator(self.api, self.mimetype)(
-            fn, uri_parser=self.uri_parser
+        decorator = AsyncDecorator(
+            self._operation,
+            uri_parser_cls=self._operation.uri_parser_class,
+            framework=self.api,
+            parameter=True,
+            response=True,
+            pythonic_params=self.pythonic_params,
         )
+        return decorator(self._fn)
 
     async def __call__(
         self, scope: Scope, receive: Receive, send: Send
     ) -> StarletteResponse:
-        if asyncio.iscoroutinefunction(self.fn):
-            return await self.fn(scope=scope, receive=receive, send=send)
-        else:
-            return self.fn(scope=scope, receive=receive, send=send)
+        return await self.fn(scope=scope, receive=receive, send=send)
 
 
 class MissingAsyncOperation(ProblemException):

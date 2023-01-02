@@ -30,9 +30,7 @@ class OpenAPIOperation(AbstractOperation):
         security_schemes=None,
         components=None,
         randomize_endpoint=None,
-        pythonic_params=False,
         uri_parser_class=None,
-        parameter_to_arg=None,
     ):
         """
         This class uses the OperationID identify the module and function that will handle the operation
@@ -63,9 +61,6 @@ class OpenAPIOperation(AbstractOperation):
         :type components: dict
         :param randomize_endpoint: number of random characters to append to operation name
         :type randomize_endpoint: integer
-        :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended
-            to any shadowed built-ins
-        :type pythonic_params: bool
         :param uri_parser_class: class to use for uri parsing
         :type uri_parser_class: AbstractURIParser
         """
@@ -84,9 +79,7 @@ class OpenAPIOperation(AbstractOperation):
             app_security=app_security,
             security_schemes=security_schemes,
             randomize_endpoint=randomize_endpoint,
-            pythonic_params=pythonic_params,
             uri_parser_class=uri_parser_class,
-            parameter_to_arg=parameter_to_arg,
         )
 
         self._request_body = operation.get("requestBody", {})

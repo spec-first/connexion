@@ -1,6 +1,7 @@
 """
 This module defines a decorator to convert request parameters to arguments for the view function.
 """
+import abc
 import asyncio
 import builtins
 import functools
@@ -16,109 +17,91 @@ import inflection
 from connexion.http_facts import FORM_CONTENT_TYPES
 from connexion.lifecycle import ConnexionRequest, MiddlewareRequest
 from connexion.operations import AbstractOperation, Swagger2Operation
-from connexion.utils import (
-    deep_merge,
-    is_json_mimetype,
-    is_null,
-    is_nullable,
-    make_type,
-)
+from connexion.utils import deep_merge, is_null, is_nullable, make_type
 
 logger = logging.getLogger(__name__)
 
 CONTEXT_NAME = "context_"
 
 
-def parameter_to_arg(
-    operation: AbstractOperation,
-    function: t.Callable,
-    pythonic_params: bool = False,
-) -> t.Callable[[ConnexionRequest], t.Any]:
+class BaseParameterDecorator:
+    def __init__(
+        self,
+        operation: AbstractOperation,
+        *,
+        get_body_fn: t.Callable,
+        arguments: t.List[str],
+        has_kwargs: bool,
+        pythonic_params: bool = False,
+    ) -> None:
+        self.operation = operation
+        self.get_body_fn = get_body_fn
+        self.arguments = arguments
+        self.has_kwargs = has_kwargs
+        self.sanitize_fn = pythonic if pythonic_params else sanitized
 
-    sanitize = pythonic if pythonic_params else sanitized
-    arguments, has_kwargs = inspect_function_arguments(function)
+    def _maybe_get_body(
+        self, request: t.Union[ConnexionRequest, MiddlewareRequest]
+    ) -> t.Any:
+        body_name = self.sanitize_fn(self.operation.body_name(request.content_type))
+        # Pass form contents separately for Swagger2 for backward compatibility with
+        # Connexion 2 Checking for body_name is not enough
+        if (body_name in self.arguments or self.has_kwargs) or (
+            request.mimetype in FORM_CONTENT_TYPES
+            and isinstance(self.operation, Swagger2Operation)
+        ):
+            return self.get_body_fn(request)
+        else:
+            return None
 
-    # TODO: should always be used for AsyncApp
-    if asyncio.iscoroutinefunction(function):
+    @abc.abstractmethod
+    def __call__(self, function: t.Callable) -> t.Callable:
+        raise NotImplementedError
 
+
+class SyncParameterDecorator(BaseParameterDecorator):
+    def __call__(self, function: t.Callable) -> t.Callable:
         @functools.wraps(function)
-        async def wrapper(
-            request: t.Union[ConnexionRequest, MiddlewareRequest]
-        ) -> t.Any:
-            body_name = sanitize(operation.body_name(request.content_type))
-            # Pass form contents separately for Swagger2 for backward compatibility with
-            # Connexion 2 Checking for body_name is not enough
-            request_body = None
-            if (body_name in arguments or has_kwargs) or (
-                request.mimetype in FORM_CONTENT_TYPES
-                and isinstance(operation, Swagger2Operation)
-            ):
-
-                if isinstance(request, ConnexionRequest):
-                    request_body = get_flask_body(request)
-                elif isinstance(request, MiddlewareRequest):
-                    request_body = await get_starlette_body(request)
+        def wrapper(request: t.Union[ConnexionRequest, MiddlewareRequest]) -> t.Any:
+            request_body = self._maybe_get_body(request)
 
             kwargs = prep_kwargs(
                 request,
-                operation=operation,
+                operation=self.operation,
                 request_body=request_body,
-                arguments=arguments,
-                has_kwargs=has_kwargs,
-                sanitize=sanitize,
-            )
-
-            return await function(**kwargs)
-
-    else:
-
-        @functools.wraps(function)
-        def wrapper(request: ConnexionRequest) -> t.Any:
-            body_name = sanitize(operation.body_name(request.content_type))
-            # Pass form contents separately for Swagger2 for backward compatibility with
-            # Connexion 2 Checking for body_name is not enough
-            if (body_name in arguments or has_kwargs) or (
-                request.mimetype in FORM_CONTENT_TYPES
-                and isinstance(operation, Swagger2Operation)
-            ):
-                request_body = get_flask_body(request)
-            else:
-                request_body = None
-
-            kwargs = prep_kwargs(
-                request,
-                operation=operation,
-                request_body=request_body,
-                arguments=arguments,
-                has_kwargs=has_kwargs,
-                sanitize=sanitize,
+                arguments=self.arguments,
+                has_kwargs=self.has_kwargs,
+                sanitize=self.sanitize_fn,
             )
 
             return function(**kwargs)
 
-    return wrapper
+        return wrapper
 
 
-def get_flask_body(request: ConnexionRequest) -> t.Any:
-    """Get body from a sync request based on the content type."""
-    if is_json_mimetype(request.content_type):
-        return request.get_json(silent=True)
-    elif request.mimetype in FORM_CONTENT_TYPES:
-        return request.form
-    else:
-        # Return explicit None instead of empty bytestring so it is handled as null downstream
-        return request.get_data() or None
+class AsyncParameterDecorator(BaseParameterDecorator):
+    def __call__(self, function: t.Callable) -> t.Callable:
+        @functools.wraps(function)
+        async def wrapper(
+            request: t.Union[ConnexionRequest, MiddlewareRequest]
+        ) -> t.Any:
+            request_body = self._maybe_get_body(request)
 
+            while asyncio.iscoroutine(request_body):
+                request_body = await request_body
 
-async def get_starlette_body(request: MiddlewareRequest) -> t.Any:
-    """Get body from an async request based on the content type."""
-    if is_json_mimetype(request.content_type):
-        return await request.json()
-    elif request.mimetype in FORM_CONTENT_TYPES:
-        return await request.form()
-    else:
-        # Return explicit None instead of empty bytestring so it is handled as null downstream
-        return await request.data() or None
+            kwargs = prep_kwargs(
+                request,
+                operation=self.operation,
+                request_body=request_body,
+                arguments=self.arguments,
+                has_kwargs=self.has_kwargs,
+                sanitize=self.sanitize_fn,
+            )
+
+            return await function(**kwargs)
+
+        return wrapper
 
 
 def prep_kwargs(

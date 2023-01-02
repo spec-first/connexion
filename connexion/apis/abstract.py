@@ -8,14 +8,11 @@ import sys
 import typing as t
 from enum import Enum
 
-from starlette.requests import Request
-
 from connexion.datastructures import NoContent
-from connexion.decorators.parameter import parameter_to_arg
 from connexion.exceptions import ResolverError
 from connexion.http_facts import METHODS
 from connexion.jsonifier import Jsonifier
-from connexion.lifecycle import ConnexionResponse
+from connexion.lifecycle import ConnexionRequest, ConnexionResponse, MiddlewareRequest
 from connexion.operations import make_operation
 from connexion.options import ConnexionOptions
 from connexion.resolver import Resolver
@@ -225,15 +222,15 @@ class AbstractAPI(AbstractRoutingAPI, metaclass=AbstractAPIMeta):
             path,
             method,
             self.resolver,
-            pythonic_params=self.pythonic_params,
             uri_parser_class=self.options.uri_parser_class,
-            parameter_to_arg=parameter_to_arg,
         )
         self._add_operation_internal(method, path, operation)
 
-    @classmethod
+    @staticmethod
     @abc.abstractmethod
-    def get_request(cls, **kwargs) -> Request:
+    def get_request(
+        **kwargs,
+    ) -> t.Union[ConnexionRequest, MiddlewareRequest]:
         """
         This method converts the user framework request to a ConnexionRequest.
         """

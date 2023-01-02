@@ -1,67 +1,116 @@
 from unittest.mock import MagicMock
 
-from connexion.decorators.parameter import parameter_to_arg, pythonic
+from connexion.decorators.parameter import (
+    AsyncParameterDecorator,
+    SyncParameterDecorator,
+    inspect_function_arguments,
+    pythonic,
+)
 
 
-async def test_injection():
+def test_sync_injection():
     request = MagicMock(name="request")
     request.query_params = {}
     request.path_params = {"p1": "123"}
-    request.headers = {}
-    request.content_type = "application/json"
-
-    async def coro():
-        return
-
-    request.json = coro
-    request.loop = None
-    request.context = {}
 
     func = MagicMock()
 
     def handler(**kwargs):
         func(**kwargs)
 
-    class Op:
-        consumes = ["application/json"]
-        parameters = []
-        method = "GET"
+    def get_body_fn(_request):
+        return {}
 
-        def body_name(self, *args, **kwargs):
-            return "body"
+    operation = MagicMock(name="operation")
+    operation.body_name = lambda _: "body"
 
-    parameter_decorator = parameter_to_arg(Op(), handler)
-    parameter_decorator(request)
+    arguments, has_kwargs = inspect_function_arguments(handler)
+
+    parameter_decorator = SyncParameterDecorator(
+        operation, get_body_fn=get_body_fn, arguments=arguments, has_kwargs=has_kwargs
+    )
+    decorated_handler = parameter_decorator(handler)
+    decorated_handler(request)
     func.assert_called_with(p1="123")
 
 
-async def test_injection_with_context():
+async def test_async_injection():
     request = MagicMock(name="request")
-
-    async def coro():
-        return
-
-    request.json = coro
-    request.loop = None
-    request.context = {}
-    request.content_type = "application/json"
+    request.query_params = {}
     request.path_params = {"p1": "123"}
+
+    func = MagicMock()
+
+    async def handler(**kwargs):
+        func(**kwargs)
+
+    def get_body_fn(_request):
+        return {}
+
+    operation = MagicMock(name="operation")
+    operation.body_name = lambda _: "body"
+
+    arguments, has_kwargs = inspect_function_arguments(handler)
+
+    parameter_decorator = AsyncParameterDecorator(
+        operation, get_body_fn=get_body_fn, arguments=arguments, has_kwargs=has_kwargs
+    )
+    decorated_handler = parameter_decorator(handler)
+    await decorated_handler(request)
+    func.assert_called_with(p1="123")
+
+
+def test_sync_injection_with_context():
+    request = MagicMock(name="request")
+    request.query_params = {}
+    request.path_params = {"p1": "123"}
+    request.context = {}
 
     func = MagicMock()
 
     def handler(context_, **kwargs):
         func(context_, **kwargs)
 
-    class Op2:
-        consumes = ["application/json"]
-        parameters = []
-        method = "GET"
+    def get_body_fn(_request):
+        return {}
 
-        def body_name(self, *args, **kwargs):
-            return "body"
+    operation = MagicMock(name="operation")
+    operation.body_name = lambda _: "body"
 
-    parameter_decorator = parameter_to_arg(Op2(), handler)
-    parameter_decorator(request)
+    arguments, has_kwargs = inspect_function_arguments(handler)
+
+    parameter_decorator = SyncParameterDecorator(
+        operation, get_body_fn=get_body_fn, arguments=arguments, has_kwargs=has_kwargs
+    )
+    decorated_handler = parameter_decorator(handler)
+    decorated_handler(request)
+    func.assert_called_with(request.context, p1="123")
+
+
+async def test_async_injection_with_context():
+    request = MagicMock(name="request")
+    request.query_params = {}
+    request.path_params = {"p1": "123"}
+    request.context = {}
+
+    func = MagicMock()
+
+    async def handler(context_, **kwargs):
+        func(context_, **kwargs)
+
+    def get_body_fn(_request):
+        return {}
+
+    operation = MagicMock(name="operation")
+    operation.body_name = lambda _: "body"
+
+    arguments, has_kwargs = inspect_function_arguments(handler)
+
+    parameter_decorator = AsyncParameterDecorator(
+        operation, get_body_fn=get_body_fn, arguments=arguments, has_kwargs=has_kwargs
+    )
+    decorated_handler = parameter_decorator(handler)
+    await decorated_handler(request)
     func.assert_called_with(request.context, p1="123")
 
 
