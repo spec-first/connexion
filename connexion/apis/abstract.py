@@ -10,7 +10,6 @@ import typing as t
 from connexion.exceptions import ResolverError
 from connexion.http_facts import METHODS
 from connexion.jsonifier import Jsonifier
-from connexion.lifecycle import ConnexionRequest, MiddlewareRequest
 from connexion.operations import make_operation
 from connexion.options import ConnexionOptions
 from connexion.resolver import Resolver
@@ -22,13 +21,10 @@ SWAGGER_UI_URL = "ui"
 logger = logging.getLogger("connexion.apis.abstract")
 
 
-class AbstractAPIMeta(abc.ABCMeta):
-    def __init__(cls, name, bases, attrs):
-        abc.ABCMeta.__init__(cls, name, bases, attrs)
-        cls._set_jsonifier()
+class AbstractSpecAPI:
 
+    jsonifier = Jsonifier()
 
-class AbstractSpecAPI(metaclass=AbstractAPIMeta):
     def __init__(
         self,
         specification: t.Union[pathlib.Path, str, dict],
@@ -87,10 +83,6 @@ class AbstractSpecAPI(metaclass=AbstractAPIMeta):
             self.base_path = base_path
         else:
             self.base_path = self.specification.base_path
-
-    @classmethod
-    def _set_jsonifier(cls):
-        cls.jsonifier = Jsonifier()
 
 
 class AbstractRoutingAPI(AbstractSpecAPI):
@@ -167,7 +159,7 @@ class AbstractRoutingAPI(AbstractSpecAPI):
         raise value.with_traceback(traceback)
 
 
-class AbstractAPI(AbstractRoutingAPI, metaclass=AbstractAPIMeta):
+class AbstractAPI(AbstractRoutingAPI):
     """
     Defines an abstract interface for a Swagger API
     """
@@ -222,46 +214,6 @@ class AbstractAPI(AbstractRoutingAPI, metaclass=AbstractAPIMeta):
             uri_parser_class=self.options.uri_parser_class,
         )
         self._add_operation_internal(method, path, operation)
-
-    @staticmethod
-    @abc.abstractmethod
-    def get_request(
-        **kwargs,
-    ) -> t.Union[ConnexionRequest, MiddlewareRequest]:
-        """
-        This method converts the user framework request to a ConnexionRequest.
-        """
-
-    @classmethod
-    @abc.abstractmethod
-    def is_framework_response(cls, response):
-        """Return True if `response` is a framework response class"""
-
-    @classmethod
-    @abc.abstractmethod
-    def connexion_to_framework_response(cls, response):
-        """Cast ConnexionResponse to framework response class"""
-
-    @classmethod
-    @abc.abstractmethod
-    def build_response(
-        cls,
-        data,
-        content_type=None,
-        status_code=None,
-        headers=None,
-    ):
-        """
-        Create a framework response from the provided arguments.
-        :param data: Body data.
-        :param content_type: The response status code.
-        :type content_type: str
-        :type status_code: int
-        :param headers: The response status code.
-        :type headers: Union[Iterable[Tuple[str, str]], Dict[str, str]]
-        :return A framework response.
-        :rtype Response
-        """
 
     def json_loads(self, data):
         return self.jsonifier.loads(data)

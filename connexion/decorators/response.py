@@ -8,6 +8,7 @@ from enum import Enum
 
 from connexion.datastructures import NoContent
 from connexion.exceptions import NonConformingResponseHeaders
+from connexion.frameworks.abstract import Framework
 from connexion.lifecycle import ConnexionResponse, MiddlewareResponse
 from connexion.operations import AbstractOperation
 from connexion.utils import is_json_mimetype
@@ -16,7 +17,9 @@ logger = logging.getLogger(__name__)
 
 
 class BaseResponseDecorator:
-    def __init__(self, operation: AbstractOperation, *, framework, jsonifier):
+    def __init__(
+        self, operation: AbstractOperation, *, framework: t.Type[Framework], jsonifier
+    ):
         self.operation = operation
         self.framework = framework
         self.jsonifier = jsonifier

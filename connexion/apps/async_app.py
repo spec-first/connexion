@@ -9,7 +9,6 @@ import pkgutil
 import sys
 import typing as t
 
-from starlette.responses import JSONResponse as StarletteJSONResponse
 from starlette.responses import Response as StarletteResponse
 from starlette.routing import Router
 from starlette.types import Receive, Scope, Send
@@ -18,13 +17,11 @@ from connexion.apis.abstract import AbstractAPI
 from connexion.apps.abstract import AbstractApp
 from connexion.decorators import AsyncDecorator
 from connexion.exceptions import MissingMiddleware, ProblemException
-from connexion.http_facts import FORM_CONTENT_TYPES
-from connexion.lifecycle import MiddlewareRequest, MiddlewareResponse
+from connexion.frameworks.starlette import Starlette as StarletteFramework
 from connexion.middleware.main import ConnexionMiddleware
 from connexion.middleware.routing import ROUTING_CONTEXT
 from connexion.operations import AbstractOperation
 from connexion.uri_parsing import AbstractURIParser
-from connexion.utils import is_json_mimetype
 
 logger = logging.getLogger("Connexion.app")
 
@@ -162,50 +159,6 @@ class AsyncApi(AsyncAsgiApp, AbstractAPI):
     ) -> None:
         self.operations[operation.operation_id] = operation
 
-    @staticmethod
-    def get_request(*, scope: Scope, receive: Receive, **kwargs) -> MiddlewareRequest:  # type: ignore
-        return MiddlewareRequest(scope, receive)
-
-    @staticmethod
-    async def get_body(request: MiddlewareRequest) -> t.Any:
-        """Get body from an async request based on the content type."""
-        if is_json_mimetype(request.content_type):
-            return await request.json()
-        elif request.mimetype in FORM_CONTENT_TYPES:
-            return await request.form()
-        else:
-            # Return explicit None instead of empty bytestring so it is handled as null downstream
-            return await request.data() or None
-
-    @classmethod
-    def is_framework_response(cls, response):
-        return isinstance(response, StarletteResponse) and not isinstance(
-            response, MiddlewareResponse
-        )
-
-    @classmethod
-    def connexion_to_framework_response(cls, response):
-        return cls.build_response(
-            status_code=response.status_code,
-            content_type=response.content_type,
-            headers=response.headers,
-            data=response.body,
-        )
-
-    @classmethod
-    def build_response(cls, data, content_type=None, status_code=None, headers=None):
-        if isinstance(data, dict) or isinstance(data, list):
-            response_cls = StarletteJSONResponse
-        else:
-            response_cls = StarletteResponse
-
-        return response_cls(
-            content=data,
-            status_code=status_code,
-            media_type=content_type,
-            headers=headers,
-        )
-
 
 class AsyncOperation:
     def __init__(
@@ -242,10 +195,11 @@ class AsyncOperation:
         decorator = AsyncDecorator(
             self._operation,
             uri_parser_cls=self._operation.uri_parser_class,
-            framework=self.api,
+            framework=StarletteFramework,
             parameter=True,
             response=True,
             pythonic_params=self.pythonic_params,
+            jsonifier=self.api.jsonifier,
         )
         return decorator(self._fn)
 

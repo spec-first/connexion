@@ -17,6 +17,7 @@ from connexion.decorators.response import (
     BaseResponseDecorator,
     SyncResponseDecorator,
 )
+from connexion.frameworks.abstract import Framework
 from connexion.operations import AbstractOperation
 from connexion.uri_parsing import AbstractURIParser
 
@@ -29,10 +30,11 @@ class BaseDecorator:
         operation_spec: AbstractOperation,
         *,
         uri_parser_cls: t.Type[AbstractURIParser],
-        framework,
+        framework: t.Type[Framework],
         parameter: bool,
         response: bool,
         pythonic_params: bool = False,
+        jsonifier,
     ) -> None:
         self.operation_spec = operation_spec
         self.uri_parser = uri_parser_cls(
@@ -43,6 +45,7 @@ class BaseDecorator:
         self.parameter = parameter
         self.response = response
         self.pythonic_params = pythonic_params
+        self.jsonifier = jsonifier
 
         if self.parameter:
             self.arguments, self.has_kwargs = inspect_function_arguments(
@@ -83,7 +86,7 @@ class BaseDecorator:
             response_decorator = self._response_decorator_cls(
                 self.operation_spec,
                 framework=self.framework,
-                jsonifier=self.framework.jsonifier,
+                jsonifier=self.jsonifier,
             )
             function = response_decorator(function)
 
