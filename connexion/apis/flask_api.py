@@ -13,7 +13,7 @@ from connexion.apis.abstract import AbstractAPI
 from connexion.decorators import SyncDecorator
 from connexion.http_facts import FORM_CONTENT_TYPES
 from connexion.jsonifier import Jsonifier
-from connexion.lifecycle import ConnexionRequest, ConnexionResponse
+from connexion.lifecycle import ConnexionRequest
 from connexion.operations import AbstractOperation
 from connexion.uri_parsing import AbstractURIParser
 from connexion.utils import is_json_mimetype
@@ -58,71 +58,33 @@ class FlaskApi(AbstractAPI):
         )
 
     @classmethod
-    def get_response(cls, response, mimetype=None):
-        """Gets ConnexionResponse instance for the operation handler
-        result. Status Code and Headers for response.  If only body
-        data is returned by the endpoint function, then the status
-        code will be set to 200 and no headers will be added.
-
-        If the returned object is a flask.Response then it will just
-        pass the information needed to recreate it.
-
-        :type response: flask.Response | (flask.Response,) | (flask.Response, int) | (flask.Response, dict) | (flask.Response, int, dict)
-        :rtype: ConnexionResponse
-        """
-        return cls._get_response(response, mimetype=mimetype)
-
-    @classmethod
-    def _is_framework_response(cls, response):
+    def is_framework_response(cls, response):
         """Return True if provided response is a framework type"""
         return flask_utils.is_flask_response(response)
 
     @classmethod
-    def _framework_to_connexion_response(cls, response, mimetype):
-        """Cast framework response class to ConnexionResponse used for schema validation"""
-        return ConnexionResponse(
-            status_code=response.status_code,
-            mimetype=response.mimetype,
-            content_type=response.content_type,
-            headers=response.headers,
-            body=response.get_data() if not response.direct_passthrough else None,
-            is_streamed=response.is_streamed,
-        )
-
-    @classmethod
-    def _connexion_to_framework_response(cls, response, mimetype):
+    def connexion_to_framework_response(cls, response):
         """Cast ConnexionResponse to framework response class"""
-        flask_response = cls._build_response(
-            mimetype=response.mimetype or mimetype,
+        return cls.build_response(
             content_type=response.content_type,
             headers=response.headers,
             status_code=response.status_code,
             data=response.body,
         )
 
-        return flask_response
-
     @classmethod
-    def _build_response(
+    def build_response(
         cls,
-        mimetype,
+        data,
         content_type=None,
         headers=None,
         status_code=None,
-        data=None,
     ):
-        if cls._is_framework_response(data):
+        if cls.is_framework_response(data):
             return flask.current_app.make_response((data, status_code, headers))
 
-        data, status_code, serialized_mimetype = cls._prepare_body_and_status_code(
-            data=data,
-            mimetype=mimetype,
-            status_code=status_code,
-        )
-
         kwargs = {
-            "mimetype": mimetype or serialized_mimetype,
-            "content_type": content_type,
+            "mimetype": content_type,
             "headers": headers,
             "response": data,
             "status": status_code,
@@ -160,7 +122,6 @@ class FlaskOperation:
         fn: t.Callable,
         uri_parser_class: t.Type[AbstractURIParser],
         api: AbstractAPI,
-        mimetype: str,
         operation_id: str,
         pythonic_params: bool,
     ) -> None:
@@ -168,7 +129,6 @@ class FlaskOperation:
         self._fn = fn
         self.uri_parser_class = uri_parser_class
         self.api = api
-        self.mimetype = mimetype
         self.operation_id = operation_id
         self.pythonic_params = pythonic_params
 
@@ -181,7 +141,6 @@ class FlaskOperation:
             fn=operation.function,
             uri_parser_class=operation.uri_parser_class,
             api=operation.api,
-            mimetype=operation.get_mimetype(),
             operation_id=operation.operation_id,
             pythonic_params=pythonic_params,
         )

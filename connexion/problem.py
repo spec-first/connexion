@@ -48,6 +48,7 @@ def problem(status, title, detail, type=None, instance=None, headers=None, ext=N
         problem_response.update(ext)
 
     mimetype = content_type = "application/problem+json"
+
     return ConnexionResponse(
         status, mimetype, content_type, body=problem_response, headers=headers
     )

@@ -85,13 +85,14 @@ class FlaskApp(AbstractApp):
                 title=exception.name,
                 detail=exception.description,
                 status=exception.code,
-                headers=exception.get_headers(),
             )
 
         if response.status_code >= 500:
             signals.got_request_exception.send(self.app, exception=exception)
 
-        return FlaskApi.get_response(response)
+        return flask.make_response(
+            (response.body, response.status_code, response.headers)
+        )
 
     def add_api(self, specification, **kwargs):
         api = super().add_api(specification, **kwargs)

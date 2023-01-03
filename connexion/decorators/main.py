@@ -8,14 +8,22 @@ from starlette.concurrency import run_in_threadpool
 
 from connexion.decorators.parameter import (
     AsyncParameterDecorator,
+    BaseParameterDecorator,
     SyncParameterDecorator,
     inspect_function_arguments,
+)
+from connexion.decorators.response import (
+    AsyncResponseDecorator,
+    BaseResponseDecorator,
+    SyncResponseDecorator,
 )
 from connexion.operations import AbstractOperation
 from connexion.uri_parsing import AbstractURIParser
 
 
 class BaseDecorator:
+    """Base class for connexion decorators."""
+
     def __init__(
         self,
         operation_spec: AbstractOperation,
@@ -36,7 +44,6 @@ class BaseDecorator:
         self.response = response
         self.pythonic_params = pythonic_params
 
-        self.arguments, self.has_kwargs = None, None
         if self.parameter:
             self.arguments, self.has_kwargs = inspect_function_arguments(
                 operation_spec.function
@@ -44,25 +51,23 @@ class BaseDecorator:
 
     @property
     @abc.abstractmethod
-    def _parameter_decorator_cls(self):
+    def _parameter_decorator_cls(self) -> t.Type[BaseParameterDecorator]:
         raise NotImplementedError
 
     @property
     @abc.abstractmethod
-    def _response_decorator_cls(self):
+    def _response_decorator_cls(self) -> t.Type[BaseResponseDecorator]:
         raise NotImplementedError
 
     @property
     @abc.abstractmethod
-    def _sync_async_decorator(self) -> t.Callable:
+    def _sync_async_decorator(self) -> t.Callable[[t.Callable], t.Callable]:
+        """Decorator to translate between sync and async functions."""
         raise NotImplementedError
 
     def decorate(self, function: t.Callable) -> t.Callable:
+        """Decorate a function with decorators based on the operation."""
         function = self._sync_async_decorator(function)
-
-        # if self.response:
-        #     response_decorator = self._response_decorator_cls()
-        #     function = response_decorator(function)
 
         if self.parameter:
             parameter_decorator = self._parameter_decorator_cls(
@@ -74,6 +79,14 @@ class BaseDecorator:
             )
             function = parameter_decorator(function)
 
+        if self.response:
+            response_decorator = self._response_decorator_cls(
+                self.operation_spec,
+                framework=self.framework,
+                jsonifier=self.framework.jsonifier,
+            )
+            function = response_decorator(function)
+
         return function
 
     @abc.abstractmethod
@@ -83,83 +96,76 @@ class BaseDecorator:
 
 class SyncDecorator(BaseDecorator):
     @property
-    def _parameter_decorator_cls(self):
+    def _parameter_decorator_cls(self) -> t.Type[SyncParameterDecorator]:
         return SyncParameterDecorator
 
     @property
-    def _response_decorator_cls(self):
-        pass
+    def _response_decorator_cls(self) -> t.Type[SyncResponseDecorator]:
+        return SyncResponseDecorator
 
     @property
-    def _sync_async_decorator(self) -> t.Callable:
-        def wrapper(function: t.Callable) -> t.Callable:
-            if asyncio.iscoroutinefunction(function):
-                return async_to_sync(function)
-            else:
-                return function
+    def _sync_async_decorator(self) -> t.Callable[[t.Callable], t.Callable]:
+        def decorator(function: t.Callable) -> t.Callable:
+            @functools.wraps(function)
+            def wrapper(*args, **kwargs) -> t.Callable:
+                if asyncio.iscoroutinefunction(function):
+                    return async_to_sync(function)(*args, **kwargs)
+                else:
+                    return function(*args, **kwargs)
 
-        return wrapper
+            return wrapper
+
+        return decorator
 
     def __call__(self, function: t.Callable) -> t.Callable:
         @functools.wraps(function)
         def wrapper(*args, **kwargs):
+            # TODO: move into parameter decorator?
             connexion_request = self.framework.get_request(
                 *args, uri_parser=self.uri_parser, **kwargs
             )
 
             decorated_function = self.decorate(function)
-            connexion_response = decorated_function(connexion_request)
-
-            # TODO: take response into account
-            mime_type = self.operation_spec.get_mimetype()
-
-            framework_response = self.framework.get_response(
-                connexion_response, mime_type
-            )
-            return framework_response
+            return decorated_function(connexion_request)
 
         return wrapper
 
 
 class AsyncDecorator(BaseDecorator):
     @property
-    def _parameter_decorator_cls(self):
+    def _parameter_decorator_cls(self) -> t.Type[AsyncParameterDecorator]:
         return AsyncParameterDecorator
 
     @property
-    def _response_decorator_cls(self):
-        pass
+    def _response_decorator_cls(self) -> t.Type[AsyncResponseDecorator]:
+        return AsyncResponseDecorator
 
     @property
-    def _sync_async_decorator(self) -> t.Callable:
-        async def wrapper(function: t.Callable) -> t.Callable:
-            if asyncio.iscoroutinefunction(function):
-                return function
-            else:
-                return functools.partial(run_in_threadpool, function)
+    def _sync_async_decorator(self) -> t.Callable[[t.Callable], t.Callable]:
+        def decorator(function: t.Callable) -> t.Callable:
+            @functools.wraps(function)
+            async def wrapper(*args, **kwargs):
+                if asyncio.iscoroutinefunction(function):
+                    return await function(*args, **kwargs)
+                else:
+                    return await run_in_threadpool(function, *args, **kwargs)
 
-        return wrapper
+            return wrapper
+
+        return decorator
 
     def __call__(self, function: t.Callable) -> t.Callable:
         @functools.wraps(function)
         async def wrapper(*args, **kwargs):
-            connexion_request = await self.framework.get_request(
+            # TODO: move into parameter decorator?
+            connexion_request = self.framework.get_request(
                 *args, uri_parser=self.uri_parser, **kwargs
             )
 
             decorated_function = self.decorate(function)
-
-            connexion_response = await decorated_function(connexion_request)
-
-            content_type = connexion_response.content_type
-            if content_type is None:
-                if len(self.produces) == 1:
-                    content_type = self.produces[0]
-
-            framework_response = await self.framework.get_response(
-                connexion_response, content_type
-            )
-
-            return framework_response
+            response = decorated_function(connexion_request)
+            while asyncio.iscoroutine(response):
+                response = await response
+            return response
 
         return wrapper

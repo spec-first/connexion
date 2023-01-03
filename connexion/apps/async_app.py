@@ -19,7 +19,7 @@ from connexion.apps.abstract import AbstractApp
 from connexion.decorators import AsyncDecorator
 from connexion.exceptions import MissingMiddleware, ProblemException
 from connexion.http_facts import FORM_CONTENT_TYPES
-from connexion.lifecycle import ConnexionResponse, MiddlewareRequest, MiddlewareResponse
+from connexion.lifecycle import MiddlewareRequest, MiddlewareResponse
 from connexion.middleware.main import ConnexionMiddleware
 from connexion.middleware.routing import ROUTING_CONTEXT
 from connexion.operations import AbstractOperation
@@ -178,37 +178,14 @@ class AsyncApi(AsyncAsgiApp, AbstractAPI):
             return await request.data() or None
 
     @classmethod
-    async def get_response(cls, response, mimetype=None):
-        while asyncio.iscoroutine(response):
-            response = await response
-
-        return cls._get_response(response, mimetype=mimetype)
-
-    @classmethod
-    def _is_framework_response(cls, response):
+    def is_framework_response(cls, response):
         return isinstance(response, StarletteResponse) and not isinstance(
             response, MiddlewareResponse
         )
 
     @classmethod
-    def _framework_to_connexion_response(cls, response, mimetype):
-        # FileResponse and StreamingResponse do not a `body` (yet)
-        body = None
-        if hasattr(response, "body"):
-            body = response.body
-
-        return ConnexionResponse(
-            status_code=response.status_code,
-            mimetype=mimetype,
-            content_type=response.media_type,
-            headers=response.headers,
-            body=body,
-        )
-
-    @classmethod
-    def _connexion_to_framework_response(cls, response, mimetype):
-        return cls._build_response(
-            mimetype=response.mimetype or mimetype,
+    def connexion_to_framework_response(cls, response):
+        return cls.build_response(
             status_code=response.status_code,
             content_type=response.content_type,
             headers=response.headers,
@@ -216,27 +193,7 @@ class AsyncApi(AsyncAsgiApp, AbstractAPI):
         )
 
     @classmethod
-    def _build_response(
-        cls, data, mimetype, content_type=None, status_code=None, headers=None
-    ):
-        if cls._is_framework_response(data):
-            raise TypeError(
-                "Cannot return starlette.responses.Response in tuple. Only raw data can be returned in tuple."
-            )
-        data, status_code, serialized_mimetype = cls._prepare_body_and_status_code(
-            data=data,
-            mimetype=mimetype,
-            status_code=status_code,
-        )
-
-        content_type = content_type or mimetype or serialized_mimetype
-
-        if content_type is None:
-            if isinstance(data, str):
-                content_type = "text/plain"
-            elif isinstance(data, bytes):
-                content_type = "application/octet-stream"
-
+    def build_response(cls, data, content_type=None, status_code=None, headers=None):
         if isinstance(data, dict) or isinstance(data, list):
             response_cls = StarletteJSONResponse
         else:
@@ -257,7 +214,6 @@ class AsyncOperation:
         fn: t.Callable,
         uri_parser: AbstractURIParser,
         api: AbstractAPI,
-        mimetype: str,
         operation_id: str,
         pythonic_params: bool,
     ) -> None:
@@ -265,7 +221,6 @@ class AsyncOperation:
         self._fn = fn
         self.uri_parser = uri_parser
         self.api = api
-        self.mimetype = mimetype
         self.operation_id = operation_id
         self.pythonic_params = pythonic_params
 
@@ -278,7 +233,6 @@ class AsyncOperation:
             fn=operation.function,
             uri_parser=operation.uri_parser_class,
             api=operation.api,
-            mimetype=operation.get_mimetype(),
             operation_id=operation.operation_id,
             pythonic_params=pythonic_params,
         )

@@ -90,7 +90,7 @@ def test_returning_flask_response_tuple(simple_app):
     app_client = simple_app.app.test_client()
 
     result = app_client.get("/v1.0/flask_response_tuple")  # type: flask.Response
-    assert result.status_code == 201
+    assert result.status_code == 201, result.text
     assert result.content_type == "application/json"
     result_data = json.loads(result.data.decode("utf-8", "replace"))
     assert result_data == {"foo": "bar"}
@@ -139,7 +139,12 @@ def test_pass_through(simple_app):
     app_client = simple_app.app.test_client()
 
     response = app_client.get("/v1.0/multimime", data={})  # type: flask.Response
-    assert response.status_code == 200
+    assert response.status_code == 500
+    assert (
+        response.json["detail"] == "Multiple response content types are defined in the "
+        "operation spec, but the handler response did not specify "
+        "which one to return."
+    )
 
 
 def test_empty(simple_app):
