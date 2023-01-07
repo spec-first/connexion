@@ -69,7 +69,7 @@ def test_openapi_yaml_behind_proxy(reverse_proxied_app):
     spec = yaml.load(openapi_yaml.data.decode("utf-8"), Loader=yaml.BaseLoader)
 
     if reverse_proxied_app._spec_file == "swagger.yaml":
-        assert b'url = "/behind/proxy/v1.0/swagger.json"' in swagger_ui.data
+        assert b'url: "/behind/proxy/v1.0/swagger.json"' in swagger_ui.data
         assert (
             spec.get("basePath") == "/behind/proxy/v1.0"
         ), "basePath should contains original URI"

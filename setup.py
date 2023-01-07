@@ -32,7 +32,7 @@ install_requires = [
     'python-multipart>=0.0.5',
 ]
 
-swagger_ui_require = 'swagger-ui-bundle>=0.0.2,<0.1'
+swagger_ui_require = 'py-swagger-ui>=1.1.0,<2'
 
 flask_require = [
     'flask[async]>=2.2,<3',
