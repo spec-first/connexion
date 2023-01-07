@@ -108,7 +108,9 @@ class RequestValidationOperation:
                     ),
                     encoding=encoding,
                     strict_validation=self.strict_validation,
-                    uri_parser=self._operation._uri_parsing_decorator,
+                    uri_parser=self._operation.uri_parser_class(
+                        self._operation.parameters, self._operation.body_definition()
+                    ),
                 )
                 receive_fn = await validator.wrapped_receive()
 

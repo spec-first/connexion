@@ -1,4 +1,4 @@
-import connexion.apis.flask_utils as flask_utils
+from connexion.frameworks import flask as flask_utils
 
 
 def test_flaskify_path():

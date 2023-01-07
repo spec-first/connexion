@@ -41,7 +41,7 @@ def wrap_default(default_fn: t.Callable) -> t.Callable:
         if isinstance(o, uuid.UUID):
             return str(o)
 
-        return default_fn(o)
+        return default_fn(self, o)
 
     return wrapped_default
 

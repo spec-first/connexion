@@ -9,17 +9,15 @@ import pkgutil
 import sys
 import typing as t
 
-from starlette.responses import JSONResponse as StarletteJSONResponse
 from starlette.responses import Response as StarletteResponse
 from starlette.routing import Router
 from starlette.types import Receive, Scope, Send
 
 from connexion.apis.abstract import AbstractAPI
 from connexion.apps.abstract import AbstractApp
-from connexion.decorators.lifecycle import RequestResponseDecorator
-from connexion.decorators.parameter import parameter_to_arg
+from connexion.decorators import AsyncDecorator
 from connexion.exceptions import MissingMiddleware, ProblemException
-from connexion.lifecycle import ConnexionResponse, MiddlewareRequest, MiddlewareResponse
+from connexion.frameworks.starlette import Starlette as StarletteFramework
 from connexion.middleware.main import ConnexionMiddleware
 from connexion.middleware.routing import ROUTING_CONTEXT
 from connexion.operations import AbstractOperation
@@ -161,84 +159,6 @@ class AsyncApi(AsyncAsgiApp, AbstractAPI):
     ) -> None:
         self.operations[operation.operation_id] = operation
 
-    @classmethod
-    def get_request(cls, **kwargs) -> MiddlewareRequest:
-        scope = kwargs.pop("scope")
-        receive = kwargs.pop("receive")
-        return MiddlewareRequest(scope, receive)
-
-    @classmethod
-    async def get_response(cls, response, mimetype=None):
-        while asyncio.iscoroutine(response):
-            response = await response
-
-        return cls._get_response(response, mimetype=mimetype)
-
-    @classmethod
-    def _is_framework_response(cls, response):
-        return isinstance(response, StarletteResponse) and not isinstance(
-            response, MiddlewareResponse
-        )
-
-    @classmethod
-    def _framework_to_connexion_response(cls, response, mimetype):
-        # FileResponse and StreamingResponse do not a `body` (yet)
-        body = None
-        if hasattr(response, "body"):
-            body = response.body
-
-        return ConnexionResponse(
-            status_code=response.status_code,
-            mimetype=mimetype,
-            content_type=response.media_type,
-            headers=response.headers,
-            body=body,
-        )
-
-    @classmethod
-    def _connexion_to_framework_response(cls, response, mimetype):
-        return cls._build_response(
-            mimetype=response.mimetype or mimetype,
-            status_code=response.status_code,
-            content_type=response.content_type,
-            headers=response.headers,
-            data=response.body,
-        )
-
-    @classmethod
-    def _build_response(
-        cls, data, mimetype, content_type=None, status_code=None, headers=None
-    ):
-        if cls._is_framework_response(data):
-            raise TypeError(
-                "Cannot return starlette.responses.Response in tuple. Only raw data can be returned in tuple."
-            )
-        data, status_code, serialized_mimetype = cls._prepare_body_and_status_code(
-            data=data,
-            mimetype=mimetype,
-            status_code=status_code,
-        )
-
-        content_type = content_type or mimetype or serialized_mimetype
-
-        if content_type is None:
-            if isinstance(data, str):
-                content_type = "text/plain"
-            elif isinstance(data, bytes):
-                content_type = "application/octet-stream"
-
-        if isinstance(data, dict) or isinstance(data, list):
-            response_cls = StarletteJSONResponse
-        else:
-            response_cls = StarletteResponse
-
-        return response_cls(
-            content=data,
-            status_code=status_code,
-            media_type=content_type,
-            headers=headers,
-        )
-
 
 class AsyncOperation:
     def __init__(
@@ -247,7 +167,6 @@ class AsyncOperation:
         fn: t.Callable,
         uri_parser: AbstractURIParser,
         api: AbstractAPI,
-        mimetype: str,
         operation_id: str,
         pythonic_params: bool,
     ) -> None:
@@ -255,7 +174,6 @@ class AsyncOperation:
         self._fn = fn
         self.uri_parser = uri_parser
         self.api = api
-        self.mimetype = mimetype
         self.operation_id = operation_id
         self.pythonic_params = pythonic_params
 
@@ -265,29 +183,30 @@ class AsyncOperation:
     ) -> "AsyncOperation":
         return cls(
             operation,
-            fn=operation._resolution.function,
-            uri_parser=operation._uri_parsing_decorator,
+            fn=operation.function,
+            uri_parser=operation.uri_parser_class,
             api=operation.api,
-            # TODO: this should be the response mimetype
-            mimetype=operation.get_mimetype(),
             operation_id=operation.operation_id,
             pythonic_params=pythonic_params,
         )
 
     @property
     def fn(self) -> t.Callable:
-        fn = parameter_to_arg(self._operation, self._fn, self.pythonic_params)
-        return RequestResponseDecorator(self.api, self.mimetype)(
-            fn, uri_parser=self.uri_parser
+        decorator = AsyncDecorator(
+            self._operation,
+            uri_parser_cls=self._operation.uri_parser_class,
+            framework=StarletteFramework,
+            parameter=True,
+            response=True,
+            pythonic_params=self.pythonic_params,
+            jsonifier=self.api.jsonifier,
         )
+        return decorator(self._fn)
 
     async def __call__(
         self, scope: Scope, receive: Receive, send: Send
     ) -> StarletteResponse:
-        if asyncio.iscoroutinefunction(self.fn):
-            return await self.fn(scope=scope, receive=receive, send=send)
-        else:
-            return self.fn(scope=scope, receive=receive, send=send)
+        return await self.fn(scope=scope, receive=receive, send=send)
 
 
 class MissingAsyncOperation(ProblemException):

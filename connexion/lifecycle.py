@@ -62,9 +62,11 @@ class ConnexionResponse:
         self.content_type = content_type
         self.body = body
         self.headers = headers or {}
+        self.headers.update({"Content-Type": content_type})
         self.is_streamed = is_streamed
 
 
+# TODO: not just used in middleware. Rename to something appropriate.
 class MiddlewareRequest(StarletteRequest):
     """Wraps starlette Request so it can easily be extended."""
 

@@ -48,9 +48,7 @@ class Swagger2Operation(AbstractOperation):
         security_schemes=None,
         definitions=None,
         randomize_endpoint=None,
-        pythonic_params=False,
         uri_parser_class=None,
-        parameter_to_arg=None,
     ):
         """
         :param api: api that this operation is attached to
@@ -79,9 +77,6 @@ class Swagger2Operation(AbstractOperation):
         :type definitions: dict
         :param randomize_endpoint: number of random characters to append to operation name
         :type randomize_endpoint: integer
-        :param pythonic_params: When True CamelCase parameters are converted to snake_case and an underscore is appended
-            to any shadowed built-ins
-        :type pythonic_params: bool
         :param uri_parser_class: class to use for uri parsing
         :type uri_parser_class: AbstractURIParser
         """
@@ -98,9 +93,7 @@ class Swagger2Operation(AbstractOperation):
             app_security=app_security,
             security_schemes=security_schemes,
             randomize_endpoint=randomize_endpoint,
-            pythonic_params=pythonic_params,
             uri_parser_class=uri_parser_class,
-            parameter_to_arg=parameter_to_arg,
         )
 
         self._produces = operation.get("produces", app_produces)
