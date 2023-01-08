@@ -192,8 +192,6 @@ class AsyncOperation:
     @property
     def fn(self) -> t.Callable:
         decorator = StarletteDecorator(
-            self._operation,
-            uri_parser_cls=self._operation.uri_parser_class,
             pythonic_params=self.pythonic_params,
             jsonifier=self.api.jsonifier,
         )

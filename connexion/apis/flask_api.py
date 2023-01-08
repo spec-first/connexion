@@ -91,8 +91,6 @@ class FlaskOperation:
     @property
     def fn(self) -> t.Callable:
         decorator = FlaskDecorator(
-            self._operation,
-            uri_parser_cls=self.uri_parser_class,
             pythonic_params=self.pythonic_params,
             jsonifier=self.api.jsonifier,
         )

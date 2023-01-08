@@ -1,16 +1,17 @@
 import abc
 import asyncio
 import functools
+import json
 import typing as t
 
 from asgiref.sync import async_to_sync
 from starlette.concurrency import run_in_threadpool
 
+from connexion.context import operation
 from connexion.decorators.parameter import (
     AsyncParameterDecorator,
     BaseParameterDecorator,
     SyncParameterDecorator,
-    inspect_function_arguments,
 )
 from connexion.decorators.response import (
     AsyncResponseDecorator,
@@ -20,8 +21,6 @@ from connexion.decorators.response import (
 from connexion.frameworks.abstract import Framework
 from connexion.frameworks.flask import Flask as FlaskFramework
 from connexion.frameworks.starlette import Starlette as StarletteFramework
-from connexion.operations import AbstractOperation
-from connexion.uri_parsing import AbstractURIParser
 
 
 class BaseDecorator:
@@ -31,23 +30,14 @@ class BaseDecorator:
 
     def __init__(
         self,
-        operation_spec: AbstractOperation,
         *,
-        uri_parser_cls: t.Type[AbstractURIParser],
         pythonic_params: bool = False,
-        jsonifier,
+        jsonifier=json,
     ) -> None:
-        self.operation_spec = operation_spec
-        self.uri_parser = uri_parser_cls(
-            operation_spec.parameters, operation_spec.body_definition()
-        )
-        self.produces = self.operation_spec.produces
         self.pythonic_params = pythonic_params
         self.jsonifier = jsonifier
 
-        self.arguments, self.has_kwargs = inspect_function_arguments(
-            operation_spec.function
-        )
+        self.arguments, self.has_kwargs = None, None
 
     @property
     @abc.abstractmethod
@@ -70,16 +60,14 @@ class BaseDecorator:
         function = self._sync_async_decorator(function)
 
         parameter_decorator = self._parameter_decorator_cls(
-            self.operation_spec,
+            operation,
             get_body_fn=self.framework.get_body,
-            arguments=self.arguments,
-            has_kwargs=self.has_kwargs,
             pythonic_params=self.pythonic_params,
         )
         function = parameter_decorator(function)
 
         response_decorator = self._response_decorator_cls(
-            self.operation_spec,
+            operation,
             framework=self.framework,
             jsonifier=self.jsonifier,
         )
@@ -124,13 +112,8 @@ class FlaskDecorator(BaseDecorator):
     def __call__(self, function: t.Callable) -> t.Callable:
         @functools.wraps(function)
         def wrapper(*args, **kwargs):
-            # TODO: move into parameter decorator?
-            connexion_request = self.framework.get_request(
-                *args, uri_parser=self.uri_parser, **kwargs
-            )
-
             decorated_function = self.decorate(function)
-            return decorated_function(connexion_request)
+            return decorated_function()
 
         return wrapper
 
@@ -173,13 +156,8 @@ class ASGIDecorator(BaseDecorator):
     def __call__(self, function: t.Callable) -> t.Callable:
         @functools.wraps(function)
         async def wrapper(*args, **kwargs):
-            # TODO: move into parameter decorator?
-            connexion_request = self.framework.get_request(
-                *args, uri_parser=self.uri_parser, **kwargs
-            )
-
             decorated_function = self.decorate(function)
-            response = decorated_function(connexion_request)
+            response = decorated_function()
             while asyncio.iscoroutine(response):
                 response = await response
             return response

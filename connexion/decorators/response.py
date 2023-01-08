@@ -153,13 +153,13 @@ class BaseResponseDecorator:
 class SyncResponseDecorator(BaseResponseDecorator):
     def __call__(self, function: t.Callable) -> t.Callable:
         @functools.wraps(function)
-        def wrapper(request):
+        def wrapper():
             """
             This method converts a handler response to a framework response.
             The handler response can be a ConnexionResponse, a framework response, a tuple or an
             object.
             """
-            handler_response = function(request)
+            handler_response = function()
             if self.framework.is_framework_response(handler_response):
                 return handler_response
             elif isinstance(handler_response, (ConnexionResponse, MiddlewareResponse)):
@@ -173,13 +173,13 @@ class SyncResponseDecorator(BaseResponseDecorator):
 class AsyncResponseDecorator(BaseResponseDecorator):
     def __call__(self, function: t.Callable) -> t.Callable:
         @functools.wraps(function)
-        async def wrapper(request):
+        async def wrapper():
             """
             This method converts a handler response to a framework response.
             The handler response can be a ConnexionResponse, a framework response, a tuple or an
             object.
             """
-            handler_response = await function(request)
+            handler_response = await function()
             if self.framework.is_framework_response(handler_response):
                 return handler_response
             elif isinstance(handler_response, (ConnexionResponse, MiddlewareResponse)):
