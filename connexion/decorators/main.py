@@ -18,6 +18,8 @@ from connexion.decorators.response import (
     SyncResponseDecorator,
 )
 from connexion.frameworks.abstract import Framework
+from connexion.frameworks.flask import Flask as FlaskFramework
+from connexion.frameworks.starlette import Starlette as StarletteFramework
 from connexion.operations import AbstractOperation
 from connexion.uri_parsing import AbstractURIParser
 
@@ -25,14 +27,13 @@ from connexion.uri_parsing import AbstractURIParser
 class BaseDecorator:
     """Base class for connexion decorators."""
 
+    framework: t.Type[Framework]
+
     def __init__(
         self,
         operation_spec: AbstractOperation,
         *,
         uri_parser_cls: t.Type[AbstractURIParser],
-        framework: t.Type[Framework],
-        parameter: bool,
-        response: bool,
         pythonic_params: bool = False,
         jsonifier,
     ) -> None:
@@ -40,17 +41,13 @@ class BaseDecorator:
         self.uri_parser = uri_parser_cls(
             operation_spec.parameters, operation_spec.body_definition()
         )
-        self.framework = framework
         self.produces = self.operation_spec.produces
-        self.parameter = parameter
-        self.response = response
         self.pythonic_params = pythonic_params
         self.jsonifier = jsonifier
 
-        if self.parameter:
-            self.arguments, self.has_kwargs = inspect_function_arguments(
-                operation_spec.function
-            )
+        self.arguments, self.has_kwargs = inspect_function_arguments(
+            operation_spec.function
+        )
 
     @property
     @abc.abstractmethod
@@ -72,23 +69,21 @@ class BaseDecorator:
         """Decorate a function with decorators based on the operation."""
         function = self._sync_async_decorator(function)
 
-        if self.parameter:
-            parameter_decorator = self._parameter_decorator_cls(
-                self.operation_spec,
-                get_body_fn=self.framework.get_body,
-                arguments=self.arguments,
-                has_kwargs=self.has_kwargs,
-                pythonic_params=self.pythonic_params,
-            )
-            function = parameter_decorator(function)
+        parameter_decorator = self._parameter_decorator_cls(
+            self.operation_spec,
+            get_body_fn=self.framework.get_body,
+            arguments=self.arguments,
+            has_kwargs=self.has_kwargs,
+            pythonic_params=self.pythonic_params,
+        )
+        function = parameter_decorator(function)
 
-        if self.response:
-            response_decorator = self._response_decorator_cls(
-                self.operation_spec,
-                framework=self.framework,
-                jsonifier=self.jsonifier,
-            )
-            function = response_decorator(function)
+        response_decorator = self._response_decorator_cls(
+            self.operation_spec,
+            framework=self.framework,
+            jsonifier=self.jsonifier,
+        )
+        function = response_decorator(function)
 
         return function
 
@@ -97,7 +92,13 @@ class BaseDecorator:
         raise NotImplementedError
 
 
-class SyncDecorator(BaseDecorator):
+class FlaskDecorator(BaseDecorator):
+    """Decorator for usage with Flask. The parameter decorator works with a Flask request,
+    and provides Flask datastructures to the view function. The response decorator returns
+    a Flask response"""
+
+    framework = FlaskFramework
+
     @property
     def _parameter_decorator_cls(self) -> t.Type[SyncParameterDecorator]:
         return SyncParameterDecorator
@@ -134,14 +135,26 @@ class SyncDecorator(BaseDecorator):
         return wrapper
 
 
-class AsyncDecorator(BaseDecorator):
+class ASGIDecorator(BaseDecorator):
+    """Decorator for usage with ASGI apps. The parameter decorator works with a Starlette request,
+    and provides Starlette datastructures to the view function. This works for any ASGI app, since
+    we get the request via the connexion context provided by ASGI middleware.
+
+    This decorator does not parse responses, but passes them directly to the ASGI App."""
+
+    framework = StarletteFramework
+
     @property
     def _parameter_decorator_cls(self) -> t.Type[AsyncParameterDecorator]:
         return AsyncParameterDecorator
 
     @property
-    def _response_decorator_cls(self) -> t.Type[AsyncResponseDecorator]:
-        return AsyncResponseDecorator
+    def _response_decorator_cls(self) -> t.Type[BaseResponseDecorator]:
+        class NoResponseDecorator(BaseResponseDecorator):
+            def __call__(self, function: t.Callable) -> t.Callable:
+                return lambda request: function(request)
+
+        return NoResponseDecorator
 
     @property
     def _sync_async_decorator(self) -> t.Callable[[t.Callable], t.Callable]:
@@ -172,3 +185,14 @@ class AsyncDecorator(BaseDecorator):
             return response
 
         return wrapper
+
+
+class StarletteDecorator(ASGIDecorator):
+    """Decorator for usage with Connexion or Starlette apps. The parameter decorator works with a
+    Starlette request, and provides Starlette datastructures to the view function.
+
+    The response decorator returns Starlette responses."""
+
+    @property
+    def _response_decorator_cls(self) -> t.Type[AsyncResponseDecorator]:
+        return AsyncResponseDecorator

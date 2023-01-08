@@ -15,9 +15,8 @@ from starlette.types import Receive, Scope, Send
 
 from connexion.apis.abstract import AbstractAPI
 from connexion.apps.abstract import AbstractApp
-from connexion.decorators import AsyncDecorator
+from connexion.decorators import StarletteDecorator
 from connexion.exceptions import MissingMiddleware, ProblemException
-from connexion.frameworks.starlette import Starlette as StarletteFramework
 from connexion.middleware.main import ConnexionMiddleware
 from connexion.middleware.routing import ROUTING_CONTEXT
 from connexion.operations import AbstractOperation
@@ -192,12 +191,9 @@ class AsyncOperation:
 
     @property
     def fn(self) -> t.Callable:
-        decorator = AsyncDecorator(
+        decorator = StarletteDecorator(
             self._operation,
             uri_parser_cls=self._operation.uri_parser_class,
-            framework=StarletteFramework,
-            parameter=True,
-            response=True,
             pythonic_params=self.pythonic_params,
             jsonifier=self.api.jsonifier,
         )
