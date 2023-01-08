@@ -205,9 +205,6 @@ class SecurityOperation:
 
 
 class SecurityAPI(RoutedAPI[SecurityOperation]):
-
-    operation_cls = SecurityOperation
-
     def __init__(self, *args, auth_all_paths: bool = False, **kwargs):
         super().__init__(*args, **kwargs)
 
