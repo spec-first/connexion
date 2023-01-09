@@ -5,8 +5,6 @@ This module defines a native connexion asynchronous application.
 import asyncio
 import logging
 import pathlib
-import pkgutil
-import sys
 import typing as t
 
 from starlette.responses import Response as StarletteResponse
@@ -119,22 +117,6 @@ class AsyncApp(AsyncAsgiApp, AbstractApp):
         middleware = ConnexionMiddleware(self.asgi_app, middlewares=middlewares)
         self.asgi_app = middleware  # type: ignore
         return middleware
-
-    def get_root_path(self) -> str:
-        # Module already imported and has a file attribute. Use that first.
-        mod = sys.modules.get(self.import_name)
-
-        if mod is not None and hasattr(mod, "__file__"):
-            return str(pathlib.Path(mod.__file__).resolve().parent)  # type: ignore
-
-        loader = pkgutil.get_loader(self.import_name)
-
-        if hasattr(loader, "get_filename"):
-            filepath = loader.get_filename(self.import_name)  # type: ignore
-        else:
-            raise RuntimeError(f"Invalid import name '{self.import_name}'")
-
-        return str(pathlib.Path(filepath).resolve().parent)
 
     def set_errors_handlers(self):
         pass

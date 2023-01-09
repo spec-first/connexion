@@ -3,7 +3,6 @@ This module defines a FlaskApp, a Connexion application to wrap a Flask applicat
 """
 
 import logging
-import pathlib
 from types import FunctionType  # NOQA
 
 import a2wsgi
@@ -53,9 +52,6 @@ class FlaskApp(AbstractApp):
         self.app.wsgi_app = a2wsgi.ASGIMiddleware(middleware)
 
         return middleware
-
-    def get_root_path(self):
-        return pathlib.Path(self.app.root_path)
 
     def set_errors_handlers(self):
         for error_code in werkzeug.exceptions.default_exceptions:
@@ -118,12 +114,6 @@ class FlaskApp(AbstractApp):
         """
         logger.debug("Adding %s with decorator", rule, extra=kwargs)
         return self.app.route(rule, **kwargs)
-
-    async def __call__(self, scope, receive, send):
-        """
-        ASGI interface. Calls the middleware wrapped around the wsgi app.
-        """
-        return await self.middleware(scope, receive, send)
 
 
 class FlaskJSONProvider(flask.json.provider.DefaultJSONProvider):

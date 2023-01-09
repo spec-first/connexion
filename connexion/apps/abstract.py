@@ -8,6 +8,7 @@ import logging
 import pathlib
 import typing as t
 
+from connexion import utils
 from connexion.middleware import ConnexionMiddleware
 from connexion.options import ConnexionOptions
 from connexion.resolver import Resolver
@@ -46,7 +47,6 @@ class AbstractApp(metaclass=abc.ABCMeta):
         self.arguments = arguments or {}
         self.api_cls = api_cls
         self.resolver_error = None
-        self.extra_files = []
 
         # Options
         self.auth_all_paths = auth_all_paths
@@ -58,7 +58,7 @@ class AbstractApp(metaclass=abc.ABCMeta):
         self.middleware = self._apply_middleware(middlewares)
 
         # we get our application root path to avoid duplicating logic
-        self.root_path = self.get_root_path()
+        self.root_path = utils.get_root_path(self.import_name)
         logger.debug("Root Path: %s", self.root_path)
 
         specification_dir = pathlib.Path(
@@ -79,12 +79,6 @@ class AbstractApp(metaclass=abc.ABCMeta):
     def _apply_middleware(self, middlewares):
         """
         Apply middleware to application
-        """
-
-    @abc.abstractmethod
-    def get_root_path(self):
-        """
-        Gets the root path of the user framework application
         """
 
     @abc.abstractmethod
@@ -159,11 +153,6 @@ class AbstractApp(metaclass=abc.ABCMeta):
             specification = specification
         else:
             specification = t.cast(pathlib.Path, self.specification_dir / specification)
-            # Add specification as file to watch for reloading
-            if pathlib.Path.cwd() in specification.parents:
-                self.extra_files.append(
-                    str(specification.relative_to(pathlib.Path.cwd()))
-                )
 
         api_options = self.options.extend(options)
 
@@ -187,9 +176,6 @@ class AbstractApp(metaclass=abc.ABCMeta):
             arguments=arguments,
             resolver=resolver,
             resolver_error_handler=resolver_error_handler,
-            validate_responses=validate_responses,
-            strict_validation=strict_validation,
-            auth_all_paths=auth_all_paths,
             pythonic_params=pythonic_params,
             options=api_options.as_dict(),
         )
@@ -266,32 +252,8 @@ class AbstractApp(metaclass=abc.ABCMeta):
                               using reload.
         :param kwargs: kwargs to pass to `uvicorn.run`.
         """
-        try:
-            import uvicorn
-        except ImportError:
-            raise RuntimeError(
-                "uvicorn is not installed. Please install connexion using the uvicorn extra "
-                "(connexion[uvicorn])"
-            )
+        self.middleware.run(import_string, **kwargs)
 
-        logger.warning(
-            f"`{self.__class__.__name__}.run` is optimized for development. "
-            "For production, run using a dedicated ASGI server."
-        )
-
-        app: t.Union[str, AbstractApp]
-        if import_string is not None:
-            app = import_string
-            kwargs.setdefault("reload", True)
-            kwargs["reload_includes"] = self.extra_files + kwargs.get(
-                "reload_includes", []
-            )
-        else:
-            app = self
-
-        uvicorn.run(app, **kwargs)
-
-    @abc.abstractmethod
     def __call__(self, scope, receive, send):
         """
         ASGI interface.
