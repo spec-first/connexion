@@ -61,7 +61,6 @@ class BaseDecorator:
 
         parameter_decorator = self._parameter_decorator_cls(
             operation,
-            get_body_fn=self.framework.get_body,
             pythonic_params=self.pythonic_params,
         )
         function = parameter_decorator(function)

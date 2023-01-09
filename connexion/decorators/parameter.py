@@ -32,11 +32,9 @@ class BaseParameterDecorator:
         self,
         operation: AbstractOperation,
         *,
-        get_body_fn: t.Callable,
         pythonic_params: bool = False,
     ) -> None:
         self.operation = operation
-        self.get_body_fn = get_body_fn
         self.sanitize_fn = pythonic if pythonic_params else sanitized
 
         self.uri_parser = operation.uri_parser_class(
@@ -57,7 +55,7 @@ class BaseParameterDecorator:
             request.mimetype in FORM_CONTENT_TYPES
             and isinstance(self.operation, Swagger2Operation)
         ):
-            return self.get_body_fn(request)
+            return request.get_body()
         else:
             return None
 

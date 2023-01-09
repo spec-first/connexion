@@ -8,9 +8,7 @@ from starlette.responses import Response as StarletteResponse
 from starlette.types import Receive, Scope
 
 from connexion.frameworks.abstract import Framework
-from connexion.http_facts import FORM_CONTENT_TYPES
 from connexion.lifecycle import MiddlewareRequest, MiddlewareResponse
-from connexion.utils import is_json_mimetype
 
 
 class Starlette(Framework):
@@ -53,16 +51,6 @@ class Starlette(Framework):
     @staticmethod
     def get_request(*, scope: Scope, receive: Receive, **kwargs) -> MiddlewareRequest:  # type: ignore
         return MiddlewareRequest(scope, receive)
-
-    @staticmethod
-    async def get_body(request):
-        if is_json_mimetype(request.content_type):
-            return await request.json()
-        elif request.mimetype in FORM_CONTENT_TYPES:
-            return await request.form()
-        else:
-            # Return explicit None instead of empty bytestring so it is handled as null downstream
-            return await request.data() or None
 
 
 PATH_PARAMETER = re.compile(r"\{([^}]*)\}")

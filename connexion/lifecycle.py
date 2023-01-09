@@ -9,6 +9,9 @@ from multipart.multipart import parse_options_header
 from starlette.requests import Request as StarletteRequest
 from starlette.responses import StreamingResponse as StarletteStreamingResponse
 
+from connexion.http_facts import FORM_CONTENT_TYPES
+from connexion.utils import is_json_mimetype
+
 
 class ConnexionRequest:
     def __init__(self, flask_request: FlaskRequest, uri_parser=None):
@@ -40,6 +43,16 @@ class ConnexionRequest:
         form = self._flask_request.form.to_dict(flat=False)
         form_data = self.uri_parser.resolve_form(form)
         return form_data
+
+    def get_body(self):
+        """Get body based on content type"""
+        if is_json_mimetype(self.content_type):
+            return self.get_json(silent=True)
+        elif self.mimetype in FORM_CONTENT_TYPES:
+            return self.form
+        else:
+            # Return explicit None instead of empty bytestring so it is handled as null downstream
+            return self.get_data() or None
 
     def __getattr__(self, item):
         return getattr(self._flask_request, item)
@@ -97,6 +110,15 @@ class MiddlewareRequest(StarletteRequest):
     def files(self):
         # TODO: separate files?
         return {}
+
+    async def get_body(self):
+        if is_json_mimetype(self.content_type):
+            return await self.json()
+        elif self.mimetype in FORM_CONTENT_TYPES:
+            return await self.form()
+        else:
+            # Return explicit None instead of empty bytestring so it is handled as null downstream
+            return await self.data() or None
 
 
 class MiddlewareResponse(StarletteStreamingResponse):
