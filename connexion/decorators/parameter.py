@@ -14,7 +14,7 @@ from copy import copy, deepcopy
 
 import inflection
 
-from connexion.context import receive, scope
+from connexion.context import context, operation
 from connexion.frameworks.flask import Flask as FlaskFramework
 from connexion.frameworks.starlette import Starlette as StarletteFramework
 from connexion.http_facts import FORM_CONTENT_TYPES
@@ -30,16 +30,10 @@ CONTEXT_NAME = "context_"
 class BaseParameterDecorator:
     def __init__(
         self,
-        operation: AbstractOperation,
         *,
         pythonic_params: bool = False,
     ) -> None:
-        self.operation = operation
         self.sanitize_fn = pythonic if pythonic_params else sanitized
-
-        self.uri_parser = operation.uri_parser_class(
-            operation.parameters, operation.body_definition()
-        )
 
     def _maybe_get_body(
         self,
@@ -48,12 +42,12 @@ class BaseParameterDecorator:
         arguments: t.List[str],
         has_kwargs: bool,
     ) -> t.Any:
-        body_name = self.sanitize_fn(self.operation.body_name(request.content_type))
+        body_name = self.sanitize_fn(operation.body_name(request.content_type))
         # Pass form contents separately for Swagger2 for backward compatibility with
         # Connexion 2 Checking for body_name is not enough
         if (body_name in arguments or has_kwargs) or (
             request.mimetype in FORM_CONTENT_TYPES
-            and isinstance(self.operation, Swagger2Operation)
+            and isinstance(operation, Swagger2Operation)
         ):
             return request.get_body()
         else:
@@ -69,19 +63,17 @@ class SyncParameterDecorator(BaseParameterDecorator):
     framework = FlaskFramework
 
     def __call__(self, function: t.Callable) -> t.Callable:
-        function = unwrap_decorators(function)
-        arguments, has_kwargs = inspect_function_arguments(function)
+        unwrapped_function = unwrap_decorators(function)
+        arguments, has_kwargs = inspect_function_arguments(unwrapped_function)
 
         @functools.wraps(function)
-        def wrapper() -> t.Any:
-            request = self.framework.get_request(uri_parser=self.uri_parser)
+        def wrapper(request: ConnexionRequest) -> t.Any:
             request_body = self._maybe_get_body(
                 request, arguments=arguments, has_kwargs=has_kwargs
             )
 
             kwargs = prep_kwargs(
                 request,
-                operation=self.operation,
                 request_body=request_body,
                 arguments=arguments,
                 has_kwargs=has_kwargs,
@@ -102,10 +94,7 @@ class AsyncParameterDecorator(BaseParameterDecorator):
         arguments, has_kwargs = inspect_function_arguments(unwrapped_function)
 
         @functools.wraps(function)
-        async def wrapper() -> t.Any:
-            request = self.framework.get_request(
-                uri_parser=self.uri_parser, scope=scope, receive=receive
-            )
+        async def wrapper(request: MiddlewareRequest) -> t.Any:
             request_body = self._maybe_get_body(
                 request, arguments=arguments, has_kwargs=has_kwargs
             )
@@ -115,7 +104,6 @@ class AsyncParameterDecorator(BaseParameterDecorator):
 
             kwargs = prep_kwargs(
                 request,
-                operation=self.operation,
                 request_body=request_body,
                 arguments=arguments,
                 has_kwargs=has_kwargs,
@@ -130,7 +118,6 @@ class AsyncParameterDecorator(BaseParameterDecorator):
 def prep_kwargs(
     request: t.Union[ConnexionRequest, MiddlewareRequest],
     *,
-    operation: AbstractOperation,
     request_body: t.Any,
     arguments: t.List[str],
     has_kwargs: bool,
@@ -152,14 +139,14 @@ def prep_kwargs(
     kwargs = {sanitize(k): v for k, v in kwargs.items()}
 
     # add context info (e.g. from security decorator)
-    for key, value in request.context.items():
+    for key, value in context.items():
         if has_kwargs or key in arguments:
             kwargs[key] = value
         else:
             logger.debug("Context parameter '%s' not in function arguments", key)
     # attempt to provide the request context to the function
     if CONTEXT_NAME in arguments:
-        kwargs[CONTEXT_NAME] = request.context
+        kwargs[CONTEXT_NAME] = context
 
     return kwargs
 

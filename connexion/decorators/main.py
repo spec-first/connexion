@@ -7,7 +7,7 @@ import typing as t
 from asgiref.sync import async_to_sync
 from starlette.concurrency import run_in_threadpool
 
-from connexion.context import operation
+from connexion.context import operation, receive, scope
 from connexion.decorators.parameter import (
     AsyncParameterDecorator,
     BaseParameterDecorator,
@@ -21,6 +21,7 @@ from connexion.decorators.response import (
 from connexion.frameworks.abstract import Framework
 from connexion.frameworks.flask import Flask as FlaskFramework
 from connexion.frameworks.starlette import Starlette as StarletteFramework
+from connexion.uri_parsing import AbstractURIParser
 
 
 class BaseDecorator:
@@ -32,9 +33,11 @@ class BaseDecorator:
         self,
         *,
         pythonic_params: bool = False,
+        uri_parser_class: AbstractURIParser = None,
         jsonifier=json,
     ) -> None:
         self.pythonic_params = pythonic_params
+        self.uri_parser_class = uri_parser_class
         self.jsonifier = jsonifier
 
         self.arguments, self.has_kwargs = None, None
@@ -55,18 +58,21 @@ class BaseDecorator:
         """Decorator to translate between sync and async functions."""
         raise NotImplementedError
 
+    @property
+    def uri_parser(self):
+        uri_parser_class = self.uri_parser_class or operation.uri_parser_class
+        return uri_parser_class(operation.parameters, operation.body_definition())
+
     def decorate(self, function: t.Callable) -> t.Callable:
         """Decorate a function with decorators based on the operation."""
         function = self._sync_async_decorator(function)
 
         parameter_decorator = self._parameter_decorator_cls(
-            operation,
             pythonic_params=self.pythonic_params,
         )
         function = parameter_decorator(function)
 
         response_decorator = self._response_decorator_cls(
-            operation,
             framework=self.framework,
             jsonifier=self.jsonifier,
         )
@@ -111,8 +117,9 @@ class FlaskDecorator(BaseDecorator):
     def __call__(self, function: t.Callable) -> t.Callable:
         @functools.wraps(function)
         def wrapper(*args, **kwargs):
+            request = self.framework.get_request(uri_parser=self.uri_parser)
             decorated_function = self.decorate(function)
-            return decorated_function()
+            return decorated_function(request)
 
         return wrapper
 
@@ -155,8 +162,11 @@ class ASGIDecorator(BaseDecorator):
     def __call__(self, function: t.Callable) -> t.Callable:
         @functools.wraps(function)
         async def wrapper(*args, **kwargs):
+            request = self.framework.get_request(
+                uri_parser=self.uri_parser, scope=scope, receive=receive
+            )
             decorated_function = self.decorate(function)
-            response = decorated_function()
+            response = decorated_function(request)
             while asyncio.iscoroutine(response):
                 response = await response
             return response

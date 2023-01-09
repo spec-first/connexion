@@ -6,21 +6,18 @@ import types
 import typing as t
 from enum import Enum
 
+from connexion.context import operation
 from connexion.datastructures import NoContent
 from connexion.exceptions import NonConformingResponseHeaders
 from connexion.frameworks.abstract import Framework
 from connexion.lifecycle import ConnexionResponse, MiddlewareResponse
-from connexion.operations import AbstractOperation
 from connexion.utils import is_json_mimetype
 
 logger = logging.getLogger(__name__)
 
 
 class BaseResponseDecorator:
-    def __init__(
-        self, operation: AbstractOperation, *, framework: t.Type[Framework], jsonifier
-    ):
-        self.operation = operation
+    def __init__(self, *, framework: t.Type[Framework], jsonifier):
         self.framework = framework
         self.jsonifier = jsonifier
 
@@ -39,7 +36,8 @@ class BaseResponseDecorator:
             data, content_type=content_type, status_code=status_code, headers=headers
         )
 
-    def _deduct_content_type(self, data: t.Any, headers: dict) -> str:
+    @staticmethod
+    def _deduct_content_type(data: t.Any, headers: dict) -> str:
         """Deduct the response content type from the returned data, headers and operation spec.
 
         :param data: Response data
@@ -52,7 +50,7 @@ class BaseResponseDecorator:
         content_type = headers.get("Content-Type")
 
         # TODO: don't default
-        produces = list(set(self.operation.produces))
+        produces = list(set(operation.produces))
         if data is not None and not produces:
             produces = ["application/json"]
 
@@ -60,7 +58,7 @@ class BaseResponseDecorator:
             if content_type not in produces:
                 raise NonConformingResponseHeaders(
                     f"Returned content type ({content_type}) is not defined in operation spec "
-                    f"({self.operation.produces})."
+                    f"({operation.produces})."
                 )
         else:
             if not produces:
@@ -153,13 +151,13 @@ class BaseResponseDecorator:
 class SyncResponseDecorator(BaseResponseDecorator):
     def __call__(self, function: t.Callable) -> t.Callable:
         @functools.wraps(function)
-        def wrapper():
+        def wrapper(*args, **kwargs):
             """
             This method converts a handler response to a framework response.
             The handler response can be a ConnexionResponse, a framework response, a tuple or an
             object.
             """
-            handler_response = function()
+            handler_response = function(*args, **kwargs)
             if self.framework.is_framework_response(handler_response):
                 return handler_response
             elif isinstance(handler_response, (ConnexionResponse, MiddlewareResponse)):
@@ -173,13 +171,13 @@ class SyncResponseDecorator(BaseResponseDecorator):
 class AsyncResponseDecorator(BaseResponseDecorator):
     def __call__(self, function: t.Callable) -> t.Callable:
         @functools.wraps(function)
-        async def wrapper():
+        async def wrapper(*args, **kwargs):
             """
             This method converts a handler response to a framework response.
             The handler response can be a ConnexionResponse, a framework response, a tuple or an
             object.
             """
-            handler_response = await function()
+            handler_response = await function(*args, **kwargs)
             if self.framework.is_framework_response(handler_response):
                 return handler_response
             elif isinstance(handler_response, (ConnexionResponse, MiddlewareResponse)):
