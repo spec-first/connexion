@@ -4,8 +4,6 @@ This module contains a Python interface for Problem Details for HTTP APIs
 to communicate distinct "problem types" to non-human consumers.
 """
 
-from .lifecycle import ConnexionResponse
-
 
 def problem(status, title, detail, type=None, instance=None, headers=None, ext=None):
     """
@@ -33,6 +31,8 @@ def problem(status, title, detail, type=None, instance=None, headers=None, ext=N
     :return: error response
     :rtype: ConnexionResponse
     """
+    from .lifecycle import ConnexionResponse  # prevent circular import
+
     if not type:
         type = "about:blank"
 

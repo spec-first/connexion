@@ -11,10 +11,8 @@ import flask
 import werkzeug
 
 from connexion.frameworks.abstract import Framework
-from connexion.http_facts import FORM_CONTENT_TYPES
 from connexion.lifecycle import ConnexionRequest
 from connexion.uri_parsing import AbstractURIParser
-from connexion.utils import is_json_mimetype
 
 
 class Flask(Framework):
@@ -57,16 +55,6 @@ class Flask(Framework):
     @staticmethod
     def get_request(*, uri_parser: AbstractURIParser, **kwargs) -> ConnexionRequest:  # type: ignore
         return ConnexionRequest(flask.request, uri_parser=uri_parser)
-
-    @staticmethod
-    def get_body(request):
-        if is_json_mimetype(request.content_type):
-            return request.get_json(silent=True)
-        elif request.mimetype in FORM_CONTENT_TYPES:
-            return request.form
-        else:
-            # Return explicit None instead of empty bytestring so it is handled as null downstream
-            return request.get_data() or None
 
 
 PATH_PARAMETER = re.compile(r"\{([^}]*)\}")

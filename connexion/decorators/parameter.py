@@ -14,6 +14,9 @@ from copy import copy, deepcopy
 
 import inflection
 
+from connexion.context import context, operation
+from connexion.frameworks.flask import Flask as FlaskFramework
+from connexion.frameworks.starlette import Starlette as StarletteFramework
 from connexion.http_facts import FORM_CONTENT_TYPES
 from connexion.lifecycle import ConnexionRequest, MiddlewareRequest
 from connexion.operations import AbstractOperation, Swagger2Operation
@@ -27,30 +30,26 @@ CONTEXT_NAME = "context_"
 class BaseParameterDecorator:
     def __init__(
         self,
-        operation: AbstractOperation,
         *,
-        get_body_fn: t.Callable,
-        arguments: t.List[str],
-        has_kwargs: bool,
         pythonic_params: bool = False,
     ) -> None:
-        self.operation = operation
-        self.get_body_fn = get_body_fn
-        self.arguments = arguments
-        self.has_kwargs = has_kwargs
         self.sanitize_fn = pythonic if pythonic_params else sanitized
 
     def _maybe_get_body(
-        self, request: t.Union[ConnexionRequest, MiddlewareRequest]
+        self,
+        request: t.Union[ConnexionRequest, MiddlewareRequest],
+        *,
+        arguments: t.List[str],
+        has_kwargs: bool,
     ) -> t.Any:
-        body_name = self.sanitize_fn(self.operation.body_name(request.content_type))
+        body_name = self.sanitize_fn(operation.body_name(request.content_type))
         # Pass form contents separately for Swagger2 for backward compatibility with
         # Connexion 2 Checking for body_name is not enough
-        if (body_name in self.arguments or self.has_kwargs) or (
+        if (body_name in arguments or has_kwargs) or (
             request.mimetype in FORM_CONTENT_TYPES
-            and isinstance(self.operation, Swagger2Operation)
+            and isinstance(operation, Swagger2Operation)
         ):
-            return self.get_body_fn(request)
+            return request.get_body()
         else:
             return None
 
@@ -60,17 +59,24 @@ class BaseParameterDecorator:
 
 
 class SyncParameterDecorator(BaseParameterDecorator):
+
+    framework = FlaskFramework
+
     def __call__(self, function: t.Callable) -> t.Callable:
+        unwrapped_function = unwrap_decorators(function)
+        arguments, has_kwargs = inspect_function_arguments(unwrapped_function)
+
         @functools.wraps(function)
-        def wrapper(request: t.Union[ConnexionRequest, MiddlewareRequest]) -> t.Any:
-            request_body = self._maybe_get_body(request)
+        def wrapper(request: ConnexionRequest) -> t.Any:
+            request_body = self._maybe_get_body(
+                request, arguments=arguments, has_kwargs=has_kwargs
+            )
 
             kwargs = prep_kwargs(
                 request,
-                operation=self.operation,
                 request_body=request_body,
-                arguments=self.arguments,
-                has_kwargs=self.has_kwargs,
+                arguments=arguments,
+                has_kwargs=has_kwargs,
                 sanitize=self.sanitize_fn,
             )
 
@@ -80,22 +86,27 @@ class SyncParameterDecorator(BaseParameterDecorator):
 
 
 class AsyncParameterDecorator(BaseParameterDecorator):
+
+    framework = StarletteFramework
+
     def __call__(self, function: t.Callable) -> t.Callable:
+        unwrapped_function = unwrap_decorators(function)
+        arguments, has_kwargs = inspect_function_arguments(unwrapped_function)
+
         @functools.wraps(function)
-        async def wrapper(
-            request: t.Union[ConnexionRequest, MiddlewareRequest]
-        ) -> t.Any:
-            request_body = self._maybe_get_body(request)
+        async def wrapper(request: MiddlewareRequest) -> t.Any:
+            request_body = self._maybe_get_body(
+                request, arguments=arguments, has_kwargs=has_kwargs
+            )
 
             while asyncio.iscoroutine(request_body):
                 request_body = await request_body
 
             kwargs = prep_kwargs(
                 request,
-                operation=self.operation,
                 request_body=request_body,
-                arguments=self.arguments,
-                has_kwargs=self.has_kwargs,
+                arguments=arguments,
+                has_kwargs=has_kwargs,
                 sanitize=self.sanitize_fn,
             )
 
@@ -107,7 +118,6 @@ class AsyncParameterDecorator(BaseParameterDecorator):
 def prep_kwargs(
     request: t.Union[ConnexionRequest, MiddlewareRequest],
     *,
-    operation: AbstractOperation,
     request_body: t.Any,
     arguments: t.List[str],
     has_kwargs: bool,
@@ -129,16 +139,23 @@ def prep_kwargs(
     kwargs = {sanitize(k): v for k, v in kwargs.items()}
 
     # add context info (e.g. from security decorator)
-    for key, value in request.context.items():
+    for key, value in context.items():
         if has_kwargs or key in arguments:
             kwargs[key] = value
         else:
             logger.debug("Context parameter '%s' not in function arguments", key)
     # attempt to provide the request context to the function
     if CONTEXT_NAME in arguments:
-        kwargs[CONTEXT_NAME] = request.context
+        kwargs[CONTEXT_NAME] = context
 
     return kwargs
+
+
+def unwrap_decorators(function: t.Callable) -> t.Callable:
+    """Unwrap decorators to return the original function."""
+    while hasattr(function, "__wrapped__"):
+        function = function.__wrapped__  # type: ignore
+    return function
 
 
 def inspect_function_arguments(function: t.Callable) -> t.Tuple[t.List[str], bool]:

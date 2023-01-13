@@ -68,12 +68,18 @@ class RoutingAPI(AbstractRoutingAPI):
             resolver=resolver,
             resolver_error_handler=resolver_error_handler,
             debug=debug,
+            **kwargs,
         )
 
     def add_operation(self, path: str, method: str) -> None:
         operation_cls = self.specification.operation_cls
         operation = operation_cls.from_spec(
-            self.specification, self, path, method, self.resolver
+            self.specification,
+            self,
+            path,
+            method,
+            self.resolver,
+            uri_parser_class=self.options.uri_parser_class,
         )
         routing_operation = RoutingOperation.from_operation(
             operation, next_app=self.next_app

@@ -40,10 +40,6 @@ OP = t.TypeVar("OP", bound=RoutedOperation)
 
 
 class RoutedAPI(AbstractSpecAPI, t.Generic[OP]):
-
-    operation_cls: t.Type[OP]
-    """The operation this middleware uses, which should implement the RoutingOperation protocol."""
-
     def __init__(
         self,
         specification: t.Union[pathlib.Path, str, dict],
@@ -70,7 +66,12 @@ class RoutedAPI(AbstractSpecAPI, t.Generic[OP]):
     def add_operation(self, path: str, method: str) -> None:
         operation_spec_cls = self.specification.operation_cls
         operation = operation_spec_cls.from_spec(
-            self.specification, self, path, method, self.resolver
+            self.specification,
+            self,
+            path,
+            method,
+            self.resolver,
+            uri_parser_class=self.options.uri_parser_class,
         )
         routed_operation = self.make_operation(operation)
         self.operations[operation.operation_id] = routed_operation

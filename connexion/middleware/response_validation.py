@@ -125,8 +125,6 @@ class ResponseValidationOperation:
 class ResponseValidationAPI(RoutedAPI[ResponseValidationOperation]):
     """Validation API."""
 
-    operation_cls = ResponseValidationOperation
-
     def __init__(
         self,
         *args,

@@ -9,9 +9,8 @@ import flask
 from flask import Response as FlaskResponse
 
 from connexion.apis.abstract import AbstractAPI
-from connexion.decorators import SyncDecorator
+from connexion.decorators import FlaskDecorator
 from connexion.frameworks import flask as flask_utils
-from connexion.frameworks.flask import Flask as FlaskFramework
 from connexion.jsonifier import Jsonifier
 from connexion.operations import AbstractOperation
 from connexion.uri_parsing import AbstractURIParser
@@ -91,12 +90,7 @@ class FlaskOperation:
 
     @property
     def fn(self) -> t.Callable:
-        decorator = SyncDecorator(
-            self._operation,
-            uri_parser_cls=self.uri_parser_class,
-            framework=FlaskFramework,
-            parameter=True,
-            response=True,
+        decorator = FlaskDecorator(
             pythonic_params=self.pythonic_params,
             jsonifier=self.api.jsonifier,
         )
