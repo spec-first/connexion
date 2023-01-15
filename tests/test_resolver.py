@@ -7,23 +7,23 @@ from connexion.resolver import RelativeResolver, Resolver, RestyResolver
 
 def test_standard_get_function():
     function = Resolver().resolve_function_from_operation_id(
-        "connexion.FlaskApp.common_error_handler"
+        "connexion.FlaskApp.add_error_handler"
     )
-    assert function == connexion.FlaskApp.common_error_handler
+    assert function == connexion.FlaskApp.add_error_handler
 
 
 def test_relative_get_function():
     function = RelativeResolver("connexion").resolve_function_from_operation_id(
-        "connexion.FlaskApp.common_error_handler"
+        "connexion.FlaskApp.add_error_handler"
     )
-    assert function == connexion.FlaskApp.common_error_handler
+    assert function == connexion.FlaskApp.add_error_handler
 
 
 def test_resty_get_function():
     function = RestyResolver("connexion").resolve_function_from_operation_id(
-        "connexion.FlaskApp.common_error_handler"
+        "connexion.FlaskApp.add_error_handler"
     )
-    assert function == connexion.FlaskApp.common_error_handler
+    assert function == connexion.FlaskApp.add_error_handler
 
 
 def test_missing_operation_id():

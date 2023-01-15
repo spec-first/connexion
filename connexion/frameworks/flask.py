@@ -8,8 +8,9 @@ import string
 import typing as t
 
 import flask
-import werkzeug
+import werkzeug.routing
 
+from connexion import jsonifier
 from connexion.frameworks.abstract import Framework
 from connexion.lifecycle import ConnexionRequest
 from connexion.uri_parsing import AbstractURIParser
@@ -115,3 +116,29 @@ def flaskify_path(swagger_path, types=None):
         types = {}
     convert_match = functools.partial(convert_path_parameter, types=types)
     return PATH_PARAMETER.sub(convert_match, swagger_path)
+
+
+class FlaskJSONProvider(flask.json.provider.DefaultJSONProvider):
+    """Custom JSONProvider which adds connexion defaults on top of Flask's"""
+
+    @jsonifier.wrap_default
+    def default(self, o):
+        return super().default(o)
+
+
+class NumberConverter(werkzeug.routing.BaseConverter):
+    """Flask converter for OpenAPI number type"""
+
+    regex = r"[+-]?[0-9]*(\.[0-9]*)?"
+
+    def to_python(self, value):
+        return float(value)
+
+
+class IntegerConverter(werkzeug.routing.BaseConverter):
+    """Flask converter for OpenAPI integer type"""
+
+    regex = r"[+-]?[0-9]+"
+
+    def to_python(self, value):
+        return int(value)

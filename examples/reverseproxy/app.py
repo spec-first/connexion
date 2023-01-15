@@ -73,7 +73,7 @@ def create_app():
     app = connexion.FlaskApp(__name__, specification_dir="spec")
     app.add_api("openapi.yaml")
     app.add_api("swagger.yaml")
-    app = ReverseProxied(app, root_path="/reverse_proxied/")
+    app.middleware = ReverseProxied(app.middleware, root_path="/reverse_proxied/")
     return app
 
 

@@ -37,7 +37,7 @@ def middleware_app(request):
 
 
 def test_routing_middleware(middleware_app):
-    app_client = middleware_app.app.test_client()
+    app_client = middleware_app.test_client()
 
     response = app_client.post("/v1.0/greeting/robbe")
 

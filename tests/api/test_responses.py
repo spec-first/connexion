@@ -2,12 +2,11 @@ import json
 from struct import unpack
 
 import yaml
-from connexion.apps.flask_app import FlaskJSONProvider
-from werkzeug.test import Client, EnvironBuilder
+from connexion.frameworks.flask import FlaskJSONProvider
 
 
 def test_app(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
 
     # by default the Swagger UI is enabled
     swagger_ui = app_client.get("/v1.0/ui/")  # type: flask.Response
@@ -54,7 +53,7 @@ def test_openapi_yaml_behind_proxy(reverse_proxied_app):
     """Verify the swagger.json file is returned with base_path updated
     according to X-Original-URI header.
     """
-    app_client = reverse_proxied_app.app.test_client()
+    app_client = reverse_proxied_app.test_client()
 
     headers = {"X-Forwarded-Path": "/behind/proxy"}
 
@@ -80,14 +79,14 @@ def test_openapi_yaml_behind_proxy(reverse_proxied_app):
 
 
 def test_produce_decorator(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
 
     get_bye = app_client.get("/v1.0/bye/jsantos")  # type: flask.Response
     assert get_bye.content_type == "text/plain; charset=utf-8"
 
 
 def test_returning_flask_response_tuple(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
 
     result = app_client.get("/v1.0/flask_response_tuple")  # type: flask.Response
     assert result.status_code == 201, result.text
@@ -97,7 +96,7 @@ def test_returning_flask_response_tuple(simple_app):
 
 
 def test_jsonifier(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
 
     post_greeting = app_client.post(
         "/v1.0/greeting/jsantos", data={}
@@ -128,7 +127,7 @@ def test_jsonifier(simple_app):
 
 
 def test_not_content_response(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
 
     get_no_content_response = app_client.get("/v1.0/test_no_content_response")
     assert get_no_content_response.status_code == 204
@@ -136,7 +135,7 @@ def test_not_content_response(simple_app):
 
 
 def test_pass_through(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
 
     response = app_client.get("/v1.0/multimime", data={})  # type: flask.Response
     assert response.status_code == 500
@@ -148,7 +147,7 @@ def test_pass_through(simple_app):
 
 
 def test_empty(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
 
     response = app_client.get("/v1.0/empty")  # type: flask.Response
     assert response.status_code == 204
@@ -156,7 +155,7 @@ def test_empty(simple_app):
 
 
 def test_exploded_deep_object_param_endpoint_openapi_simple(simple_openapi_app):
-    app_client = simple_openapi_app.app.test_client()
+    app_client = simple_openapi_app.test_client()
 
     response = app_client.get(
         "/v1.0/exploded-deep-object-param?id[foo]=bar"
@@ -169,7 +168,7 @@ def test_exploded_deep_object_param_endpoint_openapi_simple(simple_openapi_app):
 def test_exploded_deep_object_param_endpoint_openapi_multiple_data_types(
     simple_openapi_app,
 ):
-    app_client = simple_openapi_app.app.test_client()
+    app_client = simple_openapi_app.test_client()
 
     response = app_client.get(
         "/v1.0/exploded-deep-object-param?id[foo]=bar&id[fooint]=2&id[fooboo]=false"
@@ -187,7 +186,7 @@ def test_exploded_deep_object_param_endpoint_openapi_multiple_data_types(
 def test_exploded_deep_object_param_endpoint_openapi_additional_properties(
     simple_openapi_app,
 ):
-    app_client = simple_openapi_app.app.test_client()
+    app_client = simple_openapi_app.test_client()
 
     response = app_client.get(
         "/v1.0/exploded-deep-object-param-additional-properties?id[foo]=bar&id[fooint]=2"
@@ -200,7 +199,7 @@ def test_exploded_deep_object_param_endpoint_openapi_additional_properties(
 def test_exploded_deep_object_param_endpoint_openapi_additional_properties_false(
     simple_openapi_app,
 ):
-    app_client = simple_openapi_app.app.test_client()
+    app_client = simple_openapi_app.test_client()
 
     response = app_client.get(
         "/v1.0/exploded-deep-object-param?id[foo]=bar&id[foofoo]=barbar"
@@ -209,7 +208,7 @@ def test_exploded_deep_object_param_endpoint_openapi_additional_properties_false
 
 
 def test_exploded_deep_object_param_endpoint_openapi_with_dots(simple_openapi_app):
-    app_client = simple_openapi_app.app.test_client()
+    app_client = simple_openapi_app.test_client()
 
     response = app_client.get(
         "/v1.0/exploded-deep-object-param-additional-properties?id[foo]=bar&id[foo.foo]=barbar"
@@ -220,7 +219,7 @@ def test_exploded_deep_object_param_endpoint_openapi_with_dots(simple_openapi_ap
 
 
 def test_nested_exploded_deep_object_param_endpoint_openapi(simple_openapi_app):
-    app_client = simple_openapi_app.app.test_client()
+    app_client = simple_openapi_app.test_client()
 
     response = app_client.get(
         "/v1.0/nested-exploded-deep-object-param?id[foo][foo2]=bar&id[foofoo]=barbar"
@@ -234,19 +233,19 @@ def test_nested_exploded_deep_object_param_endpoint_openapi(simple_openapi_app):
 
 
 def test_redirect_endpoint(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.get("/v1.0/test-redirect-endpoint")
     assert resp.status_code == 302
 
 
 def test_redirect_response_endpoint(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.get("/v1.0/test-redirect-response-endpoint")
     assert resp.status_code == 302
 
 
 def test_default_object_body(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.post("/v1.0/test-default-object-body")
     assert resp.status_code == 200
     response = json.loads(resp.data.decode("utf-8", "replace"))
@@ -259,7 +258,7 @@ def test_default_object_body(simple_app):
 
 
 def test_empty_object_body(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.post(
         "/v1.0/test-empty-object-body",
         data=json.dumps({}),
@@ -271,7 +270,7 @@ def test_empty_object_body(simple_app):
 
 
 def test_nested_additional_properties(simple_openapi_app):
-    app_client = simple_openapi_app.app.test_client()
+    app_client = simple_openapi_app.test_client()
     resp = app_client.post(
         "/v1.0/test-nested-additional-properties",
         data=json.dumps({"nested": {"object": True}}),
@@ -300,7 +299,7 @@ def test_custom_provider(simple_app):
 
 
 def test_content_type_not_json(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
 
     resp = app_client.get("/v1.0/blob-response")
     assert resp.status_code == 200
@@ -312,7 +311,7 @@ def test_content_type_not_json(simple_app):
 
 
 def test_maybe_blob_or_json(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
 
     resp = app_client.get("/v1.0/binary-response")
     assert resp.status_code == 200
@@ -325,7 +324,7 @@ def test_maybe_blob_or_json(simple_app):
 
 def test_bad_operations(bad_operations_app):
     # Bad operationIds in bad_operations_app should result in 501
-    app_client = bad_operations_app.app.test_client()
+    app_client = bad_operations_app.test_client()
 
     resp = app_client.get("/v1.0/welcome")
     assert resp.status_code == 501
@@ -338,20 +337,20 @@ def test_bad_operations(bad_operations_app):
 
 
 def test_text_request(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
 
     resp = app_client.post("/v1.0/text-request", data="text")
     assert resp.status_code == 200
 
 
 def test_operation_handler_returns_flask_object(invalid_resp_allowed_app):
-    app_client = invalid_resp_allowed_app.app.test_client()
+    app_client = invalid_resp_allowed_app.test_client()
     resp = app_client.get("/v1.0/get_non_conforming_response")
     assert resp.status_code == 200
 
 
 def test_post_wrong_content_type(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.post(
         "/v1.0/post_wrong_content_type",
         content_type="application/xml",
@@ -377,26 +376,26 @@ def test_post_wrong_content_type(simple_app):
 
 
 def test_get_unicode_response(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.get("/v1.0/get_unicode_response")
     actualJson = {"currency": "\xa3", "key": "leena"}
     assert json.loads(resp.data.decode("utf-8", "replace")) == actualJson
 
 
 def test_get_enum_response(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.get("/v1.0/get_enum_response")
     assert resp.status_code == 200
 
 
 def test_get_httpstatus_response(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.get("/v1.0/get_httpstatus_response")
     assert resp.status_code == 200
 
 
 def test_get_bad_default_response(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.get("/v1.0/get_bad_default_response/200")
     assert resp.status_code == 200
 
@@ -405,13 +404,13 @@ def test_get_bad_default_response(simple_app):
 
 
 def test_streaming_response(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.get("/v1.0/get_streaming_response")
     assert resp.status_code == 200
 
 
 def test_oneof(simple_openapi_app):
-    app_client = simple_openapi_app.app.test_client()
+    app_client = simple_openapi_app.test_client()
 
     post_greeting = app_client.post(  # type: flask.Response
         "/v1.0/oneof_greeting",

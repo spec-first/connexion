@@ -6,7 +6,7 @@ import pytest
 
 
 def test_parameter_validation(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
 
     url = "/v1.0/test_parameter_validation"
 
@@ -37,7 +37,7 @@ def test_parameter_validation(simple_app):
 
 
 def test_required_query_param(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
 
     url = "/v1.0/test_required_query_param"
     response = app_client.get(url)
@@ -48,7 +48,7 @@ def test_required_query_param(simple_app):
 
 
 def test_array_query_param(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     headers = {"Content-type": "application/json"}
     url = "/v1.0/test_array_csv_query_param"
     response = app_client.get(url, headers=headers)
@@ -89,7 +89,7 @@ def test_array_query_param(simple_app):
 
 
 def test_array_form_param(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     headers = {"Content-type": "application/x-www-form-urlencoded"}
     url = "/v1.0/test_array_csv_form_param"
     response = app_client.post(url, headers=headers)
@@ -120,7 +120,7 @@ def test_array_form_param(simple_app):
 
 
 def test_extra_query_param(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     headers = {"Content-type": "application/json"}
     url = "/v1.0/test_parameter_validation?extra_parameter=true"
     resp = app_client.get(url, headers=headers)
@@ -128,7 +128,7 @@ def test_extra_query_param(simple_app):
 
 
 def test_strict_extra_query_param(strict_app):
-    app_client = strict_app.app.test_client()
+    app_client = strict_app.test_client()
     headers = {"Content-type": "application/json"}
     url = "/v1.0/test_parameter_validation?extra_parameter=true"
     resp = app_client.get(url, headers=headers)
@@ -138,7 +138,7 @@ def test_strict_extra_query_param(strict_app):
 
 
 def test_strict_formdata_param(strict_app):
-    app_client = strict_app.app.test_client()
+    app_client = strict_app.test_client()
     headers = {"Content-type": "application/x-www-form-urlencoded"}
     url = "/v1.0/test_array_csv_form_param"
     resp = app_client.post(url, headers=headers, data={"items": "mango"})
@@ -163,14 +163,14 @@ def test_strict_formdata_param(strict_app):
 )
 def test_path_parameter_someint(simple_app, arg, result):
     assert isinstance(arg, str)  # sanity check
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.get(f"/v1.0/test-int-path/{arg}")  # type: flask.Response
     assert resp.data.decode("utf-8", "replace") == f'"{result}"\n'
 
 
 def test_path_parameter_someint__bad(simple_app):
     # non-integer values will not match Flask route
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.get("/v1.0/test-int-path/foo")  # type: flask.Response
     assert resp.status_code == 404, resp.text
 
@@ -196,20 +196,20 @@ def test_path_parameter_someint__bad(simple_app):
 )
 def test_path_parameter_somefloat(simple_app, arg, result):
     assert isinstance(arg, str)  # sanity check
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.get(f"/v1.0/test-float-path/{arg}")  # type: flask.Response
     assert resp.data.decode("utf-8", "replace") == f'"{result}"\n'
 
 
 def test_path_parameter_somefloat__bad(simple_app):
     # non-float values will not match Flask route
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.get("/v1.0/test-float-path/123,45")  # type: flask.Response
     assert resp.status_code == 404, resp.text
 
 
 def test_default_param(strict_app):
-    app_client = strict_app.app.test_client()
+    app_client = strict_app.test_client()
     resp = app_client.get("/v1.0/test-default-query-parameter")
     assert resp.status_code == 200
     response = json.loads(resp.data.decode("utf-8", "replace"))
@@ -217,7 +217,7 @@ def test_default_param(strict_app):
 
 
 def test_falsy_param(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.get("/v1.0/test-falsy-param", query_string={"falsy": 0})
     assert resp.status_code == 200
     response = json.loads(resp.data.decode("utf-8", "replace"))
@@ -230,7 +230,7 @@ def test_falsy_param(simple_app):
 
 
 def test_formdata_param(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.post("/v1.0/test-formData-param", data={"formData": "test"})
     assert resp.status_code == 200
     response = json.loads(resp.data.decode("utf-8", "replace"))
@@ -238,7 +238,7 @@ def test_formdata_param(simple_app):
 
 
 def test_formdata_bad_request(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.post("/v1.0/test-formData-param")
     assert resp.status_code == 400
     response = json.loads(resp.data.decode("utf-8", "replace"))
@@ -249,7 +249,7 @@ def test_formdata_bad_request(simple_app):
 
 
 def test_formdata_missing_param(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.post(
         "/v1.0/test-formData-missing-param", data={"missing_formData": "test"}
     )
@@ -257,7 +257,7 @@ def test_formdata_missing_param(simple_app):
 
 
 def test_formdata_extra_param(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.post(
         "/v1.0/test-formData-param", data={"formData": "test", "extra_formData": "test"}
     )
@@ -265,7 +265,7 @@ def test_formdata_extra_param(simple_app):
 
 
 def test_strict_formdata_extra_param(strict_app):
-    app_client = strict_app.app.test_client()
+    app_client = strict_app.test_client()
     resp = app_client.post(
         "/v1.0/test-formData-param", data={"formData": "test", "extra_formData": "test"}
     )
@@ -277,7 +277,7 @@ def test_strict_formdata_extra_param(strict_app):
 
 
 def test_formdata_file_upload(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.post(
         "/v1.0/test-formData-file-upload",
         data={"fileData": (BytesIO(b"file contents"), "filename.txt")},
@@ -288,7 +288,7 @@ def test_formdata_file_upload(simple_app):
 
 
 def test_formdata_file_upload_bad_request(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.post("/v1.0/test-formData-file-upload")
     assert resp.status_code == 400
     response = json.loads(resp.data.decode("utf-8", "replace"))
@@ -299,7 +299,7 @@ def test_formdata_file_upload_bad_request(simple_app):
 
 
 def test_formdata_file_upload_missing_param(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.post(
         "/v1.0/test-formData-file-upload-missing-param",
         data={"missing_fileData": (BytesIO(b"file contents"), "example.txt")},
@@ -308,7 +308,7 @@ def test_formdata_file_upload_missing_param(simple_app):
 
 
 def test_body_not_allowed_additional_properties(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     body = {"body1": "bodyString", "additional_property": "test1"}
     resp = app_client.post(
         "/v1.0/body-not-allowed-additional-properties",
@@ -322,7 +322,7 @@ def test_body_not_allowed_additional_properties(simple_app):
 
 
 def test_bool_as_default_param(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.get("/v1.0/test-bool-param")
     assert resp.status_code == 200
 
@@ -333,7 +333,7 @@ def test_bool_as_default_param(simple_app):
 
 
 def test_bool_param(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.get("/v1.0/test-bool-param", query_string={"thruthiness": True})
     assert resp.status_code == 200
     response = json.loads(resp.data.decode("utf-8", "replace"))
@@ -346,25 +346,25 @@ def test_bool_param(simple_app):
 
 
 def test_bool_array_param(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.get("/v1.0/test-bool-array-param?thruthiness=true,true,true")
     assert resp.status_code == 200, resp.text
     response = json.loads(resp.data.decode("utf-8", "replace"))
     assert response is True
 
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.get("/v1.0/test-bool-array-param?thruthiness=true,true,false")
     assert resp.status_code == 200, resp.text
     response = json.loads(resp.data.decode("utf-8", "replace"))
     assert response is False
 
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.get("/v1.0/test-bool-array-param")
     assert resp.status_code == 200, resp.text
 
 
 def test_required_param_miss_config(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
 
     resp = app_client.get("/v1.0/test-required-param")
     assert resp.status_code == 400
@@ -377,7 +377,7 @@ def test_required_param_miss_config(simple_app):
 
 
 def test_parameters_defined_in_path_level(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.get("/v1.0/parameters-in-root-path?title=nice-get")
     assert resp.status_code == 200
     assert json.loads(resp.data.decode("utf-8", "replace")) == ["nice-get"]
@@ -387,7 +387,7 @@ def test_parameters_defined_in_path_level(simple_app):
 
 
 def test_array_in_path(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.get("/v1.0/test-array-in-path/one_item")
     assert json.loads(resp.data.decode("utf-8", "replace")) == ["one_item"]
 
@@ -399,7 +399,7 @@ def test_array_in_path(simple_app):
 
 
 def test_nullable_parameter(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.get("/v1.0/nullable-parameters?time_start=null")
     assert json.loads(resp.data.decode("utf-8", "replace")) == "it was None"
 
@@ -430,7 +430,7 @@ def test_nullable_parameter(simple_app):
 
 
 def test_args_kwargs(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.get("/v1.0/query-params-as-kwargs")
     assert resp.status_code == 200
     assert json.loads(resp.data.decode("utf-8", "replace")) == {}
@@ -454,7 +454,7 @@ def test_args_kwargs(simple_app):
 
 
 def test_param_sanitization(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.post("/v1.0/param-sanitization")
     assert resp.status_code == 200
     assert json.loads(resp.data.decode("utf-8", "replace")) == {}
@@ -501,7 +501,7 @@ def test_param_sanitization(simple_app):
 
 
 def test_no_sanitization_in_request_body(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     data = {
         "name": "John",
         "$surname": "Doe",
@@ -518,7 +518,7 @@ def test_no_sanitization_in_request_body(simple_app):
 
 
 def test_parameters_snake_case(snake_case_app):
-    app_client = snake_case_app.app.test_client()
+    app_client = snake_case_app.test_client()
     headers = {"Content-type": "application/json"}
     resp = app_client.post(
         "/v1.0/test-post-path-snake/123",
@@ -579,14 +579,14 @@ def test_parameters_snake_case(snake_case_app):
 
 def test_get_unicode_request(simple_app):
     """Regression test for Python 2 UnicodeEncodeError bug during parameter parsing."""
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.get("/v1.0/get_unicode_request?price=%C2%A319.99")  # £19.99
     assert resp.status_code == 200
     assert json.loads(resp.data.decode("utf-8"))["price"] == "£19.99"
 
 
 def test_cookie_param(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     app_client.set_cookie("localhost", "test_cookie", "hello")
     response = app_client.get("/v1.0/test-cookie-param")
     assert response.status_code == 200

@@ -63,6 +63,7 @@ copyright = '2018, Zalando SE'
 # built documents.
 #
 import connexion
+
 # The short X.Y version.
 version = connexion.__version__.rsplit('.', 1)[0]
 # The full version, including alpha/beta/rc tags.

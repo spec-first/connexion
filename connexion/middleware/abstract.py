@@ -1,42 +1,185 @@
 import abc
 import logging
 import pathlib
+import sys
 import typing as t
 
-import typing_extensions as te
 from starlette.types import ASGIApp, Receive, Scope, Send
 
-from connexion.apis.abstract import AbstractSpecAPI
-from connexion.exceptions import MissingMiddleware
+from connexion.exceptions import MissingMiddleware, ResolverError
 from connexion.http_facts import METHODS
+from connexion.jsonifier import Jsonifier
 from connexion.operations import AbstractOperation
-from connexion.resolver import ResolverError
+from connexion.resolver import Resolver
+from connexion.spec import Specification
 
-logger = logging.getLogger("connexion.middleware.abstract")
+logger = logging.getLogger(__name__)
 
 ROUTING_CONTEXT = "connexion_routing"
 
 
-class AppMiddleware(abc.ABC):
-    """Middlewares that need the APIs to be registered on them should inherit from this base
-    class"""
+class SpecMiddleware(abc.ABC):
+    """Middlewares that need the specification(s) to be registered on them should inherit from this
+    base class"""
 
     @abc.abstractmethod
     def add_api(
         self, specification: t.Union[pathlib.Path, str, dict], **kwargs
     ) -> None:
+        """
+        Register een API represented by a single OpenAPI specification on this middleware.
+        Multiple APIs can be registered on a single middleware.
+        """
+
+    @abc.abstractmethod
+    async def __call__(self, scope: Scope, receive: Receive, send: Send):
         pass
 
 
-class RoutedOperation(te.Protocol):
-    def __init__(self, next_app: ASGIApp, **kwargs) -> None:
-        ...
+class AbstractSpecAPI:
+    """Base API class with only minimal behavior related to the specification."""
 
-    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        ...
+    jsonifier = Jsonifier()
+
+    def __init__(
+        self,
+        specification: t.Union[pathlib.Path, str, dict],
+        base_path: t.Optional[str] = None,
+        resolver: t.Optional[Resolver] = None,
+        arguments: t.Optional[dict] = None,
+        uri_parser_class=None,
+        *args,
+        **kwargs,
+    ):
+        self.specification = Specification.load(specification, arguments=arguments)
+        self.uri_parser_class = uri_parser_class
+
+        self._set_base_path(base_path)
+
+        self.resolver = resolver or Resolver()
+
+    def _set_base_path(self, base_path: t.Optional[str] = None) -> None:
+        if base_path is not None:
+            # update spec to include user-provided base_path
+            self.specification.base_path = base_path
+            self.base_path = base_path
+        else:
+            self.base_path = self.specification.base_path
 
 
-OP = t.TypeVar("OP", bound=RoutedOperation)
+OP = t.TypeVar("OP")
+
+
+class AbstractRoutingAPI(AbstractSpecAPI, t.Generic[OP]):
+    """Base API class with shared functionality related to routing."""
+
+    def __init__(
+        self,
+        *args,
+        pythonic_params=False,
+        resolver_error_handler: t.Optional[t.Callable] = None,
+        **kwargs,
+    ) -> None:
+        super().__init__(*args, **kwargs)
+        self.pythonic_params = pythonic_params
+        self.resolver_error_handler = resolver_error_handler
+
+        self.add_paths()
+
+    def add_paths(self, paths: t.Optional[dict] = None) -> None:
+        """
+        Adds the paths defined in the specification as operations.
+        """
+        paths = paths or self.specification.get("paths", dict())
+        for path, methods in paths.items():
+            logger.debug("Adding %s%s...", self.base_path, path)
+
+            for method in methods:
+                if method not in METHODS:
+                    continue
+                try:
+                    self.add_operation(path, method)
+                except ResolverError as err:
+                    # If we have an error handler for resolver errors, add it as an operation.
+                    # Otherwise treat it as any other error.
+                    if self.resolver_error_handler is not None:
+                        self._add_resolver_error_handler(method, path, err)
+                    else:
+                        self._handle_add_operation_error(path, method, err.exc_info)
+                except Exception:
+                    # All other relevant exceptions should be handled as well.
+                    self._handle_add_operation_error(path, method, sys.exc_info())
+
+    def add_operation(self, path: str, method: str) -> None:
+        """
+        Adds one operation to the api.
+
+        This method uses the OperationID identify the module and function that will handle the operation
+
+        From Swagger Specification:
+
+        **OperationID**
+
+        A friendly name for the operation. The id MUST be unique among all operations described in the API.
+        Tools and libraries MAY use the operation id to uniquely identify an operation.
+        """
+        spec_operation_cls = self.specification.operation_cls
+        spec_operation = spec_operation_cls.from_spec(
+            self.specification,
+            self,
+            path,
+            method,
+            self.resolver,
+            uri_parser_class=self.uri_parser_class,
+        )
+        operation = self.make_operation(spec_operation)
+        path, name = self._framework_path_and_name(spec_operation, path)
+        self._add_operation_internal(method, path, operation, name=name)
+
+    @abc.abstractmethod
+    def make_operation(self, operation: AbstractOperation) -> OP:
+        """Build an operation to register on the API."""
+
+    @staticmethod
+    def _framework_path_and_name(
+        operation: AbstractOperation, path: str
+    ) -> t.Tuple[str, str]:
+        """Prepare the framework path & name to register the operation on the API."""
+
+    @abc.abstractmethod
+    def _add_operation_internal(
+        self, method: str, path: str, operation: OP, name: str = None
+    ) -> None:
+        """
+        Adds the operation according to the user framework in use.
+        It will be used to register the operation on the user framework router.
+        """
+
+    def _add_resolver_error_handler(
+        self, method: str, path: str, err: ResolverError
+    ) -> None:
+        """
+        Adds a handler for ResolverError for the given method and path.
+        """
+        self.resolver_error_handler = t.cast(t.Callable, self.resolver_error_handler)
+        operation = self.resolver_error_handler(
+            err,
+        )
+        self._add_operation_internal(method, path, operation)
+
+    def _handle_add_operation_error(
+        self, path: str, method: str, exc_info: tuple
+    ) -> None:
+        url = f"{self.base_path}{path}"
+        error_msg = "Failed to add operation for {method} {url}".format(
+            method=method.upper(), url=url
+        )
+        logger.error(error_msg)
+        _type, value, traceback = exc_info
+        raise value.with_traceback(traceback)
+
+    def json_loads(self, data):
+        return self.jsonifier.loads(data)
 
 
 class RoutedAPI(AbstractSpecAPI, t.Generic[OP]):
@@ -71,7 +214,7 @@ class RoutedAPI(AbstractSpecAPI, t.Generic[OP]):
             path,
             method,
             self.resolver,
-            uri_parser_class=self.options.uri_parser_class,
+            uri_parser_class=self.uri_parser_class,
         )
         routed_operation = self.make_operation(operation)
         self.operations[operation.operation_id] = routed_operation
@@ -85,7 +228,7 @@ class RoutedAPI(AbstractSpecAPI, t.Generic[OP]):
 API = t.TypeVar("API", bound="RoutedAPI")
 
 
-class RoutedMiddleware(AppMiddleware, t.Generic[API]):
+class RoutedMiddleware(SpecMiddleware, t.Generic[API]):
     """Baseclass for middleware that wants to leverage the RoutingMiddleware to route requests to
     its operations.
 

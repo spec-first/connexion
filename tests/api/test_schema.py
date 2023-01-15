@@ -2,7 +2,7 @@ import json
 
 
 def test_schema(schema_app):
-    app_client = schema_app.app.test_client()
+    app_client = schema_app.test_client()
     headers = {"Content-type": "application/json"}
 
     empty_request = app_client.post(
@@ -75,7 +75,7 @@ def test_schema(schema_app):
 
 
 def test_schema_response(schema_app):
-    app_client = schema_app.app.test_client()
+    app_client = schema_app.test_client()
 
     request = app_client.get(
         "/v1.0/test_schema/response/object/valid", headers={}, data=None
@@ -136,7 +136,7 @@ def test_schema_response(schema_app):
 
 
 def test_schema_in_query(schema_app):
-    app_client = schema_app.app.test_client()
+    app_client = schema_app.test_client()
     headers = {"Content-type": "application/json"}
 
     good_request = app_client.post(
@@ -152,7 +152,7 @@ def test_schema_in_query(schema_app):
 
 
 def test_schema_list(schema_app):
-    app_client = schema_app.app.test_client()
+    app_client = schema_app.test_client()
     headers = {"Content-type": "application/json"}
 
     wrong_type = app_client.post(
@@ -179,7 +179,7 @@ def test_schema_list(schema_app):
 
 
 def test_schema_map(schema_app):
-    app_client = schema_app.app.test_client()
+    app_client = schema_app.test_client()
     headers = {"Content-type": "application/json"}
 
     valid_object = {
@@ -218,7 +218,7 @@ def test_schema_map(schema_app):
 
 
 def test_schema_recursive(schema_app):
-    app_client = schema_app.app.test_client()
+    app_client = schema_app.test_client()
     headers = {"Content-type": "application/json"}
 
     valid_object = {
@@ -260,7 +260,7 @@ def test_schema_recursive(schema_app):
 
 
 def test_schema_format(schema_app):
-    app_client = schema_app.app.test_client()
+    app_client = schema_app.test_client()
     headers = {"Content-type": "application/json"}
 
     wrong_type = app_client.post(
@@ -276,7 +276,7 @@ def test_schema_format(schema_app):
 
 
 def test_schema_array(schema_app):
-    app_client = schema_app.app.test_client()
+    app_client = schema_app.test_client()
     headers = {"Content-type": "application/json"}
 
     array_request = app_client.post(
@@ -291,7 +291,7 @@ def test_schema_array(schema_app):
 
 
 def test_schema_int(schema_app):
-    app_client = schema_app.app.test_client()
+    app_client = schema_app.test_client()
     headers = {"Content-type": "application/json"}
 
     array_request = app_client.post(
@@ -306,13 +306,13 @@ def test_schema_int(schema_app):
 
 
 def test_global_response_definitions(schema_app):
-    app_client = schema_app.app.test_client()
+    app_client = schema_app.test_client()
     resp = app_client.get("/v1.0/define_global_response")
     assert json.loads(resp.data.decode("utf-8", "replace")) == ["general", "list"]
 
 
 def test_media_range(schema_app):
-    app_client = schema_app.app.test_client()
+    app_client = schema_app.test_client()
     headers = {"Content-type": "application/json"}
 
     array_request = app_client.post(

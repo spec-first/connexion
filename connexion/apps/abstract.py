@@ -2,194 +2,164 @@
 This module defines an AbstractApp, which defines a standardized user interface for a Connexion
 application.
 """
-
 import abc
-import logging
 import pathlib
 import typing as t
 
-from connexion import utils
-from connexion.middleware import ConnexionMiddleware
-from connexion.options import ConnexionOptions
+from starlette.types import Receive, Scope, Send
+
+from connexion.middleware import ConnexionMiddleware, SpecMiddleware
 from connexion.resolver import Resolver
+from connexion.uri_parsing import AbstractURIParser
 
-logger = logging.getLogger("connexion.app")
 
+class AbstractApp:
+    """
+    Abstract class for a Connexion Application. A Connexion Application provides an interface for a
+    framework application wrapped by Connexion Middleware. Since its main function is to provide an
+    interface, it delegates most of the work to the middleware and framework application.
+    """
 
-class AbstractApp(metaclass=abc.ABCMeta):
+    middleware_app: SpecMiddleware
+    """
+    The application wrapped by the ConnexionMiddleware, which in its turn wraps the framework
+    application.
+    """
+
     def __init__(
         self,
-        import_name,
-        api_cls,
-        specification_dir="",
-        arguments=None,
-        auth_all_paths=False,
-        resolver=None,
-        options=None,
-        skip_error_handlers=False,
-        middlewares=None,
-    ):
+        import_name: str,
+        *,
+        specification_dir: t.Union[pathlib.Path, str] = "",
+        middlewares: t.Optional[list] = None,
+        arguments: t.Optional[dict] = None,
+        auth_all_paths: t.Optional[bool] = None,
+        pythonic_params: t.Optional[bool] = None,
+        resolver: t.Optional[t.Union[Resolver, t.Callable]] = None,
+        resolver_error: t.Optional[int] = None,
+        strict_validation: t.Optional[bool] = None,
+        swagger_ui_options: t.Optional[dict] = None,
+        uri_parser_class: t.Optional[AbstractURIParser] = None,
+        validate_responses: t.Optional[bool] = None,
+        validator_map: t.Optional[dict] = None,
+    ) -> None:
         """
-        :param import_name: the name of the application package
-        :type import_name: str
-        :param specification_dir: directory where to look for specifications
-        :type specification_dir: pathlib.Path | str
-        :param arguments: arguments to replace on the specification
-        :type arguments: dict | None
-        :param auth_all_paths: whether to authenticate not defined paths
-        :type auth_all_paths: bool
-        :param resolver: Callable that maps operationID to a function
-        :param middlewares: Callable that maps operationID to a function
-        :type middlewares: list | None
+        :param import_name: The name of the package or module that this object belongs to. If you
+            are using a single module, __name__ is always the correct value. If you however are
+            using a package, it’s usually recommended to hardcode the name of your package there.
+        :param specification_dir: The directory holding the specification(s). The provided path
+            should either be absolute or relative to the root path of the application. Defaults to
+            the root path.
+        :param middlewares: The list of middlewares to wrap around the application. Defaults to
+            :obj:`middleware.main.ConnexionmMiddleware.default_middlewares`
+        :param arguments: Arguments to substitute the specification using Jinja.
+        :param auth_all_paths: whether to authenticate not paths not defined in the specification.
+            Defaults to False.
+        :param pythonic_params: When True, CamelCase parameters are converted to snake_case and an
+            underscore is appended to any shadowed built-ins. Defaults to False.
+        :param resolver: Callable that maps operationId to a function or instance of
+            :class:`resolver.Resolver`.
+        :param resolver_error: Error code to return for operations for which the operationId could
+            not be resolved. If no error code is provided, the application will fail when trying to
+            start.
+        :param strict_validation: When True, extra form or query parameters not defined in the
+            specification result in a validation error. Defaults to False.
+        :param swagger_ui_options: A :class:`options.ConnexionOptions` instance with configuration
+            options for the swagger ui.
+        :param uri_parser_class: Class to use for uri parsing. See :mod:`uri_parsing`.
+        :param validate_responses: Whether to validate responses against the specification. This has
+            an impact on performance. Defaults to False.
+        :param validator_map: A dictionary of validators to use. Defaults to
+            :obj:`validators.VALIDATOR_MAP`.
         """
-        self.resolver = resolver
-        self.import_name = import_name
-        self.arguments = arguments or {}
-        self.api_cls = api_cls
-        self.resolver_error = None
-
-        # Options
-        self.auth_all_paths = auth_all_paths
-
-        self.options = ConnexionOptions(options)
-
-        if middlewares is None:
-            middlewares = ConnexionMiddleware.default_middlewares
-        self.middleware = self._apply_middleware(middlewares)
-
-        # we get our application root path to avoid duplicating logic
-        self.root_path = utils.get_root_path(self.import_name)
-        logger.debug("Root Path: %s", self.root_path)
-
-        specification_dir = pathlib.Path(
-            specification_dir
-        )  # Ensure specification dir is a Path
-        if specification_dir.is_absolute():
-            self.specification_dir = specification_dir
-        else:
-            self.specification_dir = self.root_path / specification_dir
-
-        logger.debug("Specification directory: %s", self.specification_dir)
-
-        if not skip_error_handlers:
-            logger.debug("Setting error handlers")
-            self.set_errors_handlers()
-
-    @abc.abstractmethod
-    def _apply_middleware(self, middlewares):
-        """
-        Apply middleware to application
-        """
-
-    @abc.abstractmethod
-    def set_errors_handlers(self):
-        """
-        Sets all errors handlers of the user framework application
-        """
+        self.middleware = ConnexionMiddleware(
+            self.middleware_app,
+            import_name=import_name,
+            specification_dir=specification_dir,
+            middlewares=middlewares,
+            arguments=arguments,
+            auth_all_paths=auth_all_paths,
+            swagger_ui_options=swagger_ui_options,
+            pythonic_params=pythonic_params,
+            resolver=resolver,
+            resolver_error=resolver_error,
+            strict_validation=strict_validation,
+            uri_parser_class=uri_parser_class,
+            validate_responses=validate_responses,
+            validator_map=validator_map,
+        )
 
     def add_api(
         self,
         specification: t.Union[pathlib.Path, str, dict],
         *,
-        base_path=None,
-        arguments=None,
-        auth_all_paths=None,
-        validate_responses=False,
-        strict_validation=False,
-        resolver=None,
-        resolver_error=None,
-        pythonic_params=False,
-        options=None,
-        validator_map=None,
+        base_path: t.Optional[str] = None,
+        arguments: t.Optional[dict] = None,
+        auth_all_paths: t.Optional[bool] = None,
+        pythonic_params: t.Optional[bool] = None,
+        resolver: t.Optional[t.Union[Resolver, t.Callable]] = None,
+        resolver_error: t.Optional[int] = None,
+        strict_validation: t.Optional[bool] = None,
+        swagger_ui_options: t.Optional[dict] = None,
+        uri_parser_class: t.Optional[AbstractURIParser] = None,
+        validate_responses: t.Optional[bool] = None,
+        validator_map: t.Optional[dict] = None,
+        **kwargs,
+    ) -> t.Any:
+        """
+        Register een API represented by a single OpenAPI specification on this application.
+        Multiple APIs can be registered on a single application.
+
+        :param specification: OpenAPI specification. Can be provided either as dict, or as path
+            to file.
+        :param base_path: Base path to host the API. This overrides the basePath / servers in the
+            specification.
+        :param arguments: Arguments to substitute the specification using Jinja.
+        :param auth_all_paths: whether to authenticate not paths not defined in the specification.
+            Defaults to False.
+        :param pythonic_params: When True, CamelCase parameters are converted to snake_case and an
+            underscore is appended to any shadowed built-ins. Defaults to False.
+        :param resolver: Callable that maps operationId to a function or instance of
+            :class:`resolver.Resolver`.
+        :param resolver_error: Error code to return for operations for which the operationId could
+            not be resolved. If no error code is provided, the application will fail when trying to
+            start.
+        :param strict_validation: When True, extra form or query parameters not defined in the
+            specification result in a validation error. Defaults to False.
+        :param swagger_ui_options: A :class:`options.ConnexionOptions` instance with configuration
+            options for the swagger ui.
+        :param uri_parser_class: Class to use for uri parsing. See :mod:`uri_parsing`.
+        :param validate_responses: Whether to validate responses against the specification. This has
+            an impact on performance. Defaults to False.
+        :param validator_map: A dictionary of validators to use. Defaults to
+            :obj:`validators.VALIDATOR_MAP`
+        :param kwargs: Additional keyword arguments to pass to the `add_api` method of the managed
+            middlewares. This can be used to pass arguments to middlewares added beyond the default
+            ones.
+
+        :return: The Api registered on the middleware application wrapping the framework.
+        """
+        return self.middleware.add_api(
+            specification,
+            base_path=base_path,
+            arguments=arguments,
+            auth_all_paths=auth_all_paths,
+            pythonic_params=pythonic_params,
+            resolver=resolver,
+            resolver_error=resolver_error,
+            strict_validation=strict_validation,
+            swagger_ui_options=swagger_ui_options,
+            uri_parser_class=uri_parser_class,
+            validate_responses=validate_responses,
+            validator_map=validator_map,
+            **kwargs,
+        )
+
+    def add_url_rule(
+        self, rule, endpoint: str = None, view_func: t.Callable = None, **options
     ):
         """
-        Adds an API to the application based on a swagger file or API dict
-
-        :param specification: swagger file with the specification | specification dict
-        :type specification: pathlib.Path or str or dict
-        :param base_path: base path where to add this api
-        :type base_path: str | None
-        :param arguments: api version specific arguments to replace on the specification
-        :type arguments: dict | None
-        :param auth_all_paths: whether to authenticate not defined paths
-        :type auth_all_paths: bool
-        :param validate_responses: True enables validation. Validation errors generate HTTP 500 responses.
-        :type validate_responses: bool
-        :param strict_validation: True enables validation on invalid request parameters
-        :type strict_validation: bool
-        :param resolver: Operation resolver.
-        :type resolver: Resolver | types.FunctionType
-        :param resolver_error: If specified, turns ResolverError into error
-            responses with the given status code.
-        :type resolver_error: int | None
-        :param pythonic_params: When True CamelCase parameters are converted to snake_case
-        :type pythonic_params: bool
-
-        :param options: New style options dictionary.
-        :type options: dict | None
-        :param validator_map: map of validators
-        :type validator_map: dict
-        :rtype: AbstractAPI
-        """
-        # Turn the resolver_error code into a handler object
-        self.resolver_error = resolver_error
-        resolver_error_handler = None
-        if self.resolver_error is not None:
-            resolver_error_handler = self._resolver_error_handler
-
-        resolver = resolver or self.resolver
-        resolver = Resolver(resolver) if hasattr(resolver, "__call__") else resolver
-
-        auth_all_paths = (
-            auth_all_paths if auth_all_paths is not None else self.auth_all_paths
-        )
-        # TODO test if base_path starts with an / (if not none)
-        arguments = arguments or dict()
-        arguments = dict(
-            self.arguments, **arguments
-        )  # copy global arguments and update with api specific
-
-        if isinstance(specification, dict):
-            specification = specification
-        else:
-            specification = t.cast(pathlib.Path, self.specification_dir / specification)
-
-        api_options = self.options.extend(options)
-
-        self.middleware.add_api(
-            specification,
-            base_path=base_path,
-            arguments=arguments,
-            resolver=resolver,
-            resolver_error_handler=resolver_error_handler,
-            validate_responses=validate_responses,
-            strict_validation=strict_validation,
-            auth_all_paths=auth_all_paths,
-            validator_map=validator_map,
-            pythonic_params=pythonic_params,
-            options=api_options.as_dict(),
-        )
-
-        api = self.api_cls(
-            specification,
-            base_path=base_path,
-            arguments=arguments,
-            resolver=resolver,
-            resolver_error_handler=resolver_error_handler,
-            pythonic_params=pythonic_params,
-            options=api_options.as_dict(),
-        )
-        return api
-
-    def _resolver_error_handler(self, *args, **kwargs):
-        from connexion.handlers import ResolverErrorHandler
-
-        return ResolverErrorHandler(self.resolver_error, *args, **kwargs)
-
-    def add_url_rule(self, rule, endpoint=None, view_func=None, **options):
-        """
-        Connects a URL rule.  Works exactly like the `route` decorator.  If a view_func is provided it will be
-        registered with the endpoint.
+        Connects a URL rule.  Works exactly like the `route` decorator.
 
         Basically this example::
 
@@ -203,31 +173,19 @@ class AbstractApp(metaclass=abc.ABCMeta):
                 pass
             app.add_url_rule('/', 'index', index)
 
-        If the view_func is not provided you will need to connect the endpoint to a view function like so::
+        Internally`route` invokes `add_url_rule` so if you want to customize the behavior via
+        subclassing you only need to change this method.
 
-            app.view_functions['index'] = index
-
-        Internally`route` invokes `add_url_rule` so if you want to customize the behavior via subclassing you only need
-        to change this method.
-
-        :param rule: the URL rule as string
-        :type rule: str
-        :param endpoint: the endpoint for the registered URL rule. Flask itself assumes the name of the view function as
-                         endpoint
-        :type endpoint: str
-        :param view_func: the function to call when serving a request to the provided endpoint
-        :type view_func: types.FunctionType
-        :param options: the options to be forwarded to the underlying `werkzeug.routing.Rule` object.  A change
-                        to Werkzeug is handling of method options. methods is a list of methods this rule should be
-                        limited to (`GET`, `POST` etc.).  By default a rule just listens for `GET` (and implicitly
-                        `HEAD`).
+        :param rule: the URL rule as string.
+        :param endpoint: the name of the endpoint for the registered URL rule, which is used for
+            reverse lookup. Flask defaults to the name of the view function.
+        :param view_func: the function to call when serving a request to the provided endpoint.
+        :param options: the options to be forwarded to the underlying `werkzeug.routing.Rule`
+            object.  A change to Werkzeug is handling of method options. methods is a list of
+            methods this rule should be limited to (`GET`, `POST` etc.).  By default a rule just
+            listens for `GET` (and implicitly `HEAD`).
         """
-        log_details = {"endpoint": endpoint, "view_func": view_func.__name__}
-        log_details.update(options)
-        logger.debug("Adding %s", rule, extra=log_details)
-        self.app.add_url_rule(rule, endpoint, view_func, **options)
 
-    @abc.abstractmethod
     def route(self, rule: str, **options):
         """
         A decorator that is used to register a view function for a
@@ -239,11 +197,33 @@ class AbstractApp(metaclass=abc.ABCMeta):
                 return 'Hello World'
 
         :param rule: the URL rule as string
-        :param options: the options to be forwarded to the underlying `werkzeug.routing.Rule` object.  A change
-                        to Werkzeug is handling of method options.  methods is a list of methods this rule should be
-                        limited to (`GET`, `POST` etc.).  By default a rule just listens for `GET` (and implicitly
-                        `HEAD`).
+        :param options: the options to be forwarded to the underlying `werkzeug.routing.Rule`
+                        object. A change to Werkzeug is handling of method options. methods is a
+                        list of methods this rule should be limited to (`GET`, `POST` etc.).
+                        By default a rule just listens for `GET` (and implicitly `HEAD`).
         """
+
+        def decorator(func: t.Callable) -> t.Callable:
+            self.add_url_rule(rule, view_func=func, **options)
+            return func
+
+        return decorator
+
+    @abc.abstractmethod
+    def add_error_handler(
+        self, code_or_exception: t.Union[int, t.Type[Exception]], function: t.Callable
+    ) -> None:
+        """
+        Register a callable to handle application errors.
+
+        :param code_or_exception: An exception class or the status code of HTTP exceptions to
+            handle.
+        :param function: Callable that will handle exception.
+        """
+
+    @abc.abstractmethod
+    def test_client(self, **kwargs):
+        """Creates a test client for this application."""
 
     def run(self, import_string: str = None, **kwargs):
         """Run the application using uvicorn.
@@ -254,8 +234,5 @@ class AbstractApp(metaclass=abc.ABCMeta):
         """
         self.middleware.run(import_string, **kwargs)
 
-    def __call__(self, scope, receive, send):
-        """
-        ASGI interface.
-        """
-        return self.middleware(scope, receive, send)
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        return await self.middleware(scope, receive, send)

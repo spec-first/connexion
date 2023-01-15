@@ -4,7 +4,7 @@ import math
 from decimal import Decimal
 
 import pytest
-from connexion.apps.flask_app import FlaskJSONProvider
+from connexion.frameworks.flask import FlaskJSONProvider
 
 from conftest import build_app_from_fixture
 
@@ -46,7 +46,7 @@ def test_json_encoder_datetime_with_timezone(simple_app):
 @pytest.mark.parametrize("spec", SPECS)
 def test_readonly(json_datetime_dir, spec):
     app = build_app_from_fixture(json_datetime_dir, spec, validate_responses=True)
-    app_client = app.app.test_client()
+    app_client = app.test_client()
 
     res = app_client.get("/v1.0/" + spec.replace("yaml", "json"))
     assert res.status_code == 200, f"Error is {res.data}"

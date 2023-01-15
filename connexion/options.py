@@ -10,8 +10,6 @@ try:
 except ImportError:
     swagger_ui_path = None
 
-from connexion.uri_parsing import AbstractURIParser
-
 NO_UI_MSG = """The swagger_ui directory could not be found.
     Please install connexion with extra install: pip install connexion[swagger-ui]
     or provide the path to your local installation by passing swagger_path=<your path>
@@ -20,8 +18,8 @@ NO_UI_MSG = """The swagger_ui directory could not be found.
 logger = logging.getLogger("connexion.options")
 
 
-class ConnexionOptions:
-    """Class holding connexion specific options."""
+class SwaggerUIOptions:
+    """Class holding swagger UI specific options."""
 
     def __init__(self, options=None, oas_version=(2,)):
         self._options = {}
@@ -36,7 +34,7 @@ class ConnexionOptions:
             self._options.update(filter_values(options))
 
     def extend(self, new_values=None):
-        # type: (Optional[dict]) -> ConnexionOptions
+        # type: (Optional[dict]) -> SwaggerUIOptions
         """
         Return a new instance of `ConnexionOptions` using as default the currently
         defined options.
@@ -46,7 +44,7 @@ class ConnexionOptions:
 
         options = dict(self._options)
         options.update(filter_values(new_values))
-        return ConnexionOptions(options, self.oas_version)
+        return SwaggerUIOptions(options, self.oas_version)
 
     def as_dict(self):
         return self._options
@@ -137,15 +135,6 @@ class ConnexionOptions:
         Default: {}
         """
         return self._options.get("swagger_ui_template_arguments", {})
-
-    @property
-    def uri_parser_class(self):
-        # type: () -> AbstractURIParser
-        """
-        The class to use for parsing URIs into path and query parameters.
-        Default: None
-        """
-        return self._options.get("uri_parser_class", None)
 
 
 def filter_values(dictionary):
