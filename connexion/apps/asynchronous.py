@@ -65,7 +65,8 @@ class AsyncOperation:
     async def __call__(
         self, scope: Scope, receive: Receive, send: Send
     ) -> StarletteResponse:
-        return await self.fn(scope=scope, receive=receive, send=send)
+        response = await self.fn()
+        return await response(scope, receive, send)
 
 
 class AsyncApi(RoutedAPI[AsyncOperation]):
@@ -80,6 +81,9 @@ class AsyncApi(RoutedAPI[AsyncOperation]):
 
 
 class AsyncMiddlewareApp(RoutedMiddleware[AsyncApi]):
+
+    api_cls = AsyncApi
+
     def __init__(self) -> None:
         self.apis: t.Dict[str, AsyncApi] = {}
         self.operations: t.Dict[str, AsyncOperation] = {}
@@ -87,8 +91,7 @@ class AsyncMiddlewareApp(RoutedMiddleware[AsyncApi]):
         super().__init__(self.router)
 
     def add_api(self, *args, **kwargs):
-        api = AsyncApi(*args, **kwargs)
-        self.apis[api.base_path] = api
+        api = super().add_api(*args, **kwargs)
         self.router.mount(api.base_path, api.router)
         return api
 

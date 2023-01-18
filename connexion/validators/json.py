@@ -2,6 +2,7 @@ import json
 import logging
 import typing as t
 
+import jsonschema
 from jsonschema import Draft4Validator, ValidationError, draft4_format_checker
 from starlette.types import Receive, Scope, Send
 
@@ -33,7 +34,6 @@ class JSONRequestBodyValidator:
         self.nullable = nullable
         self.validator = validator(schema, format_checker=draft4_format_checker)
         self.encoding = encoding
-        self._messages: t.List[t.MutableMapping[str, t.Any]] = []
 
     @classmethod
     def _error_path_message(cls, exception):
@@ -52,8 +52,7 @@ class JSONRequestBodyValidator:
             )
             raise BadRequestProblem(detail=f"{exception.message}{error_path_msg}")
 
-    @staticmethod
-    def parse(body: str) -> dict:
+    def parse(self, body: str) -> dict:
         try:
             return json.loads(body)
         except json.decoder.JSONDecodeError as e:
@@ -61,12 +60,13 @@ class JSONRequestBodyValidator:
 
     async def wrapped_receive(self) -> Receive:
         more_body = True
+        messages = []
         while more_body:
             message = await self._receive()
-            self._messages.append(message)
+            messages.append(message)
             more_body = message.get("more_body", False)
 
-        bytes_body = b"".join([message.get("body", b"") for message in self._messages])
+        bytes_body = b"".join([message.get("body", b"") for message in messages])
         decoded_body = bytes_body.decode(self.encoding)
 
         if decoded_body and not (self.nullable and is_null(decoded_body)):
@@ -74,8 +74,85 @@ class JSONRequestBodyValidator:
             self.validate(body)
 
         async def receive() -> t.MutableMapping[str, t.Any]:
-            while self._messages:
-                return self._messages.pop(0)
+            while messages:
+                return messages.pop(0)
+            return await self._receive()
+
+        return receive
+
+
+class DefaultsJSONRequestBodyValidator(JSONRequestBodyValidator):
+    """Request body validator for json content types which fills in default values. This Validator
+    intercepts the body, makes changes to it, and replays it for the next ASGI application."""
+
+    def __init__(self, *args, **kwargs):
+        defaults_validator = self.extend_with_set_default(Draft4RequestValidator)
+        super().__init__(*args, validator=defaults_validator, **kwargs)
+
+    # via https://python-jsonschema.readthedocs.io/
+    @staticmethod
+    def extend_with_set_default(validator_class):
+        validate_properties = validator_class.VALIDATORS["properties"]
+
+        def set_defaults(validator, properties, instance, schema):
+            for property, subschema in properties.items():
+                if "default" in subschema:
+                    instance.setdefault(property, subschema["default"])
+
+            yield from validate_properties(validator, properties, instance, schema)
+
+        return jsonschema.validators.extend(
+            validator_class, {"properties": set_defaults}
+        )
+
+    async def read_body(self) -> t.Tuple[str, int]:
+        """Read the body from the receive channel.
+
+        :return: A tuple (body, max_length) where max_length is the length of the largest message.
+        """
+        more_body = True
+        max_length = 256000
+        messages = []
+        while more_body:
+            message = await self._receive()
+            max_length = max(max_length, len(message.get("body", b"")))
+            messages.append(message)
+            more_body = message.get("more_body", False)
+
+        bytes_body = b"".join([message.get("body", b"") for message in messages])
+
+        return bytes_body.decode(self.encoding), max_length
+
+    async def wrapped_receive(self) -> Receive:
+        """Receive channel to pass on to next ASGI application."""
+        decoded_body, max_length = await self.read_body()
+
+        # Validate the body if not null
+        if decoded_body and not (self.nullable and is_null(decoded_body)):
+            body = self.parse(decoded_body)
+            del decoded_body
+            self.validate(body)
+            str_body = json.dumps(body)
+        else:
+            str_body = decoded_body
+
+        bytes_body = str_body.encode(self.encoding)
+        del str_body
+
+        # Recreate ASGI messages from validated body so changes made by the validator are propagated
+        messages = [
+            {
+                "type": "http.request",
+                "body": bytes_body[i : i + max_length],
+                "more_body": i + max_length < len(bytes_body),
+            }
+            for i in range(0, len(bytes_body), max_length)
+        ]
+        del bytes_body
+
+        async def receive() -> t.MutableMapping[str, t.Any]:
+            while messages:
+                return messages.pop(0)
             return await self._receive()
 
         return receive
@@ -122,8 +199,7 @@ class JSONResponseBodyValidator:
                 message=f"{exception.message}{error_path_msg}"
             )
 
-    @staticmethod
-    def parse(body: str) -> dict:
+    def parse(self, body: str) -> dict:
         try:
             return json.loads(body)
         except json.decoder.JSONDecodeError as e:
@@ -147,8 +223,7 @@ class JSONResponseBodyValidator:
 
 
 class TextResponseBodyValidator(JSONResponseBodyValidator):
-    @staticmethod
-    def parse(body: str) -> str:  # type: ignore
+    def parse(self, body: str) -> str:  # type: ignore
         try:
             return json.loads(body)
         except json.decoder.JSONDecodeError:

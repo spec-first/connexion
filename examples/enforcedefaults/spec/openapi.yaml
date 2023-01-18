@@ -1,0 +1,46 @@
+openapi: 3.0.0
+info:
+  version: '1'
+  title: Custom Validator Example
+servers:
+  - url: '/openapi'
+
+paths:
+  /echo:
+    post:
+      description: Echo passed data
+      operationId: app.echo
+      requestBody:
+        x-body-name: data
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Data'
+      responses:
+        '200':
+          description: Data with defaults filled in by validator
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Data'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    Data:
+      type: object
+      properties:
+        outer-object:
+          type: object
+          default: {}
+          properties:
+            inner-object:
+              type: string
+              default: foo
+    Error:
+      type: string

@@ -25,7 +25,7 @@ class SpecMiddleware(abc.ABC):
     @abc.abstractmethod
     def add_api(
         self, specification: t.Union[pathlib.Path, str, dict], **kwargs
-    ) -> None:
+    ) -> t.Any:
         """
         Register an API represented by a single OpenAPI specification on this middleware.
         Multiple APIs can be registered on a single middleware.
@@ -246,11 +246,10 @@ class RoutedMiddleware(SpecMiddleware, t.Generic[API]):
         self.app = app
         self.apis: t.Dict[str, API] = {}
 
-    def add_api(
-        self, specification: t.Union[pathlib.Path, str, dict], **kwargs
-    ) -> None:
+    def add_api(self, specification: t.Union[pathlib.Path, str, dict], **kwargs) -> API:
         api = self.api_cls(specification, next_app=self.app, **kwargs)
         self.apis[api.base_path] = api
+        return api
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         """Fetches the operation related to the request and calls it."""

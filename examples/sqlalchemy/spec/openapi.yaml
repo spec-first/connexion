@@ -62,10 +62,10 @@ paths:
         '201':
           description: New pet created
       requestBody:
+        x-body-name: pet
         content:
           application/json:
             schema:
-              x-body-name: pet
               $ref: '#/components/schemas/Pet'
     delete:
       tags:
