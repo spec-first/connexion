@@ -27,7 +27,7 @@ class SpecMiddleware(abc.ABC):
         self, specification: t.Union[pathlib.Path, str, dict], **kwargs
     ) -> None:
         """
-        Register een API represented by a single OpenAPI specification on this middleware.
+        Register an API represented by a single OpenAPI specification on this middleware.
         Multiple APIs can be registered on a single middleware.
         """
 
@@ -68,6 +68,7 @@ class AbstractSpecAPI:
 
 
 OP = t.TypeVar("OP")
+"""Typevar representing an operation"""
 
 
 class AbstractRoutingAPI(AbstractSpecAPI, t.Generic[OP]):
@@ -226,6 +227,7 @@ class RoutedAPI(AbstractSpecAPI, t.Generic[OP]):
 
 
 API = t.TypeVar("API", bound="RoutedAPI")
+"""Typevar representing an API which subclasses RoutedAPI"""
 
 
 class RoutedMiddleware(SpecMiddleware, t.Generic[API]):

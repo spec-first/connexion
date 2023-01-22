@@ -1,9 +1,10 @@
+import typing as t
 from pathlib import Path
 
 import connexion
 from connexion.decorators import ASGIDecorator
 from connexion.resolver import RelativeResolver
-from quart import Quart, json, request
+from quart import Quart
 
 app = Quart(__name__)
 
@@ -11,7 +12,7 @@ app = Quart(__name__)
 @app.route("/openapi/greeting/<name>", methods=["POST"])
 @app.route("/swagger/greeting/<name>", methods=["POST"])
 @ASGIDecorator()
-def post_greeting(name: str, number: int = None) -> str:
+def post_greeting(name: str, number: t.Optional[int] = None) -> str:
     return f"Hello {name}, your number is {number}!"
 
 

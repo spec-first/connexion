@@ -164,7 +164,7 @@ class ConnexionMiddleware:
         self.extra_files: t.List[str] = []
 
     def ensure_absolute(self, path: t.Union[str, pathlib.Path]) -> pathlib.Path:
-        """Ensure that a path is absolute. If the path is not resolute, it is assumed to relative
+        """Ensure that a path is absolute. If the path is not absolute, it is assumed to relative
         to the application root path and made absolute."""
         path = pathlib.Path(path)
         if path.is_absolute():

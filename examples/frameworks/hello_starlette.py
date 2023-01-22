@@ -1,3 +1,4 @@
+import typing as t
 from pathlib import Path
 
 import connexion
@@ -8,7 +9,7 @@ from starlette.routing import Route
 
 
 @StarletteDecorator()
-def post_greeting(name: str, number: int = None) -> str:
+def post_greeting(name: str, number: t.Optional[int] = None) -> str:
     return f"Hello {name}, your number is {number}!"
 
 
