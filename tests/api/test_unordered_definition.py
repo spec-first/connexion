@@ -8,7 +8,4 @@ def test_app(unordered_definition_app):
     )  # type: flask.Response
     assert response.status_code == 400
     response_data = json.loads(response.data.decode("utf-8", "replace"))
-    assert (
-        response_data["detail"]
-        == "Wrong type, expected 'integer' for query parameter 'first'"
-    )
+    assert response_data["detail"].startswith("'first' is not of type 'integer'")

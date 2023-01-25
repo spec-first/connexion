@@ -9,7 +9,7 @@ import logging
 import re
 
 from connexion.exceptions import TypeValidationError
-from connexion.utils import all_json, coerce_type, deep_merge, is_null, is_nullable
+from connexion.utils import all_json, coerce_type, deep_merge
 
 logger = logging.getLogger("connexion.decorators.uri_parsing")
 
@@ -119,14 +119,12 @@ class AbstractURIParser(metaclass=abc.ABCMeta):
             else:
                 resolved_param[k] = values[-1]
 
-            if not (is_nullable(param_defn) and is_null(resolved_param[k])):
-                try:
-                    # TODO: coerce types in a single place
-                    resolved_param[k] = coerce_type(
-                        param_defn, resolved_param[k], "parameter", k
-                    )
-                except TypeValidationError:
-                    pass
+            try:
+                resolved_param[k] = coerce_type(
+                    param_defn, resolved_param[k], "parameter", k
+                )
+            except TypeValidationError:
+                pass
 
         return resolved_param
 
@@ -166,6 +164,7 @@ class OpenAPIURIParser(AbstractURIParser):
                 form_data[k] = self._split(form_data[k], encoding, "form")
             elif "contentType" in encoding and all_json([encoding.get("contentType")]):
                 form_data[k] = json.loads(form_data[k])
+            form_data[k] = coerce_type(defn, form_data[k], "requestBody", k)
         return form_data
 
     def _make_deep_object(self, k, v):

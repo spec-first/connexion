@@ -42,17 +42,17 @@ def test_parameter_validator(monkeypatch):
     request = MagicMock(path_params={"p1": ""}, **kwargs)
     with pytest.raises(BadRequestProblem) as exc:
         validator.validate_request(request)
-    assert exc.value.detail == "Wrong type, expected 'integer' for path parameter 'p1'"
+    assert exc.value.detail.startswith("'' is not of type 'integer'")
 
     request = MagicMock(path_params={"p1": "foo"}, **kwargs)
     with pytest.raises(BadRequestProblem) as exc:
         validator.validate_request(request)
-    assert exc.value.detail == "Wrong type, expected 'integer' for path parameter 'p1'"
+    assert exc.value.detail.startswith("'foo' is not of type 'integer'")
 
     request = MagicMock(path_params={"p1": "1.2"}, **kwargs)
     with pytest.raises(BadRequestProblem) as exc:
         validator.validate_request(request)
-    assert exc.value.detail == "Wrong type, expected 'integer' for path parameter 'p1'"
+    assert exc.value.detail.startswith("'1.2' is not of type 'integer'")
 
     request = MagicMock(
         path_params={"p1": 1}, query_params=QueryParams("q1=4"), headers={}, cookies={}
