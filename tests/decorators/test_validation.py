@@ -2,6 +2,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from connexion.json_schema import Draft4RequestValidator, Draft4ResponseValidator
+from connexion.utils import coerce_type
 from connexion.validators.parameter import ParameterValidator
 from jsonschema import ValidationError
 
@@ -68,6 +69,7 @@ def test_get_valid_parameter_with_enum_array_header():
         },
         "name": "test_header_param",
     }
+    value = coerce_type(param, value, "header", "test_header_param")
     result = ParameterValidator.validate_parameter("header", value, param)
     assert result is None
 
@@ -86,7 +88,6 @@ Failed validating 'type' in schema:
 On instance:
     20"""
     assert result == expected_result
-    logger.info.assert_called_once()
 
 
 def test_invalid_type_value_error(monkeypatch):
@@ -94,7 +95,7 @@ def test_invalid_type_value_error(monkeypatch):
     result = ParameterValidator.validate_parameter(
         "formdata", value, {"type": "boolean", "name": "foo"}
     )
-    assert result == "Wrong type, expected 'boolean' for formdata parameter 'foo'"
+    assert result.startswith("{'test': 1, 'second': 2} is not of type 'boolean'")
 
 
 def test_enum_error(monkeypatch):

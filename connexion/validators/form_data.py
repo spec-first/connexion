@@ -6,14 +6,10 @@ from starlette.datastructures import FormData, Headers, UploadFile
 from starlette.formparsers import FormParser, MultiPartParser
 from starlette.types import Receive, Scope
 
-from connexion.exceptions import (
-    BadRequestProblem,
-    ExtraParameterProblem,
-    TypeValidationError,
-)
+from connexion.exceptions import BadRequestProblem, ExtraParameterProblem
 from connexion.json_schema import Draft4RequestValidator
 from connexion.uri_parsing import AbstractURIParser
-from connexion.utils import coerce_type, is_null
+from connexion.utils import is_null
 
 logger = logging.getLogger("connexion.validators.form_data")
 
@@ -76,16 +72,7 @@ class FormDataValidator:
             )
             raise BadRequestProblem(detail=f"{exception.message}{error_path_msg}")
 
-    def validate(self, data: FormData) -> None:
-        if self.strict_validation:
-            form_params = data.keys()
-            spec_params = self.schema.get("properties", {}).keys()
-            errors = set(form_params).difference(set(spec_params))
-            if errors:
-                raise ExtraParameterProblem(errors, [])
-
-        props = self.schema.get("properties", {})
-        errs = []
+    def _parse(self, data: FormData) -> dict:
         if self.uri_parser is not None:
             # Don't parse file_data
             form_data = {}
@@ -94,7 +81,8 @@ class FormDataValidator:
                 if isinstance(v, str):
                     form_data[k] = data.getlist(k)
                 elif isinstance(v, UploadFile):
-                    file_data[k] = data.getlist(k)
+                    # Replace files with empty strings for validation
+                    file_data[k] = ""
 
             data = self.uri_parser.resolve_form(form_data)
             # Add the files again
@@ -102,22 +90,20 @@ class FormDataValidator:
         else:
             data = {k: data.getlist(k) for k in data}
 
-        for k, param_defn in props.items():
-            if k in data:
-                if param_defn.get("format", "") == "binary":
-                    # Replace files with empty strings for validation
-                    data[k] = ""
-                    continue
+        return data
 
-                try:
-                    data[k] = coerce_type(param_defn, data[k], "requestBody", k)
-                except TypeValidationError as e:
-                    logger.exception(e)
-                    errs += [str(e)]
+    def _validate_strictly(self, data: FormData) -> None:
+        form_params = data.keys()
+        spec_params = self.schema.get("properties", {}).keys()
+        errors = set(form_params).difference(set(spec_params))
+        if errors:
+            raise ExtraParameterProblem(errors, [])
 
-        if errs:
-            raise BadRequestProblem(detail=errs)
+    def validate(self, data: FormData) -> None:
+        if self.strict_validation:
+            self._validate_strictly(data)
 
+        data = self._parse(data)
         self._validate(data)
 
     async def wrapped_receive(self) -> Receive:
