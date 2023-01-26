@@ -6,9 +6,12 @@ import starlette.convertors
 from starlette.routing import Router
 from starlette.types import ASGIApp, Receive, Scope, Send
 
-from connexion.apis import AbstractRoutingAPI
 from connexion.frameworks import starlette as starlette_utils
-from connexion.middleware.abstract import ROUTING_CONTEXT, AppMiddleware
+from connexion.middleware.abstract import (
+    ROUTING_CONTEXT,
+    AbstractRoutingAPI,
+    SpecMiddleware,
+)
 from connexion.operations import AbstractOperation
 from connexion.resolver import Resolver
 
@@ -71,30 +74,24 @@ class RoutingAPI(AbstractRoutingAPI):
             **kwargs,
         )
 
-    def add_operation(self, path: str, method: str) -> None:
-        operation_cls = self.specification.operation_cls
-        operation = operation_cls.from_spec(
-            self.specification,
-            self,
-            path,
-            method,
-            self.resolver,
-            uri_parser_class=self.options.uri_parser_class,
-        )
-        routing_operation = RoutingOperation.from_operation(
-            operation, next_app=self.next_app
-        )
+    def make_operation(self, operation: AbstractOperation) -> RoutingOperation:
+        return RoutingOperation.from_operation(operation, next_app=self.next_app)
+
+    @staticmethod
+    def _framework_path_and_name(
+        operation: AbstractOperation, path: str
+    ) -> t.Tuple[str, str]:
         types = operation.get_path_parameter_types()
-        path = starlette_utils.starlettify_path(path, types)
-        self._add_operation_internal(method, path, routing_operation)
+        starlette_path = starlette_utils.starlettify_path(path, types)
+        return starlette_path, starlette_path
 
     def _add_operation_internal(
-        self, method: str, path: str, operation: "RoutingOperation"
+        self, method: str, path: str, operation: RoutingOperation, name: str = None
     ) -> None:
         self.router.add_route(path, operation, methods=[method])
 
 
-class RoutingMiddleware(AppMiddleware):
+class RoutingMiddleware(SpecMiddleware):
     def __init__(self, app: ASGIApp) -> None:
         """Middleware that resolves the Operation for an incoming request and attaches it to the
         scope.

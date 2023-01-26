@@ -6,9 +6,9 @@ import types
 from unittest import mock
 
 import pytest
-from connexion.apis.flask_api import Jsonifier
 from connexion.exceptions import InvalidSpecification
 from connexion.json_schema import resolve_refs
+from connexion.jsonifier import Jsonifier
 from connexion.middleware.security import SecurityOperation
 from connexion.operations import Swagger2Operation
 from connexion.resolver import Resolver

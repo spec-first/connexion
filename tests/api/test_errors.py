@@ -8,7 +8,7 @@ def fix_data(data):
 
 
 def test_errors(problem_app):
-    app_client = problem_app.app.test_client()
+    app_client = problem_app.test_client()
 
     greeting404 = app_client.get("/v1.0/greeting")  # type: flask.Response
     assert greeting404.content_type == "application/problem+json"

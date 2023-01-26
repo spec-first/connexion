@@ -2,7 +2,7 @@ import json
 
 
 def test_headers_jsonifier(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
 
     response = app_client.post("/v1.0/goodday/dan", data={})  # type: flask.Response
     assert response.status_code == 201
@@ -11,7 +11,7 @@ def test_headers_jsonifier(simple_app):
 
 
 def test_headers_produces(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
 
     response = app_client.post("/v1.0/goodevening/dan", data={})  # type: flask.Response
     assert response.status_code == 201
@@ -20,7 +20,7 @@ def test_headers_produces(simple_app):
 
 
 def test_header_not_returned(simple_openapi_app):
-    app_client = simple_openapi_app.app.test_client()
+    app_client = simple_openapi_app.test_client()
 
     response = app_client.post(
         "/v1.0/goodday/noheader", data={}
@@ -40,21 +40,21 @@ def test_header_not_returned(simple_openapi_app):
 
 
 def test_no_content_response_have_headers(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.get("/v1.0/test-204-with-headers")
     assert resp.status_code == 204
     assert "X-Something" in resp.headers
 
 
 def test_no_content_object_and_have_headers(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.get("/v1.0/test-204-with-headers-nocontent-obj")
     assert resp.status_code == 204
     assert "X-Something" in resp.headers
 
 
 def test_optional_header(simple_openapi_app):
-    app_client = simple_openapi_app.app.test_client()
+    app_client = simple_openapi_app.test_client()
     resp = app_client.get("/v1.0/test-optional-headers")
     assert resp.status_code == 200
     assert "X-Optional-Header" not in resp.headers

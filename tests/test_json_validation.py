@@ -38,7 +38,7 @@ def test_validator_map(json_validation_spec_dir, spec):
 
     app = App(__name__, specification_dir=json_validation_spec_dir)
     app.add_api(spec, validate_responses=True, validator_map=validator_map)
-    app_client = app.app.test_client()
+    app_client = app.test_client()
 
     res = app_client.post(
         "/v1.0/minlength",
@@ -58,7 +58,7 @@ def test_readonly(json_validation_spec_dir, spec):
     app = build_app_from_fixture(
         json_validation_spec_dir, spec, validate_responses=True
     )
-    app_client = app.app.test_client()
+    app_client = app.test_client()
 
     res = app_client.get("/v1.0/user")  # type: flask.Response
     assert res.status_code == 200
@@ -85,7 +85,7 @@ def test_writeonly(json_validation_spec_dir, spec):
     app = build_app_from_fixture(
         json_validation_spec_dir, spec, validate_responses=True
     )
-    app_client = app.app.test_client()
+    app_client = app.test_client()
 
     res = app_client.post(
         "/v1.0/user",
@@ -118,7 +118,7 @@ def test_multipart_form_json(json_validation_spec_dir, spec):
     app = build_app_from_fixture(
         json_validation_spec_dir, spec, validate_responses=True
     )
-    app_client = app.app.test_client()
+    app_client = app.test_client()
 
     res = app_client.post(
         "/v1.0/multipart_form_json",

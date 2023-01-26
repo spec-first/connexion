@@ -12,8 +12,9 @@ from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 from starlette.types import ASGIApp, Receive, Scope, Send
 
-from connexion.apis.abstract import AbstractSpecAPI
-from connexion.middleware import AppMiddleware
+from connexion.middleware import SpecMiddleware
+from connexion.middleware.abstract import AbstractSpecAPI
+from connexion.options import SwaggerUIOptions
 from connexion.utils import yamldumper
 
 logger = logging.getLogger("connexion.middleware.swagger_ui")
@@ -23,10 +24,19 @@ _original_scope: ContextVar[Scope] = ContextVar("SCOPE")
 
 
 class SwaggerUIAPI(AbstractSpecAPI):
-    def __init__(self, *args, default: ASGIApp, **kwargs):
+    def __init__(
+        self,
+        *args,
+        default: ASGIApp,
+        swagger_ui_options: t.Optional[dict] = None,
+        **kwargs
+    ):
         super().__init__(*args, **kwargs)
 
         self.router = Router(default=default)
+        self.options = SwaggerUIOptions(
+            swagger_ui_options, oas_version=self.specification.version
+        )
 
         if self.options.openapi_spec_available:
             self.add_openapi_json()
@@ -164,7 +174,7 @@ class SwaggerUIAPI(AbstractSpecAPI):
         )
 
 
-class SwaggerUIMiddleware(AppMiddleware):
+class SwaggerUIMiddleware(SpecMiddleware):
     def __init__(self, app: ASGIApp) -> None:
         """Middleware that hosts a swagger UI.
 

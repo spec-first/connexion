@@ -29,12 +29,11 @@ class Resolution:
 
 
 class Resolver:
-    def __init__(self, function_resolver=utils.get_function_from_name):
+    def __init__(self, function_resolver: t.Callable = utils.get_function_from_name):
         """
         Standard resolver
 
         :param function_resolver: Function that resolves functions using an operationId
-        :type function_resolver: types.FunctionType
         """
         self.function_resolver = function_resolver
 

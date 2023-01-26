@@ -31,8 +31,8 @@ def test_get_function_from_name_attr_error(monkeypatch):
 
 
 def test_get_function_from_name_for_class_method():
-    function = utils.get_function_from_name("connexion.FlaskApp.common_error_handler")
-    assert function == connexion.FlaskApp.common_error_handler
+    function = utils.get_function_from_name("connexion.FlaskApp.add_error_handler")
+    assert function == connexion.FlaskApp.add_error_handler
 
 
 def test_boolean():

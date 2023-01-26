@@ -189,7 +189,7 @@ def test_methodview_resolve_with_default_module_name_will_resolve_resource_root_
 
 
 def test_method_view_resolver_integration(method_view_app):
-    client = method_view_app.app.test_client()
+    client = method_view_app.test_client()
 
     r = client.get("/v1.0/pets")
     assert r.json == [{"name": "get"}]

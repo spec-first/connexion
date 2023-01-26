@@ -8,6 +8,7 @@ from connexion import App
 from connexion.exceptions import InvalidSpecification
 from connexion.http_facts import METHODS
 from connexion.json_schema import ExtendedSafeLoader
+from connexion.middleware.abstract import AbstractRoutingAPI
 
 from conftest import TEST_FOLDER, build_app_from_fixture
 
@@ -23,7 +24,7 @@ def test_app_with_relative_path(simple_api_spec_dir, spec):
     )
     app.add_api(spec)
 
-    app_client = app.app.test_client()
+    app_client = app.test_client()
     get_bye = app_client.get("/v1.0/bye/jsantos")  # type: flask.Response
     assert get_bye.status_code == 200
     assert get_bye.data == b"Goodbye jsantos"
@@ -49,11 +50,11 @@ def test_app_with_different_uri_parser(simple_api_spec_dir):
     app = App(
         __name__,
         specification_dir=".." / simple_api_spec_dir.relative_to(TEST_FOLDER),
-        options={"uri_parser_class": FirstValueURIParser},
+        uri_parser_class=FirstValueURIParser,
     )
     app.add_api("swagger.yaml")
 
-    app_client = app.app.test_client()
+    app_client = app.test_client()
     resp = app_client.get(
         "/v1.0/test_array_csv_query_param?items=a,b,c&items=d,e,f"
     )  # type: flask.Response
@@ -66,7 +67,7 @@ def test_app_with_different_uri_parser(simple_api_spec_dir):
 def test_swagger_ui(simple_api_spec_dir, spec):
     app = App(__name__, specification_dir=simple_api_spec_dir)
     app.add_api(spec)
-    app_client = app.app.test_client()
+    app_client = app.test_client()
     swagger_ui = app_client.get("/v1.0/ui/")  # type: flask.Response
     assert swagger_ui.status_code == 200
     spec_json_filename = "/v1.0/{spec}".format(spec=spec.replace("yaml", "json"))
@@ -78,14 +79,14 @@ def test_swagger_ui(simple_api_spec_dir, spec):
 @pytest.mark.parametrize("spec", SPECS)
 def test_swagger_ui_with_config(simple_api_spec_dir, spec):
     swagger_ui_config = {"displayOperationId": True}
-    options = {"swagger_ui_config": swagger_ui_config}
+    swagger_ui_options = {"swagger_ui_config": swagger_ui_config}
     app = App(
         __name__,
         specification_dir=simple_api_spec_dir,
-        options=options,
+        swagger_ui_options=swagger_ui_options,
     )
     app.add_api(spec)
-    app_client = app.app.test_client()
+    app_client = app.test_client()
     swagger_ui = app_client.get("/v1.0/ui/")  # type: flask.Response
     assert swagger_ui.status_code == 200
     if "openapi" in spec:
@@ -94,21 +95,21 @@ def test_swagger_ui_with_config(simple_api_spec_dir, spec):
 
 @pytest.mark.parametrize("spec", SPECS)
 def test_no_swagger_ui(simple_api_spec_dir, spec):
-    options = {"swagger_ui": False}
+    swagger_ui_options = {"swagger_ui": False}
     app = App(
         __name__,
         specification_dir=simple_api_spec_dir,
-        options=options,
+        swagger_ui_options=swagger_ui_options,
     )
     app.add_api(spec)
 
-    app_client = app.app.test_client()
+    app_client = app.test_client()
     swagger_ui = app_client.get("/v1.0/ui/")  # type: flask.Response
     assert swagger_ui.status_code == 404
 
     app2 = App(__name__, specification_dir=simple_api_spec_dir)
-    app2.add_api(spec, options={"swagger_ui": False})
-    app2_client = app2.app.test_client()
+    app2.add_api(spec, swagger_ui_options={"swagger_ui": False})
+    app2_client = app2.test_client()
     swagger_ui2 = app2_client.get("/v1.0/ui/")  # type: flask.Response
     assert swagger_ui2.status_code == 404
 
@@ -117,14 +118,14 @@ def test_no_swagger_ui(simple_api_spec_dir, spec):
 def test_swagger_ui_config_json(simple_api_spec_dir, spec):
     """Verify the swagger-ui-config.json file is returned for swagger_ui_config option passed to app."""
     swagger_ui_config = {"displayOperationId": True}
-    options = {"swagger_ui_config": swagger_ui_config}
+    swagger_ui_options = {"swagger_ui_config": swagger_ui_config}
     app = App(
         __name__,
         specification_dir=simple_api_spec_dir,
-        options=options,
+        swagger_ui_options=swagger_ui_options,
     )
     app.add_api(spec)
-    app_client = app.app.test_client()
+    app_client = app.test_client()
     url = "/v1.0/ui/swagger-ui-config.json"
     swagger_ui_config_json = app_client.get(url)  # type: flask.Response
     assert swagger_ui_config_json.status_code == 200
@@ -138,7 +139,7 @@ def test_no_swagger_ui_config_json(simple_api_spec_dir, spec):
     """Verify the swagger-ui-config.json file is not returned when the swagger_ui_config option not passed to app."""
     app = App(__name__, specification_dir=simple_api_spec_dir)
     app.add_api(spec)
-    app_client = app.app.test_client()
+    app_client = app.test_client()
     url = "/v1.0/ui/swagger-ui-config.json"
     swagger_ui_config_json = app_client.get(url)  # type: flask.Response
     assert swagger_ui_config_json.status_code == 404
@@ -149,7 +150,7 @@ def test_swagger_json_app(simple_api_spec_dir, spec):
     """Verify the spec json file is returned for default setting passed to app."""
     app = App(__name__, specification_dir=simple_api_spec_dir)
     app.add_api(spec)
-    app_client = app.app.test_client()
+    app_client = app.test_client()
     url = "/v1.0/{spec}"
     url = url.format(spec=spec.replace("yaml", "json"))
     spec_json = app_client.get(url)  # type: flask.Response
@@ -161,7 +162,7 @@ def test_swagger_yaml_app(simple_api_spec_dir, spec):
     """Verify the spec yaml file is returned for default setting passed to app."""
     app = App(__name__, specification_dir=simple_api_spec_dir)
     app.add_api(spec)
-    app_client = app.app.test_client()
+    app_client = app.test_client()
     url = "/v1.0/{spec}"
     url = url.format(spec=spec)
     spec_response = app_client.get(url)  # type: flask.Response
@@ -171,15 +172,15 @@ def test_swagger_yaml_app(simple_api_spec_dir, spec):
 @pytest.mark.parametrize("spec", SPECS)
 def test_no_swagger_json_app(simple_api_spec_dir, spec):
     """Verify the spec json file is not returned when set to False when creating app."""
-    options = {"serve_spec": False}
+    swagger_ui_options = {"serve_spec": False}
     app = App(
         __name__,
         specification_dir=simple_api_spec_dir,
-        options=options,
+        swagger_ui_options=swagger_ui_options,
     )
     app.add_api(spec)
 
-    app_client = app.app.test_client()
+    app_client = app.test_client()
     url = "/v1.0/{spec}"
     url = url.format(spec=spec.replace("yaml", "json"))
     spec_json = app_client.get(url)  # type: flask.Response
@@ -203,7 +204,7 @@ def test_dict_as_yaml_path(simple_api_spec_dir, spec):
     app = App(__name__, specification_dir=simple_api_spec_dir)
     app.add_api(specification)
 
-    app_client = app.app.test_client()
+    app_client = app.test_client()
     url = "/v1.0/{spec}".format(spec=spec.replace("yaml", "json"))
     swagger_json = app_client.get(url)  # type: flask.Response
     assert swagger_json.status_code == 200
@@ -215,7 +216,7 @@ def test_swagger_json_api(simple_api_spec_dir, spec):
     app = App(__name__, specification_dir=simple_api_spec_dir)
     app.add_api(spec)
 
-    app_client = app.app.test_client()
+    app_client = app.test_client()
     url = "/v1.0/{spec}".format(spec=spec.replace("yaml", "json"))
     swagger_json = app_client.get(url)  # type: flask.Response
     assert swagger_json.status_code == 200
@@ -225,16 +226,16 @@ def test_swagger_json_api(simple_api_spec_dir, spec):
 def test_no_swagger_json_api(simple_api_spec_dir, spec):
     """Verify the spec json file is not returned when set to False when adding api."""
     app = App(__name__, specification_dir=simple_api_spec_dir)
-    app.add_api(spec, options={"serve_spec": False})
+    app.add_api(spec, swagger_ui_options={"serve_spec": False})
 
-    app_client = app.app.test_client()
+    app_client = app.test_client()
     url = "/v1.0/{spec}".format(spec=spec.replace("yaml", "json"))
     swagger_json = app_client.get(url)  # type: flask.Response
     assert swagger_json.status_code == 404
 
 
 def test_swagger_json_content_type(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     spec = simple_app._spec_file
     url = "/v1.0/{spec}".format(spec=spec.replace("yaml", "json"))
     response = app_client.get(url)  # type: flask.Response
@@ -252,7 +253,7 @@ def test_single_route():
     def route2():
         return "single 2"
 
-    app_client = app.app.test_client()
+    app_client = app.test_client()
 
     app.add_url_rule("/single1", "single1", route1, methods=["GET"])
 
@@ -270,13 +271,13 @@ def test_single_route():
 
 
 def test_resolve_method(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.get("/v1.0/resolver-test/method")  # type: flask.Response
     assert resp.data == b'"DummyClass"\n'
 
 
 def test_resolve_classmethod(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.get("/v1.0/resolver-test/classmethod")  # type: flask.Response
     assert resp.data.decode("utf-8", "replace") == '"DummyClass"\n'
 
@@ -293,11 +294,12 @@ def test_default_query_param_does_not_match_defined_type(default_param_error_spe
         build_app_from_fixture(default_param_error_spec_dir, validate_responses=True)
 
 
-def test_handle_add_operation_error(simple_api_spec_dir):
+def test_handle_add_operation_error(simple_api_spec_dir, monkeypatch):
     app = App(__name__, specification_dir=simple_api_spec_dir)
-    app.api_cls = type("AppTest", (app.api_cls,), {})
-    app.api_cls.add_operation = mock.MagicMock(
-        side_effect=Exception("operation error!")
+    monkeypatch.setattr(
+        AbstractRoutingAPI,
+        "add_operation",
+        mock.MagicMock(side_effect=Exception("operation error!")),
     )
     with pytest.raises(Exception):
         app.add_api("swagger.yaml", resolver=lambda oid: (lambda foo: "bar"))
@@ -320,6 +322,6 @@ def test_using_all_fields_in_path_item(simple_api_spec_dir):
 
 
 def test_async_route(simple_app):
-    app_client = simple_app.app.test_client()
+    app_client = simple_app.test_client()
     resp = app_client.get("/v1.0/async-route")
     assert resp.status_code == 200
