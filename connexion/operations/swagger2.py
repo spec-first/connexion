@@ -106,10 +106,8 @@ class Swagger2Operation(AbstractOperation):
             self._parameters += path_parameters
 
         self._responses = operation.get("responses", {})
-        logger.debug(self._responses)
 
-        logger.debug("consumes: %s", self.consumes)
-        logger.debug("produces: %s", self.produces)
+        self._body_definitions = {}
 
     @classmethod
     def from_spec(cls, spec, api, path, method, resolver, *args, **kwargs):
@@ -230,24 +228,23 @@ class Swagger2Operation(AbstractOperation):
         The body complete definition for this operation.
 
         **There can be one "body" parameter at most.**
-
-        :rtype: dict
         """
-        # TODO: cache
-        if content_type in FORM_CONTENT_TYPES:
-            form_parameters = [p for p in self.parameters if p["in"] == "formData"]
-            body_definition = self._transform_form(form_parameters)
-        else:
-            body_parameters = [p for p in self.parameters if p["in"] == "body"]
-            if len(body_parameters) > 1:
-                raise InvalidSpecification(
-                    "{method} {path} There can be one 'body' parameter at most".format(
-                        method=self.method, path=self.path
+        if self._body_definitions.get(content_type) is None:
+            if content_type in FORM_CONTENT_TYPES:
+                form_parameters = [p for p in self.parameters if p["in"] == "formData"]
+                _body_definition = self._transform_form(form_parameters)
+            else:
+                body_parameters = [p for p in self.parameters if p["in"] == "body"]
+                if len(body_parameters) > 1:
+                    raise InvalidSpecification(
+                        "{method} {path} There can be one 'body' parameter at most".format(
+                            method=self.method, path=self.path
+                        )
                     )
-                )
-            body_parameter = body_parameters[0] if body_parameters else {}
-            body_definition = self._transform_json(body_parameter)
-        return body_definition
+                body_parameter = body_parameters[0] if body_parameters else {}
+                _body_definition = self._transform_json(body_parameter)
+            self._body_definitions[content_type] = _body_definition
+        return self._body_definitions[content_type]
 
     def _transform_json(self, body_parameter: dict) -> dict:
         """Translate Swagger2 json parameters into OpenAPI 3 jsonschema spec."""
