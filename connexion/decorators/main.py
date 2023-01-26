@@ -166,10 +166,7 @@ class ASGIDecorator(BaseDecorator):
                 uri_parser=self.uri_parser, scope=scope, receive=receive
             )
             decorated_function = self.decorate(function)
-            response = decorated_function(request)
-            while asyncio.iscoroutine(response):
-                response = await response
-            return response
+            return await decorated_function(request)
 
         return wrapper
 
