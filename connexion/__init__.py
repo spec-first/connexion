@@ -31,6 +31,3 @@ from connexion.middleware import ConnexionMiddleware
 
 App = FlaskApp
 Api = FlaskApi
-
-# This version is replaced during release process.
-__version__ = "3.0.dev0"

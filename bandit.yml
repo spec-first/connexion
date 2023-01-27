@@ -1,2 +1,0 @@
-skips:
- - "B101"  # https://docs.openstack.org/bandit/latest/plugins/b101_assert_used.html

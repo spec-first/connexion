@@ -16,3 +16,4 @@ venv/
 .venv/
 src/
 *.un~
+poetry.lock
