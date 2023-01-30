@@ -561,10 +561,7 @@ def test_parameters_snake_case(snake_case_app):
     assert resp.get_json() == {"truthiness": True, "order_by": "asc"}
     resp = app_client.get("/v1.0/test-get-camel-case-version?truthiness=5")
     assert resp.status_code == 400
-    assert (
-        resp.get_json()["detail"]
-        == "Wrong type, expected 'boolean' for query parameter 'truthiness'"
-    )
+    assert resp.get_json()["detail"].startswith("'5' is not of type 'boolean'")
     # Incorrectly cased params should be ignored
     resp = app_client.get(
         "/v1.0/test-get-camel-case-version?Truthiness=true&order_by=asc"

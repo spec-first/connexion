@@ -5,12 +5,8 @@ import logging
 from jsonschema import Draft4Validator, ValidationError
 from starlette.requests import Request
 
-from connexion.exceptions import (
-    BadRequestProblem,
-    ExtraParameterProblem,
-    TypeValidationError,
-)
-from connexion.utils import boolean, coerce_type, is_null, is_nullable
+from connexion.exceptions import BadRequestProblem, ExtraParameterProblem
+from connexion.utils import boolean, is_null, is_nullable
 
 logger = logging.getLogger("connexion.validators.parameter")
 
@@ -38,35 +34,17 @@ class ParameterValidator:
 
     @staticmethod
     def validate_parameter(parameter_type, value, param, param_name=None):
-        if value is not None:
-            if is_nullable(param) and is_null(value):
-                return
+        if is_nullable(param) and is_null(value):
+            return
 
-            try:
-                converted_value = coerce_type(param, value, parameter_type, param_name)
-            except TypeValidationError as e:
-                return str(e)
-
+        elif value is not None:
             param = copy.deepcopy(param)
             param = param.get("schema", param)
-            if "required" in param:
-                del param["required"]
             try:
                 Draft4Validator(param, format_checker=draft4_format_checker).validate(
-                    converted_value
+                    value
                 )
             except ValidationError as exception:
-                debug_msg = (
-                    "Error while converting value {converted_value} from param "
-                    "{type_converted_value} of type real type {param_type} to the declared type {param}"
-                )
-                fmt_params = dict(
-                    converted_value=str(converted_value),
-                    type_converted_value=type(converted_value),
-                    param_type=param.get("type"),
-                    param=param,
-                )
-                logger.info(debug_msg.format(**fmt_params))
                 return str(exception)
 
         elif param.get("required"):
@@ -102,10 +80,8 @@ class ParameterValidator:
         return self.validate_parameter("query", val, param)
 
     def validate_path_parameter(self, param, request):
-        # TODO: activate
-        # path_params = self.uri_parser.resolve_path(request.path_params)
-        # val = path_params.get(param["name"].replace("-", "_"))
-        val = request.path_params.get(param["name"].replace("-", "_"))
+        path_params = self.uri_parser.resolve_path(request.path_params)
+        val = path_params.get(param["name"].replace("-", "_"))
         return self.validate_parameter("path", val, param)
 
     def validate_header_parameter(self, param, request):
