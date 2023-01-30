@@ -45,13 +45,6 @@ def security_handler_factory():
 
 
 @pytest.fixture
-def app():
-    cnx_app = App(__name__, specification_dir=SPEC_FOLDER)
-    cnx_app.add_api("api.yaml", validate_responses=True)
-    return cnx_app
-
-
-@pytest.fixture
 def simple_api_spec_dir():
     return FIXTURES_FOLDER / "simple"
 
