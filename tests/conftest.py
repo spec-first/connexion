@@ -1,4 +1,3 @@
-import json
 import logging
 import pathlib
 
@@ -20,20 +19,6 @@ SPECS = OPENAPI2_SPEC + OPENAPI3_SPEC
 METHOD_VIEW_RESOLVERS = [MethodResolver, MethodViewResolver]
 
 
-class FakeResponse:
-    def __init__(self, status_code, text):
-        """
-        :type status_code: int
-        :type text: ste
-        """
-        self.status_code = status_code
-        self.text = text
-        self.ok = status_code == 200
-
-    def json(self):
-        return json.loads(self.text)
-
-
 def buffered_open():
     """For use with ASGI middleware"""
 
@@ -51,41 +36,6 @@ Client.open = buffered_open()
 
 # Helper fixtures functions
 # =========================
-
-
-@pytest.fixture
-def oauth_requests(monkeypatch):
-    class FakeClient:
-        @staticmethod
-        async def get(url, params=None, headers=None, timeout=None):
-            """
-            :type url: str
-            :type params: dict| None
-            """
-            headers = headers or {}
-            if url == "https://oauth.example/token_info":
-                token = headers.get("Authorization", "invalid").split()[-1]
-                if token in ["100", "has_myscope"]:
-                    return FakeResponse(
-                        200, '{"uid": "test-user", "scope": ["myscope"]}'
-                    )
-                if token in ["200", "has_wrongscope"]:
-                    return FakeResponse(
-                        200, '{"uid": "test-user", "scope": ["wrongscope"]}'
-                    )
-                if token == "has_myscope_otherscope":
-                    return FakeResponse(
-                        200, '{"uid": "test-user", "scope": ["myscope", "otherscope"]}'
-                    )
-                if token in ["300", "is_not_invalid"]:
-                    return FakeResponse(404, "")
-                if token == "has_scopes_in_scopes_with_s":
-                    return FakeResponse(
-                        200, '{"uid": "test-user", "scopes": ["myscope", "otherscope"]}'
-                    )
-            return url
-
-    monkeypatch.setattr(SecurityHandlerFactory, "client", FakeClient())
 
 
 @pytest.fixture
