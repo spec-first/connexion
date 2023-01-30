@@ -7,7 +7,7 @@ from connexion import App
 from connexion.resolver import MethodResolver, MethodViewResolver
 from connexion.security import SecurityHandlerFactory
 from starlette.types import Receive, Scope, Send
-from werkzeug.test import Client, EnvironBuilder
+from werkzeug.test import Client
 
 logging.basicConfig(level=logging.INFO)
 
@@ -32,23 +32,6 @@ class FakeResponse:
 
     def json(self):
         return json.loads(self.text)
-
-
-def fixed_get_environ():
-    """See https://github.com/pallets/werkzeug/issues/2347"""
-
-    original_get_environ = EnvironBuilder.get_environ
-
-    def f(self):
-        result = original_get_environ(self)
-        result.pop("HTTP_CONTENT_TYPE", None)
-        result.pop("HTTP_CONTENT_LENGTH", None)
-        return result
-
-    return f
-
-
-EnvironBuilder.get_environ = fixed_get_environ()
 
 
 def buffered_open():
