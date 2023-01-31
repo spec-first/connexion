@@ -4,7 +4,6 @@ import pathlib
 import pytest
 from connexion import App
 from connexion.resolver import MethodResolver, MethodViewResolver
-from connexion.security import SecurityHandlerFactory
 from starlette.types import Receive, Scope, Send
 from werkzeug.test import Client
 
@@ -36,12 +35,6 @@ Client.open = buffered_open()
 
 # Helper fixtures functions
 # =========================
-
-
-@pytest.fixture
-def security_handler_factory():
-    security_handler_factory = SecurityHandlerFactory()
-    yield security_handler_factory
 
 
 @pytest.fixture
