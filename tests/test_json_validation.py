@@ -10,10 +10,7 @@ from jsonschema.validators import _utils, extend
 
 from conftest import build_app_from_fixture
 
-SPECS = ["swagger.yaml", "openapi.yaml"]
 
-
-@pytest.mark.parametrize("spec", SPECS)
 def test_validator_map(json_validation_spec_dir, spec):
     def validate_type(validator, types, instance, schema):
         types = _utils.ensure_list(types)
@@ -53,7 +50,6 @@ def test_validator_map(json_validation_spec_dir, spec):
     assert res.status_code == 400
 
 
-@pytest.mark.parametrize("spec", SPECS)
 def test_readonly(json_validation_spec_dir, spec):
     app = build_app_from_fixture(
         json_validation_spec_dir, spec, validate_responses=True
@@ -80,7 +76,6 @@ def test_readonly(json_validation_spec_dir, spec):
     assert res.status_code == 400
 
 
-@pytest.mark.parametrize("spec", SPECS)
 def test_writeonly(json_validation_spec_dir, spec):
     app = build_app_from_fixture(
         json_validation_spec_dir, spec, validate_responses=True
@@ -107,7 +102,6 @@ def test_writeonly(json_validation_spec_dir, spec):
     )
 
 
-@pytest.mark.parametrize("spec", SPECS)
 def test_nullable_default(json_validation_spec_dir, spec):
     spec_path = pathlib.Path(json_validation_spec_dir) / spec
     Specification.load(spec_path)

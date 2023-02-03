@@ -2,7 +2,7 @@ import pytest
 from connexion.middleware import ConnexionMiddleware
 from starlette.datastructures import MutableHeaders
 
-from conftest import SPECS, build_app_from_fixture
+from conftest import build_app_from_fixture
 
 
 class TestMiddleware:
@@ -30,10 +30,10 @@ class TestMiddleware:
         await self.app(scope, receive, patched_send)
 
 
-@pytest.fixture(scope="session", params=SPECS)
-def middleware_app(request):
+@pytest.fixture(scope="session")
+def middleware_app(spec):
     middlewares = ConnexionMiddleware.default_middlewares + [TestMiddleware]
-    return build_app_from_fixture("simple", request.param, middlewares=middlewares)
+    return build_app_from_fixture("simple", spec, middlewares=middlewares)
 
 
 def test_routing_middleware(middleware_app):

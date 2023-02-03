@@ -8,8 +8,6 @@ from connexion.frameworks.flask import FlaskJSONProvider
 
 from conftest import build_app_from_fixture
 
-SPECS = ["swagger.yaml", "openapi.yaml"]
-
 
 def test_json_encoder(simple_app):
     flask_app = simple_app.app
@@ -43,7 +41,6 @@ def test_json_encoder_datetime_with_timezone(simple_app):
     assert s.endswith('+00:00"')
 
 
-@pytest.mark.parametrize("spec", SPECS)
 def test_readonly(json_datetime_dir, spec):
     app = build_app_from_fixture(json_datetime_dir, spec, validate_responses=True)
     app_client = app.test_client()

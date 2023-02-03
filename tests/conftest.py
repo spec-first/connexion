@@ -12,9 +12,9 @@ logging.basicConfig(level=logging.INFO)
 TEST_FOLDER = pathlib.Path(__file__).parent
 FIXTURES_FOLDER = TEST_FOLDER / "fixtures"
 SPEC_FOLDER = TEST_FOLDER / "fakeapi"
-OPENAPI2_SPEC = ["swagger.yaml"]
-OPENAPI3_SPEC = ["openapi.yaml"]
-SPECS = OPENAPI2_SPEC + OPENAPI3_SPEC
+OPENAPI2_SPEC = "swagger.yaml"
+OPENAPI3_SPEC = "openapi.yaml"
+SPECS = [OPENAPI2_SPEC, OPENAPI3_SPEC]
 METHOD_VIEW_RESOLVERS = [MethodResolver, MethodViewResolver]
 
 
@@ -67,6 +67,11 @@ def json_datetime_dir():
     return FIXTURES_FOLDER / "datetime_support"
 
 
+@pytest.fixture(scope="session", params=SPECS)
+def spec(request):
+    return request.param
+
+
 def build_app_from_fixture(
     api_spec_folder, spec_file="openapi.yaml", middlewares=None, **kwargs
 ):
@@ -86,18 +91,18 @@ def build_app_from_fixture(
     return cnx_app
 
 
-@pytest.fixture(scope="session", params=SPECS)
-def simple_app(request):
-    return build_app_from_fixture("simple", request.param, validate_responses=True)
+@pytest.fixture(scope="session")
+def simple_app(spec):
+    return build_app_from_fixture("simple", validate_responses=True)
 
 
-@pytest.fixture(scope="session", params=OPENAPI3_SPEC)
-def simple_openapi_app(request):
-    return build_app_from_fixture("simple", request.param, validate_responses=True)
+@pytest.fixture(scope="session")
+def simple_openapi_app():
+    return build_app_from_fixture("simple", OPENAPI3_SPEC, validate_responses=True)
 
 
-@pytest.fixture(scope="session", params=SPECS)
-def reverse_proxied_app(request):
+@pytest.fixture(scope="session")
+def reverse_proxied_app(spec):
     class ReverseProxied:
         def __init__(self, app, root_path=None, scheme=None, server=None):
             self.app = app
@@ -127,74 +132,72 @@ def reverse_proxied_app(request):
 
             return await self.app(scope, receive, send)
 
-    app = build_app_from_fixture("simple", request.param, validate_responses=True)
+    app = build_app_from_fixture("simple", spec, validate_responses=True)
     app.middleware = ReverseProxied(app.middleware, root_path="/reverse_proxied/")
     return app
 
 
-@pytest.fixture(scope="session", params=SPECS)
-def snake_case_app(request):
+@pytest.fixture(scope="session")
+def snake_case_app(spec):
     return build_app_from_fixture(
-        "snake_case", request.param, validate_responses=True, pythonic_params=True
+        "snake_case", spec, validate_responses=True, pythonic_params=True
     )
 
 
-@pytest.fixture(scope="session", params=SPECS)
-def invalid_resp_allowed_app(request):
-    return build_app_from_fixture("simple", request.param, validate_responses=False)
+@pytest.fixture(scope="session")
+def invalid_resp_allowed_app(spec):
+    return build_app_from_fixture("simple", spec, validate_responses=False)
 
 
-@pytest.fixture(scope="session", params=SPECS)
-def strict_app(request):
+@pytest.fixture(scope="session")
+def strict_app(spec):
     return build_app_from_fixture(
-        "simple", request.param, validate_responses=True, strict_validation=True
+        "simple", spec, validate_responses=True, strict_validation=True
     )
 
 
-@pytest.fixture(scope="session", params=SPECS)
-def problem_app(request):
-    return build_app_from_fixture("problem", request.param, validate_responses=True)
+@pytest.fixture(scope="session")
+def problem_app(spec):
+    return build_app_from_fixture("problem", spec, validate_responses=True)
 
 
-@pytest.fixture(scope="session", params=SPECS)
-def schema_app(request):
-    return build_app_from_fixture(
-        "different_schemas", request.param, validate_responses=True
-    )
+@pytest.fixture(scope="session")
+def schema_app(spec):
+    return build_app_from_fixture("different_schemas", spec, validate_responses=True)
 
 
-@pytest.fixture(scope="session", params=SPECS)
-def secure_endpoint_app(request):
+@pytest.fixture(scope="session")
+def secure_endpoint_app(spec):
     return build_app_from_fixture(
         "secure_endpoint",
-        request.param,
+        spec,
         validate_responses=True,
     )
 
 
-@pytest.fixture(scope="session", params=SPECS)
-def secure_api_app(request):
+@pytest.fixture(scope="session")
+def secure_api_app(spec):
     options = {"swagger_ui": False}
     return build_app_from_fixture(
-        "secure_api", request.param, options=options, auth_all_paths=True
+        "secure_api", spec, options=options, auth_all_paths=True
     )
 
 
-@pytest.fixture(scope="session", params=SPECS)
-def unordered_definition_app(request):
-    return build_app_from_fixture("unordered_definition", request.param)
+@pytest.fixture(scope="session")
+def unordered_definition_app(spec):
+    return build_app_from_fixture("unordered_definition", spec)
 
 
-@pytest.fixture(scope="session", params=SPECS)
-def bad_operations_app(request):
-    return build_app_from_fixture("bad_operations", request.param, resolver_error=501)
+@pytest.fixture(scope="session")
+def bad_operations_app(spec):
+    return build_app_from_fixture("bad_operations", spec, resolver_error=501)
 
 
-@pytest.fixture(scope="session", params=SPECS)
-def method_view_app(request):
+@pytest.fixture(scope="session")
+def method_view_app(spec):
     return build_app_from_fixture(
         "method_view",
-        request.param,
+        spec,
         resolver=MethodViewResolver("fakeapi.example_method_view"),
     )
 
