@@ -4,7 +4,6 @@ import pathlib
 import pytest
 from connexion import App
 from connexion.resolver import MethodResolver, MethodViewResolver
-from werkzeug.test import Client
 
 logging.basicConfig(level=logging.INFO)
 
@@ -15,25 +14,6 @@ OPENAPI2_SPEC = "swagger.yaml"
 OPENAPI3_SPEC = "openapi.yaml"
 SPECS = [OPENAPI2_SPEC, OPENAPI3_SPEC]
 METHOD_VIEW_RESOLVERS = [MethodResolver, MethodViewResolver]
-
-
-def buffered_open():
-    """For use with ASGI middleware"""
-
-    original_open = Client.open
-
-    def f(*args, **kwargs):
-        kwargs["buffered"] = True
-        return original_open(*args, **kwargs)
-
-    return f
-
-
-Client.open = buffered_open()
-
-
-# Helper fixtures functions
-# =========================
 
 
 @pytest.fixture
