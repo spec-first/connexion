@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from connexion import FlaskApi
-from connexion.exceptions import InvalidSpecification, ResolverError
+from connexion.exceptions import InvalidSpecification
 from connexion.spec import canonical_base_path
 from yaml import YAMLError
 

@@ -1,5 +1,7 @@
 from connexion.operations import OpenAPIOperation
-from connexion.resolver import Resolver
+from connexion.resolver import MethodViewResolver, Resolver
+
+from conftest import build_app_from_fixture
 
 COMPONENTS = {"parameters": {"myparam": {"in": "path", "schema": {"type": "integer"}}}}
 
@@ -188,7 +190,13 @@ def test_methodview_resolve_with_default_module_name_will_resolve_resource_root_
     assert operation.operation_id == "fakeapi.PetsView.post"
 
 
-def test_method_view_resolver_integration(method_view_app):
+def test_method_view_resolver_integration(spec, method_view_resolver):
+    method_view_app = build_app_from_fixture(
+        "method_view",
+        spec,
+        resolver=MethodViewResolver("fakeapi.example_method_view"),
+    )
+
     client = method_view_app.test_client()
 
     r = client.get("/v1.0/pets")

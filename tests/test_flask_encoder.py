@@ -2,33 +2,37 @@ import datetime
 import json
 import math
 from decimal import Decimal
+from unittest import mock
 
-import pytest
 from connexion.frameworks.flask import FlaskJSONProvider
 
 from conftest import build_app_from_fixture
 
 
-def test_json_encoder(simple_app):
-    flask_app = simple_app.app
+def test_json_encoder():
+    json_encoder = json.JSONEncoder
+    json_encoder.default = FlaskJSONProvider.default
 
-    s = FlaskJSONProvider(flask_app).dumps({1: 2})
+    s = json.dumps({1: 2}, cls=json_encoder)
     assert '{"1": 2}' == s
 
-    s = FlaskJSONProvider(flask_app).dumps(datetime.date.today())
+    s = json.dumps(datetime.date.today(), cls=json_encoder)
     assert len(s) == 12
 
-    s = FlaskJSONProvider(flask_app).dumps(datetime.datetime.utcnow())
+    s = json.dumps(datetime.datetime.utcnow(), cls=json_encoder)
     assert s.endswith('Z"')
 
-    s = FlaskJSONProvider(flask_app).dumps(Decimal(1.01))
+    s = json.dumps(Decimal(1.01), cls=json_encoder)
     assert s == "1.01"
 
-    s = FlaskJSONProvider(flask_app).dumps(math.expm1(1e-10))
+    s = json.dumps(math.expm1(1e-10), cls=json_encoder)
     assert s == "1.00000000005e-10"
 
 
-def test_json_encoder_datetime_with_timezone(simple_app):
+def test_json_encoder_datetime_with_timezone():
+    json_encoder = json.JSONEncoder
+    json_encoder.default = FlaskJSONProvider.default
+
     class DummyTimezone(datetime.tzinfo):
         def utcoffset(self, dt):
             return datetime.timedelta(0)
@@ -36,8 +40,7 @@ def test_json_encoder_datetime_with_timezone(simple_app):
         def dst(self, dt):
             return datetime.timedelta(0)
 
-    flask_app = simple_app.app
-    s = FlaskJSONProvider(flask_app).dumps(datetime.datetime.now(DummyTimezone()))
+    s = json.dumps(datetime.datetime.now(DummyTimezone()), cls=json_encoder)
     assert s.endswith('+00:00"')
 
 
