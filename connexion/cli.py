@@ -8,6 +8,7 @@ import sys
 from os import path
 
 import click
+import importlib_metadata
 from clickclick import AliasedGroup, fatal_error
 
 import connexion
@@ -47,7 +48,7 @@ def validate_server_requirements(ctx, param, value):
 def print_version(ctx, param, value):
     if not value or ctx.resilient_parsing:
         return
-    click.echo(f"Connexion {connexion.__version__}")
+    click.echo(f"Connexion {importlib_metadata.version('connexion')}")
     ctx.exit()
 
 

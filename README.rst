@@ -583,12 +583,12 @@ Contributing to Connexion/TODOs
 We welcome your ideas, issues, and pull requests. Just follow the
 usual/standard GitHub practices.
 
-For easy development, install connexion in editable mode with the :code:`tests` extra, and
+For easy development, install connexion using poetry with all extras, and
 install the pre-commit hooks to automatically run black formatting and static analysis checks.
 
 .. code-block:: bash
 
-    pip install -e .[tests]
+    poetry install --all-extras
     pre-commit install
 
 You can find out more about how Connexion works and where to apply your changes by having a look

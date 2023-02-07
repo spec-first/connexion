@@ -2,6 +2,7 @@ import logging
 from unittest.mock import MagicMock
 
 import connexion
+import importlib_metadata
 import pytest
 from click.testing import CliRunner
 from connexion.cli import main
@@ -51,7 +52,7 @@ def spec_file():
 def test_print_version():
     runner = CliRunner()
     result = runner.invoke(main, ["--version"], catch_exceptions=False)
-    assert f"Connexion {connexion.__version__}" in result.output
+    assert f"Connexion {importlib_metadata.version('connexion')}" in result.output
 
 
 def test_run_missing_spec():
