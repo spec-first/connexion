@@ -8,7 +8,7 @@ class FakeResponse:
     def __init__(self, status_code, text):
         """
         :type status_code: int
-        :type text: ste
+        :type text: str
         """
         self.status_code = status_code
         self.text = text
