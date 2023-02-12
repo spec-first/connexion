@@ -12,6 +12,7 @@ from connexion.jsonifier import Jsonifier
 from connexion.middleware.security import SecurityOperation
 from connexion.operations import Swagger2Operation
 from connexion.resolver import Resolver
+from connexion.security import SecurityHandlerFactory
 
 TEST_FOLDER = pathlib.Path(__file__).parent
 
@@ -376,9 +377,9 @@ SECURITY_DEFINITIONS_2_OAUTH = {
 
 
 @pytest.fixture
-def api(security_handler_factory):
+def api():
     api = mock.MagicMock(jsonifier=Jsonifier)
-    api.security_handler_factory = security_handler_factory
+    api.security_handler_factory = SecurityHandlerFactory()
     yield api
 
 
@@ -394,7 +395,7 @@ def make_operation(op, definitions=True, parameters=True):
     return resolve_refs(new_op)["wrapper"]
 
 
-def test_operation(api, security_handler_factory):
+def test_operation(api):
     op_spec = make_operation(OPERATION1)
     operation = Swagger2Operation(
         api=api,
@@ -417,7 +418,9 @@ def test_operation(api, security_handler_factory):
     assert operation.body_schema() == expected_body_schema
 
 
-def test_operation_remote_token_info(security_handler_factory):
+def test_operation_remote_token_info():
+    security_handler_factory = SecurityHandlerFactory()
+
     verify_oauth = mock.MagicMock(return_value="verify_oauth_result")
     security_handler_factory.verify_oauth = verify_oauth
     security_handler_factory.get_token_info_remote = mock.MagicMock(
@@ -490,7 +493,9 @@ def test_operation_composed_definition(api):
     assert operation.body_schema() == expected_body_schema
 
 
-def test_operation_local_security_oauth2(security_handler_factory):
+def test_operation_local_security_oauth2():
+    security_handler_factory = SecurityHandlerFactory()
+
     verify_oauth = mock.MagicMock(return_value="verify_oauth_result")
     security_handler_factory.verify_oauth = verify_oauth
 
@@ -506,7 +511,9 @@ def test_operation_local_security_oauth2(security_handler_factory):
     )
 
 
-def test_operation_local_security_duplicate_token_info(security_handler_factory):
+def test_operation_local_security_duplicate_token_info():
+    security_handler_factory = SecurityHandlerFactory()
+
     verify_oauth = mock.MagicMock(return_value="verify_oauth_result")
     security_handler_factory.verify_oauth = verify_oauth
 
@@ -546,7 +553,8 @@ def test_multi_body(api):
     )
 
 
-def test_no_token_info(security_handler_factory):
+def test_no_token_info():
+    security_handler_factory = SecurityHandlerFactory()
     SecurityOperation(
         next_app=mock.Mock,
         security_handler_factory=security_handler_factory,
@@ -555,12 +563,13 @@ def test_no_token_info(security_handler_factory):
     )
 
 
-def test_multiple_security_schemes_and(security_handler_factory):
+def test_multiple_security_schemes_and():
     """Tests an operation with multiple security schemes in AND fashion."""
 
     def return_api_key_name(func, in_, name):
         return name
 
+    security_handler_factory = SecurityHandlerFactory()
     verify_api_key = mock.MagicMock(side_effect=return_api_key_name)
     security_handler_factory.verify_api_key = verify_api_key
     verify_multiple = mock.MagicMock(return_value="verify_multiple_result")
@@ -583,11 +592,13 @@ def test_multiple_security_schemes_and(security_handler_factory):
     verify_multiple.assert_called_with({"key1": "X-Auth-1", "key2": "X-Auth-2"})
 
 
-def test_multiple_oauth_in_and(security_handler_factory, caplog):
+def test_multiple_oauth_in_and(caplog):
     """Tests an operation with multiple oauth security schemes in AND fashion.
     These should be ignored and raise a warning.
     """
     caplog.set_level(logging.WARNING, logger="connexion.operations.secure")
+    security_handler_factory = SecurityHandlerFactory()
+
     verify_oauth = mock.MagicMock(return_value="verify_oauth_result")
     security_handler_factory.verify_oauth = verify_oauth
 
@@ -683,8 +694,10 @@ def test_get_path_parameter_types(api):
     } == operation.get_path_parameter_types()
 
 
-def test_oauth_scopes_in_or(security_handler_factory):
+def test_oauth_scopes_in_or():
     """Tests whether an OAuth security scheme with 2 different possible scopes is correctly handled."""
+    security_handler_factory = SecurityHandlerFactory()
+
     verify_oauth = mock.MagicMock(return_value="verify_oauth_result")
     security_handler_factory.verify_oauth = verify_oauth
 

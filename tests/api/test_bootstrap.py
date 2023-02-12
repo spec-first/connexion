@@ -12,10 +12,7 @@ from connexion.middleware.abstract import AbstractRoutingAPI
 
 from conftest import TEST_FOLDER, build_app_from_fixture
 
-SPECS = ["swagger.yaml", "openapi.yaml"]
 
-
-@pytest.mark.parametrize("spec", SPECS)
 def test_app_with_relative_path(simple_api_spec_dir, spec):
     # Create the app with a relative path and run the test_app testcase below.
     app = App(
@@ -30,7 +27,6 @@ def test_app_with_relative_path(simple_api_spec_dir, spec):
     assert get_bye.data == b"Goodbye jsantos"
 
 
-@pytest.mark.parametrize("spec", SPECS)
 def test_app_with_resolver(simple_api_spec_dir, spec):
     from connexion.resolver import Resolver
 
@@ -63,7 +59,6 @@ def test_app_with_different_uri_parser(simple_api_spec_dir):
     assert j == ["a", "b", "c"]
 
 
-@pytest.mark.parametrize("spec", SPECS)
 def test_swagger_ui(simple_api_spec_dir, spec):
     app = App(__name__, specification_dir=simple_api_spec_dir)
     app.add_api(spec)
@@ -76,7 +71,6 @@ def test_swagger_ui(simple_api_spec_dir, spec):
         assert b"swagger-ui-config.json" not in swagger_ui.data
 
 
-@pytest.mark.parametrize("spec", SPECS)
 def test_swagger_ui_with_config(simple_api_spec_dir, spec):
     swagger_ui_config = {"displayOperationId": True}
     swagger_ui_options = {"swagger_ui_config": swagger_ui_config}
@@ -93,7 +87,6 @@ def test_swagger_ui_with_config(simple_api_spec_dir, spec):
         assert b'configUrl: "swagger-ui-config.json"' in swagger_ui.data
 
 
-@pytest.mark.parametrize("spec", SPECS)
 def test_no_swagger_ui(simple_api_spec_dir, spec):
     swagger_ui_options = {"swagger_ui": False}
     app = App(
@@ -114,7 +107,6 @@ def test_no_swagger_ui(simple_api_spec_dir, spec):
     assert swagger_ui2.status_code == 404
 
 
-@pytest.mark.parametrize("spec", SPECS)
 def test_swagger_ui_config_json(simple_api_spec_dir, spec):
     """Verify the swagger-ui-config.json file is returned for swagger_ui_config option passed to app."""
     swagger_ui_config = {"displayOperationId": True}
@@ -134,7 +126,6 @@ def test_swagger_ui_config_json(simple_api_spec_dir, spec):
     )
 
 
-@pytest.mark.parametrize("spec", SPECS)
 def test_no_swagger_ui_config_json(simple_api_spec_dir, spec):
     """Verify the swagger-ui-config.json file is not returned when the swagger_ui_config option not passed to app."""
     app = App(__name__, specification_dir=simple_api_spec_dir)
@@ -145,7 +136,6 @@ def test_no_swagger_ui_config_json(simple_api_spec_dir, spec):
     assert swagger_ui_config_json.status_code == 404
 
 
-@pytest.mark.parametrize("spec", SPECS)
 def test_swagger_json_app(simple_api_spec_dir, spec):
     """Verify the spec json file is returned for default setting passed to app."""
     app = App(__name__, specification_dir=simple_api_spec_dir)
@@ -157,7 +147,6 @@ def test_swagger_json_app(simple_api_spec_dir, spec):
     assert spec_json.status_code == 200
 
 
-@pytest.mark.parametrize("spec", SPECS)
 def test_swagger_yaml_app(simple_api_spec_dir, spec):
     """Verify the spec yaml file is returned for default setting passed to app."""
     app = App(__name__, specification_dir=simple_api_spec_dir)
@@ -169,7 +158,6 @@ def test_swagger_yaml_app(simple_api_spec_dir, spec):
     assert spec_response.status_code == 200
 
 
-@pytest.mark.parametrize("spec", SPECS)
 def test_no_swagger_json_app(simple_api_spec_dir, spec):
     """Verify the spec json file is not returned when set to False when creating app."""
     swagger_ui_options = {"serve_spec": False}
@@ -187,7 +175,6 @@ def test_no_swagger_json_app(simple_api_spec_dir, spec):
     assert spec_json.status_code == 404
 
 
-@pytest.mark.parametrize("spec", SPECS)
 def test_dict_as_yaml_path(simple_api_spec_dir, spec):
     openapi_yaml_path = simple_api_spec_dir / spec
 
@@ -210,7 +197,6 @@ def test_dict_as_yaml_path(simple_api_spec_dir, spec):
     assert swagger_json.status_code == 200
 
 
-@pytest.mark.parametrize("spec", SPECS)
 def test_swagger_json_api(simple_api_spec_dir, spec):
     """Verify the spec json file is returned for default setting passed to api."""
     app = App(__name__, specification_dir=simple_api_spec_dir)
@@ -222,7 +208,6 @@ def test_swagger_json_api(simple_api_spec_dir, spec):
     assert swagger_json.status_code == 200
 
 
-@pytest.mark.parametrize("spec", SPECS)
 def test_no_swagger_json_api(simple_api_spec_dir, spec):
     """Verify the spec json file is not returned when set to False when adding api."""
     app = App(__name__, specification_dir=simple_api_spec_dir)
@@ -282,7 +267,6 @@ def test_resolve_classmethod(simple_app):
     assert resp.data.decode("utf-8", "replace") == '"DummyClass"\n'
 
 
-@pytest.mark.parametrize("spec", SPECS)
 def test_add_api_with_function_resolver_function_is_wrapped(simple_api_spec_dir, spec):
     app = App(__name__, specification_dir=simple_api_spec_dir)
     api = app.add_api(spec, resolver=lambda oid: (lambda foo: "bar"))
