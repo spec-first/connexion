@@ -3,9 +3,7 @@ import json
 
 def test_app(unordered_definition_app):
     app_client = unordered_definition_app.test_client()
-    response = app_client.get(
-        "/v1.0/unordered-params/1?first=first&second=2"
-    )  # type: flask.Response
+    response = app_client.get("/v1.0/unordered-params/1?first=first&second=2")
     assert response.status_code == 400
-    response_data = json.loads(response.data.decode("utf-8", "replace"))
+    response_data = json.loads(response.text)
     assert response_data["detail"].startswith("'first' is not of type 'integer'")

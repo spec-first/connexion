@@ -2,7 +2,6 @@ import datetime
 import json
 import math
 from decimal import Decimal
-from unittest import mock
 
 from connexion.frameworks.flask import FlaskJSONProvider
 
@@ -44,13 +43,15 @@ def test_json_encoder_datetime_with_timezone():
     assert s.endswith('+00:00"')
 
 
-def test_readonly(json_datetime_dir, spec):
-    app = build_app_from_fixture(json_datetime_dir, spec, validate_responses=True)
+def test_readonly(json_datetime_dir, spec, app_class):
+    app = build_app_from_fixture(
+        json_datetime_dir, app_class=app_class, spec_file=spec, validate_responses=True
+    )
     app_client = app.test_client()
 
     res = app_client.get("/v1.0/" + spec.replace("yaml", "json"))
     assert res.status_code == 200, f"Error is {res.data}"
-    spec_data = json.loads(res.data.decode())
+    spec_data = json.loads(res.text)
 
     if spec == "openapi.yaml":
         response_path = "responses.200.content.application/json.schema"
@@ -75,15 +76,15 @@ def test_readonly(json_datetime_dir, spec):
 
     res = app_client.get("/v1.0/datetime")
     assert res.status_code == 200, f"Error is {res.data}"
-    data = json.loads(res.data.decode())
+    data = json.loads(res.text)
     assert data == {"value": "2000-01-02T03:04:05.000006Z"}
 
     res = app_client.get("/v1.0/date")
     assert res.status_code == 200, f"Error is {res.data}"
-    data = json.loads(res.data.decode())
+    data = json.loads(res.text)
     assert data == {"value": "2000-01-02"}
 
     res = app_client.get("/v1.0/uuid")
     assert res.status_code == 200, f"Error is {res.data}"
-    data = json.loads(res.data.decode())
+    data = json.loads(res.text)
     assert data == {"value": "e7ff66d0-3ec2-4c4e-bed0-6e4723c24c51"}

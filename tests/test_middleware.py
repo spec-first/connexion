@@ -31,9 +31,11 @@ class TestMiddleware:
 
 
 @pytest.fixture(scope="session")
-def middleware_app(spec):
+def middleware_app(spec, app_class):
     middlewares = ConnexionMiddleware.default_middlewares + [TestMiddleware]
-    return build_app_from_fixture("simple", spec, middlewares=middlewares)
+    return build_app_from_fixture(
+        "simple", app_class=app_class, spec_file=spec, middlewares=middlewares
+    )
 
 
 def test_routing_middleware(middleware_app):

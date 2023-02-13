@@ -190,10 +190,11 @@ def test_methodview_resolve_with_default_module_name_will_resolve_resource_root_
     assert operation.operation_id == "fakeapi.PetsView.post"
 
 
-def test_method_view_resolver_integration(spec, method_view_resolver):
+def test_method_view_resolver_integration(spec, app_class, method_view_resolver):
     method_view_app = build_app_from_fixture(
         "method_view",
-        spec,
+        app_class=app_class,
+        spec_file=spec,
         resolver=MethodViewResolver("fakeapi.example_method_view"),
     )
 

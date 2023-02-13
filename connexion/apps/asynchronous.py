@@ -8,6 +8,7 @@ import typing as t
 
 from starlette.responses import Response as StarletteResponse
 from starlette.routing import Router
+from starlette.testclient import TestClient
 from starlette.types import Receive, Scope, Send
 
 from connexion.apps.abstract import AbstractApp
@@ -187,4 +188,4 @@ class AsyncApp(AbstractApp):
         """TODO: implement"""
 
     def test_client(self, **kwargs):
-        """TODO: implement"""
+        return TestClient(self)

@@ -7,17 +7,21 @@ from conftest import FIXTURES_FOLDER, OPENAPI3_SPEC, build_app_from_fixture
 
 
 @pytest.fixture(scope="session")
-def simple_app(spec):
-    return build_app_from_fixture("simple", validate_responses=True)
+def simple_app(spec, app_class):
+    return build_app_from_fixture(
+        "simple", app_class=app_class, spec_file=spec, validate_responses=True
+    )
 
 
 @pytest.fixture(scope="session")
-def simple_openapi_app():
-    return build_app_from_fixture("simple", OPENAPI3_SPEC, validate_responses=True)
+def simple_openapi_app(app_class):
+    return build_app_from_fixture(
+        "simple", app_class=app_class, spec_file=OPENAPI3_SPEC, validate_responses=True
+    )
 
 
 @pytest.fixture(scope="session")
-def reverse_proxied_app(spec):
+def reverse_proxied_app(spec, app_class):
     class ReverseProxied:
         def __init__(self, app, root_path=None, scheme=None, server=None):
             self.app = app
@@ -47,62 +51,90 @@ def reverse_proxied_app(spec):
 
             return await self.app(scope, receive, send)
 
-    app = build_app_from_fixture("simple", spec, validate_responses=True)
+    app = build_app_from_fixture(
+        "simple", app_class=app_class, spec_file=spec, validate_responses=True
+    )
     app.middleware = ReverseProxied(app.middleware, root_path="/reverse_proxied/")
     return app
 
 
 @pytest.fixture(scope="session")
-def snake_case_app(spec):
+def snake_case_app(spec, app_class):
     return build_app_from_fixture(
-        "snake_case", spec, validate_responses=True, pythonic_params=True
+        "snake_case",
+        app_class=app_class,
+        spec_file=spec,
+        validate_responses=True,
+        pythonic_params=True,
     )
 
 
 @pytest.fixture(scope="session")
-def invalid_resp_allowed_app(spec):
-    return build_app_from_fixture("simple", spec, validate_responses=False)
-
-
-@pytest.fixture(scope="session")
-def strict_app(spec):
+def invalid_resp_allowed_app(spec, app_class):
     return build_app_from_fixture(
-        "simple", spec, validate_responses=True, strict_validation=True
+        "simple", app_class=app_class, spec_file=spec, validate_responses=False
     )
 
 
 @pytest.fixture(scope="session")
-def problem_app(spec):
-    return build_app_from_fixture("problem", spec, validate_responses=True)
-
-
-@pytest.fixture(scope="session")
-def schema_app(spec):
-    return build_app_from_fixture("different_schemas", spec, validate_responses=True)
-
-
-@pytest.fixture(scope="session")
-def secure_endpoint_app(spec):
+def strict_app(spec, app_class):
     return build_app_from_fixture(
-        "secure_endpoint",
-        spec,
+        "simple",
+        app_class=app_class,
+        spec_file=spec,
+        validate_responses=True,
+        strict_validation=True,
+    )
+
+
+@pytest.fixture(scope="session")
+def problem_app(spec, app_class):
+    return build_app_from_fixture(
+        "problem", app_class=app_class, spec_file=spec, validate_responses=True
+    )
+
+
+@pytest.fixture(scope="session")
+def schema_app(spec, app_class):
+    return build_app_from_fixture(
+        "different_schemas",
+        app_class=app_class,
+        spec_file=spec,
         validate_responses=True,
     )
 
 
 @pytest.fixture(scope="session")
-def secure_api_app(spec):
-    options = {"swagger_ui": False}
+def secure_endpoint_app(spec, app_class):
     return build_app_from_fixture(
-        "secure_api", spec, options=options, auth_all_paths=True
+        "secure_endpoint",
+        app_class=app_class,
+        spec_file=spec,
+        validate_responses=True,
     )
 
 
 @pytest.fixture(scope="session")
-def unordered_definition_app(spec):
-    return build_app_from_fixture("unordered_definition", spec)
+def secure_api_app(spec, app_class):
+    options = {"swagger_ui": False}
+    return build_app_from_fixture(
+        "secure_api",
+        app_class=app_class,
+        spec_file=spec,
+        options=options,
+        auth_all_paths=True,
+    )
 
 
 @pytest.fixture(scope="session")
-def bad_operations_app(spec):
-    return build_app_from_fixture("bad_operations", spec, resolver_error=501)
+def unordered_definition_app(spec, app_class):
+    return build_app_from_fixture(
+        "unordered_definition", app_class=app_class, spec_file=spec
+    )
+
+
+@pytest.fixture(scope="session")
+def bad_operations_app(spec, app_class):
+    return build_app_from_fixture(
+        "bad_operations", app_class=app_class, spec_file=spec, resolver_error=501
+    )
