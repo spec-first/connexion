@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 from connexion.decorators.parameter import (
     AsyncParameterDecorator,
@@ -28,7 +28,7 @@ def test_sync_injection():
 
 
 async def test_async_injection():
-    request = MagicMock(name="request")
+    request = AsyncMock(name="request")
     request.path_params = {"p1": "123"}
 
     func = MagicMock()
@@ -68,7 +68,7 @@ def test_sync_injection_with_context():
 
 
 async def test_async_injection_with_context():
-    request = MagicMock(name="request")
+    request = AsyncMock(name="request")
     request.path_params = {"p1": "123"}
 
     func = MagicMock()

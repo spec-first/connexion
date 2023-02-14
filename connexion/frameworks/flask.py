@@ -12,7 +12,7 @@ import werkzeug.routing
 
 from connexion import jsonifier
 from connexion.frameworks.abstract import Framework
-from connexion.lifecycle import ConnexionRequest
+from connexion.lifecycle import WSGIRequest
 from connexion.uri_parsing import AbstractURIParser
 
 
@@ -54,8 +54,10 @@ class Flask(Framework):
         return flask.current_app.response_class(**kwargs)
 
     @staticmethod
-    def get_request(*, uri_parser: AbstractURIParser, **kwargs) -> ConnexionRequest:  # type: ignore
-        return ConnexionRequest(flask.request, uri_parser=uri_parser)
+    def get_request(*, uri_parser: AbstractURIParser, **kwargs) -> WSGIRequest:  # type: ignore
+        return WSGIRequest(
+            flask.request, uri_parser=uri_parser, view_args=flask.request.view_args
+        )
 
 
 PATH_PARAMETER = re.compile(r"\{([^}]*)\}")
