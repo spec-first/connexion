@@ -15,6 +15,7 @@ OPENAPI3_SPEC = "openapi.yaml"
 SPECS = [OPENAPI2_SPEC, OPENAPI3_SPEC]
 METHOD_VIEW_RESOLVERS = [MethodResolver, MethodViewResolver]
 APP_CLASSES = [FlaskApp, AsyncApp]
+# APP_CLASSES = [FlaskApp]
 
 
 @pytest.fixture

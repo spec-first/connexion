@@ -24,7 +24,7 @@ def test_app_with_relative_path(simple_api_spec_dir, spec):
     app_client = app.test_client()
     get_bye = app_client.get("/v1.0/bye/jsantos")
     assert get_bye.status_code == 200
-    assert get_bye.data == b"Goodbye jsantos"
+    assert get_bye.text == "Goodbye jsantos"
 
 
 def test_app_with_resolver(simple_api_spec_dir, spec):
@@ -53,7 +53,7 @@ def test_app_with_different_uri_parser(simple_api_spec_dir):
     app_client = app.test_client()
     resp = app_client.get("/v1.0/test_array_csv_query_param?items=a,b,c&items=d,e,f")
     assert resp.status_code == 200
-    j = json.loads(resp.get_data(as_text=True))
+    j = resp.json()
     assert j == ["a", "b", "c"]
 
 
@@ -64,9 +64,9 @@ def test_swagger_ui(simple_api_spec_dir, spec):
     swagger_ui = app_client.get("/v1.0/ui/")
     assert swagger_ui.status_code == 200
     spec_json_filename = "/v1.0/{spec}".format(spec=spec.replace("yaml", "json"))
-    assert spec_json_filename.encode() in swagger_ui.data
+    assert spec_json_filename in swagger_ui.text
     if "openapi" in spec:
-        assert b"swagger-ui-config.json" not in swagger_ui.data
+        assert "swagger-ui-config.json" not in swagger_ui.text
 
 
 def test_swagger_ui_with_config(simple_api_spec_dir, spec):
@@ -82,7 +82,7 @@ def test_swagger_ui_with_config(simple_api_spec_dir, spec):
     swagger_ui = app_client.get("/v1.0/ui/")
     assert swagger_ui.status_code == 200
     if "openapi" in spec:
-        assert b'configUrl: "swagger-ui-config.json"' in swagger_ui.data
+        assert 'configUrl: "swagger-ui-config.json"' in swagger_ui.text
 
 
 def test_no_swagger_ui(simple_api_spec_dir, spec):
@@ -119,9 +119,7 @@ def test_swagger_ui_config_json(simple_api_spec_dir, spec):
     url = "/v1.0/ui/swagger-ui-config.json"
     swagger_ui_config_json = app_client.get(url)
     assert swagger_ui_config_json.status_code == 200
-    assert swagger_ui_config == json.loads(
-        swagger_ui_config_json.get_data(as_text=True)
-    )
+    assert swagger_ui_config == swagger_ui_config_json.json()
 
 
 def test_no_swagger_ui_config_json(simple_api_spec_dir, spec):
@@ -241,13 +239,13 @@ def test_single_route():
     app.add_url_rule("/single1", "single1", route1, methods=["GET"])
 
     get_single1 = app_client.get("/single1")
-    assert get_single1.data == b"single 1"
+    assert get_single1.text == "single 1"
 
     post_single1 = app_client.post("/single1")
     assert post_single1.status_code == 405
 
     post_single2 = app_client.post("/single2")
-    assert post_single2.data == b"single 2"
+    assert post_single2.text == "single 2"
 
     get_single2 = app_client.get("/single2")
     assert get_single2.status_code == 405

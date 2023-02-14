@@ -5,12 +5,10 @@ This module defines a FlaskApp, a Connexion application to wrap a Flask applicat
 import pathlib
 import typing as t
 
-import a2wsgi
 import flask
 import werkzeug.exceptions
 from flask import Response as FlaskResponse
 from flask import signals
-from flask.testing import FlaskClient
 from starlette.types import Receive, Scope, Send
 
 from connexion.apps.abstract import AbstractApp
@@ -251,15 +249,3 @@ class FlaskApp(AbstractApp):
         self, code_or_exception: t.Union[int, t.Type[Exception]], function: t.Callable
     ) -> None:
         self.app.register_error_handler(code_or_exception, function)
-
-    def test_client(self, **kwargs):
-        self.app.wsgi_app = a2wsgi.ASGIMiddleware(self.middleware)
-        self.app.test_client_class = ConnexionTestClient
-        return self.app.test_client(**kwargs)
-
-
-class ConnexionTestClient(FlaskClient):
-    def open(self, *args, **kwargs):
-        # Align with async test client
-        kwargs["query_string"] = kwargs.pop("params", None)
-        return super().open(*args, **kwargs)

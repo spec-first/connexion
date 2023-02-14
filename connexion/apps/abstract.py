@@ -6,6 +6,7 @@ import abc
 import pathlib
 import typing as t
 
+from starlette.testclient import TestClient
 from starlette.types import Receive, Scope, Send
 
 from connexion.middleware import ConnexionMiddleware, SpecMiddleware
@@ -224,6 +225,7 @@ class AbstractApp:
     @abc.abstractmethod
     def test_client(self, **kwargs):
         """Creates a test client for this application."""
+        return TestClient(self, **kwargs)
 
     def run(self, import_string: str = None, **kwargs):
         """Run the application using uvicorn.

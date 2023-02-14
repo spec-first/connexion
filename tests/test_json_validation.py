@@ -40,12 +40,14 @@ def test_validator_map(json_validation_spec_dir, spec):
     res = app_client.post(
         "/v1.0/minlength",
         data=json.dumps({"foo": "bar"}),
-        content_type="application/json",
+        headers={"content-type": "application/json"},
     )
     assert res.status_code == 200
 
     res = app_client.post(
-        "/v1.0/minlength", data=json.dumps({"foo": ""}), content_type="application/json"
+        "/v1.0/minlength",
+        data=json.dumps({"foo": ""}),
+        headers={"content-type": "application/json"},
     )
     assert res.status_code == 400
 
@@ -63,7 +65,7 @@ def test_readonly(json_validation_spec_dir, spec, app_class):
 
     res = app_client.get("/v1.0/user")
     assert res.status_code == 200
-    assert json.loads(res.text).get("user_id") == 7
+    assert res.json().get("user_id") == 7
 
     res = app_client.post(
         "/v1.0/user",
@@ -71,7 +73,7 @@ def test_readonly(json_validation_spec_dir, spec, app_class):
         headers=headers,
     )
     assert res.status_code == 200
-    assert json.loads(res.text).get("user_id") == 8
+    assert res.json().get("user_id") == 8
 
     res = app_client.post(
         "/v1.0/user",
@@ -96,18 +98,15 @@ def test_writeonly(json_validation_spec_dir, spec, app_class):
         headers={"content-type": "application/json"},
     )
     assert res.status_code == 200
-    assert "password" not in json.loads(res.text)
+    assert "password" not in res.json()
 
     res = app_client.get("/v1.0/user")
     assert res.status_code == 200
-    assert "password" not in json.loads(res.text)
+    assert "password" not in res.json()
 
     res = app_client.get("/v1.0/user_with_password")
     assert res.status_code == 500
-    assert (
-        json.loads(res.text)["title"]
-        == "Response body does not conform to specification"
-    )
+    assert res.json()["title"] == "Response body does not conform to specification"
 
 
 def test_nullable_default(json_validation_spec_dir, spec):
@@ -127,9 +126,9 @@ def test_multipart_form_json(json_validation_spec_dir, spec, app_class):
 
     res = app_client.post(
         "/v1.0/multipart_form_json",
+        files={"file": b""},  # Force multipart/form-data content-type
         data={"x": json.dumps({"name": "joe", "age": 20})},
-        headers={"content-type": "multipart/form-data"},
     )
     assert res.status_code == 200
-    assert json.loads(res.text)["name"] == "joe-reply"
-    assert json.loads(res.text)["age"] == 30
+    assert res.json()["name"] == "joe-reply"
+    assert res.json()["age"] == 30

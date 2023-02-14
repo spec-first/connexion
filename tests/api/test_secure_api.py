@@ -92,7 +92,7 @@ def test_security(oauth_requests, secure_endpoint_app):
     get_bye_no_auth = app_client.get("/v1.0/byesecure/jsantos")
     assert get_bye_no_auth.status_code == 401
     assert get_bye_no_auth.headers.get("content-type") == "application/problem+json"
-    get_bye_no_auth_reponse = json.loads(get_bye_no_auth.text)
+    get_bye_no_auth_reponse = get_bye_no_auth.json()
     assert get_bye_no_auth_reponse["detail"] == "No authorization token provided"
 
     headers = {"Authorization": "Bearer 100"}
@@ -104,7 +104,7 @@ def test_security(oauth_requests, secure_endpoint_app):
     get_bye_wrong_scope = app_client.get("/v1.0/byesecure/jsantos", headers=headers)
     assert get_bye_wrong_scope.status_code == 403
     assert get_bye_wrong_scope.headers.get("content-type") == "application/problem+json"
-    get_bye_wrong_scope_reponse = json.loads(get_bye_wrong_scope.text)
+    get_bye_wrong_scope_reponse = get_bye_wrong_scope.json()
     assert (
         get_bye_wrong_scope_reponse["detail"]
         == "Provided token doesn't have the required scope"
@@ -114,7 +114,7 @@ def test_security(oauth_requests, secure_endpoint_app):
     get_bye_bad_token = app_client.get("/v1.0/byesecure/jsantos", headers=headers)
     assert get_bye_bad_token.status_code == 401
     assert get_bye_bad_token.headers.get("content-type") == "application/problem+json"
-    get_bye_bad_token_reponse = json.loads(get_bye_bad_token.text)
+    get_bye_bad_token_reponse = get_bye_bad_token.json()
     assert get_bye_bad_token_reponse["detail"] == "Provided token is not valid"
 
     response = app_client.get("/v1.0/more-than-one-security-definition")

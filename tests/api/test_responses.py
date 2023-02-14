@@ -22,7 +22,7 @@ def test_app(simple_app):
     )
     assert post_greeting_url.status_code == 200
     assert post_greeting_url.headers.get("content-type") == "application/json"
-    greeting_response_url = json.loads(post_greeting_url.text)
+    greeting_response_url = post_greeting_url.json()
     assert (
         greeting_response_url["greeting"]
         == "Hello jsantos thanks for the/third/of/his/name"
@@ -31,7 +31,7 @@ def test_app(simple_app):
     post_greeting = app_client.post("/v1.0/greeting/jsantos", data={})
     assert post_greeting.status_code == 200
     assert post_greeting.headers.get("content-type") == "application/json"
-    greeting_response = json.loads(post_greeting.text)
+    greeting_response = post_greeting.json()
     assert greeting_response["greeting"] == "Hello jsantos"
 
     get_bye = app_client.get("/v1.0/bye/jsantos")
@@ -41,7 +41,7 @@ def test_app(simple_app):
     post_greeting = app_client.post("/v1.0/greeting/jsantos", data={})
     assert post_greeting.status_code == 200
     assert post_greeting.headers.get("content-type") == "application/json"
-    greeting_response = json.loads(post_greeting.text)
+    greeting_response = post_greeting.json()
     assert greeting_response["greeting"] == "Hello jsantos"
 
 
@@ -88,31 +88,31 @@ def test_returning_flask_response_tuple(simple_app):
     result = app_client.get("/v1.0/flask_response_tuple")
     assert result.status_code == 201, result.text
     assert result.headers.get("content-type") == "application/json"
-    result_data = json.loads(result.text)
+    result_data = result.json()
     assert result_data == {"foo": "bar"}
 
 
 def test_jsonifier(simple_app):
     app_client = simple_app.test_client()
 
-    post_greeting = app_client.post("/v1.0/greeting/jsantos", data={})
+    post_greeting = app_client.post("/v1.0/greeting/jsantos")
     assert post_greeting.status_code == 200
     assert post_greeting.headers.get("content-type") == "application/json"
-    greeting_reponse = json.loads(post_greeting.text)
+    greeting_reponse = post_greeting.json()
     assert greeting_reponse["greeting"] == "Hello jsantos"
 
-    get_list_greeting = app_client.get("/v1.0/list/jsantos", data={})
+    get_list_greeting = app_client.get("/v1.0/list/jsantos")
     assert get_list_greeting.status_code == 200
     assert get_list_greeting.headers.get("content-type") == "application/json"
-    greeting_reponse = json.loads(get_list_greeting.text)
+    greeting_reponse = get_list_greeting.json()
     assert len(greeting_reponse) == 2
     assert greeting_reponse[0] == "hello"
     assert greeting_reponse[1] == "jsantos"
 
-    get_greetings = app_client.get("/v1.0/greetings/jsantos", data={})
+    get_greetings = app_client.get("/v1.0/greetings/jsantos")
     assert get_greetings.status_code == 200
     assert get_greetings.headers.get("content-type") == "application/x.connexion+json"
-    greetings_reponse = json.loads(get_greetings.text)
+    greetings_reponse = get_greetings.json()
     assert len(greetings_reponse) == 1
     assert greetings_reponse["greetings"] == "Hello jsantos"
 
@@ -128,9 +128,9 @@ def test_not_content_response(simple_app):
 def test_pass_through(simple_app):
     app_client = simple_app.test_client()
 
-    response = app_client.get("/v1.0/multimime", data={})
+    response = app_client.get("/v1.0/multimime")
     assert response.status_code == 500
-    detail = json.loads(response.text)["detail"]
+    detail = response.json()["detail"]
     assert (
         detail == "Multiple response content types are defined in the "
         "operation spec, but the handler response did not specify "
@@ -151,7 +151,7 @@ def test_exploded_deep_object_param_endpoint_openapi_simple(simple_openapi_app):
 
     response = app_client.get("/v1.0/exploded-deep-object-param?id[foo]=bar")
     assert response.status_code == 200
-    response_data = json.loads(response.text)
+    response_data = response.json()
     assert response_data == {"foo": "bar", "foo4": "blubb"}
 
 
@@ -164,7 +164,7 @@ def test_exploded_deep_object_param_endpoint_openapi_multiple_data_types(
         "/v1.0/exploded-deep-object-param?id[foo]=bar&id[fooint]=2&id[fooboo]=false"
     )
     assert response.status_code == 200, response.text
-    response_data = json.loads(response.text)
+    response_data = response.json()
     assert response_data == {
         "foo": "bar",
         "fooint": 2,
@@ -182,7 +182,7 @@ def test_exploded_deep_object_param_endpoint_openapi_additional_properties(
         "/v1.0/exploded-deep-object-param-additional-properties?id[foo]=bar&id[fooint]=2"
     )
     assert response.status_code == 200
-    response_data = json.loads(response.text)
+    response_data = response.json()
     assert response_data == {"foo": "bar", "fooint": "2"}
 
 
@@ -204,7 +204,7 @@ def test_exploded_deep_object_param_endpoint_openapi_with_dots(simple_openapi_ap
         "/v1.0/exploded-deep-object-param-additional-properties?id[foo]=bar&id[foo.foo]=barbar"
     )
     assert response.status_code == 200
-    response_data = json.loads(response.text)
+    response_data = response.json()
     assert response_data == {"foo": "bar", "foo.foo": "barbar"}
 
 
@@ -215,7 +215,7 @@ def test_nested_exploded_deep_object_param_endpoint_openapi(simple_openapi_app):
         "/v1.0/nested-exploded-deep-object-param?id[foo][foo2]=bar&id[foofoo]=barbar"
     )
     assert response.status_code == 200
-    response_data = json.loads(response.text)
+    response_data = response.json()
     assert response_data == {
         "foo": {"foo2": "bar", "foo3": "blubb"},
         "foofoo": "barbar",
@@ -224,13 +224,15 @@ def test_nested_exploded_deep_object_param_endpoint_openapi(simple_openapi_app):
 
 def test_redirect_endpoint(simple_app):
     app_client = simple_app.test_client()
-    resp = app_client.get("/v1.0/test-redirect-endpoint")
+    resp = app_client.get("/v1.0/test-redirect-endpoint", follow_redirects=False)
     assert resp.status_code == 302
 
 
 def test_redirect_response_endpoint(simple_app):
     app_client = simple_app.test_client()
-    resp = app_client.get("/v1.0/test-redirect-response-endpoint")
+    resp = app_client.get(
+        "/v1.0/test-redirect-response-endpoint", follow_redirects=False
+    )
     assert resp.status_code == 302
 
 
@@ -238,12 +240,12 @@ def test_default_object_body(simple_app):
     app_client = simple_app.test_client()
     resp = app_client.post("/v1.0/test-default-object-body")
     assert resp.status_code == 200
-    response = json.loads(resp.text)
+    response = resp.json()
     assert response["stack"] == {"image_version": "default_image"}
 
     resp = app_client.post("/v1.0/test-default-integer-body")
     assert resp.status_code == 200
-    response = json.loads(resp.text)
+    response = resp.json()
     assert response == 1
 
 
@@ -255,7 +257,7 @@ def test_empty_object_body(simple_app):
         headers={"Content-Type": "application/json"},
     )
     assert resp.status_code == 200
-    response = json.loads(resp.text)
+    response = resp.json()
     assert response["stack"] == {}
 
 
@@ -267,7 +269,7 @@ def test_nested_additional_properties(simple_openapi_app):
         headers={"Content-Type": "application/json"},
     )
     assert resp.status_code == 200
-    response = json.loads(resp.text)
+    response = resp.json()
     assert response == {"nested": {"object": True}}
 
 
@@ -281,11 +283,11 @@ def test_custom_provider(simple_app):
 
     flask_app = simple_app.app
     flask_app.json = CustomProvider(flask_app)
-    app_client = flask_app.test_client()
+    app_client = simple_app.test_client()
 
     resp = app_client.get("/v1.0/custom-json-response")
     assert resp.status_code == 200
-    response = json.loads(resp.text)
+    response = resp.json()
     assert response["theResult"] == "cool result"
 
 
@@ -385,7 +387,7 @@ def test_get_unicode_response(simple_app):
     app_client = simple_app.test_client()
     resp = app_client.get("/v1.0/get_unicode_response")
     actualJson = {"currency": "\xa3", "key": "leena"}
-    assert json.loads(resp.text) == actualJson
+    assert resp.json() == actualJson
 
 
 def test_get_enum_response(simple_app):
@@ -428,7 +430,7 @@ def test_oneof(simple_openapi_app):
     )
     assert post_greeting.status_code == 200
     assert post_greeting.headers.get("content-type") == "application/json"
-    greeting_reponse = json.loads(post_greeting.text)
+    greeting_reponse = post_greeting.json()
     assert greeting_reponse["greeting"] == "Hello 3"
 
     post_greeting = app_client.post(
@@ -438,7 +440,7 @@ def test_oneof(simple_openapi_app):
     )
     assert post_greeting.status_code == 200
     assert post_greeting.headers.get("content-type") == "application/json"
-    greeting_reponse = json.loads(post_greeting.text)
+    greeting_reponse = post_greeting.json()
     assert greeting_reponse["greeting"] == "Hello True"
 
     post_greeting = app_client.post(

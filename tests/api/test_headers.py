@@ -27,7 +27,7 @@ def test_header_not_returned(simple_openapi_app):
         response.status_code == 500
     )  # view_func has not returned what was promised in spec
     assert response.headers.get("content-type") == "application/problem+json"
-    data = json.loads(response.text)
+    data = response.json()
     assert data["type"] == "about:blank"
     assert data["title"] == "Response headers do not conform to specification"
     assert (
