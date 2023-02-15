@@ -240,12 +240,16 @@ def test_redirect_response_endpoint(simple_app):
 
 def test_default_object_body(simple_app):
     app_client = simple_app.test_client()
-    resp = app_client.post("/v1.0/test-default-object-body")
+    resp = app_client.post(
+        "/v1.0/test-default-object-body", headers={"content-type": "application/json"}
+    )
     assert resp.status_code == 200
     response = resp.json()
     assert response["stack"] == {"image_version": "default_image"}
 
-    resp = app_client.post("/v1.0/test-default-integer-body")
+    resp = app_client.post(
+        "/v1.0/test-default-integer-body", headers={"content-type": "application/json"}
+    )
     assert resp.status_code == 200
     response = resp.json()
     assert response == 1

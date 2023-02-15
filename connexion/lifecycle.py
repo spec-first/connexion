@@ -70,7 +70,7 @@ class WSGIRequest(_RequestInterface):
 
     @property
     def content_type(self) -> str:
-        return self._werkzeug_request.content_type
+        return self._werkzeug_request.content_type or "application/octet-stream"
 
     @property
     def mimetype(self) -> str:
@@ -96,7 +96,7 @@ class WSGIRequest(_RequestInterface):
         return self._form
 
     def files(self):
-        return self._werkzeug_request.files
+        return self._werkzeug_request.files.to_dict(flat=False)
 
     def get_body(self):
         """Get body based on content type"""
