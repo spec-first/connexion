@@ -139,6 +139,4 @@ class RoutingMiddleware(SpecMiddleware):
 
         _scope.set(scope.copy())  # type: ignore
 
-        # Needs to be set so starlette router throws exceptions instead of returning error responses
-        scope["app"] = self
         await self.router(scope, receive, send)
