@@ -2,7 +2,10 @@ import json
 from struct import unpack
 
 import yaml
+from connexion import FlaskApp
 from connexion.frameworks.flask import FlaskJSONProvider
+
+from conftest import build_app_from_fixture
 
 
 def test_app(simple_app):
@@ -81,11 +84,10 @@ def test_produce_decorator(simple_app):
     assert get_bye.headers.get("content-type") == "text/plain; charset=utf-8"
 
 
-# TODO: make flask specific
-def test_returning_flask_response_tuple(simple_app):
+def test_returning_response_tuple(simple_app):
     app_client = simple_app.test_client()
 
-    result = app_client.get("/v1.0/flask_response_tuple")
+    result = app_client.get("/v1.0/response_tuple")
     assert result.status_code == 201, result.text
     assert result.headers.get("content-type") == "application/json"
     result_data = result.json()
@@ -273,17 +275,20 @@ def test_nested_additional_properties(simple_openapi_app):
     assert response == {"nested": {"object": True}}
 
 
-# TODO: make Flask specific
-def test_custom_provider(simple_app):
+def test_custom_provider(spec):
+    simple_flask_app = build_app_from_fixture(
+        "simple", app_class=FlaskApp, spec_file=spec, validate_responses=True
+    )
+
     class CustomProvider(FlaskJSONProvider):
         def default(self, o):
             if o.__class__.__name__ == "DummyClass":
                 return "cool result"
             return super().default(o)
 
-    flask_app = simple_app.app
+    flask_app = simple_flask_app.app
     flask_app.json = CustomProvider(flask_app)
-    app_client = simple_app.test_client()
+    app_client = simple_flask_app.test_client()
 
     resp = app_client.get("/v1.0/custom-json-response")
     assert resp.status_code == 200
@@ -411,7 +416,6 @@ def test_get_bad_default_response(simple_app):
     assert resp.status_code == 500
 
 
-# TODO: split per app
 def test_streaming_response(simple_app):
     app_client = simple_app.test_client()
     resp = app_client.get("/v1.0/get_streaming_response")
