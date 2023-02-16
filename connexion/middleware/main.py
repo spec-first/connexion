@@ -276,6 +276,13 @@ class ConnexionMiddleware:
         # Api registered on the inner application.
         return api
 
+    def add_error_handler(
+        self, code_or_exception: t.Union[int, t.Type[Exception]], function: t.Callable
+    ) -> None:
+        for app in self.apps:
+            if isinstance(app, ExceptionMiddleware):
+                app.add_exception_handler(code_or_exception, function)
+
     def run(self, import_string: str = None, **kwargs):
         """Run the application using uvicorn.
 

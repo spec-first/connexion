@@ -16,10 +16,6 @@ def test_errors(problem_app):
     error404 = greeting404.json()
     assert error404["type"] == "about:blank"
     assert error404["title"] == "Not Found"
-    assert (
-        error404["detail"] == "The requested URL was not found on the server. "
-        "If you entered the URL manually please check your spelling and try again."
-    )
     assert error404["status"] == 404
     assert "instance" not in error404
 

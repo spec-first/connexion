@@ -184,4 +184,4 @@ class AsyncApp(AbstractApp):
     def add_error_handler(
         self, code_or_exception: t.Union[int, t.Type[Exception]], function: t.Callable
     ) -> None:
-        """TODO: implement"""
+        self.middleware.add_error_handler(code_or_exception, function)

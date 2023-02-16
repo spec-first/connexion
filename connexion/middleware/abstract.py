@@ -272,7 +272,7 @@ class RoutedMiddleware(SpecMiddleware, t.Generic[API]):
                 operation = api.operations[operation_id]
             except KeyError as e:
                 if operation_id is None:
-                    logger.debug("Skipping validation check for operation without id.")
+                    logger.debug("Skipping operation without id.")
                     await self.app(scope, receive, send)
                     return
                 else:

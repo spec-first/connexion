@@ -222,7 +222,6 @@ class AbstractApp:
         :param function: Callable that will handle exception.
         """
 
-    @abc.abstractmethod
     def test_client(self, **kwargs):
         """Creates a test client for this application."""
         return TestClient(self, **kwargs)
