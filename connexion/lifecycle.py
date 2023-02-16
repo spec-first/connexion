@@ -3,59 +3,206 @@ This module defines interfaces for requests and responses used in Connexion for 
 validation, serialization, etc.
 """
 import typing as t
+from collections import defaultdict
 
-from flask import Request as FlaskRequest
 from multipart.multipart import parse_options_header
+from starlette.datastructures import UploadFile
 from starlette.requests import Request as StarletteRequest
-from starlette.responses import StreamingResponse as StarletteStreamingResponse
+from werkzeug import Request as WerkzeugRequest
 
 from connexion.http_facts import FORM_CONTENT_TYPES
 from connexion.utils import is_json_mimetype
 
 
-class ConnexionRequest:
-    def __init__(self, flask_request: FlaskRequest, uri_parser=None):
-        self._flask_request = flask_request
+class _RequestInterface:
+    @property
+    def context(self) -> t.Dict[str, t.Any]:
+        """The connexion context of the current request cycle."""
+        raise NotImplementedError
+
+    @property
+    def content_type(self) -> str:
+        raise NotImplementedError
+
+    @property
+    def mimetype(self) -> str:
+        raise NotImplementedError
+
+    @property
+    def path_params(self) -> t.Dict[str, t.Any]:
+        raise NotImplementedError
+
+    @property
+    def query_params(self) -> t.Dict[str, t.Any]:
+        raise NotImplementedError
+
+    def form(self) -> t.Union[t.Dict[str, t.Any], t.Awaitable[t.Dict[str, t.Any]]]:
+        raise NotImplementedError
+
+    def files(self) -> t.Dict[str, t.Any]:
+        raise NotImplementedError
+
+    def get_body(self) -> t.Any:
+        raise NotImplementedError
+
+
+class WSGIRequest(_RequestInterface):
+    def __init__(
+        self, werkzeug_request: WerkzeugRequest, uri_parser=None, view_args=None
+    ):
+        self._werkzeug_request = werkzeug_request
         self.uri_parser = uri_parser
+        self.view_args = view_args
+
         self._context = None
+        self._path_params = None
+        self._query_params = None
+        self._form = None
+        self._body = None
 
     @property
     def context(self):
         if self._context is None:
-            scope = self._flask_request.environ["asgi.scope"]
+            scope = self.environ["asgi.scope"]
             extensions = scope.setdefault("extensions", {})
             self._context = extensions.setdefault("connexion_context", {})
-
         return self._context
 
     @property
-    def path_params(self) -> t.Dict[str, t.Any]:
-        return self.uri_parser.resolve_path(self._flask_request.view_args)
+    def content_type(self) -> str:
+        return self._werkzeug_request.content_type
+
+    @property
+    def mimetype(self) -> str:
+        return self._werkzeug_request.mimetype
+
+    @property
+    def path_params(self):
+        if self._path_params is None:
+            self._path_params = self.uri_parser.resolve_path(self.view_args)
+        return self._path_params
 
     @property
     def query_params(self):
-        query_params = self._flask_request.args
-        query_params = {k: query_params.getlist(k) for k in query_params}
-        return self.uri_parser.resolve_query(query_params)
+        if self._query_params is None:
+            query_params = {k: self.args.getlist(k) for k in self.args}
+            self._query_params = self.uri_parser.resolve_query(query_params)
+        return self._query_params
 
-    @property
     def form(self):
-        form = self._flask_request.form.to_dict(flat=False)
-        form_data = self.uri_parser.resolve_form(form)
-        return form_data
+        if self._form is None:
+            form = self._werkzeug_request.form.to_dict(flat=False)
+            self._form = self.uri_parser.resolve_form(form)
+        return self._form
+
+    def files(self):
+        return self._werkzeug_request.files
 
     def get_body(self):
         """Get body based on content type"""
-        if is_json_mimetype(self.content_type):
-            return self.get_json(silent=True)
-        elif self.mimetype in FORM_CONTENT_TYPES:
-            return self.form
-        else:
-            # Return explicit None instead of empty bytestring so it is handled as null downstream
-            return self.get_data() or None
+        if self._body is None:
+            if is_json_mimetype(self.content_type):
+                self._body = self.get_json(silent=True)
+            elif self.mimetype in FORM_CONTENT_TYPES:
+                self._body = self.form()
+            else:
+                # Return explicit None instead of empty bytestring so it is handled as null downstream
+                self._body = self.get_data() or None
+        return self._body
 
     def __getattr__(self, item):
-        return getattr(self._flask_request, item)
+        return getattr(self._werkzeug_request, item)
+
+
+class ASGIRequest(_RequestInterface):
+    """Wraps starlette Request so it can easily be extended."""
+
+    def __init__(self, *args, uri_parser=None, **kwargs):
+        self._starlette_request = StarletteRequest(*args, **kwargs)
+        self.uri_parser = uri_parser
+
+        self._context = None
+        self._mimetype = None
+        self._path_params = None
+        self._query_params = None
+        self._form = None
+        self._files = None
+
+    @property
+    def context(self):
+        if self._context is None:
+            extensions = self.scope.setdefault("extensions", {})
+            self._context = extensions.setdefault("connexion_context", {})
+        return self._context
+
+    @property
+    def content_type(self):
+        return self.headers.get("content-type", "application/octet-stream")
+
+    @property
+    def mimetype(self):
+        if not self._mimetype:
+            mimetype, _ = parse_options_header(self.content_type)
+            self._mimetype = mimetype.decode()
+        return self._mimetype
+
+    @property
+    def path_params(self) -> t.Dict[str, t.Any]:
+        if self._path_params is None:
+            self._path_params = self.uri_parser.resolve_path(
+                self._starlette_request.path_params
+            )
+        return self._path_params
+
+    @property
+    def query_params(self):
+        if self._query_params is None:
+            args = self._starlette_request.query_params
+            query_params = {k: args.getlist(k) for k in args}
+            self._query_params = self.uri_parser.resolve_query(query_params)
+        return self._query_params
+
+    async def form(self):
+        if self._form is None:
+            await self._split_form_files()
+        return self._form
+
+    async def files(self):
+        if self._files is None:
+            await self._split_form_files()
+        return self._files
+
+    async def _split_form_files(self):
+        form_data = await self._starlette_request.form()
+
+        files = defaultdict(list)
+        form = defaultdict(list)
+        for k, v in form_data.multi_items():
+            if isinstance(v, UploadFile):
+                files[k].append(v)
+            else:
+                form[k].append(v)
+
+        self._files = files
+        self._form = self.uri_parser.resolve_form(form)
+
+    async def json(self):
+        try:
+            return await self._starlette_request.json()
+        except ValueError:
+            return None
+
+    async def get_body(self):
+        if is_json_mimetype(self.content_type):
+            return await self.json()
+        elif self.mimetype in FORM_CONTENT_TYPES:
+            return await self.form()
+        else:
+            # Return explicit None instead of empty bytestring so it is handled as null downstream
+            return await self.body() or None
+
+    def __getattr__(self, item):
+        return getattr(self._starlette_request, item)
 
 
 class ConnexionResponse:
@@ -77,49 +224,3 @@ class ConnexionResponse:
         self.headers = headers or {}
         self.headers.update({"Content-Type": content_type})
         self.is_streamed = is_streamed
-
-
-# TODO: not just used in middleware. Rename to something appropriate.
-class MiddlewareRequest(StarletteRequest):
-    """Wraps starlette Request so it can easily be extended."""
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._context = None
-        self._mimetype = None
-
-    @property
-    def context(self):
-        if self._context is None:
-            extensions = self.scope.setdefault("extensions", {})
-            self._context = extensions.setdefault("connexion_context", {})
-
-        return self._context
-
-    @property
-    def content_type(self):
-        return self.headers.get("content-type", "application/octet-stream")
-
-    @property
-    def mimetype(self):
-        if not self._mimetype:
-            self._mimetype = parse_options_header(self.content_type)
-        return self._mimetype
-
-    @property
-    def files(self):
-        # TODO: separate files?
-        return {}
-
-    async def get_body(self):
-        if is_json_mimetype(self.content_type):
-            return await self.json()
-        elif self.mimetype in FORM_CONTENT_TYPES:
-            return await self.form()
-        else:
-            # Return explicit None instead of empty bytestring so it is handled as null downstream
-            return await self.data() or None
-
-
-class MiddlewareResponse(StarletteStreamingResponse):
-    """Wraps starlette StreamingResponse so it can easily be extended."""
