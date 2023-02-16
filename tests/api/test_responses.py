@@ -259,8 +259,7 @@ def test_empty_object_body(simple_app):
     app_client = simple_app.test_client()
     resp = app_client.post(
         "/v1.0/test-empty-object-body",
-        data=json.dumps({}),
-        headers={"Content-Type": "application/json"},
+        json={},
     )
     assert resp.status_code == 200
     response = resp.json()
@@ -271,7 +270,7 @@ def test_nested_additional_properties(simple_openapi_app):
     app_client = simple_openapi_app.test_client()
     resp = app_client.post(
         "/v1.0/test-nested-additional-properties",
-        data=json.dumps({"nested": {"object": True}}),
+        json={"nested": {"object": True}},
         headers={"Content-Type": "application/json"},
     )
     assert resp.status_code == 200
@@ -356,7 +355,7 @@ def test_bad_operations(bad_operations_app):
 def test_text_request(simple_app):
     app_client = simple_app.test_client()
 
-    resp = app_client.post("/v1.0/text-request", data="text")
+    resp = app_client.post("/v1.0/text-request", content="text")
     assert resp.status_code == 200
 
 
@@ -371,21 +370,21 @@ def test_post_wrong_content_type(simple_app):
     resp = app_client.post(
         "/v1.0/post_wrong_content_type",
         headers={"content-type": "application/xml"},
-        data=json.dumps({"some": "data"}),
+        json={"some": "data"},
     )
     assert resp.status_code == 415
 
     resp = app_client.post(
         "/v1.0/post_wrong_content_type",
         headers={"content-type": "application/x-www-form-urlencoded"},
-        data="a=1&b=2",
+        content="a=1&b=2",
     )
     assert resp.status_code == 415
 
     resp = app_client.post(
         "/v1.0/post_wrong_content_type",
         headers={"content-type": "application/json"},
-        data="not a valid json",
+        content="not a valid json",
     )
     assert (
         resp.status_code == 400
@@ -429,12 +428,9 @@ def test_streaming_response(simple_app):
 def test_oneof(simple_openapi_app):
     app_client = simple_openapi_app.test_client()
 
-    headers = {"Content-type": "application/json"}
-
     post_greeting = app_client.post(
         "/v1.0/oneof_greeting",
-        data=json.dumps({"name": 3}),
-        headers=headers,
+        json={"name": 3},
     )
     assert post_greeting.status_code == 200
     assert post_greeting.headers.get("content-type") == "application/json"
@@ -443,8 +439,7 @@ def test_oneof(simple_openapi_app):
 
     post_greeting = app_client.post(
         "/v1.0/oneof_greeting",
-        data=json.dumps({"name": True}),
-        headers=headers,
+        json={"name": True},
     )
     assert post_greeting.status_code == 200
     assert post_greeting.headers.get("content-type") == "application/json"
@@ -453,7 +448,6 @@ def test_oneof(simple_openapi_app):
 
     post_greeting = app_client.post(
         "/v1.0/oneof_greeting",
-        data=json.dumps({"name": "jsantos"}),
-        headers=headers,
+        json={"name": "jsantos"},
     )
     assert post_greeting.status_code == 400

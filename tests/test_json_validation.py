@@ -39,15 +39,13 @@ def test_validator_map(json_validation_spec_dir, spec):
 
     res = app_client.post(
         "/v1.0/minlength",
-        data=json.dumps({"foo": "bar"}),
-        headers={"content-type": "application/json"},
+        json={"foo": "bar"},
     )
     assert res.status_code == 200
 
     res = app_client.post(
         "/v1.0/minlength",
-        data=json.dumps({"foo": ""}),
-        headers={"content-type": "application/json"},
+        json={"foo": ""},
     )
     assert res.status_code == 400
 
@@ -69,16 +67,14 @@ def test_readonly(json_validation_spec_dir, spec, app_class):
 
     res = app_client.post(
         "/v1.0/user",
-        data=json.dumps({"name": "max", "password": "1234"}),
-        headers=headers,
+        json={"name": "max", "password": "1234"},
     )
     assert res.status_code == 200
     assert res.json().get("user_id") == 8
 
     res = app_client.post(
         "/v1.0/user",
-        data=json.dumps({"user_id": 9, "name": "max"}),
-        headers=headers,
+        json={"user_id": 9, "name": "max"},
     )
     assert res.status_code == 400
 
@@ -94,8 +90,7 @@ def test_writeonly(json_validation_spec_dir, spec, app_class):
 
     res = app_client.post(
         "/v1.0/user",
-        data=json.dumps({"name": "max", "password": "1234"}),
-        headers={"content-type": "application/json"},
+        json={"name": "max", "password": "1234"},
     )
     assert res.status_code == 200
     assert "password" not in res.json()

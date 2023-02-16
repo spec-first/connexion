@@ -89,12 +89,12 @@ def test_array_form_param(simple_app):
     assert array_response == [1, 2, 3]
     url = "/v1.0/test_array_csv_form_param"
     data = "items=A&items=B&items=C&items=D,E,F"
-    response = app_client.post(url, headers=headers, data=data)
+    response = app_client.post(url, headers=headers, content=data)
     array_response: List[str] = response.json()  # multi array with csv format
     assert array_response == ["D", "E", "F"]
     url = "/v1.0/test_array_pipes_form_param"
     data = "items=4&items=5&items=6&items=7|8|9"
-    response = app_client.post(url, headers=headers, data=data)
+    response = app_client.post(url, headers=headers, content=data)
     array_response: List[int] = response.json()  # multi array with pipes format
     assert array_response == [7, 8, 9]
 
@@ -290,8 +290,7 @@ def test_body_not_allowed_additional_properties(simple_app):
     body = {"body1": "bodyString", "additional_property": "test1"}
     resp = app_client.post(
         "/v1.0/body-not-allowed-additional-properties",
-        data=json.dumps(body),
-        headers={"Content-Type": "application/json"},
+        json=body,
     )
     assert resp.status_code == 400
 
@@ -395,14 +394,14 @@ def test_nullable_parameter(simple_app):
     assert resp.json() == "it was None"
 
     headers = {"Content-Type": "application/json"}
-    resp = app_client.put("/v1.0/nullable-parameters", data="null", headers=headers)
+    resp = app_client.put("/v1.0/nullable-parameters", content="null", headers=headers)
     assert resp.json() == "it was None"
 
-    resp = app_client.put("/v1.0/nullable-parameters", data="None", headers=headers)
+    resp = app_client.put("/v1.0/nullable-parameters", content="None", headers=headers)
     assert resp.json() == "it was None"
 
     resp = app_client.put(
-        "/v1.0/nullable-parameters-noargs", data="None", headers=headers
+        "/v1.0/nullable-parameters-noargs", content="None", headers=headers
     )
     assert resp.json() == "hello"
 
@@ -421,8 +420,7 @@ def test_args_kwargs(simple_app):
         body = {"foo": "a", "bar": "b"}
         resp = app_client.post(
             "/v1.0/body-params-as-kwargs",
-            data=json.dumps(body),
-            headers={"Content-Type": "application/json"},
+            json=body,
         )
         assert resp.status_code == 200
         # having only kwargs, the handler would have been passed 'body'
@@ -449,7 +447,7 @@ def test_param_sanitization(simple_app):
     body = {"body1": "bodyString", "body2": "otherString"}
     resp = app_client.post(
         "/v1.0/body-sanitization",
-        data=json.dumps(body),
+        json=body,
         headers={"Content-Type": "application/json"},
     )
     assert resp.status_code == 200
@@ -458,7 +456,7 @@ def test_param_sanitization(simple_app):
     body = {"body1": "bodyString", "body2": 12, "body3": {"a": "otherString"}}
     resp = app_client.post(
         "/v1.0/body-sanitization-additional-properties",
-        data=json.dumps(body),
+        json=body,
         headers={"Content-Type": "application/json"},
     )
     assert resp.status_code == 200
@@ -471,7 +469,7 @@ def test_param_sanitization(simple_app):
     }
     resp = app_client.post(
         "/v1.0/body-sanitization-additional-properties-defined",
-        data=json.dumps(body),
+        json=body,
         headers={"Content-Type": "application/json"},
     )
     assert resp.status_code == 200
@@ -501,25 +499,25 @@ def test_parameters_snake_case(snake_case_app):
     resp = app_client.post(
         "/v1.0/test-post-path-snake/123",
         headers=headers,
-        data=json.dumps({"a": "test"}),
+        json={"a": "test"},
     )
     assert resp.status_code == 200
     resp = app_client.post(
         "/v1.0/test-post-path-shadow/123",
         headers=headers,
-        data=json.dumps({"a": "test"}),
+        json={"a": "test"},
     )
     assert resp.status_code == 200
     resp = app_client.post(
         "/v1.0/test-post-query-snake?someId=123",
         headers=headers,
-        data=json.dumps({"a": "test"}),
+        json={"a": "test"},
     )
     assert resp.status_code == 200
     resp = app_client.post(
         "/v1.0/test-post-query-shadow?id=123&class=header",
         headers=headers,
-        data=json.dumps({"a": "test"}),
+        json={"a": "test"},
     )
     assert resp.status_code == 200
     resp = app_client.get("/v1.0/test-get-path-snake/123")

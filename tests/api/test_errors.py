@@ -82,7 +82,7 @@ def test_errors(problem_app):
 
     unsupported_media_type = app_client.post(
         "/v1.0/post_wrong_content_type",
-        data="<html></html>",
+        content="<html></html>",
         headers={"content-type": "text/html"},
     )
     assert unsupported_media_type.status_code == 415
