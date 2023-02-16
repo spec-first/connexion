@@ -18,8 +18,6 @@ from .resolver import Resolution, Resolver, RestyResolver  # NOQA
 from .utils import not_installed_error  # NOQA
 
 try:
-    from flask import request  # NOQA
-
     from connexion.apps.flask import FlaskApi, FlaskApp
 except ImportError as e:  # pragma: no cover
     _flask_not_installed_error = not_installed_error(e)
@@ -27,6 +25,7 @@ except ImportError as e:  # pragma: no cover
     FlaskApp = _flask_not_installed_error  # type: ignore
 
 from connexion.apps.asynchronous import AsyncApi, AsyncApp
+from connexion.context import request
 from connexion.middleware import ConnexionMiddleware
 
 App = FlaskApp

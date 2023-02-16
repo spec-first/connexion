@@ -1,5 +1,6 @@
+from connexion import FlaskApp
 from connexion.operations import OpenAPIOperation
-from connexion.resolver import MethodViewResolver, Resolver
+from connexion.resolver import MethodResolver, MethodViewResolver, Resolver
 
 from conftest import build_app_from_fixture
 
@@ -190,10 +191,10 @@ def test_methodview_resolve_with_default_module_name_will_resolve_resource_root_
     assert operation.operation_id == "fakeapi.PetsView.post"
 
 
-def test_method_view_resolver_integration(spec, app_class, method_view_resolver):
+def test_method_view_resolver_integration(spec):
     method_view_app = build_app_from_fixture(
         "method_view",
-        app_class=app_class,
+        app_class=FlaskApp,
         spec_file=spec,
         resolver=MethodViewResolver("fakeapi.example_method_view"),
     )
@@ -202,6 +203,29 @@ def test_method_view_resolver_integration(spec, app_class, method_view_resolver)
 
     r = client.get("/v1.0/pets")
     assert r.json() == [{"name": "get"}]
+
+    r = client.get("/v1.0/pets/1")
+    assert r.json() == {"name": "get", "petId": 1}
+
+    r = client.post("/v1.0/pets", json={"name": "Musti"})
+    assert r.json() == {"name": "post", "body": {"name": "Musti"}}
+
+    r = client.put("/v1.0/pets/1", json={"name": "Igor"})
+    assert r.json() == {"name": "put", "petId": 1, "body": {"name": "Igor"}}
+
+
+def test_method_resolver_integration(spec, app_class):
+    method_view_app = build_app_from_fixture(
+        "method_view",
+        app_class=app_class,
+        spec_file=spec,
+        resolver=MethodResolver("fakeapi.example_method_class"),
+    )
+
+    client = method_view_app.test_client()
+
+    r = client.get("/v1.0/pets")
+    assert r.json() == [{"name": "search"}]
 
     r = client.get("/v1.0/pets/1")
     assert r.json() == {"name": "get", "petId": 1}

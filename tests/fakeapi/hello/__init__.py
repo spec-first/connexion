@@ -1,10 +1,10 @@
-#!/usr/bin/env python3
 import datetime
 import uuid
 
 from connexion import NoContent, ProblemException, context, request
 from connexion.exceptions import OAuthProblem
 from flask import jsonify, redirect, send_file
+from starlette.responses import FileResponse
 
 
 class DummyClass:
@@ -75,8 +75,8 @@ def get_bye(name):
     return f"Goodbye {name}"
 
 
-def get_flask_response_tuple():
-    return jsonify({"foo": "bar"}), 201
+def get_response_tuple():
+    return {"foo": "bar"}, 201
 
 
 def get_bye_secure(name, user, token_info):
@@ -652,7 +652,11 @@ def nullable_default(test):
 
 
 def get_streaming_response():
-    return send_file(__file__)
+    try:
+        return send_file(__file__)
+    except RuntimeError:
+        # Not in Flask context
+        return FileResponse(__file__)
 
 
 async def async_route():
