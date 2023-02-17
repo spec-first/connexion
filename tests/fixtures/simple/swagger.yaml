@@ -394,6 +394,23 @@ paths:
         200:
           description: OK
 
+  /test-float-path/{somefloat}/{someotherfloat}:
+    get:
+      summary: Test type casting of path parameter
+      operationId: fakeapi.hello.test_get_doublefloat
+      parameters:
+        - name: somefloat
+          in: path
+          type: number
+          required: true
+        - name: someotherfloat
+          in: path
+          type: number
+          required: true
+      responses:
+        200:
+          description: O
+
   /test-default-query-parameter:
     get:
       summary: Test if default parameter is passed to function

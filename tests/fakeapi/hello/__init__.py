@@ -280,6 +280,10 @@ def test_get_somefloat(somefloat):
     return f"{type(somefloat).__name__} {somefloat:g}"
 
 
+def test_get_doublefloat(somefloat, someotherfloat):
+    return f"{type(somefloat).__name__} {somefloat:g}, {someotherfloat}"
+
+
 def test_default_param(name):
     return {"app_name": name}
 
