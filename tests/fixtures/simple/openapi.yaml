@@ -88,11 +88,11 @@ paths:
           required: true
           schema:
             type: string
-  /flask_response_tuple:
+  /response_tuple:
     get:
-      summary: Return flask response tuple
-      description: Test returning a flask response tuple
-      operationId: fakeapi.hello.get_flask_response_tuple
+      summary: Return response tuple
+      description: Test returning a response tuple
+      operationId: fakeapi.hello.get_response_tuple
       responses:
         '200':
           description: json response

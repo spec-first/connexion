@@ -54,7 +54,7 @@ Jinja2 = "^3.0.0"
 python-multipart = "~0.0.5"
 PyYAML = ">= 5.1, < 7"
 requests = "^2.27"
-starlette = "^0.19"
+starlette = "^0.22"
 typing-extensions = "^4"
 werkzeug = "^2.2.1"
 

@@ -2,7 +2,7 @@ import logging
 import pathlib
 
 import pytest
-from connexion import App
+from connexion import AsyncApp, FlaskApp
 from connexion.resolver import MethodResolver, MethodViewResolver
 
 logging.basicConfig(level=logging.INFO)
@@ -14,6 +14,8 @@ OPENAPI2_SPEC = "swagger.yaml"
 OPENAPI3_SPEC = "openapi.yaml"
 SPECS = [OPENAPI2_SPEC, OPENAPI3_SPEC]
 METHOD_VIEW_RESOLVERS = [MethodResolver, MethodViewResolver]
+APP_CLASSES = [FlaskApp, AsyncApp]
+# APP_CLASSES = [FlaskApp]
 
 
 @pytest.fixture
@@ -56,10 +58,15 @@ def method_view_resolver(request):
     return request.param
 
 
+@pytest.fixture(scope="session", params=APP_CLASSES)
+def app_class(request):
+    return request.param
+
+
 def build_app_from_fixture(
-    api_spec_folder, spec_file="openapi.yaml", middlewares=None, **kwargs
+    api_spec_folder, *, app_class, spec_file, middlewares=None, **kwargs
 ):
-    cnx_app = App(
+    cnx_app = app_class(
         __name__,
         specification_dir=FIXTURES_FOLDER / api_spec_folder,
         middlewares=middlewares,

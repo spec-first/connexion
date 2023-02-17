@@ -5,7 +5,6 @@ This module defines a FlaskApp, a Connexion application to wrap a Flask applicat
 import pathlib
 import typing as t
 
-import a2wsgi
 import flask
 import werkzeug.exceptions
 from flask import Response as FlaskResponse
@@ -250,7 +249,3 @@ class FlaskApp(AbstractApp):
         self, code_or_exception: t.Union[int, t.Type[Exception]], function: t.Callable
     ) -> None:
         self.app.register_error_handler(code_or_exception, function)
-
-    def test_client(self, **kwargs):
-        self.app.wsgi_app = a2wsgi.ASGIMiddleware(self.middleware)
-        return self.app.test_client(**kwargs)

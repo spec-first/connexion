@@ -18,7 +18,7 @@ from connexion.context import context, operation
 from connexion.frameworks.flask import Flask as FlaskFramework
 from connexion.frameworks.starlette import Starlette as StarletteFramework
 from connexion.http_facts import FORM_CONTENT_TYPES
-from connexion.lifecycle import ConnexionRequest, MiddlewareRequest
+from connexion.lifecycle import ASGIRequest, WSGIRequest
 from connexion.operations import AbstractOperation, Swagger2Operation
 from connexion.utils import deep_merge, is_null, is_nullable, make_type
 
@@ -37,7 +37,7 @@ class BaseParameterDecorator:
 
     def _maybe_get_body(
         self,
-        request: t.Union[ConnexionRequest, MiddlewareRequest],
+        request: t.Union[WSGIRequest, ASGIRequest],
         *,
         arguments: t.List[str],
         has_kwargs: bool,
@@ -67,7 +67,7 @@ class SyncParameterDecorator(BaseParameterDecorator):
         arguments, has_kwargs = inspect_function_arguments(unwrapped_function)
 
         @functools.wraps(function)
-        def wrapper(request: ConnexionRequest) -> t.Any:
+        def wrapper(request: WSGIRequest) -> t.Any:
             request_body = self._maybe_get_body(
                 request, arguments=arguments, has_kwargs=has_kwargs
             )
@@ -75,6 +75,7 @@ class SyncParameterDecorator(BaseParameterDecorator):
             kwargs = prep_kwargs(
                 request,
                 request_body=request_body,
+                files=request.files(),
                 arguments=arguments,
                 has_kwargs=has_kwargs,
                 sanitize=self.sanitize_fn,
@@ -94,7 +95,7 @@ class AsyncParameterDecorator(BaseParameterDecorator):
         arguments, has_kwargs = inspect_function_arguments(unwrapped_function)
 
         @functools.wraps(function)
-        async def wrapper(request: MiddlewareRequest) -> t.Any:
+        async def wrapper(request: ASGIRequest) -> t.Any:
             request_body = self._maybe_get_body(
                 request, arguments=arguments, has_kwargs=has_kwargs
             )
@@ -105,6 +106,7 @@ class AsyncParameterDecorator(BaseParameterDecorator):
             kwargs = prep_kwargs(
                 request,
                 request_body=request_body,
+                files=await request.files(),
                 arguments=arguments,
                 has_kwargs=has_kwargs,
                 sanitize=self.sanitize_fn,
@@ -116,9 +118,10 @@ class AsyncParameterDecorator(BaseParameterDecorator):
 
 
 def prep_kwargs(
-    request: t.Union[ConnexionRequest, MiddlewareRequest],
+    request: t.Union[WSGIRequest, ASGIRequest],
     *,
     request_body: t.Any,
+    files: t.Dict[str, t.Any],
     arguments: t.List[str],
     has_kwargs: bool,
     sanitize: t.Callable,
@@ -128,7 +131,7 @@ def prep_kwargs(
         path_params=request.path_params,
         query_params=request.query_params,
         body=request_body,
-        files=request.files,
+        files=files,
         arguments=arguments,
         has_kwargs=has_kwargs,
         sanitize=sanitize,

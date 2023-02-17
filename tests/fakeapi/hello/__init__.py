@@ -1,10 +1,12 @@
-#!/usr/bin/env python3
+import asyncio
 import datetime
 import uuid
 
+import flask
 from connexion import NoContent, ProblemException, context, request
 from connexion.exceptions import OAuthProblem
-from flask import jsonify, redirect, send_file
+from flask import redirect, send_file
+from starlette.responses import FileResponse, RedirectResponse
 
 
 class DummyClass:
@@ -75,8 +77,8 @@ def get_bye(name):
     return f"Goodbye {name}"
 
 
-def get_flask_response_tuple():
-    return jsonify({"foo": "bar"}), 201
+def get_response_tuple():
+    return {"foo": "bar"}, 201
 
 
 def get_bye_secure(name, user, token_info):
@@ -314,10 +316,16 @@ def test_formdata_missing_param():
     return ""
 
 
-def test_formdata_file_upload(fileData, **kwargs):
+async def test_formdata_file_upload(fileData, **kwargs):
     """In Swagger, form paramaeters and files are passed separately"""
-    filename = fileData.filename
-    contents = fileData.read()
+    file_ = fileData[0]
+    try:
+        filename = file_.filename
+    except AttributeError:
+        filename = file_.name
+    contents = file_.read()
+    if asyncio.iscoroutine(contents):
+        contents = await contents
     contents = contents.decode("utf-8", "replace")
     return {filename: contents}
 
@@ -362,7 +370,11 @@ def test_redirect_endpoint():
 
 
 def test_redirect_response_endpoint():
-    return redirect("http://www.google.com/")
+    url = "http://www.google.com/"
+    if flask.has_app_context():
+        return redirect(url)
+    else:
+        return RedirectResponse(url, status_code=302)
 
 
 def test_204_with_headers():
@@ -652,7 +664,11 @@ def nullable_default(test):
 
 
 def get_streaming_response():
-    return send_file(__file__)
+    try:
+        return send_file(__file__)
+    except RuntimeError:
+        # Not in Flask context
+        return FileResponse(__file__)
 
 
 async def async_route():

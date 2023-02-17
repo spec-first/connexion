@@ -8,15 +8,14 @@ from starlette.responses import Response as StarletteResponse
 from starlette.types import Receive, Scope
 
 from connexion.frameworks.abstract import Framework
-from connexion.lifecycle import MiddlewareRequest, MiddlewareResponse
+from connexion.lifecycle import ASGIRequest
+from connexion.uri_parsing import AbstractURIParser
 
 
 class Starlette(Framework):
     @staticmethod
     def is_framework_response(response: t.Any) -> bool:
-        return isinstance(response, StarletteResponse) and not isinstance(
-            response, MiddlewareResponse
-        )
+        return isinstance(response, StarletteResponse)
 
     @classmethod
     def connexion_to_framework_response(cls, response):
@@ -49,8 +48,8 @@ class Starlette(Framework):
         )
 
     @staticmethod
-    def get_request(*, scope: Scope, receive: Receive, **kwargs) -> MiddlewareRequest:  # type: ignore
-        return MiddlewareRequest(scope, receive)
+    def get_request(*, scope: Scope, receive: Receive, uri_parser: AbstractURIParser, **kwargs) -> ASGIRequest:  # type: ignore
+        return ASGIRequest(scope, receive, uri_parser=uri_parser)
 
 
 PATH_PARAMETER = re.compile(r"\{([^}]*)\}")

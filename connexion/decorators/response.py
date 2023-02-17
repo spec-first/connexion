@@ -10,7 +10,7 @@ from connexion.context import operation
 from connexion.datastructures import NoContent
 from connexion.exceptions import NonConformingResponseHeaders
 from connexion.frameworks.abstract import Framework
-from connexion.lifecycle import ConnexionResponse, MiddlewareResponse
+from connexion.lifecycle import ConnexionResponse
 from connexion.utils import is_json_mimetype
 
 logger = logging.getLogger(__name__)
@@ -160,7 +160,7 @@ class SyncResponseDecorator(BaseResponseDecorator):
             handler_response = function(*args, **kwargs)
             if self.framework.is_framework_response(handler_response):
                 return handler_response
-            elif isinstance(handler_response, (ConnexionResponse, MiddlewareResponse)):
+            elif isinstance(handler_response, ConnexionResponse):
                 return self.framework.connexion_to_framework_response(handler_response)
             else:
                 return self.build_framework_response(handler_response)
@@ -180,7 +180,7 @@ class AsyncResponseDecorator(BaseResponseDecorator):
             handler_response = await function(*args, **kwargs)
             if self.framework.is_framework_response(handler_response):
                 return handler_response
-            elif isinstance(handler_response, (ConnexionResponse, MiddlewareResponse)):
+            elif isinstance(handler_response, ConnexionResponse):
                 return self.framework.connexion_to_framework_response(handler_response)
             else:
                 return self.build_framework_response(handler_response)

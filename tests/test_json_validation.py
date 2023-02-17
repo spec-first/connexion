@@ -39,67 +39,69 @@ def test_validator_map(json_validation_spec_dir, spec):
 
     res = app_client.post(
         "/v1.0/minlength",
-        data=json.dumps({"foo": "bar"}),
-        content_type="application/json",
-    )  # type: flask.Response
+        json={"foo": "bar"},
+    )
     assert res.status_code == 200
 
     res = app_client.post(
-        "/v1.0/minlength", data=json.dumps({"foo": ""}), content_type="application/json"
-    )  # type: flask.Response
+        "/v1.0/minlength",
+        json={"foo": ""},
+    )
     assert res.status_code == 400
 
 
-def test_readonly(json_validation_spec_dir, spec):
+def test_readonly(json_validation_spec_dir, spec, app_class):
     app = build_app_from_fixture(
-        json_validation_spec_dir, spec, validate_responses=True
+        json_validation_spec_dir,
+        app_class=app_class,
+        spec_file=spec,
+        validate_responses=True,
     )
     app_client = app.test_client()
 
-    res = app_client.get("/v1.0/user")  # type: flask.Response
+    headers = {"content-type": "application/json"}
+
+    res = app_client.get("/v1.0/user")
     assert res.status_code == 200
-    assert json.loads(res.data.decode()).get("user_id") == 7
+    assert res.json().get("user_id") == 7
 
     res = app_client.post(
         "/v1.0/user",
-        data=json.dumps({"name": "max", "password": "1234"}),
-        content_type="application/json",
-    )  # type: flask.Response
+        json={"name": "max", "password": "1234"},
+    )
     assert res.status_code == 200
-    assert json.loads(res.data.decode()).get("user_id") == 8
+    assert res.json().get("user_id") == 8
 
     res = app_client.post(
         "/v1.0/user",
-        data=json.dumps({"user_id": 9, "name": "max"}),
-        content_type="application/json",
-    )  # type: flask.Response
+        json={"user_id": 9, "name": "max"},
+    )
     assert res.status_code == 400
 
 
-def test_writeonly(json_validation_spec_dir, spec):
+def test_writeonly(json_validation_spec_dir, spec, app_class):
     app = build_app_from_fixture(
-        json_validation_spec_dir, spec, validate_responses=True
+        json_validation_spec_dir,
+        app_class=app_class,
+        spec_file=spec,
+        validate_responses=True,
     )
     app_client = app.test_client()
 
     res = app_client.post(
         "/v1.0/user",
-        data=json.dumps({"name": "max", "password": "1234"}),
-        content_type="application/json",
-    )  # type: flask.Response
+        json={"name": "max", "password": "1234"},
+    )
     assert res.status_code == 200
-    assert "password" not in json.loads(res.data.decode())
+    assert "password" not in res.json()
 
-    res = app_client.get("/v1.0/user")  # type: flask.Response
+    res = app_client.get("/v1.0/user")
     assert res.status_code == 200
-    assert "password" not in json.loads(res.data.decode())
+    assert "password" not in res.json()
 
-    res = app_client.get("/v1.0/user_with_password")  # type: flask.Response
+    res = app_client.get("/v1.0/user_with_password")
     assert res.status_code == 500
-    assert (
-        json.loads(res.data.decode())["title"]
-        == "Response body does not conform to specification"
-    )
+    assert res.json()["title"] == "Response body does not conform to specification"
 
 
 def test_nullable_default(json_validation_spec_dir, spec):
@@ -108,17 +110,20 @@ def test_nullable_default(json_validation_spec_dir, spec):
 
 
 @pytest.mark.parametrize("spec", ["openapi.yaml"])
-def test_multipart_form_json(json_validation_spec_dir, spec):
+def test_multipart_form_json(json_validation_spec_dir, spec, app_class):
     app = build_app_from_fixture(
-        json_validation_spec_dir, spec, validate_responses=True
+        json_validation_spec_dir,
+        app_class=app_class,
+        spec_file=spec,
+        validate_responses=True,
     )
     app_client = app.test_client()
 
     res = app_client.post(
         "/v1.0/multipart_form_json",
+        files={"file": b""},  # Force multipart/form-data content-type
         data={"x": json.dumps({"name": "joe", "age": 20})},
-        content_type="multipart/form-data",
     )
     assert res.status_code == 200
-    assert json.loads(res.data.decode())["name"] == "joe-reply"
-    assert json.loads(res.data.decode())["age"] == 30
+    assert res.json()["name"] == "joe-reply"
+    assert res.json()["age"] == 30
