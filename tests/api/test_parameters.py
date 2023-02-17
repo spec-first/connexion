@@ -175,6 +175,16 @@ def test_path_parameter_somefloat(simple_app, arg, result):
     assert resp.data.decode('utf-8', 'replace') == f'"{result}"\n'
 
 
+@pytest.mark.parametrize('arg, arg2, result', [
+    ['-0.000000001', '0.3', 'float -1e-09, 0.3'],
+])
+def test_path_parameter_doublefloat(simple_app, arg, arg2, result):
+    assert isinstance(arg, str)  # sanity check
+    app_client = simple_app.app.test_client()
+    resp = app_client.get(f'/v1.0/test-float-path/{arg}/{arg2}')  # type: flask.Response
+    assert resp.data.decode('utf-8', 'replace') == f'"{result}"\n'
+
+
 def test_path_parameter_somefloat__bad(simple_app):
     # non-float values will not match Flask route
     app_client = simple_app.app.test_client()
