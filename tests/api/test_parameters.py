@@ -266,6 +266,39 @@ def test_formdata_file_upload(simple_app):
     assert resp.json() == {"filename.txt": "file contents"}
 
 
+def test_formdata_multiple_file_upload(simple_app):
+    app_client = simple_app.test_client()
+    resp = app_client.post(
+        "/v1.0/test-formData-file-upload",
+        files=[
+            ("fileData", ("filename.txt", BytesIO(b"file contents"))),
+            ("fileData", ("filename2.txt", BytesIO(b"file2 contents"))),
+        ],
+    )
+    assert resp.status_code == 200
+    assert resp.json() == {
+        "filename.txt": "file contents",
+        "filename2.txt": "file2 contents",
+    }
+
+
+def test_mixed_formdata(simple_app):
+    app_client = simple_app.test_client()
+    resp = app_client.post(
+        "/v1.0/test-mixed-formData",
+        data={"formData": "test"},
+        files={"fileData": ("filename.txt", BytesIO(b"file contents"))},
+    )
+
+    assert resp.status_code == 200
+    assert resp.json() == {
+        "data": {"formData": "test"},
+        "files": {
+            "filename.txt": "file contents",
+        },
+    }
+
+
 def test_formdata_file_upload_bad_request(simple_app):
     app_client = simple_app.test_client()
     resp = app_client.post("/v1.0/test-formData-file-upload")
