@@ -96,6 +96,15 @@ to ``tornado`` or ``gevent``:
     app = connexion.FlaskApp(__name__, port = 8080, specification_dir='openapi/', server='tornado')
 
 
+Additoinally you can pass the parameters for the corresponding server as a dictionary using the `server_args` parameter. Hence in scenarios like serving static content, you can pass the parameters as given here:
+
+.. code-block:: python
+
+    import connexion
+
+    app = connexion.FlaskApp(__name__, port = 8080, specification_dir='openapi/', server='flask', server_args={'static_url_path':"/", 'static_folder':"whereever/your/static/files/are"})
+
+
 .. _Jinja2: http://jinja.pocoo.org/
 .. _Tornado: http://www.tornadoweb.org/en/stable/
 .. _gevent: http://www.gevent.org/
