@@ -33,6 +33,7 @@ Contents:
    security
    cookbook
    exceptions
+   v3
 
 .. _Flask: http://flask.pocoo.org/
 .. _OpenAPI: https://openapis.org/
