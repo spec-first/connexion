@@ -58,7 +58,7 @@ starlette = "^0.25"
 typing-extensions = "^4"
 werkzeug = "^2.2.1"
 
-a2wsgi = { version = "^1.4", optional = true }
+a2wsgi = { version = "^1.7", optional = true }
 flask = { version = "^2.2", extras = ["async"], optional = true }
 py-swagger-ui = { version = "^1.1.0", optional = true }
 uvicorn = { version = "^0.17.6", extras = ["standard"], optional = true }
