@@ -1,0 +1,36 @@
+swagger: "2.0"
+
+info:
+  title: "{{title}}"
+  version: "1.0"
+
+basePath: /swagger
+
+paths:
+  /pets:
+    get:
+      summary: List all pets
+      responses:
+        '200':
+          description: A paged array of pets
+          schema:
+            type: array
+            items:
+              $ref: 'definitions.yaml#/definitions/Pets'
+        default:
+          description: Unexpected Error
+          schema:
+            $ref:  'definitions.yaml#/definitions/Error'
+
+  '/pets/{id}':
+    get:
+      summary: Info for a specific pet
+      responses:
+        '200':
+          description: Expected response to a valid request
+          schema:
+            $ref: 'definitions.yaml#/definitions/Pet'
+        default:
+          description: Unexpected Error
+          schema:
+            $ref:  'definitions.yaml#/definitions/Error'

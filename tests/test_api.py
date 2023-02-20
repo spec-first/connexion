@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 import pytest
 from connexion import FlaskApi
 from connexion.exceptions import InvalidSpecification
-from connexion.spec import canonical_base_path
+from connexion.spec import Specification, canonical_base_path
 from yaml import YAMLError
 
 TEST_FOLDER = pathlib.Path(__file__).parent
@@ -136,6 +136,12 @@ def test_validation_error_on_completely_invalid_swagger_spec():
     with pytest.raises(InvalidSpecification):
         FlaskApi(pathlib.Path(f.name), base_path="/api/v1.0")
     os.unlink(f.name)
+
+
+def test_relative_refs(relative_refs, spec):
+    spec_path = relative_refs / spec
+    specification = Specification.load(spec_path)
+    assert "$ref" not in specification.raw
 
 
 @pytest.fixture

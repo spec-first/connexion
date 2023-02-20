@@ -48,6 +48,11 @@ def json_datetime_dir():
     return FIXTURES_FOLDER / "datetime_support"
 
 
+@pytest.fixture(scope="session")
+def relative_refs():
+    return FIXTURES_FOLDER / "relative_refs"
+
+
 @pytest.fixture(scope="session", params=SPECS)
 def spec(request):
     return request.param
