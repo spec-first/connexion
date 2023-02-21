@@ -1,7 +1,6 @@
 import abc
 import logging
 import pathlib
-import sys
 import typing as t
 
 from starlette.types import ASGIApp, Receive, Scope, Send
@@ -106,10 +105,10 @@ class AbstractRoutingAPI(AbstractSpecAPI, t.Generic[OP]):
                     if self.resolver_error_handler is not None:
                         self._add_resolver_error_handler(method, path, err)
                     else:
-                        self._handle_add_operation_error(path, method, err.exc_info)
-                except Exception:
+                        self._handle_add_operation_error(path, method, err)
+                except Exception as e:
                     # All other relevant exceptions should be handled as well.
-                    self._handle_add_operation_error(path, method, sys.exc_info())
+                    self._handle_add_operation_error(path, method, e)
 
     def add_operation(self, path: str, method: str) -> None:
         """
@@ -169,15 +168,12 @@ class AbstractRoutingAPI(AbstractSpecAPI, t.Generic[OP]):
         self._add_operation_internal(method, path, operation)
 
     def _handle_add_operation_error(
-        self, path: str, method: str, exc_info: tuple
+        self, path: str, method: str, exc: Exception
     ) -> None:
         url = f"{self.base_path}{path}"
-        error_msg = "Failed to add operation for {method} {url}".format(
-            method=method.upper(), url=url
-        )
+        error_msg = f"Failed to add operation for {method.upper()} {url}"
         logger.error(error_msg)
-        _type, value, traceback = exc_info
-        raise value.with_traceback(traceback)
+        raise exc from None
 
     def json_loads(self, data):
         return self.jsonifier.loads(data)

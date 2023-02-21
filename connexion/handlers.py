@@ -26,7 +26,7 @@ class ResolverErrorHandler:
 
     def handle(self, *args, **kwargs):
         raise ResolverProblem(
-            detail=self.exception.reason,
+            detail=self.exception.args[0],
             status=self.status_code,
         )
 
@@ -54,6 +54,6 @@ class ResolverErrorHandler:
 
     async def __call__(self, *args, **kwargs):
         raise ResolverProblem(
-            detail=self.exception.reason,
+            detail=self.exception.args[0],
             status=self.status_code,
         )

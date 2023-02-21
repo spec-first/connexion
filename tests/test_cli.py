@@ -6,6 +6,7 @@ import importlib_metadata
 import pytest
 from click.testing import CliRunner
 from connexion.cli import main
+from connexion.exceptions import ResolverError
 
 from conftest import FIXTURES_FOLDER
 
@@ -176,14 +177,14 @@ def test_run_unimplemented_operations_and_stub(mock_app_run):
     runner = CliRunner()
 
     spec_file = str(FIXTURES_FOLDER / "missing_implementation/swagger.yaml")
-    with pytest.raises(AttributeError):
+    with pytest.raises(ResolverError):
         runner.invoke(main, ["run", spec_file], catch_exceptions=False)
     # yet can be run with --stub option
     result = runner.invoke(main, ["run", spec_file, "--stub"], catch_exceptions=False)
     assert result.exit_code == 0
 
     spec_file = str(FIXTURES_FOLDER / "module_does_not_exist/swagger.yaml")
-    with pytest.raises(ImportError):
+    with pytest.raises(ResolverError):
         runner.invoke(main, ["run", spec_file], catch_exceptions=False)
     # yet can be run with --stub option
     result = runner.invoke(main, ["run", spec_file, "--stub"], catch_exceptions=False)
@@ -194,7 +195,7 @@ def test_run_unimplemented_operations_and_mock(mock_app_run):
     runner = CliRunner()
 
     spec_file = str(FIXTURES_FOLDER / "missing_implementation/swagger.yaml")
-    with pytest.raises(AttributeError):
+    with pytest.raises(ResolverError):
         runner.invoke(main, ["run", spec_file], catch_exceptions=False)
     # yet can be run with --mock option
     result = runner.invoke(

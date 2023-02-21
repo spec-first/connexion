@@ -15,14 +15,7 @@ class ConnexionException(Exception):
 
 
 class ResolverError(LookupError, ConnexionException):
-    def __init__(self, detail: str = "Unknown reason", *, exc_info: tuple) -> None:
-        """
-        :param detail: Reason why the resolver failed.
-        :param exc_info: If specified, gives details of the original exception
-            as returned by sys.exc_info()
-        """
-        self.reason = detail
-        self.exc_info = exc_info
+    pass
 
 
 class InvalidSpecification(ValidationError, ConnexionException):

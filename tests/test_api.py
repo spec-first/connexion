@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from connexion import FlaskApi
-from connexion.exceptions import InvalidSpecification
+from connexion.exceptions import InvalidSpecification, ResolverError
 from connexion.spec import Specification, canonical_base_path
 from yaml import YAMLError
 
@@ -60,28 +60,28 @@ def test_template():
 
 
 def test_invalid_operation_does_stop_application_to_setup():
-    with pytest.raises(ImportError):
+    with pytest.raises(ResolverError):
         FlaskApi(
             TEST_FOLDER / "fixtures/op_error_api/swagger.yaml",
             base_path="/api/v1.0",
             arguments={"title": "OK"},
         )
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ResolverError):
         FlaskApi(
             TEST_FOLDER / "fixtures/missing_op_id/swagger.yaml",
             base_path="/api/v1.0",
             arguments={"title": "OK"},
         )
 
-    with pytest.raises(ImportError):
+    with pytest.raises(ResolverError):
         FlaskApi(
             TEST_FOLDER / "fixtures/module_not_implemented/swagger.yaml",
             base_path="/api/v1.0",
             arguments={"title": "OK"},
         )
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ResolverError):
         FlaskApi(
             TEST_FOLDER / "fixtures/user_module_loading_error/swagger.yaml",
             base_path="/api/v1.0",
