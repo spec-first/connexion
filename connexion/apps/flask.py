@@ -7,6 +7,7 @@ import typing as t
 
 import flask
 import werkzeug.exceptions
+from a2wsgi import WSGIMiddleware
 from flask import Response as FlaskResponse
 from flask import signals
 from starlette.types import Receive, Scope, Send
@@ -17,7 +18,6 @@ from connexion.exceptions import ProblemException, ResolverError
 from connexion.frameworks import flask as flask_utils
 from connexion.jsonifier import Jsonifier
 from connexion.middleware.abstract import AbstractRoutingAPI, SpecMiddleware
-from connexion.middleware.wsgi import WSGIMiddleware
 from connexion.operations import AbstractOperation
 from connexion.problem import problem
 from connexion.resolver import Resolver
