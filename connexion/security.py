@@ -355,7 +355,7 @@ class SecurityHandlerFactory:
             if token_info is self.no_value:
                 return self.no_value
             if token_info is None:
-                raise OAuthResponseProblem(detail=exception_msg, token_response=None)
+                raise OAuthResponseProblem(detail=exception_msg)
             return token_info
 
         return wrapper
@@ -396,8 +396,6 @@ class SecurityHandlerFactory:
             if not validation:
                 raise OAuthScopeProblem(
                     detail="Provided token doesn't have the required scope",
-                    required_scopes=required_scopes,
-                    token_scopes=token_scopes,
                 )
 
             return token_info

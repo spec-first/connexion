@@ -196,7 +196,7 @@ class JSONResponseBodyValidator:
                 extra={"validator": "body"},
             )
             raise NonConformingResponseBody(
-                message=f"{exception.message}{error_path_msg}"
+                detail=f"Response body does not conform to specification. {exception.message}{error_path_msg}"
             )
 
     def parse(self, body: str) -> dict:

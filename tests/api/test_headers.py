@@ -29,10 +29,10 @@ def test_header_not_returned(simple_openapi_app):
     assert response.headers.get("content-type") == "application/problem+json"
     data = response.json()
     assert data["type"] == "about:blank"
-    assert data["title"] == "Response headers do not conform to specification"
+    assert data["title"] == "Internal Server Error"
     assert (
         data["detail"]
-        == "Keys in header don't match response specification. Difference: location"
+        == "Keys in response header don't match response specification. Difference: location"
     )
     assert data["status"] == 500
 

@@ -70,9 +70,9 @@ class Resolver:
             return self.function_resolver(operation_id)
         except ImportError as e:
             msg = f'Cannot resolve operationId "{operation_id}"! Import error was "{str(e)}"'
-            raise ResolverError(msg, sys.exc_info())
+            raise ResolverError(msg, exc_info=sys.exc_info())
         except (AttributeError, ValueError) as e:
-            raise ResolverError(str(e), sys.exc_info())
+            raise ResolverError(str(e), exc_info=sys.exc_info())
 
 
 class RelativeResolver(Resolver):
@@ -268,9 +268,9 @@ class MethodResolverBase(RestyResolver):
             msg = 'Cannot resolve operationId "{}"! Import error was "{}"'.format(
                 operation_id, str(e)
             )
-            raise ResolverError(msg, sys.exc_info())
+            raise ResolverError(msg, exc_info=sys.exc_info())
         except (AttributeError, ValueError) as e:
-            raise ResolverError(str(e), sys.exc_info())
+            raise ResolverError(str(e), exc_info=sys.exc_info())
 
     def resolve_method_from_class(self, view_name, meth_name, view_cls):
         """

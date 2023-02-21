@@ -496,7 +496,10 @@ def get_empty_dict():
 
 def get_custom_problem_response():
     raise ProblemException(
-        403, "You need to pay", "Missing amount", ext={"amount": 23.0}
+        status=403,
+        title="You need to pay",
+        detail="Missing amount",
+        ext={"amount": 23.0},
     )
 
 

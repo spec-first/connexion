@@ -277,15 +277,15 @@ async def test_verify_security_oauthproblem():
     "errors, most_specific",
     [
         ([OAuthProblem()], OAuthProblem),
-        ([OAuthProblem(), OAuthScopeProblem([], [])], OAuthScopeProblem),
+        ([OAuthProblem(), OAuthScopeProblem()], OAuthScopeProblem),
         (
-            [OAuthProblem(), OAuthScopeProblem([], []), BadRequestProblem],
+            [OAuthProblem(), OAuthScopeProblem(), BadRequestProblem],
             OAuthScopeProblem,
         ),
         (
             [
                 OAuthProblem(),
-                OAuthScopeProblem([], []),
+                OAuthScopeProblem(),
                 BadRequestProblem,
                 ConnexionException,
             ],
