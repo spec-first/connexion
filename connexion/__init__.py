@@ -7,8 +7,6 @@ REST API in as much detail as you want; then Connexion guarantees that it will w
 specified.
 """
 
-import werkzeug.exceptions as exceptions  # NOQA
-
 from .apps import AbstractApp  # NOQA
 from .apps.asynchronous import AsyncApp
 from .datastructures import NoContent  # NOQA
