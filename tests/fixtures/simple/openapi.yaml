@@ -623,6 +623,28 @@ paths:
                   format: binary
               required:
                 - fileData
+  /test-mixed-formData:
+    post:
+      summary: 'Test formData with file type, for file upload'
+      operationId: fakeapi.hello.test_mixed_formdata3
+      responses:
+        '200':
+          description: OK
+      requestBody:
+        x-body-name: formData
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                formData:
+                  type: string
+                fileData:
+                  type: string
+                  format: binary
+              required:
+                - formData
+                - fileData
   /test-formData-file-upload-missing-param:
     post:
       summary: 'Test formData with file type, missing parameter in handler'

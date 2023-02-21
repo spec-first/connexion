@@ -135,7 +135,7 @@ def prep_kwargs(
         arguments=arguments,
         has_kwargs=has_kwargs,
         sanitize=sanitize,
-        content_type=request.content_type,
+        content_type=request.mimetype,
     )
 
     # optionally convert parameter variable names to un-shadowed, snake_case form

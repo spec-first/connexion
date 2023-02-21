@@ -482,6 +482,25 @@ paths:
         200:
           description: OK
 
+  /test-mixed-formData:
+    post:
+      summary: 'Test formData with file type, for file upload'
+      operationId: fakeapi.hello.test_mixed_formdata
+      consumes:
+        - multipart/form-data
+      parameters:
+        - name: fileData
+          type: file
+          in: formData
+          required: true
+        - name: formData
+          type: string
+          in: formData
+          required: true
+      responses:
+        200:
+          description: OK
+
   /test-formData-file-upload-missing-param:
     post:
       summary: Test formData with file type, missing parameter in handler

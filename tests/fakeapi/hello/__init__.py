@@ -322,16 +322,45 @@ def test_formdata_missing_param():
 
 async def test_formdata_file_upload(fileData, **kwargs):
     """In Swagger, form paramaeters and files are passed separately"""
-    file_ = fileData[0]
-    try:
+    files = {}
+    for file_ in fileData:
         filename = file_.filename
-    except AttributeError:
-        filename = file_.name
-    contents = file_.read()
-    if asyncio.iscoroutine(contents):
-        contents = await contents
-    contents = contents.decode("utf-8", "replace")
-    return {filename: contents}
+        content = file_.read()
+        if asyncio.iscoroutine(content):
+            # AsyncApp
+            content = await content
+
+        files[filename] = content.decode()
+
+    return files
+
+
+async def test_mixed_formdata(fileData, formData):
+    files = {}
+    for file_ in fileData:
+        filename = file_.filename
+        content = file_.read()
+        if asyncio.iscoroutine(content):
+            # AsyncApp
+            content = await content
+
+        files[filename] = content.decode()
+
+    return {"data": {"formData": formData}, "files": files}
+
+
+async def test_mixed_formdata3(fileData, formData):
+    files = {}
+    for file_ in fileData:
+        filename = file_.filename
+        content = file_.read()
+        if asyncio.iscoroutine(content):
+            # AsyncApp
+            content = await content
+
+        files[filename] = content.decode()
+
+    return {"data": formData, "files": files}
 
 
 def test_formdata_file_upload_missing_param():
