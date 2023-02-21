@@ -203,7 +203,7 @@ class JSONResponseBodyValidator:
         try:
             return json.loads(body)
         except json.decoder.JSONDecodeError as e:
-            raise BadRequestProblem(str(e))
+            raise NonConformingResponseBody(str(e))
 
     async def send(self, message: t.MutableMapping[str, t.Any]) -> None:
         self._messages.append(message)
