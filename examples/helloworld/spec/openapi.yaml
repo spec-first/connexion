@@ -28,3 +28,8 @@ paths:
           schema:
             type: string
             example: "dave"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
