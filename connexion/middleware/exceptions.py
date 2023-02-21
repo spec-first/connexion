@@ -1,5 +1,3 @@
-import json
-
 from starlette.exceptions import ExceptionMiddleware as StarletteExceptionMiddleware
 from starlette.exceptions import HTTPException
 from starlette.requests import Request as StarletteRequest
@@ -23,7 +21,7 @@ class ExceptionMiddleware(StarletteExceptionMiddleware):
         response = exception.to_problem()
 
         return Response(
-            content=json.dumps(response.body),
+            content=response.body,
             status_code=response.status_code,
             media_type=response.mimetype,
             headers=response.headers,
@@ -38,7 +36,7 @@ class ExceptionMiddleware(StarletteExceptionMiddleware):
         )
 
         return Response(
-            content=json.dumps(connexion_response.body),
+            content=connexion_response.body,
             status_code=connexion_response.status_code,
             media_type=connexion_response.mimetype,
             headers=connexion_response.headers,
@@ -49,7 +47,7 @@ class ExceptionMiddleware(StarletteExceptionMiddleware):
         response = InternalServerError().to_problem()
 
         return Response(
-            content=json.dumps(response.body),
+            content=response.body,
             status_code=response.status_code,
             media_type=response.mimetype,
             headers=response.headers,

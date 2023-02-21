@@ -4,6 +4,8 @@ This module contains a Python interface for Problem Details for HTTP APIs
 to communicate distinct "problem types" to non-human consumers.
 """
 
+import json
+
 
 def problem(status, title, detail, type=None, instance=None, headers=None, ext=None):
     """
@@ -50,5 +52,9 @@ def problem(status, title, detail, type=None, instance=None, headers=None, ext=N
     mimetype = content_type = "application/problem+json"
 
     return ConnexionResponse(
-        status, mimetype, content_type, body=problem_response, headers=headers
+        status,
+        mimetype,
+        content_type,
+        body=json.dumps(problem_response),
+        headers=headers,
     )
