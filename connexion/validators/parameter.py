@@ -104,7 +104,9 @@ class ParameterValidator:
             query_errors = self.validate_query_parameter_list(request)
 
             if query_errors:
-                raise ExtraParameterProblem([], query_errors)
+                raise ExtraParameterProblem(
+                    param_type="query", extra_params=query_errors
+                )
 
         for param in self.parameters.get("query", []):
             error = self.validate_query_parameter(param, request)

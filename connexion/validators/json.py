@@ -196,14 +196,14 @@ class JSONResponseBodyValidator:
                 extra={"validator": "body"},
             )
             raise NonConformingResponseBody(
-                message=f"{exception.message}{error_path_msg}"
+                detail=f"Response body does not conform to specification. {exception.message}{error_path_msg}"
             )
 
     def parse(self, body: str) -> dict:
         try:
             return json.loads(body)
         except json.decoder.JSONDecodeError as e:
-            raise BadRequestProblem(str(e))
+            raise NonConformingResponseBody(str(e))
 
     async def send(self, message: t.MutableMapping[str, t.Any]) -> None:
         self._messages.append(message)

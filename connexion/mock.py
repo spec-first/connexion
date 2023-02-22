@@ -41,7 +41,7 @@ class MockResolver(Resolver):
             except ResolverError as resolution_error:
                 logger.debug(
                     "... {}! Mock function is used for this operation.".format(
-                        resolution_error.reason.capitalize()
+                        resolution_error.args[0].capitalize()
                     )
                 )
                 func = mock_func

@@ -75,7 +75,7 @@ def test_errors(problem_app):
     assert problem_body["amount"] == 23.0
 
     problem_as_exception = app_client.get("/v1.0/problem_exception_with_extra_args")
-    assert problem_as_exception.status_code == 400
+    assert problem_as_exception.status_code == 500
     problem_as_exception_body = problem_as_exception.json()
     assert "age" in problem_as_exception_body
     assert problem_as_exception_body["age"] == 30

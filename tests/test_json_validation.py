@@ -101,7 +101,9 @@ def test_writeonly(json_validation_spec_dir, spec, app_class):
 
     res = app_client.get("/v1.0/user_with_password")
     assert res.status_code == 500
-    assert res.json()["title"] == "Response body does not conform to specification"
+    assert res.json()["detail"].startswith(
+        "Response body does not conform to specification"
+    )
 
 
 def test_nullable_default(json_validation_spec_dir, spec):

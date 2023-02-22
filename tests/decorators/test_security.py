@@ -88,7 +88,9 @@ async def test_verify_oauth_scopes_remote(monkeypatch):
         await wrapped_func(request)
 
     assert exc_info.value.status_code == 403
-    assert exc_info.value.detail == "Provided token doesn't have the required scope"
+    assert exc_info.value.detail.startswith(
+        "Provided token does not have the required scope"
+    )
 
     tokeninfo["scope"] += " admin"
     assert await wrapped_func(request) is not None
@@ -98,7 +100,9 @@ async def test_verify_oauth_scopes_remote(monkeypatch):
         await wrapped_func(request)
 
     assert exc_info.value.status_code == 403
-    assert exc_info.value.detail == "Provided token doesn't have the required scope"
+    assert exc_info.value.detail.startswith(
+        "Provided token does not have the required scope"
+    )
 
     tokeninfo["scope"].append("admin")
     assert await wrapped_func(request) is not None
@@ -138,7 +142,9 @@ async def test_verify_oauth_scopes_local():
         await wrapped_func(request)
 
     assert exc_info.value.status_code == 403
-    assert exc_info.value.detail == "Provided token doesn't have the required scope"
+    assert exc_info.value.detail.startswith(
+        "Provided token does not have the required scope"
+    )
 
     tokeninfo["scope"] += " admin"
     assert await wrapped_func(request) is not None
@@ -148,7 +154,9 @@ async def test_verify_oauth_scopes_local():
         await wrapped_func(request)
 
     assert exc_info.value.status_code == 403
-    assert exc_info.value.detail == "Provided token doesn't have the required scope"
+    assert exc_info.value.detail.startswith(
+        "Provided token does not have the required scope"
+    )
 
     tokeninfo["scope"].append("admin")
     assert await wrapped_func(request) is not None

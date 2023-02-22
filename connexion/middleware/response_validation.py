@@ -56,8 +56,7 @@ class ResponseValidationOperation:
         """
         if mime_type.lower() not in [c.lower() for c in self._operation.produces]:
             raise NonConformingResponseHeaders(
-                reason="Invalid Response Content-type",
-                message=f"Invalid Response Content-type ({mime_type}), "
+                detail=f"Invalid Response Content-type ({mime_type}), "
                 f"expected {self._operation.produces}",
             )
 
@@ -75,9 +74,9 @@ class ResponseValidationOperation:
         if missing_keys:
             pretty_list = ", ".join(missing_keys)
             msg = (
-                "Keys in header don't match response specification. Difference: {}"
+                "Keys in response header don't match response specification. Difference: {}"
             ).format(pretty_list)
-            raise NonConformingResponseHeaders(message=msg)
+            raise NonConformingResponseHeaders(detail=msg)
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send):
 

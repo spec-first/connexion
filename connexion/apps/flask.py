@@ -14,7 +14,7 @@ from starlette.types import Receive, Scope, Send
 
 from connexion.apps.abstract import AbstractApp
 from connexion.decorators import FlaskDecorator
-from connexion.exceptions import ProblemException, ResolverError
+from connexion.exceptions import InternalServerError, ProblemException, ResolverError
 from connexion.frameworks import flask as flask_utils
 from connexion.jsonifier import Jsonifier
 from connexion.middleware.abstract import AbstractRoutingAPI, SpecMiddleware
@@ -127,18 +127,10 @@ class FlaskMiddlewareApp(SpecMiddleware):
     def common_error_handler(self, exception: Exception) -> FlaskResponse:
         """Default error handler."""
         if isinstance(exception, ProblemException):
-            response = problem(
-                status=exception.status,
-                title=exception.title,
-                detail=exception.detail,
-                type=exception.type,
-                instance=exception.instance,
-                headers=exception.headers,
-                ext=exception.ext,
-            )
+            response = exception.to_problem()
         else:
             if not isinstance(exception, werkzeug.exceptions.HTTPException):
-                exception = werkzeug.exceptions.InternalServerError()
+                exception = InternalServerError()
 
             response = problem(
                 title=exception.name,

@@ -97,7 +97,7 @@ class FormDataValidator:
         spec_params = self.schema.get("properties", {}).keys()
         errors = set(form_params).difference(set(spec_params))
         if errors:
-            raise ExtraParameterProblem(errors, [])
+            raise ExtraParameterProblem(param_type="formData", extra_params=errors)
 
     def validate(self, data: FormData) -> None:
         if self.strict_validation:

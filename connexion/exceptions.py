@@ -2,7 +2,7 @@
 This module defines Exception classes used by Connexion to generate a proper response.
 """
 
-import warnings
+import typing as t
 
 from jsonschema.exceptions import ValidationError
 from starlette.exceptions import HTTPException
@@ -14,10 +14,26 @@ class ConnexionException(Exception):
     pass
 
 
-class ProblemException(ConnexionException):
+class ResolverError(LookupError, ConnexionException):
+    pass
+
+
+class InvalidSpecification(ValidationError, ConnexionException):
+    pass
+
+
+class MissingMiddleware(ConnexionException):
+    pass
+
+
+# HTTP ERRORS
+
+
+class ProblemException(HTTPException, ConnexionException):
     def __init__(
         self,
-        status=400,
+        *,
+        status=500,
         title=None,
         detail=None,
         type=None,
@@ -29,7 +45,7 @@ class ProblemException(ConnexionException):
         This exception holds arguments that are going to be passed to the
         `connexion.problem` function to generate a proper response.
         """
-        self.status = status
+        self.status = self.status_code = status
         self.title = title
         self.detail = detail
         self.type = type
@@ -38,11 +54,6 @@ class ProblemException(ConnexionException):
         self.ext = ext
 
     def to_problem(self):
-        warnings.warn(
-            "'to_problem' is planned to be removed in a future release. "
-            "Call connexion.problem.problem(..) instead to maintain the existing error response.",
-            DeprecationWarning,
-        )
         return problem(
             status=self.status,
             title=self.title,
@@ -54,96 +65,33 @@ class ProblemException(ConnexionException):
         )
 
 
-class ResolverError(LookupError):
-    def __init__(self, reason="Unknown reason", exc_info=None):
-        """
-        :param reason: Reason why the resolver failed.
-        :type reason: str
-        :param exc_info: If specified, gives details of the original exception
-            as returned by sys.exc_info()
-        :type exc_info: tuple | None
-        """
-        self.reason = reason
-        self.exc_info = exc_info
-
-    def __str__(self):  # pragma: no cover
-        return f"<ResolverError: {self.reason}>"
-
-    def __repr__(self):  # pragma: no cover
-        return f"<ResolverError: {self.reason}>"
+# CLIENT ERRORS (4XX)
 
 
-class InvalidSpecification(ConnexionException, ValidationError):
-    pass
-
-
-class MissingMiddleware(ConnexionException):
-    pass
-
-
-class NonConformingResponse(ProblemException):
-    def __init__(self, reason="Unknown Reason", message=None):
-        """
-        :param reason: Reason why the response did not conform to the specification
-        :type reason: str
-        """
-        super().__init__(status=500, title=reason, detail=message)
-        self.reason = reason
-        self.message = message
-
-    def __str__(self):  # pragma: no cover
-        return f"<NonConformingResponse: {self.reason}>"
-
-    def __repr__(self):  # pragma: no cover
-        return f"<NonConformingResponse: {self.reason}>"
-
-
-class AuthenticationProblem(ProblemException):
-    def __init__(self, status, title, detail):
+class ClientError(ProblemException):
+    def __init__(self, status: int = 400, title: str = None, *, detail: str = None):
         super().__init__(status=status, title=title, detail=detail)
 
 
-class ResolverProblem(ProblemException):
-    def __init__(self, status, title, detail):
-        super().__init__(status=status, title=title, detail=detail)
+class BadRequestProblem(ClientError):
+    def __init__(self, detail=None):
+        super().__init__(status=400, title="Bad Request", detail=detail)
 
 
-class BadRequestProblem(ProblemException):
-    def __init__(self, title="Bad Request", detail=None):
-        super().__init__(status=400, title=title, detail=detail)
+class ExtraParameterProblem(BadRequestProblem):
+    def __init__(self, *, param_type: str, extra_params: t.Iterable[str]):
+        detail = f"Extra {param_type} parameter(s) {','.join(extra_params)} not in spec"
+        super().__init__(detail=detail)
 
 
-class NotFoundProblem(ProblemException):
-
-    description = (
-        "The requested URL was not found on the server. If you entered the URL manually please "
-        "check your spelling and try again."
-    )
-
-    def __init__(self, title="Not Found", detail=description):
-        super().__init__(status=404, title=title, detail=detail)
+class TypeValidationError(BadRequestProblem):
+    def __init__(self, schema_type: str, parameter_type: str, parameter_name: str):
+        """Exception raised when type validation fails"""
+        detail = f"Wrong type, expected '{schema_type}' for {parameter_type} parameter '{parameter_name}'"
+        super().__init__(detail=detail)
 
 
-class UnsupportedMediaTypeProblem(ProblemException):
-    def __init__(self, title="Unsupported Media Type", detail=None):
-        super().__init__(status=415, title=title, detail=detail)
-
-
-class NonConformingResponseBody(NonConformingResponse):
-    def __init__(
-        self, message, reason="Response body does not conform to specification"
-    ):
-        super().__init__(reason=reason, message=message)
-
-
-class NonConformingResponseHeaders(NonConformingResponse):
-    def __init__(
-        self, message, reason="Response headers do not conform to specification"
-    ):
-        super().__init__(reason=reason, message=message)
-
-
-class Unauthorized(HTTPException):
+class Unauthorized(ClientError):
 
     description = (
         "The server could not verify that you are authorized to access"
@@ -152,8 +100,8 @@ class Unauthorized(HTTPException):
         " how to supply the credentials required."
     )
 
-    def __init__(self, detail: str = description, **kwargs):
-        super().__init__(401, detail=detail, **kwargs)
+    def __init__(self, detail: str = description):
+        super().__init__(401, title="Unauthorized", detail=detail)
 
 
 class OAuthProblem(Unauthorized):
@@ -161,67 +109,84 @@ class OAuthProblem(Unauthorized):
 
 
 class OAuthResponseProblem(OAuthProblem):
-    def __init__(self, token_response, **kwargs):
-        self.token_response = token_response
-        super().__init__(**kwargs)
+    pass
 
 
 class Forbidden(HTTPException):
-
-    description = (
-        "You don't have the permission to access the requested"
-        " resource. It is either read-protected or not readable by the"
-        " server."
-    )
-
-    def __init__(self, detail: str = description, **kwargs):
-        super().__init__(403, detail=detail, **kwargs)
+    def __init__(self, detail: t.Optional[str] = None):
+        if detail is None:
+            detail = (
+                "You don't have the permission to access the requested"
+                " resource. It is either read-protected or not readable by the"
+                " server."
+            )
+        super().__init__(403, detail=detail)
 
 
 class OAuthScopeProblem(Forbidden):
-    def __init__(self, token_scopes, required_scopes, **kwargs):
+    def __init__(self, token_scopes: list, required_scopes: list) -> None:
         self.required_scopes = required_scopes
         self.token_scopes = token_scopes
+        detail = (
+            f"Provided token does not have the required scopes. "
+            f"Provided: {token_scopes}; Required: {required_scopes}"
+        )
+        super().__init__(detail=detail)
 
-        super().__init__(**kwargs)
+
+class UnsupportedMediaTypeProblem(ClientError):
+    def __init__(self, detail: t.Optional[str] = None):
+        super().__init__(status=415, title="Unsupported Media Type", detail=detail)
 
 
-class ExtraParameterProblem(ProblemException):
+# SERVER ERRORS (5XX)
+
+
+class ServerError(ProblemException):
     def __init__(
-        self, formdata_parameters, query_parameters, title=None, detail=None, **kwargs
+        self,
+        status: int = 500,
+        title: t.Optional[str] = None,
+        *,
+        detail: t.Optional[str] = None,
     ):
-        self.extra_formdata = formdata_parameters
-        self.extra_query = query_parameters
+        if title is None:
+            title = "Internal Server Error"
 
-        # This keep backwards compatibility with the old returns
+        super().__init__(status=status, title=title, detail=detail)
+
+
+class InternalServerError(ServerError):
+    def __init__(self, detail: t.Optional[str] = None):
         if detail is None:
-            if self.extra_query:
-                detail = "Extra {parameter_type} parameter(s) {extra_params} not in spec".format(
-                    parameter_type="query", extra_params=", ".join(self.extra_query)
-                )
-            elif self.extra_formdata:
-                detail = "Extra {parameter_type} parameter(s) {extra_params} not in spec".format(
-                    parameter_type="formData",
-                    extra_params=", ".join(self.extra_formdata),
-                )
-
-        super().__init__(title=title, detail=detail, **kwargs)
+            detail = (
+                "The server encountered an internal error and was unable to complete your "
+                "request. Either the server is overloaded or there is an error in the application."
+            )
+        super().__init__(status=500, title="Internal Server Error", detail=detail)
 
 
-class TypeValidationError(Exception):
-    def __init__(self, schema_type, parameter_type, parameter_name):
-        """
-        Exception raise when type validation fails
+class NonConformingResponse(InternalServerError):
+    def __init__(self, detail: t.Optional[str] = None):
+        super().__init__(detail=detail)
 
-        :type schema_type: str
-        :type parameter_type: str
-        :type parameter_name: str
-        :return:
-        """
-        self.schema_type = schema_type
-        self.parameter_type = parameter_type
-        self.parameter_name = parameter_name
 
-    def __str__(self):
-        msg = "Wrong type, expected '{schema_type}' for {parameter_type} parameter '{parameter_name}'"
-        return msg.format(**vars(self))
+class NonConformingResponseBody(NonConformingResponse):
+    def __init__(self, detail: t.Optional[str] = None):
+        if detail is None:
+            detail = "Response body does not conform to specification"
+
+        super().__init__(detail=detail)
+
+
+class NonConformingResponseHeaders(NonConformingResponse):
+    def __init__(self, detail: t.Optional[str] = None):
+        if detail is None:
+            detail = "Response headers do not conform to specification"
+
+        super().__init__(detail=detail)
+
+
+class ResolverProblem(ServerError):
+    def __init__(self, status: int = 501, *, detail: t.Optional[str] = None):
+        super().__init__(status=status, title="Not Implemented", detail=detail)
