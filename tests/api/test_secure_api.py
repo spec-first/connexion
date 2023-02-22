@@ -105,9 +105,8 @@ def test_security(oauth_requests, secure_endpoint_app):
     assert get_bye_wrong_scope.status_code == 403
     assert get_bye_wrong_scope.headers.get("content-type") == "application/problem+json"
     get_bye_wrong_scope_reponse = get_bye_wrong_scope.json()
-    assert (
-        get_bye_wrong_scope_reponse["detail"]
-        == "Provided token doesn't have the required scope"
+    assert get_bye_wrong_scope_reponse["detail"].startswith(
+        "Provided token does not have the required scope"
     )
 
     headers = {"Authorization": "Bearer 300"}

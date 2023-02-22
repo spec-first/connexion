@@ -395,7 +395,8 @@ class SecurityHandlerFactory:
                 validation = await validation
             if not validation:
                 raise OAuthScopeProblem(
-                    detail="Provided token doesn't have the required scope",
+                    required_scopes=required_scopes,
+                    token_scopes=token_scopes,
                 )
 
             return token_info

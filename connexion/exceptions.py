@@ -124,7 +124,14 @@ class Forbidden(HTTPException):
 
 
 class OAuthScopeProblem(Forbidden):
-    pass
+    def __init__(self, token_scopes: list, required_scopes: list) -> None:
+        self.required_scopes = required_scopes
+        self.token_scopes = token_scopes
+        detail = (
+            f"Provided token does not have the required scopes. "
+            f"Provided: {token_scopes}; Required: {required_scopes}"
+        )
+        super().__init__(detail=detail)
 
 
 class UnsupportedMediaTypeProblem(ClientError):
