@@ -5,6 +5,7 @@ This module defines Python interfaces for OpenAPI specifications.
 import abc
 import copy
 import json
+import os
 import pathlib
 import pkgutil
 from collections.abc import Mapping
@@ -71,11 +72,11 @@ def canonical_base_path(base_path):
 
 
 class Specification(Mapping):
-    def __init__(self, raw_spec):
+    def __init__(self, raw_spec, *, base_uri=""):
         self._raw_spec = copy.deepcopy(raw_spec)
         self._set_defaults(raw_spec)
         self._validate_spec(raw_spec)
-        self._spec = resolve_refs(raw_spec)
+        self._spec = resolve_refs(raw_spec, base_uri=base_uri)
 
     @classmethod
     @abc.abstractmethod
@@ -145,13 +146,13 @@ class Specification(Mapping):
             return yaml.safe_load(openapi_string)
 
     @classmethod
-    def from_file(cls, spec, arguments=None):
+    def from_file(cls, spec, *, arguments=None, base_uri=""):
         """
         Takes in a path to a YAML file, and returns a Specification
         """
         specification_path = pathlib.Path(spec)
         spec = cls._load_spec_from_file(arguments, specification_path)
-        return cls.from_dict(spec)
+        return cls.from_dict(spec, base_uri=base_uri)
 
     @staticmethod
     def _get_spec_version(spec):
@@ -173,7 +174,7 @@ class Specification(Mapping):
         return version_tuple
 
     @classmethod
-    def from_dict(cls, spec):
+    def from_dict(cls, spec, *, base_uri=""):
         """
         Takes in a dictionary, and returns a Specification
         """
@@ -187,16 +188,17 @@ class Specification(Mapping):
         spec = enforce_string_keys(spec)
         version = cls._get_spec_version(spec)
         if version < (3, 0, 0):
-            return Swagger2Specification(spec)
-        return OpenAPISpecification(spec)
+            return Swagger2Specification(spec, base_uri=base_uri)
+        return OpenAPISpecification(spec, base_uri=base_uri)
 
     def clone(self):
-        return type(self)(copy.deepcopy(self._raw_spec))
+        return type(self)(copy.deepcopy(self._spec))
 
     @classmethod
-    def load(cls, spec, arguments=None):
+    def load(cls, spec, *, arguments=None):
         if not isinstance(spec, dict):
-            return cls.from_file(spec, arguments=arguments)
+            base_uri = f"{pathlib.Path(spec).parent}{os.sep}"
+            return cls.from_file(spec, arguments=arguments, base_uri=base_uri)
         return cls.from_dict(spec)
 
     def with_base_path(self, base_path):

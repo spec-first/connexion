@@ -62,14 +62,15 @@ class URLHandler:
             return yaml.load(fh, ExtendedSafeLoader)
 
 
-default_handlers = {
+handlers = {
     "http": URLHandler(),
     "https": URLHandler(),
     "file": FileHandler(),
+    "": FileHandler(),
 }
 
 
-def resolve_refs(spec, store=None, handlers=None):
+def resolve_refs(spec, store=None, base_uri=""):
     """
     Resolve JSON references like {"$ref": <some URI>} in a spec.
     Optionally takes a store, which is a mapping from reference URLs to a
@@ -77,8 +78,7 @@ def resolve_refs(spec, store=None, handlers=None):
     """
     spec = deepcopy(spec)
     store = store or {}
-    handlers = handlers or default_handlers
-    resolver = RefResolver("", spec, store, handlers=handlers)
+    resolver = RefResolver(base_uri, spec, store, handlers=handlers)
 
     def _do_resolve(node):
         if isinstance(node, Mapping) and "$ref" in node:
@@ -94,7 +94,7 @@ def resolve_refs(spec, store=None, handlers=None):
             except KeyError:
                 # resolve external references
                 with resolver.resolving(node["$ref"]) as resolved:
-                    return resolved
+                    return _do_resolve(resolved)
         elif isinstance(node, Mapping):
             for k, v in node.items():
                 node[k] = _do_resolve(v)
