@@ -314,7 +314,10 @@ def test_mixed_formdata(simple_app):
 
 def test_formdata_file_upload_bad_request(simple_app):
     app_client = simple_app.test_client()
-    resp = app_client.post("/v1.0/test-formData-file-upload")
+    resp = app_client.post(
+        "/v1.0/test-formData-file-upload",
+        headers={"Content-Type": b"multipart/form-data; boundary=-"},
+    )
     assert resp.status_code == 400
     assert resp.json()["detail"] in [
         "Missing formdata parameter 'fileData'",

@@ -749,6 +749,7 @@ def test_form_transformation(api):
                 "param": {
                     "type": "string",
                     "format": "email",
+                    "default": "foo@bar.com",
                 },
                 "array_param": {
                     "type": "array",

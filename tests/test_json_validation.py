@@ -28,8 +28,9 @@ def test_validator_map(json_validation_spec_dir, spec):
     MinLengthRequestValidator = extend(Draft4RequestValidator, {"type": validate_type})
 
     class MyJSONBodyValidator(JSONRequestBodyValidator):
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, validator=MinLengthRequestValidator, **kwargs)
+        @property
+        def _validator(self):
+            return MinLengthRequestValidator(self._schema)
 
     validator_map = {"body": {"application/json": MyJSONBodyValidator}}
 

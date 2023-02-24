@@ -1,5 +1,6 @@
 from connexion.datastructures import MediaTypeDict
 
+from .abstract import AbstractRequestBodyValidator  # NOQA
 from .form_data import FormDataValidator, MultiPartFormDataValidator
 from .json import DefaultsJSONRequestBodyValidator  # NOQA
 from .json import (
