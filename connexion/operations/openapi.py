@@ -82,8 +82,6 @@ class OpenAPIOperation(AbstractOperation):
             uri_parser_class=uri_parser_class,
         )
 
-        self._request_body = operation.get("requestBody", {})
-
         self._parameters = operation.get("parameters", [])
         if path_parameters:
             self._parameters += path_parameters
@@ -97,9 +95,7 @@ class OpenAPIOperation(AbstractOperation):
         for _, defn in self._responses.items():
             response_content_types += defn.get("content", {}).keys()
         self._produces = response_content_types or ["application/json"]
-
-        request_content = self._request_body.get("content", {})
-        self._consumes = list(request_content.keys()) or ["application/json"]
+        self._consumes = None
 
         logger.debug("consumes: %s" % self.consumes)
         logger.debug("produces: %s" % self.produces)
@@ -122,7 +118,7 @@ class OpenAPIOperation(AbstractOperation):
 
     @property
     def request_body(self):
-        return self._request_body
+        return self._operation.get("requestBody", {})
 
     @property
     def parameters(self):
@@ -130,6 +126,9 @@ class OpenAPIOperation(AbstractOperation):
 
     @property
     def consumes(self):
+        if self._consumes is None:
+            request_content = self.request_body.get("content", {})
+            self._consumes = list(request_content.keys()) or ["application/json"]
         return self._consumes
 
     @property
@@ -247,10 +246,8 @@ class OpenAPIOperation(AbstractOperation):
         The body complete definition for this operation.
 
         **There can be one "body" parameter at most.**
-
-        :rtype: dict
         """
-        if self._request_body:
+        if self.request_body:
             if content_type is None:
                 # TODO: make content type required
                 content_type = self.consumes[0]
@@ -259,7 +256,7 @@ class OpenAPIOperation(AbstractOperation):
                     "this operation accepts multiple content types, using %s",
                     content_type,
                 )
-            content_type_dict = MediaTypeDict(self._request_body.get("content", {}))
+            content_type_dict = MediaTypeDict(self.request_body.get("content", {}))
             res = content_type_dict.get(content_type, {})
             return self.with_definitions(res)
         return {}

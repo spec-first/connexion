@@ -255,6 +255,17 @@ def test_default_object_body(simple_app):
     assert response == 1
 
 
+def test_required_body(simple_app):
+    app_client = simple_app.test_client()
+    resp = app_client.post(
+        "/v1.0/test-required-body", headers={"content-type": "application/json"}
+    )
+    assert resp.status_code == 400
+
+    resp = app_client.post("/v1.0/test-required-body", json={"foo": "bar"})
+    assert resp.status_code == 200
+
+
 def test_empty_object_body(simple_app):
     app_client = simple_app.test_client()
     resp = app_client.post(
