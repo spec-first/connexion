@@ -291,6 +291,7 @@ class Swagger2Operation(AbstractOperation):
 
             default = param.get("default")
             if default is not None:
+                prop["default"] = default
                 defaults[param["name"]] = default
 
             nullable = param.get("x-nullable")
@@ -320,11 +321,11 @@ class Swagger2Operation(AbstractOperation):
             "schema": {
                 "type": "object",
                 "properties": properties,
-                "default": defaults,
                 "required": required,
             }
         }
-
+        if defaults:
+            definition["schema"]["default"] = defaults
         if encoding:
             definition["encoding"] = encoding
 
