@@ -292,6 +292,10 @@ def test_default_object_body(stack):
     return {"stack": stack}
 
 
+def test_required_body(body):
+    return body
+
+
 def test_nested_additional_properties(body):
     return body
 

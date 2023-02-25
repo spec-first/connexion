@@ -24,9 +24,10 @@ class FormDataValidator:
         *,
         schema: dict,
         validator: t.Type[Draft4Validator] = None,
-        uri_parser: t.Optional[AbstractURIParser] = None,
+        required=False,
         nullable=False,
         encoding: str,
+        uri_parser: t.Optional[AbstractURIParser] = None,
         strict_validation: bool,
     ) -> None:
         self._scope = scope
@@ -34,6 +35,7 @@ class FormDataValidator:
         self.schema = schema
         self.has_default = schema.get("default", False)
         self.nullable = nullable
+        self.required = required
         validator_cls = validator or Draft4RequestValidator
         self.validator = validator_cls(schema, format_checker=draft4_format_checker)
         self.uri_parser = uri_parser
@@ -50,10 +52,14 @@ class FormDataValidator:
     def check_empty(self):
         """`receive` is never called if body is empty, so we need to check this case at
         initialization."""
-        if not int(self.headers.get("content-length", 0)) and self.schema.get(
-            "required", []
-        ):
-            self._validate({})
+        if not int(self.headers.get("content-length", 0)):
+            # TODO: default should be passed along and content-length updated
+            if self.schema.get("default"):
+                self.validate(self.schema.get("default"))
+            elif self.required:  # RequestBody itself is required
+                raise BadRequestProblem("RequestBody is required")
+            elif self.schema.get("required", []):  # Required top level properties
+                self._validate({})
 
     @classmethod
     def _error_path_message(cls, exception):

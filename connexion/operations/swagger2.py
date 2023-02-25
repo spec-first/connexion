@@ -6,7 +6,6 @@ import logging
 import typing as t
 
 from connexion.exceptions import InvalidSpecification
-from connexion.http_facts import FORM_CONTENT_TYPES
 from connexion.operations.abstract import AbstractOperation
 from connexion.uri_parsing import Swagger2URIParser
 from connexion.utils import deep_get
@@ -107,8 +106,6 @@ class Swagger2Operation(AbstractOperation):
 
         self._responses = operation.get("responses", {})
 
-        self._body_definitions = {}
-
     @classmethod
     def from_spec(cls, spec, api, path, method, resolver, *args, **kwargs):
         return cls(
@@ -126,6 +123,36 @@ class Swagger2Operation(AbstractOperation):
             *args,
             **kwargs,
         )
+
+    @property
+    def request_body(self) -> dict:
+        if not hasattr(self, "_request_body"):
+            body_params = []
+            form_params = []
+            for parameter in self.parameters:
+                if parameter["in"] == "body":
+                    body_params.append(parameter)
+                elif parameter["in"] == "formData":
+                    form_params.append(parameter)
+
+            if len(body_params) > 1:
+                raise InvalidSpecification(
+                    f"{self.method} {self.path}: There can be one 'body' parameter at most"
+                )
+
+            if body_params and form_params:
+                raise InvalidSpecification(
+                    f"{self.method} {self.path}: 'body' and 'formData' parameters are mutually exclusive"
+                )
+
+            if body_params:
+                self._request_body = self._transform_json(body_params[0])
+            elif form_params:
+                self._request_body = self._transform_form(form_params)
+            else:
+                self._request_body = {}
+
+        return self._request_body
 
     @property
     def parameters(self):
@@ -229,22 +256,7 @@ class Swagger2Operation(AbstractOperation):
 
         **There can be one "body" parameter at most.**
         """
-        if self._body_definitions.get(content_type) is None:
-            if content_type in FORM_CONTENT_TYPES:
-                form_parameters = [p for p in self.parameters if p["in"] == "formData"]
-                _body_definition = self._transform_form(form_parameters)
-            else:
-                body_parameters = [p for p in self.parameters if p["in"] == "body"]
-                if len(body_parameters) > 1:
-                    raise InvalidSpecification(
-                        "{method} {path} There can be one 'body' parameter at most".format(
-                            method=self.method, path=self.path
-                        )
-                    )
-                body_parameter = body_parameters[0] if body_parameters else {}
-                _body_definition = self._transform_json(body_parameter)
-            self._body_definitions[content_type] = _body_definition
-        return self._body_definitions[content_type]
+        return self.request_body
 
     def _transform_json(self, body_parameter: dict) -> dict:
         """Translate Swagger2 json parameters into OpenAPI 3 jsonschema spec."""

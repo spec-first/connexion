@@ -1,3 +1,5 @@
+import logging
+
 from starlette.exceptions import ExceptionMiddleware as StarletteExceptionMiddleware
 from starlette.exceptions import HTTPException
 from starlette.requests import Request as StarletteRequest
@@ -5,6 +7,8 @@ from starlette.responses import Response
 from starlette.types import Receive, Scope, Send
 
 from connexion.exceptions import InternalServerError, ProblemException, problem
+
+logger = logging.getLogger(__name__)
 
 
 class ExceptionMiddleware(StarletteExceptionMiddleware):
@@ -17,8 +21,10 @@ class ExceptionMiddleware(StarletteExceptionMiddleware):
         self.add_exception_handler(Exception, self.common_error_handler)
 
     @staticmethod
-    def problem_handler(_request: StarletteRequest, exception: ProblemException):
-        response = exception.to_problem()
+    def problem_handler(_request: StarletteRequest, exc: ProblemException):
+        logger.exception(exc)
+
+        response = exc.to_problem()
 
         return Response(
             content=response.body,
@@ -29,6 +35,8 @@ class ExceptionMiddleware(StarletteExceptionMiddleware):
 
     @staticmethod
     def http_exception(_request: StarletteRequest, exc: HTTPException) -> Response:
+        logger.exception(exc)
+
         headers = exc.headers
 
         connexion_response = problem(
@@ -44,6 +52,8 @@ class ExceptionMiddleware(StarletteExceptionMiddleware):
 
     @staticmethod
     def common_error_handler(_request: StarletteRequest, exc: Exception) -> Response:
+        logger.exception(exc)
+
         response = InternalServerError().to_problem()
 
         return Response(

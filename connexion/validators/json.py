@@ -4,6 +4,7 @@ import typing as t
 
 import jsonschema
 from jsonschema import Draft4Validator, ValidationError, draft4_format_checker
+from starlette.datastructures import Headers
 from starlette.types import Receive, Scope, Send
 
 from connexion.exceptions import BadRequestProblem, NonConformingResponseBody
@@ -23,6 +24,7 @@ class JSONRequestBodyValidator:
         *,
         schema: dict,
         validator: t.Type[Draft4Validator] = Draft4RequestValidator,
+        required=False,
         nullable=False,
         encoding: str,
         **kwargs,
@@ -32,8 +34,23 @@ class JSONRequestBodyValidator:
         self.schema = schema
         self.has_default = schema.get("default", False)
         self.nullable = nullable
+        self.required = required
         self.validator = validator(schema, format_checker=draft4_format_checker)
         self.encoding = encoding
+        self.headers = Headers(scope=scope)
+        self.check_empty()
+
+    def check_empty(self):
+        """receive` is never called if body is empty, so we need to check this case at
+        initialization."""
+        if not int(self.headers.get("content-length", 0)):
+            # TODO: default should be passed along and content-length updated
+            if self.schema.get("default"):
+                self.validate(self.schema.get("default"))
+            elif self.required:  # RequestBody itself is required
+                raise BadRequestProblem("RequestBody is required")
+            elif self.schema.get("required", []):  # Required top level properties
+                self.validate({})
 
     @classmethod
     def _error_path_message(cls, exception):

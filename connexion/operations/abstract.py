@@ -92,6 +92,10 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         return self._method
 
     @property
+    def request_body(self):
+        """The request body for this operation"""
+
+    @property
     def path(self):
         """
         The path of the operation, relative to the API base path

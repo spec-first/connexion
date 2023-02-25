@@ -103,6 +103,7 @@ class RequestValidationOperation:
                     scope,
                     receive,
                     schema=schema,
+                    required=self._operation.request_body.get("required", False),
                     nullable=utils.is_nullable(
                         self._operation.body_definition(mime_type)
                     ),

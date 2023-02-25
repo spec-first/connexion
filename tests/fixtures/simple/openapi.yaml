@@ -278,6 +278,19 @@ paths:
               $ref: '#/components/schemas/new_stack'
               default:
                 image_version: default_image
+  /test-required-body:
+    post:
+      summary: Test if a required RequestBody is enforced.
+      operationId: fakeapi.hello.test_required_body
+      responses:
+        '200':
+          description: OK
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
   /test-nested-additional-properties:
     post:
       summary: Test if nested additionalProperties are cast

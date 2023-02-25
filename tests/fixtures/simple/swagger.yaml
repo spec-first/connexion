@@ -182,6 +182,20 @@ paths:
         200:
           description: OK
 
+  /test-required-body:
+    post:
+      summary: Test if a required RequestBody is enforced.
+      operationId: fakeapi.hello.test_required_body
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+              type: object
+      responses:
+        200:
+          description: OK
+
   /test-default-integer-body:
     post:
       summary: Test if default integer body param is passed to handler.

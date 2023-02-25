@@ -546,10 +546,10 @@ def test_multi_body(api):
         operation.body_schema()
 
     exception = exc_info.value
-    assert str(exception) == "GET endpoint There can be one 'body' parameter at most"
+    assert str(exception) == "GET endpoint: There can be one 'body' parameter at most"
     assert (
         repr(exception)
-        == """<InvalidSpecification: "GET endpoint There can be one 'body' parameter at most">"""
+        == """<InvalidSpecification: "GET endpoint: There can be one 'body' parameter at most">"""
     )
 
 
