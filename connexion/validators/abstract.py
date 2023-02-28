@@ -7,10 +7,9 @@ import json
 import typing as t
 
 from starlette.datastructures import Headers, MutableHeaders
-from starlette.types import Receive, Scope
+from starlette.types import Receive, Scope, Send
 
 from connexion.exceptions import BadRequestProblem
-from connexion.utils import is_null
 
 
 class AbstractRequestBodyValidator:
@@ -149,3 +148,58 @@ class AbstractRequestBodyValidator:
             receive = self._insert_messages(receive, messages=messages)
 
         return receive
+
+
+class AbstractResponseBodyValidator:
+    """
+    Validator interface with base functionality that can be subclassed for custom validators.
+
+    .. note: Validators load the whole body into memory, which can be a problem for large payloads.
+    """
+
+    def __init__(
+        self,
+        scope: Scope,
+        *,
+        schema: dict,
+        nullable: bool = False,
+        encoding: str,
+    ) -> None:
+        self._scope = scope
+        self._schema = schema
+        self._nullable = nullable
+        self._encoding = encoding
+
+    def _parse(self, stream: t.Generator[bytes, None, None]) -> t.Any:
+        """Parse the incoming stream."""
+
+    def _validate(self, body: t.Any) -> t.Optional[dict]:
+        """
+        Validate the body.
+
+        :raises: :class:`connexion.exceptions.NonConformingResponse`
+        """
+
+    def wrap_send(self, send: Send) -> Send:
+        """Wrap the provided send channel with response body validation"""
+
+        messages = []
+
+        async def send_(message: t.MutableMapping[str, t.Any]) -> None:
+            messages.append(message)
+
+            if message["type"] == "http.response.start" or message.get(
+                "more_body", False
+            ):
+                return
+
+            stream = (message.get("body", b"") for message in messages)
+            body = self._parse(stream)
+
+            if not (body is None and self._nullable):
+                self._validate(body)
+
+            while messages:
+                await send(messages.pop(0))
+
+        return send_
