@@ -4,7 +4,7 @@ import typing as t
 
 import jsonschema
 from jsonschema import Draft4Validator, ValidationError, draft4_format_checker
-from starlette.types import Scope, Send
+from starlette.types import Scope
 
 from connexion.exceptions import BadRequestProblem, NonConformingResponseBody
 from connexion.json_schema import (
@@ -13,7 +13,10 @@ from connexion.json_schema import (
     format_error_with_path,
 )
 from connexion.utils import is_null
-from connexion.validators import AbstractRequestBodyValidator
+from connexion.validators import (
+    AbstractRequestBodyValidator,
+    AbstractResponseBodyValidator,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -100,39 +103,31 @@ class DefaultsJSONRequestBodyValidator(JSONRequestBodyValidator):
         )
 
 
-class JSONResponseBodyValidator:
+class JSONResponseBodyValidator(AbstractResponseBodyValidator):
     """Response body validator for json content types."""
 
-    def __init__(
-        self,
-        scope: Scope,
-        send: Send,
-        *,
-        schema: dict,
-        validator: t.Type[Draft4Validator] = Draft4ResponseValidator,
-        nullable=False,
-        encoding: str,
-    ) -> None:
-        self._scope = scope
-        self._send = send
-        self.schema = schema
-        self.has_default = schema.get("default", False)
-        self.nullable = nullable
-        self.validator = validator(schema, format_checker=draft4_format_checker)
-        self.encoding = encoding
-        self._messages: t.List[t.MutableMapping[str, t.Any]] = []
+    @property
+    def validator(self) -> Draft4Validator:
+        return Draft4ResponseValidator(
+            self._schema, format_checker=draft4_format_checker
+        )
 
-    @classmethod
-    def _error_path_message(cls, exception):
-        error_path = ".".join(str(item) for item in exception.path)
-        error_path_msg = f" - '{error_path}'" if error_path else ""
-        return error_path_msg
+    def _parse(self, stream: t.Generator[bytes, None, None]) -> t.Any:
+        body = b"".join(stream).decode(self._encoding)
 
-    def validate(self, body: dict):
+        if not body:
+            return body
+
+        try:
+            return json.loads(body)
+        except json.decoder.JSONDecodeError as e:
+            raise NonConformingResponseBody(str(e))
+
+    def _validate(self, body: dict):
         try:
             self.validator.validate(body)
         except ValidationError as exception:
-            error_path_msg = self._error_path_message(exception=exception)
+            error_path_msg = format_error_with_path(exception=exception)
             logger.error(
                 f"Validation error: {exception.message}{error_path_msg}",
                 extra={"validator": "body"},
@@ -141,31 +136,11 @@ class JSONResponseBodyValidator:
                 detail=f"Response body does not conform to specification. {exception.message}{error_path_msg}"
             )
 
-    def parse(self, body: str) -> dict:
-        try:
-            return json.loads(body)
-        except json.decoder.JSONDecodeError as e:
-            raise NonConformingResponseBody(str(e))
-
-    async def send(self, message: t.MutableMapping[str, t.Any]) -> None:
-        self._messages.append(message)
-
-        if message["type"] == "http.response.start" or message.get("more_body", False):
-            return
-
-        bytes_body = b"".join([message.get("body", b"") for message in self._messages])
-        decoded_body = bytes_body.decode(self.encoding)
-
-        if decoded_body and not (self.nullable and is_null(decoded_body)):
-            body = self.parse(decoded_body)
-            self.validate(body)
-
-        while self._messages:
-            await self._send(self._messages.pop(0))
-
 
 class TextResponseBodyValidator(JSONResponseBodyValidator):
-    def parse(self, body: str) -> str:  # type: ignore
+    def _parse(self, stream: t.Generator[bytes, None, None]) -> str:  # type: ignore
+        body = b"".join(stream).decode(self._encoding)
+
         try:
             return json.loads(body)
         except json.decoder.JSONDecodeError:
