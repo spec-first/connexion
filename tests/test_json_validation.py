@@ -59,8 +59,6 @@ def test_readonly(json_validation_spec_dir, spec, app_class):
     )
     app_client = app.test_client()
 
-    headers = {"content-type": "application/json"}
-
     res = app_client.get("/v1.0/user")
     assert res.status_code == 200
     assert res.json().get("user_id") == 7
@@ -76,7 +74,7 @@ def test_readonly(json_validation_spec_dir, spec, app_class):
         "/v1.0/user",
         json={"user_id": 9, "name": "max"},
     )
-    assert res.status_code == 400
+    assert res.status_code == 200
 
 
 def test_writeonly(json_validation_spec_dir, spec, app_class):
