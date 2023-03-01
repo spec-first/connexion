@@ -53,10 +53,13 @@ class RequestValidationOperation:
         return mime_type, encoding
 
     def validate_mime_type(self, mime_type: str) -> None:
-        """Validate the mime type against the spec.
+        """Validate the mime type against the spec if it defines which mime types are accepted.
 
         :param mime_type: mime type from content type header
         """
+        if not self._operation.consumes:
+            return
+
         # Convert to MediaTypeDict to handle media-ranges
         media_type_dict = MediaTypeDict(
             [(c.lower(), None) for c in self._operation.consumes]

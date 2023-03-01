@@ -128,7 +128,7 @@ class OpenAPIOperation(AbstractOperation):
     def consumes(self):
         if self._consumes is None:
             request_content = self.request_body.get("content", {})
-            self._consumes = list(request_content.keys()) or ["application/json"]
+            self._consumes = list(request_content.keys())
         return self._consumes
 
     @property
