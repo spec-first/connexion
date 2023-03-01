@@ -10,7 +10,6 @@ from starlette.datastructures import Headers, MutableHeaders
 from starlette.types import Receive, Scope, Send
 
 from connexion.exceptions import BadRequestProblem
-from connexion.utils import is_null
 
 
 class AbstractRequestBodyValidator:
@@ -137,7 +136,7 @@ class AbstractRequestBodyValidator:
 
         # The body is parsed and validated
         body = await self._parse(stream(), scope=scope)
-        if not (self._nullable and is_null(body)):
+        if not (body is None and self._nullable):
             self._validate(body)
 
         # If MUTABLE_VALIDATION is enabled, include any changes made during validation in the messages to send
@@ -197,7 +196,7 @@ class AbstractResponseBodyValidator:
             stream = (message.get("body", b"") for message in messages)
             body = self._parse(stream)
 
-            if body is not None and not (self._nullable and is_null(body)):
+            if not (body is None and self._nullable):
                 self._validate(body)
 
             while messages:

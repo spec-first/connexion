@@ -34,7 +34,7 @@ def test_get_missing_required_parameter():
 
 def test_get_x_nullable_parameter():
     param = {"type": "number", "required": True, "name": "foo", "x-nullable": True}
-    result = ParameterValidator.validate_parameter("formdata", "None", param)
+    result = ParameterValidator.validate_parameter("formdata", None, param)
     assert result is None
 
 
@@ -44,7 +44,7 @@ def test_get_nullable_parameter():
         "required": True,
         "name": "foo",
     }
-    result = ParameterValidator.validate_parameter("query", "null", param)
+    result = ParameterValidator.validate_parameter("query", None, param)
     assert result is None
 
 

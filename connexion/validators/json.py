@@ -12,7 +12,6 @@ from connexion.json_schema import (
     Draft4ResponseValidator,
     format_error_with_path,
 )
-from connexion.utils import is_null
 from connexion.validators import (
     AbstractRequestBodyValidator,
     AbstractResponseBodyValidator,
@@ -50,12 +49,12 @@ class JSONRequestBodyValidator(AbstractRequestBodyValidator):
 
     async def _parse(
         self, stream: t.AsyncGenerator[bytes, None], scope: Scope
-    ) -> t.Union[dict, str]:
+    ) -> t.Any:
         bytes_body = b"".join([message async for message in stream])
         body = bytes_body.decode(self._encoding)
 
-        if self._nullable and is_null(body):
-            return body
+        if not body:
+            return None
 
         try:
             return json.loads(body)
@@ -116,7 +115,7 @@ class JSONResponseBodyValidator(AbstractResponseBodyValidator):
         body = b"".join(stream).decode(self._encoding)
 
         if not body:
-            return body
+            return None
 
         try:
             return json.loads(body)

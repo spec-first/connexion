@@ -193,10 +193,7 @@ def is_nullable(param_def):
 
 
 def is_null(value):
-    if hasattr(value, "strip") and value.strip() in ["null", "None"]:
-        return True
-
-    if value is None:
+    if value in [None, ""]:
         return True
 
     return False

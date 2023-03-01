@@ -426,31 +426,22 @@ def test_array_in_path(simple_app):
 
 def test_nullable_parameter(simple_app):
     app_client = simple_app.test_client()
-    resp = app_client.get("/v1.0/nullable-parameters?time_start=null")
-    assert resp.json() == "it was None"
-
-    resp = app_client.get("/v1.0/nullable-parameters?time_start=None")
+    resp = app_client.get("/v1.0/nullable-parameters", params={"time_start": None})
     assert resp.json() == "it was None"
 
     time_start = 1010
     resp = app_client.get(f"/v1.0/nullable-parameters?time_start={time_start}")
     assert resp.json() == time_start
 
-    resp = app_client.post("/v1.0/nullable-parameters", data={"post_param": "None"})
-    assert resp.json() == "it was None"
-
-    resp = app_client.post("/v1.0/nullable-parameters", data={"post_param": "null"})
+    resp = app_client.post("/v1.0/nullable-parameters", data={"post_param": None})
     assert resp.json() == "it was None"
 
     headers = {"Content-Type": "application/json"}
     resp = app_client.put("/v1.0/nullable-parameters", content="null", headers=headers)
     assert resp.json() == "it was None"
 
-    resp = app_client.put("/v1.0/nullable-parameters", content="None", headers=headers)
-    assert resp.json() == "it was None"
-
     resp = app_client.put(
-        "/v1.0/nullable-parameters-noargs", content="None", headers=headers
+        "/v1.0/nullable-parameters-noargs", content="null", headers=headers
     )
     assert resp.json() == "hello"
 
