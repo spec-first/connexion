@@ -7,6 +7,7 @@ import typing as t
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from connexion import utils
+from connexion.datastructures import MediaTypeDict
 from connexion.exceptions import NonConformingResponseHeaders
 from connexion.middleware.abstract import RoutedAPI, RoutedMiddleware
 from connexion.operations import AbstractOperation
@@ -50,11 +51,17 @@ class ResponseValidationOperation:
         return mime_type, encoding
 
     def validate_mime_type(self, mime_type: str) -> None:
-        """Validate the mime type against the spec.
+        """Validate the mime type against the spec if it defines which mime types are produced.
 
         :param mime_type: mime type from content type header
         """
-        if mime_type.lower() not in [c.lower() for c in self._operation.produces]:
+        if not self._operation.produces:
+            return
+
+        media_type_dict = MediaTypeDict(
+            [(p.lower(), None) for p in self._operation.produces]
+        )
+        if mime_type.lower() not in media_type_dict:
             raise NonConformingResponseHeaders(
                 detail=f"Invalid Response Content-type ({mime_type}), "
                 f"expected {self._operation.produces}",
@@ -86,11 +93,13 @@ class ResponseValidationOperation:
             nonlocal send_fn
 
             if message["type"] == "http.response.start":
-                status = str(message["status"])
                 headers = message["headers"]
+
                 mime_type, encoding = self.extract_content_type(headers)
-                # TODO: Add produces to all tests and fix response content types
-                # self.validate_mime_type(mime_type)
+                if message["status"] < 400:
+                    self.validate_mime_type(mime_type)
+
+                status = str(message["status"])
                 response_definition = self._operation.response_definition(
                     status, mime_type
                 )

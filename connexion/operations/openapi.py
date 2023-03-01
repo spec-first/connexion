@@ -94,7 +94,7 @@ class OpenAPIOperation(AbstractOperation):
         response_content_types = []
         for _, defn in self._responses.items():
             response_content_types += defn.get("content", {}).keys()
-        self._produces = response_content_types or ["application/json"]
+        self._produces = response_content_types
         self._consumes = None
 
         logger.debug("consumes: %s" % self.consumes)

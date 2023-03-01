@@ -1269,7 +1269,7 @@ paths:
         '200':
           description: OK
           content:
-            application/octet-stream:
+            text/x-python:
               schema:
                 type: string
                 format: binary
