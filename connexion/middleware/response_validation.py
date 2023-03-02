@@ -79,11 +79,8 @@ class ResponseValidationOperation:
             raise NonConformingResponseHeaders(detail=msg)
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send):
-
-        send_fn = send
-
         async def wrapped_send(message: t.MutableMapping[str, t.Any]) -> None:
-            nonlocal send_fn
+            nonlocal send
 
             if message["type"] == "http.response.start":
                 status = str(message["status"])
@@ -107,16 +104,15 @@ class ResponseValidationOperation:
                 else:
                     validator = body_validator(
                         scope,
-                        send,
                         schema=self._operation.response_schema(status, mime_type),
                         nullable=utils.is_nullable(
                             self._operation.response_definition(status, mime_type)
                         ),
                         encoding=encoding,
                     )
-                    send_fn = validator.send
+                    send = validator.wrap_send(send)
 
-            return await send_fn(message)
+            return await send(message)
 
         await self.next_app(scope, receive, wrapped_send)
 

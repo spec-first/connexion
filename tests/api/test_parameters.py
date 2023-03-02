@@ -314,7 +314,10 @@ def test_mixed_formdata(simple_app):
 
 def test_formdata_file_upload_bad_request(simple_app):
     app_client = simple_app.test_client()
-    resp = app_client.post("/v1.0/test-formData-file-upload")
+    resp = app_client.post(
+        "/v1.0/test-formData-file-upload",
+        headers={"Content-Type": b"multipart/form-data; boundary=-"},
+    )
     assert resp.status_code == 400
     assert resp.json()["detail"] in [
         "Missing formdata parameter 'fileData'",
@@ -443,11 +446,8 @@ def test_nullable_parameter(simple_app):
     resp = app_client.put("/v1.0/nullable-parameters", content="null", headers=headers)
     assert resp.json() == "it was None"
 
-    resp = app_client.put("/v1.0/nullable-parameters", content="None", headers=headers)
-    assert resp.json() == "it was None"
-
     resp = app_client.put(
-        "/v1.0/nullable-parameters-noargs", content="None", headers=headers
+        "/v1.0/nullable-parameters-noargs", content="null", headers=headers
     )
     assert resp.json() == "hello"
 

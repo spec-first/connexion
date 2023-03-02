@@ -68,8 +68,6 @@ class RequestValidationOperation:
             )
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send):
-        receive_fn = receive
-
         # Validate parameters & headers
         uri_parser_class = self._operation._uri_parser_class
         uri_parser = uri_parser_class(
@@ -100,8 +98,6 @@ class RequestValidationOperation:
                 )
             else:
                 validator = body_validator(
-                    scope,
-                    receive,
                     schema=schema,
                     required=self._operation.request_body.get("required", False),
                     nullable=utils.is_nullable(
@@ -113,9 +109,9 @@ class RequestValidationOperation:
                         self._operation.parameters, self._operation.body_definition()
                     ),
                 )
-                receive_fn = await validator.wrapped_receive()
+                receive = await validator.wrap_receive(receive, scope=scope)
 
-        await self.next_app(scope, receive_fn, send)
+        await self.next_app(scope, receive, send)
 
 
 class RequestValidationAPI(RoutedAPI[RequestValidationOperation]):

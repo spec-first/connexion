@@ -107,6 +107,13 @@ def resolve_refs(spec, store=None, base_uri=""):
     return res
 
 
+def format_error_with_path(exception: ValidationError) -> str:
+    """Format a `ValidationError` with path to error."""
+    error_path = ".".join(str(item) for item in exception.path)
+    error_path_msg = f" - '{error_path}'" if error_path else ""
+    return error_path_msg
+
+
 def allow_nullable(validation_fn: t.Callable) -> t.Callable:
     """Extend an existing validation function, so it allows nullable values to be null."""
 
