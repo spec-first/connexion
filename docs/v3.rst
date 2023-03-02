@@ -1,0 +1,137 @@
+.. warning::
+
+    Do not use Connexion 3.0 in production yet!
+
+    Connexion 3.0 is currently available in alpha to give users the ability to test it and provide
+    feedback while we further polish the codebase and update the documentation.
+
+Getting started with Connexion 3.0
+==================================
+
+Connexion 3.0 brings some major changes compared to 2.X:
+
+- Connexion can now be used as middleware to supercharge any ASGI or WSGI compatible framework.
+- Aiohttp support has been dropped in favor of an ASGI compatible ``AsyncApp`` built on top of Starlette.
+- Connexion functionality is now pluggable by adding or removing middleware.
+- Validation is now pluggable by content type, solving longstanding issues regarding endpoints with
+  multiple content types and providing a pluggable interface.
+
+Install alpha version
+---------------------
+
+Install the latest alpha version using
+
+.. code-block:: bash
+
+  pip install --pre connexion
+
+Using stand-alone Connexion
+---------------------------
+
+You can use Connexion as a stand-alone web framework, using one of the available apps:
+
+- The ``FlaskApp``, which is built on top of Flask as known from Connexion 2.X.
+- The ``AsyncApp``, which is built on top of starlette and provides native asynchronous functionality.
+
+If you don't require compatibility with the Flask ecosystem, we recommend to use the ``AsyncApp``.
+Even when writing mostly synchronous code, as you can just use synchronous view functions.
+
+Using Connexion with ASGI or WSGI frameworks
+--------------------------------------------
+
+If you want to leverage Connexion functionality with third party ASGI frameworks, you can use the
+``ConnexionMiddleware`` and wrap it around a third party application.
+
+This provides all Connexion functionality except for automatic routing, automatic parameter injection,
+and response serialization. You can add some of this functionality using ``Decorators`` provided by
+Connexion:
+
+- ``FlaskDecorator``: provides automatic parameter injection and response serialization for Flask
+  applications.
+- ``ASGIDecorator``: provides automatic parameter injection for ASGI applications. Note that this
+  decorator injects Starlette datastructures (such as ``UploadFile``).
+- ``StarletteDecorator``: provides automatic parameter injection and response serialization for
+  Starlette applications.
+
+For examples, see https://github.com/spec-first/connexion/tree/main/examples/frameworks.
+
+Pluggable validation by content type
+------------------------------------
+
+Validation is now pluggable by content type, which means that the `VALIDATOR_MAP` has been updated
+to accommodate this.
+
+You can use the ``connexion.datastructures.MediaTypeDict`` to support content type ranges.
+
+.. code-block:: python
+
+    VALIDATOR_MAP = {
+        "parameter": ParameterValidator,
+        "body": MediaTypeDict(
+            {
+                "*/*json": JSONRequestBodyValidator,
+                "application/x-www-form-urlencoded": FormDataValidator,
+                "multipart/form-data": MultiPartFormDataValidator,
+            }
+        ),
+        "response": MediaTypeDict(
+            {
+                "*/*json": JSONResponseBodyValidator,
+                "text/plain": TextResponseBodyValidator,
+            }
+        ),
+    }
+
+You can pass it either to the app, or when registering an API.
+
+.. code-block:: python
+
+    app = connexion.App(__name__, validator_map=VALIDATOR_MAP)
+    app.add_api("openapi.yaml", validator_map=VALIDATOR_MAP)
+
+An ``AbstractRequestBodyValidator`` and ``AbstractResponseBodyValidator`` class are available to
+support the creation of custom validators.
+
+ASGI Server
+-----------
+
+Connexion 3.0 needs to be run using an ASGI server instead of a WSGI server. While any ASGI server
+should work, connexion comes with ``uvicorn`` as an extra:
+
+.. code-block:: bash
+
+    pip install connexion[uvicorn]
+
+Smaller breaking changes
+------------------------
+
+- The ``options`` argument has been renamed to ``swagger_ui_options``
+- The ``uri_parser_class`` is now passed to the ``App`` or its ``add_api()`` method directly
+  instead of via the ``options`` argument.
+- The ``jsonifier`` is now passed to the ``App`` or its ``add_api()`` method instead of setting it
+  as an attribute on the Api.
+- Drop Flask 1.X support and support Flask 2.X async routes
+- Drop Python 3.6 (and add Python 3.10) support
+- ``connexion.request`` is now a Starlette ``Request`` instead of a Flask ``Request``
+- Route priority changed. The most specific route should now be defined first in the specification.
+- We no longer guess a content type for response serialization if multiple are defined in the spec.
+  We do take into account returned headers.
+- Don't return 400 when read-only property is received
+- Content type is now validated for requests and responses if defined in the spec
+- The deprecated positions for ``x-body-name`` are no longer supported
+- The parameter ``pass_context_arg_name`` has been removed. Context is now available as global
+  request-level context, or can be passed in by defining a ``context_`` parameter in your view function.
+- The ``MethodViewResolver`` has been renamed to ``MethodResolver``, and a new ``MethodViewResolver``
+  has been added to work with Flask's ``MethodView`` specifically.
+- Built-in support for uWSGI has been removed. You can re-add this functionality using a custom middleware.
+
+
+Non-breaking changes
+--------------------
+
+- Relative and nested refs are now supported in OpenAPI / Swagger specifications
+- The ``required`` keyword is now supported for requestBodies
+- HTTP exceptions are now implemented as a hierarchy
+- Connexion now exposes ``context``, ``operation``, ``receive``, ``scope`` as global request-level context
+- Connexion now provides a ``DefaultsJSONRequestBodyValidator`` to fill in default values in received
+  request bodies.
