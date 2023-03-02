@@ -54,7 +54,6 @@ def test_bad_operation_id():
 
 def test_standard_resolve_x_router_controller():
     operation = Swagger2Operation(
-        api=None,
         method="GET",
         path="endpoint",
         path_parameters=[],
@@ -72,7 +71,6 @@ def test_standard_resolve_x_router_controller():
 
 def test_relative_resolve_x_router_controller():
     operation = Swagger2Operation(
-        api=None,
         method="GET",
         path="endpoint",
         path_parameters=[],
@@ -90,7 +88,6 @@ def test_relative_resolve_x_router_controller():
 
 def test_relative_resolve_operation_id():
     operation = Swagger2Operation(
-        api=None,
         method="GET",
         path="endpoint",
         path_parameters=[],
@@ -109,7 +106,6 @@ def test_relative_resolve_operation_id_with_module():
     import fakeapi
 
     operation = Swagger2Operation(
-        api=None,
         method="GET",
         path="endpoint",
         path_parameters=[],
@@ -126,7 +122,6 @@ def test_relative_resolve_operation_id_with_module():
 
 def test_resty_resolve_operation_id():
     operation = Swagger2Operation(
-        api=None,
         method="GET",
         path="endpoint",
         path_parameters=[],
@@ -143,7 +138,6 @@ def test_resty_resolve_operation_id():
 
 def test_resty_resolve_x_router_controller_with_operation_id():
     operation = Swagger2Operation(
-        api=None,
         method="GET",
         path="endpoint",
         path_parameters=[],
@@ -161,7 +155,6 @@ def test_resty_resolve_x_router_controller_with_operation_id():
 
 def test_resty_resolve_x_router_controller_without_operation_id():
     operation = Swagger2Operation(
-        api=None,
         method="GET",
         path="/hello/{id}",
         path_parameters=[],
@@ -176,7 +169,6 @@ def test_resty_resolve_x_router_controller_without_operation_id():
 
 def test_resty_resolve_with_default_module_name():
     operation = Swagger2Operation(
-        api=None,
         method="GET",
         path="/hello/{id}",
         path_parameters=[],
@@ -191,7 +183,6 @@ def test_resty_resolve_with_default_module_name():
 
 def test_resty_resolve_with_default_module_name_nested():
     operation = Swagger2Operation(
-        api=None,
         method="GET",
         path="/hello/{id}/world",
         path_parameters=[],
@@ -206,7 +197,6 @@ def test_resty_resolve_with_default_module_name_nested():
 
 def test_resty_resolve_with_default_module_name_lowercase_verb():
     operation = Swagger2Operation(
-        api=None,
         method="get",
         path="/hello/{id}",
         path_parameters=[],
@@ -221,7 +211,6 @@ def test_resty_resolve_with_default_module_name_lowercase_verb():
 
 def test_resty_resolve_with_default_module_name_lowercase_verb_nested():
     operation = Swagger2Operation(
-        api=None,
         method="get",
         path="/hello/world/{id}",
         path_parameters=[],
@@ -236,7 +225,6 @@ def test_resty_resolve_with_default_module_name_lowercase_verb_nested():
 
 def test_resty_resolve_with_default_module_name_will_translate_dashes_in_resource_name():
     operation = Swagger2Operation(
-        api=None,
         method="GET",
         path="/foo-bar",
         path_parameters=[],
@@ -251,7 +239,6 @@ def test_resty_resolve_with_default_module_name_will_translate_dashes_in_resourc
 
 def test_resty_resolve_with_default_module_name_can_resolve_api_root():
     operation = Swagger2Operation(
-        api=None,
         method="GET",
         path="/",
         path_parameters=[],
@@ -266,7 +253,6 @@ def test_resty_resolve_with_default_module_name_can_resolve_api_root():
 
 def test_resty_resolve_with_default_module_name_will_resolve_resource_root_get_as_search():
     operation = Swagger2Operation(
-        api=None,
         method="GET",
         path="/hello",
         path_parameters=[],
@@ -281,7 +267,6 @@ def test_resty_resolve_with_default_module_name_will_resolve_resource_root_get_a
 
 def test_resty_resolve_with_default_module_name_and_x_router_controller_will_resolve_resource_root_get_as_search():
     operation = Swagger2Operation(
-        api=None,
         method="GET",
         path="/hello",
         path_parameters=[],
@@ -298,7 +283,6 @@ def test_resty_resolve_with_default_module_name_and_x_router_controller_will_res
 
 def test_resty_resolve_with_default_module_name_will_resolve_resource_root_as_configured():
     operation = Swagger2Operation(
-        api=None,
         method="GET",
         path="/hello",
         path_parameters=[],
@@ -313,7 +297,6 @@ def test_resty_resolve_with_default_module_name_will_resolve_resource_root_as_co
 
 def test_resty_resolve_with_default_module_name_will_resolve_resource_root_post_as_post():
     operation = Swagger2Operation(
-        api=None,
         method="POST",
         path="/hello",
         path_parameters=[],

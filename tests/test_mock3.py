@@ -16,7 +16,6 @@ def test_mock_resolver_default():
     }
 
     operation = OpenAPIOperation(
-        api=None,
         method="GET",
         path="endpoint",
         path_parameters=[],
@@ -44,7 +43,6 @@ def test_mock_resolver_numeric():
     }
 
     operation = OpenAPIOperation(
-        api=None,
         method="GET",
         path="endpoint",
         path_parameters=[],
@@ -76,7 +74,6 @@ def test_mock_resolver_inline_schema_example():
     }
 
     operation = OpenAPIOperation(
-        api=None,
         method="GET",
         path="endpoint",
         path_parameters=[],
@@ -96,7 +93,6 @@ def test_mock_resolver_no_examples():
     responses = {"418": {}}
 
     operation = OpenAPIOperation(
-        api=None,
         method="GET",
         path="endpoint",
         path_parameters=[],
@@ -117,7 +113,6 @@ def test_mock_resolver_notimplemented():
 
     # do not mock the existent functions
     operation = OpenAPIOperation(
-        api=None,
         method="GET",
         path="endpoint",
         path_parameters=[],
@@ -128,7 +123,6 @@ def test_mock_resolver_notimplemented():
 
     # mock only the nonexistent ones
     operation = OpenAPIOperation(
-        api=None,
         method="GET",
         path="endpoint",
         path_parameters=[],

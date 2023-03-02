@@ -39,11 +39,15 @@ class FlaskOperation:
 
     @classmethod
     def from_operation(
-        cls, operation: AbstractOperation, pythonic_params: bool
+        cls,
+        operation: AbstractOperation,
+        *,
+        pythonic_params: bool,
+        jsonifier: Jsonifier,
     ) -> "FlaskOperation":
         return cls(
             fn=operation.function,
-            jsonifier=operation.api.jsonifier,
+            jsonifier=jsonifier,
             operation_id=operation.operation_id,
             pythonic_params=pythonic_params,
         )
@@ -81,7 +85,7 @@ class FlaskApi(AbstractRoutingAPI):
 
     def make_operation(self, operation):
         return FlaskOperation.from_operation(
-            operation, pythonic_params=self.pythonic_params
+            operation, pythonic_params=self.pythonic_params, jsonifier=self.jsonifier
         )
 
     @staticmethod

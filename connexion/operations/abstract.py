@@ -34,7 +34,6 @@ class AbstractOperation(metaclass=abc.ABCMeta):
 
     def __init__(
         self,
-        api,
         method,
         path,
         operation,
@@ -45,8 +44,6 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         uri_parser_class=None,
     ):
         """
-        :param api: api that this operation is attached to
-        :type api: apis.AbstractAPI
         :param method: HTTP method
         :type method: str
         :param path:
@@ -64,7 +61,6 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         :param uri_parser_class: class to use for uri parsing
         :type uri_parser_class: AbstractURIParser
         """
-        self._api = api
         self._method = method
         self._path = path
         self._operation = operation
@@ -79,10 +75,6 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         self._operation_id = self._resolution.operation_id
 
         self._responses = self._operation.get("responses", {})
-
-    @property
-    def api(self):
-        return self._api
 
     @property
     def method(self):
@@ -246,12 +238,3 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         :rtype: types.FunctionType
         """
         return self._resolution.function
-
-    def json_loads(self, data):
-        """
-        A wrapper for calling the API specific JSON loader.
-
-        :param data: The JSON data in textual form.
-        :type data: bytes
-        """
-        return self.api.json_loads(data)

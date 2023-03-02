@@ -35,7 +35,6 @@ class Swagger2Operation(AbstractOperation):
 
     def __init__(
         self,
-        api,
         method,
         path,
         operation,
@@ -50,8 +49,6 @@ class Swagger2Operation(AbstractOperation):
         uri_parser_class=None,
     ):
         """
-        :param api: api that this operation is attached to
-        :type api: apis.AbstractAPI
         :param method: HTTP method
         :type method: str
         :param path: relative path to this operation
@@ -84,7 +81,6 @@ class Swagger2Operation(AbstractOperation):
         self._router_controller = operation.get("x-swagger-router-controller")
 
         super().__init__(
-            api=api,
             method=method,
             path=path,
             operation=operation,
@@ -107,9 +103,8 @@ class Swagger2Operation(AbstractOperation):
         self._responses = operation.get("responses", {})
 
     @classmethod
-    def from_spec(cls, spec, api, path, method, resolver, *args, **kwargs):
+    def from_spec(cls, spec, *args, path, method, resolver, **kwargs):
         return cls(
-            api,
             method,
             path,
             spec.get_operation(path, method),

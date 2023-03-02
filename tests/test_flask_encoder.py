@@ -50,7 +50,7 @@ def test_readonly(json_datetime_dir, spec, app_class):
     app_client = app.test_client()
 
     res = app_client.get("/v1.0/" + spec.replace("yaml", "json"))
-    assert res.status_code == 200, f"Error is {res.data}"
+    assert res.status_code == 200, f"Error is {res.text}"
     spec_data = res.json()
 
     if spec == "openapi.yaml":

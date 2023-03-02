@@ -398,7 +398,6 @@ def make_operation(op, definitions=True, parameters=True):
 def test_operation(api):
     op_spec = make_operation(OPERATION1)
     operation = Swagger2Operation(
-        api=api,
         method="GET",
         path="endpoint",
         path_parameters=[],
@@ -445,7 +444,6 @@ def test_operation_remote_token_info():
 def test_operation_array(api):
     op_spec = make_operation(OPERATION7)
     operation = Swagger2Operation(
-        api=api,
         method="GET",
         path="endpoint",
         path_parameters=[],
@@ -472,7 +470,6 @@ def test_operation_array(api):
 def test_operation_composed_definition(api):
     op_spec = make_operation(OPERATION8)
     operation = Swagger2Operation(
-        api=api,
         method="GET",
         path="endpoint",
         path_parameters=[],
@@ -533,7 +530,6 @@ def test_multi_body(api):
     with pytest.raises(InvalidSpecification) as exc_info:  # type: py.code.ExceptionInfo
         op_spec = make_operation(OPERATION2)
         operation = Swagger2Operation(
-            api=api,
             method="GET",
             path="endpoint",
             path_parameters=[],
@@ -620,7 +616,6 @@ def test_multiple_oauth_in_and(caplog):
 def test_parameter_reference(api):
     op_spec = make_operation(OPERATION3, definitions=False)
     operation = Swagger2Operation(
-        api=api,
         method="GET",
         path="endpoint",
         path_parameters=[],
@@ -637,7 +632,6 @@ def test_default(api):
     op_spec = make_operation(OPERATION4)
     op_spec["parameters"][1]["default"] = 1
     Swagger2Operation(
-        api=api,
         method="GET",
         path="endpoint",
         path_parameters=[],
@@ -655,7 +649,6 @@ def test_default(api):
         "new_traffic": 100,
     }
     Swagger2Operation(
-        api=api,
         method="POST",
         path="endpoint",
         path_parameters=[],
@@ -676,7 +669,6 @@ def test_get_path_parameter_types(api):
     ]
 
     operation = Swagger2Operation(
-        api=api,
         method="GET",
         path="endpoint",
         path_parameters=[],

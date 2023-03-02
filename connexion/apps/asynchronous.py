@@ -12,11 +12,8 @@ from starlette.types import Receive, Scope, Send
 
 from connexion.apps.abstract import AbstractApp
 from connexion.decorators import StarletteDecorator
-from connexion.middleware.abstract import (
-    AbstractRoutingAPI,
-    RoutedAPI,
-    RoutedMiddleware,
-)
+from connexion.jsonifier import Jsonifier
+from connexion.middleware.abstract import RoutedAPI, RoutedMiddleware
 from connexion.operations import AbstractOperation
 from connexion.resolver import Resolver
 from connexion.uri_parsing import AbstractURIParser
@@ -30,26 +27,30 @@ class AsyncOperation:
         operation: AbstractOperation,
         fn: t.Callable,
         uri_parser: AbstractURIParser,
-        api: AbstractRoutingAPI,
+        jsonifier: Jsonifier,
         operation_id: str,
         pythonic_params: bool,
     ) -> None:
         self._operation = operation
         self._fn = fn
         self.uri_parser = uri_parser
-        self.api = api
+        self.jsonifier = jsonifier
         self.operation_id = operation_id
         self.pythonic_params = pythonic_params
 
     @classmethod
     def from_operation(
-        cls, operation: AbstractOperation, pythonic_params: bool
+        cls,
+        operation: AbstractOperation,
+        *,
+        pythonic_params: bool,
+        jsonifier: Jsonifier,
     ) -> "AsyncOperation":
         return cls(
             operation,
             fn=operation.function,
             uri_parser=operation.uri_parser_class,
-            api=operation.api,
+            jsonifier=jsonifier,
             operation_id=operation.operation_id,
             pythonic_params=pythonic_params,
         )
@@ -58,7 +59,7 @@ class AsyncOperation:
     def fn(self) -> t.Callable:
         decorator = StarletteDecorator(
             pythonic_params=self.pythonic_params,
-            jsonifier=self.api.jsonifier,
+            jsonifier=self.jsonifier,
         )
         return decorator(self._fn)
 
@@ -70,6 +71,9 @@ class AsyncOperation:
 
 
 class AsyncApi(RoutedAPI[AsyncOperation]):
+
+    jsonifier = Jsonifier()
+
     def __init__(self, *args, pythonic_params: bool, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.pythonic_params = pythonic_params
@@ -77,7 +81,9 @@ class AsyncApi(RoutedAPI[AsyncOperation]):
         self.add_paths()
 
     def make_operation(self, operation: AbstractOperation) -> AsyncOperation:
-        return AsyncOperation.from_operation(operation, self.pythonic_params)
+        return AsyncOperation.from_operation(
+            operation, pythonic_params=self.pythonic_params, jsonifier=self.jsonifier
+        )
 
 
 class AsyncMiddlewareApp(RoutedMiddleware[AsyncApi]):
