@@ -64,7 +64,7 @@ class BaseResponseDecorator:
             if not produces:
                 # Produces can be empty/ for empty responses
                 pass
-            if len(produces) == 1:
+            elif len(produces) == 1:
                 content_type = produces[0]
             elif isinstance(data, str) and "text/plain" in produces:
                 content_type = "text/plain"

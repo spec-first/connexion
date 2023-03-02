@@ -94,7 +94,7 @@ class OpenAPIOperation(AbstractOperation):
         response_content_types = []
         for _, defn in self._responses.items():
             response_content_types += defn.get("content", {}).keys()
-        self._produces = response_content_types or ["application/json"]
+        self._produces = response_content_types
         self._consumes = None
 
         logger.debug("consumes: %s" % self.consumes)
@@ -128,7 +128,7 @@ class OpenAPIOperation(AbstractOperation):
     def consumes(self):
         if self._consumes is None:
             request_content = self.request_body.get("content", {})
-            self._consumes = list(request_content.keys()) or ["application/json"]
+            self._consumes = list(request_content.keys())
         return self._consumes
 
     @property
