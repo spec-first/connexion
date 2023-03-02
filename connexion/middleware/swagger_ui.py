@@ -1,3 +1,4 @@
+import json
 import logging
 import pathlib
 import re
@@ -12,6 +13,7 @@ from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 from starlette.types import ASGIApp, Receive, Scope, Send
 
+from connexion.jsonifier import Jsonifier
 from connexion.middleware import SpecMiddleware
 from connexion.middleware.abstract import AbstractSpecAPI
 from connexion.options import SwaggerUIOptions
@@ -99,8 +101,11 @@ class SwaggerUIAPI(AbstractSpecAPI):
         )
 
     async def _get_openapi_json(self, request):
+        # Yaml parses datetime objects when loading the spec, so we need our custom jsonifier to dump it
+        jsonifier = Jsonifier()
+
         return StarletteResponse(
-            content=self.jsonifier.dumps(self._spec_for_prefix(request)),
+            content=jsonifier.dumps(self._spec_for_prefix(request)),
             status_code=200,
             media_type="application/json",
         )
@@ -170,7 +175,7 @@ class SwaggerUIAPI(AbstractSpecAPI):
         return StarletteResponse(
             status_code=200,
             media_type="application/json",
-            content=self.jsonifier.dumps(self.options.openapi_console_ui_config),
+            content=json.dumps(self.options.openapi_console_ui_config),
         )
 
 

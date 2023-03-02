@@ -9,7 +9,6 @@ COMPONENTS = {"parameters": {"myparam": {"in": "path", "schema": {"type": "integ
 
 def test_standard_resolve_x_router_controller():
     operation = OpenAPIOperation(
-        api=None,
         method="GET",
         path="endpoint",
         path_parameters=[],
@@ -25,7 +24,6 @@ def test_standard_resolve_x_router_controller():
 
 def test_methodview_resolve_operation_id(method_view_resolver):
     operation = OpenAPIOperation(
-        api=None,
         method="GET",
         path="endpoint",
         path_parameters=[],
@@ -40,7 +38,6 @@ def test_methodview_resolve_operation_id(method_view_resolver):
 
 def test_methodview_resolve_x_router_controller_with_operation_id(method_view_resolver):
     operation = OpenAPIOperation(
-        api=None,
         method="GET",
         path="endpoint",
         path_parameters=[],
@@ -58,7 +55,6 @@ def test_methodview_resolve_x_router_controller_without_operation_id(
     method_view_resolver,
 ):
     operation = OpenAPIOperation(
-        api=None,
         method="GET",
         path="/hello/{id}",
         path_parameters=[],
@@ -71,7 +67,6 @@ def test_methodview_resolve_x_router_controller_without_operation_id(
 
 def test_methodview_resolve_with_default_module_name(method_view_resolver):
     operation = OpenAPIOperation(
-        api=None,
         method="GET",
         path="/pets/{id}",
         path_parameters=[],
@@ -86,7 +81,6 @@ def test_methodview_resolve_with_default_module_name_lowercase_verb(
     method_view_resolver,
 ):
     operation = OpenAPIOperation(
-        api=None,
         method="get",
         path="/pets/{id}",
         path_parameters=[],
@@ -101,7 +95,6 @@ def test_methodview_resolve_with_default_module_name_will_translate_dashes_in_re
     method_view_resolver,
 ):
     operation = OpenAPIOperation(
-        api=None,
         method="GET",
         path="/pets",
         path_parameters=[],
@@ -116,7 +109,6 @@ def test_methodview_resolve_with_default_module_name_can_resolve_api_root(
     method_view_resolver,
 ):
     operation = OpenAPIOperation(
-        api=None,
         method="GET",
         path="/",
         path_parameters=[],
@@ -133,7 +125,6 @@ def test_methodview_resolve_with_default_module_name_will_resolve_resource_root_
     method_view_resolver,
 ):
     operation = OpenAPIOperation(
-        api=None,
         method="GET",
         path="/pets",
         path_parameters=[],
@@ -148,7 +139,6 @@ def test_methodview_resolve_with_default_module_name_and_x_router_controller_wil
     method_view_resolver,
 ):
     operation = OpenAPIOperation(
-        api=None,
         method="GET",
         path="/hello",
         path_parameters=[],
@@ -165,7 +155,6 @@ def test_methodview_resolve_with_default_module_name_will_resolve_resource_root_
     method_view_resolver,
 ):
     operation = OpenAPIOperation(
-        api=None,
         method="GET",
         path="/pets",
         path_parameters=[],
@@ -180,7 +169,6 @@ def test_methodview_resolve_with_default_module_name_will_resolve_resource_root_
     method_view_resolver,
 ):
     operation = OpenAPIOperation(
-        api=None,
         method="POST",
         path="/pets",
         path_parameters=[],

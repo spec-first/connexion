@@ -7,7 +7,6 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 
 from connexion.exceptions import MissingMiddleware, ResolverError
 from connexion.http_facts import METHODS
-from connexion.jsonifier import Jsonifier
 from connexion.operations import AbstractOperation
 from connexion.resolver import Resolver
 from connexion.spec import Specification
@@ -37,8 +36,6 @@ class SpecMiddleware(abc.ABC):
 
 class AbstractSpecAPI:
     """Base API class with only minimal behavior related to the specification."""
-
-    jsonifier = Jsonifier()
 
     def __init__(
         self,
@@ -126,10 +123,9 @@ class AbstractRoutingAPI(AbstractSpecAPI, t.Generic[OP]):
         spec_operation_cls = self.specification.operation_cls
         spec_operation = spec_operation_cls.from_spec(
             self.specification,
-            self,
-            path,
-            method,
-            self.resolver,
+            path=path,
+            method=method,
+            resolver=self.resolver,
             uri_parser_class=self.uri_parser_class,
         )
         operation = self.make_operation(spec_operation)
@@ -175,9 +171,6 @@ class AbstractRoutingAPI(AbstractSpecAPI, t.Generic[OP]):
         logger.error(error_msg)
         raise exc from None
 
-    def json_loads(self, data):
-        return self.jsonifier.loads(data)
-
 
 class RoutedAPI(AbstractSpecAPI, t.Generic[OP]):
     def __init__(
@@ -207,10 +200,9 @@ class RoutedAPI(AbstractSpecAPI, t.Generic[OP]):
         operation_spec_cls = self.specification.operation_cls
         operation = operation_spec_cls.from_spec(
             self.specification,
-            self,
-            path,
-            method,
-            self.resolver,
+            path=path,
+            method=method,
+            resolver=self.resolver,
             uri_parser_class=self.uri_parser_class,
         )
         routed_operation = self.make_operation(operation)

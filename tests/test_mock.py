@@ -8,7 +8,6 @@ def test_mock_resolver_default():
     responses = {"default": {"examples": {"application/json": {"foo": "bar"}}}}
 
     operation = Swagger2Operation(
-        api=None,
         method="GET",
         path="endpoint",
         path_parameters=[],
@@ -31,7 +30,6 @@ def test_mock_resolver_numeric():
     responses = {"200": {"examples": {"application/json": {"foo": "bar"}}}}
 
     operation = Swagger2Operation(
-        api=None,
         method="GET",
         path="endpoint",
         path_parameters=[],
@@ -62,7 +60,6 @@ def test_mock_resolver_example():
     }
 
     operation = Swagger2Operation(
-        api=None,
         method="GET",
         path="endpoint",
         path_parameters=[],
@@ -92,7 +89,6 @@ def test_mock_resolver_example_nested_in_object():
     }
 
     operation = Swagger2Operation(
-        api=None,
         method="GET",
         path="endpoint",
         path_parameters=[],
@@ -122,7 +118,6 @@ def test_mock_resolver_example_nested_in_list():
     }
 
     operation = Swagger2Operation(
-        api=None,
         method="GET",
         path="endpoint",
         path_parameters=[],
@@ -156,7 +151,6 @@ def test_mock_resolver_example_nested_in_object_openapi():
     }
 
     operation = OpenAPIOperation(
-        api=None,
         method="GET",
         path="endpoint",
         path_parameters=[],
@@ -187,7 +181,6 @@ def test_mock_resolver_example_nested_in_list_openapi():
     }
 
     operation = OpenAPIOperation(
-        api=None,
         method="GET",
         path="endpoint",
         path_parameters=[],
@@ -218,7 +211,6 @@ def test_mock_resolver_no_example_nested_in_object():
     }
 
     operation = Swagger2Operation(
-        api=None,
         method="GET",
         path="endpoint",
         path_parameters=[],
@@ -254,7 +246,6 @@ def test_mock_resolver_no_example_nested_in_list_openapi():
     }
 
     operation = OpenAPIOperation(
-        api=None,
         method="GET",
         path="endpoint",
         path_parameters=[],
@@ -274,7 +265,6 @@ def test_mock_resolver_no_examples():
     responses = {"418": {}}
 
     operation = Swagger2Operation(
-        api=None,
         method="GET",
         path="endpoint",
         path_parameters=[],
@@ -298,7 +288,6 @@ def test_mock_resolver_notimplemented():
 
     # do not mock the existent functions
     operation = Swagger2Operation(
-        api=None,
         method="GET",
         path="endpoint",
         path_parameters=[],
@@ -312,7 +301,6 @@ def test_mock_resolver_notimplemented():
 
     # mock only the nonexistent ones
     operation = Swagger2Operation(
-        api=None,
         method="GET",
         path="endpoint",
         path_parameters=[],

@@ -12,11 +12,8 @@ from starlette.types import Receive, Scope, Send
 
 from connexion.apps.abstract import AbstractApp
 from connexion.decorators import StarletteDecorator
-from connexion.middleware.abstract import (
-    AbstractRoutingAPI,
-    RoutedAPI,
-    RoutedMiddleware,
-)
+from connexion.jsonifier import Jsonifier
+from connexion.middleware.abstract import RoutedAPI, RoutedMiddleware
 from connexion.operations import AbstractOperation
 from connexion.resolver import Resolver
 from connexion.uri_parsing import AbstractURIParser
@@ -30,26 +27,30 @@ class AsyncOperation:
         operation: AbstractOperation,
         fn: t.Callable,
         uri_parser: AbstractURIParser,
-        api: AbstractRoutingAPI,
+        jsonifier: Jsonifier,
         operation_id: str,
         pythonic_params: bool,
     ) -> None:
         self._operation = operation
         self._fn = fn
         self.uri_parser = uri_parser
-        self.api = api
+        self.jsonifier = jsonifier
         self.operation_id = operation_id
         self.pythonic_params = pythonic_params
 
     @classmethod
     def from_operation(
-        cls, operation: AbstractOperation, pythonic_params: bool
+        cls,
+        operation: AbstractOperation,
+        *,
+        pythonic_params: bool,
+        jsonifier: Jsonifier,
     ) -> "AsyncOperation":
         return cls(
             operation,
             fn=operation.function,
             uri_parser=operation.uri_parser_class,
-            api=operation.api,
+            jsonifier=jsonifier,
             operation_id=operation.operation_id,
             pythonic_params=pythonic_params,
         )
@@ -58,7 +59,7 @@ class AsyncOperation:
     def fn(self) -> t.Callable:
         decorator = StarletteDecorator(
             pythonic_params=self.pythonic_params,
-            jsonifier=self.api.jsonifier,
+            jsonifier=self.jsonifier,
         )
         return decorator(self._fn)
 
@@ -70,14 +71,23 @@ class AsyncOperation:
 
 
 class AsyncApi(RoutedAPI[AsyncOperation]):
-    def __init__(self, *args, pythonic_params: bool, **kwargs) -> None:
+    def __init__(
+        self,
+        *args,
+        pythonic_params: bool,
+        jsonifier: t.Optional[Jsonifier] = None,
+        **kwargs,
+    ) -> None:
         super().__init__(*args, **kwargs)
         self.pythonic_params = pythonic_params
+        self.jsonifier = jsonifier or Jsonifier()
         self.router = Router()
         self.add_paths()
 
     def make_operation(self, operation: AbstractOperation) -> AsyncOperation:
-        return AsyncOperation.from_operation(operation, self.pythonic_params)
+        return AsyncOperation.from_operation(
+            operation, pythonic_params=self.pythonic_params, jsonifier=self.jsonifier
+        )
 
 
 class AsyncMiddlewareApp(RoutedMiddleware[AsyncApi]):
@@ -118,6 +128,7 @@ class AsyncApp(AbstractApp):
         middlewares: t.Optional[list] = None,
         arguments: t.Optional[dict] = None,
         auth_all_paths: t.Optional[bool] = None,
+        jsonifier: t.Optional[Jsonifier] = None,
         pythonic_params: t.Optional[bool] = None,
         resolver: t.Optional[t.Union[Resolver, t.Callable]] = None,
         resolver_error: t.Optional[int] = None,
@@ -139,6 +150,7 @@ class AsyncApp(AbstractApp):
         :param arguments: Arguments to substitute the specification using Jinja.
         :param auth_all_paths: whether to authenticate not paths not defined in the specification.
             Defaults to False.
+        :param jsonifier: Custom jsonifier to overwrite json encoding for json responses.
         :param pythonic_params: When True, CamelCase parameters are converted to snake_case and an
             underscore is appended to any shadowed built-ins. Defaults to False.
         :param resolver: Callable that maps operationId to a function or instance of
@@ -164,11 +176,12 @@ class AsyncApp(AbstractApp):
             middlewares=middlewares,
             arguments=arguments,
             auth_all_paths=auth_all_paths,
-            swagger_ui_options=swagger_ui_options,
+            jsonifier=jsonifier,
             pythonic_params=pythonic_params,
             resolver=resolver,
             resolver_error=resolver_error,
             strict_validation=strict_validation,
+            swagger_ui_options=swagger_ui_options,
             uri_parser_class=uri_parser_class,
             validate_responses=validate_responses,
             validator_map=validator_map,

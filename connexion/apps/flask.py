@@ -39,11 +39,15 @@ class FlaskOperation:
 
     @classmethod
     def from_operation(
-        cls, operation: AbstractOperation, pythonic_params: bool
+        cls,
+        operation: AbstractOperation,
+        *,
+        pythonic_params: bool,
+        jsonifier: Jsonifier,
     ) -> "FlaskOperation":
         return cls(
             fn=operation.function,
-            jsonifier=operation.api.jsonifier,
+            jsonifier=jsonifier,
             operation_id=operation.operation_id,
             pythonic_params=pythonic_params,
         )
@@ -61,8 +65,11 @@ class FlaskOperation:
 
 
 class FlaskApi(AbstractRoutingAPI):
-
-    jsonifier = Jsonifier(flask.json, indent=2)
+    def __init__(
+        self, *args, jsonifier: t.Optional[Jsonifier] = None, **kwargs
+    ) -> None:
+        self.jsonifier = jsonifier or Jsonifier(flask.json, indent=2)
+        super().__init__(*args, **kwargs)
 
     def _set_base_path(self, base_path: t.Optional[str] = None) -> None:
         super()._set_base_path(base_path)
@@ -81,7 +88,7 @@ class FlaskApi(AbstractRoutingAPI):
 
     def make_operation(self, operation):
         return FlaskOperation.from_operation(
-            operation, pythonic_params=self.pythonic_params
+            operation, pythonic_params=self.pythonic_params, jsonifier=self.jsonifier
         )
 
     @staticmethod
@@ -173,6 +180,7 @@ class FlaskApp(AbstractApp):
         middlewares: t.Optional[list] = None,
         arguments: t.Optional[dict] = None,
         auth_all_paths: t.Optional[bool] = None,
+        jsonifier: t.Optional[Jsonifier] = None,
         pythonic_params: t.Optional[bool] = None,
         resolver: t.Optional[t.Union[Resolver, t.Callable]] = None,
         resolver_error: t.Optional[int] = None,
@@ -195,6 +203,7 @@ class FlaskApp(AbstractApp):
         :param arguments: Arguments to substitute the specification using Jinja.
         :param auth_all_paths: whether to authenticate not paths not defined in the specification.
             Defaults to False.
+        :param jsonifier: Custom jsonifier to overwrite json encoding for json responses.
         :param swagger_ui_options: A :class:`options.ConnexionOptions` instance with configuration
             options for the swagger ui.
         :param pythonic_params: When True, CamelCase parameters are converted to snake_case and an
@@ -220,6 +229,7 @@ class FlaskApp(AbstractApp):
             middlewares=middlewares,
             arguments=arguments,
             auth_all_paths=auth_all_paths,
+            jsonifier=jsonifier,
             pythonic_params=pythonic_params,
             resolver=resolver,
             resolver_error=resolver_error,

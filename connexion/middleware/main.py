@@ -8,6 +8,7 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 
 from connexion import utils
 from connexion.handlers import ResolverErrorHandler
+from connexion.jsonifier import Jsonifier
 from connexion.middleware.abstract import SpecMiddleware
 from connexion.middleware.context import ContextMiddleware
 from connexion.middleware.exceptions import ExceptionMiddleware
@@ -39,6 +40,7 @@ class _Options:
 
     arguments: t.Optional[dict] = None
     auth_all_paths: t.Optional[bool] = False
+    jsonifier: t.Optional[Jsonifier] = None
     pythonic_params: t.Optional[bool] = False
     resolver: t.Optional[t.Union[Resolver, t.Callable]] = None
     resolver_error: t.Optional[int] = None
@@ -101,6 +103,7 @@ class ConnexionMiddleware:
         middlewares: t.Optional[list] = None,
         arguments: t.Optional[dict] = None,
         auth_all_paths: t.Optional[bool] = None,
+        jsonifier: t.Optional[Jsonifier] = None,
         pythonic_params: t.Optional[bool] = None,
         resolver: t.Optional[t.Union[Resolver, t.Callable]] = None,
         resolver_error: t.Optional[int] = None,
@@ -122,6 +125,7 @@ class ConnexionMiddleware:
         :param arguments: Arguments to substitute the specification using Jinja.
         :param auth_all_paths: whether to authenticate not paths not defined in the specification.
             Defaults to False.
+        :param jsonifier: Custom jsonifier to overwrite json encoding for json responses.
         :param pythonic_params: When True, CamelCase parameters are converted to snake_case and an
             underscore is appended to any shadowed built-ins. Defaults to False.
         :param resolver: Callable that maps operationId to a function or instance of
@@ -151,6 +155,7 @@ class ConnexionMiddleware:
         self.options = _Options(
             arguments=arguments,
             auth_all_paths=auth_all_paths,
+            jsonifier=jsonifier,
             pythonic_params=pythonic_params,
             resolver=resolver,
             resolver_error=resolver_error,
@@ -198,6 +203,7 @@ class ConnexionMiddleware:
         base_path: t.Optional[str] = None,
         arguments: t.Optional[dict] = None,
         auth_all_paths: t.Optional[bool] = None,
+        jsonifier: t.Optional[Jsonifier] = None,
         pythonic_params: t.Optional[bool] = None,
         resolver: t.Optional[t.Union[Resolver, t.Callable]] = None,
         resolver_error: t.Optional[int] = None,
@@ -219,6 +225,7 @@ class ConnexionMiddleware:
         :param arguments: Arguments to substitute the specification using Jinja.
         :param auth_all_paths: whether to authenticate not paths not defined in the specification.
             Defaults to False.
+        :param jsonifier: Custom jsonifier to overwrite json encoding for json responses.
         :param pythonic_params: When True, CamelCase parameters are converted to snake_case and an
             underscore is appended to any shadowed built-ins. Defaults to False.
         :param resolver: Callable that maps operationId to a function or instance of
@@ -254,6 +261,7 @@ class ConnexionMiddleware:
         options = self.options.replace(
             arguments=arguments,
             auth_all_paths=auth_all_paths,
+            jsonifier=jsonifier,
             swagger_ui_options=swagger_ui_options,
             pythonic_params=pythonic_params,
             resolver=resolver,

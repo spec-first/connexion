@@ -20,7 +20,6 @@ class OpenAPIOperation(AbstractOperation):
 
     def __init__(
         self,
-        api,
         method,
         path,
         operation,
@@ -71,7 +70,6 @@ class OpenAPIOperation(AbstractOperation):
         self._router_controller = operation.get("x-openapi-router-controller")
 
         super().__init__(
-            api=api,
             method=method,
             path=path,
             operation=operation,
@@ -101,9 +99,8 @@ class OpenAPIOperation(AbstractOperation):
         logger.debug("produces: %s" % self.produces)
 
     @classmethod
-    def from_spec(cls, spec, api, path, method, resolver, *args, **kwargs):
+    def from_spec(cls, spec, *args, path, method, resolver, **kwargs):
         return cls(
-            api,
             method,
             path,
             spec.get_operation(path, method),
