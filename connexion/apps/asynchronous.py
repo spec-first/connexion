@@ -71,12 +71,16 @@ class AsyncOperation:
 
 
 class AsyncApi(RoutedAPI[AsyncOperation]):
-
-    jsonifier = Jsonifier()
-
-    def __init__(self, *args, pythonic_params: bool, **kwargs) -> None:
+    def __init__(
+        self,
+        *args,
+        pythonic_params: bool,
+        jsonifier: t.Optional[Jsonifier] = None,
+        **kwargs,
+    ) -> None:
         super().__init__(*args, **kwargs)
         self.pythonic_params = pythonic_params
+        self.jsonifier = jsonifier or Jsonifier()
         self.router = Router()
         self.add_paths()
 
@@ -124,6 +128,7 @@ class AsyncApp(AbstractApp):
         middlewares: t.Optional[list] = None,
         arguments: t.Optional[dict] = None,
         auth_all_paths: t.Optional[bool] = None,
+        jsonifier: t.Optional[Jsonifier] = None,
         pythonic_params: t.Optional[bool] = None,
         resolver: t.Optional[t.Union[Resolver, t.Callable]] = None,
         resolver_error: t.Optional[int] = None,
@@ -145,6 +150,7 @@ class AsyncApp(AbstractApp):
         :param arguments: Arguments to substitute the specification using Jinja.
         :param auth_all_paths: whether to authenticate not paths not defined in the specification.
             Defaults to False.
+        :param jsonifier: Custom jsonifier to overwrite json encoding for json responses.
         :param pythonic_params: When True, CamelCase parameters are converted to snake_case and an
             underscore is appended to any shadowed built-ins. Defaults to False.
         :param resolver: Callable that maps operationId to a function or instance of
@@ -170,11 +176,12 @@ class AsyncApp(AbstractApp):
             middlewares=middlewares,
             arguments=arguments,
             auth_all_paths=auth_all_paths,
-            swagger_ui_options=swagger_ui_options,
+            jsonifier=jsonifier,
             pythonic_params=pythonic_params,
             resolver=resolver,
             resolver_error=resolver_error,
             strict_validation=strict_validation,
+            swagger_ui_options=swagger_ui_options,
             uri_parser_class=uri_parser_class,
             validate_responses=validate_responses,
             validator_map=validator_map,
