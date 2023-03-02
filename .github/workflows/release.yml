@@ -2,7 +2,7 @@ name: Publish Python 🐍 distributions 📦 to PyPI and TestPyPI
 on:
   push:
     tags:
-      - '[0-9]+.[0-9]+.[0-9]+.*'
+      - '[0-9]+.[0-9]+.[0-9]+*'
   release:
     types:
       - published
