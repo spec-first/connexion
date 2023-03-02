@@ -13,8 +13,6 @@ components:
       type: object
       required:
       - name
-      - user_id
-      - password
       properties:
         user_id:
           type: integer

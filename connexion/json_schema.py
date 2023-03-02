@@ -128,34 +128,6 @@ def allow_nullable(validation_fn: t.Callable) -> t.Callable:
     return nullable_validation_fn
 
 
-def validate_required(validator, required, instance, schema):
-    if not validator.is_type(instance, "object"):
-        return
-
-    for prop in required:
-        if prop not in instance:
-            properties = schema.get("properties")
-            if properties is not None:
-                subschema = properties.get(prop)
-                if subschema is not None:
-                    if "readOnly" in validator.VALIDATORS and subschema.get("readOnly"):
-                        continue
-                    if "writeOnly" in validator.VALIDATORS and subschema.get(
-                        "writeOnly"
-                    ):
-                        continue
-                    if (
-                        "x-writeOnly" in validator.VALIDATORS
-                        and subschema.get("x-writeOnly") is True
-                    ):
-                        continue
-            yield ValidationError("%r is a required property" % prop)
-
-
-def validate_readOnly(validator, ro, instance, schema):
-    yield ValidationError("Property is read-only")
-
-
 def validate_writeOnly(validator, wo, instance, schema):
     yield ValidationError("Property is write-only")
 
@@ -168,8 +140,6 @@ Draft4RequestValidator = extend(
     {
         "type": NullableTypeValidator,
         "enum": NullableEnumValidator,
-        "required": validate_required,
-        "readOnly": validate_readOnly,
     },
 )
 
@@ -178,7 +148,6 @@ Draft4ResponseValidator = extend(
     {
         "type": NullableTypeValidator,
         "enum": NullableEnumValidator,
-        "required": validate_required,
         "writeOnly": validate_writeOnly,
         "x-writeOnly": validate_writeOnly,
     },
