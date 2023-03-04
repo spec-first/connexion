@@ -135,3 +135,16 @@ Non-breaking changes
 * Connexion now exposes ``context``, ``operation``, ``receive``, ``scope`` as global request-level context
 * Connexion now provides a ``DefaultsJSONRequestBodyValidator`` to fill in default values in received
   request bodies.
+
+Feedback
+========
+
+We would really love to hear from you. By trying Connexion 3 now and providing feedback, you get the opportunity to
+make sure that updating your application will be as painless as possible, while helping to create a more stable GA
+release.
+
+* For questions, comments, and feedback, please comment on the `Connexion 3 alpha release announcement`_
+* For issues specific to the alpha version, please create a new issue and mark it with the Connexion 3 milestone
+* For missing documentation, please comment on https://github.com/spec-first/connexion/issues/1531
+
+.. _Connexion 3 alpha release announcement: https://github.com/spec-first/connexion/discussions/1660
