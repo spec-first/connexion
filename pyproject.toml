@@ -75,7 +75,9 @@ pytest-asyncio = "~0.18.3"
 pytest-cov = "~2.12.1"
 
 [tool.poetry.group.docs.dependencies]
-sphinx-autoapi = "1.8.1"
+sphinx = "5.3.0"
+sphinx-autoapi = "2.0.1"
+sphinx-rtd-theme = "1.2.0"
 
 [build-system]
 requires = ["poetry-core>=1.2.0"]
