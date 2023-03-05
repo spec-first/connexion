@@ -271,13 +271,15 @@ def yamldumper(openapi):
     return yaml.dump(openapi, allow_unicode=True, Dumper=NoAnchorDumper)
 
 
-def not_installed_error(exc):  # pragma: no cover
-    """Raises the ImportError when the module/object is actually called."""
+def not_installed_error(exc, *, msg=None):  # pragma: no cover
+    """Raises the ImportError when the module/object is actually called with a custom message."""
 
-    def _required_lib(exc, *args, **kwargs):
+    def _delayed_error(*args, **kwargs):
+        if msg is not None:
+            raise type(exc)(msg).with_traceback(exc.__traceback__)
         raise exc
 
-    return functools.partial(_required_lib, exc)
+    return _delayed_error
 
 
 def extract_content_type(

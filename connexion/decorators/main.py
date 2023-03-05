@@ -19,9 +19,17 @@ from connexion.decorators.response import (
     SyncResponseDecorator,
 )
 from connexion.frameworks.abstract import Framework
-from connexion.frameworks.flask import Flask as FlaskFramework
 from connexion.frameworks.starlette import Starlette as StarletteFramework
 from connexion.uri_parsing import AbstractURIParser
+from connexion.utils import not_installed_error
+
+try:
+    from connexion.frameworks.flask import Flask as FlaskFramework
+except ImportError as e:
+    _flask_not_installed_error = not_installed_error(
+        e, msg="Please install connexion using the 'flask' extra"
+    )
+    FlaskFramework = _flask_not_installed_error  # type: ignore
 
 
 class BaseDecorator:
@@ -68,6 +76,7 @@ class BaseDecorator:
         function = self._sync_async_decorator(function)
 
         parameter_decorator = self._parameter_decorator_cls(
+            framework=self.framework,
             pythonic_params=self.pythonic_params,
         )
         function = parameter_decorator(function)
