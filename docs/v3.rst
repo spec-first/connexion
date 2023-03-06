@@ -10,10 +10,10 @@ Getting started with Connexion 3.0
 
 Connexion 3.0 brings some major changes compared to 2.X:
 
-- Connexion can now be used as middleware to supercharge any ASGI or WSGI compatible framework.
-- Aiohttp support has been dropped in favor of an ASGI compatible ``AsyncApp`` built on top of Starlette.
-- Connexion functionality is now pluggable by adding or removing middleware.
-- Validation is now pluggable by content type, solving longstanding issues regarding endpoints with
+* Connexion can now be used as middleware to supercharge any ASGI or WSGI compatible framework.
+* Aiohttp support has been dropped in favor of an ASGI compatible ``AsyncApp`` built on top of Starlette.
+* Connexion functionality is now pluggable by adding or removing middleware.
+* Validation is now pluggable by content type, solving longstanding issues regarding endpoints with
   multiple content types and providing a pluggable interface.
 
 Install alpha version
@@ -30,8 +30,8 @@ Using stand-alone Connexion
 
 You can use Connexion as a stand-alone web framework, using one of the available apps:
 
-- The ``FlaskApp``, which is built on top of Flask as known from Connexion 2.X.
-- The ``AsyncApp``, which is built on top of starlette and provides native asynchronous functionality.
+* The ``FlaskApp``, which is built on top of Flask as known from Connexion 2.X.
+* The ``AsyncApp``, which is built on top of starlette and provides native asynchronous functionality.
 
 If you don't require compatibility with the Flask ecosystem, we recommend to use the ``AsyncApp``.
 Even when writing mostly synchronous code, as you can just use synchronous view functions.
@@ -46,11 +46,11 @@ This provides all Connexion functionality except for automatic routing, automati
 and response serialization. You can add some of this functionality using ``Decorators`` provided by
 Connexion:
 
-- ``FlaskDecorator``: provides automatic parameter injection and response serialization for Flask
+* ``FlaskDecorator``: provides automatic parameter injection and response serialization for Flask
   applications.
-- ``ASGIDecorator``: provides automatic parameter injection for ASGI applications. Note that this
+* ``ASGIDecorator``: provides automatic parameter injection for ASGI applications. Note that this
   decorator injects Starlette datastructures (such as ``UploadFile``).
-- ``StarletteDecorator``: provides automatic parameter injection and response serialization for
+* ``StarletteDecorator``: provides automatic parameter injection and response serialization for
   Starlette applications.
 
 For examples, see https://github.com/spec-first/connexion/tree/main/examples/frameworks.
@@ -105,33 +105,46 @@ should work, connexion comes with ``uvicorn`` as an extra:
 Smaller breaking changes
 ------------------------
 
-- The ``options`` argument has been renamed to ``swagger_ui_options``
-- The ``uri_parser_class`` is now passed to the ``App`` or its ``add_api()`` method directly
+* The ``options`` argument has been renamed to ``swagger_ui_options``
+* The ``uri_parser_class`` is now passed to the ``App`` or its ``add_api()`` method directly
   instead of via the ``options`` argument.
-- The ``jsonifier`` is now passed to the ``App`` or its ``add_api()`` method instead of setting it
+* The ``jsonifier`` is now passed to the ``App`` or its ``add_api()`` method instead of setting it
   as an attribute on the Api.
-- Drop Flask 1.X support and support Flask 2.X async routes
-- Drop Python 3.6 (and add Python 3.10) support
-- ``connexion.request`` is now a Starlette ``Request`` instead of a Flask ``Request``
-- Route priority changed. The most specific route should now be defined first in the specification.
-- We no longer guess a content type for response serialization if multiple are defined in the spec.
+* Drop Flask 1.X support and support Flask 2.X async routes
+* Drop Python 3.6 (and add Python 3.10) support
+* ``connexion.request`` is now a Starlette ``Request`` instead of a Flask ``Request``
+* Route priority changed. The most specific route should now be defined first in the specification.
+* We no longer guess a content type for response serialization if multiple are defined in the spec.
   We do take into account returned headers.
-- Don't return 400 when read-only property is received
-- Content type is now validated for requests and responses if defined in the spec
-- The deprecated positions for ``x-body-name`` are no longer supported
-- The parameter ``pass_context_arg_name`` has been removed. Context is now available as global
+* Don't return 400 when read-only property is received
+* Content type is now validated for requests and responses if defined in the spec
+* The deprecated positions for ``x-body-name`` are no longer supported
+* The parameter ``pass_context_arg_name`` has been removed. Context is now available as global
   request-level context, or can be passed in by defining a ``context_`` parameter in your view function.
-- The ``MethodViewResolver`` has been renamed to ``MethodResolver``, and a new ``MethodViewResolver``
+* The ``MethodViewResolver`` has been renamed to ``MethodResolver``, and a new ``MethodViewResolver``
   has been added to work with Flask's ``MethodView`` specifically.
-- Built-in support for uWSGI has been removed. You can re-add this functionality using a custom middleware.
+* Built-in support for uWSGI has been removed. You can re-add this functionality using a custom middleware.
 
 
 Non-breaking changes
 --------------------
 
-- Relative and nested refs are now supported in OpenAPI / Swagger specifications
-- The ``required`` keyword is now supported for requestBodies
-- HTTP exceptions are now implemented as a hierarchy
-- Connexion now exposes ``context``, ``operation``, ``receive``, ``scope`` as global request-level context
-- Connexion now provides a ``DefaultsJSONRequestBodyValidator`` to fill in default values in received
+* Relative and nested refs are now supported in OpenAPI / Swagger specifications
+* The ``required`` keyword is now supported for requestBodies
+* HTTP exceptions are now implemented as a hierarchy
+* Connexion now exposes ``context``, ``operation``, ``receive``, ``scope`` as global request-level context
+* Connexion now provides a ``DefaultsJSONRequestBodyValidator`` to fill in default values in received
   request bodies.
+
+Feedback
+========
+
+We would really love to hear from you. By trying Connexion 3 now and providing feedback, you get the opportunity to
+make sure that updating your application will be as painless as possible, while helping to create a more stable GA
+release.
+
+* For questions, comments, and feedback, please comment on the `Connexion 3 alpha release announcement`_
+* For issues specific to the alpha version, please create a new issue and mark it with the Connexion 3 milestone
+* For missing documentation, please comment on https://github.com/spec-first/connexion/issues/1531
+
+.. _Connexion 3 alpha release announcement: https://github.com/spec-first/connexion/discussions/1660
