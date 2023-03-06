@@ -1,7 +1,7 @@
 """
 This module defines a FlaskApp, a Connexion application to wrap a Flask application.
 """
-
+import functools
 import pathlib
 import typing as t
 
@@ -36,6 +36,7 @@ class FlaskOperation:
         self.jsonifier = jsonifier
         self.operation_id = operation_id
         self.pythonic_params = pythonic_params
+        functools.update_wrapper(self, fn)
 
     @classmethod
     def from_operation(
@@ -104,7 +105,7 @@ class FlaskApi(AbstractRoutingAPI):
         return flask_path, endpoint_name
 
     def _add_operation_internal(
-        self, method: str, path: str, operation: FlaskOperation, name: str = None
+        self, method: str, path: str, operation: t.Callable, name: str = None
     ) -> None:
         self.blueprint.add_url_rule(path, name, operation, methods=[method])
 

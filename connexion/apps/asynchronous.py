@@ -2,6 +2,7 @@
 This module defines a native connexion asynchronous application.
 """
 
+import functools
 import logging
 import pathlib
 import typing as t
@@ -24,19 +25,16 @@ logger = logging.getLogger(__name__)
 class AsyncOperation:
     def __init__(
         self,
-        operation: AbstractOperation,
         fn: t.Callable,
-        uri_parser: AbstractURIParser,
         jsonifier: Jsonifier,
         operation_id: str,
         pythonic_params: bool,
     ) -> None:
-        self._operation = operation
         self._fn = fn
-        self.uri_parser = uri_parser
         self.jsonifier = jsonifier
         self.operation_id = operation_id
         self.pythonic_params = pythonic_params
+        functools.update_wrapper(self, fn)
 
     @classmethod
     def from_operation(
@@ -47,9 +45,7 @@ class AsyncOperation:
         jsonifier: Jsonifier,
     ) -> "AsyncOperation":
         return cls(
-            operation,
-            fn=operation.function,
-            uri_parser=operation.uri_parser_class,
+            operation.function,
             jsonifier=jsonifier,
             operation_id=operation.operation_id,
             pythonic_params=pythonic_params,
