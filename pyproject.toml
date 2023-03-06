@@ -45,6 +45,7 @@ connexion = 'connexion.cli:main'
 
 [tool.poetry.dependencies]
 python = '^3.7'
+asgiref = "^3.4"
 clickclick = ">= 1.2, < 21"
 httpx = "^0.23"
 importlib_metadata = { version = "^6.0.0", python = "<3.8" }
