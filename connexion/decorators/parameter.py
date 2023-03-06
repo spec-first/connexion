@@ -15,8 +15,7 @@ from copy import copy, deepcopy
 import inflection
 
 from connexion.context import context, operation
-from connexion.frameworks.flask import Flask as FlaskFramework
-from connexion.frameworks.starlette import Starlette as StarletteFramework
+from connexion.frameworks.abstract import Framework
 from connexion.http_facts import FORM_CONTENT_TYPES
 from connexion.lifecycle import ASGIRequest, WSGIRequest
 from connexion.operations import AbstractOperation, Swagger2Operation
@@ -31,8 +30,10 @@ class BaseParameterDecorator:
     def __init__(
         self,
         *,
+        framework: t.Type[Framework],
         pythonic_params: bool = False,
     ) -> None:
+        self.framework = framework
         self.sanitize_fn = pythonic if pythonic_params else sanitized
 
     def _maybe_get_body(
@@ -59,9 +60,6 @@ class BaseParameterDecorator:
 
 
 class SyncParameterDecorator(BaseParameterDecorator):
-
-    framework = FlaskFramework
-
     def __call__(self, function: t.Callable) -> t.Callable:
         unwrapped_function = unwrap_decorators(function)
         arguments, has_kwargs = inspect_function_arguments(unwrapped_function)
@@ -87,9 +85,6 @@ class SyncParameterDecorator(BaseParameterDecorator):
 
 
 class AsyncParameterDecorator(BaseParameterDecorator):
-
-    framework = StarletteFramework
-
     def __call__(self, function: t.Callable) -> t.Callable:
         unwrapped_function = unwrap_decorators(function)
         arguments, has_kwargs = inspect_function_arguments(unwrapped_function)

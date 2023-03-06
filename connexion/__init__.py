@@ -18,7 +18,9 @@ from .utils import not_installed_error  # NOQA
 try:
     from connexion.apps.flask import FlaskApi, FlaskApp
 except ImportError as e:  # pragma: no cover
-    _flask_not_installed_error = not_installed_error(e)
+    _flask_not_installed_error = not_installed_error(
+        e, msg="Please install connexion using the 'flask' extra"
+    )
     FlaskApi = _flask_not_installed_error  # type: ignore
     FlaskApp = _flask_not_installed_error  # type: ignore
 

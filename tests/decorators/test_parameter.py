@@ -13,6 +13,8 @@ from connexion.decorators.parameter import (
     SyncParameterDecorator,
     pythonic,
 )
+from connexion.frameworks.flask import Flask as FlaskFramework
+from connexion.frameworks.starlette import Starlette as StarletteFramework
 from connexion.testing import TestContext
 
 
@@ -29,7 +31,7 @@ def test_sync_injection():
     operation.body_name = lambda _: "body"
 
     with TestContext(operation=operation):
-        parameter_decorator = SyncParameterDecorator()
+        parameter_decorator = SyncParameterDecorator(framework=FlaskFramework)
         decorated_handler = parameter_decorator(handler)
         decorated_handler(request)
     func.assert_called_with(p1="123")
@@ -51,7 +53,7 @@ async def test_async_injection():
     operation.body_name = lambda _: "body"
 
     with TestContext(operation=operation):
-        parameter_decorator = AsyncParameterDecorator()
+        parameter_decorator = AsyncParameterDecorator(framework=StarletteFramework)
         decorated_handler = parameter_decorator(handler)
         await decorated_handler(request)
     func.assert_called_with(p1="123")
@@ -72,7 +74,7 @@ def test_sync_injection_with_context():
     operation.body_name = lambda _: "body"
 
     with TestContext(context=context, operation=operation):
-        parameter_decorator = SyncParameterDecorator()
+        parameter_decorator = SyncParameterDecorator(framework=FlaskFramework)
         decorated_handler = parameter_decorator(handler)
         decorated_handler(request)
         func.assert_called_with(context, p1="123", test="success")
@@ -96,7 +98,7 @@ async def test_async_injection_with_context():
     operation.body_name = lambda _: "body"
 
     with TestContext(context=context, operation=operation):
-        parameter_decorator = AsyncParameterDecorator()
+        parameter_decorator = AsyncParameterDecorator(framework=StarletteFramework)
         decorated_handler = parameter_decorator(handler)
         await decorated_handler(request)
         func.assert_called_with(context, p1="123", test="success")
