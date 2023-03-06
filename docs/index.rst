@@ -3,24 +3,55 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. warning::
+
+    This is the WIP documentation for Connexion 3.0 which is currently in alpha. You might want to
+    read the documentation for the latest `stable version`_ instead.
+
+    If you want to try out Connexion 3.0, refer to the :ref: `v3`_ section.
+
 Welcome to Connexion's documentation!
 =====================================
 
-Connexion is a framework on top of Flask_ that automagically handles
-HTTP requests defined using `OpenAPI`_ (formerly known
-as Swagger), supporting both `v2.0`_ and `v3.0`_ of the specification. 
+Connexion is a spec-first Python web framework that automatically provides functionality based on
+an `OpenAPI`_ (or swagger) specification.
 
-Connexion allows you to write these specifications, then maps the
-endpoints to your Python functions. This is what makes it unique from
-other tools that generate the specification based on your Python
-code. You are free to describe your REST API with as much detail as
-you want and then Connexion guarantees that it will work as
-you specified. We built Connexion this way in order to:
+Connexion Features
+------------------
 
-- Simplify the development process
-- Reduce misinterpretation about what an API is going to look like
+Based on your specification, Connexion provides the following functionality:
 
-Contents:
+* Automatic routing to your Python functions
+* Authentication
+* Request validation
+* Parameter parsing and injection
+* Response serialization
+* Response validation
+* A Swagger UI console with live documentation and 'try it out' feature
+
+You are free to describe your REST API with as much detail as you want and
+Connexion will guarantee that it works as you specified.
+
+Why Connexion?
+--------------
+
+Being spec-first is what makes Connexion unique in the Python ecosystem. With Connexion, you write
+your API specification first, and automatically get a lot of functionality. With all other popular
+Python web frameworks, you write your functionality first, and automatically get your specification.
+
+We choose the spec-first approach because it:
+
+* Stimulates thinking about the design of your API and enables quick feedback loops
+* Creates a common understanding of how the API should work
+* Allows server and client development in parallel
+* Enables contract testing
+* Allows for orchestrating multiple layers of your API stack from one contract (eg. API Gateway)
+
+For a more detailed explanation about the benefits of working spec-first, or an overview of helpful
+tooling, have a look at our `recommended resources`_.
+
+Documentation
+-------------
 
 .. toctree::
    :maxdepth: 2
@@ -35,7 +66,29 @@ Contents:
    exceptions
    v3
 
-.. _Flask: http://flask.pocoo.org/
+Recommended resources
+---------------------
+
+About the advantages of working spec-first:
+
+* :ref: `Blog Atlassian`
+* :ref: `API guidelines Zalando`
+* :ref: `Blog ML6`
+* :ref: `Blog Zalando`
+
+Tools to help you work spec-first:
+
+* `Online swagger editor`_
+* `VS Code plugin`_
+* `Pycharm plugin`_
+
+.. _stable version: https://connexion.readthedocs.io/en/stable/
+.. _v3: https://connexion.readthedocs.io/en/latest/v3.html
 .. _OpenAPI: https://openapis.org/
-.. _v2.0: https://spec.openapis.org/oas/v2.0.html
-.. _v3.0: https://spec.openapis.org/oas/v3.0.1.html
+.. _Blog atlassian: https://www.atlassian.com/blog/technology/spec-first-api-development
+.. _Blog ML6: https://blog.ml6.eu/why-we-decided-to-help-maintain-connexion-c9f449877083
+.. _Blog Zalando: https://engineering.zalando.com/posts/2016/12/crafting-effective-microservices-in-python.html
+.. _API guidelines Zalando: https://opensource.zalando.com/restful-api-guidelines/#api-first
+.. _Online swagger editor: https://editor.swagger.io/
+.. _VS Code plugin: https://marketplace.visualstudio.com/items?itemName=42Crunch.vscode-openapi
+.. _Pycharm plugin: https://plugins.jetbrains.com/plugin/14837-openapi-swagger-editor
