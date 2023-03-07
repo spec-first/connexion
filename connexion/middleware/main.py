@@ -51,6 +51,7 @@ class _Options:
     uri_parser_class: t.Optional[AbstractURIParser] = None
     validate_responses: t.Optional[bool] = False
     validator_map: t.Optional[dict] = None
+    security_map: t.Optional[dict] = None
 
     def __post_init__(self):
         self.resolver = (
@@ -115,6 +116,7 @@ class ConnexionMiddleware:
         uri_parser_class: t.Optional[AbstractURIParser] = None,
         validate_responses: t.Optional[bool] = None,
         validator_map: t.Optional[dict] = None,
+        security_map: t.Optional[dict] = None,
     ):
         """
         :param import_name: The name of the package or module that this object belongs to. If you
@@ -145,6 +147,8 @@ class ConnexionMiddleware:
             an impact on performance. Defaults to False.
         :param validator_map: A dictionary of validators to use. Defaults to
             :obj:`validators.VALIDATOR_MAP`.
+        :param security_map: A dictionary of security handlers to use. Defaults to
+            :obj:`security.SECURITY_HANDLERS`.
         """
         import_name = import_name or str(pathlib.Path.cwd())
         self.root_path = utils.get_root_path(import_name)
@@ -169,6 +173,7 @@ class ConnexionMiddleware:
             uri_parser_class=uri_parser_class,
             validate_responses=validate_responses,
             validator_map=validator_map,
+            security_map=security_map,
         )
 
         self.extra_files: t.List[str] = []
@@ -217,6 +222,7 @@ class ConnexionMiddleware:
         uri_parser_class: t.Optional[AbstractURIParser] = None,
         validate_responses: t.Optional[bool] = None,
         validator_map: t.Optional[dict] = None,
+        security_map: t.Optional[dict] = None,
         **kwargs,
     ) -> t.Any:
         """
@@ -247,6 +253,8 @@ class ConnexionMiddleware:
             an impact on performance. Defaults to False.
         :param validator_map: A dictionary of validators to use. Defaults to
             :obj:`validators.VALIDATOR_MAP`
+        :param security_map: A dictionary of security handlers to use. Defaults to
+            :obj:`security.SECURITY_HANDLERS`
         :param kwargs: Additional keyword arguments to pass to the `add_api` method of the managed
             middlewares. This can be used to pass arguments to middlewares added beyond the default
             ones.
@@ -275,6 +283,7 @@ class ConnexionMiddleware:
             uri_parser_class=uri_parser_class,
             validate_responses=validate_responses,
             validator_map=validator_map,
+            security_map=security_map,
         )
 
         for app in self.apps:

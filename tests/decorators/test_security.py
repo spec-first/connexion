@@ -10,12 +10,19 @@ from connexion.exceptions import (
     OAuthResponseProblem,
     OAuthScopeProblem,
 )
-from connexion.security import SecurityHandlerFactory
+from connexion.lifecycle import ASGIRequest
+from connexion.security import (
+    NO_VALUE,
+    ApiKeySecurityHandler,
+    BasicSecurityHandler,
+    OAuthSecurityHandler,
+    SecurityHandlerFactory,
+)
 
 
 def test_get_tokeninfo_url(monkeypatch):
-    security_handler_factory = SecurityHandlerFactory()
-    security_handler_factory.get_token_info_remote = MagicMock(
+    security_handler = OAuthSecurityHandler()
+    security_handler.get_token_info_remote = MagicMock(
         return_value="get_token_info_remote_result"
     )
     env = {}
@@ -24,24 +31,24 @@ def test_get_tokeninfo_url(monkeypatch):
     monkeypatch.setattr("connexion.security.logger", logger)
 
     security_def = {}
-    assert security_handler_factory.get_tokeninfo_func(security_def) is None
+    assert security_handler.get_tokeninfo_func(security_def) is None
     logger.warn.assert_not_called()
 
     env["TOKENINFO_URL"] = "issue-146"
     assert (
-        security_handler_factory.get_tokeninfo_func(security_def)
+        security_handler.get_tokeninfo_func(security_def)
         == "get_token_info_remote_result"
     )
-    security_handler_factory.get_token_info_remote.assert_called_with("issue-146")
+    security_handler.get_token_info_remote.assert_called_with("issue-146")
     logger.warn.assert_not_called()
     logger.warn.reset_mock()
 
     security_def = {"x-tokenInfoUrl": "bar"}
     assert (
-        security_handler_factory.get_tokeninfo_func(security_def)
+        security_handler.get_tokeninfo_func(security_def)
         == "get_token_info_remote_result"
     )
-    security_handler_factory.get_token_info_remote.assert_called_with("bar")
+    security_handler.get_token_info_remote.assert_called_with("bar")
     logger.warn.assert_not_called()
 
 
@@ -49,15 +56,14 @@ def test_verify_oauth_missing_auth_header():
     def somefunc(token):
         return None
 
-    security_handler_factory = SecurityHandlerFactory()
-    wrapped_func = security_handler_factory.verify_oauth(
-        somefunc, security_handler_factory.validate_scope, ["admin"]
+    security_handler = OAuthSecurityHandler()
+    wrapped_func = security_handler._get_verify_func(
+        somefunc, security_handler.validate_scope, ["admin"]
     )
 
-    request = MagicMock()
-    request.headers = {}
+    request = ASGIRequest(scope={"type": "http", "headers": []})
 
-    assert wrapped_func(request) is security_handler_factory.no_value
+    assert wrapped_func(request) is NO_VALUE
 
 
 async def test_verify_oauth_scopes_remote(monkeypatch):
@@ -69,20 +75,21 @@ async def test_verify_oauth_scopes_remote(monkeypatch):
         tokeninfo_response._content = json.dumps(tokeninfo).encode()
         return tokeninfo_response
 
-    security_handler_factory = SecurityHandlerFactory()
-    token_info_func = security_handler_factory.get_tokeninfo_func(
+    security_handler = OAuthSecurityHandler()
+    token_info_func = security_handler.get_tokeninfo_func(
         {"x-tokenInfoUrl": "https://example.org/tokeninfo"}
     )
-    wrapped_func = security_handler_factory.verify_oauth(
-        token_info_func, security_handler_factory.validate_scope, ["admin"]
+    wrapped_func = security_handler._get_verify_func(
+        token_info_func, security_handler.validate_scope, ["admin"]
     )
 
-    request = MagicMock()
-    request.headers = {"Authorization": "Bearer 123"}
+    request = ASGIRequest(
+        scope={"type": "http", "headers": [[b"authorization", b"Bearer 123"]]}
+    )
 
     client = MagicMock()
     client.get = get_tokeninfo_response
-    monkeypatch.setattr(SecurityHandlerFactory, "client", client)
+    monkeypatch.setattr(OAuthSecurityHandler, "client", client)
 
     with pytest.raises(OAuthScopeProblem) as exc_info:
         await wrapped_func(request)
@@ -112,13 +119,14 @@ async def test_verify_oauth_invalid_local_token_response_none():
     def somefunc(token):
         return None
 
-    security_handler_factory = SecurityHandlerFactory()
-    wrapped_func = security_handler_factory.verify_oauth(
-        somefunc, security_handler_factory.validate_scope, ["admin"]
+    security_handler = OAuthSecurityHandler()
+    wrapped_func = security_handler._get_verify_func(
+        somefunc, security_handler.validate_scope, ["admin"]
     )
 
-    request = MagicMock()
-    request.headers = {"Authorization": "Bearer 123"}
+    request = ASGIRequest(
+        scope={"type": "http", "headers": [[b"authorization", b"Bearer 123"]]}
+    )
 
     with pytest.raises(OAuthResponseProblem):
         await wrapped_func(request)
@@ -130,13 +138,14 @@ async def test_verify_oauth_scopes_local():
     def token_info(token):
         return tokeninfo
 
-    security_handler_factory = SecurityHandlerFactory()
-    wrapped_func = security_handler_factory.verify_oauth(
-        token_info, security_handler_factory.validate_scope, ["admin"]
+    security_handler = OAuthSecurityHandler()
+    wrapped_func = security_handler._get_verify_func(
+        token_info, security_handler.validate_scope, ["admin"]
     )
 
-    request = MagicMock()
-    request.headers = {"Authorization": "Bearer 123"}
+    request = ASGIRequest(
+        scope={"type": "http", "headers": [[b"authorization", b"Bearer 123"]]}
+    )
 
     with pytest.raises(OAuthScopeProblem) as exc_info:
         await wrapped_func(request)
@@ -166,13 +175,14 @@ def test_verify_basic_missing_auth_header():
     def somefunc(username, password, required_scopes=None):
         return None
 
-    security_handler_factory = SecurityHandlerFactory()
-    wrapped_func = security_handler_factory.verify_basic(somefunc)
+    security_handler = BasicSecurityHandler()
+    wrapped_func = security_handler._get_verify_func(somefunc)
 
-    request = MagicMock()
-    request.headers = {"Authorization": "Bearer 123"}
+    request = ASGIRequest(
+        scope={"type": "http", "headers": [[b"authorization", b"Bearer 123"]]}
+    )
 
-    assert wrapped_func(request) is security_handler_factory.no_value
+    assert wrapped_func(request) is NO_VALUE
 
 
 async def test_verify_basic():
@@ -181,11 +191,12 @@ async def test_verify_basic():
             return {"sub": "foo"}
         return None
 
-    security_handler_factory = SecurityHandlerFactory()
-    wrapped_func = security_handler_factory.verify_basic(basic_info)
+    security_handler = BasicSecurityHandler()
+    wrapped_func = security_handler._get_verify_func(basic_info)
 
-    request = MagicMock()
-    request.headers = {"Authorization": "Basic Zm9vOmJhcg=="}
+    request = ASGIRequest(
+        scope={"type": "http", "headers": [[b"authorization", b"Basic Zm9vOmJhcg=="]]}
+    )
 
     assert await wrapped_func(request) is not None
 
@@ -196,11 +207,12 @@ async def test_verify_apikey_query():
             return {"sub": "foo"}
         return None
 
-    security_handler_factory = SecurityHandlerFactory()
-    wrapped_func = security_handler_factory.verify_api_key(apikey_info, "query", "auth")
+    security_handler_factory = ApiKeySecurityHandler()
+    wrapped_func = security_handler_factory._get_verify_func(
+        apikey_info, "query", "auth"
+    )
 
-    request = MagicMock()
-    request.query = {"auth": "foobar"}
+    request = ASGIRequest(scope={"type": "http", "query_string": b"auth=foobar"})
 
     assert await wrapped_func(request) is not None
 
@@ -211,13 +223,12 @@ async def test_verify_apikey_header():
             return {"sub": "foo"}
         return None
 
-    security_handler_factory = SecurityHandlerFactory()
-    wrapped_func = security_handler_factory.verify_api_key(
+    security_handler_factory = ApiKeySecurityHandler()
+    wrapped_func = security_handler_factory._get_verify_func(
         apikey_info, "header", "X-Auth"
     )
 
-    request = MagicMock()
-    request.headers = {"X-Auth": "foobar"}
+    request = ASGIRequest(scope={"type": "http", "headers": [[b"x-auth", b"foobar"]]})
 
     assert await wrapped_func(request) is not None
 
@@ -234,10 +245,11 @@ async def test_multiple_schemes():
         return None
 
     security_handler_factory = SecurityHandlerFactory()
-    wrapped_func_key1 = security_handler_factory.verify_api_key(
+    apikey_security_handler_factory = ApiKeySecurityHandler()
+    wrapped_func_key1 = apikey_security_handler_factory._get_verify_func(
         apikey1_info, "header", "X-Auth-1"
     )
-    wrapped_func_key2 = security_handler_factory.verify_api_key(
+    wrapped_func_key2 = apikey_security_handler_factory._get_verify_func(
         apikey2_info, "header", "X-Auth-2"
     )
     schemes = {
@@ -247,19 +259,21 @@ async def test_multiple_schemes():
     wrapped_func = security_handler_factory.verify_multiple_schemes(schemes)
 
     # Single key does not succeed
-    request = MagicMock()
-    request.headers = {"X-Auth-1": "foobar"}
+    request = ASGIRequest(scope={"type": "http", "headers": [[b"x-auth-1", b"foobar"]]})
 
-    assert await wrapped_func(request) is security_handler_factory.no_value
+    assert await wrapped_func(request) is NO_VALUE
 
-    request = MagicMock()
-    request.headers = {"X-Auth-2": "bar"}
+    request = ASGIRequest(scope={"type": "http", "headers": [[b"x-auth-2", b"bar"]]})
 
-    assert await wrapped_func(request) is security_handler_factory.no_value
+    assert await wrapped_func(request) is NO_VALUE
 
     # Supplying both keys does succeed
-    request = MagicMock()
-    request.headers = {"X-Auth-1": "foobar", "X-Auth-2": "bar"}
+    request = ASGIRequest(
+        scope={
+            "type": "http",
+            "headers": [[b"x-auth-1", b"foobar"], [b"x-auth-2", b"bar"]],
+        }
+    )
 
     expected_token_info = {
         "key1": {"sub": "foo"},
@@ -273,7 +287,7 @@ async def test_verify_security_oauthproblem():
     security_handler_factory = SecurityHandlerFactory()
     security_func = security_handler_factory.verify_security([])
 
-    request = MagicMock()
+    request = MagicMock(spec_set=ASGIRequest)
     with pytest.raises(OAuthProblem) as exc_info:
         await security_func(request)
 
