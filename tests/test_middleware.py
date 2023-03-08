@@ -1,3 +1,5 @@
+from unittest import mock
+
 import pytest
 from connexion.middleware import ConnexionMiddleware
 from starlette.datastructures import MutableHeaders
@@ -46,3 +48,13 @@ def test_routing_middleware(middleware_app):
     assert (
         response.headers.get("operation_id") == "fakeapi.hello.post_greeting"
     ), response.status_code
+
+
+async def test_lifecycle():
+    """Test that lifecycle events are passed correctly."""
+
+    async def check_lifecycle(scope, receive, send):
+        assert scope["type"] == "lifecycle"
+
+    test_app = ConnexionMiddleware(check_lifecycle)
+    await test_app({"type": "lifecycle"}, mock.AsyncMock, mock.AsyncMock)

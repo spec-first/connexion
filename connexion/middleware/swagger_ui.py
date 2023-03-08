@@ -212,6 +212,10 @@ class SwaggerUIMiddleware(SpecMiddleware):
         self.router.mount(api.base_path, app=api.router)
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
         _original_scope.set(scope.copy())  # type: ignore
         await self.router(scope, receive, send)
 
