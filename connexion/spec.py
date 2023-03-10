@@ -94,10 +94,14 @@ class Specification(Mapping):
             raise InvalidSpecification.create_from(e)
 
     def get_path_params(self, path):
-        return deep_get(self._spec, ["paths", path]).get("parameters", [])
+        if not path.startswith("/api/api"):
+            return deep_get(self._spec, ["paths", path]).get("parameters", [])
+        return deep_get(self._spec, ["paths", path[4:]]).get("parameters", [])
 
     def get_operation(self, path, method):
-        return deep_get(self._spec, ["paths", path, method])
+        if not path.startswith("/api/api"):
+            return deep_get(self._spec, ["paths", path, method])
+        return deep_get(self._spec, ["paths", path[4:], method])
 
     @property
     def raw(self):

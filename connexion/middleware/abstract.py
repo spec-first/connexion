@@ -121,16 +121,17 @@ class AbstractRoutingAPI(AbstractSpecAPI, t.Generic[OP]):
         Tools and libraries MAY use the operation id to uniquely identify an operation.
         """
         spec_operation_cls = self.specification.operation_cls
+        api_api_path = f"/api{path}"
         spec_operation = spec_operation_cls.from_spec(
             self.specification,
-            path=path,
+            path=api_api_path,
             method=method,
             resolver=self.resolver,
             uri_parser_class=self.uri_parser_class,
         )
         operation = self.make_operation(spec_operation)
         path, name = self._framework_path_and_name(spec_operation, path)
-        self._add_operation_internal(method, path, operation, name=name)
+        self._add_operation_internal(method, api_api_path, operation, name=name)
 
     @abc.abstractmethod
     def make_operation(self, operation: AbstractOperation) -> OP:
