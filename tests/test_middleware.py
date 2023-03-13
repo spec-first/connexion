@@ -13,7 +13,7 @@ class TestMiddleware:
 
     __test__ = False
 
-    def __init__(self, app):
+    def __init__(self, app, **kwargs):
         self.app = app
 
     async def __call__(self, scope, receive, send):
@@ -49,19 +49,3 @@ def test_routing_middleware(middleware_app):
     assert (
         response.headers.get("operation_id") == "fakeapi.hello.post_greeting"
     ), response.status_code
-
-
-@pytest.mark.skipif(
-    sys.version_info < (3, 8), reason="AsyncMock only available from 3.8."
-)
-async def test_lifecycle():
-    """Test that lifecycle events are passed correctly."""
-    lifecycle_handler = mock.Mock()
-
-    async def check_lifecycle(scope, receive, send):
-        if scope["type"] == "lifecycle":
-            lifecycle_handler.handle()
-
-    test_app = ConnexionMiddleware(check_lifecycle)
-    await test_app({"type": "lifecycle"}, mock.AsyncMock, mock.AsyncMock)
-    lifecycle_handler.handle.assert_called()

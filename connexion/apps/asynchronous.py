@@ -15,6 +15,7 @@ from connexion.apps.abstract import AbstractApp
 from connexion.decorators import StarletteDecorator
 from connexion.jsonifier import Jsonifier
 from connexion.middleware.abstract import RoutedAPI, RoutedMiddleware
+from connexion.middleware.lifespan import Lifespan
 from connexion.operations import AbstractOperation
 from connexion.resolver import Resolver
 from connexion.uri_parsing import AbstractURIParser
@@ -120,6 +121,7 @@ class AsyncApp(AbstractApp):
         self,
         import_name: str,
         *,
+        lifespan: t.Optional[Lifespan] = None,
         middlewares: t.Optional[list] = None,
         specification_dir: t.Union[pathlib.Path, str] = "",
         arguments: t.Optional[dict] = None,
@@ -168,8 +170,9 @@ class AsyncApp(AbstractApp):
 
         super().__init__(
             import_name,
-            specification_dir=specification_dir,
+            lifespan=lifespan,
             middlewares=middlewares,
+            specification_dir=specification_dir,
             arguments=arguments,
             auth_all_paths=auth_all_paths,
             jsonifier=jsonifier,

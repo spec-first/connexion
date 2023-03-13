@@ -12,6 +12,7 @@ from connexion.jsonifier import Jsonifier
 from connexion.middleware.abstract import SpecMiddleware
 from connexion.middleware.context import ContextMiddleware
 from connexion.middleware.exceptions import ExceptionMiddleware
+from connexion.middleware.lifespan import Lifespan, LifespanMiddleware
 from connexion.middleware.request_validation import RequestValidationMiddleware
 from connexion.middleware.response_validation import ResponseValidationMiddleware
 from connexion.middleware.routing import RoutingMiddleware
@@ -92,6 +93,7 @@ class ConnexionMiddleware:
         RequestValidationMiddleware,
         ResponseValidationMiddleware,
         ContextMiddleware,
+        LifespanMiddleware,
     ]
 
     def __init__(
@@ -99,6 +101,7 @@ class ConnexionMiddleware:
         app: ASGIApp,
         *,
         import_name: t.Optional[str] = None,
+        lifespan: t.Optional[Lifespan] = None,
         middlewares: t.Optional[list] = None,
         specification_dir: t.Union[pathlib.Path, str] = "",
         arguments: t.Optional[dict] = None,
@@ -150,7 +153,9 @@ class ConnexionMiddleware:
 
         if middlewares is None:
             middlewares = self.default_middlewares
-        self.app, self.apps = self._apply_middlewares(app, middlewares)
+        self.app, self.apps = self._apply_middlewares(
+            app, middlewares, lifespan=lifespan
+        )
 
         self.options = _Options(
             arguments=arguments,
@@ -177,9 +182,8 @@ class ConnexionMiddleware:
         else:
             return self.root_path / path
 
-    @staticmethod
     def _apply_middlewares(
-        app: ASGIApp, middlewares: t.List[t.Type[ASGIApp]]
+        self, app: ASGIApp, middlewares: t.List[t.Type[ASGIApp]], **kwargs
     ) -> t.Tuple[ASGIApp, t.Iterable[ASGIApp]]:
         """Apply all middlewares to the provided app.
 
@@ -193,7 +197,7 @@ class ConnexionMiddleware:
         # Include the wrapped application in the returned list.
         apps = [app]
         for middleware in reversed(middlewares):
-            app = middleware(app)  # type: ignore
+            app = middleware(app, **kwargs)  # type: ignore
             apps.append(app)
         return app, list(reversed(apps))
 

@@ -18,6 +18,7 @@ from connexion.exceptions import InternalServerError, ProblemException, Resolver
 from connexion.frameworks import flask as flask_utils
 from connexion.jsonifier import Jsonifier
 from connexion.middleware.abstract import AbstractRoutingAPI, SpecMiddleware
+from connexion.middleware.lifespan import Lifespan
 from connexion.operations import AbstractOperation
 from connexion.problem import problem
 from connexion.resolver import Resolver
@@ -176,6 +177,7 @@ class FlaskApp(AbstractApp):
         self,
         import_name: str,
         *,
+        lifespan: t.Optional[Lifespan] = None,
         middlewares: t.Optional[list] = None,
         server_args: t.Optional[dict] = None,
         specification_dir: t.Union[pathlib.Path, str] = "",
@@ -195,6 +197,8 @@ class FlaskApp(AbstractApp):
         :param import_name: The name of the package or module that this object belongs to. If you
             are using a single module, __name__ is always the correct value. If you however are
             using a package, it’s usually recommended to hardcode the name of your package there.
+        :param lifespan: A lifespan context function, which can be used to perform startup and
+            shutdown tasks.
         :param middlewares: The list of middlewares to wrap around the application. Defaults to
             :obj:`middleware.main.ConnexionmMiddleware.default_middlewares`
         :param server_args: Arguments to pass to the Flask application.
@@ -226,6 +230,7 @@ class FlaskApp(AbstractApp):
         self.app = self.middleware_app.app
         super().__init__(
             import_name,
+            lifespan=lifespan,
             middlewares=middlewares,
             specification_dir=specification_dir,
             arguments=arguments,

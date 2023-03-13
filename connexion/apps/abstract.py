@@ -11,6 +11,7 @@ from starlette.types import Receive, Scope, Send
 
 from connexion.jsonifier import Jsonifier
 from connexion.middleware import ConnexionMiddleware, SpecMiddleware
+from connexion.middleware.lifespan import Lifespan
 from connexion.resolver import Resolver
 from connexion.uri_parsing import AbstractURIParser
 
@@ -32,6 +33,7 @@ class AbstractApp:
         self,
         import_name: str,
         *,
+        lifespan: t.Optional[Lifespan] = None,
         middlewares: t.Optional[list] = None,
         specification_dir: t.Union[pathlib.Path, str] = "",
         arguments: t.Optional[dict] = None,
@@ -79,6 +81,7 @@ class AbstractApp:
         self.middleware = ConnexionMiddleware(
             self.middleware_app,
             import_name=import_name,
+            lifespan=lifespan,
             middlewares=middlewares,
             specification_dir=specification_dir,
             arguments=arguments,
