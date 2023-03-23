@@ -12,6 +12,7 @@ from connexion.jsonifier import Jsonifier
 from connexion.middleware.abstract import SpecMiddleware
 from connexion.middleware.context import ContextMiddleware
 from connexion.middleware.exceptions import ExceptionMiddleware
+from connexion.middleware.lifespan import Lifespan, LifespanMiddleware
 from connexion.middleware.request_validation import RequestValidationMiddleware
 from connexion.middleware.response_validation import ResponseValidationMiddleware
 from connexion.middleware.routing import RoutingMiddleware
@@ -92,6 +93,7 @@ class ConnexionMiddleware:
         RequestValidationMiddleware,
         ResponseValidationMiddleware,
         ContextMiddleware,
+        LifespanMiddleware,
     ]
 
     def __init__(
@@ -99,8 +101,9 @@ class ConnexionMiddleware:
         app: ASGIApp,
         *,
         import_name: t.Optional[str] = None,
-        specification_dir: t.Union[pathlib.Path, str] = "",
+        lifespan: t.Optional[Lifespan] = None,
         middlewares: t.Optional[list] = None,
+        specification_dir: t.Union[pathlib.Path, str] = "",
         arguments: t.Optional[dict] = None,
         auth_all_paths: t.Optional[bool] = None,
         jsonifier: t.Optional[Jsonifier] = None,
@@ -117,11 +120,11 @@ class ConnexionMiddleware:
         :param import_name: The name of the package or module that this object belongs to. If you
             are using a single module, __name__ is always the correct value. If you however are
             using a package, it’s usually recommended to hardcode the name of your package there.
+        :param middlewares: The list of middlewares to wrap around the application. Defaults to
+            :obj:`middleware.main.ConnexionmMiddleware.default_middlewares`
         :param specification_dir: The directory holding the specification(s). The provided path
             should either be absolute or relative to the root path of the application. Defaults to
             the root path.
-        :param middlewares: The list of middlewares to wrap around the application. Defaults to
-            :obj:`middleware.main.ConnexionmMiddleware.default_middlewares`
         :param arguments: Arguments to substitute the specification using Jinja.
         :param auth_all_paths: whether to authenticate not paths not defined in the specification.
             Defaults to False.
@@ -150,7 +153,9 @@ class ConnexionMiddleware:
 
         if middlewares is None:
             middlewares = self.default_middlewares
-        self.app, self.apps = self._apply_middlewares(app, middlewares)
+        self.app, self.apps = self._apply_middlewares(
+            app, middlewares, lifespan=lifespan
+        )
 
         self.options = _Options(
             arguments=arguments,
@@ -177,9 +182,8 @@ class ConnexionMiddleware:
         else:
             return self.root_path / path
 
-    @staticmethod
     def _apply_middlewares(
-        app: ASGIApp, middlewares: t.List[t.Type[ASGIApp]]
+        self, app: ASGIApp, middlewares: t.List[t.Type[ASGIApp]], **kwargs
     ) -> t.Tuple[ASGIApp, t.Iterable[ASGIApp]]:
         """Apply all middlewares to the provided app.
 
@@ -193,13 +197,14 @@ class ConnexionMiddleware:
         # Include the wrapped application in the returned list.
         apps = [app]
         for middleware in reversed(middlewares):
-            app = middleware(app)  # type: ignore
+            app = middleware(app, **kwargs)  # type: ignore
             apps.append(app)
         return app, list(reversed(apps))
 
     def add_api(
         self,
         specification: t.Union[pathlib.Path, str, dict],
+        *,
         base_path: t.Optional[str] = None,
         arguments: t.Optional[dict] = None,
         auth_all_paths: t.Optional[bool] = None,

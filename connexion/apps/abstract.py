@@ -11,6 +11,7 @@ from starlette.types import Receive, Scope, Send
 
 from connexion.jsonifier import Jsonifier
 from connexion.middleware import ConnexionMiddleware, SpecMiddleware
+from connexion.middleware.lifespan import Lifespan
 from connexion.resolver import Resolver
 from connexion.uri_parsing import AbstractURIParser
 
@@ -32,8 +33,9 @@ class AbstractApp:
         self,
         import_name: str,
         *,
-        specification_dir: t.Union[pathlib.Path, str] = "",
+        lifespan: t.Optional[Lifespan] = None,
         middlewares: t.Optional[list] = None,
+        specification_dir: t.Union[pathlib.Path, str] = "",
         arguments: t.Optional[dict] = None,
         auth_all_paths: t.Optional[bool] = None,
         jsonifier: t.Optional[Jsonifier] = None,
@@ -50,11 +52,11 @@ class AbstractApp:
         :param import_name: The name of the package or module that this object belongs to. If you
             are using a single module, __name__ is always the correct value. If you however are
             using a package, it’s usually recommended to hardcode the name of your package there.
+        :param middlewares: The list of middlewares to wrap around the application. Defaults to
+            :obj:`middleware.main.ConnexionmMiddleware.default_middlewares`
         :param specification_dir: The directory holding the specification(s). The provided path
             should either be absolute or relative to the root path of the application. Defaults to
             the root path.
-        :param middlewares: The list of middlewares to wrap around the application. Defaults to
-            :obj:`middleware.main.ConnexionmMiddleware.default_middlewares`
         :param arguments: Arguments to substitute the specification using Jinja.
         :param auth_all_paths: whether to authenticate not paths not defined in the specification.
             Defaults to False.
@@ -79,8 +81,9 @@ class AbstractApp:
         self.middleware = ConnexionMiddleware(
             self.middleware_app,
             import_name=import_name,
-            specification_dir=specification_dir,
+            lifespan=lifespan,
             middlewares=middlewares,
+            specification_dir=specification_dir,
             arguments=arguments,
             auth_all_paths=auth_all_paths,
             jsonifier=jsonifier,

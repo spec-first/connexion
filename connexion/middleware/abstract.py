@@ -230,7 +230,7 @@ class RoutedMiddleware(SpecMiddleware, t.Generic[API]):
     api_cls: t.Type[API]
     """The subclass of RoutedAPI this middleware uses."""
 
-    def __init__(self, app: ASGIApp) -> None:
+    def __init__(self, app: ASGIApp, **kwargs) -> None:
         self.app = app
         self.apis: t.Dict[str, API] = {}
 

@@ -92,7 +92,7 @@ class RoutingAPI(AbstractRoutingAPI):
 
 
 class RoutingMiddleware(SpecMiddleware):
-    def __init__(self, app: ASGIApp) -> None:
+    def __init__(self, app: ASGIApp, **kwargs) -> None:
         """Middleware that resolves the Operation for an incoming request and attaches it to the
         scope.
 

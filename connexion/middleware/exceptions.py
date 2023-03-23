@@ -4,7 +4,7 @@ from starlette.exceptions import ExceptionMiddleware as StarletteExceptionMiddle
 from starlette.exceptions import HTTPException
 from starlette.requests import Request as StarletteRequest
 from starlette.responses import Response
-from starlette.types import Receive, Scope, Send
+from starlette.types import ASGIApp, Receive, Scope, Send
 
 from connexion.exceptions import InternalServerError, ProblemException, problem
 
@@ -15,8 +15,8 @@ class ExceptionMiddleware(StarletteExceptionMiddleware):
     """Subclass of starlette ExceptionMiddleware to change handling of HTTP exceptions to
     existing connexion behavior."""
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, next_app: ASGIApp, *args, **kwargs):
+        super().__init__(next_app)
         self.add_exception_handler(ProblemException, self.problem_handler)
         self.add_exception_handler(Exception, self.common_error_handler)
 
