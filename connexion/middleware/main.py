@@ -149,7 +149,10 @@ class ConnexionMiddleware:
         import_name = import_name or str(pathlib.Path.cwd())
         self.root_path = utils.get_root_path(import_name)
 
-        self.specification_dir = self.ensure_absolute(specification_dir)
+        spec_dir = pathlib.Path(specification_dir)
+        self.specification_dir = (
+            spec_dir if spec_dir.absolute() else self.root_path / spec_dir
+        )
 
         if middlewares is None:
             middlewares = self.default_middlewares
@@ -172,15 +175,6 @@ class ConnexionMiddleware:
         )
 
         self.extra_files: t.List[str] = []
-
-    def ensure_absolute(self, path: t.Union[str, pathlib.Path]) -> pathlib.Path:
-        """Ensure that a path is absolute. If the path is not absolute, it is assumed to relative
-        to the application root path and made absolute."""
-        path = pathlib.Path(path)
-        if path.is_absolute():
-            return path
-        else:
-            return self.root_path / path
 
     def _apply_middlewares(
         self, app: ASGIApp, middlewares: t.List[t.Type[ASGIApp]], **kwargs
