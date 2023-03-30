@@ -162,8 +162,8 @@ async def test_stream_replay():
         replay.append(message)
         more_body = message.get("more_body", False)
 
-        assert len(replay) <= len(messages), (
-            "Replayed more messages than received, " "break out of while loop"
-        )
+        assert len(replay) <= len(
+            messages
+        ), "Replayed more messages than received, break out of while loop"
 
     assert messages == replay
