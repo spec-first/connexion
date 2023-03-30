@@ -4,7 +4,7 @@ from urllib.parse import quote_plus
 import pytest
 from connexion.exceptions import BadRequestProblem
 from connexion.uri_parsing import Swagger2URIParser
-from connexion.validators.parameter import ParameterValidator
+from connexion.validators import AbstractRequestBodyValidator, ParameterValidator
 from starlette.datastructures import QueryParams
 
 
@@ -140,3 +140,30 @@ def test_parameter_validator(monkeypatch):
     with pytest.raises(BadRequestProblem) as exc:
         validator.validate_request(request)
     assert exc.value.detail.startswith("'x' is not one of ['a', 'b']")
+
+
+async def test_stream_replay():
+    messages = [
+        {"body": b"message 1", "more_body": True},
+        {"body": b"message 2", "more_body": False},
+    ]
+
+    async def receive():
+        return b""
+
+    wrapped_receive = AbstractRequestBodyValidator._insert_messages(
+        receive, messages=messages
+    )
+
+    replay = []
+    more_body = True
+    while more_body:
+        message = await wrapped_receive()
+        replay.append(message)
+        more_body = message.get("more_body", False)
+
+        assert len(replay) <= len(
+            messages
+        ), "Replayed more messages than received, break out of while loop"
+
+    assert messages == replay

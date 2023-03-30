@@ -99,11 +99,14 @@ class AbstractRequestBodyValidator:
         receive: Receive, *, messages: t.Iterable[t.MutableMapping[str, t.Any]]
     ) -> Receive:
         """Insert messages at the start of the `receive` channel."""
+        # Ensure that messages is an iterator so each message is replayed once.
+        message_iterator = iter(messages)
 
         async def receive_() -> t.MutableMapping[str, t.Any]:
-            for message in messages:
-                return message
-            return await receive()
+            try:
+                return next(message_iterator)
+            except StopIteration:
+                return await receive()
 
         return receive_
 
