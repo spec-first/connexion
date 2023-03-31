@@ -7,10 +7,10 @@ import pathlib
 import typing as t
 
 from starlette.testclient import TestClient
-from starlette.types import Receive, Scope, Send
+from starlette.types import ASGIApp, Receive, Scope, Send
 
 from connexion.jsonifier import Jsonifier
-from connexion.middleware import ConnexionMiddleware, SpecMiddleware
+from connexion.middleware import ConnexionMiddleware, MiddlewarePosition, SpecMiddleware
 from connexion.middleware.lifespan import Lifespan
 from connexion.resolver import Resolver
 from connexion.uri_parsing import AbstractURIParser
@@ -96,6 +96,20 @@ class AbstractApp:
             validate_responses=validate_responses,
             validator_map=validator_map,
         )
+
+    def add_middleware(
+        self,
+        middleware_class: t.Type[ASGIApp],
+        position: MiddlewarePosition = MiddlewarePosition.BEFORE_CONTEXT,
+        **options: t.Any,
+    ) -> None:
+        """Add a middleware to the stack on the specified position.
+
+        :param middleware_class: Middleware class to add
+        :param position: Position to add the middleware, one of the MiddlewarePosition Enum
+        :param options: Options to pass to the middleware_class on initialization
+        """
+        self.middleware.add_middleware(middleware_class, position=position, **options)
 
     def add_api(
         self,
