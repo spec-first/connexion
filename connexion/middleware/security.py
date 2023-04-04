@@ -97,7 +97,6 @@ class SecurityOperation:
 
         request = ASGIRequest(scope)
         await self.verification_fn(request)
-        # TODO: Adjust scope? Or adjust downstream validation to account for api keys in query?
         await self.next_app(scope, receive, send)
 
 

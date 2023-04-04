@@ -70,6 +70,29 @@ class RequestValidationOperation:
                 f"expected {self._operation.consumes}"
             )
 
+    @property
+    def security_query_params(self) -> t.List[str]:
+        """Get the names of query parameters that are used for security."""
+        if not hasattr(self, "_security_query_params"):
+            security_query_params: t.List[str] = []
+            if self._operation.security is None:
+                self._security_query_params = security_query_params
+                return self._security_query_params
+
+            for security_req in self._operation.security:
+                for scheme_name in security_req:
+                    security_scheme = self._operation.security_schemes[scheme_name]
+
+                    if (
+                        security_scheme["type"] == "apiKey"
+                        and security_scheme["in"] == "query"
+                    ):
+                        # Only query parameters need to be considered for strict_validation
+                        security_query_params.append(security_scheme["name"])
+            self._security_query_params = security_query_params
+
+        return self._security_query_params
+
     async def __call__(self, scope: Scope, receive: Receive, send: Send):
         # Validate parameters & headers
         uri_parser_class = self._operation._uri_parser_class
@@ -81,6 +104,7 @@ class RequestValidationOperation:
             self._operation.parameters,
             uri_parser=uri_parser,
             strict_validation=self.strict_validation,
+            security_query_params=self.security_query_params,
         )
         parameter_validator.validate(scope)
 

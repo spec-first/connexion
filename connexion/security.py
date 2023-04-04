@@ -54,6 +54,7 @@ import httpx
 
 from connexion.decorators.parameter import inspect_function_arguments
 from connexion.exceptions import OAuthProblem, OAuthResponseProblem, OAuthScopeProblem
+from connexion.lifecycle import ASGIRequest
 from connexion.utils import get_function_from_name
 
 logger = logging.getLogger(__name__)
@@ -254,25 +255,9 @@ class ApiKeySecurityHandler(AbstractSecurityHandler):
     def _get_verify_func(self, api_key_info_func, loc, name):
         check_api_key_func = self.check_api_key(api_key_info_func)
 
-        def wrapper(request):
-            def _immutable_pop(_dict, key):
-                """
-                Pops the key from an immutable dict and returns the value that was popped,
-                and a new immutable dict without the popped key.
-                """
-                cls = type(_dict)
-                try:
-                    _dict = _dict.to_dict(flat=False)
-                    return _dict.pop(key)[0], cls(_dict)
-                except AttributeError:
-                    _dict = dict(_dict.items())
-                    return _dict.pop(key), cls(_dict)
-
+        def wrapper(request: ASGIRequest):
             if loc == "query":
-                try:
-                    api_key, request.query = _immutable_pop(request.query, name)
-                except KeyError:
-                    api_key = None
+                api_key = request.query_params.get(name)
             elif loc == "header":
                 api_key = request.headers.get(name)
             elif loc == "cookie":
