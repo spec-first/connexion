@@ -192,6 +192,7 @@ class FlaskApp(AbstractApp):
         uri_parser_class: t.Optional[AbstractURIParser] = None,
         validate_responses: t.Optional[bool] = None,
         validator_map: t.Optional[dict] = None,
+        security_map: t.Optional[dict] = None,
     ):
         """
         :param import_name: The name of the package or module that this object belongs to. If you
@@ -225,6 +226,8 @@ class FlaskApp(AbstractApp):
             an impact on performance. Defaults to False.
         :param validator_map: A dictionary of validators to use. Defaults to
             :obj:`validators.VALIDATOR_MAP`.
+        :param security_map: A dictionary of security handlers to use. Defaults to
+            :obj:`security.SECURITY_HANDLERS`
         """
         self.middleware_app = FlaskMiddlewareApp(import_name, server_args or {})
         self.app = self.middleware_app.app
@@ -244,6 +247,7 @@ class FlaskApp(AbstractApp):
             uri_parser_class=uri_parser_class,
             validate_responses=validate_responses,
             validator_map=validator_map,
+            security_map=security_map,
         )
 
     def add_url_rule(

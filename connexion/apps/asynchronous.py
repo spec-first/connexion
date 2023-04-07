@@ -135,6 +135,7 @@ class AsyncApp(AbstractApp):
         uri_parser_class: t.Optional[AbstractURIParser] = None,
         validate_responses: t.Optional[bool] = None,
         validator_map: t.Optional[dict] = None,
+        security_map: t.Optional[dict] = None,
     ) -> None:
         """
         :param import_name: The name of the package or module that this object belongs to. If you
@@ -165,6 +166,8 @@ class AsyncApp(AbstractApp):
             an impact on performance. Defaults to False.
         :param validator_map: A dictionary of validators to use. Defaults to
             :obj:`validators.VALIDATOR_MAP`.
+        :param security_map: A dictionary of security handlers to use. Defaults to
+            :obj:`security.SECURITY_HANDLERS`
         """
         self.middleware_app: AsyncMiddlewareApp = AsyncMiddlewareApp()
 
@@ -184,6 +187,7 @@ class AsyncApp(AbstractApp):
             uri_parser_class=uri_parser_class,
             validate_responses=validate_responses,
             validator_map=validator_map,
+            security_map=security_map,
         )
 
     def add_url_rule(
