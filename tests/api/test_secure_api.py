@@ -196,3 +196,29 @@ def test_checking_that_client_token_has_all_necessary_scopes(
     headers = {"Authorization": "Bearer has_scopes_in_scopes_with_s"}
     response = app_client.get("/v1.0/more-than-one-scope", headers=headers)
     assert response.status_code == 200
+
+
+def test_security_with_strict_validation(secure_endpoint_strict_app):
+    app_client = secure_endpoint_strict_app.test_client()
+
+    res = app_client.get("/v1.0/test_apikey_query_parameter_validation")
+    assert res.status_code == 401
+
+    res = app_client.get(
+        "/v1.0/test_apikey_query_parameter_validation",
+        params={"name": "foo"},
+    )
+    assert res.status_code == 401
+
+    res = app_client.get(
+        "/v1.0/test_apikey_query_parameter_validation",
+        params={"apikey": "mykey", "name": "foo"},
+    )
+    assert res.status_code == 200
+
+    res = app_client.get(
+        "/v1.0/test_apikey_query_parameter_validation",
+        params={"apikey": "mykey", "name": "foo", "extra_param": "bar"},
+    )
+    assert res.status_code == 400
+    assert res.json()["detail"] == "Extra query parameter(s) extra_param not in spec"
