@@ -1,7 +1,7 @@
 import json
 
 import pytest
-from connexion.security import SecurityHandlerFactory
+from connexion.security import OAuthSecurityHandler
 
 
 class FakeResponse:
@@ -50,7 +50,7 @@ def oauth_requests(monkeypatch):
                     )
             return url
 
-    monkeypatch.setattr(SecurityHandlerFactory, "client", FakeClient())
+    monkeypatch.setattr(OAuthSecurityHandler, "client", FakeClient())
 
 
 def test_security_over_nonexistent_endpoints(oauth_requests, secure_api_app):

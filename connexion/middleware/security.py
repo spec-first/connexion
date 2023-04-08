@@ -51,7 +51,7 @@ class SecurityOperation:
         auth_funcs = []
         for security_req in self.security:
             if not security_req:
-                auth_funcs.append(self.security_handler_factory.verify_none())
+                auth_funcs.append(self.security_handler_factory.verify_none)
                 continue
 
             sec_req_funcs = {}
@@ -67,123 +67,15 @@ class SecurityOperation:
                         )
                         break
                     oauth = True
-                    token_info_func = self.security_handler_factory.get_tokeninfo_func(
-                        security_scheme
-                    )
-                    scope_validate_func = (
-                        self.security_handler_factory.get_scope_validate_func(
-                            security_scheme
-                        )
-                    )
-                    if not token_info_func:
-                        logger.warning("... x-tokenInfoFunc missing", extra=vars(self))
-                        break
 
-                    sec_req_funcs[
-                        scheme_name
-                    ] = self.security_handler_factory.verify_oauth(
-                        token_info_func, scope_validate_func, required_scopes
-                    )
-
-                # Swagger 2.0
-                elif security_scheme["type"] == "basic":
-                    basic_info_func = self.security_handler_factory.get_basicinfo_func(
-                        security_scheme
-                    )
-                    if not basic_info_func:
-                        logger.warning("... x-basicInfoFunc missing", extra=vars(self))
-                        break
-
-                    sec_req_funcs[
-                        scheme_name
-                    ] = self.security_handler_factory.verify_basic(basic_info_func)
-
-                # OpenAPI 3.0.0
-                elif security_scheme["type"] == "http":
-                    scheme = security_scheme["scheme"].lower()
-                    if scheme == "basic":
-                        basic_info_func = (
-                            self.security_handler_factory.get_basicinfo_func(
-                                security_scheme
-                            )
-                        )
-                        if not basic_info_func:
-                            logger.warning(
-                                "... x-basicInfoFunc missing", extra=vars(self)
-                            )
-                            break
-
-                        sec_req_funcs[
-                            scheme_name
-                        ] = self.security_handler_factory.verify_basic(basic_info_func)
-                    elif scheme == "bearer":
-                        bearer_info_func = (
-                            self.security_handler_factory.get_bearerinfo_func(
-                                security_scheme
-                            )
-                        )
-                        if not bearer_info_func:
-                            logger.warning(
-                                "... x-bearerInfoFunc missing", extra=vars(self)
-                            )
-                            break
-                        sec_req_funcs[
-                            scheme_name
-                        ] = self.security_handler_factory.verify_bearer(
-                            bearer_info_func
-                        )
-                    else:
-                        logger.warning(
-                            "... Unsupported http authorization scheme %s" % scheme,
-                            extra=vars(self),
-                        )
-                        break
-
-                elif security_scheme["type"] == "apiKey":
-                    scheme = security_scheme.get("x-authentication-scheme", "").lower()
-                    if scheme == "bearer":
-                        bearer_info_func = (
-                            self.security_handler_factory.get_bearerinfo_func(
-                                security_scheme
-                            )
-                        )
-                        if not bearer_info_func:
-                            logger.warning(
-                                "... x-bearerInfoFunc missing", extra=vars(self)
-                            )
-                            break
-                        sec_req_funcs[
-                            scheme_name
-                        ] = self.security_handler_factory.verify_bearer(
-                            bearer_info_func
-                        )
-                    else:
-                        apikey_info_func = (
-                            self.security_handler_factory.get_apikeyinfo_func(
-                                security_scheme
-                            )
-                        )
-                        if not apikey_info_func:
-                            logger.warning(
-                                "... x-apikeyInfoFunc missing", extra=vars(self)
-                            )
-                            break
-
-                        sec_req_funcs[
-                            scheme_name
-                        ] = self.security_handler_factory.verify_api_key(
-                            apikey_info_func,
-                            security_scheme["in"],
-                            security_scheme["name"],
-                        )
-
-                else:
-                    logger.warning(
-                        "... Unsupported security scheme type %s"
-                        % security_scheme["type"],
-                        extra=vars(self),
-                    )
+                sec_req_func = self.security_handler_factory.parse_security_scheme(
+                    security_scheme, required_scopes
+                )
+                if sec_req_func is None:
                     break
+
+                sec_req_funcs[scheme_name] = sec_req_func
+
             else:
                 # No break encountered: no missing funcs
                 if len(sec_req_funcs) == 1:
@@ -199,16 +91,22 @@ class SecurityOperation:
         return self.security_handler_factory.verify_security(auth_funcs)
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if not self.security:
+            await self.next_app(scope, receive, send)
+            return
+
         request = ASGIRequest(scope)
         await self.verification_fn(request)
         await self.next_app(scope, receive, send)
 
 
 class SecurityAPI(RoutedAPI[SecurityOperation]):
-    def __init__(self, *args, auth_all_paths: bool = False, **kwargs):
+    def __init__(
+        self, *args, auth_all_paths: bool = False, security_map: dict = None, **kwargs
+    ):
         super().__init__(*args, **kwargs)
 
-        self.security_handler_factory = SecurityHandlerFactory()
+        self.security_handler_factory = SecurityHandlerFactory(security_map)
 
         if auth_all_paths:
             self.add_auth_on_not_found()

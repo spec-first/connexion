@@ -12,7 +12,11 @@ from connexion.jsonifier import Jsonifier
 from connexion.middleware.security import SecurityOperation
 from connexion.operations import Swagger2Operation
 from connexion.resolver import Resolver
-from connexion.security import SecurityHandlerFactory
+from connexion.security import (
+    ApiKeySecurityHandler,
+    OAuthSecurityHandler,
+    SecurityHandlerFactory,
+)
 
 TEST_FOLDER = pathlib.Path(__file__).parent
 
@@ -418,11 +422,14 @@ def test_operation(api):
 
 
 def test_operation_remote_token_info():
-    security_handler_factory = SecurityHandlerFactory()
+    class MockOAuthHandler(OAuthSecurityHandler):
+        """Mock."""
 
+    security_handler_factory = SecurityHandlerFactory({"oauth2": MockOAuthHandler})
+    oauth_security_handler = security_handler_factory.security_handlers["oauth2"]
     verify_oauth = mock.MagicMock(return_value="verify_oauth_result")
-    security_handler_factory.verify_oauth = verify_oauth
-    security_handler_factory.get_token_info_remote = mock.MagicMock(
+    oauth_security_handler._get_verify_func = verify_oauth
+    oauth_security_handler.get_token_info_remote = mock.MagicMock(
         return_value="get_token_info_remote_result"
     )
 
@@ -434,9 +441,11 @@ def test_operation_remote_token_info():
     )
 
     verify_oauth.assert_called_with(
-        "get_token_info_remote_result", security_handler_factory.validate_scope, ["uid"]
+        "get_token_info_remote_result",
+        oauth_security_handler.validate_scope,
+        ["uid"],
     )
-    security_handler_factory.get_token_info_remote.assert_called_with(
+    oauth_security_handler.get_token_info_remote.assert_called_with(
         "https://oauth.example/token_info"
     )
 
@@ -491,10 +500,13 @@ def test_operation_composed_definition(api):
 
 
 def test_operation_local_security_oauth2():
-    security_handler_factory = SecurityHandlerFactory()
+    class MockOAuthHandler(OAuthSecurityHandler):
+        """Mock."""
 
+    security_handler_factory = SecurityHandlerFactory({"oauth2": MockOAuthHandler})
+    oauth_security_handler = security_handler_factory.security_handlers["oauth2"]
     verify_oauth = mock.MagicMock(return_value="verify_oauth_result")
-    security_handler_factory.verify_oauth = verify_oauth
+    oauth_security_handler._get_verify_func = verify_oauth
 
     SecurityOperation(
         next_app=mock.Mock,
@@ -504,15 +516,24 @@ def test_operation_local_security_oauth2():
     )
 
     verify_oauth.assert_called_with(
-        math.ceil, security_handler_factory.validate_scope, ["uid"]
+        math.ceil, oauth_security_handler.validate_scope, ["uid"]
+    )
+
+    verify_oauth.assert_called_with(
+        math.ceil,
+        security_handler_factory.security_handlers["oauth2"].validate_scope,
+        ["uid"],
     )
 
 
 def test_operation_local_security_duplicate_token_info():
-    security_handler_factory = SecurityHandlerFactory()
+    class MockOAuthHandler(OAuthSecurityHandler):
+        """Mock."""
 
+    security_handler_factory = SecurityHandlerFactory({"oauth2": MockOAuthHandler})
+    oauth_security_handler = security_handler_factory.security_handlers["oauth2"]
     verify_oauth = mock.MagicMock(return_value="verify_oauth_result")
-    security_handler_factory.verify_oauth = verify_oauth
+    oauth_security_handler._get_verify_func = verify_oauth
 
     SecurityOperation(
         next_app=mock.Mock,
@@ -522,7 +543,11 @@ def test_operation_local_security_duplicate_token_info():
     )
 
     verify_oauth.call_args.assert_called_with(
-        math.ceil, security_handler_factory.validate_scope
+        math.ceil, oauth_security_handler.validate_scope
+    )
+
+    verify_oauth.call_args.assert_called_with(
+        math.ceil, security_handler_factory.security_handlers["oauth2"].validate_scope
     )
 
 
@@ -565,9 +590,13 @@ def test_multiple_security_schemes_and():
     def return_api_key_name(func, in_, name):
         return name
 
-    security_handler_factory = SecurityHandlerFactory()
+    class MockApiKeyHandler(ApiKeySecurityHandler):
+        """Mock"""
+
+    security_handler_factory = SecurityHandlerFactory({"apiKey": MockApiKeyHandler})
+    apikey_security_handler = security_handler_factory.security_handlers["apiKey"]
     verify_api_key = mock.MagicMock(side_effect=return_api_key_name)
-    security_handler_factory.verify_api_key = verify_api_key
+    apikey_security_handler._get_verify_func = verify_api_key
     verify_multiple = mock.MagicMock(return_value="verify_multiple_result")
     security_handler_factory.verify_multiple_schemes = verify_multiple
 
@@ -594,9 +623,6 @@ def test_multiple_oauth_in_and(caplog):
     """
     caplog.set_level(logging.WARNING, logger="connexion.operations.secure")
     security_handler_factory = SecurityHandlerFactory()
-
-    verify_oauth = mock.MagicMock(return_value="verify_oauth_result")
-    security_handler_factory.verify_oauth = verify_oauth
 
     security = [{"oauth_1": ["uid"], "oauth_2": ["uid"]}]
 
@@ -688,10 +714,14 @@ def test_get_path_parameter_types(api):
 
 def test_oauth_scopes_in_or():
     """Tests whether an OAuth security scheme with 2 different possible scopes is correctly handled."""
-    security_handler_factory = SecurityHandlerFactory()
 
+    class MockOAuthFactory(OAuthSecurityHandler):
+        """Mock."""
+
+    security_handler_factory = SecurityHandlerFactory({"oauth2": MockOAuthFactory})
+    oauth_security_handler = security_handler_factory.security_handlers["oauth2"]
     verify_oauth = mock.MagicMock(return_value="verify_oauth_result")
-    security_handler_factory.verify_oauth = verify_oauth
+    oauth_security_handler._get_verify_func = verify_oauth
 
     security = [{"oauth": ["myscope"]}, {"oauth": ["myscope2"]}]
 
@@ -704,8 +734,8 @@ def test_oauth_scopes_in_or():
 
     verify_oauth.assert_has_calls(
         [
-            mock.call(math.ceil, security_handler_factory.validate_scope, ["myscope"]),
-            mock.call(math.ceil, security_handler_factory.validate_scope, ["myscope2"]),
+            mock.call(math.ceil, oauth_security_handler.validate_scope, ["myscope"]),
+            mock.call(math.ceil, oauth_security_handler.validate_scope, ["myscope2"]),
         ]
     )
 

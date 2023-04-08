@@ -19,11 +19,20 @@ except AttributeError:  # jsonschema < 4.5.0
 
 
 class ParameterValidator:
-    def __init__(self, parameters, uri_parser, strict_validation=False):
+    def __init__(
+        self,
+        parameters,
+        uri_parser,
+        strict_validation=False,
+        security_query_params=None,
+    ):
         """
         :param parameters: List of request parameter dictionaries
         :param uri_parser: class to use for uri parsing
         :param strict_validation: Flag indicating if parameters not in spec are allowed
+        :param security_query_params: List of query parameter names used for security.
+            These parameters will be ignored when checking for extra parameters in case of
+            strict validation.
         """
         self.parameters = collections.defaultdict(list)
         for p in parameters:
@@ -31,6 +40,7 @@ class ParameterValidator:
 
         self.uri_parser = uri_parser
         self.strict_validation = strict_validation
+        self.security_query_params = set(security_query_params or [])
 
     @staticmethod
     def validate_parameter(parameter_type, value, param, param_name=None):
@@ -59,9 +69,10 @@ class ParameterValidator:
 
         return request_params.difference(spec_params)
 
-    def validate_query_parameter_list(self, request):
+    def validate_query_parameter_list(self, request, security_params=None):
         request_params = request.query_params.keys()
         spec_params = [x["name"] for x in self.parameters.get("query", [])]
+        spec_params.extend(security_params or [])
         return self.validate_parameter_list(request_params, spec_params)
 
     def validate_query_parameter(self, param, request):
@@ -99,9 +110,10 @@ class ParameterValidator:
         self.validate_request(request)
 
     def validate_request(self, request):
-
         if self.strict_validation:
-            query_errors = self.validate_query_parameter_list(request)
+            query_errors = self.validate_query_parameter_list(
+                request, security_params=self.security_query_params
+            )
 
             if query_errors:
                 raise ExtraParameterProblem(
