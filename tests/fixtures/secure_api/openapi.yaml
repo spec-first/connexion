@@ -27,6 +27,20 @@ paths:
           required: true
           schema:
             type: string
+  '/greeting_basic':
+    post:
+      summary: Generate greeting
+      description: Generates a greeting message.
+      operationId: fakeapi.hello.post_greeting_basic
+      responses:
+        '200':
+          description: greeting response
+          content:
+            '*/*':
+              schema:
+                type: object
+      security:
+        - basic: []
 components:
   securitySchemes:
     oauth:
@@ -37,3 +51,8 @@ components:
           tokenUrl: 'https://oauth.example/token'
           scopes:
             myscope: can do stuff
+    basic:
+      type: http
+      scheme: basic
+      description: Basic auth
+      x-basicInfoFunc: fakeapi.auth.fake_basic_auth

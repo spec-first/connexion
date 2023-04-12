@@ -1,7 +1,10 @@
+import base64
 import json
 
 import pytest
-from connexion.security import OAuthSecurityHandler
+from connexion import App
+from connexion.exceptions import OAuthProblem
+from connexion.security import NO_VALUE, BasicSecurityHandler, OAuthSecurityHandler
 
 
 class FakeResponse:
@@ -222,3 +225,66 @@ def test_security_with_strict_validation(secure_endpoint_strict_app):
     )
     assert res.status_code == 400
     assert res.json()["detail"] == "Extra query parameter(s) extra_param not in spec"
+
+
+def test_security_map(secure_api_spec_dir, spec):
+    class MyBasicSecurityHandler(BasicSecurityHandler):
+        """Uses my_basic instead of basic as auth type."""
+
+        def _get_verify_func(self, basic_info_func):
+            check_basic_info_func = self.check_basic_auth(basic_info_func)
+
+            def wrapper(request):
+                auth_type, user_pass = self.get_auth_header_value(request)
+                if auth_type != "my_basic":
+                    return NO_VALUE
+
+                try:
+                    username, password = (
+                        base64.b64decode(user_pass).decode("latin1").split(":", 1)
+                    )
+                except Exception:
+                    raise OAuthProblem(detail="Invalid authorization header")
+
+                return check_basic_info_func(request, username, password)
+
+            return wrapper
+
+    security_map = {
+        "basic": MyBasicSecurityHandler,
+    }
+    # api level
+    app = App(__name__, specification_dir=secure_api_spec_dir)
+    app.add_api(spec, security_map=security_map)
+    app_client = app.test_client()
+
+    res = app_client.post(
+        "/v1.0/greeting_basic/",
+        headers={"Authorization": "basic dGVzdDp0ZXN0"},
+    )
+    assert res.status_code == 401
+
+    res = app_client.post(
+        "/v1.0/greeting_basic",
+        headers={"Authorization": "my_basic dGVzdDp0ZXN0"},
+    )
+    assert res.status_code == 200
+
+    # app level
+    app = App(
+        __name__, specification_dir=secure_api_spec_dir, security_map=security_map
+    )
+    app.add_api(spec)
+    app_client = app.test_client()
+
+    res = app_client.post(
+        "/v1.0/greeting_basic/",
+        headers={"Authorization": "basic dGVzdDp0ZXN0"},
+    )
+    assert res.status_code == 401
+
+    res = app_client.post(
+        "/v1.0/greeting_basic",
+        headers={"Authorization": "my_basic dGVzdDp0ZXN0"},
+    )
+    assert res.status_code == 200
