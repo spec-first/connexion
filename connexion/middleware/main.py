@@ -22,6 +22,7 @@ from connexion.middleware.security import SecurityMiddleware
 from connexion.middleware.swagger_ui import SwaggerUIMiddleware
 from connexion.resolver import Resolver
 from connexion.uri_parsing import AbstractURIParser
+from connexion.utils import inspect_function_arguments
 
 logger = logging.getLogger(__name__)
 
@@ -238,7 +239,11 @@ class ConnexionMiddleware:
         app = self.app
         apps = [app]
         for middleware in reversed(self.middlewares):
-            app = middleware(app, lifespan=self.lifespan)  # type: ignore
+            arguments, has_kwargs = inspect_function_arguments(middleware)
+            if "lifespan" in arguments:
+                app = middleware(app, lifespan=self.lifespan)  # type: ignore
+            else:
+                app = middleware(app)  # type: ignore
             apps.append(app)
 
         for app in apps:

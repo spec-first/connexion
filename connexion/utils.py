@@ -5,6 +5,7 @@ This module provides general utility functions used within Connexion.
 import asyncio
 import functools
 import importlib
+import inspect
 import os
 import pkgutil
 import sys
@@ -407,3 +408,18 @@ def get_root_path(import_name: str) -> str:
 
     # filepath is import_name.py for a module, or __init__.py for a package.
     return os.path.dirname(os.path.abspath(filepath))
+
+
+def inspect_function_arguments(function: t.Callable) -> t.Tuple[t.List[str], bool]:
+    """
+    Returns the list of variables names of a function and if it
+    accepts keyword arguments.
+    """
+    parameters = inspect.signature(function).parameters
+    bound_arguments = [
+        name
+        for name, p in parameters.items()
+        if p.kind not in (p.VAR_POSITIONAL, p.VAR_KEYWORD)
+    ]
+    has_kwargs = any(p.kind == p.VAR_KEYWORD for p in parameters.values())
+    return list(bound_arguments), has_kwargs

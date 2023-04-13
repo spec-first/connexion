@@ -12,9 +12,7 @@ class LifespanMiddleware:
     (https://www.starlette.io/lifespan/).
     """
 
-    def __init__(
-        self, next_app: ASGIApp, *, lifespan: t.Optional[Lifespan], **kwargs
-    ) -> None:
+    def __init__(self, next_app: ASGIApp, *, lifespan: t.Optional[Lifespan]) -> None:
         self.next_app = next_app
         self._lifespan = lifespan
         # Leverage a Starlette Router for lifespan handling only
