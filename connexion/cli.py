@@ -9,40 +9,23 @@ from os import path
 
 import click
 import importlib_metadata
-from clickclick import AliasedGroup, fatal_error
+from clickclick import AliasedGroup
 
 import connexion
 from connexion.mock import MockResolver
 
 logger = logging.getLogger("connexion.cli")
-CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
+
 FLASK_APP = "flask"
-AVAILABLE_SERVERS = {
-    "flask": [FLASK_APP],
-    "gevent": [FLASK_APP],
-    "tornado": [FLASK_APP],
-}
+ASYNC_APP = "async"
 AVAILABLE_APPS = {
-    FLASK_APP: "connexion.apps.flask_app.FlaskApp",
-}
-DEFAULT_SERVERS = {
-    FLASK_APP: FLASK_APP,
+    FLASK_APP: "connexion.apps.flask.FlaskApp",
+    ASYNC_APP: "connexion.apps.asynchronous.AsyncApp",
 }
 
-
-def validate_server_requirements(ctx, param, value):
-    if value == "gevent":
-        try:
-            import gevent  # NOQA
-        except ImportError:
-            fatal_error("gevent library is not installed")
-    elif value == "tornado":
-        try:
-            import tornado  # NOQA
-        except ImportError:
-            fatal_error("tornado library is not installed")
-    else:
-        return value
+# app is defined globally so it can be passed as an import_string to `app.run`, which is needed
+# to enable reloading
+app = None
 
 
 def print_version(ctx, param, value):
@@ -52,7 +35,7 @@ def print_version(ctx, param, value):
     ctx.exit()
 
 
-@click.group(cls=AliasedGroup, context_settings=CONTEXT_SETTINGS)
+@click.group(cls=AliasedGroup, context_settings={"help_option_names": ["-h", "--help"]})
 @click.option(
     "-V",
     "--version",
@@ -70,20 +53,8 @@ def main():
 @click.argument("spec_file")
 @click.argument("base_module_path", required=False)
 @click.option("--port", "-p", default=5000, type=int, help="Port to listen.")
-@click.option("--host", "-H", type=str, help="Host interface to bind on.")
 @click.option(
-    "--wsgi-server",
-    "-w",
-    type=click.Choice(list(AVAILABLE_SERVERS)),
-    callback=validate_server_requirements,
-    help="Which WSGI server container to use. (deprecated, use --server instead)",
-)
-@click.option(
-    "--server",
-    "-s",
-    type=click.Choice(list(AVAILABLE_SERVERS)),
-    callback=validate_server_requirements,
-    help="Which server container to use.",
+    "--host", "-H", default="127.0.0.1", type=str, help="Host interface to bind on."
 )
 @click.option(
     "--stub",
@@ -147,7 +118,7 @@ def main():
 @click.option(
     "--app-framework",
     "-f",
-    default=FLASK_APP,
+    default=ASYNC_APP,
     type=click.Choice(list(AVAILABLE_APPS)),
     help="The app framework used to run the server",
 )
@@ -156,8 +127,6 @@ def run(
     base_module_path,
     port,
     host,
-    wsgi_server,
-    server,
     stub,
     mock,
     hide_spec,
@@ -181,23 +150,6 @@ def run(
 
     - BASE_MODULE_PATH (optional): filesystem path where the API endpoints handlers are going to be imported from.
     """
-    if wsgi_server and server:
-        raise click.BadParameter(
-            "these options are mutually exclusive",
-            param_hint="'wsgi-server' and 'server'",
-        )
-    elif wsgi_server:
-        server = wsgi_server
-
-    if server is None:
-        server = DEFAULT_SERVERS[app_framework]
-
-    if app_framework not in AVAILABLE_SERVERS[server]:
-        message = "Invalid server '{}' for app-framework '{}'".format(
-            server, app_framework
-        )
-        raise click.UsageError(message)
-
     logging_level = logging.WARN
     if verbose > 0:
         logging_level = logging.INFO
@@ -224,14 +176,17 @@ def run(
 
     app_cls = connexion.utils.get_function_from_name(AVAILABLE_APPS[app_framework])
 
-    options = {
+    swagger_ui_options = {
         "serve_spec": not hide_spec,
         "swagger_path": console_ui_from or None,
         "swagger_ui": not hide_console_ui,
         "swagger_url": console_ui_url or None,
     }
 
-    app = app_cls(__name__, auth_all_paths=auth_all_paths, options=options)
+    global app
+    app = app_cls(
+        __name__, auth_all_paths=auth_all_paths, swagger_ui_options=swagger_ui_options
+    )
 
     app.add_api(
         spec_file_full_path,
@@ -242,7 +197,7 @@ def run(
         **api_extra_args,
     )
 
-    app.run(port=port, host=host, server=server, debug=debug)
+    app.run("connexion.cli:app", port=port, host=host, debug=debug)
 
 
 if __name__ == "__main__":  # pragma: no cover

@@ -35,7 +35,7 @@ def expected_arguments():
     Default values arguments used to call `connexion.App` by cli.
     """
     return {
-        "options": {
+        "swagger_ui_options": {
             "serve_spec": True,
             "swagger_ui": True,
             "swagger_path": None,
@@ -90,7 +90,7 @@ def test_run_using_option_hide_spec(mock_app_run, expected_arguments, spec_file)
     runner = CliRunner()
     runner.invoke(main, ["run", spec_file, "--hide-spec"], catch_exceptions=False)
 
-    expected_arguments["options"]["serve_spec"] = False
+    expected_arguments["swagger_ui_options"]["serve_spec"] = False
     mock_app_run.assert_called_with("connexion.cli", **expected_arguments)
 
 
@@ -98,7 +98,7 @@ def test_run_using_option_hide_console_ui(mock_app_run, expected_arguments, spec
     runner = CliRunner()
     runner.invoke(main, ["run", spec_file, "--hide-console-ui"], catch_exceptions=False)
 
-    expected_arguments["options"]["swagger_ui"] = False
+    expected_arguments["swagger_ui_options"]["swagger_ui"] = False
     mock_app_run.assert_called_with("connexion.cli", **expected_arguments)
 
 
@@ -109,7 +109,7 @@ def test_run_using_option_console_ui_from(mock_app_run, expected_arguments, spec
         main, ["run", spec_file, "--console-ui-from", user_path], catch_exceptions=False
     )
 
-    expected_arguments["options"]["swagger_path"] = user_path
+    expected_arguments["swagger_ui_options"]["swagger_path"] = user_path
     mock_app_run.assert_called_with("connexion.cli", **expected_arguments)
 
 
@@ -120,7 +120,7 @@ def test_run_using_option_console_ui_url(mock_app_run, expected_arguments, spec_
         main, ["run", spec_file, "--console-ui-url", user_url], catch_exceptions=False
     )
 
-    expected_arguments["options"]["swagger_url"] = user_url
+    expected_arguments["swagger_ui_options"]["swagger_url"] = user_url
     mock_app_run.assert_called_with("connexion.cli", **expected_arguments)
 
 
@@ -202,37 +202,3 @@ def test_run_unimplemented_operations_and_mock(mock_app_run):
         main, ["run", spec_file, "--mock=all"], catch_exceptions=False
     )
     assert result.exit_code == 0
-
-
-def test_run_with_wsgi_containers(mock_app_run, spec_file):
-    runner = CliRunner()
-
-    # missing gevent
-    result = runner.invoke(
-        main, ["run", spec_file, "-w", "gevent"], catch_exceptions=False
-    )
-    assert "gevent library is not installed" in result.output
-    assert result.exit_code == 1
-
-    # missing tornado
-    result = runner.invoke(
-        main, ["run", spec_file, "-w", "tornado"], catch_exceptions=False
-    )
-    assert "tornado library is not installed" in result.output
-    assert result.exit_code == 1
-
-    # using flask
-    result = runner.invoke(
-        main, ["run", spec_file, "-w", "flask"], catch_exceptions=False
-    )
-    assert result.exit_code == 0
-
-
-def test_run_with_wsgi_server_and_server_opts(mock_app_run, spec_file):
-    runner = CliRunner()
-
-    result = runner.invoke(
-        main, ["run", spec_file, "-w", "flask", "-s", "flask"], catch_exceptions=False
-    )
-    assert "these options are mutually exclusive" in result.output
-    assert result.exit_code == 2
