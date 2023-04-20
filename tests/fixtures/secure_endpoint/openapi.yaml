@@ -148,6 +148,19 @@ paths:
       responses:
         '200':
           description: some response
+  /test_apikey_query_parameter_validation:
+    get:
+      operationId: fakeapi.hello.test_apikey_query_parameter_validation
+      parameters:
+        - name: name
+          in: query
+          schema:
+            type: string
+      security:
+        - api_key_query: []
+      responses:
+        '200':
+          description: OK
 
 servers:
   - url: /v1.0
@@ -177,3 +190,8 @@ components:
       name: X-Api-Key
       in: header
       x-apikeyInfoFunc: fakeapi.hello.apikey_exception
+    api_key_query:
+      type: apiKey
+      name: apikey
+      in: query
+      x-apikeyInfoFunc: fakeapi.hello.apikey_info
