@@ -5,7 +5,6 @@ import abc
 import asyncio
 import builtins
 import functools
-import inspect
 import keyword
 import logging
 import re
@@ -19,7 +18,13 @@ from connexion.frameworks.abstract import Framework
 from connexion.http_facts import FORM_CONTENT_TYPES
 from connexion.lifecycle import ASGIRequest, WSGIRequest
 from connexion.operations import AbstractOperation, Swagger2Operation
-from connexion.utils import deep_merge, is_null, is_nullable, make_type
+from connexion.utils import (
+    deep_merge,
+    inspect_function_arguments,
+    is_null,
+    is_nullable,
+    make_type,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -154,21 +159,6 @@ def unwrap_decorators(function: t.Callable) -> t.Callable:
     while hasattr(function, "__wrapped__"):
         function = function.__wrapped__  # type: ignore
     return function
-
-
-def inspect_function_arguments(function: t.Callable) -> t.Tuple[t.List[str], bool]:
-    """
-    Returns the list of variables names of a function and if it
-    accepts keyword arguments.
-    """
-    parameters = inspect.signature(function).parameters
-    bound_arguments = [
-        name
-        for name, p in parameters.items()
-        if p.kind not in (p.VAR_POSITIONAL, p.VAR_KEYWORD)
-    ]
-    has_kwargs = any(p.kind == p.VAR_KEYWORD for p in parameters.values())
-    return list(bound_arguments), has_kwargs
 
 
 def snake_and_shadow(name: str) -> str:

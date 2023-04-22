@@ -13,7 +13,7 @@ class TestMiddleware:
 
     __test__ = False
 
-    def __init__(self, app, **kwargs):
+    def __init__(self, app):
         self.app = app
 
     async def __call__(self, scope, receive, send):

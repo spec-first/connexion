@@ -180,7 +180,7 @@ class SwaggerUIAPI(AbstractSpecAPI):
 
 
 class SwaggerUIMiddleware(SpecMiddleware):
-    def __init__(self, app: ASGIApp, **kwargs) -> None:
+    def __init__(self, app: ASGIApp) -> None:
         """Middleware that hosts a swagger UI.
 
         :param app: app to wrap in middleware.
