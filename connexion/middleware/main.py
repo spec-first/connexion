@@ -1,8 +1,10 @@
 import dataclasses
+import enum
 import logging
 import pathlib
 import typing as t
 from dataclasses import dataclass, field
+from functools import partial
 
 from starlette.types import ASGIApp, Receive, Scope, Send
 
@@ -82,6 +84,22 @@ class _Options:
         return dataclasses.replace(self, **changes)
 
 
+class MiddlewarePosition(enum.Enum):
+
+    BEFORE_SWAGGER = SwaggerUIMiddleware
+    BEFORE_ROUTING = RoutingMiddleware
+    BEFORE_SECURITY = SecurityMiddleware
+    BEFORE_VALIDATION = RequestValidationMiddleware
+    BEFORE_CONTEXT = ContextMiddleware
+
+
+class API:
+    def __init__(self, specification, *, base_path, **kwargs) -> None:
+        self.specification = specification
+        self.base_path = base_path
+        self.kwargs = kwargs
+
+
 class ConnexionMiddleware:
     """The main Connexion middleware, which wraps a list of specialized middlewares around the
     provided application."""
@@ -93,8 +111,8 @@ class ConnexionMiddleware:
         SecurityMiddleware,
         RequestValidationMiddleware,
         ResponseValidationMiddleware,
-        ContextMiddleware,
         LifespanMiddleware,
+        ContextMiddleware,
     ]
 
     def __init__(
@@ -103,7 +121,7 @@ class ConnexionMiddleware:
         *,
         import_name: t.Optional[str] = None,
         lifespan: t.Optional[Lifespan] = None,
-        middlewares: t.Optional[list] = None,
+        middlewares: t.Optional[t.List[ASGIApp]] = None,
         specification_dir: t.Union[pathlib.Path, str] = "",
         arguments: t.Optional[dict] = None,
         auth_all_paths: t.Optional[bool] = None,
@@ -153,13 +171,19 @@ class ConnexionMiddleware:
         import_name = import_name or str(pathlib.Path.cwd())
         self.root_path = utils.get_root_path(import_name)
 
-        self.specification_dir = self.ensure_absolute(specification_dir)
-
-        if middlewares is None:
-            middlewares = self.default_middlewares
-        self.app, self.apps = self._apply_middlewares(
-            app, middlewares, lifespan=lifespan
+        spec_dir = pathlib.Path(specification_dir)
+        self.specification_dir = (
+            spec_dir if spec_dir.is_absolute() else self.root_path / spec_dir
         )
+
+        self.app = app
+        self.lifespan = lifespan
+        self.middlewares = (
+            middlewares if middlewares is not None else self.default_middlewares
+        )
+        self.middleware_stack: t.Optional[t.Iterable[ASGIApp]] = None
+        self.apis: t.List[API] = []
+        self.error_handlers: t.List[tuple] = []
 
         self.options = _Options(
             arguments=arguments,
@@ -178,32 +202,58 @@ class ConnexionMiddleware:
 
         self.extra_files: t.List[str] = []
 
-    def ensure_absolute(self, path: t.Union[str, pathlib.Path]) -> pathlib.Path:
-        """Ensure that a path is absolute. If the path is not absolute, it is assumed to relative
-        to the application root path and made absolute."""
-        path = pathlib.Path(path)
-        if path.is_absolute():
-            return path
-        else:
-            return self.root_path / path
+    def add_middleware(
+        self,
+        middleware_class: t.Type[ASGIApp],
+        *,
+        position: MiddlewarePosition = MiddlewarePosition.BEFORE_CONTEXT,
+        **options: t.Any,
+    ) -> None:
+        """Add a middleware to the stack on the specified position.
 
-    def _apply_middlewares(
-        self, app: ASGIApp, middlewares: t.List[t.Type[ASGIApp]], **kwargs
-    ) -> t.Tuple[ASGIApp, t.Iterable[ASGIApp]]:
+        :param middleware_class: Middleware class to add
+        :param position: Position to add the middleware, one of the MiddlewarePosition Enum
+        :param options: Options to pass to the middleware_class on initialization
+        """
+        if self.middleware_stack is not None:
+            raise RuntimeError("Cannot add middleware after an application has started")
+
+        for m, middleware in enumerate(self.middlewares):
+            if isinstance(middleware, partial):
+                middleware = middleware.func
+
+            if middleware == position:
+                self.middlewares.insert(
+                    m, t.cast(ASGIApp, partial(middleware_class, **options))
+                )
+                break
+
+    def _build_middleware_stack(self) -> t.Tuple[ASGIApp, t.Iterable[ASGIApp]]:
         """Apply all middlewares to the provided app.
-
-        :param app: App to wrap in middlewares.
-        :param middlewares: List of middlewares to wrap around app. The list should be ordered
-                            from outer to inner middleware.
 
         :return: Tuple of the outer middleware wrapping the application and a list of the wrapped
             middlewares, including the wrapped application.
         """
         # Include the wrapped application in the returned list.
+        app = self.app
         apps = [app]
-        for middleware in reversed(middlewares):
-            app = middleware(app, **kwargs)  # type: ignore
+        for middleware in reversed(self.middlewares):
+            app = middleware(app, lifespan=self.lifespan)  # type: ignore
             apps.append(app)
+
+        for app in apps:
+            if isinstance(app, SpecMiddleware):
+                for api in self.apis:
+                    app.add_api(
+                        api.specification,
+                        base_path=api.base_path,
+                        **api.kwargs,
+                    )
+
+            if isinstance(app, ExceptionMiddleware):
+                for error_handler in self.error_handlers:
+                    app.add_exception_handler(error_handler)
+
         return app, list(reversed(apps))
 
     def add_api(
@@ -224,7 +274,7 @@ class ConnexionMiddleware:
         validator_map: t.Optional[dict] = None,
         security_map: t.Optional[dict] = None,
         **kwargs,
-    ) -> t.Any:
+    ) -> None:
         """
         Register een API represented by a single OpenAPI specification on this middleware.
         Multiple APIs can be registered on a single middleware.
@@ -261,6 +311,9 @@ class ConnexionMiddleware:
 
         :return: The Api registered on the wrapped application.
         """
+        if self.middleware_stack is not None:
+            raise RuntimeError("Cannot add api after an application has started")
+
         if isinstance(specification, dict):
             specification = specification
         else:
@@ -286,24 +339,19 @@ class ConnexionMiddleware:
             security_map=security_map,
         )
 
-        for app in self.apps:
-            if isinstance(app, SpecMiddleware):
-                api = app.add_api(
-                    specification,
-                    base_path=base_path,
-                    **options.__dict__,
-                    **kwargs,
-                )
-
-        # Api registered on the inner application.
-        return api
+        api = API(specification, base_path=base_path, **options.__dict__, **kwargs)
+        self.apis.append(api)
 
     def add_error_handler(
         self, code_or_exception: t.Union[int, t.Type[Exception]], function: t.Callable
     ) -> None:
-        for app in self.apps:
-            if isinstance(app, ExceptionMiddleware):
-                app.add_exception_handler(code_or_exception, function)
+        if self.middleware_stack is not None:
+            raise RuntimeError(
+                "Cannot add error handler after an application has started"
+            )
+
+        error_handler = (code_or_exception, function)
+        self.error_handlers.append(error_handler)
 
     def run(self, import_string: str = None, **kwargs):
         """Run the application using uvicorn.
@@ -338,4 +386,6 @@ class ConnexionMiddleware:
         uvicorn.run(app, **kwargs)
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if self.middleware_stack is None:
+            self.app, self.middleware_stack = self._build_middleware_stack()
         await self.app(scope, receive, send)

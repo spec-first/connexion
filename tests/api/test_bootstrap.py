@@ -1,4 +1,3 @@
-import json
 from unittest import mock
 
 import jinja2
@@ -25,19 +24,6 @@ def test_app_with_relative_path(simple_api_spec_dir, spec):
     get_bye = app_client.get("/v1.0/bye/jsantos")
     assert get_bye.status_code == 200
     assert get_bye.text == "Goodbye jsantos"
-
-
-def test_app_with_resolver(simple_api_spec_dir, spec):
-    from connexion.resolver import Resolver
-
-    resolver = Resolver()
-    app = App(
-        __name__,
-        specification_dir=".." / simple_api_spec_dir.relative_to(TEST_FOLDER),
-        resolver=resolver,
-    )
-    api = app.add_api(spec)
-    assert api.resolver is resolver
 
 
 def test_app_with_different_uri_parser(simple_api_spec_dir):
@@ -263,22 +249,17 @@ def test_resolve_classmethod(simple_app):
     assert resp.text == '"DummyClass"\n'
 
 
-def test_add_api_with_function_resolver_function_is_wrapped(simple_api_spec_dir, spec):
-    app = App(__name__, specification_dir=simple_api_spec_dir)
-    api = app.add_api(spec, resolver=lambda oid: (lambda foo: "bar"))
-    assert api.resolver.resolve_function_from_operation_id("faux")("bah") == "bar"
-
-
 def test_default_query_param_does_not_match_defined_type(
     default_param_error_spec_dir, app_class, spec
 ):
     with pytest.raises(InvalidSpecification):
-        build_app_from_fixture(
+        app = build_app_from_fixture(
             default_param_error_spec_dir,
             app_class=app_class,
             spec_file=spec,
             validate_responses=True,
         )
+        app.middleware._build_middleware_stack()
 
 
 def test_handle_add_operation_error(simple_api_spec_dir, monkeypatch):
@@ -290,6 +271,7 @@ def test_handle_add_operation_error(simple_api_spec_dir, monkeypatch):
     )
     with pytest.raises(Exception):
         app.add_api("swagger.yaml", resolver=lambda oid: (lambda foo: "bar"))
+        app.middleware._build_middleware_stack()
 
 
 def test_using_all_fields_in_path_item(simple_api_spec_dir):
@@ -299,6 +281,7 @@ def test_using_all_fields_in_path_item(simple_api_spec_dir):
     """
     app = App(__name__, specification_dir=simple_api_spec_dir)
     app.add_api("openapi.yaml")
+    app.middleware._build_middleware_stack()
 
     test_methods = set()
     for rule in app.app.url_map.iter_rules():
