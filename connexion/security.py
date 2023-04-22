@@ -67,7 +67,6 @@ NO_VALUE = object()
 class AbstractSecurityHandler:
 
     required_scopes_kw = "required_scopes"
-    context_kw = "context_"
     client = None
     security_definition_key: str
     """The key which contains the value for the function name to resolve."""
@@ -107,15 +106,10 @@ class AbstractSecurityHandler:
         return default
 
     def _generic_check(self, func, exception_msg):
-        (
-            need_to_add_context,
-            need_to_add_required_scopes,
-        ) = self._need_to_add_context_or_scopes(func)
+        need_to_add_required_scopes = self._need_to_add_scopes(func)
 
         async def wrapper(request, *args, required_scopes=None):
             kwargs = {}
-            if need_to_add_context:
-                kwargs[self.context_kw] = request.context
             if need_to_add_required_scopes:
                 kwargs[self.required_scopes_kw] = required_scopes
             token_info = func(*args, **kwargs)
@@ -146,11 +140,10 @@ class AbstractSecurityHandler:
             raise OAuthProblem(detail="Invalid authorization header")
         return auth_type.lower(), value
 
-    def _need_to_add_context_or_scopes(self, func):
+    def _need_to_add_scopes(self, func):
         arguments, has_kwargs = inspect_function_arguments(func)
-        need_context = self.context_kw in arguments
         need_required_scopes = has_kwargs or self.required_scopes_kw in arguments
-        return need_context, need_required_scopes
+        return need_required_scopes
 
     def _resolve_func(self, security_scheme):
         """
@@ -411,9 +404,6 @@ class OAuthSecurityHandler(AbstractSecurityHandler):
         get_token_info = self._generic_check(
             token_info_func, "Provided token is not valid"
         )
-        need_to_add_context, _ = self._need_to_add_context_or_scopes(
-            scope_validate_func
-        )
 
         async def wrapper(request, token, required_scopes):
             token_info = await get_token_info(
@@ -423,10 +413,7 @@ class OAuthSecurityHandler(AbstractSecurityHandler):
             # Fallback to 'scopes' for backward compatibility
             token_scopes = token_info.get("scope", token_info.get("scopes", ""))
 
-            kwargs = {}
-            if need_to_add_context:
-                kwargs[self.context_kw] = request.context
-            validation = scope_validate_func(required_scopes, token_scopes, **kwargs)
+            validation = scope_validate_func(required_scopes, token_scopes)
             while asyncio.iscoroutine(validation):
                 validation = await validation
             if not validation:
