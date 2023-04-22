@@ -239,7 +239,7 @@ class ConnexionMiddleware:
         app = self.app
         apps = [app]
         for middleware in reversed(self.middlewares):
-            arguments, has_kwargs = inspect_function_arguments(middleware)
+            arguments, _ = inspect_function_arguments(middleware)
             if "lifespan" in arguments:
                 app = middleware(app, lifespan=self.lifespan)  # type: ignore
             else:
