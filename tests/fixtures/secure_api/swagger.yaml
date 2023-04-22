@@ -14,6 +14,10 @@ securityDefinitions:
       x-tokenInfoUrl: https://oauth.example/token_info
       scopes:
         myscope: can do stuff
+    basic:
+      type: basic
+      description: Basic auth
+      x-basicInfoFunc: fakeapi.auth.fake_basic_auth
 
 security:
   - oauth:
@@ -37,3 +41,16 @@ paths:
           required: true
           type: string
           format: path
+
+  /greeting_basic/:
+    post:
+      summary: Generate greeting
+      description: Generates a greeting message.
+      operationId: fakeapi.hello.post_greeting_basic
+      responses:
+        200:
+          description: greeting response
+          schema:
+            type: object
+      security:
+        - basic: []
