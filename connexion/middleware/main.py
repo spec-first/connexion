@@ -257,7 +257,7 @@ class ConnexionMiddleware:
 
             if isinstance(app, ExceptionMiddleware):
                 for error_handler in self.error_handlers:
-                    app.add_exception_handler(error_handler)
+                    app.add_exception_handler(*error_handler)
 
         return app, list(reversed(apps))
 
