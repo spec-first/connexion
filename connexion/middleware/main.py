@@ -1,3 +1,4 @@
+import copy
 import dataclasses
 import enum
 import logging
@@ -180,7 +181,9 @@ class ConnexionMiddleware:
         self.app = app
         self.lifespan = lifespan
         self.middlewares = (
-            middlewares if middlewares is not None else self.default_middlewares
+            middlewares
+            if middlewares is not None
+            else copy.copy(self.default_middlewares)
         )
         self.middleware_stack: t.Optional[t.Iterable[ASGIApp]] = None
         self.apis: t.List[API] = []

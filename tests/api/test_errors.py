@@ -1,8 +1,3 @@
-import json
-
-import flask
-
-
 def fix_data(data):
     return data.replace(b'\\"', b'"')
 
