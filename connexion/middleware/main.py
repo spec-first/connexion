@@ -223,11 +223,16 @@ class ConnexionMiddleware:
             if isinstance(middleware, partial):
                 middleware = middleware.func
 
-            if middleware == position:
+            if middleware == position.value:
                 self.middlewares.insert(
                     m, t.cast(ASGIApp, partial(middleware_class, **options))
                 )
                 break
+        else:
+            raise ValueError(
+                f"Could not insert middleware at position {position.name}. "
+                f"Please make sure you have a {position.value} in your stack."
+            )
 
     def _build_middleware_stack(self) -> t.Tuple[ASGIApp, t.Iterable[ASGIApp]]:
         """Apply all middlewares to the provided app.
