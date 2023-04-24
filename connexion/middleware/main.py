@@ -1,3 +1,4 @@
+import copy
 import dataclasses
 import enum
 import logging
@@ -180,7 +181,9 @@ class ConnexionMiddleware:
         self.app = app
         self.lifespan = lifespan
         self.middlewares = (
-            middlewares if middlewares is not None else self.default_middlewares
+            middlewares
+            if middlewares is not None
+            else copy.copy(self.default_middlewares)
         )
         self.middleware_stack: t.Optional[t.Iterable[ASGIApp]] = None
         self.apis: t.List[API] = []
@@ -223,11 +226,16 @@ class ConnexionMiddleware:
             if isinstance(middleware, partial):
                 middleware = middleware.func
 
-            if middleware == position:
+            if middleware == position.value:
                 self.middlewares.insert(
                     m, t.cast(ASGIApp, partial(middleware_class, **options))
                 )
                 break
+        else:
+            raise ValueError(
+                f"Could not insert middleware at position {position.name}. "
+                f"Please make sure you have a {position.value} in your stack."
+            )
 
     def _build_middleware_stack(self) -> t.Tuple[ASGIApp, t.Iterable[ASGIApp]]:
         """Apply all middlewares to the provided app.
