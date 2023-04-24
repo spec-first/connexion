@@ -69,7 +69,6 @@ def test_position(spec, app_class):
         for middleware in ConnexionMiddleware.default_middlewares
         if middleware != SwaggerUIMiddleware
     ]
-    print(middlewares)
     app = build_app_from_fixture(
         "simple", app_class=app_class, spec_file=spec, middlewares=middlewares
     )
