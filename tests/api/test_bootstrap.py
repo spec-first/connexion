@@ -295,3 +295,16 @@ def test_async_route(simple_app):
     app_client = simple_app.test_client()
     resp = app_client.get("/v1.0/async-route")
     assert resp.status_code == 200
+
+
+def test_add_error_handler(app_class, simple_api_spec_dir):
+    app = app_class(__name__, specification_dir=simple_api_spec_dir)
+    app.add_api("openapi.yaml")
+
+    def custom_error_handler(_request, _exception):
+        pass
+
+    app.add_error_handler(Exception, custom_error_handler)
+    app.add_error_handler(500, custom_error_handler)
+
+    app.middleware._build_middleware_stack()
