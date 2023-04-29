@@ -30,6 +30,14 @@ Based on your specification, Connexion provides the following functionality:
 * Response validation
 * A Swagger UI console with live documentation and 'try it out' feature
 
+Connexion also helps you write your OpenAPI specification and develop against it by providing a
+command line interface which lets you test and mock your specification.
+
+.. code-block:: bash
+
+    connexion run openapi.yaml
+
+
 Why Connexion?
 --------------
 
