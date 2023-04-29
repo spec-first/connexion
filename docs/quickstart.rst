@@ -1,116 +1,128 @@
 Quickstart
 ==========
 
+Installation
+------------
 
-Prerequisites
--------------
+Make sure you are on Python 3.7+.
 
-Python 3.6+
-
-Installing It
--------------
-
-In your command line, type this:
+You can install connexion using pip:
 
 .. code-block:: bash
 
-    $ pip install connexion[swagger-ui]
+    $ pip install connexion
+
+Connexion provides extras with optional dependencies to unlock additional features:
+
+- :code:`flask`: Enables the :code:`FlaskApp` to build applications compatible with the Flask
+  ecosystem.
+- :code:`swagger-ui`: Enables a Swagger UI console for your application.
+- :code:`uvicorn`: Enables to run the your application using :code:`app.run()` for
+  development instead of using an external ASGI server.
+
+You can install them as follows:
+
+.. code-block:: bash
+
+    $ pip install connexion[<extra>]
+    $ pip install connexion[<extra1>,<extra2>]
 
 
-Running It
-----------
+Creating your application
+-------------------------
 
-Put your API YAML inside a folder in the root path of your application (e.g ``openapi/``) and then do
+Create a minimal application based on an OpenAPI specification:
 
-.. code-block:: python
-
-    import connexion
-
-    app = connexion.FlaskApp(__name__, specification_dir='openapi/')
-    app.add_api('my_api.yaml')
-    app.run(port=8080)
-
-
-Dynamic Rendering of Your Specification
----------------------------------------
-
-Connexion uses Jinja2_ to allow specification parameterization through
-`arguments` parameter. You can either define specification arguments
-globally for the application in the `connexion.App` constructor, or
-for each specific API in the `connexion.App#add_api` method:
-
-.. code-block:: python
-
-    app = connexion.FlaskApp(__name__, specification_dir='openapi/',
-                        arguments={'global': 'global_value'})
-    app.add_api('my_api.yaml', arguments={'api_local': 'local_value'})
-    app.run(port=8080)
-
-When a value is provided both globally and on the API, the API value
-will take precedence.
-
-The Swagger UI Console
-----------------------
-The Swagger UI for an API is available, by default, in
-``{base_path}/ui/`` where ``base_path`` is the base path of the API.
-
-You can disable the Swagger UI at the application level:
+**run.py**
 
 .. code-block:: python
 
-    options = {"swagger_ui": False}
-    app = connexion.FlaskApp(__name__, specification_dir='openapi/',
-                        options=options)
-    app.add_api('my_api.yaml')
+    from connexion import AsyncApp
 
+    app = AsyncApp(__name__)
+    app.add_api("openapi.yaml")
 
-You can also disable it at the API level:
+Creating a Flask application
+----------------------------
 
-.. code-block:: python
+When installing connexion with the :code:`flask` extra, the :code:`FlaskApp` becomes available to
+create an application using `Flask` underneath. This can be useful for compatibility with the
+`Flask` ecosystem, but has limited asynchronous functionality.
 
-    options = {"swagger_ui": False}
-    app = connexion.FlaskApp(__name__, specification_dir='openapi/')
-    app.add_api('my_api.yaml', options=options)
-
-You can pass custom Swagger UI `Configuration Parameters`_ like e.g.
-`displayOperationId` through the `swagger_ui_config` option:
+**run.py**
 
 .. code-block:: python
 
-    options = {"swagger_ui_config": {"displayOperationId": True}}
-    app = connexion.FlaskApp(__name__, specification_dir='openapi/',
-                        options=options)
+    from connexion import FlaskApp
 
+    app = FlaskApp(__name__)
+    app.add_api("openapi.yaml")
 
-.. _Configuration Parameters: https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/#parameters
+Running your application
+------------------------
 
-Server Backend
+You can run your application using an ASGI server such as `uvicorn`:
+
+.. code-block:: bash
+
+    uvicorn run:app
+
+or if you installed connexion using :code:`connexion[uvicorn]`, you can run it using the
+:code:`run` method, although this is only recommended for development:
+
+.. code-block:: python
+
+    app.run()
+
+The Swagger UI
 --------------
-By default connexion uses the default flask server but you can also use Tornado_ or gevent_ as the HTTP server, to do so set server
-to ``tornado`` or ``gevent``:
+
+If you installed connexion using the :code:`swagger-ui` extra, a Swagger UI is available for each
+API. By default the UI is hosted at :code:`{base_path}/ui/` where :code:`base_path`` is the base
+path of the API.
+
+.. code-block::
+
+    https://localhost:{port}/{base_path}/ui/
+
+Using connexion as middleware to wrap an ASGI (or WSGI) application
+-------------------------------------------------------------------
+
+Connexion can also be used as middleware to add its functionality to existing ASGI application
+written in a different framework (such as Starlette, Quart, Django, ...):
 
 .. code-block:: python
 
-    import connexion
+    from asgi_framework import App
+    from connexion import ConnexionMiddleware
 
-    app = connexion.FlaskApp(__name__, port = 8080, specification_dir='openapi/', server='tornado')
+    app = App(__name__)
+    app = ConnexionMiddleware(app)
+    app.add_api("openapi.yaml")
 
-
-Additionally, you can pass the parameters for the corresponding server as a dictionary using the `server_args` parameter. For example, in a scenario where you're serving static content, you can pass the parameters as follows:
+You can also wrap any WSGI application by wrapping it in a :code:`WSGIMiddleware`:
 
 .. code-block:: python
 
-    import connexion
-
-    app = connexion.FlaskApp(
-        __name__,
-        port=8080,
-        specification_dir='openapi/',
-        server='flask',
-        server_args={'static_url_path': '/', 'static_folder': 'wherever/your/static/files/are'}
-    )
+    from wsgi_framework import App
+    from connexion import ConnexionMiddleware
+    from a2wsgi import WSGIMiddleware
 
 
-.. _Jinja2: http://jinja.pocoo.org/
-.. _Tornado: http://www.tornadoweb.org/en/stable/
-.. _gevent: http://www.gevent.org/
+    wsgi_app = App(__name__)
+    asgi_app = WSGIMiddleware(wsgi_app)
+    app = ConnexionMiddleware(app)
+    app.add_api("openapi.yaml")
+
+
+Configuring your API
+--------------------
+
+You can configure your application on the App level or on the API level. When an argument is
+provided both on the App and the API, the API value will take precedence.
+
+.. code-block:: python
+
+    app = connexion.App(__name__, strict_validation=True)
+    app.add_api("openapi.yaml", strict_validation=True)
+
