@@ -71,10 +71,10 @@ Recommended resources
 
 About the advantages of working spec-first:
 
-* :ref: `Blog Atlassian`
-* :ref: `API guidelines Zalando`
-* :ref: `Blog ML6`
-* :ref: `Blog Zalando`
+* `Blog Atlassian`_
+* `API guidelines Zalando`_
+* `Blog ML6`_
+* `Blog Zalando`_
 
 Tools to help you work spec-first:
 
