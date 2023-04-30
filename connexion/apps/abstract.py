@@ -53,8 +53,9 @@ class AbstractApp:
         :param import_name: The name of the package or module that this object belongs to. If you
             are using a single module, __name__ is always the correct value. If you however are
             using a package, it’s usually recommended to hardcode the name of your package there.
+        :param lifespan: A lifespan context function, which can be used to perform startup and
         :param middlewares: The list of middlewares to wrap around the application. Defaults to
-            :obj:`middleware.main.ConnexionmMiddleware.default_middlewares`
+            :obj:`middleware.main.ConnexionMiddleware.default_middlewares`
         :param specification_dir: The directory holding the specification(s). The provided path
             should either be absolute or relative to the root path of the application. Defaults to
             the root path.
