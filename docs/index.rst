@@ -57,6 +57,7 @@ Documentation
    :maxdepth: 2
 
    quickstart
+   apps_and_apis
    cli
    routing
    request
