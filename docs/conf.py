@@ -31,6 +31,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx_tabs.tabs',
     'sphinx_toolbox.collapse',
+    'sphinx_design',
 ]
 
 autoclass_content = 'both'
