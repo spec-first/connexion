@@ -16,9 +16,10 @@ built using either the :code:`AsyncApp` or :code:`FlaskApp`.
 Creating your application
 -------------------------
 
-.. tabs::
+.. tab-set::
 
-    .. group-tab:: AsyncApp
+    .. tab-item:: AsyncApp
+        :sync: AsyncApp
 
         .. code-block:: python
 
@@ -26,12 +27,14 @@ Creating your application
 
             app = AsyncApp(__name__)
 
-        .. collapse:: View a detailed reference of the options accepted by the AsyncApp
+        .. dropdown:: View a detailed reference of the options accepted by the :code:`AsyncApp`
+            :icon: eye
 
             .. autoclass:: connexion.AsyncApp
                 :noindex:
 
-    .. group-tab:: FlaskApp
+    .. tab-item:: FlaskApp
+        :sync: FlaskApp
 
         .. note::
             To leverage the :code:`FlaskApp`, make sure you install connexion using the
@@ -43,12 +46,14 @@ Creating your application
 
             app = FlaskApp(__name__)
 
-        .. collapse:: View a detailed reference of the options accepted by the FlaskApp
+        .. dropdown:: View a detailed reference of the options accepted by the :code:`FlaskApp`
+            :icon: eye
 
             .. autoclass:: connexion.FlaskApp
                 :noindex:
 
-    .. group-tab:: ConnexionMiddleware
+    .. tab-item:: ConnexionMiddleware
+        :sync: ConnexionMiddleware
 
         .. code-block:: python
 
@@ -71,7 +76,9 @@ Creating your application
             asgi_app = WSGIMiddleware(wsgi_app)
             app = ConnexionMiddleware(app)
 
-        .. collapse:: View a detailed reference of the options accepted by the ConnexionMiddleware
+        .. dropdown:: View a detailed reference of the options accepted by the
+            :code:`ConnexionMiddleware`
+            :icon: eye
 
             .. autoclass:: connexion.ConnexionMiddleware
                 :noindex:
@@ -89,26 +96,28 @@ When an argument is provided both on the App and the API, the API value will tak
 
     app.add_api("openapi.yaml")
 
-.. collapse:: View a detailed reference of the options accepted by the add_api() method.
+.. dropdown:: View a detailed reference of the options accepted by the :code:`add_api()` method
+    :icon: eye
 
-    .. tabs::
+    .. tab-set::
 
-        .. group-tab:: AsyncApp
+        .. tab-item:: AsyncApp
+            :sync: AsyncApp
 
             .. autofunction:: connexion.AsyncApp.add_api
                 :noindex:
 
-        .. group-tab:: FlaskApp
+        .. tab-item:: FlaskApp
+            :sync: FlaskApp
 
             .. autofunction:: connexion.FlaskApp.add_api
                 :noindex:
 
-        .. group-tab:: ConnexionMiddleware
+        .. tab-item:: ConnexionMiddleware
+            :sync: ConnexionMiddleware
 
             .. autofunction:: connexion.ConnexionMiddleware.add_api
                 :noindex:
-
-|
 
 Running your application
 ------------------------
@@ -136,53 +145,61 @@ import string. In most cases, this can be achieved as follows:
 
     app.run(f"{Path(__file__).stem}:app")
 
-.. collapse:: View a detailed reference of the options accepted by the run() method.
+.. dropdown:: View a detailed reference of the options accepted by the :code:`run()` method
+    :icon: eye
 
-    .. tabs::
+    .. tab-set::
 
-        .. group-tab:: AsyncApp
+        .. tab-item:: AsyncApp
+            :sync: AsyncApp
 
             .. autofunction:: connexion.AsyncApp.run
                 :noindex:
 
-        .. group-tab:: FlaskApp
+        .. tab-item:: FlaskApp
+            :sync: FlaskApp
 
             .. autofunction:: connexion.FlaskApp.run
                 :noindex:
 
-        .. group-tab:: ConnexionMiddleware
+        .. tab-item:: ConnexionMiddleware
+            :sync: ConnexionMiddleware
 
             .. autofunction:: connexion.ConnexionMiddleware.run
                 :noindex:
 
-|
-
 Full class reference
 --------------------
 
-.. tabs::
+.. tab-set::
 
-    .. group-tab:: AsyncApp
+    .. tab-item:: AsyncApp
+        :sync: AsyncApp
 
-        .. collapse:: View a complete detailed reference of the AsyncApp
+        .. dropdown:: View a detailed reference of the :code:`AsyncApp`
+            :icon: eye
 
             .. autoclass:: connexion.AsyncApp
                 :members:
                 :undoc-members:
                 :inherited-members:
 
-    .. group-tab:: FlaskApp
+    .. tab-item:: FlaskApp
+        :sync: FlaskApp
 
-        .. collapse:: View a complete detailed reference of the FlaskApp
+        .. dropdown:: View a detailed reference of the :code:`FlaskApp`
+            :icon: eye
 
             .. autoclass:: connexion.FlaskApp
                 :members:
                 :undoc-members:
                 :inherited-members:
 
-    .. group-tab:: ConnexionMiddleware
+    .. tab-item:: ConnexionMiddleware
+        :sync: ConnexionMiddleware
 
-        .. collapse:: View a complete detailed reference of the ConnexionMiddleware
+        .. dropdown:: View a detailed reference of the :code:`ConnexionMiddleware`
+            :icon: eye
 
             .. autoclass:: connexion.ConnexionMiddleware
                 :members:
