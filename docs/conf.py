@@ -29,6 +29,7 @@
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx_copybutton',
     'sphinx_design',
 ]
 
