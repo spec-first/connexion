@@ -16,6 +16,8 @@ built using either the :code:`AsyncApp` or :code:`FlaskApp`.
 Creating your application
 -------------------------
 
+The first step is to create your application:
+
 .. tab-set::
 
     .. tab-item:: AsyncApp
@@ -87,14 +89,51 @@ Registering an API
 ------------------
 
 While you can register individual routes on your application, connexion really shines when you
-register an API defined by an OpenAPI (or Swagger) specification. You can add as many APIs as you
-want to a single application.
+register an API defined by an OpenAPI (or Swagger) specification.
 
-When an argument is provided both on the App and the API, the API value will take precedence.
+.. grid::
+    :padding: 0
 
-.. code-block:: python
+    .. grid-item:: **run.py**
 
-    app.add_api("openapi.yaml")
+        .. code-block:: python
+
+            def post_greeting(name: str):
+                return f"Hello {name}", 200
+
+            app.add_api("openapi.yaml")
+
+    .. grid-item:: **openapi.yaml**
+
+        .. code-block:: yaml
+
+            openapi: "3.0.0"
+            ...
+            paths:
+              /greeting/{name}:
+                post:
+                  operationId: run.post_greeting
+                  responses:
+                    200:
+                      content:
+                        text/plain:
+                          schema:
+                            type: string
+                  parameters:
+                    - name: name
+                      in: path
+                      required: true
+                      schema:
+                        type: string
+
+The operation described in your specification is automatically linked to your Python view function
+via the :code:`operationId`. You can change this behavior using different :code:`Resolvers`, see
+:doc:`routing`. When the endpoint is called, connexion will take care of routing, security,
+request body and parameter parsing, and response serialization. All based on the specification.
+
+You can add as many APIs as you want to a single application. The :code:`add_api()` method
+provides a lot of configuration options. When an option is provided both to the App and the API,
+the API value will take precedence.
 
 .. dropdown:: View a detailed reference of the options accepted by the :code:`add_api()` method
     :icon: eye
@@ -130,7 +169,7 @@ You can run your application using an ASGI server such as `uvicorn`. If you defi
     $ uvicorn run:app
 
 or if you installed connexion using :code:`connexion[uvicorn]`, you can run it using the
-:code:`run` method, although this is only recommended for development:
+:code:`run` method. This is only recommended for development:
 
 .. code-block:: python
 
