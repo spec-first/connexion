@@ -44,25 +44,25 @@ classifiers = [
 connexion = 'connexion.cli:main'
 
 [tool.poetry.dependencies]
-python = '^3.7'
-asgiref = "^3.4"
-clickclick = ">= 1.2, < 21"
-httpx = "^0.23"
-importlib_metadata = { version = "^6.0.0", python = "<3.8" }
-inflection = ">= 0.3.1, < 0.6"
-jsonschema = "^4.0.1"
-Jinja2 = "^3.0.0"
-python-multipart = "~0.0.5"
-PyYAML = ">= 5.1, < 7"
-requests = "^2.27"
+python = '>= 3.7'
+asgiref = ">= 3.4"
+clickclick = ">= 1.2"
+httpx = ">= 0.23"
+importlib_metadata = { version = ">=6.0.0", python = "<3.8" }
+inflection = ">= 0.3.1"
+jsonschema = ">= 4.0.1"
+Jinja2 = ">= 3.0.0"
+python-multipart = ">= 0.0.5"
+PyYAML = ">= 5.1"
+requests = ">= 2.27"
 starlette = ">= 0.25"
-typing-extensions = "^4"
-werkzeug = "^2.2.1"
+typing-extensions = ">= 4"
+werkzeug = ">= 2.2.1"
 
-a2wsgi = { version = "^1.7", optional = true }
-flask = { version = "^2.2", extras = ["async"], optional = true }
-py-swagger-ui = { version = "^1.1.0", optional = true }
-uvicorn = { version = "^0.17.6", extras = ["standard"], optional = true }
+a2wsgi = { version = ">= 1.7", optional = true }
+flask = { version = ">= 2.2", extras = ["async"], optional = true }
+py-swagger-ui = { version = ">= 1.1.0", optional = true }
+uvicorn = { version = ">= 0.17.6", extras = ["standard"], optional = true }
 
 [tool.poetry.extras]
 flask = ["a2wsgi", "flask"]
