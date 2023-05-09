@@ -160,8 +160,8 @@ class ConnexionMiddleware:
             start.
         :param strict_validation: When True, extra form or query parameters not defined in the
             specification result in a validation error. Defaults to False.
-        :param swagger_ui_options: A :class:`options.ConnexionOptions` instance with configuration
-            options for the swagger ui.
+        :param swagger_ui_options: A dict with configuration options for the swagger ui. See
+            :class:`options.ConnexionOptions`.
         :param uri_parser_class: Class to use for uri parsing. See :mod:`uri_parsing`.
         :param validate_responses: Whether to validate responses against the specification. This has
             an impact on performance. Defaults to False.
@@ -309,8 +309,8 @@ class ConnexionMiddleware:
             start.
         :param strict_validation: When True, extra form or query parameters not defined in the
             specification result in a validation error. Defaults to False.
-        :param swagger_ui_options: A :class:`options.ConnexionOptions` instance with configuration
-            options for the swagger ui.
+        :param swagger_ui_options: A dict with configuration options for the swagger ui. See
+            :class:`options.ConnexionOptions`.
         :param uri_parser_class: Class to use for uri parsing. See :mod:`uri_parsing`.
         :param validate_responses: Whether to validate responses against the specification. This has
             an impact on performance. Defaults to False.
@@ -358,6 +358,13 @@ class ConnexionMiddleware:
     def add_error_handler(
         self, code_or_exception: t.Union[int, t.Type[Exception]], function: t.Callable
     ) -> None:
+        """
+        Register a callable to handle application errors.
+
+        :param code_or_exception: An exception class or the status code of HTTP exceptions to
+            handle.
+        :param function: Callable that will handle exception.
+        """
         if self.middleware_stack is not None:
             raise RuntimeError(
                 "Cannot add error handler after an application has started"

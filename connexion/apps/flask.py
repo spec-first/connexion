@@ -201,7 +201,7 @@ class FlaskApp(AbstractApp):
         :param lifespan: A lifespan context function, which can be used to perform startup and
             shutdown tasks.
         :param middlewares: The list of middlewares to wrap around the application. Defaults to
-            :obj:`middleware.main.ConnexionmMiddleware.default_middlewares`
+            :obj:`middleware.main.ConnexionMiddleware.default_middlewares`
         :param server_args: Arguments to pass to the Flask application.
         :param specification_dir: The directory holding the specification(s). The provided path
             should either be absolute or relative to the root path of the application. Defaults to
@@ -221,6 +221,8 @@ class FlaskApp(AbstractApp):
             start.
         :param strict_validation: When True, extra form or query parameters not defined in the
             specification result in a validation error. Defaults to False.
+        :param swagger_ui_options: A dict with configuration options for the swagger ui. See
+            :class:`options.ConnexionOptions`.
         :param uri_parser_class: Class to use for uri parsing. See :mod:`uri_parsing`.
         :param validate_responses: Whether to validate responses against the specification. This has
             an impact on performance. Defaults to False.

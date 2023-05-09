@@ -27,20 +27,13 @@
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['autoapi.extension']
-
-autoapi_type = 'python'
-autoapi_options = ['members',
-                   'inherited-members',
-                   'undoc-members',
-                   'show-inheritance',
-                   'show-module-summary',
-                   'special-members',
-                   'imported-members']
-autoapi_python_class_content = 'both'
-autoapi_dirs = [
-    '../connexion'
+extensions = [
+    'sphinx.ext.autodoc',
+    'sphinx_copybutton',
+    'sphinx_design',
 ]
+
+autoclass_content = 'both'
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

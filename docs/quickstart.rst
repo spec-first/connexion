@@ -1,116 +1,280 @@
 Quickstart
 ==========
 
+Installation
+------------
 
-Prerequisites
--------------
-
-Python 3.6+
-
-Installing It
--------------
-
-In your command line, type this:
+You can install connexion using pip:
 
 .. code-block:: bash
 
-    $ pip install connexion[swagger-ui]
+    $ pip install connexion
+
+Connexion provides 'extras' with optional dependencies to unlock additional features:
+
+- :code:`flask`: Enables the :code:`FlaskApp` to build applications compatible with the Flask
+  ecosystem.
+- :code:`swagger-ui`: Enables a Swagger UI console for your application.
+- :code:`uvicorn`: Enables to run the your application using :code:`app.run()` for
+  development instead of using an external ASGI server.
+
+You can install them as follows:
+
+.. code-block:: bash
+
+    $ pip install connexion[<extra>]
+    $ pip install connexion[<extra1>,<extra2>].
+
+Creating your application
+-------------------------
+
+Connexion can be used either as a standalone application or as a middleware wrapping an existing
+ASGI (or WSGI) application written using a different framework. The standalone application can be
+built using either the :code:`AsyncApp` or :code:`FlaskApp`.
+
+- The :code:`AsyncApp` is a lightweight application with native asynchronous support. Use it if you
+  are starting a new project and have no specific reason to use one of the other options.
+- The :code:`FlaskApp` leverages the `Flask` framework, which is useful if you're migrating from
+  connexion 2.X or you want to leverage the `Flask` ecosystem.
+- The :code:`ConnexionMiddleware` can be wrapped around any existing ASGI or WSGI application.
+  Use it if you already have an application written in a different framework and want to add
+  functionality provided by connexion
+
+.. tab-set::
+
+    .. tab-item:: AsyncApp
+        :sync: AsyncApp
+
+        .. code-block:: python
+
+            from connexion import AsyncApp
+
+            app = AsyncApp(__name__)
+
+        .. dropdown:: View a detailed reference of the options accepted by the :code:`AsyncApp`
+            :icon: eye
+
+            .. autoclass:: connexion.AsyncApp
+                :noindex:
+
+    .. tab-item:: FlaskApp
+        :sync: FlaskApp
+
+        .. note::
+            To leverage the :code:`FlaskApp`, make sure you install connexion using the
+            :code:`flask` extra.
+
+        .. code-block:: python
+
+            from connexion import FlaskApp
+
+            app = FlaskApp(__name__)
+
+        .. dropdown:: View a detailed reference of the options accepted by the :code:`FlaskApp`
+            :icon: eye
+
+            .. autoclass:: connexion.FlaskApp
+                :noindex:
+
+    .. tab-item:: ConnexionMiddleware
+        :sync: ConnexionMiddleware
+
+        .. code-block:: python
+
+            from asgi_framework import App
+            from connexion import ConnexionMiddleware
+
+            app = App(__name__)
+            app = ConnexionMiddleware(app)
 
 
-Running It
-----------
+        You can also wrap a WSGI application leveraging the :code:`a2wsgi.WSGIMiddleware`:
 
-Put your API YAML inside a folder in the root path of your application (e.g ``openapi/``) and then do
+        .. code-block:: python
+
+            from wsgi_framework import App
+            from connexion import ConnexionMiddleware
+            from a2wsgi import WSGIMiddleware
+
+            wsgi_app = App(__name__)
+            asgi_app = WSGIMiddleware(wsgi_app)
+            app = ConnexionMiddleware(app)
+
+        .. dropdown:: View a detailed reference of the options accepted by the
+            :code:`ConnexionMiddleware`
+            :icon: eye
+
+            .. autoclass:: connexion.ConnexionMiddleware
+                :noindex:
+
+Registering an API
+------------------
+
+While you can register individual routes on your application, connexion really shines when you
+register an API defined by an OpenAPI (or Swagger) specification.
+
+.. grid::
+    :padding: 0
+
+    .. grid-item:: **run.py**
+
+        .. code-block:: python
+
+            def post_greeting(name: str):
+                return f"Hello {name}", 200
+
+            app.add_api("openapi.yaml")
+
+    .. grid-item:: **openapi.yaml**
+
+        .. code-block:: yaml
+
+            openapi: "3.0.0"
+            ...
+            paths:
+              /greeting/{name}:
+                post:
+                  operationId: run.post_greeting
+                  responses:
+                    200:
+                      content:
+                        text/plain:
+                          schema:
+                            type: string
+                  parameters:
+                    - name: name
+                      in: path
+                      required: true
+                      schema:
+                        type: string
+
+The operation described in your specification is automatically linked to your Python view function
+via the :code:`operationId`. You can change this behavior using different :code:`Resolvers`, see
+:doc:`routing`. When the endpoint is called, connexion will take care of routing, security,
+request body and parameter parsing, and response serialization. All based on the specification.
+
+You can add as many APIs as you want to a single application. The :code:`add_api()` method
+provides a lot of configuration options. When an option is provided both to the App and the API,
+the API value will take precedence.
+
+.. dropdown:: View a detailed reference of the options accepted by the :code:`add_api()` method
+    :icon: eye
+
+    .. tab-set::
+
+        .. tab-item:: AsyncApp
+            :sync: AsyncApp
+
+            .. autofunction:: connexion.AsyncApp.add_api
+                :noindex:
+
+        .. tab-item:: FlaskApp
+            :sync: FlaskApp
+
+            .. autofunction:: connexion.FlaskApp.add_api
+                :noindex:
+
+        .. tab-item:: ConnexionMiddleware
+            :sync: ConnexionMiddleware
+
+            .. autofunction:: connexion.ConnexionMiddleware.add_api
+                :noindex:
+
+Running your application
+------------------------
+
+You can run your application using an ASGI server such as `uvicorn`. If you defined your
+:code:`app` in a python module called :code:`run.py`, you can run it as follows:
+
+.. code-block:: bash
+
+    $ uvicorn run:app
+
+or if you installed connexion using :code:`connexion[uvicorn]`, you can run it using the
+:code:`run` method. This is only recommended for development:
 
 .. code-block:: python
 
-    import connexion
+    app.run()
 
-    app = connexion.FlaskApp(__name__, specification_dir='openapi/')
-    app.add_api('my_api.yaml')
-    app.run(port=8080)
-
-
-Dynamic Rendering of Your Specification
----------------------------------------
-
-Connexion uses Jinja2_ to allow specification parameterization through
-`arguments` parameter. You can either define specification arguments
-globally for the application in the `connexion.App` constructor, or
-for each specific API in the `connexion.App#add_api` method:
+To leverage automatic reloading of your application, you need to provide the application as an
+import string. In most cases, this can be achieved as follows:
 
 .. code-block:: python
 
-    app = connexion.FlaskApp(__name__, specification_dir='openapi/',
-                        arguments={'global': 'global_value'})
-    app.add_api('my_api.yaml', arguments={'api_local': 'local_value'})
-    app.run(port=8080)
+    from pathlib import Path
 
-When a value is provided both globally and on the API, the API value
-will take precedence.
+    app.run(f"{Path(__file__).stem}:app")
 
-The Swagger UI Console
-----------------------
-The Swagger UI for an API is available, by default, in
-``{base_path}/ui/`` where ``base_path`` is the base path of the API.
+.. dropdown:: View a detailed reference of the options accepted by the :code:`run()` method
+    :icon: eye
 
-You can disable the Swagger UI at the application level:
+    .. tab-set::
 
-.. code-block:: python
+        .. tab-item:: AsyncApp
+            :sync: AsyncApp
 
-    options = {"swagger_ui": False}
-    app = connexion.FlaskApp(__name__, specification_dir='openapi/',
-                        options=options)
-    app.add_api('my_api.yaml')
+            .. autofunction:: connexion.AsyncApp.run
+                :noindex:
 
+        .. tab-item:: FlaskApp
+            :sync: FlaskApp
 
-You can also disable it at the API level:
+            .. autofunction:: connexion.FlaskApp.run
+                :noindex:
 
-.. code-block:: python
+        .. tab-item:: ConnexionMiddleware
+            :sync: ConnexionMiddleware
 
-    options = {"swagger_ui": False}
-    app = connexion.FlaskApp(__name__, specification_dir='openapi/')
-    app.add_api('my_api.yaml', options=options)
+            .. autofunction:: connexion.ConnexionMiddleware.run
+                :noindex:
 
-You can pass custom Swagger UI `Configuration Parameters`_ like e.g.
-`displayOperationId` through the `swagger_ui_config` option:
-
-.. code-block:: python
-
-    options = {"swagger_ui_config": {"displayOperationId": True}}
-    app = connexion.FlaskApp(__name__, specification_dir='openapi/',
-                        options=options)
-
-
-.. _Configuration Parameters: https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/#parameters
-
-Server Backend
+The Swagger UI
 --------------
-By default connexion uses the default flask server but you can also use Tornado_ or gevent_ as the HTTP server, to do so set server
-to ``tornado`` or ``gevent``:
 
-.. code-block:: python
+If you installed connexion using the :code:`swagger-ui` extra, a Swagger UI is available for each
+API, providing interactive documentation. By default the UI is hosted at :code:`{base_path}/ui/`
+where :code:`base_path`` is the base path of the API.
 
-    import connexion
+**https://localhost:{port}/{base_path}/ui/**
 
-    app = connexion.FlaskApp(__name__, port = 8080, specification_dir='openapi/', server='tornado')
+.. image:: images/swagger_ui.png
 
+Full App class reference
+------------------------
 
-Additionally, you can pass the parameters for the corresponding server as a dictionary using the `server_args` parameter. For example, in a scenario where you're serving static content, you can pass the parameters as follows:
+For more details on what you can do, view the complete API reference below.
 
-.. code-block:: python
+.. tab-set::
 
-    import connexion
+    .. tab-item:: AsyncApp
+        :sync: AsyncApp
 
-    app = connexion.FlaskApp(
-        __name__,
-        port=8080,
-        specification_dir='openapi/',
-        server='flask',
-        server_args={'static_url_path': '/', 'static_folder': 'wherever/your/static/files/are'}
-    )
+        .. dropdown:: View a detailed reference of the :code:`AsyncApp`
+            :icon: eye
 
+            .. autoclass:: connexion.AsyncApp
+                :members:
+                :undoc-members:
+                :inherited-members:
 
-.. _Jinja2: http://jinja.pocoo.org/
-.. _Tornado: http://www.tornadoweb.org/en/stable/
-.. _gevent: http://www.gevent.org/
+    .. tab-item:: FlaskApp
+        :sync: FlaskApp
+
+        .. dropdown:: View a detailed reference of the :code:`FlaskApp`
+            :icon: eye
+
+            .. autoclass:: connexion.FlaskApp
+                :members:
+                :undoc-members:
+                :inherited-members:
+
+    .. tab-item:: ConnexionMiddleware
+        :sync: ConnexionMiddleware
+
+        .. dropdown:: View a detailed reference of the :code:`ConnexionMiddleware`
+            :icon: eye
+
+            .. autoclass:: connexion.ConnexionMiddleware
+                :members:
+                :undoc-members:
