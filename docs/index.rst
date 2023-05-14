@@ -63,6 +63,7 @@ Documentation
    :maxdepth: 2
 
    quickstart
+   middleware
    cli
    routing
    request
