@@ -52,7 +52,7 @@ class ExceptionMiddleware(StarletteExceptionMiddleware):
 
     @staticmethod
     def common_error_handler(_request: StarletteRequest, exc: Exception) -> Response:
-        logger.error(exc)
+        logger.error(exc, exc_info=exc)
 
         response = InternalServerError().to_problem()
 
