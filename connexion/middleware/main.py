@@ -87,12 +87,66 @@ class _Options:
 
 
 class MiddlewarePosition(enum.Enum):
+    """Positions to insert a middleware"""
 
     BEFORE_SWAGGER = SwaggerUIMiddleware
+    """Add before the :class:`SwaggerUIMiddleware`. This is useful if you want your changes to
+    affect the Swagger UI, such as a path altering middleware that should also alter the paths
+    exposed by the Swagger UI
+
+    Be mindful that security has not yet been applied at this stage.
+
+    Since the inserted middleware is positioned before the RoutingMiddleware, you cannot leverage
+    any routing information yet and should implement your middleware to work globally instead of on
+    an operation level.
+
+    :meta hide-value:
+    """
     BEFORE_ROUTING = RoutingMiddleware
+    """Add before the :class:`RoutingMiddleware`. This is useful if you want your changes to be
+    applied before hitting the router, such as for path altering or CORS middleware.
+
+    Be mindful that security has not yet been applied at this stage.
+
+    Since the inserted middleware is positioned before the RoutingMiddleware, you cannot leverage
+    any routing information yet and should implement your middleware to work globally instead of on
+    an operation level.
+
+    :meta hide-value:
+    """
     BEFORE_SECURITY = SecurityMiddleware
+    """Add before the :class:`SecurityMiddleware`. Insert middleware here that needs to be able to
+    adapt incoming requests before security is applied.
+
+    Be mindful that security has not yet been applied at this stage.
+
+    Since the inserted middleware is positioned after the RoutingMiddleware, you can leverage
+    routing information and implement the middleware to work on an individual operation level.
+
+    :meta hide-value:
+    """
     BEFORE_VALIDATION = RequestValidationMiddleware
+    """Add before the :class:`RequestValidationMiddleware`. Insert middleware here that needs to be
+    able to adapt incoming requests before they are validated.
+
+    Since the inserted middleware is positioned after the RoutingMiddleware, you can leverage
+    routing information and implement the middleware to work on an individual operation level.
+
+    :meta hide-value:
+    """
     BEFORE_CONTEXT = ContextMiddleware
+    """Add before the :class:`ContextMiddleware`, near the end of the stack. This is the default
+    location. The inserted middleware is only followed by the ContextMiddleware, which ensures any
+    changes to the context are properly exposed to the application.
+
+    Since the inserted middleware is positioned after the RoutingMiddleware, you can leverage
+    routing information and implement the middleware to work on an individual operation level.
+
+    Since the inserted middleware is positioned after the ResponseValidationMiddleware,
+    it can intercept responses coming from the application and alter them before they are validated.
+
+    :meta hide-value:
+    """
 
 
 class API:
