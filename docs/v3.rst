@@ -1,10 +1,3 @@
-.. warning::
-
-    Do not use Connexion 3.0 in production yet!
-
-    Connexion 3.0 is currently available in alpha to give users the ability to test it and provide
-    feedback while we further polish the codebase and update the documentation.
-
 Getting started with Connexion 3.0
 ==================================
 

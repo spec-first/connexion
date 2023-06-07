@@ -92,7 +92,7 @@ exclude_patterns = ['_build']
 # show_authors = False
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+# pygments_style = "material"
 
 # A list of ignored prefixes for module index sorting.
 # modindex_common_prefix = []
@@ -105,19 +105,20 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-try:
-    import sphinx_rtd_theme
-
-    html_theme = "sphinx_rtd_theme"
-
-    html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
-except:
-    pass
+html_theme = "furo"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-# html_theme_options = {}
+html_theme_options = {
+    "announcement": "<b>This is the WIP documentation for Connexion 3.0, which is in alpha. "
+                    "Find the stable version "
+                    "<a href=https://connexion.readthedocs.io/en/stable/>here</a>.</b>",
+    "light_css_variables": {
+        "color-announcement-background": "#ff5252",
+        "color-announcement-text": "#ffffff"
+    }
+}
 
 # Add any paths that contain custom themes here, relative to this directory.
 # html_theme_path = []
