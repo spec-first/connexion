@@ -76,7 +76,8 @@ class AbstractRequestBodyValidator:
         bytes_body = json.dumps(body).encode(self._encoding)
 
         # Update the content-length header
-        new_scope = copy.deepcopy(scope)
+        new_scope = scope.copy()
+        new_scope["headers"] = copy.deepcopy(scope["headers"])
         headers = MutableHeaders(scope=new_scope)
         headers["content-length"] = str(len(bytes_body))
 
