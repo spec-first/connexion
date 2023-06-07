@@ -12,8 +12,9 @@ following order:
     **SwaggerUIMiddleware**, Adds a Swagger UI to your application
     **RoutingMiddleware**, "Routes incoming requests to the right operation defined in the
     specification"
-    **SecurityMiddleware**, Checks incoming requests against the security defined in the spec
-    **RequestValidationMiddleware**, validates the incoming requests against the spec
+    **SecurityMiddleware**, "Checks incoming requests against the security defined in the
+    specification"
+    **RequestValidationMiddleware**, Validates the incoming requests against the spec
     **ResponseValidationMiddleware**, "Validates the returned responses against the spec, if
     activated"
     **LifespanMiddleware**, "Allows registration of code to run before application start-up or
@@ -88,7 +89,8 @@ Middleware order
 The :code:`add_middleware` method takes a :code:`position` argument to define where in the
 middleware stack it should be inserted, which should be an instance of the
 :class:`~connexion.middleware.MiddlewarePosition` Enum. The positions below are ordered from
-first to last. Note that responses hit the middlewares in reversed order.
+outer to inner, in the order they are hit by incoming requests. Note that responses hit the
+middlewares in reversed order.
 
 .. autoclass:: connexion.middleware.MiddlewarePosition
     :members:
