@@ -1,7 +1,9 @@
 import logging
 
-from starlette.exceptions import ExceptionMiddleware as StarletteExceptionMiddleware
 from starlette.exceptions import HTTPException
+from starlette.middleware.exceptions import (
+    ExceptionMiddleware as StarletteExceptionMiddleware,
+)
 from starlette.requests import Request as StarletteRequest
 from starlette.responses import Response
 from starlette.types import ASGIApp, Receive, Scope, Send
