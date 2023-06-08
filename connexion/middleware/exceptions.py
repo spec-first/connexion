@@ -24,7 +24,7 @@ class ExceptionMiddleware(StarletteExceptionMiddleware):
 
     @staticmethod
     def problem_handler(_request: StarletteRequest, exc: ProblemException):
-        logger.error(exc)
+        logger.error("%r", exc)
 
         response = exc.to_problem()
 
@@ -37,7 +37,7 @@ class ExceptionMiddleware(StarletteExceptionMiddleware):
 
     @staticmethod
     def http_exception(_request: StarletteRequest, exc: HTTPException) -> Response:
-        logger.error(exc)
+        logger.error("%r", exc)
 
         headers = exc.headers
 
@@ -54,7 +54,7 @@ class ExceptionMiddleware(StarletteExceptionMiddleware):
 
     @staticmethod
     def common_error_handler(_request: StarletteRequest, exc: Exception) -> Response:
-        logger.error(exc, exc_info=exc)
+        logger.error("%r", exc, exc_info=exc)
 
         response = InternalServerError().to_problem()
 
