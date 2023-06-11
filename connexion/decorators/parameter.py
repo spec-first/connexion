@@ -211,18 +211,17 @@ def get_arguments(
         )
     )
 
-    if operation.method.upper() in ["PATCH", "POST", "PUT"]:
-        ret.update(
-            _get_body_argument(
-                body,
-                operation=operation,
-                arguments=arguments,
-                has_kwargs=has_kwargs,
-                sanitize=sanitize,
-                content_type=content_type,
-            )
+    ret.update(
+        _get_body_argument(
+            body,
+            operation=operation,
+            arguments=arguments,
+            has_kwargs=has_kwargs,
+            sanitize=sanitize,
+            content_type=content_type,
         )
-        ret.update(_get_file_arguments(files, arguments, has_kwargs))
+    )
+    ret.update(_get_file_arguments(files, arguments, has_kwargs))
     return ret
 
 
