@@ -21,6 +21,7 @@ from connexion.testing import TestContext
 def test_sync_injection():
     request = MagicMock(name="request")
     request.path_params = {"p1": "123"}
+    request.get_body.return_value = {}
 
     func = MagicMock()
 
@@ -34,7 +35,7 @@ def test_sync_injection():
         parameter_decorator = SyncParameterDecorator(framework=FlaskFramework)
         decorated_handler = parameter_decorator(handler)
         decorated_handler(request)
-    func.assert_called_with(p1="123")
+    func.assert_called_with(p1="123", body={})
 
 
 @pytest.mark.skipif(
@@ -43,6 +44,8 @@ def test_sync_injection():
 async def test_async_injection():
     request = AsyncMock(name="request")
     request.path_params = {"p1": "123"}
+    request.get_body.return_value = {}
+    request.files.return_value = {}
 
     func = MagicMock()
 
@@ -56,12 +59,13 @@ async def test_async_injection():
         parameter_decorator = AsyncParameterDecorator(framework=StarletteFramework)
         decorated_handler = parameter_decorator(handler)
         await decorated_handler(request)
-    func.assert_called_with(p1="123")
+    func.assert_called_with(p1="123", body={})
 
 
 def test_sync_injection_with_context():
     request = MagicMock(name="request")
     request.path_params = {"p1": "123"}
+    request.get_body.return_value = {}
 
     func = MagicMock()
 
@@ -77,7 +81,7 @@ def test_sync_injection_with_context():
         parameter_decorator = SyncParameterDecorator(framework=FlaskFramework)
         decorated_handler = parameter_decorator(handler)
         decorated_handler(request)
-        func.assert_called_with(context, p1="123", test="success")
+        func.assert_called_with(context, p1="123", test="success", body={})
 
 
 @pytest.mark.skipif(
@@ -86,6 +90,8 @@ def test_sync_injection_with_context():
 async def test_async_injection_with_context():
     request = AsyncMock(name="request")
     request.path_params = {"p1": "123"}
+    request.get_body.return_value = {}
+    request.files.return_value = {}
 
     func = MagicMock()
 
@@ -101,7 +107,7 @@ async def test_async_injection_with_context():
         parameter_decorator = AsyncParameterDecorator(framework=StarletteFramework)
         decorated_handler = parameter_decorator(handler)
         await decorated_handler(request)
-        func.assert_called_with(context, p1="123", test="success")
+        func.assert_called_with(context, p1="123", test="success", body={})
 
 
 def test_pythonic_params():
