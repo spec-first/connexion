@@ -12,8 +12,12 @@ import sys
 import typing as t
 
 import yaml
+from starlette.routing import compile_path
 
 from connexion.exceptions import TypeValidationError
+
+if t.TYPE_CHECKING:
+    from connexion.middleware.main import API
 
 
 def boolean(s):
@@ -423,3 +427,50 @@ def inspect_function_arguments(function: t.Callable) -> t.Tuple[t.List[str], boo
     ]
     has_kwargs = any(p.kind == p.VAR_KEYWORD for p in parameters.values())
     return list(bound_arguments), has_kwargs
+
+
+def sort_routes(routes: t.List[str]) -> t.List[str]:
+    """Sorts a list of routes from most specific to least specific.
+
+    See Starlette routing documentation and implementation as this function
+    is aimed to sort according to that logic.
+    - https://www.starlette.io/routing/#route-priority
+
+    For example:
+    - /users/me
+    - /users/{username}
+    - /users/{username}/projects/{project}
+
+    :param routes: List of routes to sort
+
+    :return: List of routes sorted from most specific to least specific
+    """
+
+    class SortableRoute:
+        def __init__(self, path: str) -> None:
+            self.path = path
+            self.path_regex, _, _ = compile_path(path)
+
+        def __lt__(self, other: "SortableRoute") -> bool:
+            return bool(other.path_regex.match(self.path))
+
+    return sorted(routes, key=SortableRoute)
+
+
+def sort_apis_by_basepath(apis: t.List["API"]) -> t.List["API"]:
+    """Sorts a list of APIs by basepath.
+
+    :param apis: List of APIs to sort
+
+    :return: List of APIs sorted by basepath
+    """
+
+    class SortableApi:
+        def __init__(self, api: "API") -> None:
+            self.path = api.base_path or "/"
+            self.path_regex, _, _ = compile_path(self.path)
+
+        def __lt__(self, other: "SortableApi") -> bool:
+            return bool(other.path_regex.match(self.path))
+
+    return sorted(apis, key=SortableApi)

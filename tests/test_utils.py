@@ -72,3 +72,68 @@ def test_is_json_mimetype():
         "application/vnd.com.myEntreprise.v6+json; charset=UTF-8"
     )
     assert not utils.is_json_mimetype("text/html")
+
+
+def test_sort_routes():
+    routes = ["/users/me", "/users/{username}"]
+    expected = ["/users/me", "/users/{username}"]
+    assert utils.sort_routes(routes) == expected
+
+    # Empty basepath case for Mount
+    # https://github.com/encode/starlette/blob/1c1043ca0ab7126419948b27f9d0a78270fd74e6/starlette/routing.py#L388
+    routes = ["/{path:path}", "/basepath/{path:path}"]
+    expected = ["/basepath/{path:path}", "/{path:path}"]
+    assert utils.sort_routes(routes) == expected
+
+    routes = ["/basepath/{path:path}", "/basepath/v2/{path:path}"]
+    expected = ["/basepath/v2/{path:path}", "/basepath/{path:path}"]
+    assert utils.sort_routes(routes) == expected
+
+    routes = ["/users/{username}", "/users/me"]
+    expected = ["/users/me", "/users/{username}"]
+    assert utils.sort_routes(routes) == expected
+
+    routes = [
+        "/users/{username}",
+        "/users/me",
+        "/users/{username}/items",
+        "/users/{username}/items/{item}",
+    ]
+    expected = [
+        "/users/me",
+        "/users/{username}",
+        "/users/{username}/items",
+        "/users/{username}/items/{item}",
+    ]
+    assert utils.sort_routes(routes) == expected
+
+    routes = [
+        "/users/{username}",
+        "/users/me",
+        "/users/{username}/items/{item}",
+        "/users/{username}/items/special",
+    ]
+    expected = [
+        "/users/me",
+        "/users/{username}",
+        "/users/{username}/items/special",
+        "/users/{username}/items/{item}",
+    ]
+    assert utils.sort_routes(routes) == expected
+
+
+def test_sort_apis_by_basepath():
+    api1 = MagicMock(base_path="/{path:path}")
+    api2 = MagicMock(base_path="/basepath/{path:path}")
+    assert utils.sort_apis_by_basepath([api1, api2]) == [api2, api1]
+
+    api3 = MagicMock(base_path="/basepath/v2/{path:path}")
+    assert utils.sort_apis_by_basepath([api1, api2, api3]) == [api3, api2, api1]
+
+    api4 = MagicMock(base_path="/healthz")
+    assert utils.sort_apis_by_basepath([api1, api2, api3, api4]) == [
+        api3,
+        api2,
+        api4,
+        api1,
+    ]
