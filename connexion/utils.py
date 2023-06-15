@@ -429,7 +429,10 @@ def inspect_function_arguments(function: t.Callable) -> t.Tuple[t.List[str], boo
     return list(bound_arguments), has_kwargs
 
 
-def sort_routes(routes: t.List[str]) -> t.List[str]:
+T = t.TypeVar("T")
+
+
+def sort_routes(routes: t.List[T], *, key: t.Optional[t.Callable] = None) -> t.List[T]:
     """Sorts a list of routes from most specific to least specific.
 
     See Starlette routing documentation and implementation as this function
@@ -454,7 +457,7 @@ def sort_routes(routes: t.List[str]) -> t.List[str]:
         def __lt__(self, other: "SortableRoute") -> bool:
             return bool(other.path_regex.match(self.path))
 
-    return sorted(routes, key=SortableRoute)
+    return sorted(routes, key=lambda r: SortableRoute(key(r) if key else r))
 
 
 def sort_apis_by_basepath(apis: t.List["API"]) -> t.List["API"]:
@@ -464,13 +467,4 @@ def sort_apis_by_basepath(apis: t.List["API"]) -> t.List["API"]:
 
     :return: List of APIs sorted by basepath
     """
-
-    class SortableApi:
-        def __init__(self, api: "API") -> None:
-            self.path = api.base_path or "/"
-            self.path_regex, _, _ = compile_path(self.path)
-
-        def __lt__(self, other: "SortableApi") -> bool:
-            return bool(other.path_regex.match(self.path))
-
-    return sorted(apis, key=SortableApi)
+    return sort_routes(apis, key=lambda api: api.base_path or "/")
