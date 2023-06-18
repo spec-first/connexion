@@ -136,7 +136,7 @@ class AbstractApp:
         **kwargs,
     ) -> t.Any:
         """
-        Register een API represented by a single OpenAPI specification on this application.
+        Register an API represented by a single OpenAPI specification on this application.
         Multiple APIs can be registered on a single application.
 
         :param specification: OpenAPI specification. Can be provided either as dict, or as path
