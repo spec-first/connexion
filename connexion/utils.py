@@ -433,12 +433,12 @@ T = t.TypeVar("T")
 
 
 @t.overload
-def sort_routes(routes: t.List[str], *, key: None = ...) -> t.List[str]:
+def sort_routes(routes: t.List[str], *, key: None = None) -> t.List[str]:
     ...
 
 
 @t.overload
-def sort_routes(routes: t.List[T], *, key: t.Callable[[T], str] = None) -> t.List[T]:
+def sort_routes(routes: t.List[T], *, key: t.Callable[[T], str]) -> t.List[T]:
     ...
 
 
