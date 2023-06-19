@@ -127,11 +127,11 @@ def test_sort_routes():
 
 
 def test_sort_apis_by_basepath():
-    api1 = MagicMock(base_path="/{path:path}")
-    api2 = MagicMock(base_path="/basepath/{path:path}")
+    api1 = MagicMock(base_path="/")
+    api2 = MagicMock(base_path="/basepath")
     assert utils.sort_apis_by_basepath([api1, api2]) == [api2, api1]
 
-    api3 = MagicMock(base_path="/basepath/v2/{path:path}")
+    api3 = MagicMock(base_path="/basepath/v2")
     assert utils.sort_apis_by_basepath([api1, api2, api3]) == [api3, api2, api1]
 
     api4 = MagicMock(base_path="/healthz")
@@ -140,12 +140,4 @@ def test_sort_apis_by_basepath():
         api2,
         api4,
         api1,
-    ]
-
-    api5 = MagicMock(base_path="/")
-    assert utils.sort_apis_by_basepath([api5, api2, api3, api4]) == [
-        api3,
-        api2,
-        api4,
-        api5,
     ]
