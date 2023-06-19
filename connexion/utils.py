@@ -432,27 +432,46 @@ def inspect_function_arguments(function: t.Callable) -> t.Tuple[t.List[str], boo
 T = t.TypeVar("T")
 
 
-def sort_routes(routes: t.List[T], *, key: t.Optional[t.Callable] = None) -> t.List[T]:
+@t.overload
+def sort_routes(routes: t.List[str], *, key: None = ...) -> t.List[str]:
+    ...
+
+
+@t.overload
+def sort_routes(routes: t.List[T], *, key: t.Callable[[T], str] = None) -> t.List[T]:
+    ...
+
+
+def sort_routes(routes, *, key=None):
     """Sorts a list of routes from most specific to least specific.
 
     See Starlette routing documentation and implementation as this function
     is aimed to sort according to that logic.
     - https://www.starlette.io/routing/#route-priority
 
-    For example:
+    The only difference is that a `path` component is appended to each route
+    such that `/` is less specific than `/basepath` while they are technically
+    not comparable.
+    This is because it is also done by the `Mount` class internally:
+    https://github.com/encode/starlette/blob/1c1043ca0ab7126419948b27f9d0a78270fd74e6/starlette/routing.py#L388
+
+    For example, from most to least specific:
     - /users/me
     - /users/{username}
     - /users/{username}/projects/{project}
 
     :param routes: List of routes to sort
+    :param key: Function to extract the path from a route if it is not a string
 
     :return: List of routes sorted from most specific to least specific
     """
 
     class SortableRoute:
         def __init__(self, path: str) -> None:
-            self.path = path
-            self.path_regex, _, _ = compile_path(path)
+            self.path = path.rstrip("/")
+            if not self.path.endswith("/{path:path}"):
+                self.path += "/{path:path}"
+            self.path_regex, _, _ = compile_path(self.path)
 
         def __lt__(self, other: "SortableRoute") -> bool:
             return bool(other.path_regex.match(self.path))

@@ -85,6 +85,10 @@ def test_sort_routes():
     expected = ["/basepath/{path:path}", "/{path:path}"]
     assert utils.sort_routes(routes) == expected
 
+    routes = ["/", "/basepath"]
+    expected = ["/basepath", "/"]
+    assert utils.sort_routes(routes) == expected
+
     routes = ["/basepath/{path:path}", "/basepath/v2/{path:path}"]
     expected = ["/basepath/v2/{path:path}", "/basepath/{path:path}"]
     assert utils.sort_routes(routes) == expected
@@ -101,9 +105,9 @@ def test_sort_routes():
     ]
     expected = [
         "/users/me",
-        "/users/{username}",
-        "/users/{username}/items",
         "/users/{username}/items/{item}",
+        "/users/{username}/items",
+        "/users/{username}",
     ]
     assert utils.sort_routes(routes) == expected
 
@@ -115,9 +119,9 @@ def test_sort_routes():
     ]
     expected = [
         "/users/me",
-        "/users/{username}",
         "/users/{username}/items/special",
         "/users/{username}/items/{item}",
+        "/users/{username}",
     ]
     assert utils.sort_routes(routes) == expected
 
@@ -136,4 +140,12 @@ def test_sort_apis_by_basepath():
         api2,
         api4,
         api1,
+    ]
+
+    api5 = MagicMock(base_path="/")
+    assert utils.sort_apis_by_basepath([api5, api2, api3, api4]) == [
+        api3,
+        api2,
+        api4,
+        api5,
     ]
