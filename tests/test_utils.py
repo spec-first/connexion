@@ -79,8 +79,6 @@ def test_sort_routes():
     expected = ["/users/me", "/users/{username}"]
     assert utils.sort_routes(routes) == expected
 
-    # Empty basepath case for Mount
-    # https://github.com/encode/starlette/blob/1c1043ca0ab7126419948b27f9d0a78270fd74e6/starlette/routing.py#L388
     routes = ["/{path:path}", "/basepath/{path:path}"]
     expected = ["/basepath/{path:path}", "/{path:path}"]
     assert utils.sort_routes(routes) == expected
@@ -91,6 +89,10 @@ def test_sort_routes():
 
     routes = ["/basepath/{path:path}", "/basepath/v2/{path:path}"]
     expected = ["/basepath/v2/{path:path}", "/basepath/{path:path}"]
+    assert utils.sort_routes(routes) == expected
+
+    routes = ["/basepath", "/basepath/v2"]
+    expected = ["/basepath/v2", "/basepath"]
     assert utils.sort_routes(routes) == expected
 
     routes = ["/users/{username}", "/users/me"]

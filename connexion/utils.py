@@ -457,8 +457,8 @@ def sort_routes(routes, *, key=None):
 
     For example, from most to least specific:
     - /users/me
-    - /users/{username}
     - /users/{username}/projects/{project}
+    - /users/{username}
 
     :param routes: List of routes to sort
     :param key: Function to extract the path from a route if it is not a string
