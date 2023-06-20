@@ -201,10 +201,10 @@ def test_method_view_resolver_integration(spec):
     client = method_view_app.test_client()
 
     r = client.get("/v1.0/pets")
-    assert r.json() == {"name": "get", "body": {}}
+    assert r.json() == [{"name": "get"}]
 
     r = client.get("/v1.0/pets/1")
-    assert r.json() == {"name": "get", "petId": 1, "body": {}}
+    assert r.json() == {"name": "get", "petId": 1}
 
     r = client.post("/v1.0/pets", json={"name": "Musti"})
     assert r.json() == {"name": "post", "body": {"name": "Musti"}}
@@ -227,7 +227,7 @@ def test_method_resolver_integration(spec, app_class):
     assert r.json() == [{"name": "search"}]
 
     r = client.get("/v1.0/pets/1")
-    assert r.json() == {"name": "get", "petId": 1, "body": {}}
+    assert r.json() == {"name": "get", "petId": 1}
 
     r = client.post("/v1.0/pets", json={"name": "Musti"})
     assert r.json() == {"name": "post", "body": {"name": "Musti"}}

@@ -456,11 +456,11 @@ def test_args_kwargs(simple_app):
     app_client = simple_app.test_client()
     resp = app_client.get("/v1.0/query-params-as-kwargs")
     assert resp.status_code == 200
-    assert resp.json() == {"body": {}}
+    assert resp.json() == {}
 
     resp = app_client.get("/v1.0/query-params-as-kwargs?foo=a&bar=b")
     assert resp.status_code == 200
-    assert resp.json() == {"foo": "a", "body": {}}
+    assert resp.json() == {"foo": "a"}
 
     if simple_app._spec_file == "openapi.yaml":
         body = {"foo": "a", "bar": "b"}
