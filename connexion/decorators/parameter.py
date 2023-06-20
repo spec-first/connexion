@@ -376,6 +376,9 @@ def _get_body_argument(
     if len(arguments) <= 0 and not has_kwargs:
         return {}
 
+    if operation.request_body == {}:
+        return {}
+
     body_name = sanitize(operation.body_name(content_type))
 
     if content_type in FORM_CONTENT_TYPES:
