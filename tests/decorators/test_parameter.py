@@ -29,13 +29,14 @@ def test_sync_injection():
         func(**kwargs)
 
     operation = MagicMock(name="operation")
+    operation.request_body = {}
     operation.body_name = lambda _: "body"
 
     with TestContext(operation=operation):
         parameter_decorator = SyncParameterDecorator(framework=FlaskFramework)
         decorated_handler = parameter_decorator(handler)
         decorated_handler(request)
-    func.assert_called_with(p1="123", body={})
+    func.assert_called_with(p1="123")
 
 
 @pytest.mark.skipif(
@@ -53,13 +54,14 @@ async def test_async_injection():
         func(**kwargs)
 
     operation = MagicMock(name="operation")
+    operation.request_body = {}
     operation.body_name = lambda _: "body"
 
     with TestContext(operation=operation):
         parameter_decorator = AsyncParameterDecorator(framework=StarletteFramework)
         decorated_handler = parameter_decorator(handler)
         await decorated_handler(request)
-    func.assert_called_with(p1="123", body={})
+    func.assert_called_with(p1="123")
 
 
 def test_sync_injection_with_context():
@@ -75,13 +77,14 @@ def test_sync_injection_with_context():
     context = {"test": "success"}
 
     operation = MagicMock(name="operation")
+    operation.request_body = {}
     operation.body_name = lambda _: "body"
 
     with TestContext(context=context, operation=operation):
         parameter_decorator = SyncParameterDecorator(framework=FlaskFramework)
         decorated_handler = parameter_decorator(handler)
         decorated_handler(request)
-        func.assert_called_with(context, p1="123", test="success", body={})
+        func.assert_called_with(context, p1="123", test="success")
 
 
 @pytest.mark.skipif(
@@ -101,13 +104,14 @@ async def test_async_injection_with_context():
     context = {"test": "success"}
 
     operation = MagicMock(name="operation")
+    operation.request_body = {}
     operation.body_name = lambda _: "body"
 
     with TestContext(context=context, operation=operation):
         parameter_decorator = AsyncParameterDecorator(framework=StarletteFramework)
         decorated_handler = parameter_decorator(handler)
         await decorated_handler(request)
-        func.assert_called_with(context, p1="123", test="success", body={})
+        func.assert_called_with(context, p1="123", test="success")
 
 
 def test_pythonic_params():
