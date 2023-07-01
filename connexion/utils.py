@@ -12,8 +12,12 @@ import sys
 import typing as t
 
 import yaml
+from starlette.routing import compile_path
 
 from connexion.exceptions import TypeValidationError
+
+if t.TYPE_CHECKING:
+    from connexion.middleware.main import API
 
 
 def boolean(s):
@@ -423,3 +427,63 @@ def inspect_function_arguments(function: t.Callable) -> t.Tuple[t.List[str], boo
     ]
     has_kwargs = any(p.kind == p.VAR_KEYWORD for p in parameters.values())
     return list(bound_arguments), has_kwargs
+
+
+T = t.TypeVar("T")
+
+
+@t.overload
+def sort_routes(routes: t.List[str], *, key: None = None) -> t.List[str]:
+    ...
+
+
+@t.overload
+def sort_routes(routes: t.List[T], *, key: t.Callable[[T], str]) -> t.List[T]:
+    ...
+
+
+def sort_routes(routes, *, key=None):
+    """Sorts a list of routes from most specific to least specific.
+
+    See Starlette routing documentation and implementation as this function
+    is aimed to sort according to that logic.
+    - https://www.starlette.io/routing/#route-priority
+
+    The only difference is that a `path` component is appended to each route
+    such that `/` is less specific than `/basepath` while they are technically
+    not comparable.
+    This is because it is also done by the `Mount` class internally:
+    https://github.com/encode/starlette/blob/1c1043ca0ab7126419948b27f9d0a78270fd74e6/starlette/routing.py#L388
+
+    For example, from most to least specific:
+    - /users/me
+    - /users/{username}/projects/{project}
+    - /users/{username}
+
+    :param routes: List of routes to sort
+    :param key: Function to extract the path from a route if it is not a string
+
+    :return: List of routes sorted from most specific to least specific
+    """
+
+    class SortableRoute:
+        def __init__(self, path: str) -> None:
+            self.path = path.rstrip("/")
+            if not self.path.endswith("/{path:path}"):
+                self.path += "/{path:path}"
+            self.path_regex, _, _ = compile_path(self.path)
+
+        def __lt__(self, other: "SortableRoute") -> bool:
+            return bool(other.path_regex.match(self.path))
+
+    return sorted(routes, key=lambda r: SortableRoute(key(r) if key else r))
+
+
+def sort_apis_by_basepath(apis: t.List["API"]) -> t.List["API"]:
+    """Sorts a list of APIs by basepath.
+
+    :param apis: List of APIs to sort
+
+    :return: List of APIs sorted by basepath
+    """
+    return sort_routes(apis, key=lambda api: api.base_path or "/")

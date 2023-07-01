@@ -308,6 +308,9 @@ class ConnexionMiddleware:
                 app = middleware(app)  # type: ignore
             apps.append(app)
 
+        # We sort the APIs by base path so that the most specific APIs are registered first.
+        # This is due to the way Starlette matches routes.
+        self.apis = utils.sort_apis_by_basepath(self.apis)
         for app in apps:
             if isinstance(app, SpecMiddleware):
                 for api in self.apis:
