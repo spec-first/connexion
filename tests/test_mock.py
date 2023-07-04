@@ -46,7 +46,7 @@ def test_mock_resolver_numeric():
     assert response == {"foo": "bar"}
 
 
-def test_mock_resolver_example():
+def test_mock_resolver_example(): 
     resolver = MockResolver(mock_all=True)
 
     responses = {
@@ -194,7 +194,7 @@ def test_mock_resolver_example_nested_in_list_openapi():
     assert response == ["bar"]
 
 
-def test_mock_resolver_no_example_nested_in_object():
+def test_mock_resolver_no_example_nested_in_object_string_expected():
     resolver = MockResolver(mock_all=True)
 
     responses = {
@@ -224,10 +224,228 @@ def test_mock_resolver_no_example_nested_in_object():
 
     response, status_code = resolver.mock_operation(operation)
     assert status_code == 200
-    assert response == "No example response was defined."
+    assert response == {'foo': 'abcde'}
+
+def test_mock_resolver_no_example_nested_in_object_integer_expected():
+    resolver = MockResolver(mock_all=True)
+
+    responses = {
+        "200": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "foo": {
+                        "type": "integer",
+                    }
+                },
+            }
+        }
+    }
+
+    operation = Swagger2Operation(
+        method="GET",
+        path="endpoint",
+        path_parameters=[],
+        operation={"responses": responses},
+        app_produces=["application/json"],
+        app_consumes=["application/json"],
+        definitions={},
+        resolver=resolver,
+    )
+    assert operation.operation_id == "mock-1"
+
+    response, status_code = resolver.mock_operation(operation)
+    assert status_code == 200
+    assert response == {'foo': 12345}
+
+def test_mock_resolver_no_example_nested_in_object_number_expected():
+    resolver = MockResolver(mock_all=True)
+
+    responses = {
+        "200": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "foo": {
+                        "type": "number",
+                    }
+                },
+            }
+        }
+    }
+
+    operation = Swagger2Operation(
+        method="GET",
+        path="endpoint",
+        path_parameters=[],
+        operation={"responses": responses},
+        app_produces=["application/json"],
+        app_consumes=["application/json"],
+        definitions={},
+        resolver=resolver,
+    )
+    assert operation.operation_id == "mock-1"
+
+    response, status_code = resolver.mock_operation(operation)
+    assert status_code == 200
+    assert response == {'foo': 123.45}
+
+def test_mock_resolver_no_example_nested_in_object_boolean_expected():
+    resolver = MockResolver(mock_all=True)
+
+    responses = {
+        "200": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "foo": {
+                        "type": "boolean",
+                    }
+                },
+            }
+        }
+    }
+
+    operation = Swagger2Operation(
+        method="GET",
+        path="endpoint",
+        path_parameters=[],
+        operation={"responses": responses},
+        app_produces=["application/json"],
+        app_consumes=["application/json"],
+        definitions={},
+        resolver=resolver,
+    )
+    assert operation.operation_id == "mock-1"
+
+    response, status_code = resolver.mock_operation(operation)
+    assert status_code == 200
+    assert response == {'foo': False}
+
+def test_mock_resolver_no_example_nested_in_list_boolean_expected():
+    resolver = MockResolver(mock_all=True)
+
+    responses = {
+        "200": {
+            "schema": {
+                "type": "array",
+                "items": {
+                    "type": "boolean",
+                },
+            }
+        }
+    }
+
+    operation = Swagger2Operation(
+        method="GET",
+        path="endpoint",
+        path_parameters=[],
+        operation={"responses": responses},
+        app_produces=["application/json"],
+        app_consumes=["application/json"],
+        definitions={},
+        resolver=resolver,
+    )
+    assert operation.operation_id == "mock-1"
+
+    response, status_code = resolver.mock_operation(operation)
+    assert status_code == 200
+    assert response == [False]
+
+def test_mock_resolver_no_example_nested_in_list_string_expected():
+    resolver = MockResolver(mock_all=True)
+
+    responses = {
+        "200": {
+            "schema": {
+                "type": "array",
+                "items": {
+                    "type": "string",
+                },
+            }
+        }
+    }
+
+    operation = Swagger2Operation(
+        method="GET",
+        path="endpoint",
+        path_parameters=[],
+        operation={"responses": responses},
+        app_produces=["application/json"],
+        app_consumes=["application/json"],
+        definitions={},
+        resolver=resolver,
+    )
+    assert operation.operation_id == "mock-1"
+
+    response, status_code = resolver.mock_operation(operation)
+    assert status_code == 200
+    assert response == ['abcde']
+
+def test_mock_resolver_no_example_nested_in_list_integer_expected():
+    resolver = MockResolver(mock_all=True)
+
+    responses = {
+        "200": {
+            "schema": {
+                "type": "array",
+                "items": {
+                    "type": "integer",
+                },
+            }
+        }
+    }
+
+    operation = Swagger2Operation(
+        method="GET",
+        path="endpoint",
+        path_parameters=[],
+        operation={"responses": responses},
+        app_produces=["application/json"],
+        app_consumes=["application/json"],
+        definitions={},
+        resolver=resolver,
+    )
+    assert operation.operation_id == "mock-1"
+
+    response, status_code = resolver.mock_operation(operation)
+    assert status_code == 200
+    assert response == [12345]
+
+def test_mock_resolver_no_example_nested_in_list_number_expected():
+    resolver = MockResolver(mock_all=True)
+
+     
+    responses = {
+        "200": {
+            "schema": {
+                "type": "array",
+                "items": {
+                    "type": "number",
+                },
+            }
+        }
+    }
+
+    operation = Swagger2Operation(
+        method="GET",
+        path="endpoint",
+        path_parameters=[],
+        operation={"responses": responses},
+        app_produces=["application/json"],
+        app_consumes=["application/json"],
+        definitions={},
+        resolver=resolver,
+    )
+    assert operation.operation_id == "mock-1"
+
+    response, status_code = resolver.mock_operation(operation)
+    assert status_code == 200
+    assert response == [123.45]
 
 
-def test_mock_resolver_no_example_nested_in_list_openapi():
+
+def test_mock_resolver_no_example_nested_in_list_string_expected_openapi():
     resolver = MockResolver(mock_all=True)
 
     responses = {
@@ -256,8 +474,101 @@ def test_mock_resolver_no_example_nested_in_list_openapi():
 
     response, status_code = resolver.mock_operation(operation)
     assert status_code == 202
-    assert response == "No example response was defined."
+    assert response == ["abcde"]
 
+def test_mock_resolver_no_example_nested_in_list_integer_expected_openapi():
+    resolver = MockResolver(mock_all=True)
+
+    responses = {
+        "202": {
+            "content": {
+                "application/json": {
+                    "schema": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer",
+                        },
+                    }
+                }
+            }
+        }
+    }
+
+    operation = OpenAPIOperation(
+        method="GET",
+        path="endpoint",
+        path_parameters=[],
+        operation={"responses": responses},
+        resolver=resolver,
+    )
+    assert operation.operation_id == "mock-1"
+
+    response, status_code = resolver.mock_operation(operation)
+    assert status_code == 202
+    assert response == [12345]
+
+def test_mock_resolver_no_example_nested_in_list_number_expected_openapi():
+    resolver = MockResolver(mock_all=True)
+
+    responses = {
+        "202": {
+            "content": {
+                "application/json": {
+                    "schema": {
+                        "type": "array",
+                        "items": {
+                            "type": "number",
+                        },
+                    }
+                }
+            }
+        }
+    }
+
+    operation = OpenAPIOperation(
+        method="GET",
+        path="endpoint",
+        path_parameters=[],
+        operation={"responses": responses},
+        resolver=resolver,
+    )
+    assert operation.operation_id == "mock-1"
+
+    response, status_code = resolver.mock_operation(operation)
+    assert status_code == 202
+    assert response == [123.45]
+
+
+def test_mock_resolver_no_example_nested_in_list_boolean_expected_openapi():
+    resolver = MockResolver(mock_all=True)
+
+    responses = {
+        "202": {
+            "content": {
+                "application/json": {
+                    "schema": {
+                        "type": "array",
+                        "items": {
+                            "type": "boolean",
+                        },
+                    }
+                }
+            }
+        }
+    }
+
+    operation = OpenAPIOperation(
+        method="GET",
+        path="endpoint",
+        path_parameters=[],
+        operation={"responses": responses},
+        resolver=resolver,
+    )
+    assert operation.operation_id == "mock-1"
+
+    response, status_code = resolver.mock_operation(operation)
+    assert status_code == 202
+    assert response == [False]
 
 def test_mock_resolver_no_examples():
     resolver = MockResolver(mock_all=True)
@@ -279,7 +590,6 @@ def test_mock_resolver_no_examples():
     response, status_code = resolver.mock_operation(operation)
     assert status_code == 418
     assert response == "No example response was defined."
-
 
 def test_mock_resolver_notimplemented():
     resolver = MockResolver(mock_all=False)

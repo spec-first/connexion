@@ -211,6 +211,21 @@ class OpenAPIOperation(AbstractOperation):
             # Recurse if schema is an array
             return [self._nested_example(schema["items"])]
         except KeyError:
+            pass
+        try:
+            if schema['type'] == 'integer':
+                schema['example'] = 12345
+                return(schema['example'])
+            elif schema['type'] == 'string':
+                schema['example'] = "abcde"
+                return(schema['example'])
+            elif schema['type'] == 'boolean':
+                schema['example'] = False
+                return(schema['example'])
+            elif schema['type'] == 'number':
+                schema['example'] = 123.45
+                return(schema['example'])
+        except KeyError:
             raise
 
     def get_path_parameter_types(self):
