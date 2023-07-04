@@ -7,7 +7,7 @@ import logging
 from connexion.datastructures import MediaTypeDict
 from connexion.operations.abstract import AbstractOperation
 from connexion.uri_parsing import OpenAPIURIParser
-from connexion.utils import deep_get
+from connexion.utils import deep_get, generate_example
 
 logger = logging.getLogger("connexion.operations.openapi3")
 
@@ -213,18 +213,7 @@ class OpenAPIOperation(AbstractOperation):
         except KeyError:
             pass
         try:
-            if schema['type'] == 'integer':
-                schema['example'] = 12345
-                return(schema['example'])
-            elif schema['type'] == 'string':
-                schema['example'] = "abcde"
-                return(schema['example'])
-            elif schema['type'] == 'boolean':
-                schema['example'] = False
-                return(schema['example'])
-            elif schema['type'] == 'number':
-                schema['example'] = 123.45
-                return(schema['example'])
+            return(generate_example(schema))
         except KeyError:
             raise
 

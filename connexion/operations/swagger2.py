@@ -8,7 +8,7 @@ import typing as t
 from connexion.exceptions import InvalidSpecification
 from connexion.operations.abstract import AbstractOperation
 from connexion.uri_parsing import Swagger2URIParser
-from connexion.utils import deep_get
+from connexion.utils import deep_get, generate_example
 
 logger = logging.getLogger("connexion.operations.swagger2")
 
@@ -231,23 +231,11 @@ class Swagger2Operation(AbstractOperation):
             pass
         try:
             # Recurse if schema is an array
-            print("array")
             return [self._nested_example(schema["items"])]
         except KeyError:
             pass
         try:
-            if schema['type'] == 'integer':
-                schema['example'] = 12345
-                return(schema['example'])
-            elif schema['type'] == 'string':
-                schema['example'] = "abcde"
-                return(schema['example'])
-            elif schema['type'] == 'boolean':
-                schema['example'] = False
-                return(schema['example'])
-            elif schema['type'] == 'number':
-                schema['example'] = 123.45
-                return(schema['example'])
+            return(generate_example(schema))
         except KeyError:
             raise
 

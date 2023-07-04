@@ -487,3 +487,43 @@ def sort_apis_by_basepath(apis: t.List["API"]) -> t.List["API"]:
     :return: List of APIs sorted by basepath
     """
     return sort_routes(apis, key=lambda api: api.base_path or "/")
+
+def generate_example(schema):
+    if schema['type'] == 'integer':
+        return generate_example_integer(schema)
+    if schema['type'] == 'number':
+        return generate_example_number(schema)
+    if schema['type'] == 'string':
+        return generate_example_string(schema)
+    if schema['type'] == 'boolean':
+        return generate_example_boolean(schema)
+
+def generate_example_integer(schema):
+    try:
+        if schema['exclusiveMaximum']:
+            return schema['maximum'] - 1
+    except:
+        pass
+    try:
+        return schema['maximum'] 
+    except:
+        pass
+    try:
+        if schema['exclusiveMinimum']:
+            return schema['minimum'] + 1
+    except:
+        pass
+    try:
+        return schema['minimum'] 
+    except:
+        return 12345
+    
+def generate_example_string(schema):
+    return "abcde"
+
+def generate_example_boolean(schema):
+    return False
+    
+def generate_example_number(schema):
+    return 123.45
+        

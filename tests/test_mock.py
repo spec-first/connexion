@@ -258,6 +258,140 @@ def test_mock_resolver_no_example_nested_in_object_integer_expected():
     assert status_code == 200
     assert response == {'foo': 12345}
 
+def test_mock_resolver_no_example_nested_in_object_integer_expected_minimum_provided():
+    resolver = MockResolver(mock_all=True)
+
+    responses = {
+        "200": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "foo": {
+                        "type": "integer",
+                        "minimum": 4,
+                    }
+                },
+            }
+        }
+    }
+
+    operation = Swagger2Operation(
+        method="GET",
+        path="endpoint",
+        path_parameters=[],
+        operation={"responses": responses},
+        app_produces=["application/json"],
+        app_consumes=["application/json"],
+        definitions={},
+        resolver=resolver,
+    )
+    assert operation.operation_id == "mock-1"
+
+    response, status_code = resolver.mock_operation(operation)
+    assert status_code == 200
+    assert response == {'foo': 4}
+
+def test_mock_resolver_no_example_nested_in_object_integer_expected_maximum_provided():
+    resolver = MockResolver(mock_all=True)
+
+    responses = {
+        "200": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "foo": {
+                        "type": "integer",
+                        "maximum": 17,
+                    }
+                },
+            }
+        }
+    }
+
+    operation = Swagger2Operation(
+        method="GET",
+        path="endpoint",
+        path_parameters=[],
+        operation={"responses": responses},
+        app_produces=["application/json"],
+        app_consumes=["application/json"],
+        definitions={},
+        resolver=resolver,
+    )
+    assert operation.operation_id == "mock-1"
+
+    response, status_code = resolver.mock_operation(operation)
+    assert status_code == 200
+    assert response == {'foo': 17}
+
+def test_mock_resolver_no_example_nested_in_object_integer_expected_exclusive_maximum_provided():
+    resolver = MockResolver(mock_all=True)
+
+    responses = {
+        "200": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "foo": {
+                        "type": "integer",
+                        "maximum": 17,
+                        "exclusiveMaximum": True,
+                    }
+                },
+            }
+        }
+    }
+
+    operation = Swagger2Operation(
+        method="GET",
+        path="endpoint",
+        path_parameters=[],
+        operation={"responses": responses},
+        app_produces=["application/json"],
+        app_consumes=["application/json"],
+        definitions={},
+        resolver=resolver,
+    )
+    assert operation.operation_id == "mock-1"
+
+    response, status_code = resolver.mock_operation(operation)
+    assert status_code == 200
+    assert response == {'foo': 16}
+
+def test_mock_resolver_no_example_nested_in_object_integer_expected_exclusive_minimum_provided():
+    resolver = MockResolver(mock_all=True)
+
+    responses = {
+        "200": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "foo": {
+                        "type": "integer",
+                        "minimum": 4,
+                        "exclusiveMinimum": True,
+                    }
+                },
+            }
+        }
+    }
+
+    operation = Swagger2Operation(
+        method="GET",
+        path="endpoint",
+        path_parameters=[],
+        operation={"responses": responses},
+        app_produces=["application/json"],
+        app_consumes=["application/json"],
+        definitions={},
+        resolver=resolver,
+    )
+    assert operation.operation_id == "mock-1"
+
+    response, status_code = resolver.mock_operation(operation)
+    assert status_code == 200
+    assert response == {'foo': 5}
+
 def test_mock_resolver_no_example_nested_in_object_number_expected():
     resolver = MockResolver(mock_all=True)
 
