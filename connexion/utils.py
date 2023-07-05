@@ -521,7 +521,15 @@ def generate_example_integer(schema):
     
 def generate_example_string(schema):
     try:
-            return xeger(schema['pattern'])
+        return xeger(schema['pattern'])
+    except KeyError:
+        pass
+    try:
+        return "a" * schema['minLength']
+    except KeyError:
+        pass
+    try:
+        return "a" * schema['maxLength']
     except KeyError:
         return "abcde"
 

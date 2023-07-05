@@ -235,7 +235,7 @@ class Swagger2Operation(AbstractOperation):
         except KeyError:
             pass
         try:
-            return(generate_example(schema))
+            return generate_example(schema)
         except KeyError:
             raise
 

@@ -2,7 +2,7 @@ from connexion.utils import generate_example
 from re import fullmatch, Match
 
 
-def test_short_string():
+def test_generate_example_string():
 
     schema = {
                 "type": "string",
@@ -13,7 +13,7 @@ def test_short_string():
     assert isinstance(example, str)
 
 
-def test_short_integer():
+def test_generate_example_integer():
 
     schema = {
                 "type": "integer",
@@ -24,7 +24,7 @@ def test_short_integer():
     assert isinstance(example, int)
 
 
-def test_short_number():
+def test_generate_example_number():
 
     schema = {
                 "type": "number",
@@ -35,7 +35,7 @@ def test_short_number():
     assert isinstance(example, float)
 
 
-def test_short_boolean():
+def test_generate_example_boolean():
 
     schema = {
                 "type": "boolean",
@@ -46,7 +46,7 @@ def test_short_boolean():
     assert isinstance(example, bool)
 
 
-def test_short_integer_minimum():
+def test_generate_example_integer_minimum():
 
     schema = {
                 "type": "integer",
@@ -58,7 +58,7 @@ def test_short_integer_minimum():
     assert example >= schema["minimum"] and isinstance(example, int)
 
 
-def test_short_integer_maximum():
+def test_generate_example_integer_maximum():
 
     schema = {
                 "type": "integer",
@@ -70,7 +70,7 @@ def test_short_integer_maximum():
     assert example <= schema["maximum"] and isinstance(example, int)
 
 
-def test_short_integer_exclusive_minimum():
+def test_generate_example_integer_exclusive_minimum():
 
     schema = {
                 "type": "integer",
@@ -82,7 +82,7 @@ def test_short_integer_exclusive_minimum():
     assert example > schema["minimum"] and isinstance(example, int)
 
 
-def test_short_integer_exclusive_maximum():
+def test_generate_example_integer_exclusive_maximum():
 
     schema = {
                 "type": "integer",
@@ -95,7 +95,7 @@ def test_short_integer_exclusive_maximum():
     assert example < schema["maximum"] and isinstance(example, int)
 
 
-def test_short_string_regular_expression():
+def test_generate_example_string_regular_expression():
 
     pattern = "^\d{3}-\d{2}-\d{4}$"
 
@@ -106,5 +106,30 @@ def test_short_string_regular_expression():
     
     example = generate_example(schema)
 
-    assert type(fullmatch(pattern, example)) == Match and isinstance(example, str)
+    assert fullmatch(pattern, example) != None and isinstance(example, str)
     
+
+def test_generate_example_string_maximum():
+
+
+    schema = {
+                "type": "string",
+                "maxLength": 20,
+            }
+    
+    example = generate_example(schema)
+
+    assert isinstance(example, str) and len(example) <= schema["maxLength"]
+
+
+def test_generate_example_string_minimum():
+
+
+    schema = {
+                "type": "string",
+                "minLength": 20,
+            }
+    
+    example = generate_example(schema)
+
+    assert isinstance(example, str) and len(example) >= schema["minLength"]
