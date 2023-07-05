@@ -1,0 +1,110 @@
+from connexion.utils import generate_example
+from re import fullmatch, Match
+
+
+def test_short_string():
+
+    schema = {
+                "type": "string",
+            }
+    
+    example = generate_example(schema)
+
+    assert isinstance(example, str)
+
+
+def test_short_integer():
+
+    schema = {
+                "type": "integer",
+            }
+    
+    example = generate_example(schema)
+
+    assert isinstance(example, int)
+
+
+def test_short_number():
+
+    schema = {
+                "type": "number",
+            }
+    
+    example = generate_example(schema)
+
+    assert isinstance(example, float)
+
+
+def test_short_boolean():
+
+    schema = {
+                "type": "boolean",
+            }
+    
+    example = generate_example(schema)
+
+    assert isinstance(example, bool)
+
+
+def test_short_integer_minimum():
+
+    schema = {
+                "type": "integer",
+                "minimum": 4, 
+            }
+    
+    example = generate_example(schema)
+
+    assert example >= schema["minimum"] and isinstance(example, int)
+
+
+def test_short_integer_maximum():
+
+    schema = {
+                "type": "integer",
+                "maximum": 17, 
+            }
+    
+    example = generate_example(schema)
+
+    assert example <= schema["maximum"] and isinstance(example, int)
+
+
+def test_short_integer_exclusive_minimum():
+
+    schema = {
+                "type": "integer",
+                "minimum": 4,
+                "exclusiveMinimum": True, 
+            }
+    example = generate_example(schema)
+
+    assert example > schema["minimum"] and isinstance(example, int)
+
+
+def test_short_integer_exclusive_maximum():
+
+    schema = {
+                "type": "integer",
+                "maximum": 17,
+                "exclusiveMaximum": True,
+            }
+    
+    example = generate_example(schema)
+
+    assert example < schema["maximum"] and isinstance(example, int)
+
+
+def test_short_string_regular_expression():
+
+    pattern = "^\d{3}-\d{2}-\d{4}$"
+
+    schema = {
+                "type": "string",
+                "pattern": pattern,
+            }
+    
+    example = generate_example(schema)
+
+    assert type(fullmatch(pattern, example)) == Match and isinstance(example, str)
+    
