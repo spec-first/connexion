@@ -1,5 +1,6 @@
 from connexion.mock import MockResolver
 from connexion.operations import OpenAPIOperation, Swagger2Operation
+from re import fullmatch, Match
 
 
 def test_mock_resolver_default():
@@ -515,6 +516,37 @@ def test_mock_resolver_no_example_nested_in_list_string_expected():
     response, status_code = resolver.mock_operation(operation)
     assert status_code == 200
     assert response == ['abcde']
+
+def test_mock_resolver_no_example_nested_in_list_string_expected():
+    resolver = MockResolver(mock_all=True)
+
+    responses = {
+        "200": {
+            "schema": {
+                "type": "array",
+                "items": {
+                    "type": "string",
+                    "pattern": "^\d{3}-\d{2}-\d{4}$",
+                },
+            }
+        }
+    }
+
+    operation = Swagger2Operation(
+        method="GET",
+        path="endpoint",
+        path_parameters=[],
+        operation={"responses": responses},
+        app_produces=["application/json"],
+        app_consumes=["application/json"],
+        definitions={},
+        resolver=resolver,
+    )
+    assert operation.operation_id == "mock-1"
+
+    response, status_code = resolver.mock_operation(operation)
+    assert status_code == 200
+    assert type(fullmatch("^\d{3}-\d{2}-\d{4}$", response[0])) == Match
 
 def test_mock_resolver_no_example_nested_in_list_integer_expected():
     resolver = MockResolver(mock_all=True)

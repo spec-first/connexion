@@ -10,6 +10,7 @@ import os
 import pkgutil
 import sys
 import typing as t
+from rstr import xeger
 
 import yaml
 from starlette.routing import compile_path
@@ -502,24 +503,27 @@ def generate_example_integer(schema):
     try:
         if schema['exclusiveMaximum']:
             return schema['maximum'] - 1
-    except:
+    except KeyError:
         pass
     try:
         return schema['maximum'] 
-    except:
+    except KeyError:
         pass
     try:
         if schema['exclusiveMinimum']:
             return schema['minimum'] + 1
-    except:
+    except KeyError:
         pass
     try:
         return schema['minimum'] 
-    except:
+    except KeyError:
         return 12345
     
 def generate_example_string(schema):
-    return "abcde"
+    try:
+            return xeger(schema['pattern'])
+    except KeyError:
+        return "abcde"
 
 def generate_example_boolean(schema):
     return False
