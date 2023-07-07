@@ -1,5 +1,5 @@
 from connexion.utils import generate_example
-from re import fullmatch, Match
+from re import fullmatch
 
 
 def test_generate_example_string():
