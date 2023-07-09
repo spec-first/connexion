@@ -133,3 +133,16 @@ def test_generate_example_string_minimum():
     example = generate_example(schema)
 
     assert isinstance(example, str) and len(example) >= schema["minLength"]
+
+
+def test_generate_example_enum():
+
+    schema = {
+                "type": "string",
+                "enum": ["asc", "desc"]
+            }
+    
+    example = generate_example(schema)
+
+    assert isinstance(example, str)
+    assert example == "asc" or example == "desc"

@@ -531,6 +531,10 @@ def generate_example_string(schema):
     try:
         return "a" * schema['maxLength']
     except KeyError:
+        pass
+    try:
+        return schema["enum"][0]
+    except KeyError:
         return "abcde"
 
 def generate_example_boolean(schema):
