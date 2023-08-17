@@ -284,7 +284,7 @@ class OpenAPIOperation(AbstractOperation):
             warnings.warn('x-body-name within the requestBody schema will be deprecated in the '
                           'next major version. It should be provided directly under '
                           'the requestBody instead.', DeprecationWarning)
-        else:
+        else: # When x-body-name is not present in body_schema, consider that the body is used to pass POST parameters.
             result = {}
             for k in arguments:
                 if k not in body:
