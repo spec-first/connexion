@@ -277,6 +277,7 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
         """
         ret = {}
         ret.update(self._get_path_arguments(path_params, sanitize))
+        ret.update(self._get_query_arguments(body, sanitize))
         ret.update(self._get_query_arguments(query_params, arguments,
                                              has_kwargs, sanitize))
 
