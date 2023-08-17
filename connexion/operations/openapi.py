@@ -284,6 +284,13 @@ class OpenAPIOperation(AbstractOperation):
             warnings.warn('x-body-name within the requestBody schema will be deprecated in the '
                           'next major version. It should be provided directly under '
                           'the requestBody instead.', DeprecationWarning)
+        else:
+            result = {}
+            for k in arguments:
+                if k not in body:
+                    continue
+                result[k] = body[k]
+            return result
 
         # prefer the x-body-name as an extension of requestBody, fallback to deprecated schema name, default 'body'
         x_body_name = sanitize(self.request_body.get('x-body-name', x_body_name or 'body'))
