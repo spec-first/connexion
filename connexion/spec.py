@@ -21,6 +21,15 @@ from .json_schema import NullableTypeValidator, resolve_refs
 from .operations import OpenAPIOperation, Swagger2Operation
 from .utils import deep_get
 
+try:
+    from importlib.metadata import version
+except ImportError:  # Python < 3.10 (backport)
+    from importlib_metadata import version
+
+from packaging.version import Version
+
+_jsonschema_4_or_newer = Version(version("jsonschema")) >= Version("4.0.0")
+
 validate_properties = Draft4Validator.VALIDATORS["properties"]
 
 
@@ -47,7 +56,11 @@ def create_spec_validator(spec: dict) -> Draft4Validator:
         if not valid:
             return
         if isinstance(instance, dict) and 'default' in instance:
-            for error in instance_validator.iter_errors(instance['default'], instance):
+            if _jsonschema_4_or_newer:
+                errors = instance_validator.evolve(schema=instance).iter_errors(instance['default'])
+            else:
+                errors = instance_validator.iter_errors(instance['default'], instance)
+            for error in errors:
                 yield error
 
     SpecValidator = extend_validator(Draft4Validator, {"properties": validate_defaults})
