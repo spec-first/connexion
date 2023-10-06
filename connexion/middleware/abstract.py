@@ -2,6 +2,7 @@ import abc
 import logging
 import pathlib
 import typing as t
+from collections import defaultdict
 
 from starlette.types import ASGIApp, Receive, Scope, Send
 
@@ -182,7 +183,7 @@ class RoutedAPI(AbstractSpecAPI, t.Generic[OP]):
     ) -> None:
         super().__init__(specification, *args, **kwargs)
         self.next_app = next_app
-        self.operations: t.MutableMapping[str, OP] = {}
+        self.operations: t.MutableMapping[t.Optional[str], OP] = {}
 
     def add_paths(self) -> None:
         paths = self.specification.get("paths", {})
@@ -232,11 +233,11 @@ class RoutedMiddleware(SpecMiddleware, t.Generic[API]):
 
     def __init__(self, app: ASGIApp) -> None:
         self.app = app
-        self.apis: t.Dict[str, API] = {}
+        self.apis: t.Dict[str, t.List[API]] = defaultdict(list)
 
     def add_api(self, specification: t.Union[pathlib.Path, str, dict], **kwargs) -> API:
         api = self.api_cls(specification, next_app=self.app, **kwargs)
-        self.apis[api.base_path] = api
+        self.apis[api.base_path].append(api)
         return api
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
@@ -254,19 +255,19 @@ class RoutedMiddleware(SpecMiddleware, t.Generic[API]):
             )
         api_base_path = connexion_context.get("api_base_path")
         if api_base_path is not None and api_base_path in self.apis:
-            api = self.apis[api_base_path]
-            operation_id = connexion_context.get("operation_id")
-            try:
-                operation = api.operations[operation_id]
-            except KeyError as e:
-                if operation_id is None:
-                    logger.debug("Skipping operation without id.")
-                    await self.app(scope, receive, send)
-                    return
+            for api in self.apis[api_base_path]:
+                operation_id = connexion_context.get("operation_id")
+                try:
+                    operation = api.operations[operation_id]
+                except KeyError:
+                    if operation_id is None:
+                        logger.debug("Skipping operation without id.")
+                        await self.app(scope, receive, send)
+                        return
                 else:
-                    raise MissingOperation("Encountered unknown operation_id.") from e
-            else:
-                return await operation(scope, receive, send)
+                    return await operation(scope, receive, send)
+
+            raise MissingOperation("Encountered unknown operation_id.")
 
         await self.app(scope, receive, send)
 

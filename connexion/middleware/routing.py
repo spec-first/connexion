@@ -128,6 +128,14 @@ class RoutingMiddleware(SpecMiddleware):
             next_app=self.app,
             **kwargs,
         )
+
+        # If an API with the same base_path was already registered, chain the new API as its
+        # default. This way, if no matching route is found on the first API, the request is
+        # forwarded to the new API.
+        for route in self.router.routes:
+            if isinstance(route, starlette.routing.Mount) and route.path == api.base_path:
+                route.app.default = api.router
+
         self.router.mount(api.base_path, app=api.router)
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
