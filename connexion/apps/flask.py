@@ -171,7 +171,7 @@ class FlaskMiddlewareApp(SpecMiddleware):
 class FlaskApp(AbstractApp):
     """Connexion Application based on ConnexionMiddleware wrapping a Flask application."""
 
-    middleware_app: FlaskMiddlewareApp
+    _middleware_app: FlaskMiddlewareApp
 
     def __init__(
         self,
@@ -231,8 +231,8 @@ class FlaskApp(AbstractApp):
         :param security_map: A dictionary of security handlers to use. Defaults to
             :obj:`security.SECURITY_HANDLERS`
         """
-        self.middleware_app = FlaskMiddlewareApp(import_name, server_args or {})
-        self.app = self.middleware_app.app
+        self._middleware_app = FlaskMiddlewareApp(import_name, server_args or {})
+        self.app = self._middleware_app.app
         super().__init__(
             import_name,
             lifespan=lifespan,
@@ -255,7 +255,7 @@ class FlaskApp(AbstractApp):
     def add_url_rule(
         self, rule, endpoint: str = None, view_func: t.Callable = None, **options
     ):
-        self.middleware_app.add_url_rule(
+        self._middleware_app.add_url_rule(
             rule, endpoint=endpoint, view_func=view_func, **options
         )
 

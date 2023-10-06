@@ -171,7 +171,7 @@ class AsyncApp(AbstractApp):
         :param security_map: A dictionary of security handlers to use. Defaults to
             :obj:`security.SECURITY_HANDLERS`
         """
-        self.middleware_app: AsyncMiddlewareApp = AsyncMiddlewareApp()
+        self._middleware_app: AsyncMiddlewareApp = AsyncMiddlewareApp()
 
         super().__init__(
             import_name,
@@ -195,7 +195,7 @@ class AsyncApp(AbstractApp):
     def add_url_rule(
         self, rule, endpoint: str = None, view_func: t.Callable = None, **options
     ):
-        self.middleware_app.add_url_rule(
+        self._middleware_app.add_url_rule(
             rule, endpoint=endpoint, view_func=view_func, **options
         )
 

@@ -23,7 +23,7 @@ class AbstractApp:
     interface, it delegates most of the work to the middleware and framework application.
     """
 
-    middleware_app: SpecMiddleware
+    _middleware_app: SpecMiddleware
     """
     The application wrapped by the ConnexionMiddleware, which in its turn wraps the framework
     application.
@@ -83,7 +83,7 @@ class AbstractApp:
             :obj:`security.SECURITY_HANDLERS`
         """
         self.middleware = ConnexionMiddleware(
-            self.middleware_app,
+            self._middleware_app,
             import_name=import_name,
             lifespan=lifespan,
             middlewares=middlewares,

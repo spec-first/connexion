@@ -15,4 +15,4 @@ build:
       - poetry config virtualenvs.create false
     post_install:
       # Install dependencies with 'docs' dependency group
-      - poetry install --with docs
+      - poetry install --with docs --all-extras
