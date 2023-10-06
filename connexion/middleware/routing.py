@@ -133,7 +133,10 @@ class RoutingMiddleware(SpecMiddleware):
         # default. This way, if no matching route is found on the first API, the request is
         # forwarded to the new API.
         for route in self.router.routes:
-            if isinstance(route, starlette.routing.Mount) and route.path == api.base_path:
+            if (
+                isinstance(route, starlette.routing.Mount)
+                and route.path == api.base_path
+            ):
                 route.app.default = api.router
 
         self.router.mount(api.base_path, app=api.router)

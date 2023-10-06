@@ -111,7 +111,7 @@ class SecurityAPI(RoutedAPI[SecurityOperation]):
         if auth_all_paths:
             self.add_auth_on_not_found()
         else:
-            self.operations: t.MutableMapping[str, SecurityOperation] = {}
+            self.operations: t.MutableMapping[t.Optional[str], SecurityOperation] = {}
 
         self.add_paths()
 

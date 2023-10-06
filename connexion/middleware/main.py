@@ -412,7 +412,9 @@ class ConnexionMiddleware:
             security_map=security_map,
         )
 
-        api = API(specification, base_path=base_path, name=name, **options.__dict__, **kwargs)
+        api = API(
+            specification, base_path=base_path, name=name, **options.__dict__, **kwargs
+        )
         self.apis.append(api)
 
     def add_error_handler(

@@ -92,7 +92,7 @@ class AsyncMiddlewareApp(RoutedMiddleware[AsyncApi]):
     api_cls = AsyncApi
 
     def __init__(self) -> None:
-        self.apis: t.Dict[str, AsyncApi] = {}
+        self.apis: t.Dict[str, t.List[AsyncApi]] = {}
         self.operations: t.Dict[str, AsyncOperation] = {}
         self.router = Router()
         super().__init__(self.router)

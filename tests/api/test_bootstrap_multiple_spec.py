@@ -23,10 +23,13 @@ SPECS = [
 
 
 @pytest.mark.parametrize("specs", SPECS)
-def test_app_with_multiple_definition(multiple_yaml_same_basepath_dir, specs, app_class):
+def test_app_with_multiple_definition(
+    multiple_yaml_same_basepath_dir, specs, app_class
+):
     app = app_class(
         __name__,
-        specification_dir=".." / multiple_yaml_same_basepath_dir.relative_to(TEST_FOLDER),
+        specification_dir=".."
+        / multiple_yaml_same_basepath_dir.relative_to(TEST_FOLDER),
     )
 
     for spec in specs:

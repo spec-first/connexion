@@ -16,7 +16,7 @@ from connexion.mock import MockResolver
 try:
     import importlib_metadata
 except ImportError:
-    import importlib.metadata as importlib_metadata
+    import importlib.metadata as importlib_metadata  # type: ignore
 
 logger = logging.getLogger("connexion.cli")
 
