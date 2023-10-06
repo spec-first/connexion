@@ -157,12 +157,11 @@ class FlaskMiddlewareApp(SpecMiddleware):
     def add_api(self, specification, *, name: str = None, **kwargs):
         api = FlaskApi(specification, **kwargs)
 
-        # if name is available, it will use the name passed,
-        # otherwise it will as name the base path, which is the default behaviour
-        if name is None:
+        if name is not None:
             self.app.register_blueprint(api.blueprint, name=name)
         else:
             self.app.register_blueprint(api.blueprint)
+
         return api
 
     def add_url_rule(
