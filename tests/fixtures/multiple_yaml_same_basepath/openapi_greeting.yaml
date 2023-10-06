@@ -12,7 +12,7 @@ paths:
         '200':
           description: greeting response
           content:
-            '*/*':
+            'application/json':
               schema:
                 type: object
       parameters:

@@ -1,7 +1,6 @@
 import json
 
 import pytest
-from connexion import App
 
 from conftest import TEST_FOLDER
 
@@ -23,27 +22,24 @@ SPECS = [
 ]
 
 
-@pytest.mark.parametrize("spec", SPECS)
-def test_app_with_multiple_definition(multiple_yaml_same_basepath_dir, spec):
-    # Create the app with a relative path and run the test_app testcase below.
-    app = App(
+@pytest.mark.parametrize("specs", SPECS)
+def test_app_with_multiple_definition(multiple_yaml_same_basepath_dir, specs, app_class):
+    app = app_class(
         __name__,
-        port=5001,
-        specification_dir=".."
-        / multiple_yaml_same_basepath_dir.relative_to(TEST_FOLDER),
-        debug=True,
+        specification_dir=".." / multiple_yaml_same_basepath_dir.relative_to(TEST_FOLDER),
     )
 
-    for s in spec:
-        app.add_api(**s)
+    for spec in specs:
+        print(spec)
+        app.add_api(**spec)
 
-    app_client = app.app.test_client()
+    app_client = app.test_client()
 
-    post_greeting = app_client.post("/v1.0/greeting/jsantos")  # type: flask.Response
-    assert post_greeting.status_code == 200
-    greeting_response = json.loads(post_greeting.data.decode("utf-8"))
-    assert greeting_response["greeting"] == "Hello jsantos"
+    response = app_client.post("/v1.0/greeting/Igor")
+    assert response.status_code == 200
+    print(response.text)
+    assert response.json()["greeting"] == "Hello Igor"
 
-    get_bye = app_client.get("/v1.0/bye/jsantos")  # type: flask.Response
-    assert get_bye.status_code == 200
-    assert get_bye.data == b"Goodbye jsantos"
+    response = app_client.get("/v1.0/bye/Musti")
+    assert response.status_code == 200
+    assert response.text == "Goodbye Musti"
