@@ -1,7 +1,11 @@
 import logging
 from unittest.mock import MagicMock
 
-import importlib_metadata
+try:
+    import importlib_metadata
+except ImportError:
+    import importlib.metadata as importlib_metadata
+
 import pytest
 from click.testing import CliRunner
 from connexion.cli import main
