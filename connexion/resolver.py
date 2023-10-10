@@ -114,10 +114,12 @@ class RestyResolver(Resolver):
     Resolves endpoint functions using REST semantics (unless overridden by specifying operationId)
     """
 
-    def __init__(self, default_module_name, collection_endpoint_name="search"):
+    def __init__(
+        self, default_module_name: str, *, collection_endpoint_name: str = "search"
+    ):
         """
         :param default_module_name: Default module name for operations
-        :type default_module_name: str
+        :param collection_endpoint_name: Name of function to resolve collection endpoints to
         """
         super().__init__()
         self.default_module_name = default_module_name
@@ -185,35 +187,44 @@ class RestyResolver(Resolver):
 
 class MethodResolverBase(RestyResolver):
     """
-    Resolves endpoint functions based on Flask's MethodView semantics, e.g. ::
+    Resolves endpoint functions based on Flask's MethodView semantics, e.g.
 
-            paths:
-                /foo_bar:
-                    get:
-                        # Implied function call: api.FooBarView().get
+    .. code-block:: yaml
 
-            class FooBarView(MethodView):
-                def get(self):
-                    return ...
-                def post(self):
-                    return ...
+        paths:
+            /foo_bar:
+                get:
+                    # Implied function call: api.FooBarView().get
+
+    .. code-block:: python
+
+        class FooBarView(MethodView):
+            def get(self):
+                return ...
+            def post(self):
+                return ...
+
     """
 
     _class_arguments_type = t.Dict[
         str, t.Dict[str, t.Union[t.Iterable, t.Dict[str, t.Any]]]
     ]
 
-    def __init__(self, *args, class_arguments: _class_arguments_type = None, **kwargs):
+    def __init__(self, class_arguments: _class_arguments_type = None, **kwargs):
         """
-        :param class_arguments: Arguments to instantiate the View Class in the format  # noqa
-                                {
-                                  "ViewName": {
-                                    "args": (positional arguments,)
-                                    "kwargs": {
-                                      "keyword": "argument"
-                                    }
-                                  }
-                                }
+        :param class_arguments: Arguments to instantiate the View Class in the format below
+        :param kwargs: Keywords arguments passed to :class:`~RestyResolver`
+
+        .. code-block:: python
+
+            {
+              "ViewName": {
+                "args": (positional arguments,)
+                "kwargs": {
+                  "keyword": "argument"
+                }
+              }
+            }
         """
         self.class_arguments = class_arguments or {}
         if "collection_endpoint_name" in kwargs:
@@ -223,7 +234,7 @@ class MethodResolverBase(RestyResolver):
                 "collection_endpoint_name is ignored by the MethodViewResolver. "
                 "Requests to a collection endpoint will be routed to .get()"
             )
-        super(MethodResolverBase, self).__init__(*args, **kwargs)
+        super(MethodResolverBase, self).__init__(**kwargs)
         self.initialized_views: list = []
 
     def resolve_operation_id(self, operation):
@@ -280,7 +291,7 @@ class MethodResolverBase(RestyResolver):
 
 class MethodResolver(MethodResolverBase):
     """
-    A generic method resolver that instantiates a class a extracts the method
+    A generic method resolver that instantiates a class and extracts the method
     from it, based on the operation id.
     """
 

@@ -22,27 +22,41 @@ class _RequestInterface:
 
     @property
     def content_type(self) -> str:
+        """The content type included in the request headers."""
         raise NotImplementedError
 
     @property
     def mimetype(self) -> str:
+        """The content type included in the request headers stripped from any optional character
+        set encoding"""
         raise NotImplementedError
 
     @property
     def path_params(self) -> t.Dict[str, t.Any]:
+        """Path parameters exposed as a dictionary"""
         raise NotImplementedError
 
     @property
     def query_params(self) -> t.Dict[str, t.Any]:
+        """Query parameters exposed as a dictionary"""
         raise NotImplementedError
 
     def form(self) -> t.Union[t.Dict[str, t.Any], t.Awaitable[t.Dict[str, t.Any]]]:
+        """Form data, including files."""
         raise NotImplementedError
 
     def files(self) -> t.Dict[str, t.Any]:
+        """Files included in the request."""
+        raise NotImplementedError
+
+    def json(self) -> dict:
+        """Json data included in the request."""
         raise NotImplementedError
 
     def get_body(self) -> t.Any:
+        """Get body based on the content type. This returns json data for json content types,
+        form data for form content types, and bytes for all others. If the bytes data is emtpy,
+        :code:`None` is returned instead."""
         raise NotImplementedError
 
 
@@ -98,8 +112,10 @@ class WSGIRequest(_RequestInterface):
     def files(self):
         return self._werkzeug_request.files.to_dict(flat=False)
 
+    def json(self):
+        return self.get_json(silent=True)
+
     def get_body(self):
-        """Get body based on content type"""
         if self._body is None:
             if is_json_mimetype(self.content_type):
                 self._body = self.get_json(silent=True)
@@ -115,7 +131,15 @@ class WSGIRequest(_RequestInterface):
 
 
 class ASGIRequest(_RequestInterface):
-    """Wraps starlette Request so it can easily be extended."""
+    """
+    Implementation of the Connexion :code:`_RequestInterface` representing an ASGI request.
+
+    .. attribute:: _starlette_request
+
+        This class wraps a Starlette `Request <https://www.starlette.io/requests/#request>`_,
+        and provides access to its attributes by proxy.
+
+    """
 
     def __init__(self, *args, uri_parser=None, **kwargs):
         self._starlette_request = StarletteRequest(*args, **kwargs)

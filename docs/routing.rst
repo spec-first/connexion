@@ -1,40 +1,35 @@
 Routing
 =======
 
-Endpoint Routing to Your Python Views
--------------------------------------
+Connexion leverages your OpenAPI contract to route requests to your python functions. This can
+be done in two ways:
 
-Connexion uses the ``operationId`` from each `Operation Object`_ to
-identify which Python function should handle each URL.
+* `Explicitly <#explicit-routing>`_
+* `Automatically <#automatic-routing>`_
 
-**Explicit Routing**:
+Explicit routing
+----------------
 
-.. code-block:: yaml
+Connexion uses the :code:`operation_id` to link each `operation`_ in your API contract to
+the python function that should handle it.
+
+.. code-block:: python
+    :caption: **openapi.yaml**
 
     paths:
       /hello_world:
         post:
           operationId: myapp.api.hello_world
 
-If you provided this path in your specification POST requests to
-``http://MYHOST/hello_world``, it would be handled by the function
-``hello_world`` in ``myapp.api`` module.
+Based on the :code:`operationId` above, any :code:`POST` request to
+:code:`http://{HOST}/hello_world`, will be handled by the :code:`hello_world` function in the
+:code:`myapp.api` module.
 
-Optionally, you can include ``x-swagger-router-controller`` in your operation
-definition, making ``operationId`` relative:
+Optionally, you can include :code:`x-openapi-router-controller` or
+:code:`x-swagger-router-controller` in your :code:`operationId` to make your `operationId` relative:
 
-.. code-block:: yaml
-
-    paths:
-      /hello_world:
-        post:
-          x-swagger-router-controller: myapp.api
-          operationId: hello_world
-
-NOTE: If you are using an OpenAPI spec, you should use ``x-openapi-router-controller`` 
-in your operation definition, making ``operationId`` relative:
-
-.. code-block:: yaml
+.. code-block:: python
+    :caption: **openapi.yaml**
 
     paths:
       /hello_world:
@@ -42,22 +37,302 @@ in your operation definition, making ``operationId`` relative:
           x-openapi-router-controller: myapp.api
           operationId: hello_world
 
-If all your operations are relative, you can use the ``RelativeResolver`` class
-instead of repeating the same ``x-swagger-router-controller`` or
-``x-openapi-router-controller`` in every operation:
+
+If all your operations are relative, you can use the :code:`RelativeResolver` class when
+registering your API instead of repeating the same :code:`x-openapi-router-controller` in every
+operation:
 
 .. code-block:: python
+    :caption: **app.py**
 
+    import connexion
     from connexion.resolver import RelativeResolver
-      
+
+    app = connexion.AsyncApp(__name__)
+    app.add_api('openapi.yaml', resolver=RelativeResolver('myapp.api'))
+
+
+.. dropdown:: View a detailed reference of the :code:`RelativeResolver` class
+    :icon: eye
+
+    .. autoclass:: connexion.resolver.RelativeResolver
+
+Note that :code:`HEAD` requests will be handled by the :code:`operationId` specified under the
+:code:`GET` operation in the specification. :code:`Connexion.request.method` can be used to
+determine which request was made.
+
+.. dropdown:: View a detailed reference of the :code:`connexion.request` class
+    :icon: eye
+
+    .. autoclass:: connexion.lifecycle.ASGIRequest
+       :members:
+       :undoc-members:
+       :inherited-members:
+
+
+.. _operation: https://swagger.io/docs/specification/paths-and-operations/#operations
+
+
+Automatic routing
+-----------------
+
+Connexion can also automate the routing for you. You can choose from different :code:`Resolvers`
+implementing different resolution strategies.
+
+RestyResolver
+`````````````
+
+The :code:`RestyResolver` will infer an :code:`operationId` based on the path and HTTP method of
+each operation in your specification:
+
+.. code-block:: python
+    :caption: **app.py**
+
+    import connexion
+    from connexion.resolver import RestyResolver
+
     app = connexion.FlaskApp(__name__)
-    app.add_api('swagger.yaml', resolver=RelativeResolver('api'))
+    app.add_api('openapi.yaml', resolver=RestyResolver('api'))
+
+.. code-block:: yaml
+    :caption: **openapi.yaml**
+
+    paths:
+      /:
+        get:
+           # Implied operationId: api.get
+      /foo:
+        get:
+           # Implied operationId: api.foo.search
+        post:
+           # Implied operationId: api.foo.post
+      /foo/{id}:
+        get:
+           # Implied operationId: api.foo.get
+        put:
+           # Implied operationId: api.foo.put
+        copy:
+           # Implied operationId: api.foo.copy
+        delete:
+           # Implied operationId: api.foo.delete
+      /foo/{id}/bar:
+        get:
+           # Implied operationId: api.foo.bar.search
+      /foo/{id}/bar/{name}:
+        get:
+           # Implied operationId: api.foo.bar.get
+
+``RestyResolver`` will give precedence to any ``operationId`` encountered in the specification and
+respects ``x-openapi-router-controller`` and ``x-swagger-router-controller``.
+
+.. dropdown:: View a detailed reference of the :code:`RestyResolver` class
+    :icon: eye
+
+    .. autoclass:: connexion.resolver.RestyResolver
+
+MethodResolver
+``````````````
+
+The ``MethodResolver`` works like a ``RestyResolver``, but routes to class methods instead of
+functions.
+
+.. code-block:: python
+    :caption: **app.py**
+
+    import connexion
+    from connexion.resolver import MethodResolver
+
+    app = connexion.FlaskApp(__name__)
+    app.add_api('openapi.yaml', resolver=MethodResolver('api'))
 
 
-Keep in mind that Connexion follows how `HTTP methods work in Flask`_
-and therefore HEAD requests will be handled by the ``operationId`` specified
-under GET in the specification. If both methods are supported,
-``connexion.request.method`` can be used to determine which request was made.
+.. code-block:: yaml
+    :caption: **openapi.yaml**
+
+    paths:
+      /foo:
+      get:
+        # Implied operationId: api.FooView.search
+      post:
+        # Implied operationId: api.FooView.post
+      '/foo/{id}':
+      get:
+        # Implied operationId: api.FooView.get
+      put:
+        # Implied operationId: api.FooView.put
+      copy:
+        # Implied operationId: api.FooView.copy
+      delete:
+        # Implied operationId: api.FooView.delete
+
+
+The structure expects a Class to exists inside the ``api`` module with the name
+``<<CapitalisedPath>>View``.
+
+.. code-block:: python
+    :caption: **api.py**
+
+    class PetsView:
+
+      def post(self, body: dict):
+        ...
+
+      def put(self, petId, body: dict):
+        ...
+
+      def delete(self, petId):
+        ...
+
+      def get(self, petId=None):
+        ...
+
+      def search(limit=100):
+        ...
+
+It is possible to use decorators for the Method view by listing them in the
+decorator attribute of the class:
+
+.. code-block:: python
+    :caption: **api.py**
+
+    def example_decorator(f):
+
+        def decorator(*args, **kwargs):
+            return f(*args, **kwargs)
+
+        return decorator
+
+    class PetsView:
+      """Create Pets service"""
+
+      decorators = [example_decorator]
+
+      ...
+
+
+Additionally, you may inject dependencies into the class by declaring parameters
+for this class in the ``__init__`` method and providing the arguments in the
+``MethodViewResolver()`` call. The arguments are passed down to the class when
+``as_view`` is called.
+
+A class might look like this:
+
+.. code-block:: python
+    :caption: **api.py**
+
+    class PetsView:
+        def __init__(self, pets):
+            self.pets = pets
+
+
+And the arguments are provided like this:
+
+.. code-block:: python
+    :caption: **app.py**
+
+    MethodViewResolver("api", class_arguments={"PetsView": {"kwargs": {"pets": zoo}}})
+
+``MethodResolver`` will give precedence to any ``operationId`` encountered in the specification and
+respects ``x-openapi-router-controller`` and ``x-swagger-router-controller``.
+
+.. dropdown:: View a detailed reference of the :code:`MethodResolver` class
+    :icon: eye
+
+    .. autoclass:: connexion.resolver.MethodResolver
+
+MethodViewResolver
+``````````````````
+
+The ``MethodResolver`` works like a ``MethodViewResolver``, but routes to class methods of a
+Flask ``MethodView`` subclass.
+
+.. note::
+    If you migrate from connexion v2 you may want to use the ``MethodResolver`` in order to maintain
+    the old behavior. The behavior described here is the new behavior, introduced in connexion v3.
+    Previously, in v2, the ``MethodViewResolver`` worked like the ``MethodResolver`` in v3.
+
+Another difference is that the ``MethodResolver`` will look for ``search`` and ``get``
+methods for `collection` and `single item` operations respectively, while ``MethodViewResolver``
+handles both `collection` and `single item` operations via the same ``get`` method.
+
+.. code-block:: python
+    :caption: **app.py**
+
+    import connexion
+    from connexion.resolver import MethodResolver
+
+    app = connexion.FlaskApp(__name__)
+    app.add_api('openapi.yaml', resolver=MethodViewResolver('api'))
+
+
+.. code-block:: yaml
+    :caption: **openapi.yaml**
+
+    paths:
+      /foo:
+      get:
+        # Implied operationId: api.FooView.get
+      post:
+        # Implied operationId: api.FooView.post
+      '/foo/{id}':
+      get:
+        # Implied operationId: api.FooView.get
+      put:
+        # Implied operationId: api.FooView.put
+      copy:
+        # Implied operationId: api.FooView.copy
+      delete:
+        # Implied operationId: api.FooView.delete
+
+
+The structure expects a Class to exists inside the ``api`` module with the name
+``<<CapitalisedPath>>View``.
+
+.. code-block:: python
+    :caption: **api.py**
+
+    from flask.views import MethodView
+
+
+    class PetsView(MethodView):
+
+      def post(self, body: dict):
+        ...
+
+      def put(self, petId, body: dict):
+        ...
+
+      def delete(self, petId):
+        ...
+
+      def get(self, petId=None, limit=100):
+        ...
+
+.. dropdown:: View a detailed reference of the :code:`MethodViewResolver` class
+    :icon: eye
+
+    .. autoclass:: connexion.resolver.MethodViewResolver
+
+Custom resolver
+```````````````
+
+You can import and extend ``connexion.resolver.Resolver`` to implement your own
+``operationId`` and function resolution algorithm.
+
+.. dropdown:: View a detailed reference of the :code:`RestyResolver` class
+    :icon: eye
+
+    .. autoclass:: connexion.resolver.Resolver
+        :members:
+
+.. note::
+
+    If you implement a custom ``Resolver``, and think it would be valuable for other users, we
+    would appreciate it as a contribution.
+
+
+Resolver error
+--------------
 
 By default, Connexion strictly enforces the presence of a handler
 function for any path defined in your specification. Because of this, adding
@@ -68,293 +343,73 @@ added to your specification, e.g. in an API design first workflow, set the
 paths that are not yet implemented:
 
 .. code-block:: python
+    :caption: **app.py**
 
     app = connexion.FlaskApp(__name__)
-    app.add_api('swagger.yaml', resolver_error=501)
+    app.add_api('openapi.yaml', resolver_error=501)
 
-.. code-block:: yaml
+Individual paths
+----------------
 
-Automatic Routing
------------------
-
-To customize this behavior, Connexion can use alternative
-``Resolvers``—for example, ``RestyResolver``. The ``RestyResolver``
-will compose an ``operationId`` based on the path and HTTP method of
-the endpoints in your specification:
+You can also add individual paths to your application which are not described in your API
+contract. This can be useful for eg. ``/healthz`` or similar endpoints.
 
 .. code-block:: python
+    :caption: **api.py**
 
-    from connexion.resolver import RestyResolver
+    @app.route("/healthz")
+    def healthz():
+        return 200
 
-    app = connexion.FlaskApp(__name__)
-    app.add_api('swagger.yaml', resolver=RestyResolver('api'))
+    # Or as alternative to the decorator
+    app.add_url_rule("/healthz", "healthz", healthz)
 
-.. code-block:: yaml
+.. tab-set::
 
-   paths:
-     /:
-       get:
-          # Implied operationId: api.get
-     /foo:
-       get:
-          # Implied operationId: api.foo.search
-       post:
-          # Implied operationId: api.foo.post
+    .. tab-item:: AsyncApp
+        :sync: AsyncApp
 
-     '/foo/{id}':
-       get:
-          # Implied operationId: api.foo.get
-       put:
-          # Implied operationId: api.foo.put
-       copy:
-          # Implied operationId: api.foo.copy
-       delete:
-          # Implied operationId: api.foo.delete
-     '/foo/{id}/bar':
-       get:
-          # Implied operationId: api.foo.bar.search
-     '/foo/{id}/bar/{name}':
-       get:
-          # Implied operationId: api.foo.bar.get
-          # Handler signature: `def get(id, name): ...`
+        .. dropdown:: View a detailed reference of the ``route`` and ``add_url_rule`` methods
+            :icon: eye
 
-``RestyResolver`` will give precedence to any ``operationId``
-encountered in the specification. It will also respect
-``x-swagger-router-controller`` and ``x-openapi-router-controller``.
-You may import and extend ``connexion.resolver.Resolver`` to implement your own
-``operationId`` (and function) resolution algorithm.
-Note that when using multiple parameters in the path, they will be
-collected and all passed to the endpoint handlers.
+            .. automethod:: connexion.AsyncApp.route
+                :noindex:
+            .. automethod:: connexion.AsyncApp.add_url_rule
+                :noindex:
 
-Automatic Routing with MethodViewResolver
--------------------------------------------
+    .. tab-item:: FlaskApp
+        :sync: FlaskApp
 
-.. note::
-   If you migrate from connexion v2 you may want to use the `MethodResolver`
-   in order to maintain the old behavior. The behavior described here is the new behavior,
-   introduced in connexion v3. The difference is that the `MethodResolver` works with any
-   class, while the `MethodViewResolver` is specifically designed to work with flask's
-   `MethodView`. Previously, in v2, the `MethodViewResolver` worked like the `MethodResolver`
-   in v3. One consequence is that the `MethodResolver` will look for `search` and `get`
-   methods for list and single operations respectively, while `MethodViewResolver` uses
-   the `dispatch_request` method of the given class and therefore handles both, list and
-   single operations via the same `get` method.  
+        .. dropdown:: View a detailed reference of the ``route`` and ``add_url_rule`` methods
+            :icon: eye
 
-``MethodViewResolver`` is an customised Resolver based on ``RestyResolver``
-to take advantage of MethodView structure of building Flask APIs.
-The ``MethodViewResolver`` will compose an ``operationId`` based on the path and HTTP method of
-the endpoints in your specification. The path will be based on the path you provide in the app.add_api and the path provided in the URL endpoint (specified in the swagger or openapi3).
+            .. automethod:: connexion.FlaskApp.route
+                :noindex:
+            .. automethod:: connexion.FlaskApp.add_url_rule
+                :noindex:
 
-.. code-block:: python
+    .. tab-item:: ConnexionMiddleware
+        :sync: ConnexionMiddleware
 
-    from connexion.resolver import MethodViewResolver
+        When using the ``ConnexionMiddleware`` around an ASGI or WSGI application, you can
+        register individual routes on the wrapped application.
 
-    app = connexion.FlaskApp(__name__)
-    app.add_api('swagger.yaml', resolver=MethodViewResolver('api'))
-
-And associated YAML
-
-.. code-block:: yaml
-
-   paths:
-     /foo:
-       get:
-          # Implied operationId: api.FooView.search
-       post:
-          # Implied operationId: api.FooView.post
-
-     '/foo/{id}':
-       get:
-          # Implied operationId: api.FooView.get
-       put:
-          # Implied operationId: api.FooView.put
-       copy:
-          # Implied operationId: api.FooView.copy
-       delete:
-          # Implied operationId: api.FooView.delete
-
-
-The structure expects a Class to exists inside the directory ``api`` that conforms to the naming ``<<Classname with Capitalised name>>View``.
-In the above yaml the necessary MethodView implementation is as follows:
-
-.. code-block:: python
-
-    import datetime
-
-    from connexion import NoContent
-    from flask.views import MethodView
-
-
-    class PetsView(MethodView):
-      """Create Pets service"""
-
-      pets = {}
-
-      def post(self, body: dict):
-        name = body.get("name")
-        tag = body.get("tag")
-        count = len(self.pets)
-        pet = {}
-        pet["id"] = count + 1
-        pet["tag"] = tag
-        pet["name"] = name
-        pet["last_updated"] = datetime.datetime.now()
-        self.pets[pet["id"]] = pet
-        return pet, 201
-
-      def put(self, petId, body: dict):
-        name = body["name"]
-        tag = body.get("tag")
-        pet = self.pets.get(petId, {"id": petId})
-        pet["name"] = name
-        pet["tag"] = tag
-        pet["last_updated"] = datetime.datetime.now()
-        self.pets[petId] = pet
-        return self.pets[petId], 201
-
-      def delete(self, petId):
-        id_ = int(petId)
-        if self.pets.get(id_) is None:
-          return NoContent, 404
-        del self.pets[id_]
-        return NoContent, 204
-
-      def get(self, petId=None, limit=100):
-        if petId is None:
-          # NOTE: we need to wrap it with list for Python 3 as 
-          # dict_values is not JSON serializable
-          return list(self.pets.values())[0:limit]
-        if self.pets.get(petId) is None:
-          return NoContent, 404
-        return self.pets[petId]
-
-
-and a __init__.py file to make the Class visible in the api directory.
-
-.. code-block:: python
-
-    from .petsview import PetsView
-
-
-The `as_view` method of the class is called to create the view function.
-Its `dispatch_request` method is used to route requests based on the HTTP method. 
-Therefore it is required to use the same `get` method for both, collection and 
-single resources. I.E. `/pets` and `/pets/{id}`.
-
-It is possible to use decorators for the Method view by listing them in the 
-decorator attribute of the class:
-
-.. code-block:: python
-
-    def example_decorator(f):
-
-        def decorator(*args, **kwargs):
-            return f(*args, **kwargs)
-
-        return decorator
-
-    class PetsView(MethodView):
-      """Create Pets service"""
-
-      decorators = [example_decorator]
-
-      ...
-
-
-Additionally, you may inject dependencies into the class by declaring parameters 
-for this class in the `__init__` method and providing the arguments in the 
-`MethodViewResolver` call. The arguments are passed down to the class when 
-`as_view` is called.
-
-A class might look like this:
-
-.. code-block:: python
-  
-  class PetsView(MethodView):
-    def __init__(self, pets):
-      self.pets = pets
-
-
-And the arguments are provided like this:
-
-.. code-block:: python
-
-  MethodViewResolver("api", class_arguments={"PetsView": {"kwargs": {"pets": zoo}}})
-
-
-``MethodViewResolver`` will give precedence to any ``operationId``
-encountered in the specification. It will also respect
-``x-swagger-router-controller`` and ``x-openapi-router-controller``.
-You may import and extend ``connexion.resolver.MethodViewResolver`` to implement
-your own ``operationId`` (and function) resolution algorithm.
-
-Parameter Name Sanitation
--------------------------
-
-The names of query and form parameters, as well as the name of the body
-parameter are sanitized by removing characters that are not allowed in Python
-symbols. I.e. all characters that are not letters, digits or the underscore are
-removed, and finally characters are removed from the front until a letter or an
-under-score is encountered. As an example:
-
-.. code-block:: python
-
-    >>> re.sub('^[^a-zA-Z_]+', '', re.sub('[^0-9a-zA-Z_]', '', '$top'))
-    'top'
-
-Without this sanitation it would e.g. be impossible to implement an
-`OData
-<http://www.odata.org>`_ API.
-
-You can also convert *CamelCase* parameters to *snake_case* automatically using `pythonic_params` option:
-
-.. code-block:: python
-
-    app = connexion.FlaskApp(__name__)
-    app.add_api('api.yaml', ..., pythonic_params=True)
-
-With this option enabled, Connexion firstly converts *CamelCase* names
-to *snake_case*. Secondly it looks to see if the name matches a known built-in
-and if it does it appends an underscore to the name.
-
-Parameter Variable Converters
------------------------------
-
-Connexion supports Flask's ``int``, ``float``, and ``path`` route parameter
-`variable converters
-<http://flask.pocoo.org/docs/0.12/quickstart/#variable-rules>`_.
-Specify a route parameter's type as ``integer`` or ``number`` or its type as
-``string`` and its format as ``path`` to use these converters. For example:
-
-.. code-block:: yaml
-
-  paths:
-    /greeting/{name}:
-      # ...
-      parameters:
-        - name: name
-          in: path
-          required: true
-          type: string
-          format: path
-
-will create an equivalent Flask route ``/greeting/<path:name>``, allowing
-requests to include forward slashes in the ``name`` url variable.
 
 API Versioning and basePath
 ---------------------------
 
 Setting a base path is useful for versioned APIs. An example of
-a base path would be the ``1.0`` in ``http://MYHOST/1.0/hello_world``.
+a base path would be the ``1.0`` in ``http://{HOST}/1.0/hello_world``.
 
-If you are using OpenAPI 3.x.x, you set your base URL path in the
+If you are using OpenAPI 3, you set your base URL path in the
 servers block of the specification. You can either specify a full
 URL, or just a relative path.
 
 .. code-block:: yaml
+    :caption: **openapi.yaml**
 
     servers:
-      - url: https://MYHOST/1.0
+      - url: https://{{HOST}}/1.0
         description: full url example
       - url: /1.0
         description: relative path example
@@ -362,10 +417,11 @@ URL, or just a relative path.
     paths:
       ...
 
-If you are using OpenAPI 2.0, you can define a ``basePath`` on the top level
-of your OpenAPI 2.0 specification.
+If you are using Swagger 2.0, you can define a ``basePath`` on the top level
+of your Swagger 2.0 specification.
 
 .. code-block:: yaml
+    :caption: **swagger.yaml**
 
     basePath: /1.0
 
@@ -376,40 +432,6 @@ If you don't want to include the base path in your specification, you
 can provide it when adding the API to your application:
 
 .. code-block:: python
+    :caption: **app.py**
 
     app.add_api('my_api.yaml', base_path='/1.0')
-
-Swagger UI path
----------------
-
-Swagger UI is available at ``/ui/`` by default.
-
-You can choose another path through options:
-
-.. code-block:: python
-
-    options = {'swagger_url': '/'}
-    app = connexion.App(__name__, options=options)
-
-Swagger JSON
-------------
-Connexion makes the OpenAPI/Swagger specification in JSON format
-available from ``swagger.json`` in the base path of the API.
-
-You can disable the Swagger JSON at the application level:
-
-.. code-block:: python
-
-    app = connexion.FlaskApp(__name__, specification_dir='swagger/',
-                        swagger_json=False)
-    app.add_api('my_api.yaml')
-
-You can also disable it at the API level:
-
-.. code-block:: python
-
-    app = connexion.FlaskApp(__name__, specification_dir='swagger/')
-    app.add_api('my_api.yaml', swagger_json=False)
-
-.. _Operation Object: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#operation-object
-.. _HTTP Methods work in Flask: http://flask.pocoo.org/docs/1.0/quickstart/#http-methods

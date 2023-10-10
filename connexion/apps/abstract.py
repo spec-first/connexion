@@ -214,7 +214,7 @@ class AbstractApp:
         :param endpoint: the name of the endpoint for the registered URL rule, which is used for
             reverse lookup. Flask defaults to the name of the view function.
         :param view_func: the function to call when serving a request to the provided endpoint.
-        :param options: the options to be forwarded to the underlying `werkzeug.routing.Rule`
+        :param options: the options to be forwarded to the underlying ``werkzeug.routing.Rule``
             object.  A change to Werkzeug is handling of method options. methods is a list of
             methods this rule should be limited to (`GET`, `POST` etc.).  By default a rule just
             listens for `GET` (and implicitly `HEAD`).
@@ -231,7 +231,7 @@ class AbstractApp:
                 return 'Hello World'
 
         :param rule: the URL rule as string
-        :param options: the options to be forwarded to the underlying `werkzeug.routing.Rule`
+        :param options: the options to be forwarded to the underlying ``werkzeug.routing.Rule``
                         object. A change to Werkzeug is handling of method options. methods is a
                         list of methods this rule should be limited to (`GET`, `POST` etc.).
                         By default a rule just listens for `GET` (and implicitly `HEAD`).
