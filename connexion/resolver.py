@@ -228,13 +228,6 @@ class MethodResolverBase(RestyResolver):
             }
         """
         self.class_arguments = class_arguments or {}
-        if "collection_endpoint_name" in kwargs:
-            del kwargs["collection_endpoint_name"]
-            # Dispatch of request is done by Flask
-            logger.warning(
-                "collection_endpoint_name is ignored by the MethodViewResolver. "
-                "Requests to a collection endpoint will be routed to .get()"
-            )
         super(MethodResolverBase, self).__init__(*args, **kwargs)
         self.initialized_views: list = []
 
@@ -321,6 +314,16 @@ class MethodViewResolver(MethodResolverBase):
     A specialized method resolver that works with flask's method views.
     It resolves the method by calling as_view on the class.
     """
+
+    def __init__(self, *args, **kwargs):
+        if "collection_endpoint_name" in kwargs:
+            del kwargs["collection_endpoint_name"]
+            # Dispatch of request is done by Flask
+            logger.warning(
+                "collection_endpoint_name is ignored by the MethodViewResolver. "
+                "Requests to a collection endpoint will be routed to .get()"
+            )
+        super().__init__(*args, **kwargs)
 
     def resolve_method_from_class(self, view_name, meth_name, view_cls):
         view = None
