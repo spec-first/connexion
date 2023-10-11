@@ -210,8 +210,9 @@ class MethodResolverBase(RestyResolver):
         str, t.Dict[str, t.Union[t.Iterable, t.Dict[str, t.Any]]]
     ]
 
-    def __init__(self, class_arguments: _class_arguments_type = None, **kwargs):
+    def __init__(self, *args, class_arguments: _class_arguments_type = None, **kwargs):
         """
+        :param args: Arguments passed to :class:`~RestyResolver`
         :param class_arguments: Arguments to instantiate the View Class in the format below
         :param kwargs: Keywords arguments passed to :class:`~RestyResolver`
 
@@ -234,7 +235,7 @@ class MethodResolverBase(RestyResolver):
                 "collection_endpoint_name is ignored by the MethodViewResolver. "
                 "Requests to a collection endpoint will be routed to .get()"
             )
-        super(MethodResolverBase, self).__init__(**kwargs)
+        super(MethodResolverBase, self).__init__(*args, **kwargs)
         self.initialized_views: list = []
 
     def resolve_operation_id(self, operation):
