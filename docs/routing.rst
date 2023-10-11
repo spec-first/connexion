@@ -69,10 +69,6 @@ determine which request was made.
        :undoc-members:
        :inherited-members:
 
-
-.. _operation: https://swagger.io/docs/specification/paths-and-operations/#operations
-
-
 Automatic routing
 -----------------
 
@@ -348,6 +344,58 @@ paths that are not yet implemented:
     app = connexion.FlaskApp(__name__)
     app.add_api('openapi.yaml', resolver_error=501)
 
+
+Path parameters
+---------------
+
+`Path parameters`_ are variable parts of a URL path denoted with curly braces ``{ }`` in the
+specification.
+
+.. tab-set::
+
+    .. tab-item:: OpenAPI 3
+
+        .. code-block:: yaml
+
+            paths:
+              /users/{id}:
+                parameters:
+                  - in: path
+                    name: id   # Note the name is the same as in the path
+                    required: true
+                    schema:
+                      type: integer
+                    description: The user ID
+
+    .. tab-item:: Swagger 2
+
+        .. code-block:: yaml
+
+            paths:
+              /users/{id}:
+                parameters:
+                  - in: path
+                    name: id
+                    required: true
+                    type: integer
+                    description: The user ID.
+
+By default this will capture characters up to the end of the path or the next `/`.
+
+You can use convertors to modify what is captured. The available convertors are:
+
+* `str` returns a string, and is the default.
+* `int` returns a Python integer.
+* `float` returns a Python float.
+* `path` returns the rest of the path, including any additional `/` characters.
+
+Convertors are used by defining them as the ``format`` in the parameter specification
+
+Specify a route parameter's type as ``integer`` or ``number`` or its type as
+``string`` and its format as ``path`` to use these converters.
+
+Path parameters are passed as arguments to your python function, see :doc:`parameters`.
+
 Individual paths
 ----------------
 
@@ -435,3 +483,6 @@ can provide it when adding the API to your application:
     :caption: **app.py**
 
     app.add_api('my_api.yaml', base_path='/1.0')
+
+.. _operation: https://swagger.io/docs/specification/paths-and-operations/#operations
+.. _Path parameters: https://swagger.io/docs/specification/describing-parameters/#path-parameters
