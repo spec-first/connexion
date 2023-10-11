@@ -17,6 +17,7 @@ from connexion.jsonifier import Jsonifier
 from connexion.middleware.abstract import RoutedAPI, RoutedMiddleware
 from connexion.middleware.lifespan import Lifespan
 from connexion.operations import AbstractOperation
+from connexion.options import SwaggerUIOptions
 from connexion.resolver import Resolver
 from connexion.uri_parsing import AbstractURIParser
 
@@ -131,7 +132,7 @@ class AsyncApp(AbstractApp):
         resolver: t.Optional[t.Union[Resolver, t.Callable]] = None,
         resolver_error: t.Optional[int] = None,
         strict_validation: t.Optional[bool] = None,
-        swagger_ui_options: t.Optional[dict] = None,
+        swagger_ui_options: t.Optional[SwaggerUIOptions] = None,
         uri_parser_class: t.Optional[AbstractURIParser] = None,
         validate_responses: t.Optional[bool] = None,
         validator_map: t.Optional[dict] = None,
@@ -161,8 +162,8 @@ class AsyncApp(AbstractApp):
             start.
         :param strict_validation: When True, extra form or query parameters not defined in the
             specification result in a validation error. Defaults to False.
-        :param swagger_ui_options: A dict with configuration options for the swagger ui. See
-            :class:`options.ConnexionOptions`.
+        :param swagger_ui_options: Instance of :class:`options.ConnexionOptions` with
+            configuration options for the swagger ui.
         :param uri_parser_class: Class to use for uri parsing. See :mod:`uri_parsing`.
         :param validate_responses: Whether to validate responses against the specification. This has
             an impact on performance. Defaults to False.

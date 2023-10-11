@@ -236,7 +236,7 @@ If you installed connexion using the :code:`swagger-ui` extra, a Swagger UI is a
 API, providing interactive documentation. By default the UI is hosted at :code:`{base_path}/ui/`
 where :code:`base_path`` is the base path of the API.
 
-**https://localhost:{port}/{base_path}/ui/**
+**https://{host}/{base_path}/ui/**
 
 .. image:: images/swagger_ui.png
 

@@ -8,6 +8,7 @@ from connexion.exceptions import InvalidSpecification
 from connexion.http_facts import METHODS
 from connexion.json_schema import ExtendedSafeLoader
 from connexion.middleware.abstract import AbstractRoutingAPI
+from connexion.options import SwaggerUIOptions
 
 from conftest import TEST_FOLDER, build_app_from_fixture
 
@@ -57,7 +58,7 @@ def test_swagger_ui(simple_api_spec_dir, spec):
 
 def test_swagger_ui_with_config(simple_api_spec_dir, spec):
     swagger_ui_config = {"displayOperationId": True}
-    swagger_ui_options = {"swagger_ui_config": swagger_ui_config}
+    swagger_ui_options = SwaggerUIOptions(swagger_ui_config=swagger_ui_config)
     app = App(
         __name__,
         specification_dir=simple_api_spec_dir,
@@ -72,7 +73,7 @@ def test_swagger_ui_with_config(simple_api_spec_dir, spec):
 
 
 def test_no_swagger_ui(simple_api_spec_dir, spec):
-    swagger_ui_options = {"swagger_ui": False}
+    swagger_ui_options = SwaggerUIOptions(swagger_ui=False)
     app = App(
         __name__,
         specification_dir=simple_api_spec_dir,
@@ -85,7 +86,7 @@ def test_no_swagger_ui(simple_api_spec_dir, spec):
     assert swagger_ui.status_code == 404
 
     app2 = App(__name__, specification_dir=simple_api_spec_dir)
-    app2.add_api(spec, swagger_ui_options={"swagger_ui": False})
+    app2.add_api(spec, swagger_ui_options=SwaggerUIOptions(swagger_ui=False))
     app2_client = app2.test_client()
     swagger_ui2 = app2_client.get("/v1.0/ui/")
     assert swagger_ui2.status_code == 404
@@ -94,7 +95,7 @@ def test_no_swagger_ui(simple_api_spec_dir, spec):
 def test_swagger_ui_config_json(simple_api_spec_dir, spec):
     """Verify the swagger-ui-config.json file is returned for swagger_ui_config option passed to app."""
     swagger_ui_config = {"displayOperationId": True}
-    swagger_ui_options = {"swagger_ui_config": swagger_ui_config}
+    swagger_ui_options = SwaggerUIOptions(swagger_ui_config=swagger_ui_config)
     app = App(
         __name__,
         specification_dir=simple_api_spec_dir,
@@ -142,7 +143,7 @@ def test_swagger_yaml_app(simple_api_spec_dir, spec):
 
 def test_no_swagger_json_app(simple_api_spec_dir, spec):
     """Verify the spec json file is not returned when set to False when creating app."""
-    swagger_ui_options = {"serve_spec": False}
+    swagger_ui_options = SwaggerUIOptions(serve_spec=False)
     app = App(
         __name__,
         specification_dir=simple_api_spec_dir,
@@ -193,7 +194,7 @@ def test_swagger_json_api(simple_api_spec_dir, spec):
 def test_no_swagger_json_api(simple_api_spec_dir, spec):
     """Verify the spec json file is not returned when set to False when adding api."""
     app = App(__name__, specification_dir=simple_api_spec_dir)
-    app.add_api(spec, swagger_ui_options={"serve_spec": False})
+    app.add_api(spec, swagger_ui_options=SwaggerUIOptions(serve_spec=False))
 
     app_client = app.test_client()
     url = "/v1.0/{spec}".format(spec=spec.replace("yaml", "json"))

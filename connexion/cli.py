@@ -8,11 +8,15 @@ import sys
 from os import path
 
 import click
-import importlib_metadata
 from clickclick import AliasedGroup
 
 import connexion
 from connexion.mock import MockResolver
+
+try:
+    import importlib_metadata
+except ImportError:
+    import importlib.metadata as importlib_metadata  # type: ignore
 
 logger = logging.getLogger("connexion.cli")
 
