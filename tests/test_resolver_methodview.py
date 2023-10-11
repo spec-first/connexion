@@ -151,18 +151,29 @@ def test_methodview_resolve_with_default_module_name_and_x_router_controller_wil
     assert operation.operation_id == "fakeapi.PetsView.search"
 
 
-def test_methodview_resolve_with_default_module_name_will_resolve_resource_root_as_configured(
-    method_view_resolver,
-):
+def test_method_resolve_with_default_module_name_will_resolve_resource_root_as_configured():
     operation = OpenAPIOperation(
         method="GET",
         path="/pets",
         path_parameters=[],
         operation={},
         components=COMPONENTS,
-        resolver=method_view_resolver("fakeapi", "api_list"),
+        resolver=MethodResolver("fakeapi", collection_endpoint_name="api_list"),
     )
     assert operation.operation_id == "fakeapi.PetsView.api_list"
+
+
+def test_methodview_resolve_with_default_module_name_will_resolve_resource_root_as_configured():
+    operation = OpenAPIOperation(
+        method="GET",
+        path="/pets",
+        path_parameters=[],
+        operation={},
+        components=COMPONENTS,
+        resolver=MethodViewResolver("fakeapi", collection_endpoint_name="api_list"),
+    )
+    # The collection_endpoint_name is ignored
+    assert operation.operation_id == "fakeapi.PetsView.search"
 
 
 def test_methodview_resolve_with_default_module_name_will_resolve_resource_root_post_as_post(
