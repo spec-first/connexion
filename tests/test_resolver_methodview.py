@@ -160,7 +160,7 @@ def test_methodview_resolve_with_default_module_name_will_resolve_resource_root_
         path_parameters=[],
         operation={},
         components=COMPONENTS,
-        resolver=method_view_resolver("fakeapi", "api_list"),
+        resolver=method_view_resolver("fakeapi", collection_endpoint_name="api_list"),
     )
     assert operation.operation_id == "fakeapi.PetsView.api_list"
 

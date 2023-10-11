@@ -290,7 +290,7 @@ def test_resty_resolve_with_default_module_name_will_resolve_resource_root_as_co
         app_produces=["application/json"],
         app_consumes=["application/json"],
         definitions={},
-        resolver=RestyResolver("fakeapi", "api_list"),
+        resolver=RestyResolver("fakeapi", collection_endpoint_name="api_list"),
     )
     assert operation.operation_id == "fakeapi.hello.api_list"
 
