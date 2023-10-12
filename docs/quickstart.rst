@@ -240,6 +240,8 @@ where :code:`base_path`` is the base path of the API.
 
 .. image:: images/swagger_ui.png
 
+Check :doc:`swagger_ui` for information on how to configure the UI.
+
 Full App class reference
 ------------------------
 
