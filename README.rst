@@ -323,7 +323,7 @@ supports collection formats "pipes" and "csv". The default format is "csv".
 Connexion is opinionated about how the URI is parsed for ``array`` types.
 The default behavior for query parameters that have been defined multiple
 times is to use the right-most value. For example, if you provide a URI with
-the the query string ``?letters=a,b,c&letters=d,e,f``, connexion will set
+the query string ``?letters=a,b,c&letters=d,e,f``, connexion will set
 ``letters = ['d', 'e', 'f']``.
 
 You can override this behavior by specifying the URI parser in the app or
