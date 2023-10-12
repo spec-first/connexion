@@ -100,23 +100,23 @@ def test_jsonifier(simple_app):
     post_greeting = app_client.post("/v1.0/greeting/jsantos")
     assert post_greeting.status_code == 200
     assert post_greeting.headers.get("content-type") == "application/json"
-    greeting_reponse = post_greeting.json()
-    assert greeting_reponse["greeting"] == "Hello jsantos"
+    greeting_response = post_greeting.json()
+    assert greeting_response["greeting"] == "Hello jsantos"
 
     get_list_greeting = app_client.get("/v1.0/list/jsantos")
     assert get_list_greeting.status_code == 200
     assert get_list_greeting.headers.get("content-type") == "application/json"
-    greeting_reponse = get_list_greeting.json()
-    assert len(greeting_reponse) == 2
-    assert greeting_reponse[0] == "hello"
-    assert greeting_reponse[1] == "jsantos"
+    greeting_response = get_list_greeting.json()
+    assert len(greeting_response) == 2
+    assert greeting_response[0] == "hello"
+    assert greeting_response[1] == "jsantos"
 
     get_greetings = app_client.get("/v1.0/greetings/jsantos")
     assert get_greetings.status_code == 200
     assert get_greetings.headers.get("content-type") == "application/x.connexion+json"
-    greetings_reponse = get_greetings.json()
-    assert len(greetings_reponse) == 1
-    assert greetings_reponse["greetings"] == "Hello jsantos"
+    greetings_response = get_greetings.json()
+    assert len(greetings_response) == 1
+    assert greetings_response["greetings"] == "Hello jsantos"
 
 
 def test_not_content_response(simple_app):
@@ -445,8 +445,8 @@ def test_oneof(simple_openapi_app):
     )
     assert post_greeting.status_code == 200
     assert post_greeting.headers.get("content-type") == "application/json"
-    greeting_reponse = post_greeting.json()
-    assert greeting_reponse["greeting"] == "Hello 3"
+    greeting_response = post_greeting.json()
+    assert greeting_response["greeting"] == "Hello 3"
 
     post_greeting = app_client.post(
         "/v1.0/oneof_greeting",
@@ -454,8 +454,8 @@ def test_oneof(simple_openapi_app):
     )
     assert post_greeting.status_code == 200
     assert post_greeting.headers.get("content-type") == "application/json"
-    greeting_reponse = post_greeting.json()
-    assert greeting_reponse["greeting"] == "Hello True"
+    greeting_response = post_greeting.json()
+    assert greeting_response["greeting"] == "Hello True"
 
     post_greeting = app_client.post(
         "/v1.0/oneof_greeting",

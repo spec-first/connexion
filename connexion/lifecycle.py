@@ -55,7 +55,7 @@ class _RequestInterface:
 
     def get_body(self) -> t.Any:
         """Get body based on the content type. This returns json data for json content types,
-        form data for form content types, and bytes for all others. If the bytes data is emtpy,
+        form data for form content types, and bytes for all others. If the bytes data is empty,
         :code:`None` is returned instead."""
         raise NotImplementedError
 
