@@ -105,7 +105,9 @@ should work, connexion comes with ``uvicorn`` as an extra:
 Smaller breaking changes
 ------------------------
 
-* The ``options`` argument has been renamed to ``swagger_ui_options``
+* The ``options`` argument has been renamed to ``swagger_ui_options`` and now takes an instance
+  of the :class:`.SwaggerUIOptions`. The naming of the options themselves have been changed to
+  better represent their meaning.
 * The ``uri_parser_class`` is now passed to the ``App`` or its ``add_api()`` method directly
   instead of via the ``options`` argument.
 * The ``jsonifier`` is now passed to the ``App`` or its ``add_api()`` method instead of setting it

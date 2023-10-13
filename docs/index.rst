@@ -64,8 +64,9 @@ Documentation
 
    quickstart
    middleware
-   cli
    routing
+   swagger_ui
+   cli
    request
    response
    security
