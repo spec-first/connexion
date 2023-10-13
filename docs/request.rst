@@ -1,125 +1,359 @@
-Request Handling
+Request handling
 ================
-Connexion validates incoming requests for conformance with the schemas
-described in swagger specification.
 
-Request parameters will be provided to the handler functions as keyword
-arguments if they are included in the function's signature, otherwise body
-parameters can be accessed from ``connexion.request.json`` and query parameters
-can be accessed from ``connexion.request.args``.
+When your application receives a request, Connexion provides a lot of functionality based on your
+OpenAPI spec:
 
-Request Validation
-------------------
-Both the request body and parameters are validated against the specification,
-using `jsonschema`_.
+- It checks the security (see :doc:`security`)
+- It routes the request to the correct endpoint (see :doc:`routing`)
+- It validates the body and parameters (see :doc:`validation`)
+- It parses and passes the body and parameters to your python function
 
-If the request doesn't match the specification connexion will return a 400
-error.
+On this page, we zoom in on the final part.
 
-Automatic Parameter Handling
+Automatic parameter handling
 ----------------------------
-Connexion automatically maps the parameters defined in your endpoint
-specification to arguments of your Python views as named parameters
-and with value casting whenever possible. All you need to do is define
-the endpoint's parameters with matching names with your views arguments.
 
-As example you have an endpoint specified as:
+.. tab-set::
 
-.. code-block:: yaml
+    .. tab-item:: AsyncApp
+        :sync: AsyncApp
 
-    paths:
-      /foo:
-        get:
-          operationId: api.foo_get
-          parameters:
-            - name: message
-              description: Some message.
-              in: query
-              type: string
-              required: true
+        Connexion automatically maps the parameters defined in your endpoint specification to the
+        arguments defined your associated Python function, parsing and casting values when
+        possible. All you need to do, is make sure the arguments of your function match the
+        parameters in your specification.
 
-And the view function:
+    .. tab-item:: FlaskApp
+        :sync: FlaskApp
+
+        Connexion automatically maps the parameters defined in your endpoint specification to the
+        arguments defined your associated Python function, parsing and casting values when
+        possible. All you need to do, is make sure the arguments of your function match the
+        parameters in your specification.
+
+    .. tab-item:: ConnexionMiddleware
+        :sync: ConnexionMiddleware
+
+        Connexion can automatically map the parameters defined in your endpoint specification to
+        the arguments defined your associated Python function, parsing and casting values when
+        possible. All you need to do, is make sure the arguments of your function match the
+        parameters in your specification.
+
+        To activate this behavior when using the ``ConnexionMiddleware`` wrapping a third party
+        application, you can leverage the following decorators provided by Connexion:
+
+        * FlaskDecorator: provides automatic parameter injection and response serialization for
+          Flask applications.
+
+        * ASGIDecorator: provides automatic parameter injection for ASGI applications. Note that
+          this decorator injects Starlette datastructures (such as UploadFile).
+
+        * StarletteDecorator: provides automatic parameter injection and response serialization
+          for Starlette applications.
+
+        .. code-block:: python
+            :caption: **app.py**
+
+            from asgi_framework import App
+            from connexion import ConnexionMiddleware
+
+            @app.route("/greeting/<name>", methods=["POST"])
+            @ASGIDecorator()
+            def post_greeting(name):
+                ...
+
+            app = App(__name__)
+            app = ConnexionMiddleware(app)
+            app.add_api("openapi.yaml")
+
+        For a full example, see our `Frameworks`_ example.
+
+For example, if you have an endpoint specified as:
+
+.. tab-set::
+
+    .. tab-item:: OpenAPI 3
+        :sync: OpenAPI 3
+
+        .. code-block:: yaml
+            :caption: **openapi.yaml**
+
+            paths:
+              /foo:
+                get:
+                  operationId: api.foo_get
+                  parameters:
+                    - name: message
+                      description: Some message.
+                      in: query
+                      schema:
+                        type: string
+                      required: true
+
+    .. tab-item:: Swagger 2
+        :sync: Swagger 2
+
+        .. code-block:: yaml
+            :caption: **swagger.yaml**
+
+            paths:
+              /foo:
+                get:
+                  operationId: api.foo_get
+                  parameters:
+                    - name: message
+                      description: Some message.
+                      in: query
+                      type: string
+                      required: true
+
+And the view function as:
 
 .. code-block:: python
-
-    # api.py file
+    :caption: **api.py**
 
     def foo_get(message):
-        # do something
-        return 'You send the message: {}'.format(message), 200
+        ...
 
-In this example Connexion will automatically identify that your view
-function expects an argument named `message` and will assign the value
-of the endpoint parameter `message` to your view function.
+Connexion will automatically identify that your view function expects an argument named ``message``
+and will pass in the value of the endpoint parameter ``message``.
 
-Connexion will also use default values if they are provided.
+This works for both path and query parameters.
 
-If you want to use a parameter name that collides with a Python built-in,
-you can enable the `pythonic_params` option:
+Body
+----
+
+The body will also be passed to your function.
+
+.. tab-set::
+
+    .. tab-item:: OpenAPI 3
+        :sync: OpenAPI 3
+
+        In the OpenAPI 3 spec, the ``requestBody`` does not have a name. By default it will be
+        passed into your function as ``body``. You can use ``x-body-name`` in your operation to
+        override this name.
+
+        .. code-block:: yaml
+            :caption: **openapi.yaml**
+
+            paths:
+              /path
+                post:
+                  operationId: api.foo_get
+                  requestBody:
+                    x-body-name: payload
+                    content:
+                      application/json:
+                        schema:
+                          ...
+
+        .. code-block:: python
+            :caption: **api.py**
+
+            # Default
+            def foo_get(body)
+                ...
+
+            # Based on x-body-name
+            def foo_get(payload)
+                ...
+
+    .. tab-item:: Swagger 2
+        :sync: Swagger 2
+
+        In the Swagger 2 specification, you can define the name of your body. Connexion will pass
+        the body to your function using this name.
+
+        .. code-block:: yaml
+            :caption: **swagger.yaml**
+
+            paths:
+              /path
+                post:
+                  consumes:
+                    - application/json
+                    parameters:
+                      - in: body
+                        name: payload
+                        schema:
+                          ...
+
+        .. code-block:: python
+            :caption: **api.py**
+
+            def foo_get(payload)
+                ...
+
+        Form data
+        `````````
+
+        In Swagger 2, form data is defined as parameters in your specification, and Connexion
+        passes these parameters individually:
+
+
+        .. code-block:: yaml
+            :caption: **swagger.yaml**
+
+            paths:
+              /path
+                post:
+                  operationId: api.foo_get
+                  consumes:
+                    - application/json
+                  parameters:
+                    - in: formData
+                      name: field1
+                      type: string
+                    - in: formData
+                      name: field2
+                      type: string
+
+        .. code-block:: python
+            :caption: **api.py**
+
+            def foo_get(field1, field2)
+                ...
+
+Optional arguments & Defaults
+-----------------------------
+
+If a default value is defined for a parameter in the OpenAPI specification, Connexion will
+automatically pass it in if no value was included in the request. If a default is defined in the
+specification, you should not define a default in your Python function, as it will never be
+triggered.
+
+If an endpoint parameter is optional and no default is defined in the specification, you should
+make sure the corresponding argument is optional in your Python function as well, by assigning a
+default value:
 
 .. code-block:: python
+    :caption: **api.py**
 
-    app = connexion.FlaskApp(__name__)
-    app.add_api('api.yaml', ..., pythonic_params=True)
+    def foo_get(optional_argument=None)
+        ...
 
-With this option enabled, Connexion firstly converts *CamelCase* names
-to *snake_case*. Secondly it looks to see if the name matches a known built-in
-and if it does it appends an underscore to the name.
+Missing arguments and kwargs
+----------------------------
 
-As example you have an endpoint specified as:
+Connexion will inspect your function signature and only pass in the arguments that it defines. If
+an argument is defined in your specification, but not in your function, Connexion will ignore it.
 
-.. code-block:: yaml
+If you do define a ``**kwargs`` argument in your function signature, Connexion will pass in all
+arguments, and the ones not explicitly defined in your signature will be collected in the
+``kwargs`` argument.
 
-    paths:
-      /foo:
-        get:
-          operationId: api.foo_get
-          parameters:
-            - name: filter
-              description: Some filter.
-              in: query
-              type: string
-              required: true
+Pythonic parameters
+-------------------
 
-And the view function:
+You can activate Pythonic parameters by setting the ``pythonic_params`` option to ``True`` on
+either the application or the API:
+
+.. tab-set::
+
+    .. tab-item:: AsyncApp
+        :sync: AsyncApp
+
+        .. code-block:: python
+            :caption: **app.py**
+
+            from connexion import AsyncApp
+
+            app = AsyncApp(__name__, pythonic_params=True)
+            app.add_api("openapi.yaml", pythonic_params=True)
+
+
+    .. tab-item:: FlaskApp
+        :sync: FlaskApp
+
+        .. code-block:: python
+            :caption: **app.py**
+
+            from connexion import FlaskApp
+
+            app = FlaskApp(__name__, pythonic_params=True)
+            app.add_api("openapi.yaml", pythonic_params=True):
+
+    .. tab-item:: ConnexionMiddleware
+        :sync: ConnexionMiddleware
+
+        .. code-block:: python
+            :caption: **app.py**
+
+            from asgi_framework import App
+            from connexion import ConnexionMiddleware
+
+            app = App(__name__)
+            app = ConnexionMiddleware(app, pythonic_params=True)
+            app.add_api("openapi.yaml", pythonic_params=True)
+
+This does two things:
+
+* *CamelCase* arguments are converted to *snake_case*
+* If the argument name matches a Python builtin, an underscore is appended.
+
+When ``pythonic_params`` is activated, the following specification:
+
+.. tab-set::
+
+    .. tab-item:: OpenAPI 3
+        :sync: OpenAPI 3
+
+        .. code-block:: yaml
+            :caption: **openapi.yaml**
+
+            paths:
+              /foo:
+                get:
+                  operationId: api.foo_get
+                  parameters:
+                    - name: filter
+                      description: Some filter.
+                      in: query
+                      schema:
+                        type: string
+                      required: true
+                    - name: FilterOption
+                      description: Some filter option.
+                      in: query
+                      schema:
+                        type: string
+
+    .. tab-item:: Swagger 2
+        :sync: Swagger 2
+
+        .. code-block:: yaml
+            :caption: **swagger.yaml**
+
+            paths:
+              /foo:
+                get:
+                  operationId: api.foo_get
+                  parameters:
+                    - name: filter
+                      description: Some filter.
+                      in: query
+                      type: string
+                      required: true
+                    - name: FilterOption
+                      description: Some filter option.
+                      in: query
+                      type: string
+
+Maps to the following Python function:
 
 .. code-block:: python
+    :caption: **api.py**
 
-    # api.py file
-    def foo_get(filter_):
-        # do something
-        return 'You send the filter: {}'.format(filter_), 200
-
-.. note:: In the OpenAPI 3.x.x spec, the requestBody does not have a name.
-          By default it will be passed in as 'body'. You can optionally
-          provide the x-body-name parameter in your operation 
-          (or legacy position within the requestBody schema)
-          to override the name of the parameter that will be passed to your
-          handler function.
-
-.. code-block:: yaml
-
-    /path
-      post:
-        requestBody:
-          x-body-name: body
-          content:
-            application/json:
-              schema:
-                # legacy location here should be ignored because the preferred location for x-body-name is at the requestBody level above
-                x-body-name: this_should_be_ignored
-
-.. warning:: Please note that when you have a parameter defined as
-             *not* required at your endpoint and your Python view have
-             a non-named argument, when you call this endpoint WITHOUT
-             the parameter you will get an exception of missing
-             positional argument.
+    def foo_get(filter_, filter_option=None):
+        ...
 
 Type casting
-^^^^^^^^^^^^
-Whenever possible Connexion will try to parse your argument values and
-do type casting to related Python natives values. The current
-available type castings are:
+------------
+
+Whenever possible Connexion will try to parse your argument values and cast them to the correct
+Python type:
 
 +--------------+-------------+
 | OpenAPI Type | Python Type |
@@ -135,143 +369,108 @@ available type castings are:
 +--------------+-------------+
 | array        | list        |
 +--------------+-------------+
-| null         | None        |
-+--------------+-------------+
 | object       | dict        |
 +--------------+-------------+
+| null         | None        |
++--------------+-------------+
 
-.. note:: For more details about `collectionFormat`\ s please check the
-          official `OpenAPI 2.0 Specification`_.
+Parameter serialization
+-----------------------
 
+Array and object parameters need to be serialized into lists and dicts.
 
-In the `OpenAPI 2.0 Specification`_ if you use the ``array`` type,
-you can define the ``collectionFormat`` to set the deserialization behavior.
-Connexion currently supports "pipes" and "csv" as collection formats.
-The default format is "csv".
+.. tab-set::
 
-Connexion is opinionated about how the URI is parsed for ``array`` types.
-The default behavior for query parameters that have been defined multiple
-times is to join them all together. For example, if you provide a URI with
-the query string ``?letters=a,b,c&letters=d,e,f``, connexion will set
-``letters = ['a', 'b', 'c', 'd', 'e', 'f']``.
+    .. tab-item:: OpenAPI 3
+        :sync: OpenAPI 3
 
-You can override this behavior by specifying the URI parser in the app or
-api options.
+        The `OpenAPI 3 specification`_ defines the `style` and `explode` keywords which specify how
+        these parameters should be serialized.
 
-.. code-block:: python
+        To handle these, Connexion provides the ``OpenAPIUriParser`` class, which is enabled by
+        default when using an OpenAPI 3 spec.
 
-   from connexion.decorators.uri_parsing import Swagger2URIParser
-   options = {'uri_parser_class': Swagger2URIParser}
-   app = connexion.App(__name__, specification_dir='swagger/', options=options)
+        Not all combinations of `style` and `explode` are supported yet. Please open an `issue`_ if
+        you run into any problems.
 
-You can implement your own URI parsing behavior by inheriting from
-``connexion.decorators.uri_parsing.AbstractURIParser``.
+    .. tab-item:: Swagger 2
+        :sync: Swagger 2
 
-There are a handful of URI parsers included with connection.
+        The `Swagger 2 specification`_ defines the `collectionFormat` keyword to specify how
+        these parameters should be serialized.
 
-+----------------------+---------------------------------------------------------------------------+
-| OpenAPIURIParser     | This parser adheres to the OpenAPI 3.x.x spec, and uses the ``style``     |
-| default: OpenAPI 3.0 | parameter. Query parameters are parsed from left to right, so if a query  |
-|                      | parameter is defined twice, then the right-most definition will take      |
-|                      | precedence. For example, if you provided a URI with the query string      |
-|                      | ``?letters=a,b,c&letters=d,e,f``, and ``style: simple``, then connexion   |
-|                      | will set ``letters = ['d', 'e', 'f']``. For additional information see    |
-|                      | `OpenAPI 3.0 Style Values`_.                                              |
-+----------------------+---------------------------------------------------------------------------+
-| Swagger2URIParser    | This parser adheres to the Swagger 2.0 spec, and will only join together  |
-| default: OpenAPI 2.0 | multiple instance of the same query parameter if the ``collectionFormat`` |
-|                      | is set to ``multi``. Query parameters are parsed from left to right, so   |
-|                      | if a query parameter is defined twice, then the right-most definition     |
-|                      | wins. For example, if you provided a URI with the query string            |
-|                      | ``?letters=a,b,c&letters=d,e,f``, and ``collectionFormat: csv``, then     |
-|                      | connexion will set ``letters = ['d', 'e', 'f']``                          |
-+----------------------+---------------------------------------------------------------------------+
-| FirstValueURIParser  | This parser behaves like the Swagger2URIParser, except that it prefers    |
-|                      | the first defined value. For example, if you provided a URI with the query|
-|                      | string ``?letters=a,b,c&letters=d,e,f`` and ``collectionFormat: csv``     |
-|                      | hen connexion will set ``letters = ['a', 'b', 'c']``                      |
-+----------------------+---------------------------------------------------------------------------+
-| AlwaysMultiURIParser | This parser is backwards compatible with Connexion 1.x. It joins together |
-|                      | multiple instances of the same query parameter.                           |
-+----------------------+---------------------------------------------------------------------------+
+        To handle this for you, Connexion provides the ``Swagger2URIParser`` class, which is
+        enabled by default when using a Swagger 2 spec. It currently supports the `pipes`, `csv`,
+        and `multi` collection formats.
 
+        This parser adheres to the Swagger 2.0 spec, and will only join together multiple instance
+        of the same query parameter if the collectionFormat is set to `multi`. Query parameters
+        are parsed from left to right, so if a query parameter is defined twice, then the
+        right-most definition wins. For example, if you provided a URI with the query string
+        ``?letters=a,b,c&letters=d,e,f`` and ``collectionFormat: csv``, then connexion will set
+        ``letters = ['d', 'e', 'f']``.
 
-.. _jsonschema: https://pypi.python.org/pypi/jsonschema
-.. _`OpenAPI 2.0 Specification`: https://github.com/OAI/OpenAPI-Specification/blob/OpenAPI.next/versions/2.0.md#fixed-fields-7
-.. _OpenAPI 3.0 Style Values: https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#style-values
+        Connexion also provides two alternative parsers:
 
-Parameter validation
-^^^^^^^^^^^^^^^^^^^^
+        * The ``FirstValueURIParser``, which behaves like the ``Swagger2URIParser``, except that it
+          prefers the first defined value.
+        * The ``AlwaysMultiURIParser``, which behaves like the ``Swagger2URIParser``, except that
+          it always joins together multiple instances of the same query parameter.
 
-Connexion can apply strict parameter validation for query and form data
-parameters.  When this is enabled, requests that include parameters not defined
-in the swagger spec return a 400 error.  You can enable it when adding the API
-to your application:
+Context
+-------
+
+Connexion can pass in some additional context. By default, this contains the following information:
 
 .. code-block:: python
 
-    app.add_api('my_apy.yaml', strict_validation=True)
-
-
-Nullable parameters
-^^^^^^^^^^^^^^^^^^^
-
-Sometimes your API should explicitly accept `nullable parameters`_. However
-OpenAPI specification currently does `not support`_ officially a way to serve
-this use case, Connexion adds the `x-nullable` vendor extension to parameter
-definitions. Its usage would be:
-
-.. code-block:: yaml
-
-    /countries/cities:
-       parameters:
-         - name: name
-           in: query
-           type: string
-           x-nullable: true
-           required: true
-
-It is supported by Connexion in all parameter types: `body`, `query`,
-`formData`, and `path`. Nullable values are the strings `null` and `None`.
-
-.. warning:: Be careful on nullable parameters for sensitive data where the
-             strings "null" or "None" can be `valid values`_.
-
-.. note:: This extension will be removed as soon as OpenAPI/Swagger
-          Specification provide an official way of supporting nullable
-          values.
-
-.. _`nullable parameters`: https://github.com/zalando/connexion/issues/182
-.. _`not support`: https://github.com/OAI/OpenAPI-Specification/issues/229
-.. _`valid values`: http://www.bbc.com/future/story/20160325-the-names-that-break-computer-systems
-
-Header Parameters
------------------
-
-Currently, header parameters are not passed to the handler functions as parameters. But they can be accessed through the underlying
-``connexion.request.headers`` object which aliases the ``flask.request.headers`` object.
-
-.. code-block:: python
-
-    def index():
-        page_number = connexion.request.headers['Page-Number']
-
-
-Custom Validators
------------------
-
-By default, body and parameters contents are validated against OpenAPI schema
-via ``connexion.decorators.validation.RequestBodyValidator``
-or ``connexion.decorators.validation.ParameterValidator``, if you want to
-change the validation, you can override the defaults with:
-
-.. code-block:: python
-
-    validator_map = {
-        'body': CustomRequestBodyValidator,
-        'parameter': CustomParameterValidator
+    {
+        "api_base_path": ...  # The base path of the matched API
+        "operation_id": ...  # The operation id of matched operation
+        "user": ...  # User information from authentication
+        "token_info": ...  # Token information from authentication
     }
-    app = connexion.FlaskApp(__name__)
-    app.add_api('api.yaml', ..., validator_map=validator_map)
 
-See custom validator example in ``examples/enforcedefaults``.
+Third party or custom middleware might add additional fields to this.
+
+To receive this in your function, you can either:
+
+* Specify the ``context_`` argument in your function signature, and the context dict will be
+  passed in as a whole:
+
+  .. code-block:: python
+    :caption: **api.py**
+
+    def foo_get(context_):
+        ...
+
+* Specify the keys individually in your function signature:
+
+  .. code-block:: python
+    :caption: **api.py**
+
+    def foo_get(user, token_info):
+        ...
+
+Request object
+--------------
+
+Connexion also exposes a ``Request`` class which holds all the information about the incoming
+request.
+
+.. code-block:: python
+
+    from connexion import request
+
+.. dropdown:: View a detailed reference of the ``connexion.request`` class
+    :icon: eye
+
+    .. autoclass:: connexion.lifecycle.ASGIRequest
+       :members:
+       :undoc-members:
+       :inherited-members:
+
+.. _Frameworks: https://github.com/spec-first/connexion/tree/main/examples/frameworks
+.. _OpenAPI 3 specification: https://swagger.io/docs/specification/serialization
+.. _Swagger 2 specification: https://swagger.io/docs/specification/2-0/describing-parameters/#array
+.. _issue: https://github.com/spec-first/connexion/issues
