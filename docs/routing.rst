@@ -59,15 +59,7 @@ operation:
 
 Note that :code:`HEAD` requests will be handled by the :code:`operationId` specified under the
 :code:`GET` operation in the specification. :code:`Connexion.request.method` can be used to
-determine which request was made.
-
-.. dropdown:: View a detailed reference of the :code:`connexion.request` class
-    :icon: eye
-
-    .. autoclass:: connexion.lifecycle.ASGIRequest
-       :members:
-       :undoc-members:
-       :inherited-members:
+determine which request was made. See :class:`.ASGIRequest`.
 
 Automatic routing
 -----------------
@@ -354,8 +346,10 @@ specification.
 .. tab-set::
 
     .. tab-item:: OpenAPI 3
+        :sync: OpenAPI 3
 
         .. code-block:: yaml
+            :caption: **openapi.yaml**
 
             paths:
               /users/{id}:
@@ -368,14 +362,16 @@ specification.
                     description: The user ID
 
     .. tab-item:: Swagger 2
+        :sync: Swagger 2
 
         .. code-block:: yaml
+            :caption: **swagger.yaml**
 
             paths:
               /users/{id}:
                 parameters:
                   - in: path
-                    name: id
+                    name: id   # Note the name is the same as in the path
                     required: true
                     type: integer
                     description: The user ID.
@@ -449,32 +445,41 @@ API Versioning and basePath
 Setting a base path is useful for versioned APIs. An example of
 a base path would be the ``1.0`` in ``http://{HOST}/1.0/hello_world``.
 
-If you are using OpenAPI 3, you set your base URL path in the
-servers block of the specification. You can either specify a full
-URL, or just a relative path.
 
-.. code-block:: yaml
-    :caption: **openapi.yaml**
+.. tab-set::
 
-    servers:
-      - url: https://{{HOST}}/1.0
-        description: full url example
-      - url: /1.0
-        description: relative path example
+    .. tab-item:: OpenAPI 3
+        :sync: OpenAPI 3
 
-    paths:
-      ...
+        If you are using OpenAPI 3, you set your base URL path in the
+        servers block of the specification. You can either specify a full
+        URL, or just a relative path.
 
-If you are using Swagger 2.0, you can define a ``basePath`` on the top level
-of your Swagger 2.0 specification.
+        .. code-block:: yaml
+            :caption: **openapi.yaml**
 
-.. code-block:: yaml
-    :caption: **swagger.yaml**
+            servers:
+              - url: https://{{HOST}}/1.0
+                description: full url example
+              - url: /1.0
+                description: relative path example
 
-    basePath: /1.0
+            paths:
+              ...
 
-    paths:
-      ...
+    .. tab-item:: Swagger 2
+        :sync: Swagger 2
+
+        If you are using Swagger 2.0, you can define a ``basePath`` on the top level
+        of your Swagger 2.0 specification.
+
+        .. code-block:: yaml
+            :caption: **swagger.yaml**
+
+            basePath: /1.0
+
+            paths:
+              ...
 
 If you don't want to include the base path in your specification, you
 can provide it when adding the API to your application:
@@ -482,7 +487,7 @@ can provide it when adding the API to your application:
 .. code-block:: python
     :caption: **app.py**
 
-    app.add_api('my_api.yaml', base_path='/1.0')
+    app.add_api('openapi.yaml', base_path='/1.0')
 
 .. _operation: https://swagger.io/docs/specification/paths-and-operations/#operations
 .. _Path parameters: https://swagger.io/docs/specification/describing-parameters/#path-parameters

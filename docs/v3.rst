@@ -139,7 +139,7 @@ Non-breaking changes
   request bodies.
 
 Feedback
-========
+--------
 
 We would really love to hear from you. By trying Connexion 3 now and providing feedback, you get the opportunity to
 make sure that updating your application will be as painless as possible, while helping to create a more stable GA
