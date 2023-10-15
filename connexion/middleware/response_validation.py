@@ -38,7 +38,8 @@ class ResponseValidationOperation:
 
         :return: A tuple of mime type, encoding
         """
-        mime_type, encoding = utils.extract_content_type(headers)
+        content_type = utils.extract_content_type(headers)
+        mime_type, encoding = utils.split_content_type(content_type)
         if mime_type is None:
             # Content-type header is not required. Take a best guess.
             try:

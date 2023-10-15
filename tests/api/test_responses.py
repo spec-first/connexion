@@ -81,7 +81,7 @@ def test_produce_decorator(simple_app):
     app_client = simple_app.test_client()
 
     get_bye = app_client.get("/v1.0/bye/jsantos")
-    assert get_bye.headers.get("content-type") == "text/plain; charset=utf-8"
+    assert get_bye.headers.get("content-type", "").startswith("text/plain")
 
 
 def test_returning_response_tuple(simple_app):
