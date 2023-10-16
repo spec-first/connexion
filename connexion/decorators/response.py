@@ -6,12 +6,12 @@ import types
 import typing as t
 from enum import Enum
 
+from connexion import utils
 from connexion.context import operation
 from connexion.datastructures import NoContent
 from connexion.exceptions import NonConformingResponseHeaders
 from connexion.frameworks.abstract import Framework
 from connexion.lifecycle import ConnexionResponse
-from connexion.utils import is_json_mimetype
 
 logger = logging.getLogger(__name__)
 
@@ -27,27 +27,27 @@ class BaseResponseDecorator:
 
     def build_framework_response(self, handler_response):
         data, status_code, headers = self._unpack_handler_response(handler_response)
-        content_type = self._deduct_content_type(data, headers)
+        content_type = self._infer_content_type(data, headers)
         if not self.framework.is_framework_response(data):
-            data, status_code = self._prepare_body_and_status_code(
-                data, status_code=status_code, mimetype=content_type
-            )
+            data = self._serialize_data(data, content_type=content_type)
+            status_code = status_code or self._infer_status_code(data)
+            headers = self._update_headers(headers, content_type=content_type)
         return self.framework.build_response(
             data, content_type=content_type, status_code=status_code, headers=headers
         )
 
     @staticmethod
-    def _deduct_content_type(data: t.Any, headers: dict) -> str:
-        """Deduct the response content type from the returned data, headers and operation spec.
+    def _infer_content_type(data: t.Any, headers: dict) -> t.Optional[str]:
+        """Infer the response content type from the returned data, headers and operation spec.
 
         :param data: Response data
         :param headers: Headers returned by the handler.
 
-        :return: Deducted content type
+        :return: Inferred content type
 
         :raises: NonConformingResponseHeaders if content type cannot be deducted.
         """
-        content_type = headers.get("Content-Type")
+        content_type = utils.extract_content_type(headers)
 
         # TODO: don't default
         produces = list(set(operation.produces))
@@ -66,44 +66,55 @@ class BaseResponseDecorator:
                 pass
             elif len(produces) == 1:
                 content_type = produces[0]
-            elif isinstance(data, str) and "text/plain" in produces:
-                content_type = "text/plain"
-            elif (
-                isinstance(data, bytes)
-                or isinstance(data, (types.GeneratorType, collections.abc.Iterator))
-            ) and "application/octet-stream" in produces:
-                content_type = "application/octet-stream"
             else:
-                raise NonConformingResponseHeaders(
-                    "Multiple response content types are defined in the operation spec, but the "
-                    "handler response did not specify which one to return."
-                )
+                if isinstance(data, str):
+                    for produced_content_type in produces:
+                        if "text/plain" in produced_content_type:
+                            content_type = produced_content_type
+                elif isinstance(data, bytes) or isinstance(
+                    data, (types.GeneratorType, collections.abc.Iterator)
+                ):
+                    for produced_content_type in produces:
+                        if "application/octet-stream" in produced_content_type:
+                            content_type = produced_content_type
+
+                if content_type is None:
+                    raise NonConformingResponseHeaders(
+                        "Multiple response content types are defined in the operation spec, but "
+                        "the handler response did not specify which one to return."
+                    )
 
         return content_type
 
-    def _prepare_body_and_status_code(
-        self, data, *, status_code: int = None, mimetype: str
-    ) -> tuple:
-        if data is NoContent:
-            data = None
-
-        if status_code is None:
-            if data is None:
-                status_code = 204
-            else:
-                status_code = 200
-
-        if data is not None:
-            body = self._serialize_data(data, mimetype)
-        else:
-            body = data
-
-        return body, status_code
-
-    def _serialize_data(self, data: t.Any, mimetype: str) -> t.Any:
-        if is_json_mimetype(mimetype):
+    def _serialize_data(self, data: t.Any, *, content_type: str) -> t.Any:
+        """Serialize the data based on the content type."""
+        if data is None or data is NoContent:
+            return None
+        # TODO: encode responses
+        mime_type, _ = utils.split_content_type(content_type)
+        if utils.is_json_mimetype(mime_type):
             return self.jsonifier.dumps(data)
         return data
+
+    @staticmethod
+    def _infer_status_code(data: t.Any) -> int:
+        """Infer the status code from the returned data."""
+        if data is None:
+            return 204
+        return 200
+
+    @staticmethod
+    def _update_headers(
+        headers: t.Dict[str, str], *, content_type: str
+    ) -> t.Dict[str, str]:
+        # Check if Content-Type is in headers, taking into account case-insensitivity
+        for key, value in headers.items():
+            if key.lower() == "content-type":
+                return headers
+
+        if content_type:
+            headers["Content-Type"] = content_type
+        return headers
 
     @staticmethod
     def _unpack_handler_response(
@@ -186,3 +197,10 @@ class AsyncResponseDecorator(BaseResponseDecorator):
                 return self.build_framework_response(handler_response)
 
         return wrapper
+
+
+class NoResponseDecorator(BaseResponseDecorator):
+    """Dummy decorator to skip response serialization."""
+
+    def __call__(self, function: t.Callable) -> t.Callable:
+        return lambda request: function(request)

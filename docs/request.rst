@@ -43,13 +43,16 @@ Automatic parameter handling
         To activate this behavior when using the ``ConnexionMiddleware`` wrapping a third party
         application, you can leverage the following decorators provided by Connexion:
 
-        * FlaskDecorator: provides automatic parameter injection and response serialization for
+        * ``WSGIDecorator``: provides automatic parameter injection for WSGI applications. Note
+          that this decorator injects Werkzeug / Flask datastructures.
+
+        * ``FlaskDecorator``: provides automatic parameter injection and response serialization for
           Flask applications.
 
-        * ASGIDecorator: provides automatic parameter injection for ASGI applications. Note that
+        * ``ASGIDecorator``: provides automatic parameter injection for ASGI applications. Note that
           this decorator injects Starlette datastructures (such as UploadFile).
 
-        * StarletteDecorator: provides automatic parameter injection and response serialization
+        * ``StarletteDecorator``: provides automatic parameter injection and response serialization
           for Starlette applications.
 
         .. code-block:: python
@@ -57,6 +60,7 @@ Automatic parameter handling
 
             from asgi_framework import App
             from connexion import ConnexionMiddleware
+            from connexion.decorators import ASGIDecorator
 
             @app.route("/greeting/<name>", methods=["POST"])
             @ASGIDecorator()

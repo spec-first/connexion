@@ -16,6 +16,7 @@ from connexion.decorators.parameter import (
 from connexion.decorators.response import (
     AsyncResponseDecorator,
     BaseResponseDecorator,
+    NoResponseDecorator,
     SyncResponseDecorator,
 )
 from connexion.frameworks.abstract import Framework
@@ -94,10 +95,12 @@ class BaseDecorator:
         raise NotImplementedError
 
 
-class FlaskDecorator(BaseDecorator):
-    """Decorator for usage with Flask. The parameter decorator works with a Flask request,
-    and provides Flask datastructures to the view function. The response decorator returns
-    a Flask response"""
+class WSGIDecorator(BaseDecorator):
+    """Decorator for usage with WSGI apps. The parameter decorator works with a Flask request,
+    and provides Flask datastructures to the view function. This works for any WSGI app, since
+    we get the request via the connexion context provided by WSGI middleware.
+
+    This decorator does not parse responses, but passes them directly to the WSGI App."""
 
     framework = FlaskFramework
 
@@ -106,8 +109,8 @@ class FlaskDecorator(BaseDecorator):
         return SyncParameterDecorator
 
     @property
-    def _response_decorator_cls(self) -> t.Type[SyncResponseDecorator]:
-        return SyncResponseDecorator
+    def _response_decorator_cls(self) -> t.Type[BaseResponseDecorator]:
+        return NoResponseDecorator
 
     @property
     def _sync_async_decorator(self) -> t.Callable[[t.Callable], t.Callable]:
@@ -133,6 +136,17 @@ class FlaskDecorator(BaseDecorator):
         return wrapper
 
 
+class FlaskDecorator(WSGIDecorator):
+    """Decorator for usage with Connexion or Flask apps. The parameter decorator works with a
+    Flask request, and provides Flask datastructures to the view function.
+
+    The response decorator returns Flask responses."""
+
+    @property
+    def _response_decorator_cls(self) -> t.Type[SyncResponseDecorator]:
+        return SyncResponseDecorator
+
+
 class ASGIDecorator(BaseDecorator):
     """Decorator for usage with ASGI apps. The parameter decorator works with a Starlette request,
     and provides Starlette datastructures to the view function. This works for any ASGI app, since
@@ -148,10 +162,6 @@ class ASGIDecorator(BaseDecorator):
 
     @property
     def _response_decorator_cls(self) -> t.Type[BaseResponseDecorator]:
-        class NoResponseDecorator(BaseResponseDecorator):
-            def __call__(self, function: t.Callable) -> t.Callable:
-                return lambda request: function(request)
-
         return NoResponseDecorator
 
     @property
