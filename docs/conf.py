@@ -31,7 +31,9 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx_copybutton',
     'sphinx_design',
+    'sphinx.ext.autosectionlabel',
 ]
+autosectionlabel_prefix_document = True
 
 autoclass_content = 'both'
 
