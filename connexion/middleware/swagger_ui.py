@@ -16,7 +16,7 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 from connexion.jsonifier import Jsonifier
 from connexion.middleware import SpecMiddleware
 from connexion.middleware.abstract import AbstractSpecAPI
-from connexion.options import SwaggerUIOptions
+from connexion.options import SwaggerUIConfig, SwaggerUIOptions
 from connexion.utils import yamldumper
 
 logger = logging.getLogger("connexion.middleware.swagger_ui")
@@ -30,13 +30,13 @@ class SwaggerUIAPI(AbstractSpecAPI):
         self,
         *args,
         default: ASGIApp,
-        swagger_ui_options: t.Optional[dict] = None,
+        swagger_ui_options: t.Optional[SwaggerUIOptions] = None,
         **kwargs
     ):
         super().__init__(*args, **kwargs)
 
         self.router = Router(default=default)
-        self.options = SwaggerUIOptions(
+        self.options = SwaggerUIConfig(
             swagger_ui_options, oas_version=self.specification.version
         )
 
@@ -44,11 +44,11 @@ class SwaggerUIAPI(AbstractSpecAPI):
             self.add_openapi_json()
             self.add_openapi_yaml()
 
-        if self.options.openapi_console_ui_available:
+        if self.options.swagger_ui_available:
             self.add_swagger_ui()
 
         self._templates = Jinja2Templates(
-            directory=str(self.options.openapi_console_ui_from_dir)
+            directory=str(self.options.swagger_ui_template_dir)
         )
 
     @staticmethod
@@ -121,7 +121,7 @@ class SwaggerUIAPI(AbstractSpecAPI):
         """
         Adds swagger ui to {base_path}/ui/
         """
-        console_ui_path = self.options.openapi_console_ui_path.strip().rstrip("/")
+        console_ui_path = self.options.swagger_ui_path.strip().rstrip("/")
         logger.debug("Adding swagger-ui: %s%s/", self.base_path, console_ui_path)
 
         for path in (
@@ -132,7 +132,7 @@ class SwaggerUIAPI(AbstractSpecAPI):
                 methods=["GET"], path=path, endpoint=self._get_swagger_ui_home
             )
 
-        if self.options.openapi_console_ui_config is not None:
+        if self.options.swagger_ui_config:
             self.router.add_route(
                 methods=["GET"],
                 path=console_ui_path + "/swagger-ui-config.json",
@@ -155,7 +155,7 @@ class SwaggerUIAPI(AbstractSpecAPI):
         # serve index.html, so we add the redirect above.
         self.router.mount(
             path=console_ui_path,
-            app=StaticFiles(directory=str(self.options.openapi_console_ui_from_dir)),
+            app=StaticFiles(directory=str(self.options.swagger_ui_template_dir)),
             name="swagger_ui_static",
         )
 
@@ -164,9 +164,9 @@ class SwaggerUIAPI(AbstractSpecAPI):
         template_variables = {
             "request": req,
             "openapi_spec_url": (base_path + self.options.openapi_spec_path),
-            **self.options.openapi_console_ui_index_template_variables,
+            **self.options.swagger_ui_template_arguments,
         }
-        if self.options.openapi_console_ui_config is not None:
+        if self.options.swagger_ui_config:
             template_variables["configUrl"] = "swagger-ui-config.json"
 
         return self._templates.TemplateResponse("index.j2", template_variables)
@@ -175,7 +175,7 @@ class SwaggerUIAPI(AbstractSpecAPI):
         return StarletteResponse(
             status_code=200,
             media_type="application/json",
-            content=json.dumps(self.options.openapi_console_ui_config),
+            content=json.dumps(self.options.swagger_ui_config),
         )
 
 

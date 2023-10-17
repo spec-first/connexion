@@ -12,6 +12,7 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 from connexion.jsonifier import Jsonifier
 from connexion.middleware import ConnexionMiddleware, MiddlewarePosition, SpecMiddleware
 from connexion.middleware.lifespan import Lifespan
+from connexion.options import SwaggerUIOptions
 from connexion.resolver import Resolver
 from connexion.uri_parsing import AbstractURIParser
 
@@ -23,7 +24,7 @@ class AbstractApp:
     interface, it delegates most of the work to the middleware and framework application.
     """
 
-    middleware_app: SpecMiddleware
+    _middleware_app: SpecMiddleware
     """
     The application wrapped by the ConnexionMiddleware, which in its turn wraps the framework
     application.
@@ -43,7 +44,7 @@ class AbstractApp:
         resolver: t.Optional[t.Union[Resolver, t.Callable]] = None,
         resolver_error: t.Optional[int] = None,
         strict_validation: t.Optional[bool] = None,
-        swagger_ui_options: t.Optional[dict] = None,
+        swagger_ui_options: t.Optional[SwaggerUIOptions] = None,
         uri_parser_class: t.Optional[AbstractURIParser] = None,
         validate_responses: t.Optional[bool] = None,
         validator_map: t.Optional[dict] = None,
@@ -72,8 +73,8 @@ class AbstractApp:
             start.
         :param strict_validation: When True, extra form or query parameters not defined in the
             specification result in a validation error. Defaults to False.
-        :param swagger_ui_options: A dict with configuration options for the swagger ui. See
-            :class:`options.ConnexionOptions`.
+        :param swagger_ui_options: Instance of :class:`options.ConnexionOptions` with
+            configuration options for the swagger ui.
         :param uri_parser_class: Class to use for uri parsing. See :mod:`uri_parsing`.
         :param validate_responses: Whether to validate responses against the specification. This has
             an impact on performance. Defaults to False.
@@ -83,7 +84,7 @@ class AbstractApp:
             :obj:`security.SECURITY_HANDLERS`
         """
         self.middleware = ConnexionMiddleware(
-            self.middleware_app,
+            self._middleware_app,
             import_name=import_name,
             lifespan=lifespan,
             middlewares=middlewares,
@@ -129,7 +130,7 @@ class AbstractApp:
         resolver: t.Optional[t.Union[Resolver, t.Callable]] = None,
         resolver_error: t.Optional[int] = None,
         strict_validation: t.Optional[bool] = None,
-        swagger_ui_options: t.Optional[dict] = None,
+        swagger_ui_options: t.Optional[SwaggerUIOptions] = None,
         uri_parser_class: t.Optional[AbstractURIParser] = None,
         validate_responses: t.Optional[bool] = None,
         validator_map: t.Optional[dict] = None,
@@ -218,7 +219,7 @@ class AbstractApp:
         :param endpoint: the name of the endpoint for the registered URL rule, which is used for
             reverse lookup. Flask defaults to the name of the view function.
         :param view_func: the function to call when serving a request to the provided endpoint.
-        :param options: the options to be forwarded to the underlying `werkzeug.routing.Rule`
+        :param options: the options to be forwarded to the underlying ``werkzeug.routing.Rule``
             object.  A change to Werkzeug is handling of method options. methods is a list of
             methods this rule should be limited to (`GET`, `POST` etc.).  By default a rule just
             listens for `GET` (and implicitly `HEAD`).
@@ -235,7 +236,7 @@ class AbstractApp:
                 return 'Hello World'
 
         :param rule: the URL rule as string
-        :param options: the options to be forwarded to the underlying `werkzeug.routing.Rule`
+        :param options: the options to be forwarded to the underlying ``werkzeug.routing.Rule``
                         object. A change to Werkzeug is handling of method options. methods is a
                         list of methods this rule should be limited to (`GET`, `POST` etc.).
                         By default a rule just listens for `GET` (and implicitly `HEAD`).

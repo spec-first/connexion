@@ -46,6 +46,7 @@ built using either the :code:`AsyncApp` or :code:`FlaskApp`.
         :sync: AsyncApp
 
         .. code-block:: python
+            :caption: **app.py**
 
             from connexion import AsyncApp
 
@@ -65,6 +66,7 @@ built using either the :code:`AsyncApp` or :code:`FlaskApp`.
             :code:`flask` extra.
 
         .. code-block:: python
+            :caption: **app.py**
 
             from connexion import FlaskApp
 
@@ -80,6 +82,7 @@ built using either the :code:`AsyncApp` or :code:`FlaskApp`.
         :sync: ConnexionMiddleware
 
         .. code-block:: python
+            :caption: **app.py**
 
             from asgi_framework import App
             from connexion import ConnexionMiddleware
@@ -91,6 +94,7 @@ built using either the :code:`AsyncApp` or :code:`FlaskApp`.
         You can also wrap a WSGI application leveraging the :code:`a2wsgi.WSGIMiddleware`:
 
         .. code-block:: python
+            :caption: **app.py**
 
             from wsgi_framework import App
             from connexion import ConnexionMiddleware
@@ -236,9 +240,11 @@ If you installed connexion using the :code:`swagger-ui` extra, a Swagger UI is a
 API, providing interactive documentation. By default the UI is hosted at :code:`{base_path}/ui/`
 where :code:`base_path`` is the base path of the API.
 
-**https://localhost:{port}/{base_path}/ui/**
+**https://{host}/{base_path}/ui/**
 
 .. image:: images/swagger_ui.png
+
+Check :doc:`swagger_ui` for information on how to configure the UI.
 
 Full App class reference
 ------------------------

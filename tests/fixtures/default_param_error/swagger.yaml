@@ -10,7 +10,7 @@ paths:
   /default-param-query-does-not-match-type:
     get:
       summary: Default value does not match the param type
-      operationId: fakeapi.hello.test_default_missmatch_definition
+      operationId: fakeapi.hello.test_default_mismatch_definition
       responses:
         200:
           description: OK

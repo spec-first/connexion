@@ -433,7 +433,7 @@ def path_parameters_in_get_method(title):
     return [title], 200, {}
 
 
-def test_default_missmatch_definition(age):
+def test_default_mismatch_definition(age):
     return "OK"
 
 

@@ -80,7 +80,7 @@ def main():
 )
 @click.option(
     "--hide-console-ui",
-    help="Hides the the API console UI which is by default available at `/ui`.",
+    help="Hides the API console UI which is by default available at `/ui`.",
     is_flag=True,
     default=False,
 )

@@ -20,6 +20,7 @@ from connexion.jsonifier import Jsonifier
 from connexion.middleware.abstract import AbstractRoutingAPI, SpecMiddleware
 from connexion.middleware.lifespan import Lifespan
 from connexion.operations import AbstractOperation
+from connexion.options import SwaggerUIOptions
 from connexion.problem import problem
 from connexion.resolver import Resolver
 from connexion.uri_parsing import AbstractURIParser
@@ -176,7 +177,7 @@ class FlaskMiddlewareApp(SpecMiddleware):
 class FlaskApp(AbstractApp):
     """Connexion Application based on ConnexionMiddleware wrapping a Flask application."""
 
-    middleware_app: FlaskMiddlewareApp
+    _middleware_app: FlaskMiddlewareApp
 
     def __init__(
         self,
@@ -193,7 +194,7 @@ class FlaskApp(AbstractApp):
         resolver: t.Optional[t.Union[Resolver, t.Callable]] = None,
         resolver_error: t.Optional[int] = None,
         strict_validation: t.Optional[bool] = None,
-        swagger_ui_options: t.Optional[dict] = None,
+        swagger_ui_options: t.Optional[SwaggerUIOptions] = None,
         uri_parser_class: t.Optional[AbstractURIParser] = None,
         validate_responses: t.Optional[bool] = None,
         validator_map: t.Optional[dict] = None,
@@ -226,8 +227,8 @@ class FlaskApp(AbstractApp):
             start.
         :param strict_validation: When True, extra form or query parameters not defined in the
             specification result in a validation error. Defaults to False.
-        :param swagger_ui_options: A dict with configuration options for the swagger ui. See
-            :class:`options.ConnexionOptions`.
+        :param swagger_ui_options: Instance of :class:`options.ConnexionOptions` with
+            configuration options for the swagger ui.
         :param uri_parser_class: Class to use for uri parsing. See :mod:`uri_parsing`.
         :param validate_responses: Whether to validate responses against the specification. This has
             an impact on performance. Defaults to False.
@@ -236,8 +237,8 @@ class FlaskApp(AbstractApp):
         :param security_map: A dictionary of security handlers to use. Defaults to
             :obj:`security.SECURITY_HANDLERS`
         """
-        self.middleware_app = FlaskMiddlewareApp(import_name, server_args or {})
-        self.app = self.middleware_app.app
+        self._middleware_app = FlaskMiddlewareApp(import_name, server_args or {})
+        self.app = self._middleware_app.app
         super().__init__(
             import_name,
             lifespan=lifespan,
@@ -260,7 +261,7 @@ class FlaskApp(AbstractApp):
     def add_url_rule(
         self, rule, endpoint: str = None, view_func: t.Callable = None, **options
     ):
-        self.middleware_app.add_url_rule(
+        self._middleware_app.add_url_rule(
             rule, endpoint=endpoint, view_func=view_func, **options
         )
 

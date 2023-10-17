@@ -288,31 +288,56 @@ def not_installed_error(exc, *, msg=None):  # pragma: no cover
 
 
 def extract_content_type(
-    headers: t.List[t.Tuple[bytes, bytes]]
-) -> t.Tuple[t.Optional[str], t.Optional[str]]:
+    headers: t.Union[t.List[t.Tuple[bytes, bytes]], t.Dict[str, str]]
+) -> t.Optional[str]:
     """Extract the mime type and encoding from the content type headers.
 
     :param headers: Headers from ASGI scope
 
-    :return: A tuple of mime type, encoding
+    :return: The content type if available in headers, otherwise None
     """
-    mime_type, encoding = None, None
-    for key, value in headers:
+    content_type: t.Optional[str] = None
+
+    header_pairs_type = t.Collection[t.Tuple[t.Union[str, bytes], t.Union[str, bytes]]]
+    header_pairs: header_pairs_type = headers.items() if isinstance(headers, dict) else headers  # type: ignore
+    for key, value in header_pairs:
         # Headers can always be decoded using latin-1:
         # https://stackoverflow.com/a/27357138/4098821
-        decoded_key = key.decode("latin-1")
-        if decoded_key.lower() == "content-type":
-            content_type = value.decode("latin-1")
-            if ";" in content_type:
-                mime_type, parameters = content_type.split(";", maxsplit=1)
+        if isinstance(key, bytes):
+            decoded_key: str = key.decode("latin-1")
+        else:
+            decoded_key = key
 
-                prefix = "charset="
-                for parameter in parameters.split(";"):
-                    if parameter.startswith(prefix):
-                        encoding = parameter[len(prefix) :]
+        if decoded_key.lower() == "content-type":
+            if isinstance(value, bytes):
+                content_type = value.decode("latin-1")
             else:
-                mime_type = content_type
+                content_type = value
             break
+
+    return content_type
+
+
+def split_content_type(
+    content_type: t.Optional[str],
+) -> t.Tuple[t.Optional[str], t.Optional[str]]:
+    """Split the content type in mime_type and encoding. Other parameters are ignored."""
+    mime_type, encoding = None, None
+
+    if content_type is None:
+        return mime_type, encoding
+
+    # Check for parameters
+    if ";" in content_type:
+        mime_type, parameters = content_type.split(";", maxsplit=1)
+
+        # Find parameter describing the charset
+        prefix = "charset="
+        for parameter in parameters.split(";"):
+            if parameter.startswith(prefix):
+                encoding = parameter[len(prefix) :]
+    else:
+        mime_type = content_type
     return mime_type, encoding
 
 

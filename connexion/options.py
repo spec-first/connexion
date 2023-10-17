@@ -1,14 +1,14 @@
 """
 This module defines a Connexion specific options class to pass to the Connexion App or API.
 """
-
+import dataclasses
 import logging
-from typing import Optional  # NOQA
+import typing as t
 
 try:
-    from py_swagger_ui import swagger_ui_path
+    from py_swagger_ui import swagger_ui_path as default_template_dir
 except ImportError:
-    swagger_ui_path = None
+    default_template_dir = None
 
 NO_UI_MSG = """The swagger_ui directory could not be found.
     Please install connexion with extra install: pip install connexion[swagger-ui]
@@ -18,131 +18,82 @@ NO_UI_MSG = """The swagger_ui directory could not be found.
 logger = logging.getLogger("connexion.options")
 
 
+@dataclasses.dataclass
 class SwaggerUIOptions:
+    """Options to configure the Swagger UI.
+
+    :param serve_spec: Whether to serve the Swagger / OpenAPI Specification
+    :param spec_path: Where to serve the Swagger / OpenAPI Specification
+
+    :param swagger_ui: Whether to serve the Swagger UI
+    :param swagger_ui_path: Where to serve the Swagger UI
+    :param swagger_ui_config: Options to configure the Swagger UI. See
+          https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration
+          for an overview of the available options.
+    :param swagger_ui_template_dir: Directory with static files to use to serve Swagger UI
+    :param swagger_ui_template_arguments: Arguments passed to the Swagger UI template. Useful
+        when providing your own template dir with additional template arguments.
+    """
+
+    serve_spec: bool = True
+    spec_path: t.Optional[str] = None
+
+    swagger_ui: bool = True
+    swagger_ui_config: dict = dataclasses.field(default_factory=dict)
+    swagger_ui_path: str = "/ui"
+    swagger_ui_template_dir: t.Optional[str] = None
+    swagger_ui_template_arguments: dict = dataclasses.field(default_factory=dict)
+
+
+class SwaggerUIConfig:
     """Class holding swagger UI specific options."""
 
-    def __init__(self, options=None, oas_version=(2,)):
-        self._options = {}
-        self.oas_version = oas_version
-        self.swagger_ui_local_path = swagger_ui_path
-        if self.oas_version >= (3, 0, 0):
-            self.openapi_spec_name = "/openapi.json"
+    def __init__(
+        self,
+        options: t.Optional[SwaggerUIOptions] = None,
+        oas_version: t.Tuple[int, ...] = (2,),
+    ):
+        if oas_version >= (3, 0, 0):
+            self.spec_path = "/openapi.json"
         else:
-            self.openapi_spec_name = "/swagger.json"
+            self.spec_path = "/swagger.json"
 
-        if options:
-            self._options.update(filter_values(options))
-
-    def extend(self, new_values=None):
-        # type: (Optional[dict]) -> SwaggerUIOptions
-        """
-        Return a new instance of `ConnexionOptions` using as default the currently
-        defined options.
-        """
-        if new_values is None:
-            new_values = {}
-
-        options = dict(self._options)
-        options.update(filter_values(new_values))
-        return SwaggerUIOptions(options, self.oas_version)
-
-    def as_dict(self):
-        return self._options
+        self._options = options or SwaggerUIOptions()
 
     @property
-    def openapi_spec_available(self):
-        # type: () -> bool
-        """
-        Whether to make available the OpenAPI Specification under
-        `openapi_spec_path`.
-
-        Default: True
-        """
-        deprecated_option = self._options.get("swagger_json", True)
-        serve_spec = self._options.get("serve_spec", deprecated_option)
-        if "swagger_json" in self._options:
-            deprecation_warning = (
-                "The 'swagger_json' option is deprecated. "
-                "Please use 'serve_spec' instead"
-            )
-            logger.warning(deprecation_warning)
-        return serve_spec
+    def openapi_spec_available(self) -> bool:
+        """Whether to make the OpenAPI Specification available."""
+        return self._options.serve_spec
 
     @property
-    def openapi_console_ui_available(self):
-        # type: () -> bool
-        """
-        Whether to make the OpenAPI Console UI available under the path
-        defined in `openapi_console_ui_path` option.
+    def openapi_spec_path(self) -> str:
+        """Path to host the Swagger UI."""
+        return self._options.spec_path or self.spec_path
 
-        Default: True
-        """
-        if (
-            self._options.get("swagger_ui", True)
-            and self.openapi_console_ui_from_dir is None
-        ):
+    @property
+    def swagger_ui_available(self) -> bool:
+        """Whether to make the Swagger UI available."""
+        if self._options.swagger_ui and self.swagger_ui_template_dir is None:
             logger.warning(NO_UI_MSG)
             return False
-        return self._options.get("swagger_ui", True)
+        return self._options.swagger_ui
 
     @property
-    def openapi_spec_path(self):
-        # type: () -> str
-        """
-        Path to mount the OpenAPI Console UI and make it accessible via a browser.
-
-        Default: /openapi.json for openapi3, otherwise /swagger.json
-        """
-        return self._options.get("openapi_spec_path", self.openapi_spec_name)
+    def swagger_ui_path(self) -> str:
+        """Path to mount the Swagger UI and make it accessible via a browser."""
+        return self._options.swagger_ui_path
 
     @property
-    def openapi_console_ui_path(self):
-        # type: () -> str
-        """
-        Path to mount the OpenAPI Console UI and make it accessible via a browser.
-
-        Default: /ui
-        """
-        return self._options.get("swagger_url", "/ui")
+    def swagger_ui_template_dir(self) -> str:
+        """Directory with static files to use to serve Swagger UI."""
+        return self._options.swagger_ui_template_dir or default_template_dir
 
     @property
-    def openapi_console_ui_from_dir(self):
-        # type: () -> str
-        """
-        Custom OpenAPI Console UI directory from where Connexion will serve
-        the static files.
-
-        Default: Connexion's vendored version of the OpenAPI Console UI.
-        """
-        return self._options.get("swagger_path", self.swagger_ui_local_path)
+    def swagger_ui_config(self) -> dict:
+        """Options to configure the Swagger UI."""
+        return self._options.swagger_ui_config
 
     @property
-    def openapi_console_ui_config(self):
-        # type: () -> dict
-        """
-        Custom OpenAPI Console UI config.
-
-        Default: None
-        """
-        return self._options.get("swagger_ui_config", None)
-
-    @property
-    def openapi_console_ui_index_template_variables(self):
-        # type: () -> dict
-        """
-        Custom variables passed to the OpenAPI Console UI template.
-
-        Default: {}
-        """
-        return self._options.get("swagger_ui_template_arguments", {})
-
-
-def filter_values(dictionary):
-    # type: (dict) -> dict
-    """
-    Remove `None` value entries in the dictionary.
-
-    :param dictionary:
-    :return:
-    """
-    return {key: value for key, value in dictionary.items() if value is not None}
+    def swagger_ui_template_arguments(self) -> dict:
+        """Arguments passed to the Swagger UI template."""
+        return self._options.swagger_ui_template_arguments

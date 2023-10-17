@@ -105,7 +105,9 @@ should work, connexion comes with ``uvicorn`` as an extra:
 Smaller breaking changes
 ------------------------
 
-* The ``options`` argument has been renamed to ``swagger_ui_options``
+* The ``options`` argument has been renamed to ``swagger_ui_options`` and now takes an instance
+  of the :class:`.SwaggerUIOptions`. The naming of the options themselves have been changed to
+  better represent their meaning.
 * The ``uri_parser_class`` is now passed to the ``App`` or its ``add_api()`` method directly
   instead of via the ``options`` argument.
 * The ``jsonifier`` is now passed to the ``App`` or its ``add_api()`` method instead of setting it
@@ -137,7 +139,7 @@ Non-breaking changes
   request bodies.
 
 Feedback
-========
+--------
 
 We would really love to hear from you. By trying Connexion 3 now and providing feedback, you get the opportunity to
 make sure that updating your application will be as painless as possible, while helping to create a more stable GA

@@ -1,17 +1,17 @@
 import logging
 from unittest.mock import MagicMock
 
-try:
-    import importlib_metadata
-except ImportError:
-    import importlib.metadata as importlib_metadata
-
 import pytest
 from click.testing import CliRunner
 from connexion.cli import main
 from connexion.exceptions import ResolverError
 
 from conftest import FIXTURES_FOLDER
+
+try:
+    import importlib_metadata
+except ImportError:
+    import importlib.metadata as importlib_metadata
 
 
 @pytest.fixture(scope="function")
