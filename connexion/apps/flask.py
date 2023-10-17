@@ -155,9 +155,14 @@ class FlaskMiddlewareApp(SpecMiddleware):
             (response.body, response.status_code, response.headers)
         )
 
-    def add_api(self, specification, **kwargs):
+    def add_api(self, specification, *, name: str = None, **kwargs):
         api = FlaskApi(specification, **kwargs)
-        self.app.register_blueprint(api.blueprint)
+
+        if name is not None:
+            self.app.register_blueprint(api.blueprint, name=name)
+        else:
+            self.app.register_blueprint(api.blueprint)
+
         return api
 
     def add_url_rule(

@@ -332,6 +332,7 @@ class ConnexionMiddleware:
         specification: t.Union[pathlib.Path, str, dict],
         *,
         base_path: t.Optional[str] = None,
+        name: t.Optional[str] = None,
         arguments: t.Optional[dict] = None,
         auth_all_paths: t.Optional[bool] = None,
         jsonifier: t.Optional[Jsonifier] = None,
@@ -354,6 +355,8 @@ class ConnexionMiddleware:
             to file.
         :param base_path: Base path to host the API. This overrides the basePath / servers in the
             specification.
+        :param name: Name to register the API with. If no name is passed, the base_path is used
+            as name instead.
         :param arguments: Arguments to substitute the specification using Jinja.
         :param auth_all_paths: whether to authenticate not paths not defined in the specification.
             Defaults to False.
@@ -410,7 +413,9 @@ class ConnexionMiddleware:
             security_map=security_map,
         )
 
-        api = API(specification, base_path=base_path, **options.__dict__, **kwargs)
+        api = API(
+            specification, base_path=base_path, name=name, **options.__dict__, **kwargs
+        )
         self.apis.append(api)
 
     def add_error_handler(

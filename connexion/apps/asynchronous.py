@@ -93,14 +93,18 @@ class AsyncMiddlewareApp(RoutedMiddleware[AsyncApi]):
     api_cls = AsyncApi
 
     def __init__(self) -> None:
-        self.apis: t.Dict[str, AsyncApi] = {}
+        self.apis: t.Dict[str, t.List[AsyncApi]] = {}
         self.operations: t.Dict[str, AsyncOperation] = {}
         self.router = Router()
         super().__init__(self.router)
 
-    def add_api(self, *args, **kwargs):
+    def add_api(self, *args, name: str = None, **kwargs):
         api = super().add_api(*args, **kwargs)
-        self.router.mount(api.base_path, api.router)
+
+        if name is not None:
+            self.router.mount(api.base_path, api.router, name=name)
+        else:
+            self.router.mount(api.base_path, api.router)
         return api
 
     def add_url_rule(

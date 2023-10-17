@@ -1,0 +1,28 @@
+openapi: 3.0.0
+info:
+  title: '{{title}}'
+  version: '1.0'
+paths:
+  '/bye/{name}':
+    get:
+      summary: Generate goodbye
+      description: Generates a goodbye message.
+      operationId: fakeapi.hello.get_bye
+      responses:
+        '200':
+          description: goodbye response
+          content:
+            text/plain:
+              schema:
+                type: string
+        default:
+          description: unexpected error
+      parameters:
+        - name: name
+          in: path
+          description: Name of the person to say bye.
+          required: true
+          schema:
+            type: string
+servers:
+  - url: /v1.0
