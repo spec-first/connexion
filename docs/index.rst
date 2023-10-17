@@ -69,6 +69,7 @@ Documentation
    cli
    request
    response
+   validation
    security
    cookbook
    exceptions

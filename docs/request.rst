@@ -220,6 +220,10 @@ The body will also be passed to your function.
             def foo_get(field1, field2)
                 ...
 
+Connexion will not automatically pass in the default values defined in your ``requestBody``
+definition, but you can activate this by configuring a different
+:ref:`RequestBodyValidator<validation:Custom validators>`.
+
 Optional arguments & Defaults
 -----------------------------
 
@@ -247,6 +251,21 @@ an argument is defined in your specification, but not in your function, Connexio
 If you do define a ``**kwargs`` argument in your function signature, Connexion will pass in all
 arguments, and the ones not explicitly defined in your signature will be collected in the
 ``kwargs`` argument.
+
+Parameter Name Sanitation
+-------------------------
+
+The names of query and form parameters, as well as the name of the body
+parameter are sanitized by removing characters that are not allowed in Python
+symbols. I.e. all characters that are not letters, digits or the underscore are
+removed, and finally characters are removed from the front until a letter or an
+underscore is encountered. As an example:
+
+.. code-block:: python
+
+    >>> re.sub('^[^a-zA-Z_]+', '', re.sub('[^0-9a-zA-Z_]', '', '$top'))
+    'top'
+
 
 Pythonic parameters
 -------------------
