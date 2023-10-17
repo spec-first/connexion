@@ -9,6 +9,8 @@ from connexion.exceptions import InvalidSpecification, ResolverError
 from connexion.spec import Specification, canonical_base_path
 from yaml import YAMLError
 
+# import pytest
+
 TEST_FOLDER = pathlib.Path(__file__).parent
 
 
@@ -37,9 +39,10 @@ def test_api():
     assert api4.blueprint.url_prefix == "/v1.0"
 
 
+# @pytest.mark.cheers
 def test_api_base_path_slash():
     api = FlaskApi(TEST_FOLDER / "fixtures/simple/basepath-slash.yaml")
-    assert api.blueprint.name == ""
+    assert api.blueprint.name == "/"
     assert api.blueprint.url_prefix == ""
 
 

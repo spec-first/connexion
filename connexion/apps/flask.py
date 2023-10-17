@@ -80,6 +80,10 @@ class FlaskApi(AbstractRoutingAPI):
 
     def _set_blueprint(self):
         endpoint = flask_utils.flaskify_endpoint(self.base_path)
+        if endpoint == "" and self.base_path != "":
+            endpoint = self.base_path
+        elif endpoint == "":
+            endpoint = "/"
         self.blueprint = flask.Blueprint(
             endpoint,
             __name__,
