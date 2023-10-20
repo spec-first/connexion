@@ -29,7 +29,7 @@ def test_sync_injection():
         func(**kwargs)
 
     operation = MagicMock(name="operation")
-    operation.request_body = {}
+    operation.is_request_body_defined = False
     operation.body_name = lambda _: "body"
 
     with TestContext(operation=operation):
@@ -54,7 +54,7 @@ async def test_async_injection():
         func(**kwargs)
 
     operation = MagicMock(name="operation")
-    operation.request_body = {}
+    operation.is_request_body_defined = False
     operation.body_name = lambda _: "body"
 
     with TestContext(operation=operation):
@@ -77,7 +77,7 @@ def test_sync_injection_with_context():
     context = {"test": "success"}
 
     operation = MagicMock(name="operation")
-    operation.request_body = {}
+    operation.is_request_body_defined = False
     operation.body_name = lambda _: "body"
 
     with TestContext(context=context, operation=operation):
@@ -104,7 +104,7 @@ async def test_async_injection_with_context():
     context = {"test": "success"}
 
     operation = MagicMock(name="operation")
-    operation.request_body = {}
+    operation.is_request_body_defined = False
     operation.body_name = lambda _: "body"
 
     with TestContext(context=context, operation=operation):

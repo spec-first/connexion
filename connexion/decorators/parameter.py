@@ -376,7 +376,7 @@ def _get_body_argument(
     if len(arguments) <= 0 and not has_kwargs:
         return {}
 
-    if operation.request_body == {}:
+    if not operation.is_request_body_defined:
         return {}
 
     body_name = sanitize(operation.body_name(content_type))
