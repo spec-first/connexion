@@ -1079,6 +1079,20 @@ paths:
                 body1:
                   type: string
               additionalProperties: false
+  /body-in-get-request:
+    get:
+      operationId: fakeapi.hello.test_body_in_get_request
+      responses:
+        '200':
+          description: OK
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                body1:
+                  type: string
   /get_non_conforming_response:
     get:
       operationId: fakeapi.hello.get_empty_dict
