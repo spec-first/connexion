@@ -66,13 +66,14 @@ Documentation
    middleware
    routing
    swagger_ui
-   cli
    request
    response
    validation
    security
+   context
    cookbook
    exceptions
+   cli
    v3
 
 Recommended resources
