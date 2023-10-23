@@ -67,6 +67,7 @@ class ExceptionMiddleware(StarletteExceptionMiddleware):
 
     @staticmethod
     def problem_handler(_request: ASGIRequest, exc: ProblemException):
+        """Default handler for Connexion ProblemExceptions"""
         logger.error("%r", exc)
         return exc.to_problem()
 
@@ -75,6 +76,7 @@ class ExceptionMiddleware(StarletteExceptionMiddleware):
     def http_exception(
         _request: StarletteRequest, exc: HTTPException, **kwargs
     ) -> StarletteResponse:
+        """Default handler for Starlette HTTPException"""
         logger.error("%r", exc)
         return problem(
             title=exc.detail,
@@ -87,14 +89,20 @@ class ExceptionMiddleware(StarletteExceptionMiddleware):
     def common_error_handler(
         _request: StarletteRequest, exc: Exception
     ) -> ConnexionResponse:
+        """Default handler for any unhandled Exception"""
         logger.error("%r", exc, exc_info=exc)
         return InternalServerError().to_problem()
 
-    @staticmethod
     def flask_error_handler(
-        _request: StarletteRequest, exc: werkzeug.exceptions.HTTPException
+        self, request: StarletteRequest, exc: werkzeug.exceptions.HTTPException
     ) -> ConnexionResponse:
-        """Default error handler."""
+        """Default handler for Flask / werkzeug HTTPException"""
+        # If a handler is registered for the received status_code, call it instead.
+        # This is only done automatically for Starlette HTTPExceptions
+        if handler := self._status_handlers.get(exc.code):
+            starlette_exception = HTTPException(exc.code, detail=exc.description)
+            return handler(request, starlette_exception)
+
         return problem(
             title=exc.name,
             detail=exc.description,
