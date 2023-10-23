@@ -3,6 +3,7 @@ This module defines a command-line interface (CLI) that runs an OpenAPI specific
 starting point for developing your API with Connexion.
 """
 
+import importlib.metadata
 import logging
 import sys
 from os import path
@@ -12,11 +13,6 @@ from clickclick import AliasedGroup
 
 import connexion
 from connexion.mock import MockResolver
-
-try:
-    import importlib_metadata
-except ImportError:
-    import importlib.metadata as importlib_metadata  # type: ignore
 
 logger = logging.getLogger("connexion.cli")
 
@@ -35,7 +31,7 @@ app = None
 def print_version(ctx, param, value):
     if not value or ctx.resilient_parsing:
         return
-    click.echo(f"Connexion {importlib_metadata.version('connexion')}")
+    click.echo(f"Connexion {importlib.metadata.version('connexion')}")
     ctx.exit()
 
 

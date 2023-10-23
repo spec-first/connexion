@@ -39,7 +39,7 @@ def test_api():
 
 def test_api_base_path_slash():
     api = FlaskApi(TEST_FOLDER / "fixtures/simple/basepath-slash.yaml")
-    assert api.blueprint.name == ""
+    assert api.blueprint.name == "/"
     assert api.blueprint.url_prefix == ""
 
 

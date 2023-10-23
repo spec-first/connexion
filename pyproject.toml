@@ -26,11 +26,11 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Internet",
     "Topic :: Internet :: WWW/HTTP",
     "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
@@ -44,11 +44,10 @@ classifiers = [
 connexion = 'connexion.cli:main'
 
 [tool.poetry.dependencies]
-python = '^3.7'
+python = '^3.8'
 asgiref = ">= 3.4"
 clickclick = ">= 1.2"
 httpx = ">= 0.23"
-importlib_metadata = { version = ">=6.0.0", python = "<3.8" }
 inflection = ">= 0.3.1"
 jsonschema = ">= 4.0.1"
 Jinja2 = ">= 3.0.0"
