@@ -211,6 +211,10 @@ def get_arguments(
         )
     )
 
+    if operation.method.upper() == "TRACE":
+        # TRACE requests MUST NOT include a body (RFC7231 section 4.3.8)
+        return ret
+
     ret.update(
         _get_body_argument(
             body,
