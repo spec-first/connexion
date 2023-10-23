@@ -130,7 +130,7 @@ class WSGIRequest(_RequestInterface):
         return getattr(self._werkzeug_request, item)
 
 
-class ASGIRequest(_RequestInterface):
+class ConnexionRequest(_RequestInterface):
     """
     Implementation of the Connexion :code:`_RequestInterface` representing an ASGI request.
 
@@ -157,7 +157,7 @@ class ASGIRequest(_RequestInterface):
     @classmethod
     def from_starlette_request(
         cls, request: StarletteRequest, uri_parser=None
-    ) -> "ASGIRequest":
+    ) -> "ConnexionRequest":
         # Instantiate the class, and set the `_starlette_request` property before initializing.
         self = cls.__new__(cls)
         self._starlette_request = request

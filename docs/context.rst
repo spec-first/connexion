@@ -24,12 +24,13 @@ See below for an explanation of the different variables.
 request
 -------
 
-A ``Request`` object representing the incoming request. This is an instance of the ``ASGIRequest``.
+A ``Request`` object representing the incoming request. This is an instance of the
+``ConnexionRequest``.
 
-.. dropdown:: View a detailed reference of the ``ASGIRequest`` class
+.. dropdown:: View a detailed reference of the ``ConnexionRequest`` class
     :icon: eye
 
-    .. autoclass:: connexion.lifecycle.ASGIRequest
+    .. autoclass:: connexion.lifecycle.ConnexionRequest
         :noindex:
         :members:
         :undoc-members:

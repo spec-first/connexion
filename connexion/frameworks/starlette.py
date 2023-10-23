@@ -8,7 +8,7 @@ from starlette.responses import Response as StarletteResponse
 from starlette.types import Receive, Scope
 
 from connexion.frameworks.abstract import Framework
-from connexion.lifecycle import ASGIRequest
+from connexion.lifecycle import ConnexionRequest
 from connexion.uri_parsing import AbstractURIParser
 
 
@@ -48,8 +48,8 @@ class Starlette(Framework):
         )
 
     @staticmethod
-    def get_request(*, scope: Scope, receive: Receive, uri_parser: AbstractURIParser, **kwargs) -> ASGIRequest:  # type: ignore
-        return ASGIRequest(scope, receive, uri_parser=uri_parser)
+    def get_request(*, scope: Scope, receive: Receive, uri_parser: AbstractURIParser, **kwargs) -> ConnexionRequest:  # type: ignore
+        return ConnexionRequest(scope, receive, uri_parser=uri_parser)
 
 
 PATH_PARAMETER = re.compile(r"\{([^}]*)\}")

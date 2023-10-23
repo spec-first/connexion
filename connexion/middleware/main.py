@@ -12,7 +12,7 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 from connexion import utils
 from connexion.handlers import ResolverErrorHandler
 from connexion.jsonifier import Jsonifier
-from connexion.lifecycle import ASGIRequest, ConnexionResponse
+from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.middleware.abstract import SpecMiddleware
 from connexion.middleware.context import ContextMiddleware
 from connexion.middleware.exceptions import ExceptionMiddleware
@@ -424,7 +424,7 @@ class ConnexionMiddleware:
         self,
         code_or_exception: t.Union[int, t.Type[Exception]],
         function: t.Callable[
-            [ASGIRequest, Exception], MaybeAwaitable[ConnexionResponse]
+            [ConnexionRequest, Exception], MaybeAwaitable[ConnexionResponse]
         ],
     ) -> None:
         """

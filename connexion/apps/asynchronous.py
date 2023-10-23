@@ -14,7 +14,7 @@ from starlette.types import Receive, Scope, Send
 from connexion.apps.abstract import AbstractApp
 from connexion.decorators import StarletteDecorator
 from connexion.jsonifier import Jsonifier
-from connexion.lifecycle import ASGIRequest, ConnexionResponse
+from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.middleware.abstract import RoutedAPI, RoutedMiddleware
 from connexion.middleware.lifespan import Lifespan
 from connexion.operations import AbstractOperation
@@ -210,7 +210,7 @@ class AsyncApp(AbstractApp):
         self,
         code_or_exception: t.Union[int, t.Type[Exception]],
         function: t.Callable[
-            [ASGIRequest, Exception], MaybeAwaitable[ConnexionResponse]
+            [ConnexionRequest, Exception], MaybeAwaitable[ConnexionResponse]
         ],
     ) -> None:
         self.middleware.add_error_handler(code_or_exception, function)

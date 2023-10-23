@@ -16,7 +16,7 @@ import inflection
 from connexion.context import context, operation
 from connexion.frameworks.abstract import Framework
 from connexion.http_facts import FORM_CONTENT_TYPES
-from connexion.lifecycle import ASGIRequest, WSGIRequest
+from connexion.lifecycle import ConnexionRequest, WSGIRequest
 from connexion.operations import AbstractOperation, Swagger2Operation
 from connexion.utils import (
     deep_merge,
@@ -43,7 +43,7 @@ class BaseParameterDecorator:
 
     def _maybe_get_body(
         self,
-        request: t.Union[WSGIRequest, ASGIRequest],
+        request: t.Union[WSGIRequest, ConnexionRequest],
         *,
         arguments: t.List[str],
         has_kwargs: bool,
@@ -95,7 +95,7 @@ class AsyncParameterDecorator(BaseParameterDecorator):
         arguments, has_kwargs = inspect_function_arguments(unwrapped_function)
 
         @functools.wraps(function)
-        async def wrapper(request: ASGIRequest) -> t.Any:
+        async def wrapper(request: ConnexionRequest) -> t.Any:
             request_body = self._maybe_get_body(
                 request, arguments=arguments, has_kwargs=has_kwargs
             )
@@ -118,7 +118,7 @@ class AsyncParameterDecorator(BaseParameterDecorator):
 
 
 def prep_kwargs(
-    request: t.Union[WSGIRequest, ASGIRequest],
+    request: t.Union[WSGIRequest, ConnexionRequest],
     *,
     request_body: t.Any,
     files: t.Dict[str, t.Any],

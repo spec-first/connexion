@@ -5,7 +5,7 @@ from collections import defaultdict
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from connexion.exceptions import ProblemException
-from connexion.lifecycle import ASGIRequest
+from connexion.lifecycle import ConnexionRequest
 from connexion.middleware.abstract import RoutedAPI, RoutedMiddleware
 from connexion.operations import AbstractOperation
 from connexion.security import SecurityHandlerFactory
@@ -95,7 +95,7 @@ class SecurityOperation:
             await self.next_app(scope, receive, send)
             return
 
-        request = ASGIRequest(scope)
+        request = ConnexionRequest(scope)
         await self.verification_fn(request)
         await self.next_app(scope, receive, send)
 

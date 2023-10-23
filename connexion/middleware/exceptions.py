@@ -13,21 +13,23 @@ from starlette.responses import Response as StarletteResponse
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from connexion.exceptions import InternalServerError, ProblemException, problem
-from connexion.lifecycle import ASGIRequest, ConnexionResponse
+from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.types import MaybeAwaitable
 
 logger = logging.getLogger(__name__)
 
 
 def connexion_wrapper(
-    handler: t.Callable[[ASGIRequest, Exception], MaybeAwaitable[ConnexionResponse]]
+    handler: t.Callable[
+        [ConnexionRequest, Exception], MaybeAwaitable[ConnexionResponse]
+    ]
 ) -> t.Callable[[StarletteRequest, Exception], t.Awaitable[StarletteResponse]]:
     """Wrapper that translates Starlette requests to Connexion requests before passing
     them to the error handler, and translates the returned Connexion responses to
     Starlette responses."""
 
     async def wrapper(request: StarletteRequest, exc: Exception) -> StarletteResponse:
-        request = ASGIRequest.from_starlette_request(request)
+        request = ConnexionRequest.from_starlette_request(request)
 
         if asyncio.iscoroutinefunction(handler):
             response = await handler(request, exc)  # type: ignore
@@ -59,14 +61,14 @@ class ExceptionMiddleware(StarletteExceptionMiddleware):
     def add_exception_handler(
         self,
         exc_class_or_status_code: t.Union[int, t.Type[Exception]],
-        handler: t.Callable[[ASGIRequest, Exception], StarletteResponse],
+        handler: t.Callable[[ConnexionRequest, Exception], StarletteResponse],
     ) -> None:
         super().add_exception_handler(
             exc_class_or_status_code, handler=connexion_wrapper(handler)
         )
 
     @staticmethod
-    def problem_handler(_request: ASGIRequest, exc: ProblemException):
+    def problem_handler(_request: ConnexionRequest, exc: ProblemException):
         """Default handler for Connexion ProblemExceptions"""
         logger.error("%r", exc)
         return exc.to_problem()

@@ -10,7 +10,7 @@ from starlette.testclient import TestClient
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from connexion.jsonifier import Jsonifier
-from connexion.lifecycle import ASGIRequest, ConnexionResponse
+from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.middleware import ConnexionMiddleware, MiddlewarePosition, SpecMiddleware
 from connexion.middleware.lifespan import Lifespan
 from connexion.options import SwaggerUIOptions
@@ -255,7 +255,7 @@ class AbstractApp:
         self,
         code_or_exception: t.Union[int, t.Type[Exception]],
         function: t.Callable[
-            [ASGIRequest, Exception], MaybeAwaitable[ConnexionResponse]
+            [ConnexionRequest, Exception], MaybeAwaitable[ConnexionResponse]
         ],
     ) -> None:
         """
