@@ -88,6 +88,11 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         """The request body for this operation"""
 
     @property
+    def is_request_body_defined(self) -> bool:
+        """Whether the request body is defined for this operation"""
+        return self.request_body != {}
+
+    @property
     def path(self):
         """
         The path of the operation, relative to the API base path

@@ -211,18 +211,21 @@ def get_arguments(
         )
     )
 
-    if operation.method.upper() in ["PATCH", "POST", "PUT"]:
-        ret.update(
-            _get_body_argument(
-                body,
-                operation=operation,
-                arguments=arguments,
-                has_kwargs=has_kwargs,
-                sanitize=sanitize,
-                content_type=content_type,
-            )
+    if operation.method.upper() == "TRACE":
+        # TRACE requests MUST NOT include a body (RFC7231 section 4.3.8)
+        return ret
+
+    ret.update(
+        _get_body_argument(
+            body,
+            operation=operation,
+            arguments=arguments,
+            has_kwargs=has_kwargs,
+            sanitize=sanitize,
+            content_type=content_type,
         )
-        ret.update(_get_file_arguments(files, arguments, has_kwargs))
+    )
+    ret.update(_get_file_arguments(files, arguments, has_kwargs))
     return ret
 
 
@@ -375,6 +378,9 @@ def _get_body_argument(
     content_type: str,
 ) -> dict:
     if len(arguments) <= 0 and not has_kwargs:
+        return {}
+
+    if not operation.is_request_body_defined:
         return {}
 
     body_name = sanitize(operation.body_name(content_type))

@@ -347,6 +347,18 @@ def test_body_not_allowed_additional_properties(simple_app):
     assert "Additional properties are not allowed" in response["detail"]
 
 
+def test_body_in_get_request(simple_app):
+    app_client = simple_app.test_client()
+    body = {"body1": "bodyString"}
+    resp = app_client.request(
+        "GET",
+        "/v1.0/body-in-get-request",
+        json=body,
+    )
+    assert resp.status_code == 200
+    assert resp.json() == body
+
+
 def test_bool_as_default_param(simple_app):
     app_client = simple_app.test_client()
     resp = app_client.get("/v1.0/test-bool-param")

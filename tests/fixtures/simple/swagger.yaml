@@ -951,6 +951,27 @@ paths:
         200:
           description: OK
 
+  /body-in-get-request:
+    get:
+      operationId: fakeapi.hello.test_body_in_get_request
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: $body
+          description: A request body in a GET method.
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              body1:
+                type: string
+      responses:
+        200:
+          description: OK
+
   /get_non_conforming_response:
     get:
       operationId: fakeapi.hello.get_empty_dict

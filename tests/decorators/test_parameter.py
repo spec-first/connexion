@@ -21,6 +21,7 @@ from connexion.testing import TestContext
 def test_sync_injection():
     request = MagicMock(name="request")
     request.path_params = {"p1": "123"}
+    request.get_body.return_value = {}
 
     func = MagicMock()
 
@@ -28,6 +29,7 @@ def test_sync_injection():
         func(**kwargs)
 
     operation = MagicMock(name="operation")
+    operation.is_request_body_defined = False
     operation.body_name = lambda _: "body"
 
     with TestContext(operation=operation):
@@ -43,6 +45,8 @@ def test_sync_injection():
 async def test_async_injection():
     request = AsyncMock(name="request")
     request.path_params = {"p1": "123"}
+    request.get_body.return_value = {}
+    request.files.return_value = {}
 
     func = MagicMock()
 
@@ -50,6 +54,7 @@ async def test_async_injection():
         func(**kwargs)
 
     operation = MagicMock(name="operation")
+    operation.is_request_body_defined = False
     operation.body_name = lambda _: "body"
 
     with TestContext(operation=operation):
@@ -62,6 +67,7 @@ async def test_async_injection():
 def test_sync_injection_with_context():
     request = MagicMock(name="request")
     request.path_params = {"p1": "123"}
+    request.get_body.return_value = {}
 
     func = MagicMock()
 
@@ -71,6 +77,7 @@ def test_sync_injection_with_context():
     context = {"test": "success"}
 
     operation = MagicMock(name="operation")
+    operation.is_request_body_defined = False
     operation.body_name = lambda _: "body"
 
     with TestContext(context=context, operation=operation):
@@ -86,6 +93,8 @@ def test_sync_injection_with_context():
 async def test_async_injection_with_context():
     request = AsyncMock(name="request")
     request.path_params = {"p1": "123"}
+    request.get_body.return_value = {}
+    request.files.return_value = {}
 
     func = MagicMock()
 
@@ -95,6 +104,7 @@ async def test_async_injection_with_context():
     context = {"test": "success"}
 
     operation = MagicMock(name="operation")
+    operation.is_request_body_defined = False
     operation.body_name = lambda _: "body"
 
     with TestContext(context=context, operation=operation):

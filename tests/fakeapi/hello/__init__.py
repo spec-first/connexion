@@ -580,6 +580,10 @@ def test_body_not_allowed_additional_properties(body):
     return body
 
 
+def test_body_in_get_request(body):
+    return body
+
+
 def post_wrong_content_type():
     return "NOT OK"
 
