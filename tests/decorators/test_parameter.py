@@ -1,11 +1,5 @@
 import sys
-from unittest.mock import MagicMock
-
-try:
-    from unittest.mock import AsyncMock
-except ImportError:
-    # Python 3.7
-    AsyncMock = None
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from connexion.decorators.parameter import (
