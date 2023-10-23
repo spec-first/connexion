@@ -10,10 +10,12 @@ from starlette.testclient import TestClient
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from connexion.jsonifier import Jsonifier
+from connexion.lifecycle import ASGIRequest, ConnexionResponse
 from connexion.middleware import ConnexionMiddleware, MiddlewarePosition, SpecMiddleware
 from connexion.middleware.lifespan import Lifespan
 from connexion.options import SwaggerUIOptions
 from connexion.resolver import Resolver
+from connexion.types import MaybeAwaitable
 from connexion.uri_parsing import AbstractURIParser
 
 
@@ -250,14 +252,18 @@ class AbstractApp:
 
     @abc.abstractmethod
     def add_error_handler(
-        self, code_or_exception: t.Union[int, t.Type[Exception]], function: t.Callable
+        self,
+        code_or_exception: t.Union[int, t.Type[Exception]],
+        function: t.Callable[
+            [ASGIRequest, Exception], MaybeAwaitable[ConnexionResponse]
+        ],
     ) -> None:
         """
         Register a callable to handle application errors.
 
         :param code_or_exception: An exception class or the status code of HTTP exceptions to
             handle.
-        :param function: Callable that will handle exception.
+        :param function: Callable that will handle exception, may be async.
         """
 
     def test_client(self, **kwargs):
