@@ -126,7 +126,7 @@ Smaller breaking changes
 * The ``MethodViewResolver`` has been renamed to ``MethodResolver``, and a new ``MethodViewResolver``
   has been added to work with Flask's ``MethodView`` specifically.
 * Built-in support for uWSGI has been removed. You can re-add this functionality using a custom middleware.
-* The request body is now passed through for ``PATCH``, ``POST``, and ``PUT`` methods as well.
+* The request body is now passed through for ``GET``, ``HEAD``, ``DELETE``, ``CONNECT`` and ``OPTIONS`` methods as well.
 
 
 Non-breaking changes
