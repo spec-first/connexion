@@ -88,7 +88,7 @@ class AsyncApi(RoutedAPI[AsyncOperation]):
         )
 
 
-class AsyncMiddlewareApp(RoutedMiddleware[AsyncApi]):
+class AsyncASGIApp(RoutedMiddleware[AsyncApi]):
 
     api_cls = AsyncApi
 
@@ -176,7 +176,7 @@ class AsyncApp(AbstractApp):
         :param security_map: A dictionary of security handlers to use. Defaults to
             :obj:`security.SECURITY_HANDLERS`
         """
-        self._middleware_app: AsyncMiddlewareApp = AsyncMiddlewareApp()
+        self._middleware_app: AsyncASGIApp = AsyncASGIApp()
 
         super().__init__(
             import_name,

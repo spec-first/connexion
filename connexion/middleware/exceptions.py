@@ -1,5 +1,7 @@
 import logging
 
+import werkzeug.exceptions
+from flask import Response as FlaskResponse
 from starlette.exceptions import HTTPException
 from starlette.middleware.exceptions import (
     ExceptionMiddleware as StarletteExceptionMiddleware,
@@ -20,6 +22,9 @@ class ExceptionMiddleware(StarletteExceptionMiddleware):
     def __init__(self, next_app: ASGIApp):
         super().__init__(next_app)
         self.add_exception_handler(ProblemException, self.problem_handler)
+        self.add_exception_handler(
+            werkzeug.exceptions.HTTPException, self.flask_error_handler
+        )
         self.add_exception_handler(Exception, self.common_error_handler)
 
     @staticmethod
@@ -36,7 +41,9 @@ class ExceptionMiddleware(StarletteExceptionMiddleware):
         )
 
     @staticmethod
-    def http_exception(_request: StarletteRequest, exc: HTTPException) -> Response:
+    def http_exception(
+        _request: StarletteRequest, exc: HTTPException, **kwargs
+    ) -> Response:
         logger.error("%r", exc)
 
         headers = exc.headers
@@ -57,6 +64,24 @@ class ExceptionMiddleware(StarletteExceptionMiddleware):
         logger.error("%r", exc, exc_info=exc)
 
         response = InternalServerError().to_problem()
+
+        return Response(
+            content=response.body,
+            status_code=response.status_code,
+            media_type=response.mimetype,
+            headers=response.headers,
+        )
+
+    @staticmethod
+    def flask_error_handler(
+        _request: StarletteRequest, exc: werkzeug.exceptions.HTTPException
+    ) -> FlaskResponse:
+        """Default error handler."""
+        response = problem(
+            title=exc.name,
+            detail=exc.description,
+            status=exc.code,
+        )
 
         return Response(
             content=response.body,
