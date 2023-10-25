@@ -6,7 +6,7 @@ import logging
 import typing as t
 
 try:
-    from py_swagger_ui import swagger_ui_path as default_template_dir
+    from swagger_ui_bundle import swagger_ui_path as default_template_dir
 except ImportError:
     default_template_dir = None
 
