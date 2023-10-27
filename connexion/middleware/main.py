@@ -471,4 +471,7 @@ class ConnexionMiddleware:
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if self.middleware_stack is None:
             self.app, self.middleware_stack = self._build_middleware_stack()
+        # Set so starlette router throws exceptions instead of returning error responses
+        # This instance is also passed to any lifespan handler
+        scope["app"] = self
         await self.app(scope, receive, send)
