@@ -261,7 +261,8 @@ class AbstractApp:
         """
 
     def test_client(self, **kwargs):
-        """Creates a test client for this application."""
+        """Creates a test client for this application. The keywords arguments passed in are
+        passed to the ``StarletteClient``."""
         return TestClient(self, **kwargs)
 
     def run(self, import_string: str = None, **kwargs):
