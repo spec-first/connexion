@@ -11,25 +11,32 @@ from .problem import problem
 
 
 class ConnexionException(Exception):
-    pass
+    """Base class for any exception thrown by the Connexion framework."""
 
 
 class ResolverError(LookupError, ConnexionException):
-    pass
+    """Error raised at startup when the resolver cannot find a view function for an endpoint in
+    your specification, and no ``resolver_error`` is configured."""
 
 
 class InvalidSpecification(ValidationError, ConnexionException):
-    pass
+    """Error raised at startup when the provided specification cannot be validated."""
 
 
 class MissingMiddleware(ConnexionException):
-    pass
+    """Error raised when you're leveraging behavior that depends on a specific middleware,
+    and that middleware is not part of your middleware stack."""
 
 
 # HTTP ERRORS
 
 
 class ProblemException(HTTPException, ConnexionException):
+    """
+    This exception holds arguments that are going to be passed to the
+    `connexion.problem` function to generate a proper response.
+    """
+
     def __init__(
         self,
         *,
@@ -41,10 +48,6 @@ class ProblemException(HTTPException, ConnexionException):
         headers=None,
         ext=None,
     ):
-        """
-        This exception holds arguments that are going to be passed to the
-        `connexion.problem` function to generate a proper response.
-        """
         self.status = self.status_code = status
         self.title = title
         self.detail = detail
@@ -68,30 +71,41 @@ class ProblemException(HTTPException, ConnexionException):
 # CLIENT ERRORS (4XX)
 
 
-class ClientError(ProblemException):
+class ClientProblem(ProblemException):
+    """Base exception for any 4XX error. Returns 400 by default, however
+    :class:`BadRequestProblem` should be preferred for 400 errors."""
+
     def __init__(self, status: int = 400, title: str = None, *, detail: str = None):
         super().__init__(status=status, title=title, detail=detail)
 
 
-class BadRequestProblem(ClientError):
+class BadRequestProblem(ClientProblem):
+    """Problem class for 400 Bad Request errors."""
+
     def __init__(self, detail=None):
         super().__init__(status=400, title="Bad Request", detail=detail)
 
 
 class ExtraParameterProblem(BadRequestProblem):
+    """Problem class for 400 Bad Request errors raised when extra query or form parameters are
+    detected and ``strict_validation`` is enabled."""
+
     def __init__(self, *, param_type: str, extra_params: t.Iterable[str]):
         detail = f"Extra {param_type} parameter(s) {','.join(extra_params)} not in spec"
         super().__init__(detail=detail)
 
 
 class TypeValidationError(BadRequestProblem):
+    """Problem class for 400 Bad Request errors raised when path, query or form parameters with
+    an incorrect type are detected."""
+
     def __init__(self, schema_type: str, parameter_type: str, parameter_name: str):
-        """Exception raised when type validation fails"""
         detail = f"Wrong type, expected '{schema_type}' for {parameter_type} parameter '{parameter_name}'"
         super().__init__(detail=detail)
 
 
-class Unauthorized(ClientError):
+class Unauthorized(ClientProblem):
+    """Problem class for 401 Unauthorized errors."""
 
     description = (
         "The server could not verify that you are authorized to access"
@@ -105,14 +119,22 @@ class Unauthorized(ClientError):
 
 
 class OAuthProblem(Unauthorized):
+    """Problem class for 401 Unauthorized errors raised when there is an issue with the received
+    OAuth headers."""
+
     pass
 
 
 class OAuthResponseProblem(OAuthProblem):
+    """Problem class for 401 Unauthorized errors raised when improper OAuth credentials are
+    retrieved from your OAuth server."""
+
     pass
 
 
 class Forbidden(HTTPException):
+    """Problem class for 403 Unauthorized errors."""
+
     def __init__(self, detail: t.Optional[str] = None):
         if detail is None:
             detail = (
@@ -124,6 +146,8 @@ class Forbidden(HTTPException):
 
 
 class OAuthScopeProblem(Forbidden):
+    """Problem class for 403 Unauthorized errors raised because of OAuth scope validation errors."""
+
     def __init__(self, token_scopes: list, required_scopes: list) -> None:
         self.required_scopes = required_scopes
         self.token_scopes = token_scopes
@@ -134,7 +158,10 @@ class OAuthScopeProblem(Forbidden):
         super().__init__(detail=detail)
 
 
-class UnsupportedMediaTypeProblem(ClientError):
+class UnsupportedMediaTypeProblem(ClientProblem):
+    """Problem class for 415 Unsupported Media Type errors which are raised when Connexion
+    receives a request with an unsupported media type header."""
+
     def __init__(self, detail: t.Optional[str] = None):
         super().__init__(status=415, title="Unsupported Media Type", detail=detail)
 
@@ -143,6 +170,9 @@ class UnsupportedMediaTypeProblem(ClientError):
 
 
 class ServerError(ProblemException):
+    """Base exception for any 5XX error. Returns 500 by default, however
+    :class:`InternalServerError` should be preferred for 500 errors."""
+
     def __init__(
         self,
         status: int = 500,
@@ -157,6 +187,8 @@ class ServerError(ProblemException):
 
 
 class InternalServerError(ServerError):
+    """Problem class for 500 Internal Server errors."""
+
     def __init__(self, detail: t.Optional[str] = None):
         if detail is None:
             detail = (
@@ -167,11 +199,17 @@ class InternalServerError(ServerError):
 
 
 class NonConformingResponse(InternalServerError):
+    """Problem class for 500 Internal Server errors raised because of a returned response not
+    matching the specification if response validation is enabled."""
+
     def __init__(self, detail: t.Optional[str] = None):
         super().__init__(detail=detail)
 
 
 class NonConformingResponseBody(NonConformingResponse):
+    """Problem class for 500 Internal Server errors raised because of a returned response body not
+    matching the specification if response validation is enabled."""
+
     def __init__(self, detail: t.Optional[str] = None):
         if detail is None:
             detail = "Response body does not conform to specification"
@@ -180,6 +218,9 @@ class NonConformingResponseBody(NonConformingResponse):
 
 
 class NonConformingResponseHeaders(NonConformingResponse):
+    """Problem class for 500 Internal Server errors raised because of a returned response headers
+    not matching the specification if response validation is enabled."""
+
     def __init__(self, detail: t.Optional[str] = None):
         if detail is None:
             detail = "Response headers do not conform to specification"
@@ -188,5 +229,8 @@ class NonConformingResponseHeaders(NonConformingResponse):
 
 
 class ResolverProblem(ServerError):
+    """Problem class for 501 Not Implemented errors raised when the resolver cannot find a view
+    function to handle the incoming request."""
+
     def __init__(self, status: int = 501, *, detail: t.Optional[str] = None):
         super().__init__(status=status, title="Not Implemented", detail=detail)
