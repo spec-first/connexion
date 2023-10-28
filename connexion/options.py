@@ -58,6 +58,12 @@ class SwaggerUIConfig:
         else:
             self.spec_path = "/swagger.json"
 
+        if options is not None and not isinstance(options, SwaggerUIOptions):
+            raise ValueError(
+                f"`swaggger_ui_options` should be of type `SwaggerUIOptions`, "
+                f"but received {type(options)} instead."
+            )
+
         self._options = options or SwaggerUIOptions()
 
     @property
