@@ -490,6 +490,11 @@ class SecurityHandlerFactory:
                 security_handler = self.security_handlers["apiKey"]
                 return security_handler().get_fn(security_scheme, required_scopes)
 
+        # Custom security handler
+        elif (scheme := security_scheme["scheme"].lower()) in self.security_handlers:
+            security_handler = self.security_handlers[scheme]
+            return security_handler().get_fn(security_scheme, required_scopes)
+
         else:
             logger.warning(
                 "... Unsupported security scheme type %s",

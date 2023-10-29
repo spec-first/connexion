@@ -32,6 +32,7 @@ extensions = [
     'sphinx_copybutton',
     'sphinx_design',
     'sphinx.ext.autosectionlabel',
+    'sphinxemoji.sphinxemoji',
 ]
 autosectionlabel_prefix_document = True
 
