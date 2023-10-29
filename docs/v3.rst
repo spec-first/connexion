@@ -127,6 +127,8 @@ Smaller breaking changes
   has been added to work with Flask's ``MethodView`` specifically.
 * Built-in support for uWSGI has been removed. You can re-add this functionality using a custom middleware.
 * The request body is now passed through for ``GET``, ``HEAD``, ``DELETE``, ``CONNECT`` and ``OPTIONS`` methods as well.
+* Error handlers registered on the on the underlying Flask app directly will be ignored. You
+  should register them on the Connexion app directly.
 
 
 Non-breaking changes

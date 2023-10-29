@@ -10,7 +10,7 @@ from connexion.exceptions import (
     OAuthResponseProblem,
     OAuthScopeProblem,
 )
-from connexion.lifecycle import ASGIRequest
+from connexion.lifecycle import ConnexionRequest
 from connexion.security import (
     NO_VALUE,
     ApiKeySecurityHandler,
@@ -61,7 +61,7 @@ def test_verify_oauth_missing_auth_header():
         somefunc, security_handler.validate_scope, ["admin"]
     )
 
-    request = ASGIRequest(scope={"type": "http", "headers": []})
+    request = ConnexionRequest(scope={"type": "http", "headers": []})
 
     assert wrapped_func(request) is NO_VALUE
 
@@ -83,7 +83,7 @@ async def test_verify_oauth_scopes_remote(monkeypatch):
         token_info_func, security_handler.validate_scope, ["admin"]
     )
 
-    request = ASGIRequest(
+    request = ConnexionRequest(
         scope={"type": "http", "headers": [[b"authorization", b"Bearer 123"]]}
     )
 
@@ -124,7 +124,7 @@ async def test_verify_oauth_invalid_local_token_response_none():
         somefunc, security_handler.validate_scope, ["admin"]
     )
 
-    request = ASGIRequest(
+    request = ConnexionRequest(
         scope={"type": "http", "headers": [[b"authorization", b"Bearer 123"]]}
     )
 
@@ -143,7 +143,7 @@ async def test_verify_oauth_scopes_local():
         token_info, security_handler.validate_scope, ["admin"]
     )
 
-    request = ASGIRequest(
+    request = ConnexionRequest(
         scope={"type": "http", "headers": [[b"authorization", b"Bearer 123"]]}
     )
 
@@ -178,7 +178,7 @@ def test_verify_basic_missing_auth_header():
     security_handler = BasicSecurityHandler()
     wrapped_func = security_handler._get_verify_func(somefunc)
 
-    request = ASGIRequest(
+    request = ConnexionRequest(
         scope={"type": "http", "headers": [[b"authorization", b"Bearer 123"]]}
     )
 
@@ -194,7 +194,7 @@ async def test_verify_basic():
     security_handler = BasicSecurityHandler()
     wrapped_func = security_handler._get_verify_func(basic_info)
 
-    request = ASGIRequest(
+    request = ConnexionRequest(
         scope={"type": "http", "headers": [[b"authorization", b"Basic Zm9vOmJhcg=="]]}
     )
 
@@ -212,7 +212,7 @@ async def test_verify_apikey_query():
         apikey_info, "query", "auth"
     )
 
-    request = ASGIRequest(scope={"type": "http", "query_string": b"auth=foobar"})
+    request = ConnexionRequest(scope={"type": "http", "query_string": b"auth=foobar"})
 
     assert await wrapped_func(request) is not None
 
@@ -228,7 +228,9 @@ async def test_verify_apikey_header():
         apikey_info, "header", "X-Auth"
     )
 
-    request = ASGIRequest(scope={"type": "http", "headers": [[b"x-auth", b"foobar"]]})
+    request = ConnexionRequest(
+        scope={"type": "http", "headers": [[b"x-auth", b"foobar"]]}
+    )
 
     assert await wrapped_func(request) is not None
 
@@ -259,16 +261,20 @@ async def test_multiple_schemes():
     wrapped_func = security_handler_factory.verify_multiple_schemes(schemes)
 
     # Single key does not succeed
-    request = ASGIRequest(scope={"type": "http", "headers": [[b"x-auth-1", b"foobar"]]})
+    request = ConnexionRequest(
+        scope={"type": "http", "headers": [[b"x-auth-1", b"foobar"]]}
+    )
 
     assert await wrapped_func(request) is NO_VALUE
 
-    request = ASGIRequest(scope={"type": "http", "headers": [[b"x-auth-2", b"bar"]]})
+    request = ConnexionRequest(
+        scope={"type": "http", "headers": [[b"x-auth-2", b"bar"]]}
+    )
 
     assert await wrapped_func(request) is NO_VALUE
 
     # Supplying both keys does succeed
-    request = ASGIRequest(
+    request = ConnexionRequest(
         scope={
             "type": "http",
             "headers": [[b"x-auth-1", b"foobar"], [b"x-auth-2", b"bar"]],
@@ -287,7 +293,7 @@ async def test_verify_security_oauthproblem():
     security_handler_factory = SecurityHandlerFactory()
     security_func = security_handler_factory.verify_security([])
 
-    request = MagicMock(spec_set=ASGIRequest)
+    request = MagicMock(spec_set=ConnexionRequest)
     with pytest.raises(OAuthProblem) as exc_info:
         await security_func(request)
 

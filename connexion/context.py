@@ -3,7 +3,7 @@ from contextvars import ContextVar
 from starlette.types import Receive, Scope
 from werkzeug.local import LocalProxy
 
-from connexion.lifecycle import ASGIRequest
+from connexion.lifecycle import ConnexionRequest
 from connexion.operations import AbstractOperation
 
 UNBOUND_MESSAGE = (
@@ -25,5 +25,5 @@ _scope: ContextVar[Scope] = ContextVar("SCOPE")
 scope = LocalProxy(_scope, unbound_message=UNBOUND_MESSAGE)
 
 request = LocalProxy(
-    lambda: ASGIRequest(scope, receive), unbound_message=UNBOUND_MESSAGE
+    lambda: ConnexionRequest(scope, receive), unbound_message=UNBOUND_MESSAGE
 )

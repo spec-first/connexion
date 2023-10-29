@@ -130,7 +130,7 @@ class WSGIRequest(_RequestInterface):
         return getattr(self._werkzeug_request, item)
 
 
-class ASGIRequest(_RequestInterface):
+class ConnexionRequest(_RequestInterface):
     """
     Implementation of the Connexion :code:`_RequestInterface` representing an ASGI request.
 
@@ -142,7 +142,9 @@ class ASGIRequest(_RequestInterface):
     """
 
     def __init__(self, *args, uri_parser=None, **kwargs):
-        self._starlette_request = StarletteRequest(*args, **kwargs)
+        # Might be set in `from_starlette_request` class method
+        if not hasattr(self, "_starlette_request"):
+            self._starlette_request = StarletteRequest(*args, **kwargs)
         self.uri_parser = uri_parser
 
         self._context = None
@@ -151,6 +153,16 @@ class ASGIRequest(_RequestInterface):
         self._query_params = None
         self._form = None
         self._files = None
+
+    @classmethod
+    def from_starlette_request(
+        cls, request: StarletteRequest, uri_parser=None
+    ) -> "ConnexionRequest":
+        # Instantiate the class, and set the `_starlette_request` property before initializing.
+        self = cls.__new__(cls)
+        self._starlette_request = request
+        self.__init__(uri_parser=uri_parser)  # type: ignore
+        return self
 
     @property
     def context(self):
@@ -226,7 +238,8 @@ class ASGIRequest(_RequestInterface):
             return await self.body() or None
 
     def __getattr__(self, item):
-        return getattr(self._starlette_request, item)
+        if self.__getattribute__("_starlette_request"):
+            return getattr(self._starlette_request, item)
 
 
 class ConnexionResponse:

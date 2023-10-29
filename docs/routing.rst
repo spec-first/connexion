@@ -59,7 +59,7 @@ operation:
 
 Note that :code:`HEAD` requests will be handled by the :code:`operationId` specified under the
 :code:`GET` operation in the specification. :code:`Connexion.request.method` can be used to
-determine which request was made. See :class:`.ASGIRequest`.
+determine which request was made. See :class:`.ConnexionRequest`.
 
 Automatic routing
 -----------------

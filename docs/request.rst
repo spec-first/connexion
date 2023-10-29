@@ -488,7 +488,7 @@ request.
 .. dropdown:: View a detailed reference of the ``connexion.request`` class
     :icon: eye
 
-    .. autoclass:: connexion.lifecycle.ASGIRequest
+    .. autoclass:: connexion.lifecycle.ConnexionRequest
        :members:
        :undoc-members:
        :inherited-members:

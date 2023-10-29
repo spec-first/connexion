@@ -54,7 +54,7 @@ import httpx
 
 from connexion.decorators.parameter import inspect_function_arguments
 from connexion.exceptions import OAuthProblem, OAuthResponseProblem, OAuthScopeProblem
-from connexion.lifecycle import ASGIRequest
+from connexion.lifecycle import ConnexionRequest
 from connexion.utils import get_function_from_name
 
 logger = logging.getLogger(__name__)
@@ -248,7 +248,7 @@ class ApiKeySecurityHandler(AbstractSecurityHandler):
     def _get_verify_func(self, api_key_info_func, loc, name):
         check_api_key_func = self.check_api_key(api_key_info_func)
 
-        def wrapper(request: ASGIRequest):
+        def wrapper(request: ConnexionRequest):
             if loc == "query":
                 api_key = request.query_params.get(name)
             elif loc == "header":

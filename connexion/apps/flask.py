@@ -6,23 +6,22 @@ import pathlib
 import typing as t
 
 import flask
-import werkzeug.exceptions
 from a2wsgi import WSGIMiddleware
 from flask import Response as FlaskResponse
-from flask import signals
 from starlette.types import Receive, Scope, Send
 
 from connexion.apps.abstract import AbstractApp
 from connexion.decorators import FlaskDecorator
-from connexion.exceptions import InternalServerError, ProblemException, ResolverError
+from connexion.exceptions import ResolverError
 from connexion.frameworks import flask as flask_utils
 from connexion.jsonifier import Jsonifier
+from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.middleware.abstract import AbstractRoutingAPI, SpecMiddleware
 from connexion.middleware.lifespan import Lifespan
 from connexion.operations import AbstractOperation
 from connexion.options import SwaggerUIOptions
-from connexion.problem import problem
 from connexion.resolver import Resolver
+from connexion.types import MaybeAwaitable
 from connexion.uri_parsing import AbstractURIParser
 
 
@@ -117,43 +116,19 @@ class FlaskApi(AbstractRoutingAPI):
         return self.blueprint.add_url_rule(rule, endpoint, view_func, **options)
 
 
-class FlaskMiddlewareApp(SpecMiddleware):
+class FlaskASGIApp(SpecMiddleware):
     def __init__(self, import_name, server_args: dict, **kwargs):
         self.app = flask.Flask(import_name, **server_args)
         self.app.json = flask_utils.FlaskJSONProvider(self.app)
         self.app.url_map.converters["float"] = flask_utils.NumberConverter
         self.app.url_map.converters["int"] = flask_utils.IntegerConverter
 
-        self.set_errors_handlers()
+        # Propagate Errors so we can handle them in the middleware
+        self.app.config["PROPAGATE_EXCEPTIONS"] = True
+        self.app.config["TRAP_BAD_REQUEST_ERRORS"] = True
+        self.app.config["TRAP_HTTP_EXCEPTIONS"] = True
 
         self.asgi_app = WSGIMiddleware(self.app.wsgi_app)
-
-    def set_errors_handlers(self):
-        for error_code in werkzeug.exceptions.default_exceptions:
-            self.app.register_error_handler(error_code, self.common_error_handler)
-
-        self.app.register_error_handler(ProblemException, self.common_error_handler)
-
-    def common_error_handler(self, exception: Exception) -> FlaskResponse:
-        """Default error handler."""
-        if isinstance(exception, ProblemException):
-            response = exception.to_problem()
-        else:
-            if not isinstance(exception, werkzeug.exceptions.HTTPException):
-                exception = InternalServerError()
-
-            response = problem(
-                title=exception.name,
-                detail=exception.description,
-                status=exception.code,
-            )
-
-        if response.status_code >= 500:
-            signals.got_request_exception.send(self.app, exception=exception)
-
-        return flask.make_response(
-            (response.body, response.status_code, response.headers)
-        )
 
     def add_api(self, specification, *, name: str = None, **kwargs):
         api = FlaskApi(specification, **kwargs)
@@ -177,7 +152,7 @@ class FlaskMiddlewareApp(SpecMiddleware):
 class FlaskApp(AbstractApp):
     """Connexion Application based on ConnexionMiddleware wrapping a Flask application."""
 
-    _middleware_app: FlaskMiddlewareApp
+    _middleware_app: FlaskASGIApp
 
     def __init__(
         self,
@@ -237,7 +212,7 @@ class FlaskApp(AbstractApp):
         :param security_map: A dictionary of security handlers to use. Defaults to
             :obj:`security.SECURITY_HANDLERS`
         """
-        self._middleware_app = FlaskMiddlewareApp(import_name, server_args or {})
+        self._middleware_app = FlaskASGIApp(import_name, server_args or {})
         self.app = self._middleware_app.app
         super().__init__(
             import_name,
@@ -266,6 +241,10 @@ class FlaskApp(AbstractApp):
         )
 
     def add_error_handler(
-        self, code_or_exception: t.Union[int, t.Type[Exception]], function: t.Callable
+        self,
+        code_or_exception: t.Union[int, t.Type[Exception]],
+        function: t.Callable[
+            [ConnexionRequest, Exception], MaybeAwaitable[ConnexionResponse]
+        ],
     ) -> None:
         self.app.register_error_handler(code_or_exception, function)

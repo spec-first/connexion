@@ -14,11 +14,13 @@ from starlette.types import Receive, Scope, Send
 from connexion.apps.abstract import AbstractApp
 from connexion.decorators import StarletteDecorator
 from connexion.jsonifier import Jsonifier
+from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.middleware.abstract import RoutedAPI, RoutedMiddleware
 from connexion.middleware.lifespan import Lifespan
 from connexion.operations import AbstractOperation
 from connexion.options import SwaggerUIOptions
 from connexion.resolver import Resolver
+from connexion.types import MaybeAwaitable
 from connexion.uri_parsing import AbstractURIParser
 
 logger = logging.getLogger(__name__)
@@ -88,7 +90,7 @@ class AsyncApi(RoutedAPI[AsyncOperation]):
         )
 
 
-class AsyncMiddlewareApp(RoutedMiddleware[AsyncApi]):
+class AsyncASGIApp(RoutedMiddleware[AsyncApi]):
 
     api_cls = AsyncApi
 
@@ -176,7 +178,7 @@ class AsyncApp(AbstractApp):
         :param security_map: A dictionary of security handlers to use. Defaults to
             :obj:`security.SECURITY_HANDLERS`
         """
-        self._middleware_app: AsyncMiddlewareApp = AsyncMiddlewareApp()
+        self._middleware_app: AsyncASGIApp = AsyncASGIApp()
 
         super().__init__(
             import_name,
@@ -205,6 +207,10 @@ class AsyncApp(AbstractApp):
         )
 
     def add_error_handler(
-        self, code_or_exception: t.Union[int, t.Type[Exception]], function: t.Callable
+        self,
+        code_or_exception: t.Union[int, t.Type[Exception]],
+        function: t.Callable[
+            [ConnexionRequest, Exception], MaybeAwaitable[ConnexionResponse]
+        ],
     ) -> None:
         self.middleware.add_error_handler(code_or_exception, function)

@@ -12,6 +12,7 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 from connexion import utils
 from connexion.handlers import ResolverErrorHandler
 from connexion.jsonifier import Jsonifier
+from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.middleware.abstract import SpecMiddleware
 from connexion.middleware.context import ContextMiddleware
 from connexion.middleware.exceptions import ExceptionMiddleware
@@ -23,6 +24,7 @@ from connexion.middleware.security import SecurityMiddleware
 from connexion.middleware.swagger_ui import SwaggerUIMiddleware
 from connexion.options import SwaggerUIOptions
 from connexion.resolver import Resolver
+from connexion.types import MaybeAwaitable
 from connexion.uri_parsing import AbstractURIParser
 from connexion.utils import inspect_function_arguments
 
@@ -419,14 +421,18 @@ class ConnexionMiddleware:
         self.apis.append(api)
 
     def add_error_handler(
-        self, code_or_exception: t.Union[int, t.Type[Exception]], function: t.Callable
+        self,
+        code_or_exception: t.Union[int, t.Type[Exception]],
+        function: t.Callable[
+            [ConnexionRequest, Exception], MaybeAwaitable[ConnexionResponse]
+        ],
     ) -> None:
         """
         Register a callable to handle application errors.
 
         :param code_or_exception: An exception class or the status code of HTTP exceptions to
             handle.
-        :param function: Callable that will handle exception.
+        :param function: Callable that will handle exception, may be async.
         """
         if self.middleware_stack is not None:
             raise RuntimeError(
