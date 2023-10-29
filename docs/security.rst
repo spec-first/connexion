@@ -66,6 +66,7 @@ For Basic authentication, the API security definition must include an
 ``x-basicInfoFunc`` definition or set the ``BASICINFO_FUNC`` environment variable.
 
 The function should accept the following arguments:
+
 - username
 - password
 - required_scopes (optional)
@@ -81,6 +82,7 @@ For Bearer authentication (JWT), the API security definition must include an
 ``x-bearerInfoFunc`` definition or set the ``BEARERINFO_FUNC`` environment variable.
 
 The function should accept the following arguments:
+
 - token
 - required_scopes (optional)
 
@@ -95,6 +97,7 @@ For API key authentication, the API security definition must include an
 ``x-apikeyInfoFunc`` definition or set the ``APIKEYINFO_FUNC`` environment variable.
 
 The function should accept the following arguments:
+
 - apikey
 - required_scopes (optional)
 
@@ -109,6 +112,7 @@ For OAuth authentication, the API security definition must include an
 ``x-tokenInfoFunc`` definition or set the ``TOKENINFO_FUNC`` environment variable.
 
 The function should accept the following arguments:
+
 - token
 - required_scopes (optional)
 
@@ -125,12 +129,14 @@ You can supply a custom scope validation func by defining ``x-scopeValidateFunc`
 or setting a ``SCOPEVALIDATE_FUNC`` environment variable.
 
 The function should accept the following arguments:
+
 - required_scopes
 - token_scopes
 
 and return a boolean indicating if the validation was successful.
 
 Deprecated features, retained for backward compatibility:
+
 - ``scope`` field can also be named ``scopes``.
 - ``sub`` field can also be named ``uid``.
 
