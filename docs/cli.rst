@@ -4,12 +4,6 @@ For convenience Connexion provides a command-line interface
 (CLI). This interface aims to be a starting point in developing or
 testing OpenAPI specifications with Connexion.
 
-The available commands are:
-
-- ``connexion run``
-
-All commands can run with -h or --help to list more information.
-
 Running an OpenAPI specification
 --------------------------------
 
@@ -22,12 +16,11 @@ To run your specification, execute in your shell:
 
 .. code-block:: bash
 
-     $ connexion run your_api.yaml --stub --debug
+     $ connexion run your_api.yaml --stub
 
 This command will tell Connexion to run the ``your_api.yaml``
 specification file attaching a stub operation (``--stub``) to the
-unavailable operations/functions of your API and in debug mode
-(``--debug``).
+unavailable operations/functions of your API, which will return a ``501 Not Implemented`` response.
 
 The basic usage of this command is:
 
@@ -58,4 +51,4 @@ Your API specification file is not required to have any ``operationId``.
 
 .. code-block:: bash
 
-    $ connexion run your_api.yaml --mock=all -v
+    $ connexion run your_api.yaml --mock=all
