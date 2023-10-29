@@ -61,7 +61,9 @@ class JSONRequestBodyValidator(AbstractRequestBodyValidator):
         except json.decoder.JSONDecodeError as e:
             raise BadRequestProblem(detail=str(e))
 
-    def _validate(self, body: dict) -> None:
+    def _validate(self, body: t.Any) -> t.Optional[dict]:
+        if not self._nullable and body is None:
+            raise BadRequestProblem("Request body must not be empty")
         try:
             return self._validator.validate(body)
         except ValidationError as exception:
