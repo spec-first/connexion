@@ -3,18 +3,19 @@ This module defines a command-line interface (CLI) that runs an OpenAPI specific
 starting point for developing your API with Connexion.
 """
 
+import argparse
 import importlib.metadata
 import logging
+import os
 import sys
-from os import path
-
-import click
-from clickclick import AliasedGroup
+import typing as t
 
 import connexion
+from connexion.apps import AbstractApp
 from connexion.mock import MockResolver
+from connexion.options import SwaggerUIOptions
 
-logger = logging.getLogger("connexion.cli")
+logger = logging.getLogger(__name__)
 
 FLASK_APP = "flask"
 ASYNC_APP = "async"
@@ -23,182 +24,144 @@ AVAILABLE_APPS = {
     ASYNC_APP: "connexion.apps.asynchronous.AsyncApp",
 }
 
-# app is defined globally so it can be passed as an import_string to `app.run`, which is needed
-# to enable reloading
-app = None
+
+def run(app: AbstractApp, args: argparse.Namespace):
+    app.run("connexion.cli:create_app", port=args.port, host=args.host, factory=True)
 
 
-def print_version(ctx, param, value):
-    if not value or ctx.resilient_parsing:
-        return
-    click.echo(f"Connexion {importlib.metadata.version('connexion')}")
-    ctx.exit()
+parser = argparse.ArgumentParser()
 
-
-@click.group(cls=AliasedGroup, context_settings={"help_option_names": ["-h", "--help"]})
-@click.option(
-    "-V",
+parser.add_argument(
     "--version",
-    is_flag=True,
-    callback=print_version,
-    expose_value=False,
-    is_eager=True,
-    help="Print the current version number and exit.",
+    action="version",
+    version=f"Connexion {importlib.metadata.version('connexion')}",
 )
-def main():
-    pass
 
+subparsers = parser.add_subparsers()
+run_parser = subparsers.add_parser("run")
+run_parser.set_defaults(func=run)
 
-@main.command()
-@click.argument("spec_file")
-@click.argument("base_module_path", required=False)
-@click.option("--port", "-p", default=5000, type=int, help="Port to listen.")
-@click.option(
-    "--host", "-H", default="127.0.0.1", type=str, help="Host interface to bind on."
+run_parser.add_argument("spec_file", help="Path to OpenAPI specification.")
+run_parser.add_argument(
+    "base_module_path", nargs="?", help="Root directory of handler code."
 )
-@click.option(
+run_parser.add_argument(
+    "-p", "--port", default=5000, type=int, help="Port to listen on."
+)
+run_parser.add_argument(
+    "-H", "--host", default="127.0.0.1", type=str, help="Host interface to bind on."
+)
+run_parser.add_argument(
     "--stub",
-    help="Returns status code 501, and `Not Implemented Yet` payload, for "
-    "the endpoints which handlers are not found.",
-    is_flag=True,
-    default=False,
+    action="store_true",
+    help="Returns status code 501, and `Not Implemented Yet` payload, for the endpoints which "
+    "handlers are not found.",
 )
-@click.option(
+run_parser.add_argument(
     "--mock",
-    type=click.Choice(["all", "notimplemented"]),
+    choices=["all", "notimplemented"],
     help="Returns example data for all endpoints or for which handlers are not found.",
 )
-@click.option(
-    "--hide-spec",
-    help="Hides the API spec in JSON format which is by default available at `/swagger.json`.",
-    is_flag=True,
-    default=False,
-)
-@click.option(
-    "--hide-console-ui",
-    help="Hides the API console UI which is by default available at `/ui`.",
-    is_flag=True,
-    default=False,
-)
-@click.option(
-    "--console-ui-url",
-    metavar="URL",
+run_parser.add_argument(
+    "--swagger-ui-path",
     help="Personalize what URL path the API console UI will be mounted.",
+    default="/ui",
 )
-@click.option(
-    "--console-ui-from",
-    metavar="PATH",
+run_parser.add_argument(
+    "--swagger-ui-template-dir",
     help="Path to a customized API console UI dashboard.",
 )
-@click.option(
+run_parser.add_argument(
     "--auth-all-paths",
     help="Enable authentication to paths not defined in the spec.",
-    is_flag=True,
-    default=False,
+    action="store_true",
 )
-@click.option(
+run_parser.add_argument(
     "--validate-responses",
     help="Enable validation of response values from operation handlers.",
-    is_flag=True,
-    default=False,
+    action="store_true",
 )
-@click.option(
+run_parser.add_argument(
     "--strict-validation",
     help="Enable strict validation of request payloads.",
-    is_flag=True,
-    default=False,
+    action="store_true",
 )
-@click.option(
-    "--debug", "-d", help="Show debugging information.", is_flag=True, default=False
+run_parser.add_argument(
+    "-v",
+    "--verbose",
+    help="Show verbose information.",
+    action="count",
+    default=0,
 )
-@click.option("--verbose", "-v", help="Show verbose information.", count=True)
-@click.option(
-    "--base-path", metavar="PATH", help="Override the basePath in the API spec."
-)
-@click.option(
+run_parser.add_argument("--base-path", help="Override the basePath in the API spec.")
+run_parser.add_argument(
     "--app-framework",
     "-f",
+    choices=list(AVAILABLE_APPS),
     default=ASYNC_APP,
-    type=click.Choice(list(AVAILABLE_APPS)),
     help="The app framework used to run the server",
 )
-def run(
-    spec_file,
-    base_module_path,
-    port,
-    host,
-    stub,
-    mock,
-    hide_spec,
-    hide_console_ui,
-    console_ui_url,
-    console_ui_from,
-    auth_all_paths,
-    validate_responses,
-    strict_validation,
-    debug,
-    verbose,
-    base_path,
-    app_framework,
-):
-    """
-    Runs a server compliant with a OpenAPI/Swagger 2.0 Specification file.
 
-    Arguments:
 
-    - SPEC_FILE: specification file that describes the server endpoints.
+def create_app(args: t.Optional[argparse.Namespace] = None) -> AbstractApp:
+    """Runs a server compliant with a OpenAPI/Swagger Specification file."""
+    if args is None:
+        args = parser.parse_args()
 
-    - BASE_MODULE_PATH (optional): filesystem path where the API endpoints handlers are going to be imported from.
-    """
-    logging_level = logging.WARN
-    if verbose > 0:
+    if args.verbose == 1:
         logging_level = logging.INFO
-
-    if debug or verbose > 1:
+    elif args.verbose >= 2:
         logging_level = logging.DEBUG
-        debug = True
+    else:
+        logging_level = logging.WARN
 
     logging.basicConfig(level=logging_level)
 
-    spec_file_full_path = path.abspath(spec_file)
-    py_module_path = base_module_path or path.dirname(spec_file_full_path)
-    sys.path.insert(1, path.abspath(py_module_path))
+    spec_file_full_path = os.path.abspath(args.spec_file)
+    py_module_path = args.base_module_path or os.path.dirname(spec_file_full_path)
+    sys.path.insert(1, os.path.abspath(py_module_path))
     logger.debug(f"Added {py_module_path} to system path.")
 
     resolver_error = None
-    if stub:
+    if args.stub:
         resolver_error = 501
 
     api_extra_args = {}
-    if mock:
-        resolver = MockResolver(mock_all=mock == "all")
+    if args.mock:
+        resolver = MockResolver(mock_all=args.mock == "all")
         api_extra_args["resolver"] = resolver
 
-    app_cls = connexion.utils.get_function_from_name(AVAILABLE_APPS[app_framework])
+    app_cls = connexion.utils.get_function_from_name(AVAILABLE_APPS[args.app_framework])
 
-    swagger_ui_options = {
-        "serve_spec": not hide_spec,
-        "swagger_path": console_ui_from or None,
-        "swagger_ui": not hide_console_ui,
-        "swagger_url": console_ui_url or None,
-    }
+    swagger_ui_options = SwaggerUIOptions(
+        swagger_ui_path=args.swagger_ui_path,
+        swagger_ui_template_dir=args.swagger_ui_template_dir,
+    )
 
-    global app
     app = app_cls(
-        __name__, auth_all_paths=auth_all_paths, swagger_ui_options=swagger_ui_options
+        __name__,
+        auth_all_paths=args.auth_all_paths,
+        swagger_ui_options=swagger_ui_options,
     )
 
     app.add_api(
         spec_file_full_path,
-        base_path=base_path,
+        base_path=args.base_path,
         resolver_error=resolver_error,
-        validate_responses=validate_responses,
-        strict_validation=strict_validation,
+        validate_responses=args.validate_responses,
+        strict_validation=args.strict_validation,
         **api_extra_args,
     )
 
-    app.run("connexion.cli:app", port=port, host=host, debug=debug)
+    return app
 
 
-if __name__ == "__main__":  # pragma: no cover
-    main()
+def main(argv: t.Optional[t.List[str]] = None) -> None:
+    if argv is None:
+        argv = sys.argv[1:]
+    if not argv:
+        argv = ["--help"]
+
+    args = parser.parse_args(argv)
+    app = create_app(args)
+    args.func(app, args)

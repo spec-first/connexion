@@ -1,10 +1,12 @@
+import contextlib
+import io
 import logging
 from unittest.mock import MagicMock
 
 import pytest
-from click.testing import CliRunner
 from connexion.cli import main
 from connexion.exceptions import ResolverError
+from connexion.options import SwaggerUIOptions
 
 from conftest import FIXTURES_FOLDER
 
@@ -52,12 +54,10 @@ def expected_arguments():
     Default values arguments used to call `connexion.App` by cli.
     """
     return {
-        "swagger_ui_options": {
-            "serve_spec": True,
-            "swagger_ui": True,
-            "swagger_path": None,
-            "swagger_url": None,
-        },
+        "swagger_ui_options": SwaggerUIOptions(
+            swagger_ui_path="/ui",
+            swagger_ui_template_dir=None,
+        ),
         "auth_all_paths": False,
     }
 
@@ -68,82 +68,61 @@ def spec_file():
 
 
 def test_print_version():
-    runner = CliRunner()
-    result = runner.invoke(main, ["--version"], catch_exceptions=False)
-    assert f"Connexion {importlib_metadata.version('connexion')}" in result.output
+
+    output = io.StringIO()
+    with pytest.raises(SystemExit) as e_info, contextlib.redirect_stdout(output):
+        main(["--version"])
+
+    assert e_info.value.code == 0
+    assert f"Connexion {importlib_metadata.version('connexion')}" in output.getvalue()
 
 
 def test_run_missing_spec():
-    runner = CliRunner()
-    result = runner.invoke(main, ["run"], catch_exceptions=False)
-    assert "Missing argument" in result.output
+    output = io.StringIO()
+    with pytest.raises(SystemExit) as e_info, contextlib.redirect_stderr(output):
+        main(["run"])
+
+    assert e_info.value.code != 0
+    assert "the following arguments are required: spec_file" in output.getvalue()
 
 
 def test_run_simple_spec(mock_app_run, spec_file):
-    runner = CliRunner()
-    runner.invoke(main, ["run", spec_file], catch_exceptions=False)
+    main(["run", spec_file])
 
     app_instance = mock_app_run()
     app_instance.run.assert_called()
 
 
 def test_run_spec_with_host(mock_app_run, spec_file):
-    runner = CliRunner()
-    runner.invoke(
-        main, ["run", spec_file, "--host", "custom.host"], catch_exceptions=False
-    )
+    main(["run", spec_file, "--host", "custom.host"])
 
     app_instance = mock_app_run()
     app_instance.run.assert_called()
 
 
 def test_run_no_options_all_default(mock_app_run, expected_arguments, spec_file):
-    runner = CliRunner()
-    runner.invoke(main, ["run", spec_file], catch_exceptions=False)
-    mock_app_run.assert_called_with("connexion.cli", **expected_arguments)
-
-
-def test_run_using_option_hide_spec(mock_app_run, expected_arguments, spec_file):
-    runner = CliRunner()
-    runner.invoke(main, ["run", spec_file, "--hide-spec"], catch_exceptions=False)
-
-    expected_arguments["swagger_ui_options"]["serve_spec"] = False
-    mock_app_run.assert_called_with("connexion.cli", **expected_arguments)
-
-
-def test_run_using_option_hide_console_ui(mock_app_run, expected_arguments, spec_file):
-    runner = CliRunner()
-    runner.invoke(main, ["run", spec_file, "--hide-console-ui"], catch_exceptions=False)
-
-    expected_arguments["swagger_ui_options"]["swagger_ui"] = False
+    main(["run", spec_file])
     mock_app_run.assert_called_with("connexion.cli", **expected_arguments)
 
 
 def test_run_using_option_console_ui_from(mock_app_run, expected_arguments, spec_file):
     user_path = "/some/path/here"
-    runner = CliRunner()
-    runner.invoke(
-        main, ["run", spec_file, "--console-ui-from", user_path], catch_exceptions=False
-    )
+    main(["run", spec_file, "--swagger-ui-template-dir", user_path])
 
-    expected_arguments["swagger_ui_options"]["swagger_path"] = user_path
+    expected_arguments["swagger_ui_options"].swagger_ui_template_dir = user_path
     mock_app_run.assert_called_with("connexion.cli", **expected_arguments)
 
 
 def test_run_using_option_console_ui_url(mock_app_run, expected_arguments, spec_file):
     user_url = "/console_ui_test"
-    runner = CliRunner()
-    runner.invoke(
-        main, ["run", spec_file, "--console-ui-url", user_url], catch_exceptions=False
-    )
+    main(["run", spec_file, "--swagger-ui-path", user_url])
 
-    expected_arguments["swagger_ui_options"]["swagger_url"] = user_url
+    expected_arguments["swagger_ui_options"].swagger_ui_path = user_url
     mock_app_run.assert_called_with("connexion.cli", **expected_arguments)
 
 
 def test_run_using_option_auth_all_paths(mock_app_run, expected_arguments, spec_file):
-    runner = CliRunner()
-    runner.invoke(main, ["run", spec_file, "--auth-all-paths"], catch_exceptions=False)
+    main(["run", spec_file, "--auth-all-paths"])
 
     expected_arguments["auth_all_paths"] = True
     mock_app_run.assert_called_with("connexion.cli", **expected_arguments)
@@ -155,8 +134,7 @@ def test_run_in_very_verbose_mode(
     logging_config = MagicMock(name="connexion.cli.logging.basicConfig")
     monkeypatch.setattr("connexion.cli.logging.basicConfig", logging_config)
 
-    runner = CliRunner()
-    runner.invoke(main, ["run", spec_file, "-vv"], catch_exceptions=False)
+    main(["run", spec_file, "-vv"])
 
     logging_config.assert_called_with(level=logging.DEBUG)
 
@@ -167,8 +145,7 @@ def test_run_in_verbose_mode(mock_app_run, expected_arguments, spec_file, monkey
     logging_config = MagicMock(name="connexion.cli.logging.basicConfig")
     monkeypatch.setattr("connexion.cli.logging.basicConfig", logging_config)
 
-    runner = CliRunner()
-    runner.invoke(main, ["run", spec_file, "-v"], catch_exceptions=False)
+    main(["run", spec_file, "-v"])
 
     logging_config.assert_called_with(level=logging.INFO)
 
@@ -176,10 +153,7 @@ def test_run_in_verbose_mode(mock_app_run, expected_arguments, spec_file, monkey
 
 
 def test_run_using_option_base_path(mock_app_run, expected_arguments, spec_file):
-    runner = CliRunner()
-    runner.invoke(
-        main, ["run", spec_file, "--base-path", "/foo"], catch_exceptions=False
-    )
+    main(["run", spec_file, "--base-path", "/foo"])
 
     expected_arguments = dict(
         base_path="/foo",
@@ -192,38 +166,25 @@ def test_run_using_option_base_path(mock_app_run, expected_arguments, spec_file)
 
 
 def test_run_unimplemented_operations(mock_app_run):
-    runner = CliRunner()
-
     spec_file = str(FIXTURES_FOLDER / "missing_implementation/swagger.yaml")
     with pytest.raises(ResolverError):
-        runner.invoke(main, ["run", spec_file], catch_exceptions=False)
+        main(["run", spec_file])
 
     spec_file = str(FIXTURES_FOLDER / "module_does_not_exist/swagger.yaml")
     with pytest.raises(ResolverError):
-        runner.invoke(main, ["run", spec_file], catch_exceptions=False)
+        main(["run", spec_file])
 
 
 def test_run_unimplemented_operations_with_stub1(mock_app_run):
-    runner = CliRunner()
-
     spec_file = str(FIXTURES_FOLDER / "missing_implementation/swagger.yaml")
-    result = runner.invoke(main, ["run", spec_file, "--stub"], catch_exceptions=False)
-    assert result.exit_code == 0
+    main(["run", spec_file, "--stub"])
 
 
 def test_run_unimplemented_operations_with_stub2(mock_app_run):
-    runner = CliRunner()
-
     spec_file = str(FIXTURES_FOLDER / "module_does_not_exist/swagger.yaml")
-    result = runner.invoke(main, ["run", spec_file, "--stub"], catch_exceptions=False)
-    assert result.exit_code == 0
+    main(["run", spec_file, "--stub"])
 
 
 def test_run_unimplemented_operations_and_mock(mock_app_run):
-    runner = CliRunner()
-
     spec_file = str(FIXTURES_FOLDER / "missing_implementation/swagger.yaml")
-    result = runner.invoke(
-        main, ["run", spec_file, "--mock=all"], catch_exceptions=False
-    )
-    assert result.exit_code == 0
+    main(["run", spec_file, "--mock=all"])
