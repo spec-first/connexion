@@ -112,6 +112,4 @@ class ExceptionMiddleware(StarletteExceptionMiddleware):
         )
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        # Needs to be set so starlette router throws exceptions instead of returning error responses
-        scope["app"] = "connexion"
         await super().__call__(scope, receive, send)

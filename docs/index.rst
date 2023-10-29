@@ -71,6 +71,7 @@ Documentation
    validation
    security
    context
+   lifespan
    cookbook
    exceptions
    cli
