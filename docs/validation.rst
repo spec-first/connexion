@@ -321,5 +321,52 @@ Which you then pass into your application or API as mentioned above.
 
 See our `enforce defaults`_ example for a full example.
 
+Custom type formats
+-------------------
+
+It is possible to define custom type formats for validation without adding a custom validator, by
+leveraging the ``jsonschema.draft4_format_checker.checks`` decorator.
+
+We can for instance create a custom `money` format.
+
+.. code-block:: python
+
+    import re
+    from jsonschema import draft4_format_checker
+
+    MONEY_RE = re.compile('^\$\s*\d+(\.\d\d)?')
+
+    @draft4_format_checker.checks('money')
+    def is_money(val):
+        if not isinstance(val, str):
+            return True
+        return MONEY_RE.match(val)
+
+
+Which you can then use in your openAPI specification:
+
+.. code-block:: yaml
+
+    type: object
+    properties:
+      title:
+        type: string
+      price_label:
+        type: string
+        format: money
+
+
+The format checker function is expected to return ``True`` when the
+value matches the expected format and return ``False`` when it
+doesn't. Also is important to verify if the type of the value you are
+trying to validate is compatible with the format. In our example we
+check if the ``val`` is of type "string" before performing any further
+checking.
+
+.. note::
+
+Keep in mind that the format checkers should be defined and registered before you run your
+application server.
+
 .. _enforce defaults: https://github.com/spec-first/connexion/tree/main/examples/enforcedefaults
 .. _jsonschema: https://github.com/python-jsonschema/jsonschema

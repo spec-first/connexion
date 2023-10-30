@@ -63,7 +63,6 @@ Documentation
    :maxdepth: 2
 
    quickstart
-   middleware
    routing
    swagger_ui
    request
@@ -72,8 +71,8 @@ Documentation
    security
    context
    lifespan
-   cookbook
    exceptions
+   middleware
    cli
    v3
 
