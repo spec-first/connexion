@@ -86,6 +86,8 @@ New in Connexion 3.0:
 - Validation is now pluggable by content type, solving longstanding issues regarding endpoints with
   multiple content types and providing a pluggable interface.
 
+For more detailed information on the changes in 3.0, see the `v3 documentation`_.
+
 How to Use
 ==========
 
@@ -180,3 +182,4 @@ project, and to Swagger/OpenAPI for their support.
 .. _Connexion's Documentation Page: http://connexion.readthedocs.org/en/latest/
 .. _Crafting effective Microservices in Python: https://jobs.zalando.com/tech/blog/crafting-effective-microservices-in-python/
 .. _issues where we are looking for contributions: https://github.com/spec-first/connexion/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22
+.. _v3 documentation: ./docs/v3.rst
