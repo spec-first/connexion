@@ -194,7 +194,15 @@ You can run your application using an ASGI server such as `uvicorn`. If you defi
 
     $ uvicorn run:app
 
-or if you installed connexion using :code:`connexion[uvicorn]`, you can run it using the
+Or with gunicorn:
+
+.. code-block:: bash
+
+    $ gunicorn -k uvicorn.workers.UvicornWorker
+
+See the `uvicorn documentation`_ for more details.
+
+If you installed connexion using :code:`connexion[uvicorn]`, you can run it using the
 :code:`run` method. This is only recommended for development:
 
 .. code-block:: python
@@ -232,6 +240,8 @@ import string. In most cases, this can be achieved as follows:
 
             .. autofunction:: connexion.ConnexionMiddleware.run
                 :noindex:
+
+.. _uvicorn documentation: https://www.uvicorn.org/deployment/
 
 The Swagger UI
 --------------
