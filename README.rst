@@ -1,16 +1,12 @@
 Connexion
 =========
 
-.. image:: https://badges.gitter.im/zalando/connexion.svg
-   :alt: Join the chat at https://gitter.im/zalando/connexion
-   :target: https://gitter.im/zalando/connexion?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
-
-.. image:: https://github.com/zalando/connexion/actions/workflows/pipeline.yml/badge.svg
+.. image:: https://github.com/spec-first/connexion/actions/workflows/pipeline.yml/badge.svg
    :alt: Build status
-   :target: https://github.com/zalando/connexion/actions/workflows/pipeline.yml
+   :target: https://github.com/spec-first/connexion/actions/workflows/pipeline.yml
 
-.. image:: https://coveralls.io/repos/github/zalando/connexion/badge.svg?branch=main
-   :target: https://coveralls.io/github/zalando/connexion?branch=main
+.. image:: https://coveralls.io/repos/github/spec-first/connexion/badge.svg?branch=main
+   :target: https://coveralls.io/github/spec-first/connexion?branch=main
    :alt: Coveralls status
 
 .. image:: https://img.shields.io/pypi/v/connexion.svg
@@ -26,7 +22,7 @@ Connexion
    :alt: Python Versions
 
 .. image:: https://img.shields.io/pypi/l/connexion.svg
-   :target: https://github.com/zalando/connexion/blob/main/LICENSE.txt
+   :target: https://github.com/spec-first/connexion/blob/main/LICENSE.txt
    :alt: License
 
 Connexion is a framework that automagically handles HTTP requests based on `OpenAPI Specification`_
@@ -575,7 +571,7 @@ Changes
 
 A full changelog is maintained on the `GitHub releases page`_.
 
-.. _GitHub releases page: https://github.com/zalando/connexion/releases
+.. _GitHub releases page: https://github.com/spec-first/connexion/releases
 
 Contributing to Connexion/TODOs
 ===============================
@@ -596,7 +592,7 @@ at our `ARCHITECTURE.rst <ARCHITECTURE.rst>`_.
 
 Unless you explicitly state otherwise in advance, any non trivial
 contribution intentionally submitted for inclusion in this project by you
-to the steward of this repository (Zalando SE, Berlin) shall be under the
+to the steward of this repository shall be under the
 terms and conditions of Apache License 2.0 written below, without any
 additional copyright information, terms or conditions.
 
@@ -613,17 +609,7 @@ Thanks
 We'd like to thank all of Connexion's contributors for working on this
 project, and to Swagger/OpenAPI for their support.
 
-License
-===================
-
-Copyright 2015 Zalando SE
-
-Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0.
-
-Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
-
 .. _Flask: http://flask.pocoo.org/
-.. _issues waffle board: https://waffle.io/zalando/connexion
 .. _API First: https://opensource.zalando.com/restful-api-guidelines/#api-first
 .. _Hug: https://github.com/timothycrosley/hug
 .. _Swagger: http://swagger.io/open-source-integrations/
