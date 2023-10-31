@@ -29,10 +29,10 @@ Connexion is a framework that automagically handles HTTP requests based on `Open
 (formerly known as Swagger Spec) of your API described in `YAML format`_. Connexion allows you to
 write an OpenAPI specification, then maps the endpoints to your Python functions; this makes it
 unique, as many tools generate the specification based on your Python code. You can describe your
-REST API in as much detail as you want; then Connexion guarantees that it will work as you
+REST API in as much detail as you want; Connexion then guarantees that it will work as you
 specified.
 
-We built Connexion this way in order to:
+Connexion was built this way in order to:
 
 - simplify the development process
 - confirm expectations about what your API will look like
