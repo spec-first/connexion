@@ -95,7 +95,7 @@ How to Use
 Prerequisites
 -------------
 
-Python 3.6+
+Python 3.8+
 
 Installing It
 -------------
