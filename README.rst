@@ -80,7 +80,11 @@ Other Sources/Mentions
 New in Connexion 3.0:
 ---------------------
 
-.. include:: ./docs/v3.rst
+- Connexion can now be used as middleware to supercharge any ASGI or WSGI compatible framework.
+- Aiohttp support has been dropped in favor of an ASGI compatible ``AsyncApp`` built on top of Starlette.
+- Connexion functionality is now pluggable by adding or removing middleware.
+- Validation is now pluggable by content type, solving longstanding issues regarding endpoints with
+  multiple content types and providing a pluggable interface.
 
 How to Use
 ==========
