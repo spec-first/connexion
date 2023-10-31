@@ -171,23 +171,15 @@ Thanks
 We'd like to thank all of Connexion's contributors for working on this
 project, and to Swagger/OpenAPI for their support.
 
-.. _Flask: http://flask.pocoo.org/
 .. _API First: https://opensource.zalando.com/restful-api-guidelines/#api-first
 .. _Hug: https://github.com/timothycrosley/hug
 .. _Swagger: http://swagger.io/open-source-integrations/
-.. _Jinja2: http://jinja.pocoo.org/
-.. _rfc6750: https://tools.ietf.org/html/rfc6750
 .. _OpenAPI Specification: https://www.openapis.org/
 .. _OpenAPI 3.0 Style Values: https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#style-values
 .. _Operation Object: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#operation-object
 .. _swager.spec.security_definition: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-definitions-object
 .. _swager.spec.security_requirement: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-requirement-object
 .. _YAML format: https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md#format
-.. _token information: https://tools.ietf.org/html/rfc6749
-.. _Tornado: http://www.tornadoweb.org/en/stable/
-.. _described by Flask: http://flask.pocoo.org/snippets/111/
-.. _werkzeug: http://werkzeug.pocoo.org/
 .. _Connexion's Documentation Page: http://connexion.readthedocs.org/en/latest/
 .. _Crafting effective Microservices in Python: https://jobs.zalando.com/tech/blog/crafting-effective-microservices-in-python/
-.. _issues where we are looking for contributions: https://github.com/zalando/connexion/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22
-.. _HTTP Methods work in Flask: http://flask.pocoo.org/docs/1.0/quickstart/#http-methods
+.. _issues where we are looking for contributions: https://github.com/spec-first/connexion/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22
