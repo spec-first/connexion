@@ -1,29 +1,21 @@
-Connexion
-=========
+.. raw:: html
 
-.. image:: https://github.com/spec-first/connexion/actions/workflows/pipeline.yml/badge.svg
-   :alt: Build status
-   :target: https://github.com/spec-first/connexion/actions/workflows/pipeline.yml
+   <a id="top"></a>
+   <p align="center">
+       <img src="docs/images/logo_banner.svg" width="100%"/>
+   </p>
+   <p align="center">
+       <a href="https://pypi.org/project/connexion"><img alt="coveralls" src="https://img.shields.io/pypi/status/connexion.svg?style=flat-square&color=brightgreen"></a>
+       <a href="https://pypi.org/project/connexion"><img alt="PyPI version" src="https://img.shields.io/pypi/v/connexion?color=brightgreen&style=flat-square"></a>
+       <a href="https://github.com/spec-first/connexion/blob/feature/update-readme/LICENSE.txt"><img alt="License" src="https://img.shields.io/pypi/l/connexion?style=flat-square&color=brightgreen"></a>
+       <a href="https://github.com/spec-first/connexion/actions/workflows/pipeline.yml"><img alt="GitHub Workflow Status" src="https://img.shields.io/github/actions/workflow/status/spec-first/connexion/pipeline.yml?style=flat-square"></a>
+       <a href="https://coveralls.io/github/ml6team/fondant?branch=main"><img alt="Coveralls" src="https://img.shields.io/coverallsCoverage/github/spec-first/connexion?style=flat-square"></a>
+       <br>
+       <br>
+       <a href="https://connexion.readthedocs.io/en/latest/"><strong>Explore the docs »</strong></a>
+   </p>
 
-.. image:: https://coveralls.io/repos/github/spec-first/connexion/badge.svg?branch=main
-   :target: https://coveralls.io/github/spec-first/connexion?branch=main
-   :alt: Coveralls status
-
-.. image:: https://img.shields.io/pypi/v/connexion.svg
-   :target: https://pypi.python.org/pypi/connexion
-   :alt: Latest Version
-
-.. image:: https://img.shields.io/pypi/status/connexion.svg
-   :target: https://pypi.python.org/pypi/connexion
-   :alt: Development Status
-
-.. image:: https://img.shields.io/pypi/pyversions/connexion.svg
-   :target: https://pypi.python.org/pypi/connexion
-   :alt: Python Versions
-
-.. image:: https://img.shields.io/pypi/l/connexion.svg
-   :target: https://github.com/spec-first/connexion/blob/main/LICENSE.txt
-   :alt: License
+----
 
 Connexion is a framework that automagically handles HTTP requests based on `OpenAPI Specification`_
 (formerly known as Swagger Spec) of your API described in `YAML format`_. Connexion allows you to
@@ -36,6 +28,7 @@ Connexion was built this way in order to:
 
 - simplify the development process
 - confirm expectations about what your API will look like
+
 
 Connexion Features:
 -------------------
@@ -63,7 +56,7 @@ single line of code.
 
 If multiple teams depend on your APIs, you can use Connexion to easily
 send them the documentation of your API. This guarantees that your API will
-follow the specification that you wrote. This is a different process from 
+follow the specification that you wrote. This is a different process from
 the one offered by most frameworks, which generate a specification
 *after* you've written the code.
 Some disadvantages of generating specifications based on code is that
