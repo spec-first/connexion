@@ -390,7 +390,8 @@ Convertors are used by defining them as the ``format`` in the parameter specific
 Specify a route parameter's type as ``integer`` or ``number`` or its type as
 ``string`` and its format as ``path`` to use these converters.
 
-Path parameters are passed as arguments to your python function, see :doc:`parameters`.
+Path parameters are passed as :ref:`arguments <request:Automatic parameter handling>` to your
+python function.
 
 Individual paths
 ----------------

@@ -13,11 +13,11 @@ def get_secret(user) -> str:
     return f"You are: {user}"
 
 
-def token_info(access_token) -> dict:
-    uid = TOKENS.get(access_token)
-    if not uid:
+def token_info(token) -> dict:
+    sub = TOKENS.get(token)
+    if not sub:
         return None
-    return {"uid": uid, "scope": ["uid"]}
+    return {"sub": sub, "scope": ["uid"]}
 
 
 app = connexion.FlaskApp(__name__, specification_dir="spec")

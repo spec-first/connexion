@@ -16,12 +16,12 @@ def get_tokeninfo() -> dict:
     except Exception:
         access_token = ""
 
-    uid = TOKENS.get(access_token)
+    sub = TOKENS.get(access_token)
 
-    if not uid:
+    if not sub:
         return "No such token", 401
 
-    return {"uid": uid, "scope": ["uid"]}
+    return {"sub": sub, "scope": ["uid"]}
 
 
 if __name__ == "__main__":
