@@ -61,7 +61,14 @@ incentivizes you to write the specification so that all of your
 developers can understand what your API does, even before you write a
 single line of code.
 
-If multiple teams depend on your APIs, you can use Connexion to easily send them the documentation of your API. This guarantees that your API will follow the specification that you wrote. This is a different process from that offered by frameworks such as Hug_, which generates a specification *after* you've written the code. Some disadvantages of generating specifications based on code is that they often end up lacking details or mix your documentation with the code logic of your application.
+If multiple teams depend on your APIs, you can use Connexion to easily
+send them the documentation of your API. This guarantees that your API will
+follow the specification that you wrote. This is a different process from 
+the one offered by most frameworks, which generate a specification
+*after* you've written the code.
+Some disadvantages of generating specifications based on code is that
+they often end up lacking details or mix your documentation with the code
+logic of your application.
 
 Other Sources/Mentions
 ----------------------
