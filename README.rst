@@ -240,7 +240,7 @@ project, Swagger/OpenAPI for their support, and Zalando for originally developin
 Sponsors
 --------
 
-.. image:: ./docs/images/sponsors/ML6.png
+.. image:: https://github.com/spec-first/connexion/blob/main/docs/images/sponsors/ML6.png
    :alt: GitHub Sponsors
    :target: https://www.ml6.eu
 
@@ -282,7 +282,7 @@ install the pre-commit hooks to automatically run black formatting and static an
     pre-commit install
 
 You can find out more about how Connexion works and where to apply your changes by having a look
-at our `architecture <./docs/images/architecture.png>`_.
+at our `architecture <https://github.com/spec-first/connexion/blob/main/docs/images/architecture.png>`_.
 
 Unless you explicitly state otherwise in advance, any non trivial
 contribution intentionally submitted for inclusion in this project by you
@@ -320,4 +320,4 @@ Tools to help you work spec-first:
 .. _Online swagger editor: https://editor.swagger.io/
 .. _VS Code plugin: https://marketplace.visualstudio.com/items?itemName=42Crunch.vscode-openapi
 .. _Pycharm plugin: https://plugins.jetbrains.com/plugin/14837-openapi-swagger-editor
-.. _examples: ./examples
+.. _examples: https://github.com/spec-first/connexion/blob/main/examples
