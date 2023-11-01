@@ -88,3 +88,10 @@ def test_errors(problem_app):
         "Invalid Content-type (text/html)"
     )
     assert unsupported_media_type_body["status"] == 415
+
+
+def test_should_raise_400_for_no_json(simple_app):
+    app_client = simple_app.test_client()
+    response = app_client.post("/v1.0/test-empty-object-body")
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Request body must not be empty"
