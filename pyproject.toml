@@ -2,7 +2,7 @@
 name = "connexion"
 version = "3.0.dev0"
 description = "Connexion - API first applications with OpenAPI/Swagger"
-readme = "README.rst"
+readme = "README.md"
 keywords = ["api", "swagger", "openapi"]
 license = "Apache-2.0"
 authors = [
