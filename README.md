@@ -1,6 +1,6 @@
  <a id="top"></a>
  <p align="center">
-     <img src="docs/images/logo_banner.svg" width="100%"/>
+     <img src="https://raw.githubusercontent.com/spec-first/connexion/main/docs/images/logo_banner.svg" width="100%"/>
  </p>
  <p align="center">
      <a href="https://pypi.org/project/connexion"><img alt="coveralls" src="https://img.shields.io/pypi/status/connexion.svg?style=flat-square&color=brightgreen"></a>
@@ -213,7 +213,7 @@ project, Swagger/OpenAPI for their support, and Zalando for originally developin
 
 ### Sponsors
 
-[![ML6](https://github.com/spec-first/connexion/blob/main/docs/images/sponsors/ML6.png)][ML6]
+[![ML6](https://raw.githubusercontent.com/spec-first/connexion/main/docs/images/sponsors/ML6.png)][ML6]
 
 Sponsors help us dedicate time to maintain Connexion. Want to help?
 
