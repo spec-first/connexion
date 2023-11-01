@@ -79,8 +79,8 @@ logic of your application.
 How to Use
 ==========
 
-Installing It
--------------
+Installation
+------------
 
 You can install connexion using pip:
 
@@ -233,7 +233,21 @@ Thanks
 ======
 
 We'd like to thank all of Connexion's contributors for working on this
-project, and to Swagger/OpenAPI for their support.
+project, Swagger/OpenAPI for their support, and Zalando for originally developing and releasing Connexion.
+
+Sponsors
+--------
+
+.. image:: ./docs/images/sponsors/ML6.png
+   :alt: GitHub Sponsors
+   :target: https://www.ml6.eu
+
+|
+Sponsors help us dedicate time to maintain Connexion. Want to help?
+
+.. raw:: html
+
+   <a href="https://github.com/sponsors/spec-first"><strong>Explore the options »</strong></a>
 
 .. raw:: html
 
