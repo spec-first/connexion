@@ -6,11 +6,11 @@ readme = "README.rst"
 keywords = ["api", "swagger", "openapi"]
 license = "Apache-2.0"
 authors = [
+    "Robbe Sneyders <robbe.sneyders@gmail.com>",
+    "Ruwan Lambrichts <ruwan.lambrichts@ml6.eu>",
     "Daniel Grossmann-Kavanagh <me@danielgk.com>",
     "Henning Jacobs <henning.jacobs@zalando.de>",
     "João Santos <joao.santos@zalando.de>",
-    "Robbe Sneyders <robbe.sneyders@gmail.com>",
-    "Ruwan Lambrichts <ruwan.lambrichts@ml6.eu>",
 ]
 maintainers = [
     "Robbe Sneyders <robbe.sneyders@gmail.com>",
