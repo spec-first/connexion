@@ -70,7 +70,7 @@ class FormDataValidator(AbstractRequestBodyValidator):
 
         return data
 
-    def _validate(self, body: t.Any) -> t.Optional[dict]:
+    def _validate(self, body: t.Any) -> t.Optional[dict]:  # type: ignore[return]
         if not isinstance(body, dict):
             raise BadRequestProblem("Parsed body must be a mapping")
         if self._strict_validation:
