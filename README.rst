@@ -33,18 +33,18 @@ It works either standalone, or in combination with any ASGI or WSGI-compatible f
    </p>
 
 
-Features
-========
+✨ Features
+===========
 
 Connexion provides the following functionality **based on your specification**:
 
-- **Automatic route registration**, no ``@route`` decorators needed
-- **Authentication**, split from your application logic
-- **Request and response validation** of headers, parameters, and body
-- **Parameter parsing and injection**, no request object needed
-- **Response serialization**, you can return regular Python objects
-- **A Swagger UI console** with live documentation and ‘try it out’ feature
-- **Pluggability**, in all dimensions
+- 🚏 **Automatic route registration**, no ``@route`` decorators needed
+- 🔒 **Authentication**, split from your application logic
+- 🔎 **Request and response validation** of headers, parameters, and body
+- 📬 **Parameter parsing and injection**, no request object needed
+- 📨 **Response serialization**, you can return regular Python objects
+- 📺 **A Swagger UI console** with live documentation and ‘try it out’ feature
+- 🧩 **Pluggability**, in all dimensions
 
 Connexion also **helps you write your OpenAPI specification** and develop against it by providing a command line interface which lets you test and mock your specification.
 
@@ -56,8 +56,8 @@ Connexion also **helps you write your OpenAPI specification** and develop agains
 
    <p align="right">(<a href="#top">back to top</a>)</p>
 
-Why Connexion
-=============
+🪤 Why Connexion
+================
 
 With Connexion, you write the spec first. Connexion then calls your Python
 code, handling the mapping from the specification to the code. This
@@ -78,8 +78,8 @@ logic of your application.
 
    <p align="right">(<a href="#top">back to top</a>)</p>
 
-How to Use
-==========
+⚒️ How to Use
+=============
 
 Installation
 ------------
@@ -231,8 +231,8 @@ See the `examples`_ folder for more examples.
 
    <p align="right">(<a href="#top">back to top</a>)</p>
 
-Thanks
-======
+🙏 Thanks
+=========
 
 We'd like to thank all of Connexion's contributors for working on this
 project, Swagger/OpenAPI for their support, and Zalando for originally developing and releasing Connexion.
@@ -255,8 +255,8 @@ Sponsors help us dedicate time to maintain Connexion. Want to help?
 
    <p align="right">(<a href="#top">back to top</a>)</p>
 
-Changes
-=======
+📜 Changes
+==========
 
 A full changelog is maintained on the `GitHub releases page`_.
 
@@ -266,8 +266,8 @@ A full changelog is maintained on the `GitHub releases page`_.
 
    <p align="right">(<a href="#top">back to top</a>)</p>
 
-Contributing
-============
+🤲 Contributing
+===============
 
 We welcome your ideas, issues, and pull requests. Just follow the
 usual/standard GitHub practices.
@@ -294,8 +294,8 @@ additional copyright information, terms or conditions.
 
    <p align="right">(<a href="#top">back to top</a>)</p>
 
-Recommended Resources
----------------------
+📚 Recommended Resources
+========================
 
 About the advantages of working spec-first:
 
