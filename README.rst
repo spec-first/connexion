@@ -282,7 +282,7 @@ install the pre-commit hooks to automatically run black formatting and static an
     pre-commit install
 
 You can find out more about how Connexion works and where to apply your changes by having a look
-at our `ARCHITECTURE.rst <ARCHITECTURE.rst>`_.
+at our `architecture <./docs/images/architecture.png>`_.
 
 Unless you explicitly state otherwise in advance, any non trivial
 contribution intentionally submitted for inclusion in this project by you
