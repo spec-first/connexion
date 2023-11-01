@@ -135,6 +135,7 @@ class ConnexionRequest(_RequestInterface):
     Implementation of the Connexion :code:`_RequestInterface` representing an ASGI request.
 
     .. attribute:: _starlette_request
+        :noindex:
 
         This class wraps a Starlette `Request <https://www.starlette.io/requests/#request>`_,
         and provides access to its attributes by proxy.

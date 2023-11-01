@@ -365,8 +365,8 @@ checking.
 
 .. note::
 
-Keep in mind that the format checkers should be defined and registered before you run your
-application server.
+    Keep in mind that the format checkers should be defined and registered before you run your
+    application server.
 
 .. _enforce defaults: https://github.com/spec-first/connexion/tree/main/examples/enforcedefaults
 .. _jsonschema: https://github.com/python-jsonschema/jsonschema

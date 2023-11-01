@@ -1,10 +1,3 @@
-.. warning::
-
-    Do not use Connexion 3.0 in production yet!
-
-    Connexion 3.0 is currently available in alpha to give users the ability to test it and provide
-    feedback while we further polish the codebase and update the documentation.
-
 Getting started with Connexion 3.0
 ==================================
 
@@ -16,14 +9,19 @@ Connexion 3.0 brings some major changes compared to 2.X:
 * Validation is now pluggable by content type, solving longstanding issues regarding endpoints with
   multiple content types and providing a pluggable interface.
 
-Install alpha version
+Install Connexion 3
 ---------------------
 
-Install the latest alpha version using
+Install the latest version using
 
 .. code-block:: bash
 
-  pip install --pre connexion
+  pip install connexion
+
+.. note::
+
+    Connexion 3 will be released on 02/11/23. Until then, you can add the `--pre` flag to install
+    a pre-release version.
 
 Using stand-alone Connexion
 ---------------------------
@@ -144,12 +142,12 @@ Non-breaking changes
 Feedback
 --------
 
-We would really love to hear from you. By trying Connexion 3 now and providing feedback, you get the opportunity to
-make sure that updating your application will be as painless as possible, while helping to create a more stable GA
-release.
+We would really love to hear from you, so let us know if you have any feedback or questions. We'd
+like to make the migration for our users as easy and possible.
 
-* For questions, comments, and feedback, please comment on the `Connexion 3 alpha release announcement`_
-* For issues specific to the alpha version, please create a new issue and mark it with the Connexion 3 milestone
-* For missing documentation, please comment on https://github.com/spec-first/connexion/issues/1531
+* For questions, comments, and feedback, please comment on the `discussion`_ which will be
+  created and pinned after the release.
+* For issues, please open an issue on our `Github tracker`_
 
-.. _Connexion 3 alpha release announcement: https://github.com/spec-first/connexion/discussions/1660
+.. _discussion: https://github.com/spec-first/connexion/discussions
+.. _Github tracker: https://github.com/spec-first/connexion/issues
