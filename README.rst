@@ -12,12 +12,14 @@
        <a href="https://coveralls.io/github/ml6team/fondant?branch=main"><img alt="Coveralls" src="https://img.shields.io/coverallsCoverage/github/spec-first/connexion?style=flat-square"></a>
        <br>
        <br>
-       <a href="https://connexion.readthedocs.io/en/latest/"><strong>Explore the docs »</strong></a>
+       <a href="https://connexion.readthedocs.io/en/stable/"><strong>Explore the docs »</strong></a>
    </p>
 
 ----
 
-Connexion is a modern Python web framework that makes spec-first and api-first development easy. You describe your API in an OpenAPI (or swagger) specification with as much detail as you want and Connexion will guarantee that it works as you specified.
+Connexion is a modern Python web framework that makes spec-first and api-first development easy.
+You describe your API in an `OpenAPI`_ (or `Swagger`_) specification with as much detail as you
+want and Connexion will guarantee that it works as you specified.
 
 It works either standalone, or in combination with any ASGI or WSGI-compatible framework!
 
@@ -292,20 +294,30 @@ additional copyright information, terms or conditions.
 
    <p align="right">(<a href="#top">back to top</a>)</p>
 
-Additional Resources
---------------------
+Recommended Resources
+---------------------
 
-.. _API First: https://opensource.zalando.com/restful-api-guidelines/#api-first
-.. _Hug: https://github.com/timothycrosley/hug
+About the advantages of working spec-first:
+
+* `Blog Atlassian`_
+* `API guidelines Zalando`_
+* `Blog ML6`_
+* `Blog Zalando`_
+
+Tools to help you work spec-first:
+
+* `Online swagger editor`_
+* `VS Code plugin`_
+* `Pycharm plugin`_
+
+.. _v3 documentation: https://connexion.readthedocs.io/en/latest/v3.html
+.. _OpenAPI: https://openapis.org/
 .. _Swagger: http://swagger.io/open-source-integrations/
-.. _OpenAPI Specification: https://www.openapis.org/
-.. _OpenAPI 3.0 Style Values: https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#style-values
-.. _Operation Object: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#operation-object
-.. _swager.spec.security_definition: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-definitions-object
-.. _swager.spec.security_requirement: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#security-requirement-object
-.. _YAML format: https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md#format
-.. _Connexion's Documentation Page: http://connexion.readthedocs.org/en/latest/
-.. _Crafting effective Microservices in Python: https://jobs.zalando.com/tech/blog/crafting-effective-microservices-in-python/
-.. _issues where we are looking for contributions: https://github.com/spec-first/connexion/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22
-.. _v3 documentation: ./docs/v3.rst
+.. _Blog atlassian: https://www.atlassian.com/blog/technology/spec-first-api-development
+.. _Blog ML6: https://blog.ml6.eu/why-we-decided-to-help-maintain-connexion-c9f449877083
+.. _Blog Zalando: https://engineering.zalando.com/posts/2016/12/crafting-effective-microservices-in-python.html
+.. _API guidelines Zalando: https://opensource.zalando.com/restful-api-guidelines/#api-first
+.. _Online swagger editor: https://editor.swagger.io/
+.. _VS Code plugin: https://marketplace.visualstudio.com/items?itemName=42Crunch.vscode-openapi
+.. _Pycharm plugin: https://plugins.jetbrains.com/plugin/14837-openapi-swagger-editor
 .. _examples: ./examples
