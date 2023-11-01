@@ -198,7 +198,7 @@ Or with gunicorn:
 
 .. code-block:: bash
 
-    $ gunicorn -k uvicorn.workers.UvicornWorker
+    $ gunicorn -k uvicorn.workers.UvicornWorker run:app
 
 See the `uvicorn documentation`_ for more details.
 
