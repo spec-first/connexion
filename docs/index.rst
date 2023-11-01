@@ -3,12 +3,11 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-.. warning::
+.. important::
 
-    This is the WIP documentation for Connexion 3.0 which is currently in alpha. You might want to
-    read the documentation for the latest `stable version`_ instead.
+    📢 **Connexion 3 was recently released!**
 
-    If you want to try out Connexion 3.0, refer to the :ref: `v3`_ section.
+    If you are upgrading from Connexion 2, refer to the :doc:`v3` section.
 
 Welcome to Connexion's documentation!
 =====================================
@@ -73,6 +72,7 @@ Documentation
    lifespan
    exceptions
    middleware
+   testing
    cli
    v3
 
