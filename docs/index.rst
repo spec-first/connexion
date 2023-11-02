@@ -36,6 +36,26 @@ command line interface which lets you test and mock your specification.
 
     connexion run openapi.yaml
 
+Sponsors
+--------
+
+.. image:: https://raw.githubusercontent.com/spec-first/connexion/main/docs/images/sponsors/ML6.png
+   :alt: ML6
+   :height: 100px
+   :target: https://www.ml6.eu
+
+.. image:: https://raw.githubusercontent.com/spec-first/connexion/main/docs/images/sponsors/Fern.png
+   :alt: Fern
+   :height: 100px
+   :target: www.devmark.ai/fern/?utm_source=connexion&utm_loc=website&utm_type=logo
+
+Sponsors help us dedicate time to maintain Connexion. Want to help?
+
+.. raw:: html
+
+   <a href="https://github.com/sponsors/spec-first"><strong>Explore the options »</strong></a>
+
+|
 
 Why Connexion?
 --------------

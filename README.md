@@ -48,6 +48,18 @@ Connexion also **helps you write your OpenAPI specification** and develop agains
 
  <p align="right">(<a href="#top">back to top</a>)</p>
 
+
+## 🫶 Sponsors
+
+<a href="https://www.ml6.eu"><img src="https://raw.githubusercontent.com/spec-first/connexion/main/docs/images/sponsors/ML6.png" title=ML6 height="100"></a>
+<a href="https://www.devmark.ai/fern/?utm_source=connexion&utm_loc=readme&utm_type=logo"><img src="https://raw.githubusercontent.com/spec-first/connexion/main/docs/images/sponsors/Fern.png" title=Fern height="100"></a>
+
+Sponsors help us dedicate time to maintain Connexion. Want to help?
+
+<a href="https://github.com/sponsors/spec-first"><strong>Explore the options »</strong></a>
+
+<p align="right">(<a href="#top">back to top</a>)</p>
+
 ## 🪤 Why Connexion
 
 With Connexion, you write the spec first. Connexion then calls your Python
@@ -206,21 +218,6 @@ See the [examples][examples] folder for more examples.
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
-## 🙏 Thanks
-
-We'd like to thank all of Connexion's contributors for working on this
-project, Swagger/OpenAPI for their support, and Zalando for originally developing and releasing Connexion.
-
-### Sponsors
-
-[![ML6](https://raw.githubusercontent.com/spec-first/connexion/main/docs/images/sponsors/ML6.png)][ML6]
-
-Sponsors help us dedicate time to maintain Connexion. Want to help?
-
-<a href="https://github.com/sponsors/spec-first"><strong>Explore the options »</strong></a>
-
-<p align="right">(<a href="#top">back to top</a>)</p>
-
 ## 📜 Changes
 
 A full changelog is maintained on the [GitHub releases page][Releases].
@@ -252,6 +249,11 @@ additional copyright information, terms or conditions.
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
+## 🙏 Thanks
+
+We'd like to thank all of Connexion's contributors for working on this
+project, Swagger/OpenAPI for their support, and Zalando for originally developing and releasing Connexion.
+
 ## 📚 Recommended Resources
 
 About the advantages of working spec-first:
@@ -277,6 +279,5 @@ Tools to help you work spec-first:
 [VS Code plugin]: https://marketplace.visualstudio.com/items?itemName=42Crunch.vscode-openapi
 [Pycharm plugin]: https://plugins.jetbrains.com/plugin/14837-openapi-swagger-editor
 [examples]: https://github.com/spec-first/connexion/blob/main/examples
-[ML6]: https://www.ml6.eu
 [Releases]: https://github.com/spec-first/connexion/releases
 [Architecture]: https://github.com/spec-first/connexion/blob/main/docs/images/architecture.png
