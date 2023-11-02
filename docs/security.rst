@@ -152,12 +152,29 @@ Multiple Authentication Schemes
 -------------------------------
 
 With Connexion, it is also possible to combine multiple authentication schemes
-as described in the `OpenAPI specification`_. When multiple authentication
-schemes are combined using logical AND, the ``token_info`` argument will
-consist of a dictionary mapping the names of the security scheme to their
+as described in the `OpenAPI specification`_.
+
+AND
+```
+
+When multiple authentication schemes are combined using logical AND, the ``token_info`` argument
+will consist of a dictionary mapping the names of the security scheme to their
 corresponding ``token_info``.
 
 Multiple OAuth2 security schemes in AND fashion are not supported.
+
+OR
+``
+
+When multiple authentication schemes are combined using logical OR, the schemes are checked in
+the order they are listed in the OpenAPI spec. For each security scheme the following logic is
+applied:
+
+- If a token matching the security schem is found in the request and is valid, allow the request
+  to pass
+- If a token matching the security scheme is found in the request and is invalid, return an error
+- If no token matching the security scheme is found in the request, move on to the next scheme,
+  or return a 401 error if this was the last scheme
 
 .. _OpenAPI specification: https://swagger.io/docs/specification/authentication/#multiple
 
