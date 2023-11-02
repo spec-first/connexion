@@ -1,34 +1,48 @@
-Getting started with Connexion 3.0
-==================================
+Connexion 3.0: API-first for all
+================================
 
-Connexion 3.0 brings some major changes compared to 2.X:
+**We are excited to announce the release of Connexion 3.0!** 🎉
 
-* Connexion can now be used as middleware to supercharge any ASGI or WSGI compatible framework.
-* Aiohttp support has been dropped in favor of an ASGI compatible ``AsyncApp`` built on top of Starlette.
-* Connexion functionality is now pluggable by adding or removing middleware.
-* Validation is now pluggable by content type, solving longstanding issues regarding endpoints with
-  multiple content types and providing a pluggable interface.
+Connexion 3 fundamentally changes how Connexion is designed and implemented, and how it
+fits into the wider Python API ecosystem. We adopted the ASGI interface, which makes Connexion both
+modular and well-integrated with most modern Python API tooling.
 
-Install Connexion 3
----------------------
+**It brings some major changes compared to 2.X:**
 
-Install the latest version using
+* The improved ``App`` and new ``AsyncApp`` allow you to use Connexion as a stand-alone framework
 
-.. code-block:: bash
+  * The ``App`` interface was extended so you no longer have to care about the framework used
+    underneath
 
-  pip install connexion
+* Connexion can now be used as middleware to supercharge any ASGI or WSGI-compatible framework
+  with its spec-based functionality
+* Connexion is now pluggable in many dimensions:
 
-.. note::
+  * All Connexion functionality is pluggable by adding or removing middleware from its stack
+  * Validation is now pluggable by content type, solving longstanding issues regarding endpoints
+    with multiple content types and making it easy to add validation for additional content types
+  * Authentication is now pluggable by security scheme, making it easy to customize the behavior or
+    add support for additional security schemes.
 
-    Connexion 3 will be released on 02/11/23. Until then, you can add the `--pre` flag to install
-    a pre-release version.
+* Aiohttp support has been dropped due to lack of ASGI support
+* We spent a lot of effort on extending and improving `our documentation`_
+
+**Read on below to discover more changes.** 👇
+
+Or read our `in-depth blog post`_ on the redesign.
+
+.. _in-depth blog post: https://medium.com/@robbe.sneyders/a5dc17e81ff8?source=friends_link&sk=de5a7a67ccae8a03752f5e8e1dc68d48
+.. _our documentation: https://connexion.readthedocs.io/en/stable/
+
+Getting started with Connexion 3
+--------------------------------
 
 Using stand-alone Connexion
 ---------------------------
 
 You can use Connexion as a stand-alone web framework, using one of the available apps:
 
-* The ``FlaskApp``, which is built on top of Flask as known from Connexion 2.X.
+* The ``App`` (alias ``FlaskApp``), which is built on top of Flask as known from Connexion 2.X.
 * The ``AsyncApp``, which is built on top of starlette and provides native asynchronous functionality.
 
 If you don't require compatibility with the Flask ecosystem, we recommend to use the ``AsyncApp``.
@@ -138,6 +152,13 @@ Non-breaking changes
 * Connexion now exposes ``context``, ``operation``, ``receive``, ``scope`` as global request-level context
 * Connexion now provides a ``DefaultsJSONRequestBodyValidator`` to fill in default values in received
   request bodies.
+
+Full changelog
+--------------
+
+Consult our `Github release page`_ for an overview of all changes.
+
+.. _Github release page: https://github.com/spec-first/connexion/releases/tag/3.0.0
 
 Feedback
 --------
