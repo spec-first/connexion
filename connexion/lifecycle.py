@@ -260,5 +260,6 @@ class ConnexionResponse:
         self.content_type = content_type
         self.body = body
         self.headers = headers or {}
-        self.headers.update({"Content-Type": content_type})
+        if content_type:
+            self.headers.update({"Content-Type": content_type})
         self.is_streamed = is_streamed
