@@ -1,3 +1,4 @@
+import json
 from unittest import mock
 
 import jinja2
@@ -7,6 +8,7 @@ from connexion import App
 from connexion.exceptions import InvalidSpecification
 from connexion.http_facts import METHODS
 from connexion.json_schema import ExtendedSafeLoader
+from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.middleware.abstract import AbstractRoutingAPI
 from connexion.options import SwaggerUIOptions
 
@@ -302,10 +304,15 @@ def test_add_error_handler(app_class, simple_api_spec_dir):
     app = app_class(__name__, specification_dir=simple_api_spec_dir)
     app.add_api("openapi.yaml")
 
-    def custom_error_handler(_request, _exception):
-        pass
+    def not_found(request: ConnexionRequest, exc: Exception) -> ConnexionResponse:
+        return ConnexionResponse(
+            status_code=404, body=json.dumps({"error": "NotFound"})
+        )
 
-    app.add_error_handler(Exception, custom_error_handler)
-    app.add_error_handler(500, custom_error_handler)
+    app.add_error_handler(404, not_found)
 
-    app.middleware._build_middleware_stack()
+    app_client = app.test_client()
+
+    response = app_client.get("/does_not_exist")
+    assert response.status_code == 404
+    assert response.json()["error"] == "NotFound"
