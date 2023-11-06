@@ -192,15 +192,21 @@ You can run your application using an ASGI server such as `uvicorn`. If you defi
 
 .. code-block:: bash
 
+    # assuming your application is defined as ``app`` in ``run.py``
     $ uvicorn run:app
 
-Or with gunicorn:
+Or with gunicorn (which is recommended in production).
 
 .. code-block:: bash
 
+    # assuming your application is defined as ``app`` in ``run.py``
     $ gunicorn -k uvicorn.workers.UvicornWorker run:app
 
-See the `uvicorn documentation`_ for more details.
+See the `uvicorn documentation`_ for more details or check this
+`overview of available ASGI servers`_ for other options.
+
+.. _overview of available ASGI servers: https://asgi.readthedocs.io/en/latest/implementations.html#servers.
+
 
 If you installed connexion using :code:`connexion[uvicorn]`, you can run it using the
 :code:`run` method. This is only recommended for development:
