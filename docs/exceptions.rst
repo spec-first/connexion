@@ -31,7 +31,7 @@ problem responses.
             app.add_error_handler(FileNotFoundError, not_found)
             app.add_error_handler(404, not_found)
 
-        .. dropdown:: View a detailed reference of the :code:`add_middleware` method
+        .. dropdown:: View a detailed reference of the ``add_error_handler`` method
             :icon: eye
 
             .. automethod:: connexion.AsyncApp.add_error_handler
@@ -63,7 +63,7 @@ problem responses.
             app.add_error_handler(FileNotFoundError, not_found)
             app.add_error_handler(404, not_found)
 
-        .. dropdown:: View a detailed reference of the :code:`add_middleware` method
+        .. dropdown:: View a detailed reference of the ``add_error_handler`` method
             :icon: eye
 
             .. automethod:: connexion.FlaskApp.add_error_handler
@@ -99,7 +99,7 @@ problem responses.
             app.add_error_handler(FileNotFoundError, not_found)
             app.add_error_handler(404, not_found)
 
-        .. dropdown:: View a detailed reference of the :code:`add_middleware` method
+        .. dropdown:: View a detailed reference of the ``add_error_handler`` method
             :icon: eye
 
             .. automethod:: connexion.ConnexionMiddleware.add_error_handler
