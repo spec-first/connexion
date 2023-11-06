@@ -117,6 +117,16 @@ should work, connexion comes with ``uvicorn`` as an extra:
 Check :ref:`quickstart:Running your application` for more details on how to run your application
 using an ASGI server.
 
+.. warning::
+
+    You can wrap Connexion with the `ASGIMiddleware`_ offered by `a2wsgi`_ to run it with a WSGI
+    server. You will however lose the benefits offered by ASGI, and performance might be
+    impacted. You should only use this as a temporary workaround until you can switch to an ASGI
+    server.
+
+.. _ASGIMiddleware: https://github.com/abersheeran/a2wsgi#convert-asgi-app-to-wsgi-app
+.. _a2wsgi: https://github.com/abersheeran/a2wsgi
+
 Smaller breaking changes
 ------------------------
 
