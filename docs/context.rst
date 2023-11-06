@@ -86,13 +86,11 @@ for more information on its contents.
 context.context
 ---------------
 
-A dict containing the following information:
+A dict containing the information from the security middleware:
 
 .. code-block:: python
 
     {
-        "api_base_path": ...  # The base path of the matched API
-        "operation_id": ...  # The operation id of matched operation
         "user": ...  # User information from authentication
         "token_info": ...  # Token information from authentication
     }
