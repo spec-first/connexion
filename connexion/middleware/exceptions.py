@@ -1,8 +1,8 @@
 import asyncio
+import functools
 import logging
 import typing as t
 
-import werkzeug.exceptions
 from starlette.concurrency import run_in_threadpool
 from starlette.exceptions import HTTPException
 from starlette.middleware.exceptions import (
@@ -12,6 +12,7 @@ from starlette.requests import Request as StarletteRequest
 from starlette.responses import Response as StarletteResponse
 from starlette.types import ASGIApp, Receive, Scope, Send
 
+from connexion import http_facts
 from connexion.exceptions import InternalServerError, ProblemException, problem
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.types import MaybeAwaitable
@@ -28,6 +29,7 @@ def connexion_wrapper(
     them to the error handler, and translates the returned Connexion responses to
     Starlette responses."""
 
+    @functools.wraps(handler)
     async def wrapper(request: StarletteRequest, exc: Exception) -> StarletteResponse:
         request = ConnexionRequest.from_starlette_request(request)
 
@@ -35,6 +37,9 @@ def connexion_wrapper(
             response = await handler(request, exc)  # type: ignore
         else:
             response = await run_in_threadpool(handler, request, exc)
+
+        while asyncio.iscoroutine(response):
+            response = await response
 
         return StarletteResponse(
             content=response.body,
@@ -53,9 +58,6 @@ class ExceptionMiddleware(StarletteExceptionMiddleware):
     def __init__(self, next_app: ASGIApp):
         super().__init__(next_app)
         self.add_exception_handler(ProblemException, self.problem_handler)  # type: ignore
-        self.add_exception_handler(
-            werkzeug.exceptions.HTTPException, self.flask_error_handler
-        )
         self.add_exception_handler(Exception, self.common_error_handler)
 
     def add_exception_handler(
@@ -81,7 +83,7 @@ class ExceptionMiddleware(StarletteExceptionMiddleware):
         """Default handler for Starlette HTTPException"""
         logger.error("%r", exc)
         return problem(
-            title=exc.detail,
+            title=http_facts.HTTP_STATUS_CODES.get(exc.status_code),
             detail=exc.detail,
             status=exc.status_code,
             headers=exc.headers,
@@ -94,22 +96,6 @@ class ExceptionMiddleware(StarletteExceptionMiddleware):
         """Default handler for any unhandled Exception"""
         logger.error("%r", exc, exc_info=exc)
         return InternalServerError().to_problem()
-
-    def flask_error_handler(
-        self, request: StarletteRequest, exc: werkzeug.exceptions.HTTPException
-    ) -> ConnexionResponse:
-        """Default handler for Flask / werkzeug HTTPException"""
-        # If a handler is registered for the received status_code, call it instead.
-        # This is only done automatically for Starlette HTTPExceptions
-        if handler := self._status_handlers.get(exc.code):
-            starlette_exception = HTTPException(exc.code, detail=exc.description)
-            return handler(request, starlette_exception)
-
-        return problem(
-            title=exc.name,
-            detail=exc.description,
-            status=exc.code,
-        )
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         await super().__call__(scope, receive, send)

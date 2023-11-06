@@ -4,20 +4,20 @@ Exception Handling
 Connexion allows you to register custom error handlers to convert Python ``Exceptions`` into HTTP
 problem responses.
 
+You can register error handlers on:
+
+- The exception class to handle
+  If this exception class is raised somewhere in your application or the middleware stack,
+  it will be passed to your handler.
+- The HTTP status code to handle
+  Connexion will raise ``starlette.HTTPException`` errors when it encounters any issues
+  with a request or response. You can intercept these exceptions with specific status codes
+  if you want to return custom responses.
+
 .. tab-set::
 
     .. tab-item:: AsyncApp
         :sync: AsyncApp
-
-        You can register error handlers on:
-
-        - The exception class to handle
-          If this exception class is raised somewhere in your application or the middleware stack,
-          it will be passed to your handler.
-        - The HTTP status code to handle
-          Connexion will raise ``starlette.HTTPException`` errors when it encounters any issues
-          with a request or response. You can intercept these exceptions with specific status codes
-          if you want to return custom responses.
 
         .. code-block:: python
 
@@ -40,17 +40,6 @@ problem responses.
     .. tab-item:: FlaskApp
         :sync: FlaskApp
 
-        You can register error handlers on:
-
-        - The exception class to handle
-          If this exception class is raised somewhere in your application or the middleware stack,
-          it will be passed to your handler.
-        - The HTTP status code to handle
-          Connexion will raise ``starlette.HTTPException`` errors when it encounters any issues
-          with a request or response. The underlying Flask application will raise
-          ``werkzeug.HTTPException`` errors. You can intercept both of these exceptions with
-          specific status codes if you want to return custom responses.
-
         .. code-block:: python
 
             from connexion import FlaskApp
@@ -69,20 +58,34 @@ problem responses.
             .. automethod:: connexion.FlaskApp.add_error_handler
                 :noindex:
 
+        .. note::
+
+            .. warning::
+
+                ⚠️ **The following is not recommended as it complicates the exception handling logic,**
+
+            You can also register error handlers on the underlying flask application directly.
+
+            .. code-block:: python
+
+                flask_app = app.app
+                flask_app.register_error_handler(FileNotFoundError, not_found)
+                flask_app.register_error_handler(404, not_found)
+
+            `Flask documentation`_
+
+            Error handlers registered this way:
+
+            - Will only intercept exceptions thrown in the application, not in the Connexion
+              middleware.
+            - Can intercept exceptions before they reach the error handlers registered on the
+              connexion app.
+            - When registered on status code, will intercept only
+              ``werkzeug.exceptions.HTTPException`` thrown by werkzeug / Flask not
+              ``starlette.exceptions.HTTPException``.
+
     .. tab-item:: ConnexionMiddleware
         :sync: ConnexionMiddleware
-
-        You can register error handlers on:
-
-        - The exception class to handle
-          If this exception class is raised somewhere in your application or the middleware stack,
-          it will be passed to your handler.
-        - The HTTP status code to handle
-          Connexion will raise ``starlette.HTTPException`` errors when it encounters any issues
-          with a request or response. You can intercept these exceptions with specific status codes
-          if you want to return custom responses.
-          Note that this might not catch ``HTTPExceptions`` with the same status code raised by
-          your wrapped ASGI/WSGI framework.
 
         .. code-block:: python
 
@@ -105,9 +108,16 @@ problem responses.
             .. automethod:: connexion.ConnexionMiddleware.add_error_handler
                 :noindex:
 
+        .. note::
+
+            This might not catch ``HTTPExceptions`` with the same status code raised by
+            your wrapped ASGI/WSGI framework.
+
 .. note::
 
     Error handlers can be ``async`` coroutines as well.
+
+.. _Flask documentation: https://flask.palletsprojects.com/en/latest/errorhandling/#error-handlers
 
 Default Exception Handling
 --------------------------

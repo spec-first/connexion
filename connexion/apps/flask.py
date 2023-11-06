@@ -6,6 +6,8 @@ import pathlib
 import typing as t
 
 import flask
+import starlette.exceptions
+import werkzeug.exceptions
 from a2wsgi import WSGIMiddleware
 from flask import Response as FlaskResponse
 from starlette.types import Receive, Scope, Send
@@ -213,7 +215,7 @@ class FlaskApp(AbstractApp):
             :obj:`security.SECURITY_HANDLERS`
         """
         self._middleware_app = FlaskASGIApp(import_name, server_args or {})
-        self.app = self._middleware_app.app
+
         super().__init__(
             import_name,
             lifespan=lifespan,
@@ -233,6 +235,15 @@ class FlaskApp(AbstractApp):
             security_map=security_map,
         )
 
+        self.app = self._middleware_app.app
+        self.app.register_error_handler(
+            werkzeug.exceptions.HTTPException, self._http_exception
+        )
+
+    def _http_exception(self, exc: werkzeug.exceptions.HTTPException):
+        """Reraise werkzeug HTTPExceptions as starlette HTTPExceptions"""
+        raise starlette.exceptions.HTTPException(exc.code, detail=exc.description)
+
     def add_url_rule(
         self, rule, endpoint: str = None, view_func: t.Callable = None, **options
     ):
@@ -247,4 +258,4 @@ class FlaskApp(AbstractApp):
             [ConnexionRequest, Exception], MaybeAwaitable[ConnexionResponse]
         ],
     ) -> None:
-        self.app.register_error_handler(code_or_exception, function)
+        self.middleware.add_error_handler(code_or_exception, function)
