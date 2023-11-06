@@ -94,6 +94,7 @@ Documentation
    middleware
    testing
    cli
+   cookbook
    v3
 
 Recommended resources
