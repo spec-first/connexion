@@ -113,9 +113,10 @@ Security through an API Gateway in front of your application, you can do:
         .. code-block:: python
 
             from connexion import AsyncApp, ConnexionMiddleware
+            from connexion.middleware.security import SecurityMiddleware
 
             middlewares = [middleware for middleware in ConnexionMiddleware.default_middlewares
-                           if not isinstance(middleware, SecurityMiddleware)]
+                           if middleware is not SecurityMiddleware]
 
             app = AsyncApp(__name__, middlewares=middlewares)
 
@@ -132,9 +133,10 @@ Security through an API Gateway in front of your application, you can do:
         .. code-block:: python
 
             from connexion import FlaskApp, ConnexionMiddleware
+            from connexion.middleware.security import SecurityMiddleware
 
             middlewares = [middleware for middleware in ConnexionMiddleware.default_middlewares
-                           if not isinstance(middleware, SecurityMiddleware)]
+                           if middleware is not SecurityMiddleware]
 
             app = FlaskApp(__name__, middlewares=middlewares)
 
@@ -153,9 +155,10 @@ Security through an API Gateway in front of your application, you can do:
 
             from asgi_framework import App
             from connexion import ConnexionMiddleware
+            from connexion.middleware.security import SecurityMiddleware
 
             middlewares = [middleware for middleware in ConnexionMiddleware.default_middlewares
-                           if not isinstance(middleware, SecurityMiddleware)]
+                           if middleware is not SecurityMiddleware]
 
             app = App(__name__)
             app = ConnexionMiddleware(app, middlewares=middlewares)
