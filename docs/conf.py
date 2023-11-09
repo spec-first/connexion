@@ -123,7 +123,8 @@ try:
         'display_github': True,
         'github_user': 'spec-first',
         'github_repo': 'connexion',
-        'github_version': 'main/docs/',
+        'github_version': 'main',
+        'conf_py_path': '/docs/'
     }
 except:
     pass
