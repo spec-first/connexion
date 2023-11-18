@@ -225,7 +225,8 @@ def get_arguments(
             content_type=content_type,
         )
     )
-    ret.update(_get_file_arguments(files, arguments, has_kwargs))
+    body_schema = operation.body_schema(content_type)
+    ret.update(_get_file_arguments(files, arguments, body_schema, has_kwargs))
     return ret
 
 
@@ -482,5 +483,13 @@ def _get_typed_body_values(body_arg, body_props, additional_props):
     return res
 
 
-def _get_file_arguments(files, arguments, has_kwargs=False):
-    return {k: v for k, v in files.items() if k in arguments or has_kwargs}
+def _get_file_arguments(files, arguments, body_schema: dict, has_kwargs=False):
+    results = {}
+    for k, v in files.items():
+        if not (k in arguments or has_kwargs):
+            continue
+        if body_schema.get("properties", {}).get(k, {}).get("type") != "array":
+            v = v[0]
+        results[k] = v
+
+    return results

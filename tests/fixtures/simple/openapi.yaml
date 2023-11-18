@@ -612,17 +612,36 @@ paths:
         '200':
           description: OK
       requestBody:
-        x-body-name: formData
         content:
           multipart/form-data:
             schema:
               type: object
               properties:
-                fileData:
+                file:
                   type: string
                   format: binary
               required:
-                - fileData
+                - file
+  /test-formData-multiple-file-upload:
+    post:
+      summary: 'Test multiple file upload'
+      operationId: fakeapi.hello.test_formdata_multiple_file_upload
+      responses:
+        '200':
+          description: OK
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+              required:
+                - file
   /test-mixed-formData:
     post:
       summary: 'Test formData with file type, for file upload'
@@ -639,12 +658,12 @@ paths:
               properties:
                 formData:
                   type: string
-                fileData:
+                file:
                   type: string
                   format: binary
               required:
                 - formData
-                - fileData
+                - file
   /test-formData-file-upload-missing-param:
     post:
       summary: 'Test formData with file type, missing parameter in handler'

@@ -329,47 +329,53 @@ def test_formdata_missing_param():
     return ""
 
 
-async def test_formdata_file_upload(fileData, **kwargs):
-    """In Swagger, form paramaeters and files are passed separately"""
-    files = {}
-    for file_ in fileData:
-        filename = file_.filename
-        content = file_.read()
+async def test_formdata_file_upload(file):
+    """In Swagger, form parameters and files are passed separately"""
+    filename = file.filename
+    content = file.read()
+    if asyncio.iscoroutine(content):
+        # AsyncApp
+        content = await content
+
+    return {filename: content.decode()}
+
+
+async def test_formdata_multiple_file_upload(file):
+    """In Swagger, form parameters and files are passed separately"""
+    assert isinstance(file, list)
+
+    results = {}
+
+    for f in file:
+        filename = f.filename
+        content = f.read()
         if asyncio.iscoroutine(content):
             # AsyncApp
             content = await content
 
-        files[filename] = content.decode()
+        results[filename] = content.decode()
 
-    return files
-
-
-async def test_mixed_formdata(fileData, formData):
-    files = {}
-    for file_ in fileData:
-        filename = file_.filename
-        content = file_.read()
-        if asyncio.iscoroutine(content):
-            # AsyncApp
-            content = await content
-
-        files[filename] = content.decode()
-
-    return {"data": {"formData": formData}, "files": files}
+    return results
 
 
-async def test_mixed_formdata3(fileData, formData):
-    files = {}
-    for file_ in fileData:
-        filename = file_.filename
-        content = file_.read()
-        if asyncio.iscoroutine(content):
-            # AsyncApp
-            content = await content
+async def test_mixed_formdata(file, formData):
+    filename = file.filename
+    content = file.read()
+    if asyncio.iscoroutine(content):
+        # AsyncApp
+        content = await content
 
-        files[filename] = content.decode()
+    return {"data": {"formData": formData}, "files": {filename: content.decode()}}
 
-    return {"data": formData, "files": files}
+
+async def test_mixed_formdata3(file, formData):
+    filename = file.filename
+    content = file.read()
+    if asyncio.iscoroutine(content):
+        # AsyncApp
+        content = await content
+
+    return {"data": formData, "files": {filename: content.decode()}}
 
 
 def test_formdata_file_upload_missing_param():

@@ -224,6 +224,119 @@ Connexion will not automatically pass in the default values defined in your ``re
 definition, but you can activate this by configuring a different
 :ref:`RequestBodyValidator<validation:Custom validators>`.
 
+Files
+-----
+
+Connexion extracts the files from the body and passes them into your view function separately:
+
+.. tab-set::
+
+    .. tab-item:: OpenAPI 3
+        :sync: OpenAPI 3
+
+        .. code-block:: yaml
+            :caption: **openapi.yaml**
+
+            paths:
+              /path
+                post:
+                  operationId: api.foo_get
+                  requestBody:
+                    content:
+                      multipart/form-data:
+                        schema:
+                          type: object
+                          properties:
+                            file:
+                              type: string
+                              format: binary
+
+    .. tab-item:: Swagger 2
+        :sync: Swagger 2
+
+        In the Swagger 2 specification, you can define the name of your body. Connexion will pass
+        the body to your function using this name.
+
+        .. code-block:: yaml
+            :caption: **swagger.yaml**
+
+            paths:
+              /path
+                post:
+                  consumes:
+                    - application/json
+                  parameters:
+                    - name: file
+                      type: file
+                      in: formData
+
+
+.. tab-set::
+
+    .. tab-item:: AsyncApp
+        :sync: AsyncApp
+
+        If you're using the `AsyncApp`, the files are provided as `Starlette.UploadFile`_ instances.
+
+        .. code-block:: python
+            :caption: **api.py**
+
+                    def foo_get(file)
+                        assert isinstance(file, starlette.UploadFile)
+                        ...
+
+
+    .. tab-item:: FlaskApp
+        :sync: FlaskApp
+
+        If you're using the `FlaskApp`, the files are provided as `werkzeug.FileStorage`_ instances.
+
+        .. code-block:: python
+            :caption: **api.py**
+
+                    def foo_get(file)
+                        assert isinstance(file, werkzeug.FileStorage)
+                        ...
+
+When your specification defines an array of files:
+
+.. code-block:: yaml
+
+    type: array
+    items:
+        type: string
+        format: binary
+
+They will be provided to your view function as a list.
+
+.. tab-set::
+
+    .. tab-item:: AsyncApp
+        :sync: AsyncApp
+
+        .. code-block:: python
+            :caption: **api.py**
+
+                    def foo_get(file)
+                        assert isinstance(file, list)
+                        assert isinstance(file[0], starlette.UploadFile)
+                        ...
+
+
+    .. tab-item:: FlaskApp
+        :sync: FlaskApp
+
+        .. code-block:: python
+            :caption: **api.py**
+
+                    def foo_get(file)
+                        assert isinstance(file, list)
+                        assert isinstance(file[0], werkzeug.FileStorage)
+                        ...
+
+.. _Starlette.UploadFile: https://www.starlette.io/requests/#request-files
+.. _werkzeug.FileStorage: https://werkzeug.palletsprojects.com/en/3.0.x/datastructures/#werkzeug.datastructures.FileStorage
+
 Optional arguments & Defaults
 -----------------------------
 

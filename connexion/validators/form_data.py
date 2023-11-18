@@ -54,14 +54,37 @@ class FormDataValidator(AbstractRequestBodyValidator):
         if self._uri_parser is not None:
             # Don't parse file_data
             form_data = {}
-            file_data = {}
-            for k, v in data.items():
-                if isinstance(v, str):
-                    form_data[k] = data.getlist(k)
-                elif isinstance(v, UploadFile):
-                    # Replace files with empty strings for validation
-                    file_data[k] = ""
+            file_data: t.Dict[str, t.Union[str, t.List[str]]] = {}
+            for key in data.keys():
+                # Extract files
+                param_schema = self._schema.get("properties", {}).get(key, {})
+                value = data.getlist(key)
 
+                def is_file(schema):
+                    return (
+                        schema.get("type") == "string"
+                        and schema.get("format") == "binary"
+                    )
+
+                # Single file upload
+                if is_file(param_schema):
+                    # Unpack if single file received
+                    if len(value) == 1:
+                        file_data[key] = ""
+                    # If multiple files received, replace with array so validation will fail
+                    else:
+                        file_data[key] = [""] * len(value)
+                # Multiple file upload, replace files with array of strings
+                elif is_file(param_schema.get("items", {})):
+                    file_data[key] = [""] * len(value)
+                # UploadFile received for non-file upload. Replace and let validation handle.
+                elif isinstance(value[0], UploadFile):
+                    file_data[key] = [""] * len(value)
+                # No files, add multi-value to form data and let uri parser handle multi-value
+                else:
+                    form_data[key] = value
+
+            # Resolve form data, not file data
             data = self._uri_parser.resolve_form(form_data)
             # Add the files again
             data.update(file_data)

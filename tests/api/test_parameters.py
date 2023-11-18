@@ -270,22 +270,36 @@ def test_strict_formdata_extra_param(strict_app):
 
 
 def test_formdata_file_upload(simple_app):
+    """Test that a single file is accepted and provided to the user as a file object if the openapi
+    specification defines single file. Do not accept multiple files."""
     app_client = simple_app.test_client()
+
     resp = app_client.post(
         "/v1.0/test-formData-file-upload",
-        files={"fileData": ("filename.txt", BytesIO(b"file contents"))},
+        files=[
+            ("file", ("filename.txt", BytesIO(b"file contents"))),
+            ("file", ("filename2.txt", BytesIO(b"file2 contents"))),
+        ],
+    )
+    assert resp.status_code == 400
+
+    resp = app_client.post(
+        "/v1.0/test-formData-file-upload",
+        files={"file": ("filename.txt", BytesIO(b"file contents"))},
     )
     assert resp.status_code == 200
     assert resp.json() == {"filename.txt": "file contents"}
 
 
 def test_formdata_multiple_file_upload(simple_app):
+    """Test that multiple files are accepted and provided to the user as a list if the openapi
+    specification defines an array of files."""
     app_client = simple_app.test_client()
     resp = app_client.post(
-        "/v1.0/test-formData-file-upload",
+        "/v1.0/test-formData-multiple-file-upload",
         files=[
-            ("fileData", ("filename.txt", BytesIO(b"file contents"))),
-            ("fileData", ("filename2.txt", BytesIO(b"file2 contents"))),
+            ("file", ("filename.txt", BytesIO(b"file contents"))),
+            ("file", ("filename2.txt", BytesIO(b"file2 contents"))),
         ],
     )
     assert resp.status_code == 200
@@ -294,13 +308,20 @@ def test_formdata_multiple_file_upload(simple_app):
         "filename2.txt": "file2 contents",
     }
 
+    resp = app_client.post(
+        "/v1.0/test-formData-multiple-file-upload",
+        files={"file": ("filename.txt", BytesIO(b"file contents"))},
+    )
+    assert resp.status_code == 200
+    assert resp.json() == {"filename.txt": "file contents"}
+
 
 def test_mixed_formdata(simple_app):
     app_client = simple_app.test_client()
     resp = app_client.post(
         "/v1.0/test-mixed-formData",
         data={"formData": "test"},
-        files={"fileData": ("filename.txt", BytesIO(b"file contents"))},
+        files={"file": ("filename.txt", BytesIO(b"file contents"))},
     )
 
     assert resp.status_code == 200
@@ -320,8 +341,8 @@ def test_formdata_file_upload_bad_request(simple_app):
     )
     assert resp.status_code == 400
     assert resp.json()["detail"] in [
-        "Missing formdata parameter 'fileData'",
-        "'fileData' is a required property",  # OAS3
+        "Missing formdata parameter 'file'",
+        "'file' is a required property",  # OAS3
     ]
 
 

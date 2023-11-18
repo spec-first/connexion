@@ -475,8 +475,26 @@ paths:
       consumes:
       - multipart/form-data
       parameters:
-        - name: fileData
+        - name: file
           type: file
+          in: formData
+          required: true
+      responses:
+        200:
+          description: OK
+
+  /test-formData-multiple-file-upload:
+    post:
+      summary: Test multiple file upload
+      operationId: fakeapi.hello.test_formdata_multiple_file_upload
+      consumes:
+        - multipart/form-data
+      parameters:
+        - name: file
+          type: array
+          items:
+            type: string
+            format: binary
           in: formData
           required: true
       responses:
@@ -490,7 +508,7 @@ paths:
       consumes:
         - multipart/form-data
       parameters:
-        - name: fileData
+        - name: file
           type: file
           in: formData
           required: true
