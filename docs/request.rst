@@ -601,6 +601,11 @@ request.
 .. dropdown:: View a detailed reference of the ``connexion.request`` class
     :icon: eye
 
+    .. warning::
+
+        The asynchronous body arguments (body, form, files) might already be consumed by connexion.
+        We recommend to let Connexion inject them into your view function as mentioned above.
+
     .. autoclass:: connexion.lifecycle.ConnexionRequest
        :members:
        :undoc-members:
