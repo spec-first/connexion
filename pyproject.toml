@@ -103,3 +103,7 @@ exclude_lines = [
     "if t.TYPE_CHECKING:",
     "@t.overload",
 ]
+
+[[tool.mypy.overrides]]
+module = "referencing.jsonschema.*"
+follow_imports = "skip"
