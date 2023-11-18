@@ -64,6 +64,20 @@ You can easily add additional ASGI middleware to the middleware stack with the
             .. automethod:: connexion.FlaskApp.add_middleware
                 :noindex:
 
+        You can also add WSGI middleware to a ``FlaskApp``. Note that it will only be called at the
+        end of the middleware stack. If you need your middleware to act sooner, you will have to
+        use an ASGI middleware instead.
+
+        .. code-block:: python
+
+            app.add_wsgi_middleware(MiddlewareClass, **options)
+
+        .. dropdown:: View a detailed reference of the :code:`add_middleware` method
+            :icon: eye
+
+            .. automethod:: connexion.FlaskApp.add_wsgi_middleware
+                :noindex:
+
     .. tab-item:: ConnexionMiddleware
         :sync: ConnexionMiddleware
 
@@ -77,7 +91,7 @@ You can easily add additional ASGI middleware to the middleware stack with the
 
             app.add_middleware(MiddlewareClass, **options)
 
-        .. dropdown:: View a detailed reference of the :code:`add_middleware` method
+        .. dropdown:: View a detailed reference of the :code:`add_wsgi_middleware` method
             :icon: eye
 
             .. automethod:: connexion.ConnexionMiddleware.add_middleware
