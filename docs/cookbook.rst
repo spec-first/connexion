@@ -16,13 +16,15 @@ Starlette. You can add it to your application, ideally in front of the ``Routing
         :sync: AsyncApp
 
         .. code-block:: python
+        
+            from pathlib import Path
 
             from connexion import AsyncApp
             from connexion.middleware import MiddlewarePosition
             from starlette.middleware.cors import CORSMiddleware
 
 
-            app = connexion.AsyncApp(__name__)
+            app = AsyncApp(__name__)
 
             app.add_middleware(
                 CORSMiddleware,
@@ -48,13 +50,15 @@ Starlette. You can add it to your application, ideally in front of the ``Routing
         :sync: FlaskApp
 
         .. code-block:: python
+        
+            from pathlib import Path
 
             from connexion import FlaskApp
             from connexion.middleware import MiddlewarePosition
             from starlette.middleware.cors import CORSMiddleware
 
 
-            app = connexion.FlaskApp(__name__)
+            app = FlaskApp(__name__)
 
             app.add_middleware(
                 CORSMiddleware,
@@ -80,10 +84,12 @@ Starlette. You can add it to your application, ideally in front of the ``Routing
         :sync: ConnexionMiddleware
 
         .. code-block:: python
+        
+            from pathlib import Path
 
             from asgi_framework import App
             from connexion import ConnexionMiddleware
-            from connexion.lifecycle import ConnexionRequest, ConnexionResponse
+            from starlette.middleware.cors import CORSMiddleware
 
             app = App(__name__)
             app = ConnexionMiddleware(app)
