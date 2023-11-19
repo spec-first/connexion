@@ -16,6 +16,7 @@ Starlette. You can add it to your application, ideally in front of the ``Routing
         :sync: AsyncApp
 
         .. code-block:: python
+        
             from pathlib import Path
 
             from connexion import AsyncApp
@@ -49,6 +50,7 @@ Starlette. You can add it to your application, ideally in front of the ``Routing
         :sync: FlaskApp
 
         .. code-block:: python
+        
             from pathlib import Path
 
             from connexion import FlaskApp
@@ -82,6 +84,7 @@ Starlette. You can add it to your application, ideally in front of the ``Routing
         :sync: ConnexionMiddleware
 
         .. code-block:: python
+        
             from pathlib import Path
 
             from asgi_framework import App
