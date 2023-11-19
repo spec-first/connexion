@@ -1,6 +1,11 @@
+import typing as t
+from unittest.mock import Mock
+
 import pytest
+from connexion import FlaskApp
 from connexion.middleware import ConnexionMiddleware, MiddlewarePosition
 from connexion.middleware.swagger_ui import SwaggerUIMiddleware
+from connexion.types import Environ, ResponseStream, StartResponse, WSGIApp
 from starlette.datastructures import MutableHeaders
 
 from conftest import build_app_from_fixture
@@ -81,3 +86,26 @@ def test_position(spec, app_class):
         == f"Could not insert middleware at position BEFORE_SWAGGER. "
         f"Please make sure you have a {SwaggerUIMiddleware} in your stack."
     )
+
+
+def test_add_wsgi_middleware(spec):
+    app: FlaskApp = build_app_from_fixture("simple", app_class=FlaskApp, spec_file=spec)
+
+    class WSGIMiddleware:
+        def __init__(self, app_: WSGIApp, mock_counter):
+            self.next_app = app_
+            self.mock_counter = mock_counter
+
+        def __call__(
+            self, environ: Environ, start_response: StartResponse
+        ) -> ResponseStream:
+            self.mock_counter()
+            return self.next_app(environ, start_response)
+
+    mock = Mock()
+    app.add_wsgi_middleware(WSGIMiddleware, mock_counter=mock)
+
+    app_client = app.test_client()
+    app_client.post("/v1.0/greeting/robbe")
+
+    mock.assert_called_once()

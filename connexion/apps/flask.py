@@ -23,7 +23,7 @@ from connexion.middleware.lifespan import Lifespan
 from connexion.operations import AbstractOperation
 from connexion.options import SwaggerUIOptions
 from connexion.resolver import Resolver
-from connexion.types import MaybeAwaitable
+from connexion.types import MaybeAwaitable, WSGIApp
 from connexion.uri_parsing import AbstractURIParser
 
 
@@ -259,3 +259,19 @@ class FlaskApp(AbstractApp):
         ],
     ) -> None:
         self.middleware.add_error_handler(code_or_exception, function)
+
+    def add_wsgi_middleware(
+        self, middleware: t.Type[WSGIApp], **options: t.Any
+    ) -> None:
+        """Wrap the underlying Flask application with a WSGI middleware. Note that it will only be
+        called at the end of the middleware stack. Middleware that needs to act sooner, needs to
+        be added as ASGI middleware instead.
+
+        Adding multiple middleware using this method wraps each middleware around the previous one.
+
+        :param middleware: Middleware class to add
+        :param options: Options to pass to the middleware_class on initialization
+        """
+        self._middleware_app.asgi_app.app = middleware(
+            self._middleware_app.asgi_app.app, **options  # type: ignore
+        )
