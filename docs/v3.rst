@@ -37,38 +37,176 @@ Or read our `in-depth blog post`_ on the redesign.
 Getting started with Connexion 3
 --------------------------------
 
-Using stand-alone Connexion
----------------------------
+If you're getting started with Connexion 3 for a new project, follow the
+`quickstart <quickstart.md>`_. All documentation has been updated for Connexion 3.
 
-You can use Connexion as a stand-alone web framework, using one of the available apps:
+Migrating from Connexion 2
+--------------------------
 
-* The ``App`` (alias ``FlaskApp``), which is built on top of Flask as known from Connexion 2.X.
-* The ``AsyncApp``, which is built on top of starlette and provides native asynchronous functionality.
+The rest of this page will focus on how to migrate from Connexion 2 to Connexion 3.
 
-If you don't require compatibility with the Flask ecosystem, we recommend to use the ``AsyncApp``.
-Even when writing mostly synchronous code, as you can just use synchronous view functions.
+This page will show examples migrating the ``connexion.FlaskApp``. However all Connexion 3 examples
+should work for ``connexion.AsyncApp`` as well. If you are not relying on the underlying
+Flask application, or you are coming from the old ``AiohttpApp``, we recommend migrating to the
+``connexion.AsyncApp`` instead.
 
-Using Connexion with ASGI or WSGI frameworks
---------------------------------------------
+Running the application
+'''''''''''''''''''''''
 
-If you want to leverage Connexion functionality with third party ASGI frameworks, you can use the
-``ConnexionMiddleware`` and wrap it around a third party application.
+There have been 2 changes related to running the application:
 
-This provides all Connexion functionality except for automatic routing, automatic parameter injection,
-and response serialization. You can add some of this functionality using ``Decorators`` provided by
-Connexion:
+- You now MUST run the Connexion application instead of the underlying Flask application.
+- You should use an ASGI server instead of a WSGI server.
 
-* ``FlaskDecorator``: provides automatic parameter injection and response serialization for Flask
-  applications.
-* ``ASGIDecorator``: provides automatic parameter injection for ASGI applications. Note that this
-  decorator injects Starlette datastructures (such as ``UploadFile``).
-* ``StarletteDecorator``: provides automatic parameter injection and response serialization for
-  Starlette applications.
+While the following would work on Connexion 2, it no longer works on Connexion 3:
 
-For examples, see https://github.com/spec-first/connexion/tree/main/examples/frameworks.
+.. code-block:: python
+    :caption: **hello.py**
 
-Pluggable validation by content type
-------------------------------------
+    import connexion
+
+    app = connexion.App(__name__)
+    flask_app = app.app
+
+    if __name__ == "__main__":
+        flask_app.run()
+
+.. code-block:: bash
+
+    $ flask --app hello:flask_app
+
+.. code-block:: bash
+
+    $ gunicorn hello:flask_app
+
+
+Instead, you need to run the Connexion application using an ASGI server:
+
+.. code-block:: python
+    :caption: **hello.py**
+
+    import connexion
+
+    app = connexion.App(__name__)
+
+    if __name__ == "__main__":
+        app.run()
+
+.. code-block:: bash
+
+    $ uvicorn run:app
+
+.. code-block:: bash
+
+    $ gunicorn -k uvicorn.workers.UvicornWorker run:app
+
+.. warning::
+
+    You can wrap Connexion with the `ASGIMiddleware`_ offered by `a2wsgi`_ to run it with a WSGI
+    server. You will however lose the benefits offered by ASGI, and performance might be
+    impacted. You should only use this as a temporary workaround until you can switch to an ASGI
+    server.
+
+For more information, check :ref:`Running your application <quickstart:Running your application>`.
+
+.. _ASGIMiddleware: https://github.com/abersheeran/a2wsgi#convert-asgi-app-to-wsgi-app
+.. _a2wsgi: https://github.com/abersheeran/a2wsgi
+
+**Workers and threads**
+
+You can still use workers as before, however you should not use threads with ASGI, since it
+handles concurrency using an async event loop instead.
+
+In the ``AsyncApp``, concurrency is completely handled by the async event loop.
+
+The ``FlaskApp`` is more complex, since the underlying Flask app is WSGI instead of ASGI.
+Concurrency in the middleware stack is handled by the async event loop, but once a request is
+passed to the underlying Flask app, it is executed in a thread pool (of 10 workers) automatically.
+
+Error handlers
+``````````````
+
+There have been 2 changes related to running the application:
+
+- The interface of the error handlers changed, with a request now being injected as well
+- The error handlers now should be registered on the Connexion App, not the underlying Flask App
+
+Connexion 2:
+
+.. code-block:: python
+    :caption: **hello.py**
+
+    import connexion
+
+    def not_found_handler(exc: Exception) -> flask.Response:
+        ...
+
+    app = connexion.App(__name__)
+    flask_app = app.app
+
+    app.add_error_handler(404, not_found_handler)  # either
+    flask_app.register_error_handler(404, not_found_handler)  # or
+
+Connexion 3:
+
+.. code-block:: python
+    :caption: **hello.py**
+
+    import connexion
+    from connexion.lifecycle import ConnexionRequest, ConnexionResponse
+
+    def not_found_handler(request: ConnexionRequest, exc: Exception) -> ConnexionResponse:
+        ...
+
+    app = connexion.App(__name__)
+    app.add_error_handler(404, not_found_handler)
+
+You can easily generate Connexion responses adhering to the `Problem Details for HTTP APIs`_
+standard by using the ``connexion.problem.problem`` module:
+
+.. code-block:: python
+
+    from connexion.problem import problem
+
+    def not_found_handler(request: ConnexionRequest, exc: Exception) -> ConnexionResponse:
+        return problem(
+            title=http_facts.HTTP_STATUS_CODES.get(404),
+            detail="The resource was not found",
+            status=404,
+        )
+
+
+.. dropdown:: View a detailed reference of the ``connexion.problem.problem`` function
+    :icon: eye
+
+    .. autofunction:: connexion.problem.problem
+        :noindex:
+
+For more information, check the :doc:`exceptions` documentation.
+
+.. _Problem Details for HTTP APIs: https://datatracker.ietf.org/doc/html/rfc7807
+
+Flask extensions and WSGI middleware
+````````````````````````````````````
+
+Certain Flask extensions and WSGI middleware might no longer work, since some functionaity was
+moved outside the scope of the Flask application. Extensions and middleware impacting the
+following functionality should now be implemented as ASGI middleware instead:
+
+- Exception handling
+- Swagger UI
+- Routing
+- Security
+- Validation
+
+One such example is CORS support, since it impacts routing. It can no longer be added via the
+``Flask-Cors`` extension. See :ref:`Connexion Cookbook: CORS <cookbook:CORS>` on how to use a
+``CORSMiddleware`` instead.
+
+See :doc:`middleware` for general documentation on ASGI middleware.
+
+Custom validators
+`````````````````
 
 Validation is now pluggable by content type, which means that the `VALIDATOR_MAP` has been updated
 to accommodate this.
@@ -104,35 +242,31 @@ You can pass it either to the app, or when registering an API.
 An ``AbstractRequestBodyValidator`` and ``AbstractResponseBodyValidator`` class are available to
 support the creation of custom validators.
 
-ASGI Server
------------
+Swagger UI Options
+------------------
 
-Connexion 3.0 needs to be run using an ASGI server instead of a WSGI server. While any ASGI server
-should work, connexion comes with ``uvicorn`` as an extra:
+The ``options`` argument has been renamed to ``swagger_ui_options`` and now takes an instance
+of the :class:`.SwaggerUIOptions`. The naming of the options themselves have been changed to
+better represent their meaning.
 
-.. code-block:: bash
+.. code-block:: python
 
-    pip install connexion[uvicorn]
+    import connexion
+    from connexion.options import SwaggerUIOptions
 
-Check :ref:`quickstart:Running your application` for more details on how to run your application
-using an ASGI server.
+    swagger_ui_options = SwaggerUIOptions(
+        swagger_ui=True,
+        swagger_ui_path="docs",
+    )
 
-.. warning::
+    app = connexion.FlaskApp(__name__, swagger_ui_options=swagger_ui_options)  # either
+    app.add_api("openapi.yaml", swagger_ui_options=swagger_ui_options)  # or
 
-    You can wrap Connexion with the `ASGIMiddleware`_ offered by `a2wsgi`_ to run it with a WSGI
-    server. You will however lose the benefits offered by ASGI, and performance might be
-    impacted. You should only use this as a temporary workaround until you can switch to an ASGI
-    server.
-
-.. _ASGIMiddleware: https://github.com/abersheeran/a2wsgi#convert-asgi-app-to-wsgi-app
-.. _a2wsgi: https://github.com/abersheeran/a2wsgi
+See :doc:`swagger_ui` for more information.
 
 Smaller breaking changes
 ------------------------
 
-* The ``options`` argument has been renamed to ``swagger_ui_options`` and now takes an instance
-  of the :class:`.SwaggerUIOptions`. The naming of the options themselves have been changed to
-  better represent their meaning.
 * The ``uri_parser_class`` is now passed to the ``App`` or its ``add_api()`` method directly
   instead of via the ``options`` argument.
 * The ``jsonifier`` is now passed to the ``App`` or its ``add_api()`` method instead of setting it
