@@ -143,7 +143,7 @@ The body will also be passed to your function.
             :caption: **openapi.yaml**
 
             paths:
-              /path
+              /foo:
                 post:
                   operationId: api.foo_get
                   requestBody:
@@ -174,7 +174,7 @@ The body will also be passed to your function.
             :caption: **swagger.yaml**
 
             paths:
-              /path
+              /foo:
                 post:
                   consumes:
                     - application/json
@@ -201,7 +201,7 @@ The body will also be passed to your function.
             :caption: **swagger.yaml**
 
             paths:
-              /path
+              /foo:
                 post:
                   operationId: api.foo_get
                   consumes:
@@ -238,7 +238,7 @@ Connexion extracts the files from the body and passes them into your view functi
             :caption: **openapi.yaml**
 
             paths:
-              /path
+              /foo:
                 post:
                   operationId: api.foo_get
                   requestBody:
@@ -261,7 +261,7 @@ Connexion extracts the files from the body and passes them into your view functi
             :caption: **swagger.yaml**
 
             paths:
-              /path
+              /foo:
                 post:
                   consumes:
                     - application/json
