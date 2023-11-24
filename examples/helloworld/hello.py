@@ -9,7 +9,7 @@ def post_greeting(name: str) -> str:
 
 app = connexion.FlaskApp(__name__, specification_dir="spec/")
 app.add_api("openapi.yaml", arguments={"title": "Hello World Example"})
-app.add_api("swagger.yaml", arguments={"title": "Hello World Example"})
+# app.add_api("swagger.yaml", arguments={"title": "Hello World Example"})
 
 
 if __name__ == "__main__":

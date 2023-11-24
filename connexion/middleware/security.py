@@ -9,6 +9,7 @@ from connexion.lifecycle import ConnexionRequest
 from connexion.middleware.abstract import RoutedAPI, RoutedMiddleware
 from connexion.operations import AbstractOperation
 from connexion.security import SecurityHandlerFactory
+from connexion.spec import Specification
 
 logger = logging.getLogger("connexion.middleware.security")
 
@@ -31,7 +32,7 @@ class SecurityOperation:
     @classmethod
     def from_operation(
         cls,
-        operation: AbstractOperation,
+        operation: t.Union[AbstractOperation, Specification],
         *,
         next_app: ASGIApp,
         security_handler_factory: SecurityHandlerFactory,
@@ -120,7 +121,9 @@ class SecurityAPI(RoutedAPI[SecurityOperation]):
         default_operation = self.make_operation(self.specification)
         self.operations = defaultdict(lambda: default_operation)
 
-    def make_operation(self, operation: AbstractOperation) -> SecurityOperation:
+    def make_operation(
+        self, operation: t.Union[AbstractOperation, Specification]
+    ) -> SecurityOperation:
         return SecurityOperation.from_operation(
             operation,
             next_app=self.next_app,

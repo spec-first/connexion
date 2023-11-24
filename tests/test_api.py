@@ -20,41 +20,52 @@ def test_canonical_base_path():
 
 
 def test_api():
-    api = FlaskApi(TEST_FOLDER / "fixtures/simple/swagger.yaml", base_path="/api/v1.0")
+    api = FlaskApi(
+        Specification.load(TEST_FOLDER / "fixtures/simple/swagger.yaml"),
+        base_path="/api/v1.0",
+    )
     assert api.blueprint.name == "/api/v1_0"
     assert api.blueprint.url_prefix == "/api/v1.0"
 
-    api2 = FlaskApi(TEST_FOLDER / "fixtures/simple/swagger.yaml")
+    api2 = FlaskApi(Specification.load(TEST_FOLDER / "fixtures/simple/swagger.yaml"))
     assert api2.blueprint.name == "/v1_0"
     assert api2.blueprint.url_prefix == "/v1.0"
 
-    api3 = FlaskApi(TEST_FOLDER / "fixtures/simple/openapi.yaml", base_path="/api/v1.0")
+    api3 = FlaskApi(
+        Specification.load(TEST_FOLDER / "fixtures/simple/openapi.yaml"),
+        base_path="/api/v1.0",
+    )
     assert api3.blueprint.name == "/api/v1_0"
     assert api3.blueprint.url_prefix == "/api/v1.0"
 
-    api4 = FlaskApi(TEST_FOLDER / "fixtures/simple/openapi.yaml")
+    api4 = FlaskApi(Specification.load(TEST_FOLDER / "fixtures/simple/openapi.yaml"))
     assert api4.blueprint.name == "/v1_0"
     assert api4.blueprint.url_prefix == "/v1.0"
 
 
 def test_api_base_path_slash():
-    api = FlaskApi(TEST_FOLDER / "fixtures/simple/basepath-slash.yaml")
+    api = FlaskApi(
+        Specification.load(TEST_FOLDER / "fixtures/simple/basepath-slash.yaml")
+    )
     assert api.blueprint.name == "/"
     assert api.blueprint.url_prefix == ""
 
 
 def test_template():
     api1 = FlaskApi(
-        TEST_FOLDER / "fixtures/simple/swagger.yaml",
+        Specification.load(
+            TEST_FOLDER / "fixtures/simple/swagger.yaml", arguments={"title": "test"}
+        ),
         base_path="/api/v1.0",
-        arguments={"title": "test"},
     )
     assert api1.specification["info"]["title"] == "test"
 
     api2 = FlaskApi(
-        TEST_FOLDER / "fixtures/simple/swagger.yaml",
+        Specification.load(
+            TEST_FOLDER / "fixtures/simple/swagger.yaml",
+            arguments={"title": "other test"},
+        ),
         base_path="/api/v1.0",
-        arguments={"title": "other test"},
     )
     assert api2.specification["info"]["title"] == "other test"
 
@@ -62,30 +73,38 @@ def test_template():
 def test_invalid_operation_does_stop_application_to_setup():
     with pytest.raises(ResolverError):
         FlaskApi(
-            TEST_FOLDER / "fixtures/op_error_api/swagger.yaml",
+            Specification.load(
+                TEST_FOLDER / "fixtures/op_error_api/swagger.yaml",
+                arguments={"title": "OK"},
+            ),
             base_path="/api/v1.0",
-            arguments={"title": "OK"},
         )
 
     with pytest.raises(ResolverError):
         FlaskApi(
-            TEST_FOLDER / "fixtures/missing_op_id/swagger.yaml",
+            Specification.load(
+                TEST_FOLDER / "fixtures/missing_op_id/swagger.yaml",
+                arguments={"title": "OK"},
+            ),
             base_path="/api/v1.0",
-            arguments={"title": "OK"},
         )
 
     with pytest.raises(ResolverError):
         FlaskApi(
-            TEST_FOLDER / "fixtures/module_not_implemented/swagger.yaml",
+            Specification.load(
+                TEST_FOLDER / "fixtures/module_not_implemented/swagger.yaml",
+                arguments={"title": "OK"},
+            ),
             base_path="/api/v1.0",
-            arguments={"title": "OK"},
         )
 
     with pytest.raises(ResolverError):
         FlaskApi(
-            TEST_FOLDER / "fixtures/user_module_loading_error/swagger.yaml",
+            Specification.load(
+                TEST_FOLDER / "fixtures/user_module_loading_error/swagger.yaml",
+                arguments={"title": "OK"},
+            ),
             base_path="/api/v1.0",
-            arguments={"title": "OK"},
         )
 
 
@@ -93,18 +112,22 @@ def test_other_errors_stop_application_to_setup():
     # Errors should still result exceptions!
     with pytest.raises(InvalidSpecification):
         FlaskApi(
-            TEST_FOLDER / "fixtures/bad_specs/swagger.yaml",
+            Specification.load(
+                TEST_FOLDER / "fixtures/bad_specs/swagger.yaml",
+                arguments={"title": "OK"},
+            ),
             base_path="/api/v1.0",
-            arguments={"title": "OK"},
         )
 
 
 def test_invalid_schema_file_structure():
     with pytest.raises(InvalidSpecification):
         FlaskApi(
-            TEST_FOLDER / "fixtures/invalid_schema/swagger.yaml",
+            Specification.load(
+                TEST_FOLDER / "fixtures/invalid_schema/swagger.yaml",
+                arguments={"title": "OK"},
+            ),
             base_path="/api/v1.0",
-            arguments={"title": "OK"},
         )
 
 
@@ -115,7 +138,7 @@ def test_invalid_encoding():
                 "gbk"
             )
         )
-    FlaskApi(pathlib.Path(f.name), base_path="/api/v1.0")
+    FlaskApi(Specification.load(pathlib.Path(f.name)), base_path="/api/v1.0")
     os.unlink(f.name)
 
 
@@ -124,7 +147,7 @@ def test_use_of_safe_load_for_yaml_swagger_specs():
         with tempfile.NamedTemporaryFile(delete=False) as f:
             f.write(b"!!python/object:object {}\n")
         try:
-            FlaskApi(pathlib.Path(f.name), base_path="/api/v1.0")
+            FlaskApi(Specification.load(pathlib.Path(f.name)), base_path="/api/v1.0")
             os.unlink(f.name)
         except InvalidSpecification:
             pytest.fail("Could load invalid YAML file, use yaml.safe_load!")
@@ -134,7 +157,7 @@ def test_validation_error_on_completely_invalid_swagger_spec():
     with tempfile.NamedTemporaryFile(delete=False) as f:
         f.write(b"[1]\n")
     with pytest.raises(InvalidSpecification):
-        FlaskApi(pathlib.Path(f.name), base_path="/api/v1.0")
+        FlaskApi(Specification.load(pathlib.Path(f.name)), base_path="/api/v1.0")
     os.unlink(f.name)
 
 

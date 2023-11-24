@@ -24,6 +24,7 @@ from connexion.middleware.security import SecurityMiddleware
 from connexion.middleware.swagger_ui import SwaggerUIMiddleware
 from connexion.options import SwaggerUIOptions
 from connexion.resolver import Resolver
+from connexion.spec import Specification
 from connexion.types import MaybeAwaitable
 from connexion.uri_parsing import AbstractURIParser
 from connexion.utils import inspect_function_arguments
@@ -390,18 +391,18 @@ class ConnexionMiddleware:
         if self.middleware_stack is not None:
             raise RuntimeError("Cannot add api after an application has started")
 
-        if isinstance(specification, dict):
-            specification = specification
-        else:
+        if isinstance(specification, (pathlib.Path, str)):
             specification = t.cast(pathlib.Path, self.specification_dir / specification)
+
             # Add specification as file to watch for reloading
             if pathlib.Path.cwd() in specification.parents:
                 self.extra_files.append(
                     str(specification.relative_to(pathlib.Path.cwd()))
                 )
 
+        specification = Specification.load(specification, arguments=arguments)
+
         options = self.options.replace(
-            arguments=arguments,
             auth_all_paths=auth_all_paths,
             jsonifier=jsonifier,
             swagger_ui_options=swagger_ui_options,
