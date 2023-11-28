@@ -16,24 +16,30 @@ def simple_app(spec, app_class):
         "simple", app_class=app_class, spec_file=spec, validate_responses=True
     )
 
+
 @pytest.fixture(scope="session")
 def simple_openapi_app(app_class):
     return build_app_from_fixture(
         "simple", app_class=app_class, spec_file=OPENAPI3_SPEC, validate_responses=True
     )
 
+
 @pytest.fixture(scope="session")
 def cors_openapi_app(app_class):
     middlewares = [*ConnexionMiddleware.default_middlewares]
-    cors_middleware = partial(CORSMiddleware, allow_origins=['http://localhost'])
+    cors_middleware = partial(CORSMiddleware, allow_origins=["http://localhost"])
     # CORS should always be directly after ServerErrorMiddleware
     server_error_idx = middlewares.index(ServerErrorMiddleware)
-    middlewares.insert(server_error_idx+1, cors_middleware)
+    middlewares.insert(server_error_idx + 1, cors_middleware)
 
     return build_app_from_fixture(
-        "simple", app_class=app_class, spec_file=OPENAPI3_SPEC, middlewares=middlewares,
-        validate_responses=True
+        "simple",
+        app_class=app_class,
+        spec_file=OPENAPI3_SPEC,
+        middlewares=middlewares,
+        validate_responses=True,
     )
+
 
 @pytest.fixture(scope="session")
 def reverse_proxied_app(spec, app_class):

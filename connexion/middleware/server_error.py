@@ -20,9 +20,7 @@ class ServerErrorMiddleware(StarletteServerErrorMiddleware):
         super().__init__(next_app)
 
     @staticmethod
-    def error_response(
-        _request: StarletteRequest, exc: Exception
-    ) -> ConnexionResponse:
+    def error_response(_request: StarletteRequest, exc: Exception) -> ConnexionResponse:
         """Default handler for any unhandled Exception"""
         logger.error("%r", exc, exc_info=exc)
         return InternalServerError().to_problem()
