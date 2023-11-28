@@ -1,11 +1,11 @@
-from functools import partial
 import logging
+from functools import partial
 
 import pytest
-from starlette.types import Receive, Scope, Send
 from connexion import ConnexionMiddleware
 from connexion.middleware.server_error import ServerErrorMiddleware
 from starlette.middleware.cors import CORSMiddleware
+from starlette.types import Receive, Scope, Send
 
 from conftest import FIXTURES_FOLDER, OPENAPI3_SPEC, build_app_from_fixture
 

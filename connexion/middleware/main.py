@@ -16,12 +16,12 @@ from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.middleware.abstract import SpecMiddleware
 from connexion.middleware.context import ContextMiddleware
 from connexion.middleware.exceptions import ExceptionMiddleware
-from connexion.middleware.server_error import ServerErrorMiddleware
 from connexion.middleware.lifespan import Lifespan, LifespanMiddleware
 from connexion.middleware.request_validation import RequestValidationMiddleware
 from connexion.middleware.response_validation import ResponseValidationMiddleware
 from connexion.middleware.routing import RoutingMiddleware
 from connexion.middleware.security import SecurityMiddleware
+from connexion.middleware.server_error import ServerErrorMiddleware
 from connexion.middleware.swagger_ui import SwaggerUIMiddleware
 from connexion.options import SwaggerUIOptions
 from connexion.resolver import Resolver
