@@ -1,5 +1,6 @@
 import json
 
+
 def test_cors_valid(cors_openapi_app):
     app_client = cors_openapi_app.test_client()
     origin = "http://localhost"

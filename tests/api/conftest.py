@@ -9,6 +9,7 @@ from starlette.types import Receive, Scope, Send
 
 from conftest import FIXTURES_FOLDER, OPENAPI3_SPEC, build_app_from_fixture
 
+
 @pytest.fixture(scope="session")
 def simple_app(spec, app_class):
     return build_app_from_fixture(
