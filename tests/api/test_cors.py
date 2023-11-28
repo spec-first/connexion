@@ -14,7 +14,7 @@ def test_cors_invalid(cors_openapi_app):
     response = app_client.options(
         "/v1.0/goodday/dan", headers={
             "Origin": "http://0.0.0.0",
-            "access-control-request-method": "POST"
+            "Access-Control-Request-Method": "POST"
         }
     )
     assert response.status_code == 400
