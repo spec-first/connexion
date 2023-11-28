@@ -35,5 +35,4 @@ def test_cors_server_error(cors_openapi_app):
         "/v1.0/goodday/noheader", data={}, headers={"Origin": "http://localhost"}
     )
     assert response.status_code == 500
-
     assert "Access-Control-Allow-Origin" in response.headers
