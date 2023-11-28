@@ -16,6 +16,7 @@ from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.middleware.abstract import SpecMiddleware
 from connexion.middleware.context import ContextMiddleware
 from connexion.middleware.exceptions import ExceptionMiddleware
+from connexion.middleware.server_error import ServerErrorMiddleware
 from connexion.middleware.lifespan import Lifespan, LifespanMiddleware
 from connexion.middleware.request_validation import RequestValidationMiddleware
 from connexion.middleware.response_validation import ResponseValidationMiddleware
@@ -92,6 +93,17 @@ class _Options:
 class MiddlewarePosition(enum.Enum):
     """Positions to insert a middleware"""
 
+    BEFORE_EXCEPTION = ExceptionMiddleware
+    """Add before the :class:`ExceptionMiddleware`. This is useful if you want your changes to
+    affect the way exceptions are handled, such as a custom error handler.
+
+    Be mindful that security has not yet been applied at this stage.
+    Additionally, the inserted middleware is positioned before the RoutingMiddleware, so you cannot
+    leverage any routing information yet and should implement your middleware to work globally
+    instead of on an operation level.
+
+    Usefull for CORS middleware which should be applied before the exception middleware.
+    """
     BEFORE_SWAGGER = SwaggerUIMiddleware
     """Add before the :class:`SwaggerUIMiddleware`. This is useful if you want your changes to
     affect the Swagger UI, such as a path altering middleware that should also alter the paths
@@ -164,6 +176,7 @@ class ConnexionMiddleware:
     provided application."""
 
     default_middlewares = [
+        ServerErrorMiddleware,
         ExceptionMiddleware,
         SwaggerUIMiddleware,
         RoutingMiddleware,
