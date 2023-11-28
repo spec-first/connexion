@@ -12,7 +12,10 @@ def test_cors_valid(cors_openapi_app):
 def test_cors_invalid(cors_openapi_app):
     app_client = cors_openapi_app.test_client()
     response = app_client.options(
-        "/v1.0/goodday/dan", headers={"Origin": "http://0.0.0.0"}
+        "/v1.0/goodday/dan", headers={
+            "Origin": "http://0.0.0.0",
+            "access-control-request-method": "POST"
+        }
     )
     assert response.status_code == 400
     assert "Access-Control-Allow-Origin" not in response.headers
