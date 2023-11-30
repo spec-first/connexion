@@ -18,17 +18,17 @@ class ServerErrorMiddleware(StarletteServerErrorMiddleware):
     """Subclass of starlette ServerErrorMiddleware to change handling of Unhandled Server
     exceptions to existing connexion behavior."""
 
-    def __init__(self, next_app: ASGIApp, handler: t.Optional[
-            t.Callable[[ConnexionRequest, Exception], t.Any]] = None):
+    def __init__(
+        self,
+        next_app: ASGIApp,
+        handler: t.Optional[t.Callable[[ConnexionRequest, Exception], t.Any]] = None,
+    ):
         handler = connexion_wrapper(handler) if handler else None
         super().__init__(next_app, handler=handler)
 
     @staticmethod
     @connexion_wrapper
-    def error_response(
-        _request: StarletteRequest, exc: Exception
-    ) -> ConnexionResponse:
+    def error_response(_request: StarletteRequest, exc: Exception) -> ConnexionResponse:
         """Default handler for any unhandled Exception"""
         logger.error("%r", exc, exc_info=exc)
         return InternalServerError().to_problem()
-
