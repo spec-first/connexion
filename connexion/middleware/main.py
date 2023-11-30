@@ -103,6 +103,7 @@ class MiddlewarePosition(enum.Enum):
     instead of on an operation level.
 
     Useful for CORS middleware which should be applied before the exception middleware.
+
     :meta hide-value:
     """
     BEFORE_SWAGGER = SwaggerUIMiddleware
