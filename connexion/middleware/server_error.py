@@ -20,9 +20,11 @@ class ServerErrorMiddleware(StarletteServerErrorMiddleware):
 
     def __init__(self, next_app: ASGIApp, handler: t.Optional[
             t.Callable[[ConnexionRequest, Exception], t.Any]] = None):
-        super().__init__(next_app, handler=connexion_wrapper(handler or self.error_response))
+        handler = connexion_wrapper(handler) if handler else None
+        super().__init__(next_app, handler=handler)
 
     @staticmethod
+    @connexion_wrapper
     def error_response(
         _request: StarletteRequest, exc: Exception
     ) -> ConnexionResponse:
