@@ -1,13 +1,11 @@
 import logging
-from functools import partial
 
 import pytest
-from connexion import ConnexionMiddleware
-from connexion.middleware.server_error import ServerErrorMiddleware
+from connexion.middleware import MiddlewarePosition
 from starlette.middleware.cors import CORSMiddleware
 from starlette.types import Receive, Scope, Send
 
-from conftest import FIXTURES_FOLDER, OPENAPI3_SPEC, build_app_from_fixture
+from conftest import OPENAPI3_SPEC, build_app_from_fixture
 
 
 @pytest.fixture(scope="session")
@@ -26,19 +24,20 @@ def simple_openapi_app(app_class):
 
 @pytest.fixture(scope="session")
 def cors_openapi_app(app_class):
-    middlewares = [*ConnexionMiddleware.default_middlewares]
-    cors_middleware = partial(CORSMiddleware, allow_origins=["http://localhost"])
-    # CORS should always be directly after ServerErrorMiddleware
-    server_error_idx = middlewares.index(ServerErrorMiddleware)
-    middlewares.insert(server_error_idx + 1, cors_middleware)
-
-    return build_app_from_fixture(
+    app = build_app_from_fixture(
         "simple",
         app_class=app_class,
         spec_file=OPENAPI3_SPEC,
-        middlewares=middlewares,
         validate_responses=True,
     )
+
+    app.add_middleware(
+        CORSMiddleware,
+        position=MiddlewarePosition.BEFORE_EXCEPTION,
+        allow_origins=["http://localhost"],
+    )
+
+    return app
 
 
 @pytest.fixture(scope="session")

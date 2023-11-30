@@ -102,7 +102,8 @@ class MiddlewarePosition(enum.Enum):
     leverage any routing information yet and should implement your middleware to work globally
     instead of on an operation level.
 
-    Usefull for CORS middleware which should be applied before the exception middleware.
+    Useful for CORS middleware which should be applied before the exception middleware.
+    :meta hide-value:
     """
     BEFORE_SWAGGER = SwaggerUIMiddleware
     """Add before the :class:`SwaggerUIMiddleware`. This is useful if you want your changes to
