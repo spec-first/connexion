@@ -8,6 +8,7 @@ import json
 import os
 import pathlib
 import pkgutil
+import typing as t
 from collections.abc import Mapping
 from urllib.parse import urlsplit
 
@@ -19,7 +20,7 @@ from jsonschema.validators import extend as extend_validator
 
 from .exceptions import InvalidSpecification
 from .json_schema import NullableTypeValidator, resolve_refs
-from .operations import OpenAPIOperation, Swagger2Operation
+from .operations import AbstractOperation, OpenAPIOperation, Swagger2Operation
 from .utils import deep_get
 
 validate_properties = Draft4Validator.VALIDATORS["properties"]
@@ -72,6 +73,9 @@ def canonical_base_path(base_path):
 
 
 class Specification(Mapping):
+
+    operation_cls: t.Type[AbstractOperation]
+
     def __init__(self, raw_spec, *, base_uri=""):
         self._raw_spec = copy.deepcopy(raw_spec)
         self._set_defaults(raw_spec)
@@ -205,6 +209,16 @@ class Specification(Mapping):
         new_spec = self.clone()
         new_spec.base_path = base_path
         return new_spec
+
+    @property
+    @abc.abstractmethod
+    def base_path(self):
+        pass
+
+    @base_path.setter
+    @abc.abstractmethod
+    def base_path(self, base_path):
+        pass
 
 
 class Swagger2Specification(Specification):

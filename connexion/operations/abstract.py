@@ -76,6 +76,11 @@ class AbstractOperation(metaclass=abc.ABCMeta):
 
         self._responses = self._operation.get("responses", {})
 
+    @classmethod
+    @abc.abstractmethod
+    def from_spec(cls, spec, *args, path, method, resolver, **kwargs):
+        pass
+
     @property
     def method(self):
         """

@@ -1,4 +1,3 @@
-import pathlib
 import typing as t
 from contextvars import ContextVar
 
@@ -14,6 +13,7 @@ from connexion.middleware.abstract import (
 )
 from connexion.operations import AbstractOperation
 from connexion.resolver import Resolver
+from connexion.spec import Specification
 
 _scope: ContextVar[dict] = ContextVar("SCOPE")
 
@@ -50,7 +50,7 @@ class RoutingOperation:
 class RoutingAPI(AbstractRoutingAPI):
     def __init__(
         self,
-        specification: t.Union[pathlib.Path, str, dict],
+        specification: Specification,
         *,
         next_app: ASGIApp,
         base_path: t.Optional[str] = None,
@@ -110,14 +110,14 @@ class RoutingMiddleware(SpecMiddleware):
 
     def add_api(
         self,
-        specification: t.Union[pathlib.Path, str, dict],
+        specification: Specification,
         base_path: t.Optional[str] = None,
         arguments: t.Optional[dict] = None,
         **kwargs,
     ) -> None:
         """Add an API to the router based on a OpenAPI spec.
 
-        :param specification: OpenAPI spec as dict or path to file.
+        :param specification: OpenAPI spec.
         :param base_path: Base path where to add this API.
         :param arguments: Jinja arguments to replace in the spec.
         """

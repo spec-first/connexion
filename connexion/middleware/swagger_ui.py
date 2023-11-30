@@ -1,6 +1,5 @@
 import json
 import logging
-import pathlib
 import re
 import typing as t
 from contextvars import ContextVar
@@ -17,6 +16,7 @@ from connexion.jsonifier import Jsonifier
 from connexion.middleware import SpecMiddleware
 from connexion.middleware.abstract import AbstractSpecAPI
 from connexion.options import SwaggerUIConfig, SwaggerUIOptions
+from connexion.spec import Specification
 from connexion.utils import yamldumper
 
 logger = logging.getLogger("connexion.middleware.swagger_ui")
@@ -191,14 +191,14 @@ class SwaggerUIMiddleware(SpecMiddleware):
 
     def add_api(
         self,
-        specification: t.Union[pathlib.Path, str, dict],
+        specification: Specification,
         base_path: t.Optional[str] = None,
         arguments: t.Optional[dict] = None,
         **kwargs
     ) -> None:
         """Add an API to the router based on a OpenAPI spec.
 
-        :param specification: OpenAPI spec as dict or path to file.
+        :param specification: OpenAPI spec.
         :param base_path: Base path where to add this API.
         :param arguments: Jinja arguments to replace in the spec.
         """

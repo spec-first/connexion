@@ -1,6 +1,5 @@
 import abc
 import logging
-import pathlib
 import typing as t
 from collections import defaultdict
 
@@ -22,9 +21,7 @@ class SpecMiddleware(abc.ABC):
     base class"""
 
     @abc.abstractmethod
-    def add_api(
-        self, specification: t.Union[pathlib.Path, str, dict], **kwargs
-    ) -> t.Any:
+    def add_api(self, specification: Specification, **kwargs) -> t.Any:
         """
         Register an API represented by a single OpenAPI specification on this middleware.
         Multiple APIs can be registered on a single middleware.
@@ -40,15 +37,14 @@ class AbstractSpecAPI:
 
     def __init__(
         self,
-        specification: t.Union[pathlib.Path, str, dict],
+        specification: Specification,
         base_path: t.Optional[str] = None,
         resolver: t.Optional[Resolver] = None,
-        arguments: t.Optional[dict] = None,
         uri_parser_class=None,
         *args,
         **kwargs,
     ):
-        self.specification = Specification.load(specification, arguments=arguments)
+        self.specification = specification
         self.uri_parser_class = uri_parser_class
 
         self._set_base_path(base_path)
@@ -88,7 +84,7 @@ class AbstractRoutingAPI(AbstractSpecAPI, t.Generic[OP]):
         """
         Adds the paths defined in the specification as operations.
         """
-        paths = paths or self.specification.get("paths", dict())
+        paths = t.cast(dict, paths or self.specification.get("paths", dict()))
         for path, methods in paths.items():
             logger.debug("Adding %s%s...", self.base_path, path)
 
@@ -176,7 +172,7 @@ class AbstractRoutingAPI(AbstractSpecAPI, t.Generic[OP]):
 class RoutedAPI(AbstractSpecAPI, t.Generic[OP]):
     def __init__(
         self,
-        specification: t.Union[pathlib.Path, str, dict],
+        specification: Specification,
         *args,
         next_app: ASGIApp,
         **kwargs,
@@ -235,7 +231,7 @@ class RoutedMiddleware(SpecMiddleware, t.Generic[API]):
         self.app = app
         self.apis: t.Dict[str, t.List[API]] = defaultdict(list)
 
-    def add_api(self, specification: t.Union[pathlib.Path, str, dict], **kwargs) -> API:
+    def add_api(self, specification: Specification, **kwargs) -> API:
         api = self.api_cls(specification, next_app=self.app, **kwargs)
         self.apis[api.base_path].append(api)
         return api
