@@ -102,7 +102,9 @@ class MiddlewarePosition(enum.Enum):
     leverage any routing information yet and should implement your middleware to work globally
     instead of on an operation level.
 
-    Useful for CORS middleware which should be applied before the exception middleware.
+    Useful for middleware which should also be applied to error responses. Note that errors
+    raised here will not be handled by the exception handlers and will always result in an
+    internal server error response.
 
     :meta hide-value:
     """

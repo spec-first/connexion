@@ -8,6 +8,8 @@ following order:
 .. csv-table::
     :widths: 30, 70
 
+    **ServerErrorMiddleware**, "Returns server errors for any exceptions not caught by the
+    ExceptionMiddleware"
     **ExceptionMiddleware**, Handles exceptions raised by the middleware stack or application
     **SwaggerUIMiddleware**, Adds a Swagger UI to your application
     **RoutingMiddleware**, "Routes incoming requests to the right operation defined in the
