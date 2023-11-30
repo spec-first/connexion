@@ -1,11 +1,7 @@
-import logging
-
 from starlette.middleware.errors import (
     ServerErrorMiddleware as StarletteServerErrorMiddleware,
 )
 from starlette.types import ASGIApp
-
-logger = logging.getLogger(__name__)
 
 
 class ServerErrorMiddleware(StarletteServerErrorMiddleware):
