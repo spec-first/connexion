@@ -21,6 +21,7 @@ from connexion.middleware.request_validation import RequestValidationMiddleware
 from connexion.middleware.response_validation import ResponseValidationMiddleware
 from connexion.middleware.routing import RoutingMiddleware
 from connexion.middleware.security import SecurityMiddleware
+from connexion.middleware.server_error import ServerErrorMiddleware
 from connexion.middleware.swagger_ui import SwaggerUIMiddleware
 from connexion.options import SwaggerUIOptions
 from connexion.resolver import Resolver
@@ -93,6 +94,21 @@ class _Options:
 class MiddlewarePosition(enum.Enum):
     """Positions to insert a middleware"""
 
+    BEFORE_EXCEPTION = ExceptionMiddleware
+    """Add before the :class:`ExceptionMiddleware`. This is useful if you want your changes to
+    affect the way exceptions are handled, such as a custom error handler.
+
+    Be mindful that security has not yet been applied at this stage.
+    Additionally, the inserted middleware is positioned before the RoutingMiddleware, so you cannot
+    leverage any routing information yet and should implement your middleware to work globally
+    instead of on an operation level.
+
+    Useful for middleware which should also be applied to error responses. Note that errors
+    raised here will not be handled by the exception handlers and will always result in an
+    internal server error response.
+
+    :meta hide-value:
+    """
     BEFORE_SWAGGER = SwaggerUIMiddleware
     """Add before the :class:`SwaggerUIMiddleware`. This is useful if you want your changes to
     affect the Swagger UI, such as a path altering middleware that should also alter the paths
@@ -165,6 +181,7 @@ class ConnexionMiddleware:
     provided application."""
 
     default_middlewares = [
+        ServerErrorMiddleware,
         ExceptionMiddleware,
         SwaggerUIMiddleware,
         RoutingMiddleware,

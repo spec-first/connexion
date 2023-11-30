@@ -28,7 +28,7 @@ Starlette. You can add it to your application, ideally in front of the ``Routing
 
             app.add_middleware(
                 CORSMiddleware,
-                position=MiddlewarePosition.BEFORE_ROUTING,
+                position=MiddlewarePosition.BEFORE_EXCEPTION,
                 allow_origins=["*"],
                 allow_credentials=True,
                 allow_methods=["*"],
@@ -62,7 +62,7 @@ Starlette. You can add it to your application, ideally in front of the ``Routing
 
             app.add_middleware(
                 CORSMiddleware,
-                position=MiddlewarePosition.BEFORE_ROUTING,
+                position=MiddlewarePosition.BEFORE_EXCEPTION,
                 allow_origins=["*"],
                 allow_credentials=True,
                 allow_methods=["*"],
@@ -96,7 +96,7 @@ Starlette. You can add it to your application, ideally in front of the ``Routing
 
             app.add_middleware(
                 CORSMiddleware,
-                position=MiddlewarePosition.BEFORE_ROUTING,
+                position=MiddlewarePosition.BEFORE_EXCEPTION,
                 allow_origins=["*"],
                 allow_credentials=True,
                 allow_methods=["*"],
