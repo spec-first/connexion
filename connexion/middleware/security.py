@@ -37,6 +37,16 @@ class SecurityOperation:
         next_app: ASGIApp,
         security_handler_factory: SecurityHandlerFactory,
     ) -> "SecurityOperation":
+        """Create a SecurityOperation from an Operation of Specification instance
+
+        :param operation: The operation can be both an Operation or Specification instance here
+            since security is defined at both levels in the OpenAPI spec. Creating a
+            SecurityOperation based on a Specification can be used to create a SecurityOperation
+            for routes not explicitly defined in the specification.
+        :param next_app: The next ASGI app to call.
+        :param security_handler_factory: The factory to be used to generate security handlers for
+            the different security schemes.
+        """
         return cls(
             next_app=next_app,
             security_handler_factory=security_handler_factory,
@@ -124,6 +134,13 @@ class SecurityAPI(RoutedAPI[SecurityOperation]):
     def make_operation(
         self, operation: t.Union[AbstractOperation, Specification]
     ) -> SecurityOperation:
+        """Create a SecurityOperation from an Operation of Specification instance
+
+        :param operation: The operation can be both an Operation or Specification instance here
+            since security is defined at both levels in the OpenAPI spec. Creating a
+            SecurityOperation based on a Specification can be used to create a SecurityOperation
+            for routes not explicitly defined in the specification.
+        """
         return SecurityOperation.from_operation(
             operation,
             next_app=self.next_app,
