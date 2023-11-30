@@ -8,8 +8,8 @@ from starlette.requests import Request as StarletteRequest
 from starlette.types import ASGIApp
 
 from connexion.exceptions import InternalServerError
-from connexion.middleware.exceptions import connexion_wrapper
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
+from connexion.middleware.exceptions import connexion_wrapper
 
 logger = logging.getLogger(__name__)
 
