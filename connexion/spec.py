@@ -196,7 +196,7 @@ class Specification(Mapping):
         return OpenAPISpecification(spec, base_uri=base_uri)
 
     def clone(self):
-        return type(self)(copy.deepcopy(self._spec))
+        return type(self)(copy.deepcopy(self._raw_spec))
 
     @classmethod
     def load(cls, spec, *, arguments=None):
