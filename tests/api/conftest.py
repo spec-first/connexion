@@ -2,6 +2,7 @@ import logging
 
 import pytest
 from connexion.middleware import MiddlewarePosition
+from connexion.options import SwaggerUIOptions
 from starlette.middleware.cors import CORSMiddleware
 from starlette.types import Receive, Scope, Send
 
@@ -19,6 +20,17 @@ def simple_app(spec, app_class):
 def simple_openapi_app(app_class):
     return build_app_from_fixture(
         "simple", app_class=app_class, spec_file=OPENAPI3_SPEC, validate_responses=True
+    )
+
+
+@pytest.fixture(scope="session")
+def swagger_ui_app(app_class):
+    return build_app_from_fixture(
+        "simple",
+        app_class=app_class,
+        spec_file=OPENAPI3_SPEC,
+        validate_responses=True,
+        swagger_ui_options=SwaggerUIOptions(spec_path="/spec.json"),
     )
 
 
