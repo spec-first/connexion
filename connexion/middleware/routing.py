@@ -35,8 +35,12 @@ class RoutingOperation:
             scope.get("path_params", {})
         )
 
-        api_base_path = scope.get("root_path", "")[
-            len(original_scope.get("root_path", "")) :
+        api_base_path = scope.get("route_root_path", scope.get("root_path", ""))[
+            len(
+                original_scope.get(
+                    "route_root_path", original_scope.get("root_path", "")
+                )
+            ) :
         ]
 
         extensions = original_scope.setdefault("extensions", {})
