@@ -6,7 +6,7 @@ from connexion.options import SwaggerUIOptions
 from starlette.middleware.cors import CORSMiddleware
 from starlette.types import Receive, Scope, Send
 
-from conftest import OPENAPI3_SPEC, BASEPATH_SLASH_SPEC, build_app_from_fixture
+from conftest import BASEPATH_SLASH_SPEC, OPENAPI3_SPEC, build_app_from_fixture
 
 
 @pytest.fixture(scope="session")
