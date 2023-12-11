@@ -265,7 +265,7 @@ class Swagger2Specification(Specification):
 
     @property
     def base_path(self):
-        return canonical_base_path(self._spec.get("basePath", ""))
+        return "/" + canonical_base_path(self._spec.get("basePath", "")).lstrip('/')
 
     @base_path.setter
     def base_path(self, base_path):
