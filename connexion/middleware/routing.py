@@ -35,13 +35,10 @@ class RoutingOperation:
             scope.get("path_params", {})
         )
 
-        api_base_path = scope.get("route_root_path", scope.get("root_path", ""))[
-            len(
-                original_scope.get(
-                    "route_root_path", original_scope.get("root_path", "")
-                )
-            ) :
-        ]
+        def get_root_path(scope: Scope) -> str:
+            return scope.get("route_root_path", scope.get("root_path", ""))
+
+        api_base_path = get_root_path(scope)[len(get_root_path(original_scope)) :]
 
         extensions = original_scope.setdefault("extensions", {})
         connexion_routing = extensions.setdefault(ROUTING_CONTEXT, {})
