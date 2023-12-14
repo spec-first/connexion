@@ -243,9 +243,10 @@ class ApiKeySecurityHandler(AbstractSecurityHandler):
             apikey_info_func,
             security_scheme["in"],
             security_scheme["name"],
+            required_scopes,
         )
 
-    def _get_verify_func(self, api_key_info_func, loc, name):
+    def _get_verify_func(self, api_key_info_func, loc, name, required_scopes):
         check_api_key_func = self.check_api_key(api_key_info_func)
 
         def wrapper(request: ConnexionRequest):
@@ -262,7 +263,7 @@ class ApiKeySecurityHandler(AbstractSecurityHandler):
             if api_key is None:
                 return NO_VALUE
 
-            return check_api_key_func(request, api_key)
+            return check_api_key_func(request, api_key, required_scopes=required_scopes)
 
         return wrapper
 

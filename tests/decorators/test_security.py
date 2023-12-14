@@ -1,5 +1,5 @@
 import json
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 import requests
@@ -233,6 +233,36 @@ async def test_verify_apikey_header():
     )
 
     assert await wrapped_func(request) is not None
+
+
+async def test_verify_apikey_scopes():
+    def apikey_info(apikey, required_scopes=None):
+        if apikey == "admin foobar" and required_scopes == ["admin"]:
+            return {"sub": "foo"}
+        return None
+
+    security_handler_factory = ApiKeySecurityHandler()
+
+    scheme_apikey = {
+        "type": "apiKey",
+        "name": "x-auth",
+        "in": "header",
+        "scopes": {"admin"},
+    }
+
+    with patch.object(
+        security_handler_factory,
+        f"{security_handler_factory._resolve_func.__name__}",
+        return_value=apikey_info,
+    ) as mock_resolve_func:
+        wrapped_func = security_handler_factory.get_fn(scheme_apikey, ["admin"])
+        mock_resolve_func.assert_called_once()
+
+        request = ConnexionRequest(
+            scope={"type": "http", "headers": [[b"x-auth", b"admin foobar"]]}
+        )
+
+        assert await wrapped_func(request) is not None
 
 
 async def test_multiple_schemes():
