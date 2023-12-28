@@ -189,6 +189,8 @@ class AsyncResponseDecorator(BaseResponseDecorator):
             object.
             """
             handler_response = await function(*args, **kwargs)
+            if isinstance(handler_response, t.Coroutine):
+                handler_response = await handler_response
             if self.framework.is_framework_response(handler_response):
                 return handler_response
             elif isinstance(handler_response, ConnexionResponse):
