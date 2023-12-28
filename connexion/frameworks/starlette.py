@@ -38,7 +38,7 @@ class Starlette(Framework):
     ):
         if isinstance(data, dict) or isinstance(data, list):
             response_cls = StarletteJSONResponse
-        elif isinstance(data, t.Generator):
+        elif isinstance(data, t.Generator) or isinstance(data, t.AsyncGenerator):
             response_cls = StarletteStreamingResponse
         else:
             response_cls = StarletteResponse
