@@ -75,16 +75,16 @@ def test_readonly(json_datetime_dir, spec, app_class):
     assert example == "a7b8869c-5f24-4ce0-a5d1-3e44c3663aa9"
 
     res = app_client.get("/v1.0/datetime")
-    assert res.status_code == 200, f"Error is {res.data}"
+    assert res.status_code == 200, f"Error is {res.text}"
     data = res.json()
     assert data == {"value": "2000-01-02T03:04:05.000006Z"}
 
     res = app_client.get("/v1.0/date")
-    assert res.status_code == 200, f"Error is {res.data}"
+    assert res.status_code == 200, f"Error is {res.text}"
     data = res.json()
     assert data == {"value": "2000-01-02"}
 
     res = app_client.get("/v1.0/uuid")
-    assert res.status_code == 200, f"Error is {res.data}"
+    assert res.status_code == 200, f"Error is {res.text}"
     data = res.json()
     assert data == {"value": "e7ff66d0-3ec2-4c4e-bed0-6e4723c24c51"}
