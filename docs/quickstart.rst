@@ -102,7 +102,7 @@ built using either the :code:`AsyncApp` or :code:`FlaskApp`.
 
             wsgi_app = App(__name__)
             asgi_app = WSGIMiddleware(wsgi_app)
-            app = ConnexionMiddleware(app)
+            app = ConnexionMiddleware(asgi_app)
 
         .. dropdown:: View a detailed reference of the options accepted by the
             :code:`ConnexionMiddleware`
