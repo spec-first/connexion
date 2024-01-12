@@ -6,7 +6,7 @@ from connexion.options import SwaggerUIOptions
 from starlette.middleware.cors import CORSMiddleware
 from starlette.types import Receive, Scope, Send
 
-from conftest import BASEPATH_SLASH_SPEC, OPENAPI3_SPEC, build_app_from_fixture
+from conftest import OPENAPI3_SPEC, build_app_from_fixture
 
 
 @pytest.fixture(scope="session")
@@ -39,7 +39,7 @@ def swagger_ui_basepath_app(app_class):
     return build_app_from_fixture(
         "simple",
         app_class=app_class,
-        spec_file=BASEPATH_SLASH_SPEC,
+        spec_file="basepath-slash.yaml",
         validate_responses=True,
         swagger_ui_options=SwaggerUIOptions(spec_path="/spec.json"),
     )
