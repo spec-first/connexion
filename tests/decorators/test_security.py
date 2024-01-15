@@ -209,7 +209,7 @@ async def test_verify_apikey_query():
 
     security_handler_factory = ApiKeySecurityHandler()
     wrapped_func = security_handler_factory._get_verify_func(
-        apikey_info, "query", "auth"
+        apikey_info, "query", "auth", None
     )
 
     request = ConnexionRequest(scope={"type": "http", "query_string": b"auth=foobar"})
@@ -225,7 +225,7 @@ async def test_verify_apikey_header():
 
     security_handler_factory = ApiKeySecurityHandler()
     wrapped_func = security_handler_factory._get_verify_func(
-        apikey_info, "header", "X-Auth"
+        apikey_info, "header", "X-Auth", None
     )
 
     request = ConnexionRequest(
@@ -279,10 +279,10 @@ async def test_multiple_schemes():
     security_handler_factory = SecurityHandlerFactory()
     apikey_security_handler_factory = ApiKeySecurityHandler()
     wrapped_func_key1 = apikey_security_handler_factory._get_verify_func(
-        apikey1_info, "header", "X-Auth-1"
+        apikey1_info, "header", "X-Auth-1", []
     )
     wrapped_func_key2 = apikey_security_handler_factory._get_verify_func(
-        apikey2_info, "header", "X-Auth-2"
+        apikey2_info, "header", "X-Auth-2", []
     )
     schemes = {
         "key1": wrapped_func_key1,
