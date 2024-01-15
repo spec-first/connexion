@@ -59,7 +59,9 @@ class SwaggerUIAPI(AbstractSpecAPI):
         """
         returns a modified basePath which includes the incoming root_path.
         """
-        return request.scope.get("root_path", "").rstrip("/")
+        return request.scope.get(
+            "route_root_path", request.scope.get("root_path", "")
+        ).rstrip("/")
 
     def _spec_for_prefix(self, request):
         """
