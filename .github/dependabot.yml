@@ -1,0 +1,14 @@
+# dependabot
+# Ref: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+# ------------------------------------------------------------------------------
+version: 2
+updates:
+- package-ecosystem: github-actions
+  directory: /
+  schedule:
+    interval: monthly
+  groups:
+    # open a single pull-request for all GitHub actions updates
+    github-actions:
+      patterns:
+      - '*'
