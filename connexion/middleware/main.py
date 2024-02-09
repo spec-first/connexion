@@ -408,7 +408,11 @@ class ConnexionMiddleware:
         if self.middleware_stack is not None:
             raise RuntimeError("Cannot add api after an application has started")
 
-        if isinstance(specification, (pathlib.Path, str)):
+        if isinstance(specification, str) and (
+            specification.startswith("http://") or specification.startswith("https://")
+        ):
+            pass
+        elif isinstance(specification, (pathlib.Path, str)):
             specification = t.cast(pathlib.Path, self.specification_dir / specification)
 
             # Add specification as file to watch for reloading
