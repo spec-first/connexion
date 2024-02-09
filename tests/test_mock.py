@@ -224,7 +224,8 @@ def test_mock_resolver_no_example_nested_in_object():
 
     response, status_code = resolver.mock_operation(operation)
     assert status_code == 200
-    assert response == "No example response was defined."
+    assert isinstance(response, dict)
+    assert isinstance(response["foo"], str)
 
 
 def test_mock_resolver_no_example_nested_in_list_openapi():
@@ -256,7 +257,8 @@ def test_mock_resolver_no_example_nested_in_list_openapi():
 
     response, status_code = resolver.mock_operation(operation)
     assert status_code == 202
-    assert response == "No example response was defined."
+    assert isinstance(response, list)
+    assert all(isinstance(c, str) for c in response)
 
 
 def test_mock_resolver_no_examples():

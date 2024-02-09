@@ -12,6 +12,7 @@ import sys
 import typing as t
 
 import yaml
+from jsf import JSF
 from starlette.routing import compile_path
 
 from connexion.exceptions import TypeValidationError
@@ -512,3 +513,8 @@ def sort_apis_by_basepath(apis: t.List["API"]) -> t.List["API"]:
     :return: List of APIs sorted by basepath
     """
     return sort_routes(apis, key=lambda api: api.base_path or "/")
+
+
+def generate_example(schema):
+    faker = JSF(schema)
+    return faker.generate()

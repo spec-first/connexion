@@ -7,7 +7,7 @@ import logging
 from connexion.datastructures import MediaTypeDict
 from connexion.operations.abstract import AbstractOperation
 from connexion.uri_parsing import OpenAPIURIParser
-from connexion.utils import deep_get
+from connexion.utils import deep_get, generate_example
 
 logger = logging.getLogger("connexion.operations.openapi3")
 
@@ -210,6 +210,10 @@ class OpenAPIOperation(AbstractOperation):
         try:
             # Recurse if schema is an array
             return [self._nested_example(schema["items"])]
+        except KeyError:
+            pass
+        try:
+            return generate_example(schema)
         except KeyError:
             raise
 
