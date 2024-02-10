@@ -61,6 +61,7 @@ class _Options:
     validate_responses: t.Optional[bool] = False
     validator_map: t.Optional[dict] = None
     security_map: t.Optional[dict] = None
+    no_security: t.Optional[bool] = False
 
     def __post_init__(self):
         self.resolver = (
@@ -212,6 +213,7 @@ class ConnexionMiddleware:
         validate_responses: t.Optional[bool] = None,
         validator_map: t.Optional[dict] = None,
         security_map: t.Optional[dict] = None,
+        no_security: t.Optional[bool] = None,
     ):
         """
         :param import_name: The name of the package or module that this object belongs to. If you
@@ -244,6 +246,9 @@ class ConnexionMiddleware:
             :obj:`validators.VALIDATOR_MAP`.
         :param security_map: A dictionary of security handlers to use. Defaults to
             :obj:`security.SECURITY_HANDLERS`.
+        :param no_security: Disable security verification. Useful for prototyping
+            or if security is handled by an API Gateway in front of your application. Defaults to
+            False.
         """
         import_name = import_name or str(pathlib.Path.cwd())
         self.root_path = utils.get_root_path(import_name)
@@ -277,6 +282,7 @@ class ConnexionMiddleware:
             validate_responses=validate_responses,
             validator_map=validator_map,
             security_map=security_map,
+            no_security=no_security,
         )
 
         self.extra_files: t.List[str] = []
@@ -365,6 +371,7 @@ class ConnexionMiddleware:
         validate_responses: t.Optional[bool] = None,
         validator_map: t.Optional[dict] = None,
         security_map: t.Optional[dict] = None,
+        no_security: t.Optional[bool] = False,
         **kwargs,
     ) -> None:
         """
@@ -399,6 +406,9 @@ class ConnexionMiddleware:
             :obj:`validators.VALIDATOR_MAP`
         :param security_map: A dictionary of security handlers to use. Defaults to
             :obj:`security.SECURITY_HANDLERS`
+        :param no_security: Disable security verification. Useful for prototyping
+            or if security is handled by an API Gateway in front of your application. Defaults to
+            False.
         :param kwargs: Additional keyword arguments to pass to the `add_api` method of the managed
             middlewares. This can be used to pass arguments to middlewares added beyond the default
             ones.
@@ -431,6 +441,7 @@ class ConnexionMiddleware:
             validate_responses=validate_responses,
             validator_map=validator_map,
             security_map=security_map,
+            no_security=no_security,
         )
 
         api = API(

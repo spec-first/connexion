@@ -36,6 +36,7 @@ class SecurityOperation:
         *,
         next_app: ASGIApp,
         security_handler_factory: SecurityHandlerFactory,
+        no_security: bool = False,
     ) -> "SecurityOperation":
         """Create a SecurityOperation from an Operation of Specification instance
 
@@ -47,10 +48,15 @@ class SecurityOperation:
         :param security_handler_factory: The factory to be used to generate security handlers for
             the different security schemes.
         """
+        if no_security:
+            security = []
+        else:
+            security = operation.security
+
         return cls(
             next_app=next_app,
             security_handler_factory=security_handler_factory,
-            security=operation.security,
+            security=security,
             security_schemes=operation.security_schemes,
         )
 
@@ -113,11 +119,17 @@ class SecurityOperation:
 
 class SecurityAPI(RoutedAPI[SecurityOperation]):
     def __init__(
-        self, *args, auth_all_paths: bool = False, security_map: dict = None, **kwargs
+        self,
+        *args,
+        auth_all_paths: bool = False,
+        security_map: dict = None,
+        no_security: bool = False,
+        **kwargs,
     ):
         super().__init__(*args, **kwargs)
 
         self.security_handler_factory = SecurityHandlerFactory(security_map)
+        self.no_security = no_security
 
         if auth_all_paths:
             self.add_auth_on_not_found()
@@ -145,6 +157,7 @@ class SecurityAPI(RoutedAPI[SecurityOperation]):
             operation,
             next_app=self.next_app,
             security_handler_factory=self.security_handler_factory,
+            no_security=self.no_security,
         )
 
 

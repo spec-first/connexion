@@ -93,6 +93,11 @@ run_parser.add_argument(
     action="count",
     default=0,
 )
+run_parser.add_argument(
+    "--no-security",
+    help="Disable security checks.",
+    action="store_true",
+)
 run_parser.add_argument("--base-path", help="Override the basePath in the API spec.")
 run_parser.add_argument(
     "--app-framework",
@@ -126,10 +131,13 @@ def create_app(args: t.Optional[argparse.Namespace] = None) -> AbstractApp:
     if args.stub:
         resolver_error = 501
 
-    api_extra_args = {}
+    api_extra_args: t.Dict[str, t.Any] = {}
     if args.mock:
         resolver = MockResolver(mock_all=args.mock == "all")
         api_extra_args["resolver"] = resolver
+    if args.no_security:
+        logger.warning("Disabling security checks on the API.")
+        api_extra_args["no_security"] = True
 
     app_cls = connexion.utils.get_function_from_name(AVAILABLE_APPS[args.app_framework])
 

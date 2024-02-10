@@ -176,6 +176,7 @@ class FlaskApp(AbstractApp):
         validate_responses: t.Optional[bool] = None,
         validator_map: t.Optional[dict] = None,
         security_map: t.Optional[dict] = None,
+        no_security: t.Optional[bool] = None,
     ):
         """
         :param import_name: The name of the package or module that this object belongs to. If you
@@ -213,6 +214,9 @@ class FlaskApp(AbstractApp):
             :obj:`validators.VALIDATOR_MAP`.
         :param security_map: A dictionary of security handlers to use. Defaults to
             :obj:`security.SECURITY_HANDLERS`
+        :param no_security: Disable security verification. Useful for prototyping
+            or if security is handled by an API Gateway in front of your application. Defaults to
+            False.
         """
         self._middleware_app = FlaskASGIApp(import_name, server_args or {})
 
@@ -233,6 +237,7 @@ class FlaskApp(AbstractApp):
             validate_responses=validate_responses,
             validator_map=validator_map,
             security_map=security_map,
+            no_security=no_security,
         )
 
         self.app = self._middleware_app.app
