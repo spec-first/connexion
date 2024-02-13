@@ -262,7 +262,7 @@ async def test_verify_apikey_scopes():
             scope={"type": "http", "headers": [[b"x-auth", b"admin foobar"]]}
         )
 
-        assert await wrapped_func(request) is not None
+        assert await wrapped_func(request) == {"sub": "foo"}
 
 
 async def test_multiple_schemes():
