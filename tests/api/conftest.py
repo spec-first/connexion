@@ -84,10 +84,10 @@ def reverse_proxied_app(spec, app_class):
                     root_path = value.decode()
                     break
             if root_path:
-                scope["root_path"] = "/" + root_path.strip("/")
-                path_info = scope.get("PATH_INFO", scope.get("path"))
-                if path_info.startswith(root_path):
-                    scope["PATH_INFO"] = path_info[len(root_path) :]
+                root_path = "/" + root_path.strip("/")
+                scope["root_path"] = root_path
+                scope["path"] = root_path + scope.get("path", "")
+                scope["raw_path"] = root_path.encode() + scope.get("raw_path", "")
 
             scope["scheme"] = scope.get("scheme") or self.scheme
             scope["server"] = scope.get("server") or (self.server, None)

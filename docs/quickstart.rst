@@ -205,7 +205,7 @@ Or with gunicorn (which is recommended in production).
 See the `uvicorn documentation`_ for more details or check this
 `overview of available ASGI servers`_ for other options.
 
-.. _overview of available ASGI servers: https://asgi.readthedocs.io/en/latest/implementations.html#servers.
+.. _overview of available ASGI servers: https://asgi.readthedocs.io/en/latest/implementations.html#servers
 
 
 If you installed connexion using :code:`connexion[uvicorn]`, you can run it using the
