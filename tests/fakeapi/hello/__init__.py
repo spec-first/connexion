@@ -650,6 +650,15 @@ def post_multipart_form(body):
     return x
 
 
+def post_multipart_form_array(body):
+    result = []
+    for x in body["x"]:
+        x["name"] += "-reply"
+        x["age"] += 10
+        result.append(x)
+    return result
+
+
 def apikey_info(apikey, required_scopes=None):
     if apikey == "mykey":
         return {"sub": "admin"}

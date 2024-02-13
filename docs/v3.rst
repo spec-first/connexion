@@ -38,7 +38,7 @@ Getting started with Connexion 3
 --------------------------------
 
 If you're getting started with Connexion 3 for a new project, follow the
-`quickstart <quickstart.md>`_. All documentation has been updated for Connexion 3.
+:doc:`quickstart <quickstart>`. All documentation has been updated for Connexion 3.
 
 Migrating from Connexion 2
 --------------------------
