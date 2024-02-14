@@ -328,3 +328,52 @@ def test_raise_most_specific(errors, most_specific):
     security_handler_factory = SecurityHandlerFactory()
     with pytest.raises(most_specific):
         security_handler_factory._raise_most_specific(errors)
+
+
+async def test_optional_kwargs_injected():
+    """Test that optional keyword arguments 'required_scopes' and 'request' are injected when
+    defined as arguments in the user security function. This test uses the ApiKeySecurityHandler,
+    but the tested behavior is generic across handlers."""
+    security_handler_factory = ApiKeySecurityHandler()
+
+    request = ConnexionRequest(
+        scope={"type": "http", "headers": [[b"x-auth", b"foobar"]]}
+    )
+
+    def apikey_info_no_kwargs(key):
+        """Will fail if additional keywords are injected."""
+        return {"sub": "no_kwargs"}
+
+    wrapped_func_no_kwargs = security_handler_factory._get_verify_func(
+        apikey_info_no_kwargs, "header", "X-Auth"
+    )
+    assert await wrapped_func_no_kwargs(request) == {"sub": "no_kwargs"}
+
+    def apikey_info_request(key, request):
+        """Will fail if request is not injected."""
+        return {"sub": "request"}
+
+    wrapped_func_request = security_handler_factory._get_verify_func(
+        apikey_info_request, "header", "X-Auth"
+    )
+    assert await wrapped_func_request(request) == {"sub": "request"}
+
+    def apikey_info_scopes(key, required_scopes):
+        """Will fail if required_scopes is not injected."""
+        return {"sub": "scopes"}
+
+    wrapped_func_scopes = security_handler_factory._get_verify_func(
+        apikey_info_scopes, "header", "X-Auth"
+    )
+    assert await wrapped_func_scopes(request) == {"sub": "scopes"}
+
+    def apikey_info_kwargs(key, **kwargs):
+        """Will fail if request and required_scopes are not injected."""
+        assert "request" in kwargs
+        assert "required_scopes" in kwargs
+        return {"sub": "kwargs"}
+
+    wrapped_func_kwargs = security_handler_factory._get_verify_func(
+        apikey_info_kwargs, "header", "X-Auth"
+    )
+    assert await wrapped_func_kwargs(request) == {"sub": "kwargs"}
