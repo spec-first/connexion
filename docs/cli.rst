@@ -30,7 +30,8 @@ The basic usage of this command is:
 
 Where:
 
-- SPEC_FILE: Your OpenAPI specification file in YAML format.
+- SPEC_FILE: Your OpenAPI specification file in YAML format. Can also be given
+  as a URL, which will be automatically downloaded.
 - BASE_MODULE_PATH (optional): filesystem path where the API endpoints
   handlers are going to be imported from. In short, where your Python
   code is saved.
@@ -52,3 +53,5 @@ Your API specification file is not required to have any ``operationId``.
 .. code-block:: bash
 
     $ connexion run your_api.yaml --mock=all
+
+    $ connexion run https://raw.githubusercontent.com/spec-first/connexion/main/examples/helloworld_async/spec/openapi.yaml --mock=all

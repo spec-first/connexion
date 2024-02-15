@@ -8,20 +8,18 @@ import json
 import os
 import pathlib
 import pkgutil
-import tempfile
 import typing as t
 from collections.abc import Mapping
 from urllib.parse import urlsplit
 
 import jinja2
 import jsonschema
-import requests
 import yaml
 from jsonschema import Draft4Validator
 from jsonschema.validators import extend as extend_validator
 
 from .exceptions import InvalidSpecification
-from .json_schema import NullableTypeValidator, resolve_refs
+from .json_schema import NullableTypeValidator, URLHandler, resolve_refs
 from .operations import AbstractOperation, OpenAPIOperation, Swagger2Operation
 from .utils import deep_get
 
@@ -161,15 +159,12 @@ class Specification(Mapping):
         return cls.from_dict(spec, base_uri=base_uri)
 
     @classmethod
-    def from_url(cls, spec, *, arguments=None, base_uri=""):
+    def from_url(cls, spec, *, base_uri=""):
         """
         Takes in a path to a YAML file, and returns a Specification
         """
-        spec_content = requests.get(spec).content
-        with tempfile.NamedTemporaryFile() as tfile:
-            tfile.write(spec_content)
-            tfile.flush()
-            return cls.from_file(tfile.name, arguments=arguments, base_uri=base_uri)
+        spec = URLHandler()(spec)
+        return cls.from_dict(spec, base_uri=base_uri)
 
     @staticmethod
     def _get_spec_version(spec):
@@ -216,7 +211,7 @@ class Specification(Mapping):
         if isinstance(spec, str) and (
             spec.startswith("http://") or spec.startswith("https://")
         ):
-            return cls.from_url(spec, arguments=arguments)
+            return cls.from_url(spec)
         if not isinstance(spec, dict):
             base_uri = f"{pathlib.Path(spec).parent}{os.sep}"
             return cls.from_file(spec, arguments=arguments, base_uri=base_uri)
