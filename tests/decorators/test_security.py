@@ -299,32 +299,3 @@ async def test_verify_security_oauthproblem():
 
     assert exc_info.value.status_code == 401
     assert exc_info.value.detail == "No authorization token provided"
-
-
-@pytest.mark.parametrize(
-    "errors, most_specific",
-    [
-        ([OAuthProblem()], OAuthProblem),
-        ([OAuthProblem(), OAuthScopeProblem([], [])], OAuthScopeProblem),
-        (
-            [OAuthProblem(), OAuthScopeProblem([], []), BadRequestProblem],
-            OAuthScopeProblem,
-        ),
-        (
-            [
-                OAuthProblem(),
-                OAuthScopeProblem([], []),
-                BadRequestProblem,
-                ConnexionException,
-            ],
-            OAuthScopeProblem,
-        ),
-        ([BadRequestProblem(), ConnexionException()], BadRequestProblem),
-        ([ConnexionException()], ConnexionException),
-    ],
-)
-def test_raise_most_specific(errors, most_specific):
-    """Tests whether most specific exception is raised from a list."""
-    security_handler_factory = SecurityHandlerFactory()
-    with pytest.raises(most_specific):
-        security_handler_factory._raise_most_specific(errors)

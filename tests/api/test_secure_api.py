@@ -162,8 +162,8 @@ def test_security(oauth_requests, secure_endpoint_app):
     assert response.text == '"Authenticated"\n'
     headers = {"X-AUTH": "wrong-key"}
     response = app_client.get("/v1.0/optional-auth", headers=headers)
-    assert response.text == '"Unauthenticated"\n'
-    assert response.status_code == 200
+    assert response.json()["title"] == "Unauthorized"
+    assert response.status_code == 401
 
     # security function throws exception
     response = app_client.get("/v1.0/auth-exception", headers={"X-Api-Key": "foo"})

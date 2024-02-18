@@ -532,9 +532,8 @@ def more_than_one_scope_defined(**kwargs):
     return "OK"
 
 
-def optional_auth(**kwargs):
-    key = apikey_info(request.headers.get("X-AUTH"))
-    if key is None:
+def optional_auth(context_):
+    if not context_.get("token_info"):
         return "Unauthenticated"
     else:
         return "Authenticated"

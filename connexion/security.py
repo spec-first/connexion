@@ -558,24 +558,15 @@ class SecurityHandlerFactory:
     @classmethod
     def verify_security(cls, auth_funcs):
         async def verify_fn(request):
-            token_info = NO_VALUE
-            errors = []
             for func in auth_funcs:
-                try:
-                    token_info = func(request)
-                    while asyncio.iscoroutine(token_info):
-                        token_info = await token_info
-                    if token_info is not NO_VALUE:
-                        break
-                except Exception as err:
-                    errors.append(err)
-
+                token_info = func(request)
+                while asyncio.iscoroutine(token_info):
+                    token_info = await token_info
+                if token_info is not NO_VALUE:
+                    break
             else:
-                if errors != []:
-                    cls._raise_most_specific(errors)
-                else:
-                    logger.info("... No auth provided. Aborting with 401.")
-                    raise OAuthProblem(detail="No authorization token provided")
+                logger.info("... No auth provided. Aborting with 401.")
+                raise OAuthProblem(detail="No authorization token provided")
 
             request.context.update(
                 {
@@ -586,34 +577,3 @@ class SecurityHandlerFactory:
             )
 
         return verify_fn
-
-    @staticmethod
-    def _raise_most_specific(exceptions: t.List[Exception]) -> None:
-        """Raises the most specific error from a list of exceptions by status code.
-
-        The status codes are expected to be either in the `code`
-        or in the `status` attribute of the exceptions.
-
-        The order is as follows:
-            - 403: valid credentials but not enough privileges
-            - 401: no or invalid credentials
-            - for other status codes, the smallest one is selected
-
-        :param errors: List of exceptions.
-        :type errors: t.List[Exception]
-        """
-        if not exceptions:
-            return
-        # We only use status code attributes from exceptions
-        # We use 600 as default because 599 is highest valid status code
-        status_to_exc = {
-            getattr(exc, "status_code", getattr(exc, "status", 600)): exc
-            for exc in exceptions
-        }
-        if 403 in status_to_exc:
-            raise status_to_exc[403]
-        elif 401 in status_to_exc:
-            raise status_to_exc[401]
-        else:
-            lowest_status_code = min(status_to_exc)
-            raise status_to_exc[lowest_status_code]
