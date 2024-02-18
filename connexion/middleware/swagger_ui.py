@@ -151,12 +151,12 @@ class SwaggerUIAPI(AbstractSpecAPI):
             url += "/"
             return RedirectResponse(url=url)
 
-        self.router.add_route(methods=["GET"], path=console_ui_path, endpoint=redirect)
+        self.router.add_route(methods=["GET"], path=console_ui_path or "/", endpoint=redirect)
 
         # this route will match and get a permission error when trying to
         # serve index.html, so we add the redirect above.
         self.router.mount(
-            path=console_ui_path,
+            path=console_ui_path or "/",
             app=StaticFiles(directory=str(self.options.swagger_ui_template_dir)),
             name="swagger_ui_static",
         )
