@@ -54,7 +54,7 @@ python-multipart = ">= 0.0.5"
 PyYAML = ">= 5.1"
 requests = ">= 2.27"
 starlette = ">= 0.35"
-typing-extensions = ">= 4"
+typing-extensions = ">= 4.6.1"
 werkzeug = ">= 2.2.1"
 
 a2wsgi = { version = ">= 1.7", optional = true }
