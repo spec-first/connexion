@@ -186,7 +186,11 @@ class OpenAPIOperation(AbstractOperation):
         except KeyError:
             pass
 
-        schema = deep_get(self._responses, schema_path)
+        try:
+            schema = deep_get(self._responses, schema_path)
+        except KeyError:
+            return ("No example response or response schema defined.", status_code)
+
         return (build_example_from_schema(schema), status_code)
 
     def get_path_parameter_types(self):
