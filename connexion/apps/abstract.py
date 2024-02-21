@@ -143,8 +143,8 @@ class AbstractApp:
         Register an API represented by a single OpenAPI specification on this application.
         Multiple APIs can be registered on a single application.
 
-        :param specification: OpenAPI specification. Can be provided either as dict, or as path
-            to file.
+        :param specification: OpenAPI specification. Can be provided either as dict, a path
+            to file, or a URL.
         :param base_path: Base path to host the API. This overrides the basePath / servers in the
             specification.
         :param name: Name to register the API with. If no name is passed, the base_path is used

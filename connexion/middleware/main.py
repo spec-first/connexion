@@ -371,8 +371,8 @@ class ConnexionMiddleware:
         Register een API represented by a single OpenAPI specification on this middleware.
         Multiple APIs can be registered on a single middleware.
 
-        :param specification: OpenAPI specification. Can be provided either as dict, or as path
-            to file.
+        :param specification: OpenAPI specification. Can be provided either as dict, a path
+            to file, or a URL.
         :param base_path: Base path to host the API. This overrides the basePath / servers in the
             specification.
         :param name: Name to register the API with. If no name is passed, the base_path is used
@@ -408,7 +408,11 @@ class ConnexionMiddleware:
         if self.middleware_stack is not None:
             raise RuntimeError("Cannot add api after an application has started")
 
-        if isinstance(specification, (pathlib.Path, str)):
+        if isinstance(specification, str) and (
+            specification.startswith("http://") or specification.startswith("https://")
+        ):
+            pass
+        elif isinstance(specification, (pathlib.Path, str)):
             specification = t.cast(pathlib.Path, self.specification_dir / specification)
 
             # Add specification as file to watch for reloading

@@ -61,10 +61,10 @@ class FormDataValidator(AbstractRequestBodyValidator):
                 value = data.getlist(key)
 
                 def is_file(schema):
-                    return (
-                        schema.get("type") == "string"
-                        and schema.get("format") == "binary"
-                    )
+                    return schema.get("type") == "string" and schema.get("format") in [
+                        "binary",
+                        "base64",
+                    ]
 
                 # Single file upload
                 if is_file(param_schema):

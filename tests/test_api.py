@@ -51,6 +51,42 @@ def test_api_base_path_slash():
     assert api.blueprint.url_prefix == ""
 
 
+def test_remote_api():
+    api = FlaskApi(
+        Specification.load(
+            "https://raw.githubusercontent.com/spec-first/connexion/165a915/tests/fixtures/simple/swagger.yaml"
+        ),
+        base_path="/api/v1.0",
+    )
+    assert api.blueprint.name == "/api/v1_0"
+    assert api.blueprint.url_prefix == "/api/v1.0"
+
+    api2 = FlaskApi(
+        Specification.load(
+            "https://raw.githubusercontent.com/spec-first/connexion/165a915/tests/fixtures/simple/swagger.yaml"
+        )
+    )
+    assert api2.blueprint.name == "/v1_0"
+    assert api2.blueprint.url_prefix == "/v1.0"
+
+    api3 = FlaskApi(
+        Specification.load(
+            "https://raw.githubusercontent.com/spec-first/connexion/165a915/tests/fixtures/simple/openapi.yaml"
+        ),
+        base_path="/api/v1.0",
+    )
+    assert api3.blueprint.name == "/api/v1_0"
+    assert api3.blueprint.url_prefix == "/api/v1.0"
+
+    api4 = FlaskApi(
+        Specification.load(
+            "https://raw.githubusercontent.com/spec-first/connexion/165a915/tests/fixtures/simple/openapi.yaml"
+        )
+    )
+    assert api4.blueprint.name == "/v1_0"
+    assert api4.blueprint.url_prefix == "/v1.0"
+
+
 def test_template():
     api1 = FlaskApi(
         Specification.load(

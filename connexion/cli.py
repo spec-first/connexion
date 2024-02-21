@@ -117,10 +117,13 @@ def create_app(args: t.Optional[argparse.Namespace] = None) -> AbstractApp:
 
     logging.basicConfig(level=logging_level)
 
-    spec_file_full_path = os.path.abspath(args.spec_file)
-    py_module_path = args.base_module_path or os.path.dirname(spec_file_full_path)
-    sys.path.insert(1, os.path.abspath(py_module_path))
-    logger.debug(f"Added {py_module_path} to system path.")
+    if args.spec_file.startswith("http") or args.spec_file.startswith("https"):
+        spec_file_full_path = args.spec_file
+    else:
+        spec_file_full_path = os.path.abspath(args.spec_file)
+        py_module_path = args.base_module_path or os.path.dirname(spec_file_full_path)
+        sys.path.insert(1, os.path.abspath(py_module_path))
+        logger.debug(f"Added {py_module_path} to system path.")
 
     resolver_error = None
     if args.stub:
