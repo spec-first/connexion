@@ -49,8 +49,7 @@ Running a mock server
 You can run a simple server which returns example responses on every request.
 
 The example responses can be defined in the ``examples`` response property of
-the OpenAPI specification. If no examples are specified, then an example is
-built from the schema provided.
+the OpenAPI specification. If no examples are specified, and you have installed connexion with the `mock` extra (`pip install connexion[mock]`), an example is generated based on the provided schema.
 
 Your API specification file is not required to have any ``operationId``.
 
