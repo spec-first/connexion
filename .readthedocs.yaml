@@ -10,9 +10,9 @@ build:
   jobs:
     post_create_environment:
       # Install poetry
-      - pip install poetry
+      - python -m pip install poetry
       # Tell poetry to not use a virtual environment
       - poetry config virtualenvs.create false
     post_install:
       # Install dependencies with 'docs' dependency group
-      - poetry install --with docs --all-extras
+      - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH python -m poetry install --with docs --all-extras
