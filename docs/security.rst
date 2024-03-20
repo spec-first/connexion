@@ -70,6 +70,7 @@ The function should accept the following arguments:
 - username
 - password
 - required_scopes (optional)
+- request (optional)
 
 You can find a `minimal Basic Auth example application`_ in Connexion's "examples" folder.
 
@@ -85,6 +86,7 @@ The function should accept the following arguments:
 
 - token
 - required_scopes (optional)
+- request (optional)
 
 You can find a `minimal Bearer example application`_ in Connexion's "examples" folder.
 
@@ -100,6 +102,7 @@ The function should accept the following arguments:
 
 - apikey
 - required_scopes (optional)
+- request (optional)
 
 You can find a `minimal API Key example application`_ in Connexion's "examples" folder.
 
@@ -115,6 +118,7 @@ The function should accept the following arguments:
 
 - token
 - required_scopes (optional)
+- request (optional)
 
 As alternative to an ``x-tokenInfoFunc`` definition, you can set an ``x-tokenInfoUrl`` definition or
 ``TOKENINFO_URL`` environment variable, and connexion will call the url instead of a local
@@ -132,6 +136,7 @@ The function should accept the following arguments:
 
 - required_scopes
 - token_scopes
+- request (optional)
 
 and return a boolean indicating if the validation was successful.
 
