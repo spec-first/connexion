@@ -103,7 +103,7 @@ def test_mock_resolver_no_examples():
 
     response, status_code = resolver.mock_operation(operation)
     assert status_code == 418
-    assert response == "No example response was defined."
+    assert response == "No example response or response schema defined."
 
 
 def test_mock_resolver_notimplemented():
@@ -133,4 +133,7 @@ def test_mock_resolver_notimplemented():
         resolver=resolver,
     )
     # check if it is using the mock function
-    assert operation._resolution.function() == ("No example response was defined.", 418)
+    assert operation._resolution.function() == (
+        "No example response or response schema defined.",
+        418,
+    )

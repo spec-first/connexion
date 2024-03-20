@@ -7,7 +7,7 @@ import logging
 from connexion.datastructures import MediaTypeDict
 from connexion.operations.abstract import AbstractOperation
 from connexion.uri_parsing import OpenAPIURIParser
-from connexion.utils import deep_get
+from connexion.utils import build_example_from_schema, deep_get
 
 logger = logging.getLogger("connexion.operations.openapi3")
 
@@ -187,31 +187,11 @@ class OpenAPIOperation(AbstractOperation):
             pass
 
         try:
-            return (
-                self._nested_example(deep_get(self._responses, schema_path)),
-                status_code,
-            )
+            schema = deep_get(self._responses, schema_path)
         except KeyError:
-            return (None, status_code)
+            return ("No example response or response schema defined.", status_code)
 
-    def _nested_example(self, schema):
-        try:
-            return schema["example"]
-        except KeyError:
-            pass
-        try:
-            # Recurse if schema is an object
-            return {
-                key: self._nested_example(value)
-                for (key, value) in schema["properties"].items()
-            }
-        except KeyError:
-            pass
-        try:
-            # Recurse if schema is an array
-            return [self._nested_example(schema["items"])]
-        except KeyError:
-            raise
+        return (build_example_from_schema(schema), status_code)
 
     def get_path_parameter_types(self):
         types = {}
