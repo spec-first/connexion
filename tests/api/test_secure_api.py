@@ -170,6 +170,16 @@ def test_security(oauth_requests, secure_endpoint_app):
     assert response.status_code == 401
 
 
+def test_disabled_security(secure_endpoint_app_no_security):
+    # Test that disabling security allows unauthenticated access to an otherwise
+    # secure endpoint.
+    app_client = secure_endpoint_app_no_security.test_client()
+
+    get_bye_no_auth = app_client.get("/v1.0/byesecure-ignoring-context/jsantos")
+    assert get_bye_no_auth.status_code == 200
+    assert get_bye_no_auth.text == "Goodbye jsantos (Secure!)"
+
+
 def test_checking_that_client_token_has_all_necessary_scopes(
     oauth_requests, secure_endpoint_app
 ):
