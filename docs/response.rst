@@ -93,7 +93,7 @@ Response Serialization
     def endpoint():
         data = "success"
         status_code = 200
-        headers = {"Content-Type": "text/plain}
+        headers = {"Content-Type": "text/plain"}
         return data, status_code, headers
 
 Data
