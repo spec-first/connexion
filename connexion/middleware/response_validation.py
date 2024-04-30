@@ -97,7 +97,11 @@ class ResponseValidationOperation:
                 if message["status"] < 400:
                     self.validate_mime_type(mime_type)
 
-                status = str(message["status"])
+                try:
+                    status = str(message["status"].value)
+                except AttributeError:
+                    status = str(message["status"])
+
                 response_definition = self._operation.response_definition(
                     status, mime_type
                 )
