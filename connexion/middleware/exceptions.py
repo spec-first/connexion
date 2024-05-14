@@ -72,7 +72,12 @@ class ExceptionMiddleware(StarletteExceptionMiddleware):
     @staticmethod
     def problem_handler(_request: ConnexionRequest, exc: ProblemException):
         """Default handler for Connexion ProblemExceptions"""
-        logger.error("%r", exc)
+
+        if 400 <= exc.status <= 499:
+            logger.warning("%r", exc)
+        else:
+            logger.error("%r", exc)
+
         return exc.to_problem()
 
     @staticmethod
@@ -81,6 +86,12 @@ class ExceptionMiddleware(StarletteExceptionMiddleware):
         _request: StarletteRequest, exc: HTTPException, **kwargs
     ) -> StarletteResponse:
         """Default handler for Starlette HTTPException"""
+
+        if 400 <= exc.status_code <= 499:
+            logger.warning("%r", exc)
+        else:
+            logger.error("%r", exc)
+
         logger.error("%r", exc)
         return problem(
             title=http_facts.HTTP_STATUS_CODES.get(exc.status_code),

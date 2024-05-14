@@ -68,7 +68,7 @@ class JSONRequestBodyValidator(AbstractRequestBodyValidator):
             return self._validator.validate(body)
         except ValidationError as exception:
             error_path_msg = format_error_with_path(exception=exception)
-            logger.error(
+            logger.info(
                 f"Validation error: {exception.message}{error_path_msg}",
                 extra={"validator": "body"},
             )
@@ -129,7 +129,7 @@ class JSONResponseBodyValidator(AbstractResponseBodyValidator):
             self.validator.validate(body)
         except ValidationError as exception:
             error_path_msg = format_error_with_path(exception=exception)
-            logger.error(
+            logger.info(
                 f"Validation error: {exception.message}{error_path_msg}",
                 extra={"validator": "body"},
             )
