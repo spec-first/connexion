@@ -77,7 +77,8 @@ class JSONRequestBodyValidator(AbstractRequestBodyValidator):
 
 class DefaultsJSONRequestBodyValidator(JSONRequestBodyValidator):
     """Request body validator for json content types which fills in default values. This Validator
-    intercepts the body, makes changes to it, and replays it for the next ASGI application."""
+    intercepts the body, makes changes to it, and replays it for the next ASGI application.
+    """
 
     MUTABLE_VALIDATION = True
     """This validator might mutate to the body."""
@@ -129,7 +130,7 @@ class JSONResponseBodyValidator(AbstractResponseBodyValidator):
             self.validator.validate(body)
         except ValidationError as exception:
             error_path_msg = format_error_with_path(exception=exception)
-            logger.info(
+            logger.warning(
                 f"Validation error: {exception.message}{error_path_msg}",
                 extra={"validator": "body"},
             )
