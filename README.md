@@ -101,7 +101,7 @@ You can install them as follows:
 
 ```shell
     $ pip install connexion[swagger-ui]
-    $ pip install connexion[swagger-ui,uvicorn].
+    $ pip install connexion[swagger-ui,uvicorn]
 ```
 
 <p align="right">(<a href="#top">back to top</a>)</p>
