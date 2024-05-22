@@ -6,7 +6,7 @@ from jsonschema import Draft4Validator, ValidationError
 from starlette.requests import Request
 
 from connexion.exceptions import BadRequestProblem, ExtraParameterProblem
-from connexion.utils import boolean, is_null, is_nullable
+from connexion.utils import boolean, is_null, is_nullable, coerce_type, TypeValidationError
 
 logger = logging.getLogger("connexion.validators.parameter")
 
@@ -97,7 +97,12 @@ class ParameterValidator:
 
     def validate_header_parameter(self, param, request):
         val = request.headers.get(param["name"])
-        return self.validate_parameter("header", val, param)
+        parameter_type = "header"
+        try:
+            converted_value = coerce_type(param, val, parameter_type)
+        except TypeValidationError as e:
+            return str(e)
+        return self.validate_parameter(parameter_type, converted_value, param)
 
     def validate_cookie_parameter(self, param, request):
         val = request.cookies.get(param["name"])
