@@ -67,6 +67,7 @@ NO_VALUE = object()
 class AbstractSecurityHandler:
 
     required_scopes_kw = "required_scopes"
+    request_kw = "request"
     client = None
     security_definition_key: str
     """The key which contains the value for the function name to resolve."""
@@ -106,12 +107,12 @@ class AbstractSecurityHandler:
         return default
 
     def _generic_check(self, func, exception_msg):
-        need_to_add_required_scopes = self._need_to_add_scopes(func)
-
         async def wrapper(request, *args, required_scopes=None):
             kwargs = {}
-            if need_to_add_required_scopes:
+            if self._accepts_kwarg(func, self.required_scopes_kw):
                 kwargs[self.required_scopes_kw] = required_scopes
+            if self._accepts_kwarg(func, self.request_kw):
+                kwargs[self.request_kw] = request
             token_info = func(*args, **kwargs)
             while asyncio.iscoroutine(token_info):
                 token_info = await token_info
@@ -140,10 +141,11 @@ class AbstractSecurityHandler:
             raise OAuthProblem(detail="Invalid authorization header")
         return auth_type.lower(), value
 
-    def _need_to_add_scopes(self, func):
+    @staticmethod
+    def _accepts_kwarg(func: t.Callable, keyword: str) -> bool:
+        """Check if the function accepts the provided keyword argument."""
         arguments, has_kwargs = inspect_function_arguments(func)
-        need_required_scopes = has_kwargs or self.required_scopes_kw in arguments
-        return need_required_scopes
+        return has_kwargs or keyword in arguments
 
     def _resolve_func(self, security_scheme):
         """
