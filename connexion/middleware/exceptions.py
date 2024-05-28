@@ -92,7 +92,6 @@ class ExceptionMiddleware(StarletteExceptionMiddleware):
         else:
             logger.error("%r", exc)
 
-        logger.error("%r", exc)
         return problem(
             title=http_facts.HTTP_STATUS_CODES.get(exc.status_code),
             detail=exc.detail,
