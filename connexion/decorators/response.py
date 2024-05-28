@@ -138,7 +138,7 @@ class BaseResponseDecorator:
         elif len(handler_response) == 2:
             data, status_code_or_headers = handler_response
             if isinstance(status_code_or_headers, int):
-                status_code = status_code_or_headers
+                status_code = int(status_code_or_headers)
             elif isinstance(status_code_or_headers, Enum) and isinstance(
                 status_code_or_headers.value, int
             ):
