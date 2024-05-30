@@ -140,6 +140,13 @@ def test_pass_through(simple_app):
     )
 
 
+def test_can_use_httpstatus_enum(simple_openapi_app):
+    app_client = simple_openapi_app.test_client()
+
+    response = app_client.get("/v1.0/httpstatus")
+    assert response.status_code == 201
+
+
 def test_empty(simple_app):
     app_client = simple_app.test_client()
 
