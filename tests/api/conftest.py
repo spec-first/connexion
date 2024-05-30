@@ -147,6 +147,17 @@ def secure_endpoint_app(spec, app_class):
 
 
 @pytest.fixture(scope="session")
+def secure_endpoint_app_no_security(spec, app_class):
+    return build_app_from_fixture(
+        "secure_endpoint",
+        app_class=app_class,
+        spec_file=spec,
+        validate_responses=True,
+        no_security=True,
+    )
+
+
+@pytest.fixture(scope="session")
 def secure_endpoint_strict_app(spec, app_class):
     return build_app_from_fixture(
         "secure_endpoint",
