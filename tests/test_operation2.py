@@ -587,7 +587,7 @@ def test_no_token_info():
 def test_multiple_security_schemes_and():
     """Tests an operation with multiple security schemes in AND fashion."""
 
-    def return_api_key_name(func, in_, name):
+    def return_api_key_name(func, in_, name, scopes):
         return name
 
     class MockApiKeyHandler(ApiKeySecurityHandler):
@@ -610,8 +610,8 @@ def test_multiple_security_schemes_and():
     )
 
     assert verify_api_key.call_count == 2
-    verify_api_key.assert_any_call(math.ceil, "header", "X-Auth-1")
-    verify_api_key.assert_any_call(math.ceil, "header", "X-Auth-2")
+    verify_api_key.assert_any_call(math.ceil, "header", "X-Auth-1", [])
+    verify_api_key.assert_any_call(math.ceil, "header", "X-Auth-2", [])
     # Assert verify_multiple_schemes is called with mapping from scheme name
     # to result of security_handler_factory.verify_api_key()
     verify_multiple.assert_called_with({"key1": "X-Auth-1", "key2": "X-Auth-2"})
