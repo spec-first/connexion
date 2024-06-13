@@ -1,3 +1,5 @@
+from urllib.parse import quote_plus
+
 import pytest
 from connexion.uri_parsing import (
     AlwaysMultiURIParser,
@@ -5,6 +7,7 @@ from connexion.uri_parsing import (
     OpenAPIURIParser,
     Swagger2URIParser,
 )
+from starlette.datastructures import QueryParams
 from werkzeug.datastructures import MultiDict
 
 QUERY1 = MultiDict([("letters", "a"), ("letters", "b,c"), ("letters", "d,e,f")])
@@ -262,3 +265,57 @@ async def test_uri_parser_query_params_with_malformed_names(
     parser = parser_class(parameters, body_defn)
     res = parser.resolve_query(request.query.to_dict(flat=False))
     assert res == expected
+
+
+def test_parameter_coercion():
+    params = [
+        {"name": "p1", "in": "path", "type": "integer", "required": True},
+        {"name": "h1", "in": "header", "type": "string", "enum": ["a", "b"]},
+        {"name": "q1", "in": "query", "type": "integer", "maximum": 3},
+        {
+            "name": "a1",
+            "in": "query",
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 3,
+            "items": {"type": "integer", "minimum": 0},
+        },
+    ]
+
+    uri_parser = Swagger2URIParser(params, {})
+
+    parsed_param = uri_parser.resolve_path({"p1": "123"})
+    assert parsed_param == {"p1": 123}
+
+    parsed_param = uri_parser.resolve_path({"p1": ""})
+    assert parsed_param == {"p1": ""}
+
+    parsed_param = uri_parser.resolve_path({"p1": "foo"})
+    assert parsed_param == {"p1": "foo"}
+
+    parsed_param = uri_parser.resolve_path({"p1": "1.2"})
+    assert parsed_param == {"p1": "1.2"}
+
+    parsed_param = uri_parser.resolve_path({"p1": 1})
+    assert parsed_param == {"p1": 1}
+
+    parsed_param = uri_parser.resolve_query(QueryParams("q1=4"))
+    assert parsed_param == {"q1": 4}
+
+    parsed_param = uri_parser.resolve_query(QueryParams("q1=3"))
+    assert parsed_param == {"q1": 3}
+
+    parsed_param = uri_parser.resolve_query(QueryParams(f"a1={quote_plus('1,2')}"))
+    assert parsed_param == {"a1": [2]}  # Swagger2URIParser
+
+    parsed_param = uri_parser.resolve_query(QueryParams(f"a1={quote_plus('1,a')}"))
+    assert parsed_param == {"a1": ["a"]}  # Swagger2URIParser
+
+    parsed_param = uri_parser.resolve_query(QueryParams(f"a1={quote_plus('1,-1')}"))
+    assert parsed_param == {"a1": [1]}  # Swagger2URIParser
+
+    parsed_param = uri_parser.resolve_query(QueryParams(f"a1=1"))
+    assert parsed_param == {"a1": [1]}  # Swagger2URIParser
+
+    parsed_param = uri_parser.resolve_query(QueryParams(f"a1={quote_plus('1,2,3,4')}"))
+    assert parsed_param == {"a1": [4]}  # Swagger2URIParser

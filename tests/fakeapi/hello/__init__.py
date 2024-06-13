@@ -1,6 +1,7 @@
 import asyncio
 import datetime
 import uuid
+from http import HTTPStatus
 
 import flask
 from connexion import NoContent, ProblemException, context, request
@@ -737,3 +738,7 @@ def get_streaming_response():
 
 async def async_route():
     return {}, 200
+
+
+def httpstatus():
+    return {}, HTTPStatus.CREATED

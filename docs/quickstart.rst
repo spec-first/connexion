@@ -141,6 +141,7 @@ register an API defined by an OpenAPI (or Swagger) specification.
                   operationId: run.post_greeting
                   responses:
                     200:
+                      description: "Greeting response"
                       content:
                         text/plain:
                           schema:

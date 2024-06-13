@@ -3,9 +3,9 @@ import copy
 import logging
 
 from jsonschema import Draft4Validator, ValidationError
-from starlette.requests import Request
 
 from connexion.exceptions import BadRequestProblem, ExtraParameterProblem
+from connexion.lifecycle import ConnexionRequest
 from connexion.utils import boolean, is_null, is_nullable
 
 logger = logging.getLogger("connexion.validators.parameter")
@@ -82,17 +82,11 @@ class ParameterValidator:
         :type param: dict
         :rtype: str
         """
-        # Convert to dict of lists
-        query_params = {
-            k: request.query_params.getlist(k) for k in request.query_params
-        }
-        query_params = self.uri_parser.resolve_query(query_params)
-        val = query_params.get(param["name"])
+        val = request.query_params.get(param["name"])
         return self.validate_parameter("query", val, param)
 
     def validate_path_parameter(self, param, request):
-        path_params = self.uri_parser.resolve_path(request.path_params)
-        val = path_params.get(param["name"].replace("-", "_"))
+        val = request.path_params.get(param["name"].replace("-", "_"))
         return self.validate_parameter("path", val, param)
 
     def validate_header_parameter(self, param, request):
@@ -106,7 +100,7 @@ class ParameterValidator:
     def validate(self, scope):
         logger.debug("%s validating parameters...", scope.get("path"))
 
-        request = Request(scope)
+        request = ConnexionRequest(scope, uri_parser=self.uri_parser)
         self.validate_request(request)
 
     def validate_request(self, request):

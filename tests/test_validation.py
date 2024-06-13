@@ -3,6 +3,7 @@ from urllib.parse import quote_plus
 
 import pytest
 from connexion.exceptions import BadRequestProblem
+from connexion.lifecycle import ConnexionRequest
 from connexion.uri_parsing import Swagger2URIParser
 from connexion.validators import AbstractRequestBodyValidator, ParameterValidator
 from starlette.datastructures import QueryParams
@@ -31,63 +32,60 @@ def test_parameter_validator(monkeypatch):
     request = MagicMock(path_params={}, **kwargs)
     with pytest.raises(BadRequestProblem) as exc:
         validator.validate_request(request)
-    assert exc.value.detail == "Missing path parameter 'p1'"
+        assert exc.value.detail == "Missing path parameter 'p1'"
 
     request = MagicMock(path_params={"p1": "123"}, **kwargs)
-    try:
+    with pytest.raises(BadRequestProblem) as exc:
         validator.validate_request(request)
-    except Exception as e:
-        pytest.fail(str(e))
+        assert exc.value.detail.startswith("'123' is not of type 'integer'")
 
     request = MagicMock(path_params={"p1": ""}, **kwargs)
     with pytest.raises(BadRequestProblem) as exc:
         validator.validate_request(request)
-    assert exc.value.detail.startswith("'' is not of type 'integer'")
+        assert exc.value.detail.startswith("'' is not of type 'integer'")
 
     request = MagicMock(path_params={"p1": "foo"}, **kwargs)
     with pytest.raises(BadRequestProblem) as exc:
         validator.validate_request(request)
-    assert exc.value.detail.startswith("'foo' is not of type 'integer'")
+        assert exc.value.detail.startswith("'foo' is not of type 'integer'")
 
     request = MagicMock(path_params={"p1": "1.2"}, **kwargs)
     with pytest.raises(BadRequestProblem) as exc:
         validator.validate_request(request)
-    assert exc.value.detail.startswith("'1.2' is not of type 'integer'")
+        assert exc.value.detail.startswith("'1.2' is not of type 'integer'")
 
     request = MagicMock(
-        path_params={"p1": 1}, query_params=QueryParams("q1=4"), headers={}, cookies={}
+        path_params={"p1": 1}, query_params={"q1": 4}, headers={}, cookies={}
     )
     with pytest.raises(BadRequestProblem) as exc:
         validator.validate_request(request)
-    assert exc.value.detail.startswith("4 is greater than the maximum of 3")
+        assert exc.value.detail.startswith("4 is greater than the maximum of 3")
 
     request = MagicMock(
-        path_params={"p1": 1}, query_params=QueryParams("q1=3"), headers={}, cookies={}
+        path_params={"p1": 1}, query_params={"q1": 3}, headers={}, cookies={}
     )
     try:
         validator.validate_request(request)
     except Exception as e:
         pytest.fail(str(e))
 
-    query_params = QueryParams(f"a1={quote_plus('1,2')}")
     request = MagicMock(
-        path_params={"p1": 1}, query_params=query_params, headers={}, cookies={}
+        path_params={"p1": 1}, query_params={"a1": [1, 2]}, headers={}, cookies={}
     )
     try:
         validator.validate_request(request)
     except Exception as e:
         pytest.fail(str(e))
 
-    query_params = QueryParams(f"a1={quote_plus('1,a')}")
     request = MagicMock(
-        path_params={"p1": 1}, query_params=query_params, headers={}, cookies={}
+        path_params={"p1": 1}, query_params={"a1": [1, "a"]}, headers={}, cookies={}
     )
     with pytest.raises(BadRequestProblem) as exc:
         validator.validate_request(request)
-    assert exc.value.detail.startswith("'a' is not of type 'integer'")
+        assert exc.value.detail.startswith("'a' is not of type 'integer'")
 
     request = MagicMock(
-        path_params={"p1": "123"}, query_params={}, headers={}, cookies={"c1": "b"}
+        path_params={"p1": 123}, query_params={}, headers={}, cookies={"c1": "b"}
     )
     try:
         validator.validate_request(request)
@@ -95,39 +93,35 @@ def test_parameter_validator(monkeypatch):
         pytest.fail(str(e))
 
     request = MagicMock(
-        path_params={"p1": "123"}, query={}, headers={}, cookies={"c1": "x"}
+        path_params={"p1": 123}, query={}, headers={}, cookies={"c1": "x"}
     )
     with pytest.raises(BadRequestProblem) as exc:
         assert validator.validate_request(request)
+        assert exc.value.detail.startswith("'x' is not one of ['a', 'b']")
 
-    assert exc.value.detail.startswith("'x' is not one of ['a', 'b']")
-
-    query_params = QueryParams(f"a1={quote_plus('1,-1')}")
     request = MagicMock(
-        path_params={"p1": 1}, query_params=query_params, headers={}, cookies={}
+        path_params={"p1": 1}, query_params={"a1": [1, -1]}, headers={}, cookies={}
     )
     with pytest.raises(BadRequestProblem) as exc:
         validator.validate_request(request)
-    assert exc.value.detail.startswith("-1 is less than the minimum of 0")
+        assert exc.value.detail.startswith("-1 is less than the minimum of 0")
 
-    query_params = QueryParams("a1=1")
     request = MagicMock(
-        path_params={"p1": 1}, query_params=query_params, headers={}, cookies={}
+        path_params={"p1": 1}, query_params={"a1": 1}, headers={}, cookies={}
     )
     with pytest.raises(BadRequestProblem) as exc:
         validator.validate_request(request)
-    assert exc.value.detail.startswith("[1] is too short")
+        assert exc.value.detail.startswith("[1] is too short")
 
-    query_params = QueryParams(f"a1={quote_plus('1,2,3,4')}")
     request = MagicMock(
-        path_params={"p1": 1}, query_params=query_params, headers={}, cookies={}
+        path_params={"p1": 1}, query_params={"a1": [1, 2, 3, 4]}, headers={}, cookies={}
     )
     with pytest.raises(BadRequestProblem) as exc:
         validator.validate_request(request)
-    assert exc.value.detail.startswith("[1, 2, 3, 4] is too long")
+        assert exc.value.detail.startswith("[1, 2, 3, 4] is too long")
 
     request = MagicMock(
-        path_params={"p1": "123"}, query_params={}, headers={"h1": "a"}, cookies={}
+        path_params={"p1": 123}, query_params={}, headers={"h1": "a"}, cookies={}
     )
     try:
         validator.validate_request(request)
@@ -135,11 +129,11 @@ def test_parameter_validator(monkeypatch):
         pytest.fail(str(e))
 
     request = MagicMock(
-        path_params={"p1": "123"}, query_params={}, headers={"h1": "x"}, cookies={}
+        path_params={"p1": 123}, query_params={}, headers={"h1": "x"}, cookies={}
     )
     with pytest.raises(BadRequestProblem) as exc:
         validator.validate_request(request)
-    assert exc.value.detail.startswith("'x' is not one of ['a', 'b']")
+        assert exc.value.detail.startswith("'x' is not one of ['a', 'b']")
 
 
 async def test_stream_replay():

@@ -1316,7 +1316,23 @@ paths:
       responses:
         200:
           description: 'OK'
-
+  /httpstatus:
+    get:
+      operationId: fakeapi.hello.httpstatus
+      responses:
+        201:
+          description: "happy path"
+        default:
+          description: "default"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: integer
+                required:
+                  - error_code
 
 servers:
   - url: http://localhost:{port}/{basePath}
