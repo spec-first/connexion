@@ -41,6 +41,21 @@ paths:
                 type: object
       security:
         - basic: []
+  '/greeting_oidc':
+    post:
+      summary: Generate greeting
+      description: Generates a greeting message.
+      operationId: fakeapi.hello.post_greeting_oidc
+      responses:
+        '200':
+          description: greeting response
+          content:
+            '*/*':
+              schema:
+                type: object
+      security:
+        - openIdConnect:
+            - mytestscope
 components:
   securitySchemes:
     oauth:
@@ -56,3 +71,8 @@ components:
       scheme: basic
       description: Basic auth
       x-basicInfoFunc: fakeapi.auth.fake_basic_auth
+
+    openIdConnect:
+      type: openIdConnect
+      description: Fake OIDC auth
+      openIdConnectUrl: https://oauth.example/.well-known/openid-configuration
