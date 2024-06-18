@@ -47,6 +47,9 @@ def post_greeting_basic():
     data = {"greeting": "Hello basic"}
     return data
 
+def post_greeting_oidc():
+    data = {"greeting": "Hello oidc"}
+    return data
 
 def post_greeting3(body, **kwargs):
     data = {"greeting": "Hello {name}".format(name=body["name"])}
