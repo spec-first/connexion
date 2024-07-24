@@ -2,7 +2,7 @@ import collections
 import copy
 import logging
 
-from jsonschema import Draft4Validator, ValidationError
+from jsonschema import Draft4Validator, ValidationError, Draft202012Validator
 
 from connexion.exceptions import BadRequestProblem, ExtraParameterProblem
 from connexion.lifecycle import ConnexionRequest
