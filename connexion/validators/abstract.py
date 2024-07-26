@@ -64,14 +64,16 @@ class AbstractRequestBodyValidator:
         :raises: :class:`connexion.exceptions.BadRequestProblem`
         """
 
-    def _insert_body(self, receive: Receive, *, body: t.Any, scope: Scope) -> Receive:
+    def _insert_body(
+        self, receive: Receive, *, body: t.Any, scope: Scope
+    ) -> t.Tuple[Receive, Scope]:
         """
         Insert messages transmitting the body at the start of the `receive` channel.
 
         This method updates the provided `scope` in place with the right `Content-Length` header.
         """
         if body is None:
-            return receive
+            return receive, scope
 
         bytes_body = json.dumps(body).encode(self._encoding)
 
@@ -93,7 +95,7 @@ class AbstractRequestBodyValidator:
 
         receive = self._insert_messages(receive, messages=messages)
 
-        return receive
+        return receive, new_scope
 
     @staticmethod
     def _insert_messages(
@@ -111,7 +113,9 @@ class AbstractRequestBodyValidator:
 
         return receive_
 
-    async def wrap_receive(self, receive: Receive, *, scope: Scope) -> Receive:
+    async def wrap_receive(
+        self, receive: Receive, *, scope: Scope
+    ) -> t.Tuple[Receive, Scope]:
         """
         Wrap the provided `receive` channel with request body validation.
 
@@ -124,7 +128,7 @@ class AbstractRequestBodyValidator:
             if body is None and self._required:
                 raise BadRequestProblem("RequestBody is required")
             # The default body is encoded as a `receive` channel to mimic an incoming body
-            receive = self._insert_body(receive, body=body, scope=scope)
+            receive, scope = self._insert_body(receive, body=body, scope=scope)
 
         # The receive channel is converted to a stream for convenient access
         messages = []
@@ -146,12 +150,12 @@ class AbstractRequestBodyValidator:
         # If MUTABLE_VALIDATION is enabled, include any changes made during validation in the messages to send
         if self.MUTABLE_VALIDATION:
             # Include changes made during validation
-            receive = self._insert_body(receive, body=body, scope=scope)
+            receive, scope = self._insert_body(receive, body=body, scope=scope)
         else:
             # Serialize original messages
             receive = self._insert_messages(receive, messages=messages)
 
-        return receive
+        return receive, scope
 
 
 class AbstractResponseBodyValidator:
