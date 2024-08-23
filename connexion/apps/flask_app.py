@@ -10,7 +10,8 @@ from types import FunctionType  # NOQA
 
 import flask
 import werkzeug.exceptions
-from flask import json, signals
+from flask import signals
+import json
 
 from ..apis.flask_api import FlaskApi
 from ..exceptions import ProblemException

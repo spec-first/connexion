@@ -25,7 +25,7 @@ install_requires = [
     'PyYAML>=5.1,<7',
     'requests>=2.9.1,<3',
     'inflection>=0.3.1,<0.6',
-    'werkzeug>=1.0,<2.3',
+    'werkzeug>=1.0,<4.0',
     'importlib-metadata>=1 ; python_version<"3.8"',
     'packaging>=20',
 ]
@@ -44,9 +44,10 @@ aiohttp_require = [
 
 tests_require = [
     'decorator>=5,<6',
-    'pytest>=6,<7',
+    'pytest>=6,<9',
     'pytest-cov>=2,<3',
     'testfixtures>=6,<7',
+    'pytest',
     *flask_require,
     swagger_ui_require
 ]
@@ -100,7 +101,7 @@ setup(
     url='https://github.com/zalando/connexion',
     keywords='openapi oai swagger rest api oauth flask microservice framework',
     license='Apache License Version 2.0',
-    setup_requires=['flake8'],
+    setup_requires=['flake8', 'pytest-runner'],
     python_requires=">=3.6",
     install_requires=install_requires + flask_require,
     tests_require=tests_require,
