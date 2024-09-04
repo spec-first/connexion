@@ -32,7 +32,7 @@ class Starlette(Framework):
         data: t.Any,
         *,
         content_type: t.Optional[str] = None,
-        headers: dict = None,
+        headers: t.Optional[dict] = None,
         status_code: int = None,
     ):
         if isinstance(data, dict) or isinstance(data, list):

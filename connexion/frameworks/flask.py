@@ -38,7 +38,7 @@ class Flask(Framework):
         data: t.Any,
         *,
         content_type: t.Optional[str] = None,
-        headers: dict = None,
+        headers: t.Optional[dict] = None,
         status_code: int = None
     ):
         if cls.is_framework_response(data):

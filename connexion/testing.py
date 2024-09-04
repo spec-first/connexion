@@ -14,7 +14,7 @@ class TestContext:
     def __init__(
         self,
         *,
-        context: dict = None,
+        context: t.Optional[dict] = None,
         operation: AbstractOperation = None,
         receive: Receive = None,
         scope: Scope = None,
