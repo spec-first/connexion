@@ -31,7 +31,7 @@ class Starlette(Framework):
         cls,
         data: t.Any,
         *,
-        content_type: str = None,
+        content_type: t.Optional[str] = None,
         headers: dict = None,
         status_code: int = None,
     ):
