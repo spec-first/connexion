@@ -200,7 +200,7 @@ class AbstractApp:
         self,
         rule,
         endpoint: t.Optional[str] = None,
-        view_func: t.Callable = None,
+        view_func: t.Optional[t.Callable] = None,
         **options,
     ):
         """

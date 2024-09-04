@@ -120,7 +120,7 @@ class FlaskApi(AbstractRoutingAPI):
         self,
         rule,
         endpoint: t.Optional[str] = None,
-        view_func: t.Callable = None,
+        view_func: t.Optional[t.Callable] = None,
         **options,
     ):
         return self.blueprint.add_url_rule(rule, endpoint, view_func, **options)
@@ -154,7 +154,7 @@ class FlaskASGIApp(SpecMiddleware):
         self,
         rule,
         endpoint: t.Optional[str] = None,
-        view_func: t.Callable = None,
+        view_func: t.Optional[t.Callable] = None,
         **options,
     ):
         return self.app.add_url_rule(rule, endpoint, view_func, **options)
@@ -260,7 +260,7 @@ class FlaskApp(AbstractApp):
         self,
         rule,
         endpoint: t.Optional[str] = None,
-        view_func: t.Callable = None,
+        view_func: t.Optional[t.Callable] = None,
         **options,
     ):
         self._middleware_app.add_url_rule(

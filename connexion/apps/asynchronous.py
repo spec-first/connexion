@@ -113,7 +113,7 @@ class AsyncASGIApp(RoutedMiddleware[AsyncApi]):
         self,
         rule,
         endpoint: t.Optional[str] = None,
-        view_func: t.Callable = None,
+        view_func: t.Optional[t.Callable] = None,
         methods: t.List[str] = None,
         **options,
     ):
@@ -203,7 +203,7 @@ class AsyncApp(AbstractApp):
         self,
         rule,
         endpoint: t.Optional[str] = None,
-        view_func: t.Callable = None,
+        view_func: t.Optional[t.Callable] = None,
         **options,
     ):
         self._middleware_app.add_url_rule(
