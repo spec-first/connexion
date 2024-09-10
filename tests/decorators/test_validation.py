@@ -83,7 +83,7 @@ def test_invalid_type(monkeypatch):
     expected_result = """20 is not of type 'string'
 
 Failed validating 'type' in schema:
-    {'name': 'foo', 'type': 'string'}
+    {'type': 'string', 'name': 'foo'}
 
 On instance:
     20"""
