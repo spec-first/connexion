@@ -87,7 +87,11 @@ class RoutingAPI(AbstractRoutingAPI):
         return starlette_path, starlette_path
 
     def _add_operation_internal(
-        self, method: str, path: str, operation: RoutingOperation, name: str = None
+        self,
+        method: str,
+        path: str,
+        operation: RoutingOperation,
+        name: t.Optional[str] = None,
     ) -> None:
         self.router.add_route(path, operation, methods=[method])
 

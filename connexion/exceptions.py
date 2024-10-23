@@ -75,7 +75,13 @@ class ClientProblem(ProblemException):
     """Base exception for any 4XX error. Returns 400 by default, however
     :class:`BadRequestProblem` should be preferred for 400 errors."""
 
-    def __init__(self, status: int = 400, title: str = None, *, detail: str = None):
+    def __init__(
+        self,
+        status: int = 400,
+        title: t.Optional[str] = None,
+        *,
+        detail: t.Optional[str] = None,
+    ):
         super().__init__(status=status, title=title, detail=detail)
 
 

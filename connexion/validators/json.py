@@ -3,7 +3,7 @@ import logging
 import typing as t
 
 import jsonschema
-from jsonschema import Draft4Validator, ValidationError, draft4_format_checker
+from jsonschema import Draft4Validator, ValidationError
 from starlette.types import Scope
 
 from connexion.exceptions import BadRequestProblem, NonConformingResponseBody
@@ -44,7 +44,7 @@ class JSONRequestBodyValidator(AbstractRequestBodyValidator):
     @property
     def _validator(self):
         return Draft4RequestValidator(
-            self._schema, format_checker=draft4_format_checker
+            self._schema, format_checker=Draft4Validator.FORMAT_CHECKER
         )
 
     async def _parse(
@@ -86,7 +86,9 @@ class DefaultsJSONRequestBodyValidator(JSONRequestBodyValidator):
     @property
     def _validator(self):
         validator_cls = self.extend_with_set_default(Draft4RequestValidator)
-        return validator_cls(self._schema, format_checker=draft4_format_checker)
+        return validator_cls(
+            self._schema, format_checker=Draft4Validator.FORMAT_CHECKER
+        )
 
     # via https://python-jsonschema.readthedocs.io/
     @staticmethod
@@ -111,7 +113,7 @@ class JSONResponseBodyValidator(AbstractResponseBodyValidator):
     @property
     def validator(self) -> Draft4Validator:
         return Draft4ResponseValidator(
-            self._schema, format_checker=draft4_format_checker
+            self._schema, format_checker=Draft4Validator.FORMAT_CHECKER
         )
 
     def _parse(self, stream: t.Generator[bytes, None, None]) -> t.Any:

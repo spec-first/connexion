@@ -141,7 +141,7 @@ class AbstractRoutingAPI(AbstractSpecAPI, t.Generic[OP]):
 
     @abc.abstractmethod
     def _add_operation_internal(
-        self, method: str, path: str, operation: OP, name: str = None
+        self, method: str, path: str, operation: OP, name: t.Optional[str] = None
     ) -> None:
         """
         Adds the operation according to the user framework in use.

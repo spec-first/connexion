@@ -29,7 +29,7 @@ validate the incoming credentials, and return information about the authenticate
 The validation function must either be defined in the API security definition
 as ``x-{type}InfoFunc``, or in the environment variables as ``{TYPE}INFO_FUNC``. The function
 should be referenced as a string using the same syntax that is used to connect an ``operationId``
-to a Python function when :ref:`routing <Routing:Explicit routing>`.
+to a Python function when :ref:`routing <Routing:Explicit routing>`. Note that even if you used a resolver for the operation id, it is not applied to the validation function, and you need to specify the complete path to the security module
 
 While the validation functions should accept different arguments based on the authentication type
 (as documented below), they should all return a dict which complies with `RFC 7662 <rfc7662_>`_:

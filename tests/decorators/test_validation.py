@@ -78,7 +78,7 @@ def test_invalid_type(monkeypatch):
     logger = MagicMock()
     monkeypatch.setattr("connexion.validators.parameter.logger", logger)
     result = ParameterValidator.validate_parameter(
-        "formdata", 20, {"type": "string", "name": "foo"}
+        "formdata", 20, {"name": "foo", "type": "string"}
     )
     expected_result = """20 is not of type 'string'
 
