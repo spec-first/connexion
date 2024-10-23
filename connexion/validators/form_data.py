@@ -1,7 +1,7 @@
 import logging
 import typing as t
 
-from jsonschema import ValidationError, draft4_format_checker
+from jsonschema import Draft4Validator, ValidationError
 from starlette.datastructures import Headers, UploadFile
 from starlette.formparsers import FormParser, MultiPartParser
 from starlette.types import Scope
@@ -39,7 +39,7 @@ class FormDataValidator(AbstractRequestBodyValidator):
     @property
     def _validator(self):
         return Draft4RequestValidator(
-            self._schema, format_checker=draft4_format_checker
+            self._schema, format_checker=Draft4Validator.FORMAT_CHECKER
         )
 
     @property
