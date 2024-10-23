@@ -197,7 +197,11 @@ class AbstractApp:
         )
 
     def add_url_rule(
-        self, rule, endpoint: str = None, view_func: t.Callable = None, **options
+        self,
+        rule,
+        endpoint: t.Optional[str] = None,
+        view_func: t.Optional[t.Callable] = None,
+        **options,
     ):
         """
         Connects a URL rule.  Works exactly like the `route` decorator.
@@ -271,7 +275,7 @@ class AbstractApp:
         passed to the ``StarletteClient``."""
         return TestClient(self, **kwargs)
 
-    def run(self, import_string: str = None, **kwargs):
+    def run(self, import_string: t.Optional[str] = None, **kwargs):
         """Run the application using uvicorn.
 
         :param import_string: application as import string (eg. "main:app"). This is needed to run

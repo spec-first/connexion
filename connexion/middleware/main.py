@@ -464,7 +464,7 @@ class ConnexionMiddleware:
         error_handler = (code_or_exception, function)
         self.error_handlers.append(error_handler)
 
-    def run(self, import_string: str = None, **kwargs):
+    def run(self, import_string: t.Optional[str] = None, **kwargs):
         """Run the application using uvicorn.
 
         :param import_string: application as import string (eg. "main:app"). This is needed to run
