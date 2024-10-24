@@ -375,7 +375,7 @@ async def test_optional_kwargs_injected():
         return {"sub": "no_kwargs"}
 
     wrapped_func_no_kwargs = security_handler_factory._get_verify_func(
-        apikey_info_no_kwargs, "header", "X-Auth"
+        apikey_info_no_kwargs, "header", "X-Auth", None
     )
     assert await wrapped_func_no_kwargs(request) == {"sub": "no_kwargs"}
 
@@ -384,7 +384,7 @@ async def test_optional_kwargs_injected():
         return {"sub": "request"}
 
     wrapped_func_request = security_handler_factory._get_verify_func(
-        apikey_info_request, "header", "X-Auth"
+        apikey_info_request, "header", "X-Auth", None
     )
     assert await wrapped_func_request(request) == {"sub": "request"}
 
@@ -393,7 +393,7 @@ async def test_optional_kwargs_injected():
         return {"sub": "scopes"}
 
     wrapped_func_scopes = security_handler_factory._get_verify_func(
-        apikey_info_scopes, "header", "X-Auth"
+        apikey_info_scopes, "header", "X-Auth", None
     )
     assert await wrapped_func_scopes(request) == {"sub": "scopes"}
 
@@ -404,6 +404,6 @@ async def test_optional_kwargs_injected():
         return {"sub": "kwargs"}
 
     wrapped_func_kwargs = security_handler_factory._get_verify_func(
-        apikey_info_kwargs, "header", "X-Auth"
+        apikey_info_kwargs, "header", "X-Auth", None
     )
     assert await wrapped_func_kwargs(request) == {"sub": "kwargs"}
