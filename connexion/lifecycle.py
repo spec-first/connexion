@@ -5,7 +5,7 @@ validation, serialization, etc.
 import typing as t
 from collections import defaultdict
 
-from multipart.multipart import parse_options_header
+from python_multipart.multipart import parse_options_header
 from starlette.datastructures import UploadFile
 from starlette.requests import Request as StarletteRequest
 from werkzeug import Request as WerkzeugRequest
