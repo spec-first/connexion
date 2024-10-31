@@ -14,10 +14,10 @@ class TestContext:
     def __init__(
         self,
         *,
-        context: dict = None,
-        operation: AbstractOperation = None,
-        receive: Receive = None,
-        scope: Scope = None,
+        context: t.Optional[dict] = None,
+        operation: t.Optional[AbstractOperation] = None,
+        receive: t.Optional[Receive] = None,
+        scope: t.Optional[Scope] = None,
     ) -> None:
         self.context = context if context is not None else self.build_context()
         self.operation = operation if operation is not None else self.build_operation()

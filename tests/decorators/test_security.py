@@ -1,5 +1,5 @@
 import json
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 import requests
@@ -209,7 +209,7 @@ async def test_verify_apikey_query():
 
     security_handler_factory = ApiKeySecurityHandler()
     wrapped_func = security_handler_factory._get_verify_func(
-        apikey_info, "query", "auth"
+        apikey_info, "query", "auth", None
     )
 
     request = ConnexionRequest(scope={"type": "http", "query_string": b"auth=foobar"})
@@ -225,7 +225,7 @@ async def test_verify_apikey_header():
 
     security_handler_factory = ApiKeySecurityHandler()
     wrapped_func = security_handler_factory._get_verify_func(
-        apikey_info, "header", "X-Auth"
+        apikey_info, "header", "X-Auth", None
     )
 
     request = ConnexionRequest(
@@ -233,6 +233,36 @@ async def test_verify_apikey_header():
     )
 
     assert await wrapped_func(request) is not None
+
+
+async def test_verify_apikey_scopes():
+    def apikey_info(apikey, required_scopes=None):
+        if apikey == "admin foobar" and required_scopes == ["admin"]:
+            return {"sub": "foo"}
+        return None
+
+    security_handler_factory = ApiKeySecurityHandler()
+
+    scheme_apikey = {
+        "type": "apiKey",
+        "name": "x-auth",
+        "in": "header",
+        "scopes": {"admin"},
+    }
+
+    with patch.object(
+        security_handler_factory,
+        f"{security_handler_factory._resolve_func.__name__}",
+        return_value=apikey_info,
+    ) as mock_resolve_func:
+        wrapped_func = security_handler_factory.get_fn(scheme_apikey, ["admin"])
+        mock_resolve_func.assert_called_once()
+
+        request = ConnexionRequest(
+            scope={"type": "http", "headers": [[b"x-auth", b"admin foobar"]]}
+        )
+
+        assert await wrapped_func(request) == {"sub": "foo"}
 
 
 async def test_multiple_schemes():
@@ -249,10 +279,10 @@ async def test_multiple_schemes():
     security_handler_factory = SecurityHandlerFactory()
     apikey_security_handler_factory = ApiKeySecurityHandler()
     wrapped_func_key1 = apikey_security_handler_factory._get_verify_func(
-        apikey1_info, "header", "X-Auth-1"
+        apikey1_info, "header", "X-Auth-1", []
     )
     wrapped_func_key2 = apikey_security_handler_factory._get_verify_func(
-        apikey2_info, "header", "X-Auth-2"
+        apikey2_info, "header", "X-Auth-2", []
     )
     schemes = {
         "key1": wrapped_func_key1,
@@ -345,7 +375,7 @@ async def test_optional_kwargs_injected():
         return {"sub": "no_kwargs"}
 
     wrapped_func_no_kwargs = security_handler_factory._get_verify_func(
-        apikey_info_no_kwargs, "header", "X-Auth"
+        apikey_info_no_kwargs, "header", "X-Auth", None
     )
     assert await wrapped_func_no_kwargs(request) == {"sub": "no_kwargs"}
 
@@ -354,7 +384,7 @@ async def test_optional_kwargs_injected():
         return {"sub": "request"}
 
     wrapped_func_request = security_handler_factory._get_verify_func(
-        apikey_info_request, "header", "X-Auth"
+        apikey_info_request, "header", "X-Auth", None
     )
     assert await wrapped_func_request(request) == {"sub": "request"}
 
@@ -363,7 +393,7 @@ async def test_optional_kwargs_injected():
         return {"sub": "scopes"}
 
     wrapped_func_scopes = security_handler_factory._get_verify_func(
-        apikey_info_scopes, "header", "X-Auth"
+        apikey_info_scopes, "header", "X-Auth", None
     )
     assert await wrapped_func_scopes(request) == {"sub": "scopes"}
 
@@ -374,6 +404,6 @@ async def test_optional_kwargs_injected():
         return {"sub": "kwargs"}
 
     wrapped_func_kwargs = security_handler_factory._get_verify_func(
-        apikey_info_kwargs, "header", "X-Auth"
+        apikey_info_kwargs, "header", "X-Auth", None
     )
     assert await wrapped_func_kwargs(request) == {"sub": "kwargs"}

@@ -108,12 +108,20 @@ class FlaskApi(AbstractRoutingAPI):
         return flask_path, endpoint_name
 
     def _add_operation_internal(
-        self, method: str, path: str, operation: t.Callable, name: str = None
+        self,
+        method: str,
+        path: str,
+        operation: t.Callable,
+        name: t.Optional[str] = None,
     ) -> None:
         self.blueprint.add_url_rule(path, name, operation, methods=[method])
 
     def add_url_rule(
-        self, rule, endpoint: str = None, view_func: t.Callable = None, **options
+        self,
+        rule,
+        endpoint: t.Optional[str] = None,
+        view_func: t.Optional[t.Callable] = None,
+        **options,
     ):
         return self.blueprint.add_url_rule(rule, endpoint, view_func, **options)
 
@@ -132,7 +140,7 @@ class FlaskASGIApp(SpecMiddleware):
 
         self.asgi_app = WSGIMiddleware(self.app.wsgi_app)
 
-    def add_api(self, specification, *, name: str = None, **kwargs):
+    def add_api(self, specification, *, name: t.Optional[str] = None, **kwargs):
         api = FlaskApi(specification, **kwargs)
 
         if name is not None:
@@ -143,7 +151,11 @@ class FlaskASGIApp(SpecMiddleware):
         return api
 
     def add_url_rule(
-        self, rule, endpoint: str = None, view_func: t.Callable = None, **options
+        self,
+        rule,
+        endpoint: t.Optional[str] = None,
+        view_func: t.Optional[t.Callable] = None,
+        **options,
     ):
         return self.app.add_url_rule(rule, endpoint, view_func, **options)
 
@@ -245,7 +257,11 @@ class FlaskApp(AbstractApp):
         raise starlette.exceptions.HTTPException(exc.code, detail=exc.description)
 
     def add_url_rule(
-        self, rule, endpoint: str = None, view_func: t.Callable = None, **options
+        self,
+        rule,
+        endpoint: t.Optional[str] = None,
+        view_func: t.Optional[t.Callable] = None,
+        **options,
     ):
         self._middleware_app.add_url_rule(
             rule, endpoint=endpoint, view_func=view_func, **options

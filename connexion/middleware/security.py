@@ -113,7 +113,11 @@ class SecurityOperation:
 
 class SecurityAPI(RoutedAPI[SecurityOperation]):
     def __init__(
-        self, *args, auth_all_paths: bool = False, security_map: dict = None, **kwargs
+        self,
+        *args,
+        auth_all_paths: bool = False,
+        security_map: t.Optional[dict] = None,
+        **kwargs,
     ):
         super().__init__(*args, **kwargs)
 

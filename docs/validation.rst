@@ -325,18 +325,18 @@ Custom type formats
 -------------------
 
 It is possible to define custom type formats for validation without adding a custom validator, by
-leveraging the ``jsonschema.draft4_format_checker.checks`` decorator.
+leveraging the ``jsonschema.Draft4Validator.FORMAT_CHECKER.checks`` decorator.
 
 We can for instance create a custom `money` format.
 
 .. code-block:: python
 
     import re
-    from jsonschema import draft4_format_checker
+    from jsonschema import Draft4Validator
 
     MONEY_RE = re.compile('^\$\s*\d+(\.\d\d)?')
 
-    @draft4_format_checker.checks('money')
+    @Draft4Validator.FORMAT_CHECKER.checks('money')
     def is_money(val):
         if not isinstance(val, str):
             return True

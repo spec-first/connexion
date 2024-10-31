@@ -5,6 +5,7 @@ and functionality shared between Swagger 2 and OpenAPI 3 specifications.
 
 import abc
 import logging
+import typing as t
 
 from connexion.utils import all_json
 
@@ -168,13 +169,13 @@ class AbstractOperation(metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def body_schema(self, content_type: str = None) -> dict:
+    def body_schema(self, content_type: t.Optional[str] = None) -> dict:
         """
         The body schema definition for this operation.
         """
 
     @abc.abstractmethod
-    def body_definition(self, content_type: str = None) -> dict:
+    def body_definition(self, content_type: t.Optional[str] = None) -> dict:
         """
         The body definition for this operation.
         :rtype: dict

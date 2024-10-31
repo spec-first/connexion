@@ -215,17 +215,17 @@ class Swagger2Operation(AbstractOperation):
 
         return (build_example_from_schema(schema), status_code)
 
-    def body_name(self, content_type: str = None) -> str:
+    def body_name(self, content_type: t.Optional[str] = None) -> str:
         return self.body_definition(content_type).get("name", "body")
 
-    def body_schema(self, content_type: str = None) -> dict:
+    def body_schema(self, content_type: t.Optional[str] = None) -> dict:
         """
         The body schema definition for this operation.
         """
         body_definition = self.body_definition(content_type)
         return self.with_definitions(body_definition).get("schema", {})
 
-    def body_definition(self, content_type: str = None) -> dict:
+    def body_definition(self, content_type: t.Optional[str] = None) -> dict:
         """
         The body complete definition for this operation.
 

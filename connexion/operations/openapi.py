@@ -3,6 +3,7 @@ This module defines an OpenAPIOperation class, a Connexion operation specific fo
 """
 
 import logging
+import typing as t
 
 from connexion.datastructures import MediaTypeDict
 from connexion.operations.abstract import AbstractOperation
@@ -212,13 +213,13 @@ class OpenAPIOperation(AbstractOperation):
     def body_name(self, _content_type: str) -> str:
         return self.request_body.get("x-body-name", "body")
 
-    def body_schema(self, content_type: str = None) -> dict:
+    def body_schema(self, content_type: t.Optional[str] = None) -> dict:
         """
         The body schema definition for this operation.
         """
         return self.body_definition(content_type).get("schema", {})
 
-    def body_definition(self, content_type: str = None) -> dict:
+    def body_definition(self, content_type: t.Optional[str] = None) -> dict:
         """
         The body complete definition for this operation.
 
