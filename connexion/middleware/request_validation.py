@@ -137,7 +137,7 @@ class RequestValidationOperation:
                         self._operation.parameters, self._operation.body_definition()
                     ),
                 )
-                receive = await validator.wrap_receive(receive, scope=scope)
+                receive, scope = await validator.wrap_receive(receive, scope=scope)
 
         await self.next_app(scope, receive, send)
 

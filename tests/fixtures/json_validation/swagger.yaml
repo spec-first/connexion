@@ -20,7 +20,9 @@ definitions:
       password:
         type: string
         x-writeOnly: true
-
+      human:
+        type: boolean
+        default: true
 paths:
   /minlength:
     post:

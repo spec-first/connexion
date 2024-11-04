@@ -22,6 +22,9 @@ components:
         password:
           type: string
           writeOnly: true
+        human:
+          type: boolean
+          default: true
     X:
       type: object
       properties:
