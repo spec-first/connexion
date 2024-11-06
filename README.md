@@ -1,4 +1,4 @@
- <a id="top"></a>
+<a id="top"></a>
  <p align="center">
      <img src="https://raw.githubusercontent.com/spec-first/connexion/main/docs/images/logo_banner.svg" width="100%"/>
  </p>
@@ -9,6 +9,7 @@
      <a href="https://github.com/spec-first/connexion/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/pypi/l/connexion?style=flat-square&color=brightgreen"></a>
      <a href="https://github.com/spec-first/connexion/actions/workflows/pipeline.yml"><img alt="GitHub Workflow Status" src="https://img.shields.io/github/actions/workflow/status/spec-first/connexion/pipeline.yml?style=flat-square"></a>
      <a href="https://coveralls.io/github/spec-first/connexion?branch=main"><img alt="Coveralls" src="https://img.shields.io/coverallsCoverage/github/spec-first/connexion?style=flat-square"></a>
+     <a href="https://gurubase.io/g/connexion"><img alt="Gurubase" src="https://img.shields.io/badge/Gurubase-Ask%20Connexion%20Guru-006BFF?style=flat-square"></a>
      <br>
      <br>
      <a href="https://connexion.readthedocs.io/en/stable/"><strong>Explore the docs »</strong></a>
