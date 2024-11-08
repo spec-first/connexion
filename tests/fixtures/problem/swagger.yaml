@@ -22,7 +22,7 @@ paths:
       description: Generates a greeting message.
       operationId: fakeapi.hello.post_greeting
       responses:
-        200:
+        '200':
           description: greeting response
           schema:
             type: object
@@ -41,7 +41,7 @@ paths:
       produces:
         - text/plain
       responses:
-        200:
+        '200':
           description: goodbye response
           schema:
             type: string
@@ -54,7 +54,7 @@ paths:
       produces:
         - application/json
       responses:
-        200:
+        '200':
           description: goodbye response
           schema:
             type: string
@@ -67,7 +67,7 @@ paths:
       produces:
         - text/plain
       responses:
-        200:
+        '200':
           description: goodbye response
           schema:
             type: string
@@ -79,7 +79,7 @@ paths:
       produces:
         - application/json
       responses:
-        200:
+        '200':
           description: Never happens
 
   /customized_problem_response:
@@ -89,7 +89,7 @@ paths:
       produces:
         - application/json
       responses:
-        200:
+        '200':
           description: Custom problem response
 
   /problem_exception_with_extra_args:
@@ -99,7 +99,7 @@ paths:
       produces:
         - application/json
       responses:
-        200:
+        '200':
           description: Problem exception
 
   /post_wrong_content_type:
@@ -115,5 +115,5 @@ paths:
           schema:
             type: object
       responses:
-        200:
+        '200':
           description: OK

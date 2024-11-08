@@ -13,7 +13,7 @@ paths:
       summary: Return secret string
       operationId: app.get_secret
       responses:
-        200:
+        '200':
           description: secret response
           content:
             'text/plain':

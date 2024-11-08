@@ -24,7 +24,7 @@ paths:
           minimum: 0
           default: 100
       responses:
-        200:
+        '200':
           description: Return pets
           schema:
             type: array
@@ -38,11 +38,11 @@ paths:
       parameters:
         - $ref: '#/parameters/pet_id'
       responses:
-        200:
+        '200':
           description: Return pet
           schema:
             $ref: '#/definitions/Pet'
-        404:
+        '404':
           description: Pet does not exist
     put:
       tags: [Pets]
@@ -55,9 +55,9 @@ paths:
           schema:
             $ref: '#/definitions/Pet'
       responses:
-        200:
+        '200':
           description: Pet updated
-        201:
+        '201':
           description: New pet created
     delete:
       tags: [Pets]
@@ -66,9 +66,9 @@ paths:
       parameters:
         - $ref: '#/parameters/pet_id'
       responses:
-        204:
+        '204':
           description: Pet was deleted
-        404:
+        '404':
           description: Pet does not exist
 
 

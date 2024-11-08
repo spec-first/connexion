@@ -12,5 +12,5 @@ paths:
       summary: Operation function does not exist.
       operationId: api.this_function_does_not_exist
       responses:
-        200:
+        '200':
           description: OK

@@ -11,7 +11,7 @@ paths:
     get:
       operationId: fakeapi.module_with_error.something
       responses:
-        200:
+        '200':
           description: greeting response
           schema:
             type: object

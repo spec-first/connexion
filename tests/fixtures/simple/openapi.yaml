@@ -406,7 +406,7 @@ paths:
                 style: form
                 explode: false
       responses:
-        200:
+        '200':
           description: OK
 
   /test_array_pipes_form_param:
@@ -429,7 +429,7 @@ paths:
               items:
                 style: pipeDelimited
       responses:
-        200:
+        '200':
           description: OK
 
   /test_array_csv_query_param:
@@ -1314,13 +1314,13 @@ paths:
     get:
       operationId: fakeapi.hello.async_route
       responses:
-        200:
+        '200':
           description: 'OK'
   /httpstatus:
     get:
       operationId: fakeapi.hello.httpstatus
       responses:
-        201:
+        '201':
           description: "happy path"
         default:
           description: "default"

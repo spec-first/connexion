@@ -53,7 +53,7 @@ paths:
       produces:
         - text/plain
       responses:
-        200:
+        '200':
           description: goodbye response
           schema:
             type: string
@@ -75,7 +75,7 @@ paths:
       produces:
         - text/plain
       responses:
-        200:
+        '200':
           description: goodbye response
           schema:
             type: string
@@ -91,7 +91,7 @@ paths:
       produces:
         - text/plain
       responses:
-        200:
+        '200':
           description: goodbye response
           schema:
             type: string
@@ -107,7 +107,7 @@ paths:
       produces:
         - text/plain
       responses:
-        200:
+        '200':
           description: goodbye response
           schema:
             type: string
@@ -128,7 +128,7 @@ paths:
       produces:
         - text/plain
       responses:
-        200:
+        '200':
           description: goodbye response
           schema:
             type: string
@@ -149,7 +149,7 @@ paths:
           - myscope
         - api_key: []
       responses:
-        200:
+        '200':
           description: OK
 
   /more-than-one-scope:
@@ -166,7 +166,7 @@ paths:
       produces:
         - text/plain
       responses:
-        200:
+        '200':
           description: some response
 
   /optional-auth:
@@ -205,5 +205,5 @@ paths:
       security:
         - api_key_query: []
       responses:
-        200:
+        '200':
           description: OK

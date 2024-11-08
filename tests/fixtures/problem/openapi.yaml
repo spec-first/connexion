@@ -89,7 +89,7 @@ paths:
             schema:
               type: object
       responses:
-        200:
+        '200':
           description: OK
 servers:
   - url: /v1.0

@@ -13,7 +13,7 @@ paths:
       description: Generates a greeting message.
       operationId: fakeapi.hello.post_greeting
       responses:
-        200:
+        '200':
           description: greeting response
           schema:
             type: object

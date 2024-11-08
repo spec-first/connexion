@@ -11,21 +11,21 @@ paths:
     get:
       operationId: no.module.or.function
       responses:
-        200:
+        '200':
           description: greeting response
           schema:
             type: object
     put:
       # operationId: XXX completely missing
       responses:
-        200:
+        '200':
           description: greeting response
           schema:
             type: object
     post:
       operationId: fakeapi.module_with_error.something
       responses:
-        200:
+        '200':
           description: greeting response
           schema:
             type: object

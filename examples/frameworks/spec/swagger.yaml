@@ -15,7 +15,7 @@ paths:
       produces:
         - text/plain;
       responses:
-        200:
+        '200':
           description: greeting response
           schema:
             type: string

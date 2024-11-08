@@ -169,7 +169,7 @@ The operation described in your specification is automatically linked to your Py
        post:
          operationId: run.post_greeting
          responses:
-           200:
+           '200':
              content:
                text/plain:
                  schema:
