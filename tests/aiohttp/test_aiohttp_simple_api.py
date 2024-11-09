@@ -3,6 +3,7 @@ import sys
 import pytest
 import yaml
 from connexion import AioHttpApp
+from aiohttp import web
 
 from conftest import TEST_FOLDER
 
@@ -111,11 +112,11 @@ async def test_swagger_ui(aiohttp_api_spec_dir, aiohttp_client):
     swagger_ui = await app_client.get('/v1.0/ui')
     assert swagger_ui.status == 200
     assert swagger_ui.url.path == '/v1.0/ui/'
-    assert b'url = "/v1.0/swagger.json"' in (await swagger_ui.read())
+    assert b'url: "/v1.0/swagger.json"' in (await swagger_ui.read())
 
     swagger_ui = await app_client.get('/v1.0/ui/')
     assert swagger_ui.status == 200
-    assert b'url = "/v1.0/swagger.json"' in (await swagger_ui.read())
+    assert b'url: "/v1.0/swagger.json"' in (await swagger_ui.read())
 
 
 async def test_swagger_ui_config_json(aiohttp_api_spec_dir, aiohttp_client):
@@ -202,7 +203,9 @@ async def test_cookie_param(aiohttp_api_spec_dir, aiohttp_client):
     assert j['cookie_value'] == "hello"
 
 
-async def test_swagger_ui_static(aiohttp_api_spec_dir, aiohttp_client):
+async def deprecated_swagger_ui_static(aiohttp_api_spec_dir, aiohttp_client):
+    """ "Removed: updated version of swagger_ui_bundle no longer has
+    swagger-oauth.js, swagger-ui.min.js"""
     app = AioHttpApp(__name__, port=5001,
                      specification_dir=aiohttp_api_spec_dir,
                      debug=True)
@@ -239,15 +242,13 @@ async def test_no_swagger_ui(aiohttp_api_spec_dir, aiohttp_client):
 
 
 async def test_middlewares(aiohttp_api_spec_dir, aiohttp_client):
-    async def middleware(app, handler):
-        async def middleware_handler(request):
-            response = (await handler(request))
-            response.body += b' middleware'
-            return response
+    @web.middleware
+    async def test_middleware(request, handler):
+        response = await handler(request)
+        response.body += b" middleware"
+        return response
 
-        return middleware_handler
-
-    options = {"middlewares": [middleware]}
+    options = {"middlewares": [test_middleware]}
     app = AioHttpApp(__name__, port=5001,
                      specification_dir=aiohttp_api_spec_dir,
                      debug=True, options=options)

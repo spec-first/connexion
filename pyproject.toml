@@ -1,0 +1,114 @@
+[tool.poetry]
+name = "connexion"
+version = "2.0.dev0"
+description = "Connexion - API first applications with OpenAPI/Swagger"
+readme = "README.md"
+keywords = ["api", "swagger", "openapi"]
+license = "Apache-2.0"
+authors = [
+    "Robbe Sneyders <robbe.sneyders@gmail.com>",
+    "Ruwan Lambrichts <ruwan.lambrichts@ml6.eu>",
+    "Daniel Grossmann-Kavanagh <me@danielgk.com>",
+    "Henning Jacobs <henning.jacobs@zalando.de>",
+    "João Santos <joao.santos@zalando.de>",
+]
+maintainers = [
+    "Robbe Sneyders <robbe.sneyders@gmail.com>",
+    "Ruwan Lambrichts <ruwan.lambrichts@ml6.eu>",
+]
+repository = "https://github.com/spec-first/connexion"
+include = ["*.txt", "*.rst"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Internet",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
+    "Topic :: Software Development",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
+]
+
+[tool.poetry.scripts]
+connexion = 'connexion.cli:main'
+
+[tool.poetry.dependencies]
+python = '^3.8'
+asgiref = ">= 3.4"
+httpx = ">= 0.23"
+inflection = ">= 0.3.1"
+jsonschema = ">=4.17.3"
+Jinja2 = ">= 3.0.0"
+python-multipart = ">= 0.0.5"
+PyYAML = ">= 5.1"
+requests = ">= 2.27"
+#starlette = ">= 0.35"
+typing-extensions = ">= 4.6.1"
+werkzeug = ">= 2.2.1"
+aiohttp= ">= 2.3.10,<4"
+aiohttp-jinja2=">=0.14.0,<2"
+MarkupSafe=">=0.23"
+clickclick="^20.10.2"
+
+a2wsgi = { version = ">= 1.7", optional = true }
+#flask = { version = ">= 2.2", extras = ["async"], optional = true }
+flask = "^3.0"
+swagger-ui-bundle = { version = ">= 1.1.0", optional = true }
+uvicorn = { version = ">= 0.17.6", extras = ["standard"], optional = true }
+jsf = { version = ">=0.10.0", optional = true }
+
+[tool.poetry.group.docs.dependencies]
+sphinx-autoapi="1.8.1"
+
+[tool.poetry.extras]
+flask = ["a2wsgi", "flask"]
+swagger-ui = ["swagger-ui-bundle"]
+uvicorn = ["uvicorn"]
+mock = ["jsf"]
+
+[tool.poetry.group.tests.dependencies]
+pre-commit = "~2.21.0"
+pytest = "7.2.1"
+pytest-asyncio = "~0.18.3"
+pytest-cov = "~2.12.1"
+pytest-aiohttp=">=1.0.5"
+aiohttp-remotes=">=1.2.0"
+
+[build-system]
+requires = ["poetry-core>=1.2.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.distutils.bdist_wheel]
+universal = true
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore::DeprecationWarning:connexion.*:",
+    "ignore::FutureWarning:connexion.*:",
+]
+asyncio_mode = "auto"
+
+[tool.isort]
+profile = "black"
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if t.TYPE_CHECKING:",
+    "@t.overload",
+]
+
+[[tool.mypy.overrides]]
+module = "referencing.jsonschema.*"
+follow_imports = "skip"

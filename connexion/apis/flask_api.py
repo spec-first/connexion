@@ -9,6 +9,7 @@ import warnings
 from typing import Any
 
 import flask
+from flask.globals import request_ctx
 import werkzeug.exceptions
 from werkzeug.local import LocalProxy
 
@@ -36,7 +37,7 @@ class FlaskApi(AbstractAPI):
 
     def _set_blueprint(self):
         logger.debug('Creating API blueprint: %s', self.base_path)
-        endpoint = flask_utils.flaskify_endpoint(self.base_path)
+        endpoint = flask_utils.flaskify_endpoint(self.base_path) or "/"
         self.blueprint = flask.Blueprint(endpoint, __name__, url_prefix=self.base_path,
                                          template_folder=str(self.options.openapi_console_ui_from_dir))
 
@@ -233,7 +234,7 @@ class FlaskApi(AbstractAPI):
         :rtype: ConnexionRequest
         """
         context_dict = {}
-        setattr(flask._request_ctx_stack.top, 'connexion_context', context_dict)
+        setattr(request_ctx, "connexion_context", context_dict)
         flask_request = flask.request
         request = ConnexionRequest(
             flask_request.url,
@@ -265,7 +266,7 @@ class FlaskApi(AbstractAPI):
 
 
 def _get_context():
-    return getattr(flask._request_ctx_stack.top, 'connexion_context')
+    return getattr(request_ctx, "connexion_context")
 
 
 context = LocalProxy(_get_context)
