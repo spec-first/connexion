@@ -11,7 +11,7 @@ paths:
     get:
       operationId: no.module.or.function
       responses:
-        200:
+        '200':
           description: greeting response
           schema:
             type: object

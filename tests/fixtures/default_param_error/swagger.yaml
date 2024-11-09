@@ -12,7 +12,7 @@ paths:
       summary: Default value does not match the param type
       operationId: fakeapi.hello.test_default_mismatch_definition
       responses:
-        200:
+        '200':
           description: OK
       parameters:
         - name: age

@@ -29,7 +29,7 @@ paths:
       produces:
         - application/json
       responses:
-        200:
+        '200':
           description: goodbye response
           schema:
             $ref: '#/definitions/new_stack'
@@ -48,7 +48,7 @@ paths:
           required: true
           type: string
       responses:
-        200:
+        '200':
           description: Requested new_stack data model
           schema:
             $ref: '#/definitions/new_stack'
@@ -67,7 +67,7 @@ paths:
           required: true
           type: string
       responses:
-        200:
+        '200':
           description: Requested new_stack data model
           schema:
             type: string
@@ -86,7 +86,7 @@ paths:
           required: true
           type: string
       responses:
-        200:
+        '200':
           description: Requested new_stack data model
           schema:
             type: integer
@@ -105,7 +105,7 @@ paths:
           required: true
           type: string
       responses:
-        200:
+        '200':
           description: Requested new_stack data model
           schema:
             type: number
@@ -124,7 +124,7 @@ paths:
           required: true
           type: string
       responses:
-        200:
+        '200':
           description: Requested new_stack data model
           schema:
             type: boolean
@@ -143,7 +143,7 @@ paths:
           required: true
           type: string
       responses:
-        200:
+        '200':
           description: Requested new_stack data model
           schema:
             type: array
@@ -167,7 +167,7 @@ paths:
       produces:
         - application/json
       responses:
-        200:
+        '200':
           description: goodbye response
           schema:
             $ref: '#/definitions/new_stack'
@@ -188,7 +188,7 @@ paths:
       produces:
         - application/json
       responses:
-        200:
+        '200':
           description: goodbye response
           schema:
             type: string
@@ -209,7 +209,7 @@ paths:
       produces:
         - application/json
       responses:
-        200:
+        '200':
           description: goodbye response
           schema:
             type: string
@@ -228,7 +228,7 @@ paths:
       produces:
         - application/json
       responses:
-        200:
+        '200':
           description: goodbye response
           schema:
             type: string
@@ -248,7 +248,7 @@ paths:
       produces:
         - application/json
       responses:
-        200:
+        '200':
           description: goodbye response
           schema:
             type: string
@@ -264,7 +264,7 @@ paths:
           schema:
             type: integer
       responses:
-        200:
+        '200':
           description: OK
 
   /schema_array:
@@ -280,7 +280,7 @@ paths:
             items:
               type: string
       responses:
-        200:
+        '200':
           description: OK
 
   /define_global_response:
@@ -288,7 +288,7 @@ paths:
       description: Should allow global response definitions
       operationId: fakeapi.hello.test_global_response_definition
       responses:
-        200:
+        '200':
           $ref: '#/responses/GeneralList'
 
   /media_range:

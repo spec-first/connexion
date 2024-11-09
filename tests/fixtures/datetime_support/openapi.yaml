@@ -12,7 +12,7 @@ paths:
       summary: Generate data with date time
       operationId: fakeapi.hello.get_datetime
       responses:
-        200:
+        '200':
           description: date time example
           content:
             application/json:
@@ -29,7 +29,7 @@ paths:
       summary: Generate data with date
       operationId: fakeapi.hello.get_date
       responses:
-        200:
+        '200':
           description: date example
           content:
             application/json:
@@ -46,7 +46,7 @@ paths:
       summary: Generate data with uuid
       operationId: fakeapi.hello.get_uuid
       responses:
-        200:
+        '200':
           description: uuid example
           content:
             application/json:

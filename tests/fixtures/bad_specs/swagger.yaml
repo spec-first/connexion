@@ -17,7 +17,7 @@ paths:
           type: integer
           default: somestring
       responses:
-        200:
+        '200':
           description: search
           schema:
             type: object
