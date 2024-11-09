@@ -1,0 +1,7 @@
+FROM python:3.9
+
+RUN : \
+ && apt update \
+ && apt install -y python3 curl \
+ && curl -sSL https://install.python-poetry.org | python3 - \
+ && pip install tox pre-commit pytest black python-dateutil commitizen
