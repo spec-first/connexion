@@ -49,7 +49,9 @@ class MockResolver(Resolver):
 
     def mock_operation(self, operation, *args, **kwargs):
         resp, code = operation.example_response()
-        if resp is not None:
+        if code == 204:
+            return None, code
+        elif resp is not None:
             return resp, code
         return (
             "No example response defined in the API, and response "
