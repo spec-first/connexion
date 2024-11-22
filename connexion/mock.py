@@ -6,8 +6,8 @@ import functools
 import logging
 from http import HTTPStatus
 
-from connexion.resolver import Resolution, Resolver, ResolverError
 from connexion.datastructures import NoContent
+from connexion.resolver import Resolution, Resolver, ResolverError
 
 logger = logging.getLogger(__name__)
 
