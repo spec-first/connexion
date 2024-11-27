@@ -94,11 +94,11 @@ Instead, you need to run the Connexion application using an ASGI server:
 
 .. code-block:: bash
 
-    $ uvicorn run:app
+    $ uvicorn hello:app
 
 .. code-block:: bash
 
-    $ gunicorn -k uvicorn.workers.UvicornWorker run:app
+    $ gunicorn -k uvicorn.workers.UvicornWorker hello:app
 
 .. warning::
 
