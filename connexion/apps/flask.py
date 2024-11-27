@@ -202,11 +202,9 @@ class FlaskApp(AbstractApp):
             should either be absolute or relative to the root path of the application. Defaults to
             the root path.
         :param arguments: Arguments to substitute the specification using Jinja.
-        :param auth_all_paths: whether to authenticate not paths not defined in the specification.
+        :param auth_all_paths: whether to authenticate all paths not defined in the specification.
             Defaults to False.
         :param jsonifier: Custom jsonifier to overwrite json encoding for json responses.
-        :param swagger_ui_options: A :class:`options.SwaggerUIOptions` instance with configuration
-            options for the swagger ui.
         :param pythonic_params: When True, CamelCase parameters are converted to snake_case and an
             underscore is appended to any shadowed built-ins. Defaults to False.
         :param resolver: Callable that maps operationId to a function or instance of
