@@ -63,7 +63,7 @@ class SwaggerUIAPI(AbstractSpecAPI):
             "route_root_path", request.scope.get("root_path", "")
         ).rstrip("/")
 
-    def _spec_for_prefix(self, request):
+    def _spec_for_prefix(self, request) -> dict:
         """
         returns a spec with a modified basePath / servers block
         which corresponds to the incoming request path.
