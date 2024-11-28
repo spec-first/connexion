@@ -1,3 +1,4 @@
+from connexion.datastructures import NoContent
 from connexion.mock import MockResolver
 from connexion.operations import OpenAPIOperation, Swagger2Operation
 
@@ -259,6 +260,27 @@ def test_mock_resolver_no_example_nested_in_list_openapi():
     assert status_code == 202
     assert isinstance(response, list)
     assert all(isinstance(c, str) for c in response)
+
+def test_mock_resolver_no_content():
+    resolver = MockResolver(mock_all=True)
+
+    responses = {"204": {}}
+
+    operation = Swagger2Operation(
+        method="GET",
+        path="endpoint",
+        path_parameters=[],
+        operation={"responses": responses},
+        app_produces=["application/json"],
+        app_consumes=["application/json"],
+        definitions={},
+        resolver=resolver,
+    )
+    assert operation.operation_id == "mock-1"
+
+    response, status_code = resolver.mock_operation(operation)
+    assert status_code == 204
+    assert response == NoContent
 
 
 def test_mock_resolver_no_examples():
