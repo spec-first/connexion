@@ -174,7 +174,7 @@ class OpenAPIOperation(AbstractOperation):
 
         if status_code == HTTPStatus.NO_CONTENT:
             return NoContent, status_code
-        
+
         try:
             # TODO also use example header?
             return (
