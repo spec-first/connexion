@@ -1,0 +1,45 @@
+swagger: "2.0"
+
+info:
+  title: "{{title}}"
+  version: "1.0"
+
+basePath: /swagger
+
+paths:
+  /pets:
+    get:
+      summary: List all pets
+      operationId: app.show
+      responses:
+        '200':
+          description: List all pets
+          schema:
+            type: array
+            items:
+              $ref: 'definitions.yaml#/definitions/Pets'
+        default:
+          description: Unexpected Error
+          schema:
+            $ref:  'definitions.yaml#/definitions/Error'
+
+  '/pets/{petId}':
+    get:
+      summary: Info for a specific pet
+      operationId: app.get
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          type: integer
+          minimum: 1
+          description: Parameter description in Markdown.
+      responses:
+        '200':
+          description: Expected response to a valid request
+          schema:
+            $ref: 'definitions.yaml#/definitions/Pet'
+        default:
+          description: Unexpected Error
+          schema:
+            $ref:  'definitions.yaml#/definitions/Error'
