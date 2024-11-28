@@ -4,9 +4,7 @@ This module contains a mock resolver that returns mock functions for operations 
 
 import functools
 import logging
-from http import HTTPStatus
 
-from connexion.datastructures import NoContent
 from connexion.resolver import Resolution, Resolver, ResolverError
 
 logger = logging.getLogger(__name__)
@@ -51,9 +49,7 @@ class MockResolver(Resolver):
 
     def mock_operation(self, operation, *args, **kwargs):
         resp, code = operation.example_response()
-        if code == HTTPStatus.NO_CONTENT:
-            return NoContent, code
-        elif resp is not None:
+        if resp is not None:
             return resp, code
         return (
             "No example response defined in the API, and response "
