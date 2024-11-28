@@ -4,7 +4,9 @@ This module defines a Swagger2Operation class, a Connexion operation specific fo
 
 import logging
 import typing as t
+from http import HTTPStatus
 
+from connexion.datastructures import NoContent
 from connexion.exceptions import InvalidSpecification
 from connexion.operations.abstract import AbstractOperation
 from connexion.uri_parsing import Swagger2URIParser
@@ -196,6 +198,10 @@ class Swagger2Operation(AbstractOperation):
             status_code = int(status_code)
         except ValueError:
             status_code = 200
+
+        if status_code == HTTPStatus.NO_CONTENT:
+            return NoContent, status_code
+        
         try:
             return (
                 list(deep_get(self._responses, examples_path).values())[0],
