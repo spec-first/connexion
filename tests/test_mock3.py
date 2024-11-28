@@ -1,3 +1,4 @@
+from connexion.datastructures import NoContent
 from connexion.mock import MockResolver
 from connexion.operations import OpenAPIOperation
 
@@ -85,6 +86,24 @@ def test_mock_resolver_inline_schema_example():
     response, status_code = resolver.mock_operation(operation)
     assert status_code == 200
     assert response == {"foo": "bar"}
+
+def test_mock_resolver_no_content():
+    resolver = MockResolver(mock_all=True)
+
+    responses = {"204": {}}
+
+    operation = OpenAPIOperation(
+        method="GET",
+        path="endpoint",
+        path_parameters=[],
+        operation={"responses": responses},
+        resolver=resolver,
+    )
+    assert operation.operation_id == "mock-1"
+
+    response, status_code = resolver.mock_operation(operation)
+    assert status_code == 204
+    assert response == NoContent
 
 
 def test_mock_resolver_no_examples():
