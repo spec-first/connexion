@@ -261,6 +261,7 @@ def test_mock_resolver_no_example_nested_in_list_openapi():
     assert isinstance(response, list)
     assert all(isinstance(c, str) for c in response)
 
+
 def test_mock_resolver_no_content():
     resolver = MockResolver(mock_all=True)
 

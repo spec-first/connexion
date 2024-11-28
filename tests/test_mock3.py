@@ -87,6 +87,7 @@ def test_mock_resolver_inline_schema_example():
     assert status_code == 200
     assert response == {"foo": "bar"}
 
+
 def test_mock_resolver_no_content():
     resolver = MockResolver(mock_all=True)
 
