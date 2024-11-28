@@ -201,7 +201,7 @@ class Swagger2Operation(AbstractOperation):
 
         if status_code == HTTPStatus.NO_CONTENT:
             return NoContent, status_code
-        
+
         try:
             return (
                 list(deep_get(self._responses, examples_path).values())[0],
