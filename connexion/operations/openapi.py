@@ -4,8 +4,9 @@ This module defines an OpenAPIOperation class, a Connexion operation specific fo
 
 import logging
 import typing as t
+from http import HTTPStatus
 
-from connexion.datastructures import MediaTypeDict
+from connexion.datastructures import MediaTypeDict, NoContent
 from connexion.operations.abstract import AbstractOperation
 from connexion.uri_parsing import OpenAPIURIParser
 from connexion.utils import build_example_from_schema, deep_get
@@ -170,6 +171,10 @@ class OpenAPIOperation(AbstractOperation):
             status_code = int(status_code)
         except ValueError:
             status_code = 200
+
+        if status_code == HTTPStatus.NO_CONTENT:
+            return NoContent, status_code
+        
         try:
             # TODO also use example header?
             return (
