@@ -120,7 +120,7 @@ class RequestValidationOperation:
             try:
                 body_validator = self._validator_map["body"][mime_type]  # type: ignore
             except KeyError:
-                logging.info(
+                logger.info(
                     f"Skipping validation. No validator registered for content type: "
                     f"{mime_type}."
                 )
