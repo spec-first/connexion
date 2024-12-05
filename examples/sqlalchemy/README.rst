@@ -4,8 +4,6 @@ SQLAlchemy Example
 
 .. note::
 
-    TODO: Update this example to work with recent (2024) versions of Python and SQLAlchemy.
-
 A simple example of how one might use SQLAlchemy as a backing store for a 
 Connexion based application.
 
