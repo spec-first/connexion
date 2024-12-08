@@ -1,0 +1,55 @@
+openapi: 3.0.0
+
+info:
+  version: 1.0.0
+  title: Swagger Petstore
+  license:
+    name: MIT
+
+servers:
+  - url: /openapi
+
+paths:
+  /pets:
+    get:
+      summary: List all pets
+      operationId: app.show
+      responses:
+        '200':
+          description: A list of pets
+          content:
+            application/json:
+              schema:
+                $ref: "components.yaml#/components/schemas/Pets"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "components.yaml#/components/schemas/Error"
+
+  '/pets/{petId}':
+    get:
+      summary: Info for a specific pet
+      operationId: app.get
+      parameters:
+        - name: petId
+          in: path
+          description: Id of the pet to get.
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: "components.yaml#/components/schemas/Pet"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "components.yaml#/components/schemas/Error"

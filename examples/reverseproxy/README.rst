@@ -28,10 +28,9 @@ You can set the path in three ways:
     }
 
 To run this example, install Connexion from PyPI:
-
 .. code-block::
 
-    $ pip install --upgrade connexion[swagger-ui]
+    $ pip install 'connexion[flask,swagger-ui,uvicorn]>=3.1.0'
 
 and then run it either directly
 .. code-block::
@@ -44,7 +43,6 @@ or using uvicorn (or another async server):
 
 If your proxy server is running at http://localhost:8080/revers_proxied/, you can go to
 http://localhost:8080/reverse_proxied/openapi/ui/ to see the Swagger UI.
-
 
 Or you can test this using the ``X-Forwarded-Path`` header to modify the reverse proxy path.
 For example, note the servers block:
@@ -85,4 +83,3 @@ For example, note the servers block:
           "title" : "Path-Altering Reverse Proxy Example"
        }
     }
-
