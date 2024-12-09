@@ -1,6 +1,7 @@
 from sqlalchemy import Column, DateTime, String, create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
 Base = declarative_base()
 
@@ -24,11 +25,17 @@ class Pet(Base):
         return {k: v for k, v in vars(self).items() if not k.startswith("_")}
 
 
-def init_db(uri):
-    engine = create_engine(uri, convert_unicode=True)
-    db_session = scoped_session(
-        sessionmaker(autocommit=False, autoflush=False, bind=engine)
+def init_db():
+    """
+    Initialize the database and return a sessionmaker object.
+    `check_same_thread` and `StaticPool` are helpful for unit testing of
+    in-memory sqlite databases; they should not be used in production.
+    https://stackoverflow.com/questions/6519546/scoped-sessionsessionmaker-or-plain-sessionmaker-in-sqlalchemy
+    """
+    engine = create_engine(
+        url="sqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
     )
-    Base.query = db_session.query_property()
     Base.metadata.create_all(bind=engine)
-    return db_session
+    return sessionmaker(autocommit=False, autoflush=False, bind=engine)
