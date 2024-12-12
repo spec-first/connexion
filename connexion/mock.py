@@ -14,6 +14,7 @@ class MockResolver(Resolver):
     def __init__(self, mock_all):
         super().__init__()
         self.mock_all = mock_all
+        self._resolved_operations = {}
         self._operation_id_counter = 1
 
     def resolve(self, operation):
@@ -23,10 +24,15 @@ class MockResolver(Resolver):
         :type operation: connexion.operations.AbstractOperation
         """
         operation_id = self.resolve_operation_id(operation)
-        if not operation_id:
-            # just generate an unique operation ID
-            operation_id = f"mock-{self._operation_id_counter}"
-            self._operation_id_counter += 1
+        if operation_id is None:
+            operation_ref = operation.path + operation.method
+            if operation_ref in self._resolved_operations:
+                operation_id = self._resolved_operations.get(operation_ref)
+            else:
+                # just generate an unique operation ID
+                operation_id = f"mock-{self._operation_id_counter}"
+                self._resolved_operations[operation_ref] = operation_id
+                self._operation_id_counter += 1
 
         mock_func = functools.partial(self.mock_operation, operation=operation)
         if self.mock_all:
