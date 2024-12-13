@@ -493,8 +493,18 @@ class SecurityHandlerFactory:
                 security_handler = self.security_handlers["apiKey"]
                 return security_handler().get_fn(security_scheme, required_scopes)
 
+        elif security_type == "openIdConnect":
+            if security_type in self.security_handlers:
+                security_handler = self.security_handlers[security_type]
+                return security_handler().get_fn(security_scheme, required_scopes)
+            logger.warning("... No default implementation for openIdConnect")
+            return None
+
         # Custom security scheme handler
-        elif "scheme" in security_scheme and (scheme := security_scheme["scheme"].lower()) in self.security_handlers:
+        elif (
+            "scheme" in security_scheme
+            and (scheme := security_scheme["scheme"].lower()) in self.security_handlers
+        ):
             security_handler = self.security_handlers[scheme]
             return security_handler().get_fn(security_scheme, required_scopes)
 
