@@ -454,7 +454,9 @@ class ConnexionMiddleware:
 
         :param code_or_exception: An exception class or the status code of HTTP exceptions to
             handle.
-        :param function: Callable that will handle exception, may be async.
+        :param function: Callable that will handle exception and return a HTTP problem response.
+            An async coroutine has access to the stack traceback.  Can also use a regular function,
+            which will be wrapped and has no access to the stack traceback.
         """
         if self.middleware_stack is not None:
             raise RuntimeError(

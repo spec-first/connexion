@@ -24,7 +24,7 @@ You can register error handlers on:
             from connexion import AsyncApp
             from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 
-            def not_found(request: ConnexionRequest, exc: Exception) -> ConnexionResponse:
+            async def not_found(request: ConnexionRequest, exc: Exception) -> ConnexionResponse:
                 return ConnexionResponse(status_code=404, body=json.dumps({"error": "NotFound"}))
 
             app = AsyncApp(__name__)
@@ -45,7 +45,7 @@ You can register error handlers on:
             from connexion import FlaskApp
             from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 
-            def not_found(request: ConnexionRequest, exc: Exception) -> ConnexionResponse:
+            async def not_found(request: ConnexionRequest, exc: Exception) -> ConnexionResponse:
                 return ConnexionResponse(status_code=404, body=json.dumps({"error": "NotFound"}))
 
             app = FlaskApp(__name__)
@@ -62,7 +62,7 @@ You can register error handlers on:
 
             .. warning::
 
-                ⚠️ **The following is not recommended as it complicates the exception handling logic,**
+                ⚠️ **The following is not recommended as it complicates the exception handling logic!**
 
             You can also register error handlers on the underlying flask application directly.
 
@@ -93,7 +93,7 @@ You can register error handlers on:
             from connexion import ConnexionMiddleware
             from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 
-            def not_found(request: ConnexionRequest, exc: Exception) -> ConnexionResponse:
+            async def not_found(request: ConnexionRequest, exc: Exception) -> ConnexionResponse:
                 return ConnexionResponse(status_code=404, body=json.dumps({"error": "NotFound"}))
 
             app = App(__name__)
@@ -115,7 +115,9 @@ You can register error handlers on:
 
 .. note::
 
-    Error handlers can be ``async`` coroutines as well.
+    Connexion error handlers are not required to be ``async`` coroutines. However, the
+    middleware must wrap a regular function to call it, and a wrapped handler function
+    has no access to the stack traceback from the exception.
 
 .. _Flask documentation: https://flask.palletsprojects.com/en/latest/errorhandling/#error-handlers
 
