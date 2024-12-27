@@ -452,7 +452,8 @@ class ConnexionMiddleware:
 
         :param code_or_exception: An exception class or the status code of HTTP exceptions to
             handle.
-        :param function: Callable that will handle exception, may be async.
+        :param function: Callable that will handle the exception and return a ConnexionResponse such
+            as a `connexion.problem.problem`. May be async; a sync function is run in a threadpool.
         """
         if self.middleware_stack is not None:
             raise RuntimeError(
