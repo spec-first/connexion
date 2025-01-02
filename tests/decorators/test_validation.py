@@ -62,7 +62,7 @@ def test_get_valid_parameter_with_enum_array_header():
 def test_invalid_type(monkeypatch):
     logger = MagicMock()
     monkeypatch.setattr('connexion.decorators.validation.logger', logger)
-    result = ParameterValidator.validate_parameter('formdata', 20, {'type': 'string', 'name': 'foo'})
+    result = ParameterValidator.validate_parameter("formdata", 20, {"name": "foo", "type": "string"})
     expected_result = """20 is not of type 'string'
 
 Failed validating 'type' in schema:
