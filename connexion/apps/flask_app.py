@@ -153,10 +153,8 @@ class FlaskApp(AbstractApp):
 
 
 class FlaskJSONProvider(DefaultJSONProvider):
-    def __init__(self, app):
-        super().__init__(app)
-
-    def default(self, o):
+    @classmethod
+    def default(cls, o):
         if isinstance(o, datetime.datetime):
             if o.tzinfo:
                 # eg: '2015-09-25T23:14:42.588601+00:00'
@@ -177,22 +175,7 @@ class FlaskJSONProvider(DefaultJSONProvider):
 
 class FlaskJSONEncoder(json.JSONEncoder):
     def default(self, o):
-        if isinstance(o, datetime.datetime):
-            if o.tzinfo:
-                # eg: '2015-09-25T23:14:42.588601+00:00'
-                return o.isoformat('T')
-            else:
-                # No timezone present - assume UTC.
-                # eg: '2015-09-25T23:14:42.588601Z'
-                return o.isoformat('T') + 'Z'
-
-        if isinstance(o, datetime.date):
-            return o.isoformat()
-
-        if isinstance(o, Decimal):
-            return float(o)
-
-        return json.JSONEncoder.default(self, o)
+        return FlaskJSONProvider.default(o)
 
 
 class NumberConverter(werkzeug.routing.BaseConverter):
