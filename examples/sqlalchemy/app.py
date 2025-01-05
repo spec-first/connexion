@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 import orm
 from connexion import FlaskApp, NoContent
 
+
 def get_pets(limit, animal_type=None):
     with db_session_factory() as db_session:
         q = db_session.query(orm.Pet)
@@ -27,7 +28,7 @@ def put_pet(pet_id, pet):
             p.update(**pet)
         else:
             logging.info("Creating pet %s..", pet_id)
-            pet["created"] = datetime.now(timezone.UTC)
+            pet["created"] = datetime.now(timezone.utc)
             db_session.add(orm.Pet(**pet))
         db_session.commit()
         return NoContent, (200 if p is not None else 201)
