@@ -1,8 +1,9 @@
 import logging
 from datetime import datetime, timezone
 
+import connexion
 import orm
-from connexion import FlaskApp, NoContent
+from connexion import NoContent
 
 
 def get_pets(limit, animal_type=None):
@@ -55,7 +56,7 @@ pets = {
 }
 for id_, pet in pets.items():
     put_pet(id_, pet)
-app = FlaskApp(__name__, specification_dir="spec")
+app = connexion.FlaskApp(__name__, specification_dir="spec")
 app.add_api("openapi.yaml")
 app.add_api("swagger.yaml")
 
