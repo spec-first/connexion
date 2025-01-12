@@ -13,7 +13,7 @@ paths:
       description: Generates a greeting message.
       operationId: post_greeting
       produces:
-        - text/plain;
+        - text/plain
       responses:
         '200':
           description: greeting response
