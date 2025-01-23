@@ -1,5 +1,5 @@
-import datetime
 import logging
+from datetime import datetime, timezone
 
 import connexion
 import orm
@@ -29,7 +29,7 @@ def put_pet(pet_id, pet):
             p.update(**pet)
         else:
             logging.info("Creating pet %s..", pet_id)
-            pet["created"] = datetime.datetime.now(datetime.UTC)
+            pet["created"] = datetime.now(timezone.utc)
             db_session.add(orm.Pet(**pet))
         db_session.commit()
         return NoContent, (200 if p is not None else 201)
