@@ -62,7 +62,7 @@ You can register error handlers on:
 
             .. warning::
 
-                ⚠️ **The following is not recommended as it complicates the exception handling logic,**
+                ⚠️ **The following is not recommended as it complicates the exception handling logic!**
 
             You can also register error handlers on the underlying flask application directly.
 
@@ -115,7 +115,11 @@ You can register error handlers on:
 
 .. note::
 
-    Error handlers can be ``async`` coroutines as well.
+    All the error handlers shown above are sync functions. The exception stack trace is
+    not available in a sync function because the middleware runs it in a threadpool.
+
+    Error handlers can be ``async`` coroutines as well.  Use a coroutine if the handler
+    function needs the stack trace from the exception, for example to log a traceback. 
 
 .. _Flask documentation: https://flask.palletsprojects.com/en/latest/errorhandling/#error-handlers
 
