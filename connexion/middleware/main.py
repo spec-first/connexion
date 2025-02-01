@@ -402,8 +402,6 @@ class ConnexionMiddleware:
         :param kwargs: Additional keyword arguments to pass to the `add_api` method of the managed
             middlewares. This can be used to pass arguments to middlewares added beyond the default
             ones.
-
-        :return: The Api registered on the wrapped application.
         """
         if self.middleware_stack is not None:
             raise RuntimeError("Cannot add api after an application has started")
