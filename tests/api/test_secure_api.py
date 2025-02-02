@@ -6,6 +6,8 @@ from connexion import App
 from connexion.exceptions import OAuthProblem
 from connexion.security import NO_VALUE, BasicSecurityHandler, OAuthSecurityHandler
 
+from tests.conftest import OPENAPI3_SPEC
+
 
 class FakeResponse:
     def __init__(self, status_code, text):
@@ -286,5 +288,90 @@ def test_security_map(secure_api_spec_dir, spec):
     res = app_client.post(
         "/v1.0/greeting_basic",
         headers={"Authorization": "my_basic dGVzdDp0ZXN0"},
+    )
+    assert res.status_code == 200
+
+
+def test_security_map_custom_type(secure_api_spec_dir):
+    def generate_token(scopes):
+        token_segments = [
+            json.dumps({"alg": "none", "typ": "JWT"}),
+            json.dumps({"sub": "1234567890", "name": "John Doe", "scopes": scopes}),
+            "",
+        ]
+        token = ".".join(
+            base64.urlsafe_b64encode(s.encode()).decode().rstrip("=")
+            for s in token_segments
+        )
+        return token
+
+    class FakeOIDCSecurityHandler(OAuthSecurityHandler):
+        """
+        Uses openIdConnect (not currently directly implemented) as auth type to test custom/unimplemented auth types.
+        Doesn't attempt to actually implement OIDC
+        """
+
+        def _get_verify_func(
+            self, token_info_func, scope_validate_func, required_scopes
+        ):
+            check_oauth_func = self.check_oauth_func(
+                token_info_func, scope_validate_func
+            )
+
+            def wrapper(request):
+                auth_type, token = self.get_auth_header_value(request)
+                if auth_type != "bearer":
+                    return NO_VALUE
+
+                return check_oauth_func(request, token, required_scopes=required_scopes)
+
+            return wrapper
+
+        def get_tokeninfo_func(self, security_definition: dict):
+            def wrapper(token):
+                segments = token.split(".")
+                body = segments[1]
+                body += "=" * (-len(body) % 4)
+                return json.loads(base64.urlsafe_b64decode(body))
+
+            return wrapper
+
+    security_map = {
+        "openIdConnect": FakeOIDCSecurityHandler,
+    }
+    # api level
+    app = App(__name__, specification_dir=secure_api_spec_dir)
+    app.add_api(OPENAPI3_SPEC, security_map=security_map)
+    app_client = app.test_client()
+    invalid_token = generate_token(["invalidscope"])
+    res = app_client.post(
+        "/v1.0/greeting_oidc",
+        headers={"Authorization": f"bearer {invalid_token}"},
+    )
+    assert res.status_code == 403
+
+    valid_token = generate_token(["mytestscope"])
+    res = app_client.post(
+        "/v1.0/greeting_oidc",
+        headers={"Authorization": f"bearer {valid_token}"},
+    )
+    assert res.status_code == 200
+
+    # app level
+    app = App(
+        __name__, specification_dir=secure_api_spec_dir, security_map=security_map
+    )
+    app.add_api(OPENAPI3_SPEC)
+    app_client = app.test_client()
+
+    res = app_client.post(
+        "/v1.0/greeting_oidc",
+        headers={"Authorization": f"bearer {invalid_token}"},
+    )
+    assert res.status_code == 403
+
+    res = app_client.post(
+        "/v1.0/greeting_oidc",
+        headers={"Authorization": f"bearer {valid_token}"},
     )
     assert res.status_code == 200
