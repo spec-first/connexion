@@ -117,7 +117,7 @@ built using either the `AsyncApp` or `FlaskApp`.
 - The `AsyncApp` is a lightweight application with native asynchronous support. Use it if you
   are starting a new project and have no specific reason to use one of the other options.
 
-  ```Python
+  ```python
       from connexion import AsyncApp
 
       app = AsyncApp(__name__)
