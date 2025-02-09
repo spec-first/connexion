@@ -10,13 +10,13 @@ following order:
 
     **ServerErrorMiddleware**, "Returns server errors for any exceptions not caught by the
     ExceptionMiddleware"
-    **ExceptionMiddleware**, Handles exceptions raised by the middleware stack or application
-    **SwaggerUIMiddleware**, Adds a Swagger UI to your application
+    **ExceptionMiddleware**, "Handles exceptions raised by the middleware stack or application"
+    **SwaggerUIMiddleware**, "Adds a Swagger UI to your application"
     **RoutingMiddleware**, "Routes incoming requests to the right operation defined in the
     specification"
     **SecurityMiddleware**, "Checks incoming requests against the security defined in the
     specification"
-    **RequestValidationMiddleware**, Validates the incoming requests against the spec
+    **RequestValidationMiddleware**, "Validates the incoming requests against the spec"
     **ResponseValidationMiddleware**, "Validates the returned responses against the spec, if
     activated"
     **LifespanMiddleware**, "Allows registration of code to run before application start-up or
@@ -191,12 +191,12 @@ Writing custom middleware
 -------------------------
 
 You can add any custom middleware as long as it implements the ASGI interface. To learn how to
-write pure ASGI middleware, please refer to the `documentation of starlette`_.
+write pure ASGI middleware, please refer to the `documentation of Starlette`_.
 
 List of useful middleware
 -------------------------
 
-Starlette provides a bunch of useful middleware such as:
+Starlette provides a variety of useful middleware such as:
 
 * `CORSMiddleware`_
 * `SessionMiddleware`_
@@ -204,13 +204,13 @@ Starlette provides a bunch of useful middleware such as:
 * `TrustedHostMiddleware`_
 * `GZipMiddleware`_
 
-Other useful middleware:
+Other useful middleware includes:
 
 * `ProxyHeadersMiddleware`_ by Uvicorn
 * `SentryASGIMiddleware`_ by Sentry
 * `MetricsMiddleware`_ by Prometheus
 
-For more, check the `asgi-middleware topic`_ on github.
+For more, check the `asgi-middleware topic`_ on GitHub.
 
 .. _documentation of starlette: https://www.starlette.io/middleware/#writing-pure-asgi-middleware
 .. _CORSMiddleware: https://www.starlette.io/middleware/#corsmiddleware

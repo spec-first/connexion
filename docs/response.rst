@@ -19,19 +19,19 @@ Response Serialization
         :sync: AsyncApp
 
 
-        When working with Connexion, you can return ordinary Python types, and connexion will serialize
+        When working with Connexion, you can return ordinary Python types, and Connexion will serialize
         them into a network response.
 
     .. tab-item:: FlaskApp
         :sync: FlaskApp
 
-        When working with Connexion, you can return ordinary Python types, and connexion will serialize
+        When working with Connexion, you can return ordinary Python types, and Connexion will serialize
         them into a network response.
 
     .. tab-item:: ConnexionMiddleware
         :sync: ConnexionMiddleware
 
-        When working with Connexion, you can return ordinary Python types, and connexion will serialize
+        When working with Connexion, you can return ordinary Python types, and Connexion will serialize
         them into a network response.
 
         To activate this behavior when using the ``ConnexionMiddleware`` wrapping a third party
@@ -131,7 +131,7 @@ an API:
             from connexion import FlaskApp
 
             app = FlaskApp(__name__, jsonifier=...)
-            app.add_api("openapi.yaml", jsonifier=...):
+            app.add_api("openapi.yaml", jsonifier=...)
 
     .. tab-item:: ConnexionMiddleware
         :sync: ConnexionMiddleware
@@ -179,7 +179,6 @@ If your endpoint returns an instance of ``connexion.lifecycle.ConnexionResponse`
 framework-specific response (``flask.Response`` or ``starlette.responses.Response``), response
 serialization is skipped, and the response is passed directly to the underlying framework.
 
-If your endpoint returns a `Response`
-If the endpoint returns a `Response` object this response will be used as is.
+If your endpoint returns a `Response` object, this response will be used as is.
 
 .. _Frameworks: https://github.com/spec-first/connexion/tree/main/examples/frameworks
