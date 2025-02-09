@@ -10,14 +10,14 @@ some of the most popular security schemes.
 
     **Swagger 2**, **Connexion support**
     Basic Authentication, |:white_check_mark:|
-    API key, |:white_check_mark:|
-    Oauth2, |:white_check_mark:|
+    API Key, |:white_check_mark:|
+    OAuth2, |:white_check_mark:|
     **OpenAPI**,
     HTTP Basic, |:white_check_mark:|
     HTTP Bearer, |:white_check_mark:|
-    Other HTTP schemes (RFC 7253), "No built-in support, use a `custom security handler <#custom-security-handlers>`_"
-    API key, |:white_check_mark:|
-    Oauth2, |:white_check_mark:|
+    Other HTTP Schemes (RFC 7253), "No built-in support, use a `custom security handler <#custom-security-handlers>`_"
+    API Key, |:white_check_mark:|
+    OAuth2, |:white_check_mark:|
     OpenID, "No built-in support, use a `custom security handler <#custom-security-handlers>`_"
 
 General authentication flow
@@ -29,7 +29,7 @@ validate the incoming credentials, and return information about the authenticate
 The validation function must either be defined in the API security definition
 as ``x-{type}InfoFunc``, or in the environment variables as ``{TYPE}INFO_FUNC``. The function
 should be referenced as a string using the same syntax that is used to connect an ``operationId``
-to a Python function when :ref:`routing <Routing:Explicit routing>`. Note that even if you used a resolver for the operation id, it is not applied to the validation function, and you need to specify the complete path to the security module
+to a Python function when :ref:`routing <Routing:Explicit routing>`. Note that even if you used a resolver for the operation id, it is not applied to the validation function, and you need to specify the complete path to the security module.
 
 While the validation functions should accept different arguments based on the authentication type
 (as documented below), they should all return a dict which complies with `RFC 7662 <rfc7662_>`_:
@@ -55,7 +55,7 @@ The token information is made available to your endpoint view functions via the
 
 .. note::
 
-    Note that you are responsible to validate any fields other than the scopes yourself.
+    Note that you are responsible for validate any fields other than the scopes yourself.
 
 .. _rfc7662: https://tools.ietf.org/html/rfc7662
 
@@ -120,16 +120,16 @@ The function should accept the following arguments:
 - required_scopes (optional)
 - request (optional)
 
-As alternative to an ``x-tokenInfoFunc`` definition, you can set an ``x-tokenInfoUrl`` definition or
-``TOKENINFO_URL`` environment variable, and connexion will call the url instead of a local
-function instead. Connexion expects the authorization server to receive the OAuth token in the
+As an alternative to an ``x-tokenInfoFunc`` definition, you can set an ``x-tokenInfoUrl`` definition or
+``TOKENINFO_URL`` environment variable, and Connexion will call the URL instead of a local
+function. Connexion expects the authorization server to receive the OAuth token in the
 ``Authorization`` header field in the format described in `RFC 6750 <rfc6750_>`_ section 2.1 and
 return the token information in the same format as a validation function. When both
 ``x-tokenInfoUrl`` and ``x-tokenInfoFunc`` are used, Connexion will prioritize the function.
 
 The list of scopes returned in the token information will be validated against the scopes
 required by the API security definition to determine if the user is authorized.
-You can supply a custom scope validation func by defining ``x-scopeValidateFunc``
+You can supply a custom scope validation function by defining ``x-scopeValidateFunc``
 or setting a ``SCOPEVALIDATE_FUNC`` environment variable.
 
 The function should accept the following arguments:
