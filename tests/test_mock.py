@@ -1,3 +1,4 @@
+from connexion.datastructures import NoContent
 from connexion.mock import MockResolver
 from connexion.operations import OpenAPIOperation, Swagger2Operation
 
@@ -224,7 +225,8 @@ def test_mock_resolver_no_example_nested_in_object():
 
     response, status_code = resolver.mock_operation(operation)
     assert status_code == 200
-    assert response == "No example response was defined."
+    assert isinstance(response, dict)
+    assert isinstance(response["foo"], str)
 
 
 def test_mock_resolver_no_example_nested_in_list_openapi():
@@ -256,7 +258,30 @@ def test_mock_resolver_no_example_nested_in_list_openapi():
 
     response, status_code = resolver.mock_operation(operation)
     assert status_code == 202
-    assert response == "No example response was defined."
+    assert isinstance(response, list)
+    assert all(isinstance(c, str) for c in response)
+
+
+def test_mock_resolver_no_content():
+    resolver = MockResolver(mock_all=True)
+
+    responses = {"204": {}}
+
+    operation = Swagger2Operation(
+        method="GET",
+        path="endpoint",
+        path_parameters=[],
+        operation={"responses": responses},
+        app_produces=["application/json"],
+        app_consumes=["application/json"],
+        definitions={},
+        resolver=resolver,
+    )
+    assert operation.operation_id == "mock-1"
+
+    response, status_code = resolver.mock_operation(operation)
+    assert status_code == 204
+    assert response == NoContent
 
 
 def test_mock_resolver_no_examples():
@@ -278,7 +303,7 @@ def test_mock_resolver_no_examples():
 
     response, status_code = resolver.mock_operation(operation)
     assert status_code == 418
-    assert response == "No example response was defined."
+    assert response == "No example response or response schema defined."
 
 
 def test_mock_resolver_notimplemented():
@@ -315,4 +340,7 @@ def test_mock_resolver_notimplemented():
     )
 
     # check if it is using the mock function
-    assert operation._resolution.function() == ("No example response was defined.", 418)
+    assert operation._resolution.function() == (
+        "No example response or response schema defined.",
+        418,
+    )

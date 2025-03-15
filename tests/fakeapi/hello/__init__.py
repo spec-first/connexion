@@ -1,6 +1,7 @@
 import asyncio
 import datetime
 import uuid
+from http import HTTPStatus
 
 import flask
 from connexion import NoContent, ProblemException, context, request
@@ -650,6 +651,15 @@ def post_multipart_form(body):
     return x
 
 
+def post_multipart_form_array(body):
+    result = []
+    for x in body["x"]:
+        x["name"] += "-reply"
+        x["age"] += 10
+        result.append(x)
+    return result
+
+
 def apikey_info(apikey, required_scopes=None):
     if apikey == "mykey":
         return {"sub": "admin"}
@@ -728,3 +738,7 @@ def get_streaming_response():
 
 async def async_route():
     return {}, 200
+
+
+def httpstatus():
+    return {}, HTTPStatus.CREATED

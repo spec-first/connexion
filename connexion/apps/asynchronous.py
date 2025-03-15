@@ -100,7 +100,7 @@ class AsyncASGIApp(RoutedMiddleware[AsyncApi]):
         self.router = Router()
         super().__init__(self.router)
 
-    def add_api(self, *args, name: str = None, **kwargs):
+    def add_api(self, *args, name: t.Optional[str] = None, **kwargs):
         api = super().add_api(*args, **kwargs)
 
         if name is not None:
@@ -112,8 +112,8 @@ class AsyncASGIApp(RoutedMiddleware[AsyncApi]):
     def add_url_rule(
         self,
         rule,
-        endpoint: str = None,
-        view_func: t.Callable = None,
+        endpoint: t.Optional[str] = None,
+        view_func: t.Optional[t.Callable] = None,
         methods: t.List[str] = None,
         **options,
     ):
@@ -168,7 +168,7 @@ class AsyncApp(AbstractApp):
             start.
         :param strict_validation: When True, extra form or query parameters not defined in the
             specification result in a validation error. Defaults to False.
-        :param swagger_ui_options: Instance of :class:`options.ConnexionOptions` with
+        :param swagger_ui_options: Instance of :class:`options.SwaggerUIOptions` with
             configuration options for the swagger ui.
         :param uri_parser_class: Class to use for uri parsing. See :mod:`uri_parsing`.
         :param validate_responses: Whether to validate responses against the specification. This has
@@ -200,7 +200,11 @@ class AsyncApp(AbstractApp):
         )
 
     def add_url_rule(
-        self, rule, endpoint: str = None, view_func: t.Callable = None, **options
+        self,
+        rule,
+        endpoint: t.Optional[str] = None,
+        view_func: t.Optional[t.Callable] = None,
+        **options,
     ):
         self._middleware_app.add_url_rule(
             rule, endpoint=endpoint, view_func=view_func, **options

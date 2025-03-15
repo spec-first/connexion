@@ -512,3 +512,35 @@ def sort_apis_by_basepath(apis: t.List["API"]) -> t.List["API"]:
     :return: List of APIs sorted by basepath
     """
     return sort_routes(apis, key=lambda api: api.base_path or "/")
+
+
+def build_example_from_schema(schema):
+    if "example" in schema:
+        return schema["example"]
+
+    if "properties" in schema:
+        # Recurse if schema is an object
+        return {
+            key: build_example_from_schema(value)
+            for (key, value) in schema["properties"].items()
+        }
+
+    if "items" in schema:
+        # Recurse if schema is an array
+        min_item_count = schema.get("minItems", 0)
+        max_item_count = schema.get("maxItems")
+
+        if max_item_count is None or max_item_count >= min_item_count + 1:
+            item_count = min_item_count + 1
+        else:
+            item_count = min_item_count
+
+        return [build_example_from_schema(schema["items"]) for n in range(item_count)]
+
+    try:
+        from jsf import JSF
+    except ImportError:
+        return None
+
+    faker = JSF(schema)
+    return faker.generate()

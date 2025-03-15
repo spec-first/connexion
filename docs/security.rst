@@ -29,7 +29,7 @@ validate the incoming credentials, and return information about the authenticate
 The validation function must either be defined in the API security definition
 as ``x-{type}InfoFunc``, or in the environment variables as ``{TYPE}INFO_FUNC``. The function
 should be referenced as a string using the same syntax that is used to connect an ``operationId``
-to a Python function when :ref:`routing <Routing:Explicit routing>`.
+to a Python function when :ref:`routing <Routing:Explicit routing>`. Note that even if you used a resolver for the operation id, it is not applied to the validation function, and you need to specify the complete path to the security module
 
 While the validation functions should accept different arguments based on the authentication type
 (as documented below), they should all return a dict which complies with `RFC 7662 <rfc7662_>`_:
@@ -70,6 +70,7 @@ The function should accept the following arguments:
 - username
 - password
 - required_scopes (optional)
+- request (optional)
 
 You can find a `minimal Basic Auth example application`_ in Connexion's "examples" folder.
 
@@ -85,6 +86,7 @@ The function should accept the following arguments:
 
 - token
 - required_scopes (optional)
+- request (optional)
 
 You can find a `minimal Bearer example application`_ in Connexion's "examples" folder.
 
@@ -100,6 +102,7 @@ The function should accept the following arguments:
 
 - apikey
 - required_scopes (optional)
+- request (optional)
 
 You can find a `minimal API Key example application`_ in Connexion's "examples" folder.
 
@@ -115,6 +118,7 @@ The function should accept the following arguments:
 
 - token
 - required_scopes (optional)
+- request (optional)
 
 As alternative to an ``x-tokenInfoFunc`` definition, you can set an ``x-tokenInfoUrl`` definition or
 ``TOKENINFO_URL`` environment variable, and connexion will call the url instead of a local
@@ -132,6 +136,7 @@ The function should accept the following arguments:
 
 - required_scopes
 - token_scopes
+- request (optional)
 
 and return a boolean indicating if the validation was successful.
 

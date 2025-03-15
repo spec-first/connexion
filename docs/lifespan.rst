@@ -18,7 +18,7 @@ instance.
             from connexion import AsyncApp, ConnexionMiddleware, request
 
             @contextlib.asynccontextmanager
-            def lifespan_handler(app: ConnexionMiddleware) -> typing.AsyncIterator:
+            async def lifespan_handler(app: ConnexionMiddleware) -> typing.AsyncIterator:
                 """Called at startup and shutdown, can yield state which will be available on the
                  request."""
                 client = Client()
@@ -44,7 +44,7 @@ instance.
             from connexion import FlaskApp, ConnexionMiddleware, request
 
             @contextlib.asynccontextmanager
-            def lifespan_handler(app: ConnexionMiddleware) -> typing.AsyncIterator:
+            async def lifespan_handler(app: ConnexionMiddleware) -> typing.AsyncIterator:
                 """Called at startup and shutdown, can yield state which will be available on the
                  request."""
                 client = Client()
@@ -71,7 +71,7 @@ instance.
             from connexion import ConnexionMiddleware, request
 
             @contextlib.asynccontextmanager
-            def lifespan_handler(app: ConnexionMiddleware) -> typing.AsyncIterator:
+            async def lifespan_handler(app: ConnexionMiddleware) -> typing.AsyncIterator:
                 """Called at startup and shutdown, can yield state which will be available on the
                  request."""
                 client = Client()

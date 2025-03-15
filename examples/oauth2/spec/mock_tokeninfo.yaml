@@ -10,7 +10,7 @@ paths:
       summary: OAuth2 token info
       operationId: mock_tokeninfo.get_tokeninfo
       responses:
-        200:
+        '200':
           description: Token info object
           schema:
             type: object

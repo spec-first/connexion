@@ -75,7 +75,7 @@ class AbstractApp:
             start.
         :param strict_validation: When True, extra form or query parameters not defined in the
             specification result in a validation error. Defaults to False.
-        :param swagger_ui_options: Instance of :class:`options.ConnexionOptions` with
+        :param swagger_ui_options: Instance of :class:`options.SwaggerUIOptions` with
             configuration options for the swagger ui.
         :param uri_parser_class: Class to use for uri parsing. See :mod:`uri_parsing`.
         :param validate_responses: Whether to validate responses against the specification. This has
@@ -143,8 +143,8 @@ class AbstractApp:
         Register an API represented by a single OpenAPI specification on this application.
         Multiple APIs can be registered on a single application.
 
-        :param specification: OpenAPI specification. Can be provided either as dict, or as path
-            to file.
+        :param specification: OpenAPI specification. Can be provided either as dict, a path
+            to file, or a URL.
         :param base_path: Base path to host the API. This overrides the basePath / servers in the
             specification.
         :param name: Name to register the API with. If no name is passed, the base_path is used
@@ -162,7 +162,7 @@ class AbstractApp:
             start.
         :param strict_validation: When True, extra form or query parameters not defined in the
             specification result in a validation error. Defaults to False.
-        :param swagger_ui_options: A :class:`options.ConnexionOptions` instance with configuration
+        :param swagger_ui_options: A :class:`options.SwaggerUIOptions` instance with configuration
             options for the swagger ui.
         :param uri_parser_class: Class to use for uri parsing. See :mod:`uri_parsing`.
         :param validate_responses: Whether to validate responses against the specification. This has
@@ -197,7 +197,11 @@ class AbstractApp:
         )
 
     def add_url_rule(
-        self, rule, endpoint: str = None, view_func: t.Callable = None, **options
+        self,
+        rule,
+        endpoint: t.Optional[str] = None,
+        view_func: t.Optional[t.Callable] = None,
+        **options,
     ):
         """
         Connects a URL rule.  Works exactly like the `route` decorator.
@@ -271,7 +275,7 @@ class AbstractApp:
         passed to the ``StarletteClient``."""
         return TestClient(self, **kwargs)
 
-    def run(self, import_string: str = None, **kwargs):
+    def run(self, import_string: t.Optional[str] = None, **kwargs):
         """Run the application using uvicorn.
 
         :param import_string: application as import string (eg. "main:app"). This is needed to run

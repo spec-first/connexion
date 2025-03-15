@@ -107,7 +107,7 @@ class ResponseValidationOperation:
                 try:
                     body_validator = self._validator_map["response"][mime_type]  # type: ignore
                 except KeyError:
-                    logging.info(
+                    logger.info(
                         f"Skipping validation. No validator registered for content type: "
                         f"{mime_type}."
                     )

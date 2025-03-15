@@ -235,7 +235,7 @@ class ConnexionMiddleware:
             start.
         :param strict_validation: When True, extra form or query parameters not defined in the
             specification result in a validation error. Defaults to False.
-        :param swagger_ui_options: Instance of :class:`options.ConnexionOptions` with
+        :param swagger_ui_options: Instance of :class:`options.SwaggerUIOptions` with
             configuration options for the swagger ui.
         :param uri_parser_class: Class to use for uri parsing. See :mod:`uri_parsing`.
         :param validate_responses: Whether to validate responses against the specification. This has
@@ -371,8 +371,8 @@ class ConnexionMiddleware:
         Register een API represented by a single OpenAPI specification on this middleware.
         Multiple APIs can be registered on a single middleware.
 
-        :param specification: OpenAPI specification. Can be provided either as dict, or as path
-            to file.
+        :param specification: OpenAPI specification. Can be provided either as dict, a path
+            to file, or a URL.
         :param base_path: Base path to host the API. This overrides the basePath / servers in the
             specification.
         :param name: Name to register the API with. If no name is passed, the base_path is used
@@ -391,7 +391,7 @@ class ConnexionMiddleware:
         :param strict_validation: When True, extra form or query parameters not defined in the
             specification result in a validation error. Defaults to False.
         :param swagger_ui_options: A dict with configuration options for the swagger ui. See
-            :class:`options.ConnexionOptions`.
+            :class:`options.SwaggerUIOptions`.
         :param uri_parser_class: Class to use for uri parsing. See :mod:`uri_parsing`.
         :param validate_responses: Whether to validate responses against the specification. This has
             an impact on performance. Defaults to False.
@@ -402,13 +402,15 @@ class ConnexionMiddleware:
         :param kwargs: Additional keyword arguments to pass to the `add_api` method of the managed
             middlewares. This can be used to pass arguments to middlewares added beyond the default
             ones.
-
-        :return: The Api registered on the wrapped application.
         """
         if self.middleware_stack is not None:
             raise RuntimeError("Cannot add api after an application has started")
 
-        if isinstance(specification, (pathlib.Path, str)):
+        if isinstance(specification, str) and (
+            specification.startswith("http://") or specification.startswith("https://")
+        ):
+            pass
+        elif isinstance(specification, (pathlib.Path, str)):
             specification = t.cast(pathlib.Path, self.specification_dir / specification)
 
             # Add specification as file to watch for reloading
@@ -460,7 +462,7 @@ class ConnexionMiddleware:
         error_handler = (code_or_exception, function)
         self.error_handlers.append(error_handler)
 
-    def run(self, import_string: str = None, **kwargs):
+    def run(self, import_string: t.Optional[str] = None, **kwargs):
         """Run the application using uvicorn.
 
         :param import_string: application as import string (eg. "main:app"). This is needed to run

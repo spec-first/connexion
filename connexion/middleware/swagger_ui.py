@@ -59,9 +59,11 @@ class SwaggerUIAPI(AbstractSpecAPI):
         """
         returns a modified basePath which includes the incoming root_path.
         """
-        return request.scope.get("root_path", "").rstrip("/")
+        return request.scope.get(
+            "route_root_path", request.scope.get("root_path", "")
+        ).rstrip("/")
 
-    def _spec_for_prefix(self, request):
+    def _spec_for_prefix(self, request) -> dict:
         """
         returns a spec with a modified basePath / servers block
         which corresponds to the incoming request path.
@@ -162,14 +164,15 @@ class SwaggerUIAPI(AbstractSpecAPI):
     async def _get_swagger_ui_home(self, req):
         base_path = self._base_path_for_prefix(req)
         template_variables = {
-            "request": req,
             "openapi_spec_url": (base_path + self.options.openapi_spec_path),
             **self.options.swagger_ui_template_arguments,
         }
         if self.options.swagger_ui_config:
             template_variables["configUrl"] = "swagger-ui-config.json"
 
-        return self._templates.TemplateResponse("index.j2", template_variables)
+        return self._templates.TemplateResponse(
+            req, name="index.j2", context=template_variables
+        )
 
     async def _get_swagger_ui_config(self, request):
         return StarletteResponse(

@@ -102,7 +102,7 @@ built using either the :code:`AsyncApp` or :code:`FlaskApp`.
 
             wsgi_app = App(__name__)
             asgi_app = WSGIMiddleware(wsgi_app)
-            app = ConnexionMiddleware(app)
+            app = ConnexionMiddleware(asgi_app)
 
         .. dropdown:: View a detailed reference of the options accepted by the
             :code:`ConnexionMiddleware`
@@ -134,13 +134,16 @@ register an API defined by an OpenAPI (or Swagger) specification.
         .. code-block:: yaml
 
             openapi: "3.0.0"
-            ...
+            info:
+              title: Greeting application
+              version: 0.0.1
             paths:
               /greeting/{name}:
                 post:
                   operationId: run.post_greeting
                   responses:
-                    200:
+                    '200':
+                      description: "Greeting response"
                       content:
                         text/plain:
                           schema:
@@ -205,7 +208,7 @@ Or with gunicorn (which is recommended in production).
 See the `uvicorn documentation`_ for more details or check this
 `overview of available ASGI servers`_ for other options.
 
-.. _overview of available ASGI servers: https://asgi.readthedocs.io/en/latest/implementations.html#servers.
+.. _overview of available ASGI servers: https://asgi.readthedocs.io/en/latest/implementations.html#servers
 
 
 If you installed connexion using :code:`connexion[uvicorn]`, you can run it using the

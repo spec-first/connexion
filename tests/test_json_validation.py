@@ -5,7 +5,10 @@ import pytest
 from connexion import App
 from connexion.json_schema import Draft4RequestValidator
 from connexion.spec import Specification
-from connexion.validators import JSONRequestBodyValidator
+from connexion.validators import (
+    DefaultsJSONRequestBodyValidator,
+    JSONRequestBodyValidator,
+)
 from jsonschema.validators import _utils, extend
 
 from conftest import build_app_from_fixture
@@ -128,3 +131,47 @@ def test_multipart_form_json(json_validation_spec_dir, spec, app_class):
     assert res.status_code == 200
     assert res.json()["name"] == "joe-reply"
     assert res.json()["age"] == 30
+
+
+@pytest.mark.parametrize("spec", ["openapi.yaml"])
+def test_multipart_form_json_array(json_validation_spec_dir, spec, app_class):
+    app = build_app_from_fixture(
+        json_validation_spec_dir,
+        app_class=app_class,
+        spec_file=spec,
+        validate_responses=True,
+    )
+    app_client = app.test_client()
+
+    res = app_client.post(
+        "/v1.0/multipart_form_json_array",
+        files={"file": b""},  # Force multipart/form-data content-type
+        data={
+            "x": json.dumps([{"name": "joe", "age": 20}, {"name": "alena", "age": 28}])
+        },
+    )
+    assert res.status_code == 200
+    assert res.json()[0]["name"] == "joe-reply"
+    assert res.json()[0]["age"] == 30
+    assert res.json()[1]["name"] == "alena-reply"
+    assert res.json()[1]["age"] == 38
+
+
+def test_defaults_body(json_validation_spec_dir, spec):
+    """ensure that defaults applied that modify the body"""
+
+    class MyDefaultsJSONBodyValidator(DefaultsJSONRequestBodyValidator):
+        pass
+
+    validator_map = {"body": {"application/json": MyDefaultsJSONBodyValidator}}
+
+    app = App(__name__, specification_dir=json_validation_spec_dir)
+    app.add_api(spec, validate_responses=True, validator_map=validator_map)
+    app_client = app.test_client()
+
+    res = app_client.post(
+        "/v1.0/user",
+        json={"name": "foo"},
+    )
+    assert res.status_code == 200
+    assert res.json().get("human")

@@ -5,9 +5,11 @@
  <p align="center">
      <a href="https://pypi.org/project/connexion"><img alt="coveralls" src="https://img.shields.io/pypi/status/connexion.svg?style=flat-square&color=brightgreen"></a>
      <a href="https://pypi.org/project/connexion"><img alt="PyPI version" src="https://img.shields.io/pypi/v/connexion?color=brightgreen&style=flat-square"></a>
+     <a href="https://pypistats.org/packages/connexion"><img alt="PyPI" src="https://img.shields.io/pypi/dm/connexion?style=flat-square&color=brightgreen"></a>
      <a href="https://github.com/spec-first/connexion/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/pypi/l/connexion?style=flat-square&color=brightgreen"></a>
      <a href="https://github.com/spec-first/connexion/actions/workflows/pipeline.yml"><img alt="GitHub Workflow Status" src="https://img.shields.io/github/actions/workflow/status/spec-first/connexion/pipeline.yml?style=flat-square"></a>
      <a href="https://coveralls.io/github/spec-first/connexion?branch=main"><img alt="Coveralls" src="https://img.shields.io/coverallsCoverage/github/spec-first/connexion?style=flat-square"></a>
+     <a href="https://gurubase.io/g/connexion"><img alt="Gurubase" src="https://img.shields.io/badge/Gurubase-Ask%20Connexion%20Guru-brightgreen?style=flat-square"></a>
      <br>
      <br>
      <a href="https://connexion.readthedocs.io/en/stable/"><strong>Explore the docs »</strong></a>
@@ -101,7 +103,7 @@ You can install them as follows:
 
 ```shell
     $ pip install connexion[swagger-ui]
-    $ pip install connexion[swagger-ui,uvicorn].
+    $ pip install connexion[swagger-ui,uvicorn]
 ```
 
 <p align="right">(<a href="#top">back to top</a>)</p>
@@ -168,7 +170,7 @@ The operation described in your specification is automatically linked to your Py
        post:
          operationId: run.post_greeting
          responses:
-           200:
+           '200':
              content:
                text/plain:
                  schema:

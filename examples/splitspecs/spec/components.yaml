@@ -1,0 +1,34 @@
+components:
+  schemas:
+    Pet:
+      required:
+        - name
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+          example: 1
+        name:
+          type: string
+          example: fluffy
+        registered:
+          type: string
+          readOnly: true
+          example: 2019-01-16T23:52:54Z
+
+    Pets:
+      type: array
+      items:
+        $ref: "#/components/schemas/Pet"
+
+    Error:
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+      required:
+        - code
+        - message

@@ -51,4 +51,9 @@ class MockResolver(Resolver):
         resp, code = operation.example_response()
         if resp is not None:
             return resp, code
-        return "No example response was defined.", code
+        return (
+            "No example response defined in the API, and response "
+            "auto-generation disabled. To enable response auto-generation, "
+            "install connexion using the mock extra (connexion[mock])",
+            501,
+        )

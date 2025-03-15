@@ -38,7 +38,7 @@ Getting started with Connexion 3
 --------------------------------
 
 If you're getting started with Connexion 3 for a new project, follow the
-`quickstart <quickstart.md>`_. All documentation has been updated for Connexion 3.
+:doc:`quickstart <quickstart>`. All documentation has been updated for Connexion 3.
 
 Migrating from Connexion 2
 --------------------------
@@ -94,11 +94,11 @@ Instead, you need to run the Connexion application using an ASGI server:
 
 .. code-block:: bash
 
-    $ uvicorn run:app
+    $ uvicorn hello:app
 
 .. code-block:: bash
 
-    $ gunicorn -k uvicorn.workers.UvicornWorker run:app
+    $ gunicorn -k uvicorn.workers.UvicornWorker hello:app
 
 .. warning::
 

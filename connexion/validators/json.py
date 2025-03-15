@@ -3,7 +3,7 @@ import logging
 import typing as t
 
 import jsonschema
-from jsonschema import Draft4Validator, ValidationError, draft4_format_checker
+from jsonschema import Draft4Validator, ValidationError
 from starlette.types import Scope
 
 from connexion.exceptions import BadRequestProblem, NonConformingResponseBody
@@ -44,7 +44,7 @@ class JSONRequestBodyValidator(AbstractRequestBodyValidator):
     @property
     def _validator(self):
         return Draft4RequestValidator(
-            self._schema, format_checker=draft4_format_checker
+            self._schema, format_checker=Draft4Validator.FORMAT_CHECKER
         )
 
     async def _parse(
@@ -68,7 +68,7 @@ class JSONRequestBodyValidator(AbstractRequestBodyValidator):
             return self._validator.validate(body)
         except ValidationError as exception:
             error_path_msg = format_error_with_path(exception=exception)
-            logger.error(
+            logger.info(
                 f"Validation error: {exception.message}{error_path_msg}",
                 extra={"validator": "body"},
             )
@@ -77,7 +77,8 @@ class JSONRequestBodyValidator(AbstractRequestBodyValidator):
 
 class DefaultsJSONRequestBodyValidator(JSONRequestBodyValidator):
     """Request body validator for json content types which fills in default values. This Validator
-    intercepts the body, makes changes to it, and replays it for the next ASGI application."""
+    intercepts the body, makes changes to it, and replays it for the next ASGI application.
+    """
 
     MUTABLE_VALIDATION = True
     """This validator might mutate to the body."""
@@ -85,7 +86,9 @@ class DefaultsJSONRequestBodyValidator(JSONRequestBodyValidator):
     @property
     def _validator(self):
         validator_cls = self.extend_with_set_default(Draft4RequestValidator)
-        return validator_cls(self._schema, format_checker=draft4_format_checker)
+        return validator_cls(
+            self._schema, format_checker=Draft4Validator.FORMAT_CHECKER
+        )
 
     # via https://python-jsonschema.readthedocs.io/
     @staticmethod
@@ -110,7 +113,7 @@ class JSONResponseBodyValidator(AbstractResponseBodyValidator):
     @property
     def validator(self) -> Draft4Validator:
         return Draft4ResponseValidator(
-            self._schema, format_checker=draft4_format_checker
+            self._schema, format_checker=Draft4Validator.FORMAT_CHECKER
         )
 
     def _parse(self, stream: t.Generator[bytes, None, None]) -> t.Any:
@@ -129,7 +132,7 @@ class JSONResponseBodyValidator(AbstractResponseBodyValidator):
             self.validator.validate(body)
         except ValidationError as exception:
             error_path_msg = format_error_with_path(exception=exception)
-            logger.error(
+            logger.warning(
                 f"Validation error: {exception.message}{error_path_msg}",
                 extra={"validator": "body"},
             )

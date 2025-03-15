@@ -3,11 +3,13 @@ This module defines an OpenAPIOperation class, a Connexion operation specific fo
 """
 
 import logging
+import typing as t
+from http import HTTPStatus
 
-from connexion.datastructures import MediaTypeDict
+from connexion.datastructures import MediaTypeDict, NoContent
 from connexion.operations.abstract import AbstractOperation
 from connexion.uri_parsing import OpenAPIURIParser
-from connexion.utils import deep_get
+from connexion.utils import build_example_from_schema, deep_get
 
 logger = logging.getLogger("connexion.operations.openapi3")
 
@@ -169,6 +171,10 @@ class OpenAPIOperation(AbstractOperation):
             status_code = int(status_code)
         except ValueError:
             status_code = 200
+
+        if status_code == HTTPStatus.NO_CONTENT:
+            return NoContent, status_code
+
         try:
             # TODO also use example header?
             return (
@@ -187,31 +193,11 @@ class OpenAPIOperation(AbstractOperation):
             pass
 
         try:
-            return (
-                self._nested_example(deep_get(self._responses, schema_path)),
-                status_code,
-            )
+            schema = deep_get(self._responses, schema_path)
         except KeyError:
-            return (None, status_code)
+            return ("No example response or response schema defined.", status_code)
 
-    def _nested_example(self, schema):
-        try:
-            return schema["example"]
-        except KeyError:
-            pass
-        try:
-            # Recurse if schema is an object
-            return {
-                key: self._nested_example(value)
-                for (key, value) in schema["properties"].items()
-            }
-        except KeyError:
-            pass
-        try:
-            # Recurse if schema is an array
-            return [self._nested_example(schema["items"])]
-        except KeyError:
-            raise
+        return (build_example_from_schema(schema), status_code)
 
     def get_path_parameter_types(self):
         types = {}
@@ -232,13 +218,13 @@ class OpenAPIOperation(AbstractOperation):
     def body_name(self, _content_type: str) -> str:
         return self.request_body.get("x-body-name", "body")
 
-    def body_schema(self, content_type: str = None) -> dict:
+    def body_schema(self, content_type: t.Optional[str] = None) -> dict:
         """
         The body schema definition for this operation.
         """
         return self.body_definition(content_type).get("schema", {})
 
-    def body_definition(self, content_type: str = None) -> dict:
+    def body_definition(self, content_type: t.Optional[str] = None) -> dict:
         """
         The body complete definition for this operation.
 
