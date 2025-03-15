@@ -23,7 +23,9 @@ def mock_framework():
     framework = MagicMock()
     framework.is_framework_response.return_value = False
     framework.build_response.return_value = "framework_response"
-    framework.connexion_to_framework_response.return_value = "connexion_to_framework_response"
+    framework.connexion_to_framework_response.return_value = (
+        "connexion_to_framework_response"
+    )
     return framework
 
 
@@ -47,9 +49,21 @@ def patch_operation_context(monkeypatch):
     original_split_content_type = split_content_type
     original_is_json_mimetype = is_json_mimetype
 
-    monkeypatch.setattr(connexion.decorators.response.utils, "extract_content_type", original_extract_content_type)
-    monkeypatch.setattr(connexion.decorators.response.utils, "split_content_type", original_split_content_type)
-    monkeypatch.setattr(connexion.decorators.response.utils, "is_json_mimetype", original_is_json_mimetype)
+    monkeypatch.setattr(
+        connexion.decorators.response.utils,
+        "extract_content_type",
+        original_extract_content_type,
+    )
+    monkeypatch.setattr(
+        connexion.decorators.response.utils,
+        "split_content_type",
+        original_split_content_type,
+    )
+    monkeypatch.setattr(
+        connexion.decorators.response.utils,
+        "is_json_mimetype",
+        original_is_json_mimetype,
+    )
 
     return mock_operation
 
@@ -82,7 +96,9 @@ class TestBaseResponseDecorator:
     def test_unpack_handler_response_tuple_2_status(self):
         """Test _unpack_handler_response with a 2-tuple containing status code."""
         decorator = BaseResponseDecorator(framework=MagicMock(), jsonifier=MagicMock())
-        data, status_code, headers = decorator._unpack_handler_response(("test_data", 201))
+        data, status_code, headers = decorator._unpack_handler_response(
+            ("test_data", 201)
+        )
         assert data == "test_data"
         assert status_code == 201
         assert headers == {}
@@ -91,7 +107,9 @@ class TestBaseResponseDecorator:
         """Test _unpack_handler_response with a 2-tuple containing headers."""
         decorator = BaseResponseDecorator(framework=MagicMock(), jsonifier=MagicMock())
         headers_dict = {"Content-Type": "text/plain"}
-        data, status_code, headers = decorator._unpack_handler_response(("test_data", headers_dict))
+        data, status_code, headers = decorator._unpack_handler_response(
+            ("test_data", headers_dict)
+        )
         assert data == "test_data"
         assert status_code is None
         assert headers == headers_dict
@@ -100,7 +118,9 @@ class TestBaseResponseDecorator:
         """Test _unpack_handler_response with a 3-tuple."""
         decorator = BaseResponseDecorator(framework=MagicMock(), jsonifier=MagicMock())
         headers_dict = {"Content-Type": "text/plain"}
-        data, status_code, headers = decorator._unpack_handler_response(("test_data", 201, headers_dict))
+        data, status_code, headers = decorator._unpack_handler_response(
+            ("test_data", 201, headers_dict)
+        )
         assert data == "test_data"
         assert status_code == 201
         assert headers == headers_dict
@@ -113,11 +133,14 @@ class TestBaseResponseDecorator:
 
     def test_unpack_handler_response_enum_status(self):
         """Test _unpack_handler_response with an enum status code."""
+
         class HttpStatus(Enum):
             CREATED = 201
 
         decorator = BaseResponseDecorator(framework=MagicMock(), jsonifier=MagicMock())
-        data, status_code, headers = decorator._unpack_handler_response(("test_data", HttpStatus.CREATED))
+        data, status_code, headers = decorator._unpack_handler_response(
+            ("test_data", HttpStatus.CREATED)
+        )
         assert data == "test_data"
         assert status_code == 201
         assert headers == {}
@@ -141,42 +164,59 @@ class TestBaseResponseDecorator:
     def test_update_headers_with_existing_content_type(self):
         """Test _update_headers with existing content type header."""
         decorator = BaseResponseDecorator(framework=MagicMock(), jsonifier=MagicMock())
-        headers = decorator._update_headers({"Content-Type": "text/plain"}, content_type="application/json")
+        headers = decorator._update_headers(
+            {"Content-Type": "text/plain"}, content_type="application/json"
+        )
         assert headers == {"Content-Type": "text/plain"}
 
     def test_update_headers_case_insensitive(self):
         """Test _update_headers with case-insensitive content type header."""
         decorator = BaseResponseDecorator(framework=MagicMock(), jsonifier=MagicMock())
-        headers = decorator._update_headers({"content-type": "text/plain"}, content_type="application/json")
+        headers = decorator._update_headers(
+            {"content-type": "text/plain"}, content_type="application/json"
+        )
         assert headers == {"content-type": "text/plain"}
 
     def test_serialize_data_json(self, mock_jsonifier):
         """Test _serialize_data with JSON content type."""
-        decorator = BaseResponseDecorator(framework=MagicMock(), jsonifier=mock_jsonifier)
+        decorator = BaseResponseDecorator(
+            framework=MagicMock(), jsonifier=mock_jsonifier
+        )
         result = decorator._serialize_data("test_data", content_type="application/json")
         assert result == "json:test_data"
         mock_jsonifier.dumps.assert_called_once_with("test_data")
 
     def test_serialize_data_text(self, mock_jsonifier):
         """Test _serialize_data with text content type."""
-        decorator = BaseResponseDecorator(framework=MagicMock(), jsonifier=mock_jsonifier)
+        decorator = BaseResponseDecorator(
+            framework=MagicMock(), jsonifier=mock_jsonifier
+        )
         result = decorator._serialize_data("test_data", content_type="text/plain")
         assert result == "test_data"
         mock_jsonifier.dumps.assert_not_called()
 
     def test_serialize_data_none(self, mock_jsonifier):
         """Test _serialize_data with None data."""
-        decorator = BaseResponseDecorator(framework=MagicMock(), jsonifier=mock_jsonifier)
+        decorator = BaseResponseDecorator(
+            framework=MagicMock(), jsonifier=mock_jsonifier
+        )
         assert decorator._serialize_data(None, content_type="application/json") is None
-        assert decorator._serialize_data(NoContent, content_type="application/json") is None
+        assert (
+            decorator._serialize_data(NoContent, content_type="application/json")
+            is None
+        )
 
     def test_infer_content_type_from_headers(self, patch_operation_context):
         """Test _infer_content_type from headers."""
         decorator = BaseResponseDecorator(framework=MagicMock(), jsonifier=MagicMock())
-        content_type = decorator._infer_content_type("test_data", {"Content-Type": "application/json"})
+        content_type = decorator._infer_content_type(
+            "test_data", {"Content-Type": "application/json"}
+        )
         assert content_type == "application/json"
 
-    def test_infer_content_type_from_headers_non_conforming(self, patch_operation_context):
+    def test_infer_content_type_from_headers_non_conforming(
+        self, patch_operation_context
+    ):
         """Test _infer_content_type with non-conforming headers."""
         decorator = BaseResponseDecorator(framework=MagicMock(), jsonifier=MagicMock())
         with pytest.raises(NonConformingResponseHeaders):
@@ -197,14 +237,22 @@ class TestBaseResponseDecorator:
 
     def test_infer_content_type_multiple_produces_bytes(self, patch_operation_context):
         """Test _infer_content_type with multiple produces values and bytes data."""
-        patch_operation_context.produces = ["application/json", "application/octet-stream"]
+        patch_operation_context.produces = [
+            "application/json",
+            "application/octet-stream",
+        ]
         decorator = BaseResponseDecorator(framework=MagicMock(), jsonifier=MagicMock())
         content_type = decorator._infer_content_type(b"test_data", {})
         assert content_type == "application/octet-stream"
 
-    def test_infer_content_type_multiple_produces_generator(self, patch_operation_context):
+    def test_infer_content_type_multiple_produces_generator(
+        self, patch_operation_context
+    ):
         """Test _infer_content_type with multiple produces values and generator data."""
-        patch_operation_context.produces = ["application/json", "application/octet-stream"]
+        patch_operation_context.produces = [
+            "application/json",
+            "application/octet-stream",
+        ]
         decorator = BaseResponseDecorator(framework=MagicMock(), jsonifier=MagicMock())
 
         def gen():
@@ -213,9 +261,14 @@ class TestBaseResponseDecorator:
         content_type = decorator._infer_content_type(gen(), {})
         assert content_type == "application/octet-stream"
 
-    def test_infer_content_type_multiple_produces_iterator(self, patch_operation_context):
+    def test_infer_content_type_multiple_produces_iterator(
+        self, patch_operation_context
+    ):
         """Test _infer_content_type with multiple produces values and iterator data."""
-        patch_operation_context.produces = ["application/json", "application/octet-stream"]
+        patch_operation_context.produces = [
+            "application/json",
+            "application/octet-stream",
+        ]
         decorator = BaseResponseDecorator(framework=MagicMock(), jsonifier=MagicMock())
 
         class TestIterator(collections.abc.Iterator):
@@ -241,12 +294,16 @@ class TestBaseResponseDecorator:
 
     def test_build_framework_response(self, mock_framework, mock_jsonifier):
         """Test build_framework_response."""
-        decorator = BaseResponseDecorator(framework=mock_framework, jsonifier=mock_jsonifier)
+        decorator = BaseResponseDecorator(
+            framework=mock_framework, jsonifier=mock_jsonifier
+        )
         response = decorator.build_framework_response("test_data")
         assert response == "framework_response"
         mock_framework.build_response.assert_called_once_with(
-            "json:test_data", content_type="application/json", status_code=200,
-            headers={"Content-Type": "application/json"}
+            "json:test_data",
+            content_type="application/json",
+            status_code=200,
+            headers={"Content-Type": "application/json"},
         )
 
 
@@ -255,7 +312,9 @@ class TestSyncResponseDecorator:
 
     def test_call_simple_response(self, mock_framework, mock_jsonifier):
         """Test __call__ with a simple response."""
-        decorator = SyncResponseDecorator(framework=mock_framework, jsonifier=mock_jsonifier)
+        decorator = SyncResponseDecorator(
+            framework=mock_framework, jsonifier=mock_jsonifier
+        )
 
         def handler():
             return "test_data"
@@ -268,7 +327,9 @@ class TestSyncResponseDecorator:
 
     def test_call_framework_response(self, mock_framework, mock_jsonifier):
         """Test __call__ with a framework response."""
-        decorator = SyncResponseDecorator(framework=mock_framework, jsonifier=mock_jsonifier)
+        decorator = SyncResponseDecorator(
+            framework=mock_framework, jsonifier=mock_jsonifier
+        )
         mock_framework.is_framework_response.return_value = True
 
         def handler():
@@ -282,7 +343,9 @@ class TestSyncResponseDecorator:
 
     def test_call_connexion_response(self, mock_framework, mock_jsonifier):
         """Test __call__ with a ConnexionResponse."""
-        decorator = SyncResponseDecorator(framework=mock_framework, jsonifier=mock_jsonifier)
+        decorator = SyncResponseDecorator(
+            framework=mock_framework, jsonifier=mock_jsonifier
+        )
 
         def handler():
             return ConnexionResponse(body="test_data")
@@ -300,7 +363,9 @@ class TestAsyncResponseDecorator:
     @pytest.mark.asyncio
     async def test_call_simple_response(self, mock_framework, mock_jsonifier):
         """Test __call__ with a simple response."""
-        decorator = AsyncResponseDecorator(framework=mock_framework, jsonifier=mock_jsonifier)
+        decorator = AsyncResponseDecorator(
+            framework=mock_framework, jsonifier=mock_jsonifier
+        )
 
         async def handler():
             return "test_data"
@@ -314,7 +379,9 @@ class TestAsyncResponseDecorator:
     @pytest.mark.asyncio
     async def test_call_framework_response(self, mock_framework, mock_jsonifier):
         """Test __call__ with a framework response."""
-        decorator = AsyncResponseDecorator(framework=mock_framework, jsonifier=mock_jsonifier)
+        decorator = AsyncResponseDecorator(
+            framework=mock_framework, jsonifier=mock_jsonifier
+        )
         mock_framework.is_framework_response.return_value = True
 
         async def handler():
@@ -329,7 +396,9 @@ class TestAsyncResponseDecorator:
     @pytest.mark.asyncio
     async def test_call_connexion_response(self, mock_framework, mock_jsonifier):
         """Test __call__ with a ConnexionResponse."""
-        decorator = AsyncResponseDecorator(framework=mock_framework, jsonifier=mock_jsonifier)
+        decorator = AsyncResponseDecorator(
+            framework=mock_framework, jsonifier=mock_jsonifier
+        )
 
         async def handler():
             return ConnexionResponse(body="test_data")
@@ -343,7 +412,9 @@ class TestAsyncResponseDecorator:
     @pytest.mark.asyncio
     async def test_call_coroutine_response(self, mock_framework, mock_jsonifier):
         """Test __call__ with a coroutine response."""
-        decorator = AsyncResponseDecorator(framework=mock_framework, jsonifier=mock_jsonifier)
+        decorator = AsyncResponseDecorator(
+            framework=mock_framework, jsonifier=mock_jsonifier
+        )
 
         async def coro():
             return "test_data"
@@ -363,7 +434,9 @@ class TestNoResponseDecorator:
 
     def test_call(self, mock_framework, mock_jsonifier):
         """Test __call__ passes through the handler function."""
-        decorator = NoResponseDecorator(framework=mock_framework, jsonifier=mock_jsonifier)
+        decorator = NoResponseDecorator(
+            framework=mock_framework, jsonifier=mock_jsonifier
+        )
 
         def handler(request):
             return f"processed {request}"
