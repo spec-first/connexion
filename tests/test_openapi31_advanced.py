@@ -5,11 +5,12 @@ Tests for advanced OpenAPI 3.1 features in Connexion
 import json
 import pathlib
 import pytest
+import yaml
 
 from connexion import FlaskApp
 from connexion.exceptions import InvalidSpecification
 from connexion.json_schema import Draft2020RequestValidator, Draft2020ResponseValidator
-from connexion.spec import OpenAPI31Specification
+from connexion.spec import OpenAPI31Specification, Specification
 from jsonschema import Draft202012Validator
 
 TEST_FOLDER = pathlib.Path(__file__).parent
@@ -177,3 +178,89 @@ def test_openapi31_webhooks():
     # Verify response schema
     assert "responses" in webhook["post"]
     assert "200" in webhook["post"]["responses"]
+
+
+def test_openapi31_minimal_document():
+    """Test that OpenAPI 3.1 documents without paths are valid."""
+    spec_path = TEST_FOLDER / 'fixtures/openapi_3_1/minimal_openapi.yaml'
+    spec = Specification.load(spec_path)
+    
+    # Verify it's a valid OpenAPI 3.1 document
+    assert spec.version == (3, 1, 0)
+    assert isinstance(spec, OpenAPI31Specification)
+    
+    # Verify the minimal structure
+    assert "info" in spec
+    assert spec["info"]["title"] == "Minimal OpenAPI 3.1 Document"
+    assert spec["info"]["summary"] == "A minimal valid OpenAPI 3.1 document without paths"
+    
+    # Verify there are no paths
+    assert "paths" not in spec or not spec["paths"]
+    
+    # Verify components exist
+    assert "components" in spec
+    assert "schemas" in spec["components"]
+    assert "Pet" in spec["components"]["schemas"]
+
+
+def test_openapi31_path_items_in_components():
+    """Test pathItems in Components for OpenAPI 3.1."""
+    app = FlaskApp(__name__)
+    app.add_api(TEST_FOLDER / 'fixtures/openapi_3_1/path_items_components.yaml', base_path="/v1")
+    client = app.test_client()
+    
+    # Test that paths using references to pathItems components work
+    response = client.get('/v1/pets')
+    assert response.status_code == 200
+    
+    # Verify the POST operation works too
+    response = client.post('/v1/pets', 
+                         json={"id": 40, "species": "cat", "name": "Felix"})
+    assert response.status_code == 201
+    
+    # Now check the raw spec directly to confirm pathItems exist in components
+    # We use spec.raw to get the unresolved spec
+    spec_path = TEST_FOLDER / 'fixtures/openapi_3_1/path_items_components.yaml'
+    spec = Specification.load(spec_path)
+    
+    with open(spec_path, 'r') as f:
+        raw_spec = yaml.safe_load(f)
+    
+    # Verify path reference in raw spec
+    assert "/pets" in raw_spec["paths"]
+    assert "$ref" in raw_spec["paths"]["/pets"]
+    assert raw_spec["paths"]["/pets"]["$ref"] == "#/components/pathItems/PetsPathItem"
+    
+    # Verify pathItems in components
+    assert "pathItems" in raw_spec["components"]
+    assert "PetsPathItem" in raw_spec["components"]["pathItems"]
+    assert "get" in raw_spec["components"]["pathItems"]["PetsPathItem"]
+    assert "post" in raw_spec["components"]["pathItems"]["PetsPathItem"]
+    
+    # Verify the property is accessible via our API
+    assert "pathItems" in spec.components
+    assert hasattr(spec, "path_items")
+    assert "PetsPathItem" in spec.path_items
+
+
+def test_openapi31_security_improvements():
+    """Test security improvements in OpenAPI 3.1."""
+    spec_path = TEST_FOLDER / 'fixtures/openapi_3_1/security_improvements.yaml'
+    spec = Specification.load(spec_path)
+    
+    # Verify security schemes
+    assert "securitySchemes" in spec["components"]
+    
+    # Verify OAuth2 with scopes
+    assert "OAuth2" in spec["components"]["securitySchemes"]
+    assert spec["components"]["securitySchemes"]["OAuth2"]["type"] == "oauth2"
+    
+    # Verify mutualTLS security scheme
+    assert "mutualTLS" in spec["components"]["securitySchemes"]
+    assert spec["components"]["securitySchemes"]["mutualTLS"]["type"] == "mutualTLS"
+    
+    # Verify security requirements with scopes array
+    security = spec["paths"]["/secure"]["get"]["security"]
+    oauth_security = next(item for item in security if "OAuth2" in item)
+    assert "read:pets" in oauth_security["OAuth2"]
+    assert "write:pets" in oauth_security["OAuth2"]

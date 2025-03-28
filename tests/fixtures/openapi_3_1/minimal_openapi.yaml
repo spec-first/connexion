@@ -1,0 +1,18 @@
+openapi: 3.1.0
+info:
+  title: Minimal OpenAPI 3.1 Document
+  version: 1.0.0
+  summary: A minimal valid OpenAPI 3.1 document without paths
+  description: Testing that OpenAPI 3.1 documents without paths are valid
+jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
+
+# No paths required in OpenAPI 3.1
+components:
+  schemas:
+    Pet:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string

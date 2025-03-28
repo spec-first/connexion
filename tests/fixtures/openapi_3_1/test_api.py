@@ -26,3 +26,8 @@ def add_pet(body):
     """Add a new pet"""
     PETS.append(body)
     return body, 201
+
+
+def get_secure():
+    """Handle secure endpoint with OAuth2 or mutual TLS"""
+    return {"message": "Authenticated successfully"}, 200
