@@ -104,7 +104,7 @@ class OpenAPIOperation(AbstractOperation):
 
     @classmethod
     def from_spec(cls, spec, *args, path, method, resolver, **kwargs):
-        json_schema_dialect = getattr(spec, 'json_schema_dialect', None)
+        json_schema_dialect = getattr(spec, "json_schema_dialect", None)
         return cls(
             method,
             path,

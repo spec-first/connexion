@@ -346,23 +346,27 @@ class OpenAPI31Specification(OpenAPISpecification):
     @classmethod
     def _set_defaults(cls, spec):
         spec.setdefault("components", {})
-        spec.setdefault("jsonSchemaDialect", "https://json-schema.org/draft/2020-12/schema")
+        spec.setdefault(
+            "jsonSchemaDialect", "https://json-schema.org/draft/2020-12/schema"
+        )
         spec.setdefault("webhooks", {})
-        
+
         # Add pathItems in components
         if "components" in spec:
             spec["components"].setdefault("pathItems", {})
-        
+
     @property
     def json_schema_dialect(self):
         """Return the JSON Schema dialect used by this specification."""
-        return self._spec.get("jsonSchemaDialect", "https://json-schema.org/draft/2020-12/schema")
-        
+        return self._spec.get(
+            "jsonSchemaDialect", "https://json-schema.org/draft/2020-12/schema"
+        )
+
     @property
     def webhooks(self):
         """Return the webhooks defined in this specification."""
         return self._spec.get("webhooks", {})
-        
+
     @property
     def path_items(self):
         """Return the pathItems defined in components."""

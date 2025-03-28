@@ -3,7 +3,12 @@ import logging
 import typing as t
 
 import jsonschema
-from jsonschema import Draft4Validator, Draft7Validator, Draft202012Validator, ValidationError
+from jsonschema import (
+    Draft4Validator,
+    Draft7Validator,
+    Draft202012Validator,
+    ValidationError,
+)
 from starlette.types import Scope
 
 from connexion.exceptions import BadRequestProblem, NonConformingResponseBody
@@ -50,7 +55,7 @@ class JSONRequestBodyValidator(AbstractRequestBodyValidator):
     @property
     def _validator(self):
         # Use Draft2020 validator for OpenAPI 3.1
-        if self._schema_dialect and 'draft/2020-12' in self._schema_dialect:
+        if self._schema_dialect and "draft/2020-12" in self._schema_dialect:
             return Draft2020RequestValidator(
                 self._schema, format_checker=Draft202012Validator.FORMAT_CHECKER
             )
@@ -98,7 +103,7 @@ class DefaultsJSONRequestBodyValidator(JSONRequestBodyValidator):
     @property
     def _validator(self):
         # Use Draft2020 validator for OpenAPI 3.1
-        if self._schema_dialect and 'draft/2020-12' in self._schema_dialect:
+        if self._schema_dialect and "draft/2020-12" in self._schema_dialect:
             validator_cls = self.extend_with_set_default(Draft2020RequestValidator)
             return validator_cls(
                 self._schema, format_checker=Draft202012Validator.FORMAT_CHECKER
@@ -152,11 +157,11 @@ class JSONResponseBodyValidator(AbstractResponseBodyValidator):
     @property
     def validator(self):
         # Use Draft2020 validator for OpenAPI 3.1
-        if self._schema_dialect and 'draft/2020-12' in self._schema_dialect:
+        if self._schema_dialect and "draft/2020-12" in self._schema_dialect:
             return Draft2020ResponseValidator(
                 self._schema, format_checker=Draft202012Validator.FORMAT_CHECKER
             )
-        # Default to Draft4 for backward compatibility 
+        # Default to Draft4 for backward compatibility
         return Draft4ResponseValidator(
             self._schema, format_checker=Draft4Validator.FORMAT_CHECKER
         )
@@ -205,9 +210,9 @@ class TextResponseBodyValidator(JSONResponseBodyValidator):
             nullable=nullable,
             strict_validation=strict_validation,
             schema_dialect=schema_dialect,
-            **kwargs
+            **kwargs,
         )
-        
+
     def _parse(self, stream: t.Generator[bytes, None, None]) -> str:  # type: ignore
         body = b"".join(stream).decode(self._encoding)
 

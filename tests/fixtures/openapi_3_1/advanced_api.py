@@ -31,15 +31,15 @@ def add_pet(body):
     # Validate required fields are present
     if "id" not in body or "species" not in body:
         return {"code": 400, "message": "Missing required fields"}, 400
-    
+
     # Validate species enum
     if body["species"] not in ["dog", "cat", "bird"]:
         return {"code": 400, "message": "Invalid species"}, 400
-    
+
     # Validate age is greater than 0
     if "age" in body and body["age"] <= 0:
         return {"code": 400, "message": "Age must be greater than 0"}, 400
-    
+
     PETS.append(body)
     return body, 201
 
@@ -49,19 +49,22 @@ def add_pet_with_metadata(body):
     # Basic validation
     if "id" not in body or "species" not in body:
         return {"code": 400, "message": "Missing required fields"}, 400
-    
+
     # Validate species enum
     if body["species"] not in ["dog", "cat", "bird"]:
         return {"code": 400, "message": "Invalid species"}, 400
-    
+
     # Validate metadata structure
     if "metadata" in body:
         # Only allow known properties in metadata
         allowed_keys = ["color", "weight"]
         for key in body["metadata"]:
             if key not in allowed_keys:
-                return {"code": 400, "message": f"Unknown metadata property: {key}"}, 400
-    
+                return {
+                    "code": 400,
+                    "message": f"Unknown metadata property: {key}",
+                }, 400
+
     PETS.append(body)
     return body, 201
 

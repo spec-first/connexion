@@ -7,7 +7,11 @@ from starlette.formparsers import FormParser, MultiPartParser
 from starlette.types import Scope
 
 from connexion.exceptions import BadRequestProblem, ExtraParameterProblem
-from connexion.json_schema import Draft4RequestValidator, Draft2020RequestValidator, format_error_with_path
+from connexion.json_schema import (
+    Draft4RequestValidator,
+    Draft2020RequestValidator,
+    format_error_with_path,
+)
 from connexion.uri_parsing import AbstractURIParser
 from connexion.validators import AbstractRequestBodyValidator
 
@@ -43,7 +47,7 @@ class FormDataValidator(AbstractRequestBodyValidator):
     @property
     def _validator(self):
         # Use Draft2020 validator for OpenAPI 3.1
-        if self._schema_dialect and 'draft/2020-12' in self._schema_dialect:
+        if self._schema_dialect and "draft/2020-12" in self._schema_dialect:
             return Draft2020RequestValidator(
                 self._schema, format_checker=Draft202012Validator.FORMAT_CHECKER
             )

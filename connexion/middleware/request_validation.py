@@ -125,7 +125,9 @@ class RequestValidationOperation:
                     f"{mime_type}."
                 )
             else:
-                json_schema_dialect = getattr(self._operation, 'json_schema_dialect', None)
+                json_schema_dialect = getattr(
+                    self._operation, "json_schema_dialect", None
+                )
                 validator = body_validator(
                     schema=schema,
                     required=self._operation.request_body.get("required", False),

@@ -13,7 +13,13 @@ from copy import deepcopy
 
 import requests
 import yaml
-from jsonschema import Draft4Validator, Draft7Validator, Draft202012Validator, draft7_format_checker, RefResolver
+from jsonschema import (
+    Draft4Validator,
+    Draft7Validator,
+    Draft202012Validator,
+    draft7_format_checker,
+    RefResolver,
+)
 from jsonschema.exceptions import RefResolutionError, ValidationError  # noqa
 from jsonschema.validators import extend
 

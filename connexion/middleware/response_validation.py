@@ -112,7 +112,9 @@ class ResponseValidationOperation:
                         f"{mime_type}."
                     )
                 else:
-                    json_schema_dialect = getattr(self._operation, 'json_schema_dialect', None)
+                    json_schema_dialect = getattr(
+                        self._operation, "json_schema_dialect", None
+                    )
                     validator = body_validator(
                         scope,
                         schema=self._operation.response_schema(status, mime_type),

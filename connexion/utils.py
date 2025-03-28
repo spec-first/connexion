@@ -553,42 +553,43 @@ def build_example_from_schema(schema):
             min_length = schema["minLength"]
             return "A" * max(min_length, 1)
         return "string"
-        
+
     elif schema_type == "integer":
         minimum = schema.get("minimum", 0)
         maximum = schema.get("maximum", 100)
-        
+
         if schema.get("exclusiveMinimum") and minimum is not None:
             minimum += 1
         if schema.get("exclusiveMaximum") and maximum is not None:
             maximum -= 1
-            
+
         if schema.get("multipleOf"):
             # Return a value that satisfies multipleOf
             multiple = schema["multipleOf"]
             return ((minimum + 1) // multiple * multiple) or multiple
-            
+
         # Default integer value that passes most validation
         return max(minimum, 0) + 1
-        
+
     elif schema_type == "number":
         minimum = schema.get("minimum", 0.0)
         maximum = schema.get("maximum", 100.0)
-        
+
         if schema.get("exclusiveMinimum") and minimum is not None:
             minimum += 0.1
         if schema.get("exclusiveMaximum") and maximum is not None:
             maximum -= 0.1
-            
+
         # Default float value
         return float(max(minimum, 0.0) + 0.5)
-        
+
     elif schema_type == "boolean":
         return True
-        
+
     # Try to use JSF if available, otherwise return a default value
     try:
         from jsf import JSF
+
         faker = JSF(schema)
         return faker.generate()
     except (ImportError, Exception):
