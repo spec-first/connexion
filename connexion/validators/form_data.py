@@ -26,6 +26,8 @@ class FormDataValidator(AbstractRequestBodyValidator):
         encoding: str,
         strict_validation: bool,
         uri_parser: t.Optional[AbstractURIParser] = None,
+        schema_dialect=None,
+        **kwargs,
     ) -> None:
         super().__init__(
             schema=schema,
@@ -33,11 +35,21 @@ class FormDataValidator(AbstractRequestBodyValidator):
             nullable=nullable,
             encoding=encoding,
             strict_validation=strict_validation,
+            schema_dialect=schema_dialect,
         )
         self._uri_parser = uri_parser
+        self._schema_dialect = schema_dialect
 
     @property
     def _validator(self):
+        # Use Draft7 validator for OpenAPI 3.1
+        if self._schema_dialect and 'draft/2020-12' in self._schema_dialect:
+            from connexion.json_schema import Draft7RequestValidator
+            from jsonschema import Draft7Validator
+            return Draft7RequestValidator(
+                self._schema, format_checker=Draft7Validator.FORMAT_CHECKER
+            )
+        # Default to Draft4 for backward compatibility
         return Draft4RequestValidator(
             self._schema, format_checker=Draft4Validator.FORMAT_CHECKER
         )

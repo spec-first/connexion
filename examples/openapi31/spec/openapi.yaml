@@ -1,0 +1,112 @@
+openapi: 3.1.0
+info:
+  title: OpenAPI 3.1 Example API
+  version: 1.0.0
+  description: API showcasing OpenAPI 3.1 support in Connexion
+jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
+paths:
+  /:
+    get:
+      operationId: app.hello_world
+      summary: Returns a greeting
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+  /users:
+    get:
+      operationId: app.get_users
+      summary: List all users
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+    post:
+      operationId: app.create_user
+      summary: Create a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewUser'
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid input
+  /users/{user_id}:
+    parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      operationId: app.get_user
+      summary: Get a user by ID
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, inactive, suspended]
+        metadata:
+          type: object
+          additionalProperties: true
+      required:
+        - id
+        - username
+        - email
+    NewUser:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 3
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, inactive]
+          default: active
+        metadata:
+          type: object
+          additionalProperties: true
+      required:
+        - username
+        - email

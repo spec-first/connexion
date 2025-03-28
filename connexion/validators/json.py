@@ -3,13 +3,15 @@ import logging
 import typing as t
 
 import jsonschema
-from jsonschema import Draft4Validator, ValidationError
+from jsonschema import Draft4Validator, Draft7Validator, ValidationError
 from starlette.types import Scope
 
 from connexion.exceptions import BadRequestProblem, NonConformingResponseBody
 from connexion.json_schema import (
     Draft4RequestValidator,
     Draft4ResponseValidator,
+    Draft7RequestValidator,
+    Draft7ResponseValidator,
     format_error_with_path,
 )
 from connexion.validators import (
@@ -31,6 +33,7 @@ class JSONRequestBodyValidator(AbstractRequestBodyValidator):
         nullable=False,
         encoding: str,
         strict_validation: bool,
+        schema_dialect=None,
         **kwargs,
     ) -> None:
         super().__init__(
@@ -40,9 +43,16 @@ class JSONRequestBodyValidator(AbstractRequestBodyValidator):
             encoding=encoding,
             strict_validation=strict_validation,
         )
+        self._schema_dialect = schema_dialect
 
     @property
     def _validator(self):
+        # Use Draft7 validator for OpenAPI 3.1
+        if self._schema_dialect and 'draft/2020-12' in self._schema_dialect:
+            return Draft7RequestValidator(
+                self._schema, format_checker=Draft7Validator.FORMAT_CHECKER
+            )
+        # Default to Draft4 for backward compatibility
         return Draft4RequestValidator(
             self._schema, format_checker=Draft4Validator.FORMAT_CHECKER
         )
@@ -85,6 +95,13 @@ class DefaultsJSONRequestBodyValidator(JSONRequestBodyValidator):
 
     @property
     def _validator(self):
+        # Use Draft7 validator for OpenAPI 3.1
+        if self._schema_dialect and 'draft/2020-12' in self._schema_dialect:
+            validator_cls = self.extend_with_set_default(Draft7RequestValidator)
+            return validator_cls(
+                self._schema, format_checker=Draft7Validator.FORMAT_CHECKER
+            )
+        # Default to Draft4 for backward compatibility
         validator_cls = self.extend_with_set_default(Draft4RequestValidator)
         return validator_cls(
             self._schema, format_checker=Draft4Validator.FORMAT_CHECKER
@@ -110,8 +127,34 @@ class DefaultsJSONRequestBodyValidator(JSONRequestBodyValidator):
 class JSONResponseBodyValidator(AbstractResponseBodyValidator):
     """Response body validator for json content types."""
 
+    def __init__(
+        self,
+        scope: t.Optional[Scope] = None,
+        *,
+        schema: dict,
+        encoding: str,
+        nullable: bool = False,
+        strict_validation: bool = False,
+        schema_dialect=None,
+        **kwargs,
+    ) -> None:
+        super().__init__(
+            scope=scope,
+            schema=schema,
+            encoding=encoding,
+            nullable=nullable,
+            strict_validation=strict_validation,
+        )
+        self._schema_dialect = schema_dialect
+
     @property
-    def validator(self) -> Draft4Validator:
+    def validator(self):
+        # Use Draft7 validator for OpenAPI 3.1
+        if self._schema_dialect and 'draft/2020-12' in self._schema_dialect:
+            return Draft7ResponseValidator(
+                self._schema, format_checker=Draft7Validator.FORMAT_CHECKER
+            )
+        # Default to Draft4 for backward compatibility 
         return Draft4ResponseValidator(
             self._schema, format_checker=Draft4Validator.FORMAT_CHECKER
         )
@@ -142,6 +185,27 @@ class JSONResponseBodyValidator(AbstractResponseBodyValidator):
 
 
 class TextResponseBodyValidator(JSONResponseBodyValidator):
+    def __init__(
+        self,
+        scope: t.Optional[Scope] = None,
+        *,
+        schema: dict,
+        encoding: str,
+        nullable: bool = False,
+        strict_validation: bool = False,
+        schema_dialect=None,
+        **kwargs,
+    ) -> None:
+        super().__init__(
+            scope=scope,
+            schema=schema,
+            encoding=encoding,
+            nullable=nullable,
+            strict_validation=strict_validation,
+            schema_dialect=schema_dialect,
+            **kwargs
+        )
+        
     def _parse(self, stream: t.Generator[bytes, None, None]) -> str:  # type: ignore
         body = b"".join(stream).decode(self._encoding)
 

@@ -13,7 +13,7 @@ from copy import deepcopy
 
 import requests
 import yaml
-from jsonschema import Draft4Validator, RefResolver
+from jsonschema import Draft4Validator, Draft7Validator, draft7_format_checker, RefResolver
 from jsonschema.exceptions import RefResolutionError, ValidationError  # noqa
 from jsonschema.validators import extend
 
@@ -148,6 +148,28 @@ Draft4ResponseValidator = extend(
     {
         "type": NullableTypeValidator,
         "enum": NullableEnumValidator,
+        "writeOnly": validate_writeOnly,
+        "x-writeOnly": validate_writeOnly,
+    },
+)
+
+# Support for OpenAPI 3.1 with Draft7 validation
+NullableTypeValidator7 = allow_nullable(Draft7Validator.VALIDATORS["type"])
+NullableEnumValidator7 = allow_nullable(Draft7Validator.VALIDATORS["enum"])
+
+Draft7RequestValidator = extend(
+    Draft7Validator,
+    {
+        "type": NullableTypeValidator7,
+        "enum": NullableEnumValidator7,
+    },
+)
+
+Draft7ResponseValidator = extend(
+    Draft7Validator,
+    {
+        "type": NullableTypeValidator7,
+        "enum": NullableEnumValidator7,
         "writeOnly": validate_writeOnly,
         "x-writeOnly": validate_writeOnly,
     },
