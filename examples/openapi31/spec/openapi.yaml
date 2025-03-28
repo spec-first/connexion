@@ -2,8 +2,55 @@ openapi: 3.1.0
 info:
   title: OpenAPI 3.1 Example API
   version: 1.0.0
-  description: API showcasing OpenAPI 3.1 support in Connexion
+  description: |
+    API showcasing OpenAPI 3.1 support in Connexion
+    
+    This example demonstrates various OpenAPI 3.1 features:
+    - JSON Schema 2020-12 alignment
+    - Type arrays for nullability
+    - Webhooks
+    - Server variables
+    - Advanced validation features
 jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
+
+# Server templating example
+servers:
+  - url: https://{environment}.example.com/v1
+    variables:
+      environment:
+        default: api
+        enum: [api, staging, dev]
+        description: Server environment
+
+# Webhook definition
+webhooks:
+  userWebhook:
+    post:
+      operationId: app.process_user_webhook
+      summary: Process a user-related webhook event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                event:
+                  type: string
+                  enum: [created, updated, deleted]
+                user:
+                  $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: Webhook processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
 paths:
   /:
     get:
@@ -19,6 +66,7 @@ paths:
                 properties:
                   message:
                     type: string
+
   /users:
     get:
       operationId: app.get_users
@@ -32,6 +80,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/User'
+
     post:
       operationId: app.create_user
       summary: Create a new user
@@ -41,6 +90,19 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/NewUser'
+            examples:
+              user1:
+                summary: A basic user
+                value:
+                  username: new_user
+                  email: new@example.com
+              user2:
+                summary: A user with metadata
+                value:
+                  username: advanced_user
+                  email: advanced@example.com
+                  metadata:
+                    location: "San Francisco"
       responses:
         '201':
           description: User created
@@ -50,6 +112,11 @@ paths:
                 $ref: '#/components/schemas/User'
         '400':
           description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   /users/{user_id}:
     parameters:
       - name: user_id
@@ -69,6 +136,25 @@ paths:
                 $ref: '#/components/schemas/User'
         '404':
           description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /webhook-calls:
+    get:
+      operationId: app.get_webhook_calls
+      summary: Get all recorded webhook calls
+      responses:
+        '200':
+          description: List of webhook calls
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
 components:
   schemas:
     User:
@@ -82,15 +168,23 @@ components:
           type: string
           format: email
         status:
-          type: string
+          # Using type array instead of nullable property
+          type: ["string", "null"]
           enum: [active, inactive, suspended]
         metadata:
           type: object
-          additionalProperties: true
+          properties:
+            location:
+              type: string
+            preferences:
+              type: object
+          # New in JSON Schema 2020-12, only allow specified properties
+          unevaluatedProperties: false
       required:
         - id
         - username
         - email
+
     NewUser:
       type: object
       properties:
@@ -106,7 +200,23 @@ components:
           default: active
         metadata:
           type: object
-          additionalProperties: true
+          properties:
+            location:
+              type: string
+            preferences:
+              type: object
+          unevaluatedProperties: false
       required:
         - username
         - email
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+      required:
+        - code
+        - message
