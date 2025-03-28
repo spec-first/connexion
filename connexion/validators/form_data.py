@@ -1,13 +1,13 @@
 import logging
 import typing as t
 
-from jsonschema import Draft4Validator, ValidationError
+from jsonschema import Draft4Validator, Draft202012Validator, ValidationError
 from starlette.datastructures import Headers, UploadFile
 from starlette.formparsers import FormParser, MultiPartParser
 from starlette.types import Scope
 
 from connexion.exceptions import BadRequestProblem, ExtraParameterProblem
-from connexion.json_schema import Draft4RequestValidator, format_error_with_path
+from connexion.json_schema import Draft4RequestValidator, Draft2020RequestValidator, format_error_with_path
 from connexion.uri_parsing import AbstractURIParser
 from connexion.validators import AbstractRequestBodyValidator
 
@@ -42,12 +42,10 @@ class FormDataValidator(AbstractRequestBodyValidator):
 
     @property
     def _validator(self):
-        # Use Draft7 validator for OpenAPI 3.1
+        # Use Draft2020 validator for OpenAPI 3.1
         if self._schema_dialect and 'draft/2020-12' in self._schema_dialect:
-            from connexion.json_schema import Draft7RequestValidator
-            from jsonschema import Draft7Validator
-            return Draft7RequestValidator(
-                self._schema, format_checker=Draft7Validator.FORMAT_CHECKER
+            return Draft2020RequestValidator(
+                self._schema, format_checker=Draft202012Validator.FORMAT_CHECKER
             )
         # Default to Draft4 for backward compatibility
         return Draft4RequestValidator(

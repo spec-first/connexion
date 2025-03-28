@@ -3,7 +3,7 @@ import logging
 import typing as t
 
 import jsonschema
-from jsonschema import Draft4Validator, Draft7Validator, ValidationError
+from jsonschema import Draft4Validator, Draft7Validator, Draft202012Validator, ValidationError
 from starlette.types import Scope
 
 from connexion.exceptions import BadRequestProblem, NonConformingResponseBody
@@ -12,6 +12,8 @@ from connexion.json_schema import (
     Draft4ResponseValidator,
     Draft7RequestValidator,
     Draft7ResponseValidator,
+    Draft2020RequestValidator,
+    Draft2020ResponseValidator,
     format_error_with_path,
 )
 from connexion.validators import (
@@ -47,10 +49,10 @@ class JSONRequestBodyValidator(AbstractRequestBodyValidator):
 
     @property
     def _validator(self):
-        # Use Draft7 validator for OpenAPI 3.1
+        # Use Draft2020 validator for OpenAPI 3.1
         if self._schema_dialect and 'draft/2020-12' in self._schema_dialect:
-            return Draft7RequestValidator(
-                self._schema, format_checker=Draft7Validator.FORMAT_CHECKER
+            return Draft2020RequestValidator(
+                self._schema, format_checker=Draft202012Validator.FORMAT_CHECKER
             )
         # Default to Draft4 for backward compatibility
         return Draft4RequestValidator(
@@ -95,11 +97,11 @@ class DefaultsJSONRequestBodyValidator(JSONRequestBodyValidator):
 
     @property
     def _validator(self):
-        # Use Draft7 validator for OpenAPI 3.1
+        # Use Draft2020 validator for OpenAPI 3.1
         if self._schema_dialect and 'draft/2020-12' in self._schema_dialect:
-            validator_cls = self.extend_with_set_default(Draft7RequestValidator)
+            validator_cls = self.extend_with_set_default(Draft2020RequestValidator)
             return validator_cls(
-                self._schema, format_checker=Draft7Validator.FORMAT_CHECKER
+                self._schema, format_checker=Draft202012Validator.FORMAT_CHECKER
             )
         # Default to Draft4 for backward compatibility
         validator_cls = self.extend_with_set_default(Draft4RequestValidator)
@@ -149,10 +151,10 @@ class JSONResponseBodyValidator(AbstractResponseBodyValidator):
 
     @property
     def validator(self):
-        # Use Draft7 validator for OpenAPI 3.1
+        # Use Draft2020 validator for OpenAPI 3.1
         if self._schema_dialect and 'draft/2020-12' in self._schema_dialect:
-            return Draft7ResponseValidator(
-                self._schema, format_checker=Draft7Validator.FORMAT_CHECKER
+            return Draft2020ResponseValidator(
+                self._schema, format_checker=Draft202012Validator.FORMAT_CHECKER
             )
         # Default to Draft4 for backward compatibility 
         return Draft4ResponseValidator(
