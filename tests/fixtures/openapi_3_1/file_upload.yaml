@@ -1,0 +1,41 @@
+openapi: 3.1.0
+info:
+  title: Simple File Upload API
+  version: 1.0.0
+  description: A simplified API for testing file uploads
+jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
+
+paths:
+  /upload:
+    post:
+      operationId: tests.fixtures.openapi_3_1.file_upload_simple.upload_file
+      summary: Upload a file with metadata
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                fileName:
+                  type: string
+              required:
+                - file
+                - fileName
+      responses:
+        '200':
+          description: Successful upload
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  uploaded:
+                    type: boolean
+                  fileName:
+                    type: string
+                  size:
+                    type: integer

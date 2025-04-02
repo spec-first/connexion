@@ -1,0 +1,89 @@
+openapi: 3.1.0
+info:
+  title: Complex Query Parameters Test
+  version: 1.0.0
+  description: Testing complex query parameter schemas (oneOf, anyOf, allOf) in OpenAPI 3.1
+jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
+
+paths:
+  /query/oneof:
+    get:
+      operationId: tests.fixtures.openapi_3_1.query_params_api.get_with_oneof
+      summary: Endpoint with oneOf in query parameter
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            oneOf:
+              - type: integer
+                format: int32
+                minimum: 1
+                maximum: 100
+              - type: string
+                enum: ["all", "none"]
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  limit:
+                    oneOf:
+                      - type: integer
+                      - type: string
+
+  /query/anyof:
+    get:
+      operationId: tests.fixtures.openapi_3_1.query_params_api.get_with_anyof
+      summary: Endpoint with anyOf in query parameter
+      parameters:
+        - name: filter
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - type: string
+                pattern: "^[a-z]+$"
+              - type: array
+                items:
+                  type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  filter:
+                    anyOf:
+                      - type: string
+                      - type: array
+                        items:
+                          type: string
+
+  /query/allof:
+    get:
+      operationId: tests.fixtures.openapi_3_1.query_params_api.get_with_allof
+      summary: Endpoint with allOf in query parameter
+      parameters:
+        - name: range
+          in: query
+          required: false
+          schema:
+            allOf:
+              - type: string
+              - pattern: "^\\d+-\\d+$"
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  range:
+                    type: string

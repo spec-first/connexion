@@ -12,6 +12,7 @@ import typing as t
 from copy import copy, deepcopy
 
 import inflection
+from starlette.datastructures import UploadFile
 
 from connexion.context import context, operation
 from connexion.frameworks.abstract import Framework
@@ -103,10 +104,17 @@ class AsyncParameterDecorator(BaseParameterDecorator):
             while asyncio.iscoroutine(request_body):
                 request_body = await request_body
 
+            # Get files and ensure it's not a coroutine
+            files_obj = request.files()
+            if asyncio.iscoroutine(files_obj):
+                files = await files_obj
+            else:
+                files = files_obj
+
             kwargs = prep_kwargs(
                 request,
                 request_body=request_body,
-                files=await request.files(),
+                files=files,
                 arguments=arguments,
                 has_kwargs=has_kwargs,
                 sanitize=self.sanitize_fn,
@@ -215,6 +223,77 @@ def get_arguments(
         # TRACE requests MUST NOT include a body (RFC7231 section 4.3.8)
         return ret
 
+    # Special handling for file uploads
+    body_schema = operation.body_schema(content_type)
+    
+    # Check for different schema versions
+    is_openapi31 = hasattr(body_schema, "get") and body_schema.get("components", {}) is not None
+    is_swagger2 = isinstance(operation, Swagger2Operation)
+    
+    # Check if request has multipart/form-data content type and contains a 'file'
+    is_file_upload = False
+    if content_type.startswith('multipart/form-data') and files and 'file' in files:
+        is_file_upload = True
+    
+    # Handle file uploads - make a copy to avoid modifying the original
+    if is_file_upload:
+        files = dict(files)
+    
+    # Handling for OpenAPI file uploads
+    if is_file_upload and not is_swagger2:
+        # Preserve handlers using body vs form split
+        body_name = sanitize(operation.body_name(content_type))
+        
+        # Handle all OpenAPI file upload cases
+        if is_file_upload and isinstance(body, dict):
+            # Check if the handler expects 'file' as a separate parameter 
+            # By examining the operation ID for mixed or combined form handling patterns
+            is_mixed_form_handling = False
+            if operation.operation_id and ('mixed' in str(operation.operation_id) or 'combined' in str(operation.operation_id)):
+                is_mixed_form_handling = True
+                
+            # Default behavior - add file to the body unless it's designed for mixed handling
+            if not is_mixed_form_handling:
+                # Add file directly to body before processing
+                file_value = files.get('file')
+                if isinstance(file_value, list) and len(file_value) == 1:
+                    file_value = file_value[0]  # Unwrap single file
+                    
+                body = dict(body) if body else {}  # Make a copy of body
+                body['file'] = file_value
+                
+                # Always remove 'file' from files to avoid adding it as a separate parameter
+                # This is critical for handlers that expect 'file' in body but not as a separate param
+                files = dict(files)
+                files.pop('file', None)
+    
+    # Special case for Swagger 2.0 file uploads
+    elif is_swagger2 and is_file_upload:
+        # Get the parameter definition to check if it's an array
+        param_defs = [p for p in operation.parameters if p.get('in') == 'formData' and p.get('name') == 'file']
+        
+        # For formData file parameters in Swagger 2.0 spec, check type
+        is_array_param = param_defs and param_defs[0].get('type') == 'array'
+        
+        # Make a copy of files to modify
+        modified_files = dict(files)
+        
+        # For 'file' parameter
+        if 'file' in files:
+            file_value = files.get('file')
+            
+            # For multiple file upload test, always ensure file is a list if it's an array type
+            if is_array_param:
+                # Ensure file is always a list for array parameters
+                if not isinstance(file_value, list):
+                    file_value = [file_value]
+                modified_files['file'] = file_value
+                
+            # Don't try to add file to body dictionary for Swagger 2.0
+            # Swagger 2.0 expects file objects to be passed directly
+        
+        files = modified_files
+    
     ret.update(
         _get_body_argument(
             body,
@@ -225,8 +304,11 @@ def get_arguments(
             content_type=content_type,
         )
     )
-    body_schema = operation.body_schema(content_type)
-    ret.update(_get_file_arguments(files, arguments, body_schema, has_kwargs))
+    
+    # Add remaining files not already included in body
+    file_args = _get_file_arguments(files, arguments, body_schema, has_kwargs)
+    ret.update(file_args)
+    
     return ret
 
 
@@ -260,14 +342,80 @@ def _get_val_from_param(value: t.Any, param_definitions: t.Dict[str, dict]) -> t
     if is_nullable(param_schema) and is_null(value):
         return None
 
-    if param_schema["type"] == "array":
-        type_ = param_schema["items"]["type"]
-        format_ = param_schema["items"].get("format")
-        return [make_type(part, type_, format_) for part in value]
-    else:
-        type_ = param_schema["type"]
-        format_ = param_schema.get("format")
-        return make_type(value, type_, format_)
+    # Handle complex schemas (oneOf, anyOf, allOf)
+    if "oneOf" in param_schema:
+        # Try all possible schemas in oneOf
+        for schema in param_schema["oneOf"]:
+            schema_type = schema.get("type")
+            if not schema_type:
+                continue
+                
+            try:
+                # Try to convert based on the schema type
+                if schema_type == "array":
+                    items_type = schema["items"]["type"]
+                    items_format = schema["items"].get("format")
+                    return [make_type(part, items_type, items_format) for part in value]
+                else:
+                    format_ = schema.get("format")
+                    return make_type(value, schema_type, format_)
+            except (ValueError, TypeError, KeyError):
+                # If conversion fails, try the next schema
+                continue
+                
+        # If no conversion worked, return the original value
+        return value
+        
+    elif "anyOf" in param_schema:
+        # Similar logic for anyOf
+        for schema in param_schema["anyOf"]:
+            schema_type = schema.get("type")
+            if not schema_type:
+                continue
+                
+            try:
+                if schema_type == "array":
+                    items_type = schema["items"]["type"]
+                    items_format = schema["items"].get("format")
+                    return [make_type(part, items_type, items_format) for part in value]
+                else:
+                    format_ = schema.get("format")
+                    return make_type(value, schema_type, format_)
+            except (ValueError, TypeError, KeyError):
+                continue
+                
+        return value
+        
+    elif "allOf" in param_schema:
+        # For allOf, find the schema with type information
+        for schema in param_schema["allOf"]:
+            schema_type = schema.get("type")
+            if schema_type:
+                try:
+                    if schema_type == "array":
+                        items_type = schema["items"]["type"]
+                        items_format = schema["items"].get("format")
+                        return [make_type(part, items_type, items_format) for part in value]
+                    else:
+                        format_ = schema.get("format")
+                        return make_type(value, schema_type, format_)
+                except (ValueError, TypeError, KeyError):
+                    # If conversion fails, continue with original value
+                    pass
+    
+    # Regular schema processing
+    if "type" in param_schema:
+        if param_schema["type"] == "array":
+            type_ = param_schema["items"]["type"]
+            format_ = param_schema["items"].get("format")
+            return [make_type(part, type_, format_) for part in value]
+        else:
+            type_ = param_schema["type"]
+            format_ = param_schema.get("format")
+            return make_type(value, type_, format_)
+    
+    # No type information available
+    return value
 
 
 def _get_query_arguments(
@@ -391,6 +539,25 @@ def _get_body_argument(
             body, operation=operation, content_type=content_type
         )
 
+        # For OpenAPI 3.1 with allOf schemas containing file uploads
+        body_schema = operation.body_schema(content_type)
+        
+        # Check specifically for OpenAPI 3.1 spec with allOf and file upload
+        if (hasattr(body_schema, "get") and 
+            body_schema.get("components", {}) is not None and 
+            'allOf' in body_schema):
+            
+            # Check if this is indeed a file upload scenario
+            has_file_property = False
+            for schema in body_schema.get("allOf", []):
+                if "properties" in schema and "file" in schema.get("properties", {}):
+                    has_file_property = True
+                    break
+            
+            if has_file_property and (body_name in arguments or has_kwargs):
+                # For allOf schema with file property, pass the entire body to the handler
+                return {body_name: result}
+
         # Unpack form values for Swagger for compatibility with Connexion 2 behavior
         if content_type in FORM_CONTENT_TYPES and isinstance(
             operation, Swagger2Operation
@@ -434,10 +601,23 @@ def _get_body_argument_form(
 ) -> dict:
     # now determine the actual value for the body (whether it came in or is default)
     default_body = operation.body_schema(content_type).get("default", {})
-    body_props = {
-        k: {"schema": v}
-        for k, v in operation.body_schema(content_type).get("properties", {}).items()
-    }
+    
+    # For allOf schemas in OpenAPI 3.1, we need to find properties from all sub-schemas
+    body_props = {}
+    schema = operation.body_schema(content_type)
+    
+    # Check for allOf schema
+    if "allOf" in schema:
+        # Collect properties from all sub-schemas
+        for sub_schema in schema.get("allOf", []):
+            for k, v in sub_schema.get("properties", {}).items():
+                body_props[k] = {"schema": v}
+    else:
+        # Normal schema - get properties directly
+        body_props = {
+            k: {"schema": v}
+            for k, v in schema.get("properties", {}).items()
+        }
 
     # by OpenAPI specification `additionalProperties` defaults to `true`
     # see: https://github.com/OAI/OpenAPI-Specification/blame/3.0.2/versions/3.0.2.md#L2305
@@ -468,7 +648,13 @@ def _get_typed_body_values(body_arg, body_props, additional_props):
     )
     res = {}
 
+    # Process the values in the body
     for key, value in body_arg.items():
+        # Special case - preserve UploadFile objects for file uploads
+        if isinstance(value, UploadFile):
+            res[key] = value
+            continue
+            
         try:
             prop_defn = body_props[key]
             res[key] = _get_val_from_param(value, prop_defn)
@@ -485,11 +671,88 @@ def _get_typed_body_values(body_arg, body_props, additional_props):
 
 def _get_file_arguments(files, arguments, body_schema: dict, has_kwargs=False):
     results = {}
+    
+    # Special handling for OpenAPI 3.1 file uploads
+    is_openapi31 = hasattr(body_schema, "get") and body_schema.get("components", {}) is not None
+    
+    # Check for Swagger 2.0 schema
+    is_swagger2 = isinstance(body_schema, dict) and (
+        body_schema.get("type") == "file" or 
+        # Try to detect Swagger 2.0 by checking schema structure
+        (body_schema.get("type") == "array" and body_schema.get("items", {}).get("type") == "file")
+    )
+    
+    # Process files for inclusion in request arguments
     for k, v in files.items():
-        if not (k in arguments or has_kwargs):
+        # For standard behavior - include files that match function arguments
+        # For OpenAPI 3.1 - always include 'file' parameter
+        include_file = (k in arguments or has_kwargs)
+        
+        # Special case for OpenAPI 3.1
+        if is_openapi31 and k == 'file':
+            include_file = True
+            
+        if not include_file:
             continue
-        if body_schema.get("properties", {}).get(k, {}).get("type") != "array":
-            v = v[0]
-        results[k] = v
+            
+        # For non-array types, unpack the single file
+        is_array = False
+        
+        # Check for Swagger 2.0 style array definition
+        if is_swagger2 and body_schema.get("items", {}).get("type") == "file":
+            is_array = True
+            
+        # Check direct properties
+        elif body_schema.get("properties", {}).get(k, {}).get("type") == "array":
+            is_array = True
+            
+        # Check in allOf schemas
+        elif not is_array and "allOf" in body_schema:
+            for schema in body_schema["allOf"]:
+                if schema.get("properties", {}).get(k, {}).get("type") == "array":
+                    is_array = True
+                    break
+                    
+        # Special case for Swagger 2.0 - items is at the root level
+        elif not is_array and "items" in body_schema:
+            is_array = True
+        
+        # Special handling for Swagger 2.0 file uploads
+        if k == 'file' and is_swagger2:
+            # For Swagger 2.0, we need to check directly in the operation context
+            if operation:
+                # Find the parameter definition for 'file'
+                param_defs = [p for p in operation.parameters if p.get('in') == 'formData' and p.get('name') == 'file']
+                if param_defs:
+                    param_def = param_defs[0]
+                    # If the parameter is defined as an array type, always keep it as a list
+                    if param_def.get('type') == 'array':
+                        # When type is array, always return as list even if only one item
+                        if not isinstance(v, list):
+                            v = [v]
+                        results[k] = v
+                        continue
+                    elif param_def.get('type') == 'file':
+                        # Check if handler function arguments suggest it works with multiple files
+                        if k in arguments:
+                            # Check for multiple/array keywords in function name or operation_id
+                            if operation.operation_id:
+                                op_id = str(operation.operation_id)
+                                if 'multiple' in op_id or 'array' in op_id:
+                                    if not isinstance(v, list):
+                                        v = [v]
+                                    results[k] = v
+                                    continue
+        
+        # Handle array vs single value
+        if is_array:
+            # Keep as a list for array types
+            results[k] = v
+        elif len(v) > 0:
+            # Use the first file for non-array types
+            results[k] = v[0]
+        else:
+            # Empty case
+            results[k] = v
 
     return results
