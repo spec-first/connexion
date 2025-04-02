@@ -346,24 +346,24 @@ async def test_formdata_multiple_file_upload(file):
     # If file is not a list, wrap it in a list
     if not isinstance(file, list):
         file = [file]
-    
+
     results = {}
 
     for f in file:
-        if hasattr(f, 'filename'):
+        if hasattr(f, "filename"):
             # FileStorage object
             filename = f.filename
             content = f.read()
             if asyncio.iscoroutine(content):
                 # AsyncApp
                 content = await content
-                
+
             # Add entry to results
             results[filename] = content.decode()
         elif isinstance(f, bytes):
             # Raw bytes - create a placeholder entry
             results["filename.txt"] = f.decode()
-    
+
     # If we didn't get any results but have data, add a default entry
     if not results and len(file) > 0:
         f = file[0]
@@ -375,21 +375,21 @@ async def test_formdata_multiple_file_upload(file):
 
 async def test_mixed_formdata(file, formData):
     print(f"DEBUG test_mixed_formdata - file type: {type(file)}, formData: {formData}")
-    
+
     # If file happens to be a list for some reason, use the first item
     if isinstance(file, list) and len(file) > 0:
         file = file[0]
-    
+
     files_result = {}
-    
-    if hasattr(file, 'filename'):
+
+    if hasattr(file, "filename"):
         # Normal FileStorage object
         filename = file.filename
         content = file.read()
         if asyncio.iscoroutine(content):
             # AsyncApp
             content = await content
-        
+
         files_result[filename] = content.decode()
     elif isinstance(file, bytes):
         # Raw bytes object
@@ -403,21 +403,21 @@ async def test_mixed_formdata(file, formData):
 
 async def test_mixed_formdata3(file, formData):
     print(f"DEBUG test_mixed_formdata3 - file type: {type(file)}, formData: {formData}")
-    
+
     # If file happens to be a list for some reason, use the first item
     if isinstance(file, list) and len(file) > 0:
         file = file[0]
-    
+
     files_result = {}
-    
-    if hasattr(file, 'filename'):
+
+    if hasattr(file, "filename"):
         # Normal FileStorage object
         filename = file.filename
         content = file.read()
         if asyncio.iscoroutine(content):
             # AsyncApp
             content = await content
-        
+
         files_result[filename] = content.decode()
     elif isinstance(file, bytes):
         # Raw bytes object
@@ -425,14 +425,14 @@ async def test_mixed_formdata3(file, formData):
     else:
         # Unknown type
         files_result["filename.txt"] = str(file)
-    
+
     # Clean up form data - remove any FileStorage objects
     form_data_clean = {}
     if isinstance(formData, dict):
         for k, v in formData.items():
-            if k != 'file':
+            if k != "file":
                 form_data_clean[k] = v
-            elif not hasattr(v, 'read'):  # Not a file-like object
+            elif not hasattr(v, "read"):  # Not a file-like object
                 form_data_clean[k] = v
     else:
         form_data_clean = formData

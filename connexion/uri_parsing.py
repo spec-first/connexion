@@ -179,43 +179,43 @@ class OpenAPIURIParser(AbstractURIParser):
     def resolve_form(self, form_data):
         if self._body_schema is None or self._body_schema.get("type") != "object":
             return form_data
-            
+
         # Process form data
-            
+
         for k in form_data:
             encoding = self._body_encoding.get(k, {"style": "form"})
-            
+
             # Look for the field definition in properties first
             defn = self.form_defns.get(k, {})
-            
+
             # If not found directly, look for it in complex schemas
             if not defn and "allOf" in self._body_schema:
                 for schema in self._body_schema["allOf"]:
                     if "properties" in schema and k in schema["properties"]:
                         defn = schema["properties"][k]
                         break
-            
+
             # Special handling for file uploads in OpenAPI 3.1 with allOf schema
-            
+
             if isinstance(form_data[k], UploadFile):
                 # Check if this is an OpenAPI 3.1 schema with allOf and file property
                 is_openapi31_allof = (
-                    hasattr(self._body_schema, "get") and
-                    self._body_schema.get("components", {}) is not None and
-                    "allOf" in self._body_schema
+                    hasattr(self._body_schema, "get")
+                    and self._body_schema.get("components", {}) is not None
+                    and "allOf" in self._body_schema
                 )
-                
+
                 has_file_property = False
                 if is_openapi31_allof:
                     for schema in self._body_schema.get("allOf", []):
                         if "properties" in schema and k in schema.get("properties", {}):
                             has_file_property = True
                             break
-                
+
                 # Skip processing for file uploads in OpenAPI 3.1 with allOf and file property
                 if is_openapi31_allof and has_file_property:
                     continue
-                
+
             # Handle arrays in oneOf/anyOf/allOf schemas
             is_array = False
             if "type" in defn and defn["type"] == "array":
@@ -235,28 +235,36 @@ class OpenAPIURIParser(AbstractURIParser):
                     if schema.get("type") == "array":
                         is_array = True
                         break
-            
+
             # TODO support more form encoding styles
             form_data[k] = self._resolve_param_duplicates(
                 form_data[k], encoding, "form"
             )
-            
+
             if "contentType" in encoding and all_json([encoding.get("contentType")]):
                 form_data[k] = json.loads(form_data[k])
             elif is_array:
                 form_data[k] = self._split(form_data[k], encoding, "form")
-            
+
             # If the value is still a list with just one string value, and it's not an array type,
             # extract the single value to avoid the "not of type string" error
-            if isinstance(form_data[k], list) and len(form_data[k]) == 1 and not is_array:
+            if (
+                isinstance(form_data[k], list)
+                and len(form_data[k]) == 1
+                and not is_array
+            ):
                 form_data[k] = form_data[k][0]
-                
+
             # Only try to coerce non-UploadFile values for OpenAPI 3.1
-            is_openapi31 = hasattr(self._body_schema, "get") and self._body_schema.get("components", {}).get("pathItems", None) is not None
-            
+            is_openapi31 = (
+                hasattr(self._body_schema, "get")
+                and self._body_schema.get("components", {}).get("pathItems", None)
+                is not None
+            )
+
             if not isinstance(form_data[k], UploadFile) or not is_openapi31:
                 form_data[k] = coerce_type(defn, form_data[k], "requestBody", k)
-            
+
         # Return processed form data
         return form_data
 
@@ -325,26 +333,26 @@ class OpenAPIURIParser(AbstractURIParser):
         are concatenated together and `a` would be "1,2,3,4,5,6".
         """
         # Special case for UploadFile objects in the list - don't try to join them
-        
+
         # If values is a single UploadFile, return it directly
         if isinstance(values, UploadFile):
             return values
-            
+
         # If it's a list containing UploadFile objects, we need to return the list as is
-        if hasattr(values, '__iter__') and not isinstance(values, (str, bytes)):
+        if hasattr(values, "__iter__") and not isinstance(values, (str, bytes)):
             if any(isinstance(v, UploadFile) for v in values):
                 return values
-            
+
         # Normal parameter handling
         default_style = OpenAPIURIParser.style_defaults[_in]
         style = param_defn.get("style", default_style)
         delimiter = QUERY_STRING_DELIMITERS.get(style, ",")
         is_form = style == "form"
         explode = param_defn.get("explode", is_form)
-        
+
         if explode:
             # Make sure values is iterable before joining
-            if hasattr(values, '__iter__') and not isinstance(values, (str, bytes)):
+            if hasattr(values, "__iter__") and not isinstance(values, (str, bytes)):
                 # Filter out any UploadFile objects before joining
                 str_values = [v for v in values if not isinstance(v, UploadFile)]
                 if str_values:
@@ -353,7 +361,7 @@ class OpenAPIURIParser(AbstractURIParser):
             return values
 
         # default to last defined value
-        if hasattr(values, '__getitem__') and not isinstance(values, (str, bytes)):
+        if hasattr(values, "__getitem__") and not isinstance(values, (str, bytes)):
             return values[-1]
         return values
 
@@ -362,13 +370,13 @@ class OpenAPIURIParser(AbstractURIParser):
         # Special case for UploadFile objects - don't try to split them
         if isinstance(value, UploadFile):
             return value
-            
+
         default_style = OpenAPIURIParser.style_defaults[_in]
         style = param_defn.get("style", default_style)
         delimiter = QUERY_STRING_DELIMITERS.get(style, ",")
-        
+
         # Make sure value has a split method
-        if hasattr(value, 'split'):
+        if hasattr(value, "split"):
             return value.split(delimiter)
         return value
 

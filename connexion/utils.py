@@ -354,7 +354,7 @@ def coerce_type(param, value, parameter_type, parameter_name=None):
         return None
 
     parameter_name = parameter_name if parameter_name else param.get("name")
-    
+
     # Handle complex schemas (oneOf, anyOf, allOf)
     if "oneOf" in param_schema:
         # Try all possible schemas in oneOf
@@ -363,7 +363,7 @@ def coerce_type(param, value, parameter_type, parameter_name=None):
             schema_type = schema.get("type")
             if not schema_type:
                 continue
-                
+
             try:
                 # Try to convert based on the schema type
                 if schema_type == "integer":
@@ -376,10 +376,10 @@ def coerce_type(param, value, parameter_type, parameter_name=None):
             except (ValueError, TypeError):
                 # If conversion fails, try the next schema
                 continue
-                
+
         # If no conversion worked, return the original value
         return original_value
-        
+
     elif "anyOf" in param_schema:
         # Similar logic for anyOf
         original_value = value
@@ -387,7 +387,7 @@ def coerce_type(param, value, parameter_type, parameter_name=None):
             schema_type = schema.get("type")
             if not schema_type:
                 continue
-                
+
             try:
                 # Try to convert based on the schema type
                 if schema_type == "integer":
@@ -398,9 +398,9 @@ def coerce_type(param, value, parameter_type, parameter_name=None):
                     return boolean(value)
             except (ValueError, TypeError):
                 continue
-                
+
         return original_value
-        
+
     elif "allOf" in param_schema:
         # For allOf, find the schema with type information
         for schema in param_schema["allOf"]:
@@ -418,7 +418,7 @@ def coerce_type(param, value, parameter_type, parameter_name=None):
                 except (ValueError, TypeError):
                     # If conversion fails, continue with original value
                     pass
-                    
+
     # Regular schema processing (unchanged from original)
     param_type = param_schema.get("type")
     if param_type == "array":

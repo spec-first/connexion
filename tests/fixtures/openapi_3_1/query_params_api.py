@@ -2,6 +2,7 @@
 Test API implementation for complex query parameters
 """
 
+
 def get_with_oneof(limit=None):
     """Handle endpoint with oneOf in query parameter"""
     return {"limit": limit}, 200
