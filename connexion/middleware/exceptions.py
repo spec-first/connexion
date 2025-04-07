@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 def connexion_wrapper(
     handler: t.Callable[
         [ConnexionRequest, Exception], MaybeAwaitable[ConnexionResponse]
-    ]
+    ],
 ) -> t.Callable[[StarletteRequest, Exception], t.Awaitable[StarletteResponse]]:
     """Wrapper that translates Starlette requests to Connexion requests before passing
     them to the error handler, and translates the returned Connexion responses to
