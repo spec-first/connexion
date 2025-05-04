@@ -109,3 +109,7 @@ exclude_lines = [
 [[tool.mypy.overrides]]
 module = "referencing.jsonschema.*"
 follow_imports = "skip"
+
+[[tool.mypy.overrides]]
+module = "referencing._core.*"
+follow_imports = "skip"
