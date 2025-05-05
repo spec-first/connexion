@@ -30,6 +30,7 @@ class OpenAPIOperation(AbstractOperation):
         app_security=None,
         security_schemes=None,
         components=None,
+        json_schema_dialect=None,
         randomize_endpoint=None,
         uri_parser_class=None,
     ):
@@ -66,6 +67,7 @@ class OpenAPIOperation(AbstractOperation):
         :type uri_parser_class: AbstractURIParser
         """
         self.components = components or {}
+        self.json_schema_dialect = json_schema_dialect
 
         uri_parser_class = uri_parser_class or OpenAPIURIParser
 
@@ -102,6 +104,7 @@ class OpenAPIOperation(AbstractOperation):
 
     @classmethod
     def from_spec(cls, spec, *args, path, method, resolver, **kwargs):
+        json_schema_dialect = getattr(spec, "json_schema_dialect", None)
         return cls(
             method,
             path,
@@ -111,6 +114,7 @@ class OpenAPIOperation(AbstractOperation):
             app_security=spec.security,
             security_schemes=spec.security_schemes,
             components=spec.components,
+            json_schema_dialect=json_schema_dialect,
             *args,
             **kwargs,
         )
