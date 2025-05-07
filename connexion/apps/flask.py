@@ -127,7 +127,7 @@ class FlaskApi(AbstractRoutingAPI):
 
 
 class FlaskASGIApp(SpecMiddleware):
-    def __init__(self, import_name, server_args: dict, **kwargs):
+    def __init__(self, import_name, server_args: dict, worker_threads: int = 10, **kwargs):
         self.app = flask.Flask(import_name, **server_args)
         self.app.json = flask_utils.FlaskJSONProvider(self.app)
         self.app.url_map.converters["float"] = flask_utils.NumberConverter
@@ -138,7 +138,7 @@ class FlaskASGIApp(SpecMiddleware):
         self.app.config["TRAP_BAD_REQUEST_ERRORS"] = True
         self.app.config["TRAP_HTTP_EXCEPTIONS"] = True
 
-        self.asgi_app = WSGIMiddleware(self.app.wsgi_app)
+        self.asgi_app = WSGIMiddleware(self.app.wsgi_app, threads=worker_threads)
 
     def add_api(self, specification, *, name: t.Optional[str] = None, **kwargs):
         api = FlaskApi(specification, **kwargs)
@@ -175,6 +175,7 @@ class FlaskApp(AbstractApp):
         lifespan: t.Optional[Lifespan] = None,
         middlewares: t.Optional[list] = None,
         server_args: t.Optional[dict] = None,
+        worker_threads: int = 10,
         specification_dir: t.Union[pathlib.Path, str] = "",
         arguments: t.Optional[dict] = None,
         auth_all_paths: t.Optional[bool] = None,
@@ -198,6 +199,8 @@ class FlaskApp(AbstractApp):
         :param middlewares: The list of middlewares to wrap around the application. Defaults to
             :obj:`middleware.main.ConnexionMiddleware.default_middlewares`
         :param server_args: Arguments to pass to the Flask application.
+        :param worker_threads: Number of worker threads for the WSGIMiddleware wrapping FlaskApp.
+            Defaults to 10.
         :param specification_dir: The directory holding the specification(s). The provided path
             should either be absolute or relative to the root path of the application. Defaults to
             the root path.
@@ -224,7 +227,7 @@ class FlaskApp(AbstractApp):
         :param security_map: A dictionary of security handlers to use. Defaults to
             :obj:`security.SECURITY_HANDLERS`
         """
-        self._middleware_app = FlaskASGIApp(import_name, server_args or {})
+        self._middleware_app = FlaskASGIApp(import_name, server_args or {}, worker_threads=worker_threads)
 
         super().__init__(
             import_name,
