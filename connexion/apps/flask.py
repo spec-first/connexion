@@ -127,7 +127,7 @@ class FlaskApi(AbstractRoutingAPI):
 
 
 class FlaskASGIApp(SpecMiddleware):
-    def __init__(self, import_name, server_args: dict, **kwargs):
+    def __init__(self, import_name, server_args: dict, worker_threads, **kwargs):
         self.app = flask.Flask(import_name, **server_args)
         self.app.json = flask_utils.FlaskJSONProvider(self.app)
         self.app.url_map.converters["float"] = flask_utils.NumberConverter
@@ -138,7 +138,7 @@ class FlaskASGIApp(SpecMiddleware):
         self.app.config["TRAP_BAD_REQUEST_ERRORS"] = True
         self.app.config["TRAP_HTTP_EXCEPTIONS"] = True
 
-        self.asgi_app = WSGIMiddleware(self.app.wsgi_app)
+        self.asgi_app = WSGIMiddleware(self.app.wsgi_app, workers=worker_threads)
 
     def add_api(self, specification, *, name: t.Optional[str] = None, **kwargs):
         api = FlaskApi(specification, **kwargs)
@@ -175,6 +175,7 @@ class FlaskApp(AbstractApp):
         lifespan: t.Optional[Lifespan] = None,
         middlewares: t.Optional[list] = None,
         server_args: t.Optional[dict] = None,
+        worker_threads: t.Optional[int] = 10,
         specification_dir: t.Union[pathlib.Path, str] = "",
         arguments: t.Optional[dict] = None,
         auth_all_paths: t.Optional[bool] = None,
@@ -223,8 +224,12 @@ class FlaskApp(AbstractApp):
             :obj:`validators.VALIDATOR_MAP`.
         :param security_map: A dictionary of security handlers to use. Defaults to
             :obj:`security.SECURITY_HANDLERS`
+        :param worker_threads: Number of worker threads for WSGI middleware wrapping FlaskApp; for handling FlaskApp requests.
+            Defaults to 10.
         """
-        self._middleware_app = FlaskASGIApp(import_name, server_args or {})
+        self._middleware_app = FlaskASGIApp(
+            import_name, server_args or {}, worker_threads=worker_threads
+        )
 
         super().__init__(
             import_name,
