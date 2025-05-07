@@ -227,7 +227,9 @@ class FlaskApp(AbstractApp):
         :param worker_threads: Number of worker threads for WSGI middleware wrapping FlaskApp; for handling FlaskApp requests.
             Defaults to 10.
         """
-        self._middleware_app = FlaskASGIApp(import_name, server_args or {}, worker_threads=worker_threads)
+        self._middleware_app = FlaskASGIApp(
+            import_name, server_args or {}, worker_threads=worker_threads
+        )
 
         super().__init__(
             import_name,
