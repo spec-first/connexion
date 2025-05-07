@@ -127,7 +127,9 @@ class FlaskApi(AbstractRoutingAPI):
 
 
 class FlaskASGIApp(SpecMiddleware):
-    def __init__(self, import_name, server_args: dict, worker_threads: int = 10, **kwargs):
+    def __init__(
+        self, import_name, server_args: dict, worker_threads: int = 10, **kwargs
+    ):
         self.app = flask.Flask(import_name, **server_args)
         self.app.json = flask_utils.FlaskJSONProvider(self.app)
         self.app.url_map.converters["float"] = flask_utils.NumberConverter
@@ -227,7 +229,9 @@ class FlaskApp(AbstractApp):
         :param security_map: A dictionary of security handlers to use. Defaults to
             :obj:`security.SECURITY_HANDLERS`
         """
-        self._middleware_app = FlaskASGIApp(import_name, server_args or {}, worker_threads=worker_threads)
+        self._middleware_app = FlaskASGIApp(
+            import_name, server_args or {}, worker_threads=worker_threads
+        )
 
         super().__init__(
             import_name,
