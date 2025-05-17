@@ -12,7 +12,7 @@
 Welcome to Connexion's documentation!
 =====================================
 
-Connexion is a modern Python web framework that makes spec-first and api-first development easy. You
+Connexion is a modern Python web framework that simplifies spec-first and API-first development. You
 describe your API in an `OpenAPI`_ (or swagger) specification with as much detail as you want and
 Connexion will guarantee that it works as you specified.
 
@@ -29,8 +29,8 @@ Based on your specification, Connexion provides the following functionality:
 * Response validation
 * A Swagger UI console with live documentation and 'try it out' feature
 
-Connexion also helps you write your OpenAPI specification and develop against it by providing a
-command line interface which lets you test and mock your specification.
+Connexion also assists in writing your OpenAPI Specification and developing against it by providing a 
+command-line interface for testing and mocking your specification.
 
 .. code-block:: bash
 
@@ -60,8 +60,8 @@ Sponsors help us dedicate time to maintain Connexion. Want to help?
 Why Connexion?
 --------------
 
-Being spec-first is what makes Connexion unique in the Python ecosystem. With Connexion, you write
-your API specification first, and automatically get a lot of functionality. With all other popular
+The spec-first approach is what makes Connexion unique in the Python ecosystem. With Connexion, you 
+write your API specification first, and automatically get a lot of functionality. With all other popular
 Python web frameworks, you write your functionality first, and automatically get your specification.
 
 We choose the spec-first approach because it:
@@ -73,7 +73,7 @@ We choose the spec-first approach because it:
 * Allows for orchestrating multiple layers of your API stack from one contract (eg. API Gateway)
 
 For a more detailed explanation about the benefits of working spec-first, or an overview of helpful
-tooling, have a look at our `recommended resources`_.
+tooling, have a look at our `recommended resources`_ section.
 
 Documentation
 -------------

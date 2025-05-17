@@ -1,6 +1,9 @@
 Testing
 =======
 
+This document provides guidelines and examples for testing Connexion applications, including how 
+to use the `test_client` and `TestContext` to facilitate testing.
+
 test_client
 -----------
 
@@ -17,7 +20,7 @@ Connexion application during tests.
             assert response.status_code == 200
 
 
-The passed in keywords used to create a `Starlette` ``TestClient`` which is then returned.
+The passed-in keywords used to create a `Starlette` ``TestClient``, which is then returned.
 
 For more information, please check the `Starlette documentation`_.
 
@@ -45,6 +48,6 @@ provided by Connexion.
         operation = MagicMock(name="operation")
         operation.method = "post"
         with TestContext(operation=operation):
-            assert get_method() == "post
+            assert get_method() == "post"
 
-If you don't pass in a certain context variable, the `TestContext` will generate a dummy one.
+If a specific context variable is not provided, the `TestContext` will automatically generate a dummy value for it.

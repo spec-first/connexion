@@ -1,7 +1,7 @@
 Connexion Cookbook
 ==================
 
-This page provides recipes with Connexion as an ingredient.
+This section offers practical examples and recipes for using Connexion in your projects.
 
 CORS
 ----
@@ -120,8 +120,9 @@ Starlette. You can add it to your application, ideally in front of the ``Routing
 Reverse Proxy
 -------------
 
-When running behind a reverse proxy with stripped path prefix, you need to configure your
-application to properly handle this.
+When running behind a reverse proxy with a stripped path prefix, you need to configure your
+application to handle this properly. This ensures that your application correctly interprets 
+the original request path.
 
 Single known path prefix
 ''''''''''''''''''''''''

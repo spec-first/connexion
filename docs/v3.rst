@@ -189,7 +189,7 @@ For more information, check the :doc:`exceptions` documentation.
 Flask extensions and WSGI middleware
 ````````````````````````````````````
 
-Certain Flask extensions and WSGI middleware might no longer work, since some functionaity was
+Certain Flask extensions and WSGI middleware might no longer work, since some functionality was
 moved outside the scope of the Flask application. Extensions and middleware impacting the
 following functionality should now be implemented as ASGI middleware instead:
 
