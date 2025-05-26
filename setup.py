@@ -25,7 +25,7 @@ install_requires = [
     'PyYAML>=5.1,<7',
     'requests>=2.9.1,<3',
     'inflection>=0.3.1,<0.6',
-    'werkzeug>=1.0,<2.3',
+    'werkzeug>=1.0,<4',
     'importlib-metadata>=1 ; python_version<"3.8"',
     'packaging>=20',
 ]
