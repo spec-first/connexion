@@ -44,7 +44,7 @@ classifiers = [
 connexion = 'connexion.cli:main'
 
 [tool.poetry.dependencies]
-python = '^3.9'
+python = "^3.9"
 asgiref = ">= 3.4"
 httpx = ">= 0.23"
 inflection = ">= 0.3.1"
