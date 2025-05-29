@@ -370,3 +370,29 @@ checking.
 
 .. _enforce defaults: https://github.com/spec-first/connexion/tree/main/examples/enforcedefaults
 .. _jsonschema: https://github.com/python-jsonschema/jsonschema
+
+OpenAPI 3.1 Support
+-------------------
+
+Connexion supports OpenAPI 3.1 specifications, which align with JSON Schema 2020-12.
+For OpenAPI 3.1 specs, Connexion will use Draft7Validator to validate requests and responses
+instead of the Draft4Validator used for OpenAPI 2.0 and 3.0.
+
+You can specify the JSON Schema dialect to use by setting the ``jsonSchemaDialect`` field in your
+OpenAPI 3.1 specification:
+
+.. code-block:: yaml
+
+    openapi: 3.1.0
+    info:
+      title: Example API
+      version: 1.0.0
+    jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
+    # ... rest of your specification
+
+If the ``jsonSchemaDialect`` field is not specified, Connexion will use the default value
+of ``https://json-schema.org/draft/2020-12/schema`` for OpenAPI 3.1 specifications.
+
+See our `openapi31 example`_ for a full example of using OpenAPI 3.1 with Connexion.
+
+.. _openapi31 example: https://github.com/spec-first/connexion/tree/main/examples/openapi31

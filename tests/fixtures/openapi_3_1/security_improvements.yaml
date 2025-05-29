@@ -1,0 +1,41 @@
+openapi: 3.1.0
+info:
+  title: Security Improvements in OpenAPI 3.1
+  version: 1.0.0
+  description: Testing security improvements in OpenAPI 3.1
+jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
+
+paths:
+  /secure:
+    get:
+      operationId: tests.fixtures.openapi_3_1.test_api.get_secure
+      summary: Secure endpoint with different security requirements
+      security:
+        - OAuth2:
+            - read:pets
+            - write:pets
+        - mutualTLS: []
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+components:
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        implicit:
+          authorizationUrl: https://example.com/oauth2/auth
+          scopes:
+            read:pets: Read pets
+            write:pets: Write pets
+    mutualTLS:
+      type: mutualTLS
+      description: Mutual TLS authentication

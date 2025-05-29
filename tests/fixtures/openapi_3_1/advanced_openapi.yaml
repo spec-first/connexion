@@ -1,0 +1,180 @@
+openapi: 3.1.0
+info:
+  title: Advanced OpenAPI 3.1 Test API
+  version: 1.0.0
+  description: API for testing advanced OpenAPI 3.1 features in Connexion
+jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
+
+# Include server variables
+servers:
+  - url: https://{environment}.example.com/v1
+    variables:
+      environment:
+        default: api
+        enum: [api, staging, dev]
+
+# Define webhooks
+webhooks:
+  newPet:
+    post:
+      operationId: tests.fixtures.openapi_3_1.advanced_api.process_new_pet_webhook
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Pet'
+      responses:
+        '200':
+          description: Webhook processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+paths:
+  /advanced-pets:
+    get:
+      operationId: tests.fixtures.openapi_3_1.advanced_api.get_pets
+      summary: Get all pets
+      responses:
+        '200':
+          description: A list of pets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Pet'
+                
+    post:
+      operationId: tests.fixtures.openapi_3_1.advanced_api.add_pet
+      summary: Add a new pet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Pet'
+      responses:
+        '201':
+          description: Pet created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pet'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /advanced-pets/{pet_id}:
+    parameters:
+      - name: pet_id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      operationId: tests.fixtures.openapi_3_1.advanced_api.get_pet
+      summary: Get a pet by ID
+      responses:
+        '200':
+          description: A pet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pet'
+        '404':
+          description: Pet not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /advanced-pets/with-metadata:
+    post:
+      operationId: tests.fixtures.openapi_3_1.advanced_api.add_pet_with_metadata
+      summary: Add a new pet with metadata
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PetWithMetadata'
+      responses:
+        '201':
+          description: Pet created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PetWithMetadata'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    Pet:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          # Using type array instead of nullable property
+          type: ["string", "null"]
+        species:
+          type: string
+          enum: [dog, cat, bird]
+        age:
+          type: number
+          # Using exclusiveMinimum directly as per JSON Schema 2020-12
+          exclusiveMinimum: 0
+      required: [id, species]
+      
+    PetWithMetadata:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        species:
+          type: string
+          enum: [dog, cat, bird]
+        # Using unevaluatedProperties as per JSON Schema 2020-12
+        metadata:
+          type: object
+          properties:
+            color:
+              type: string
+            weight:
+              type: number
+          unevaluatedProperties: false
+      required: [id, species]
+    
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+      required: [code, message]
+
+  # Example of using examples in OpenAPI 3.1
+  examples:
+    PetExample:
+      summary: Example of a valid pet
+      value:
+        id: 1
+        name: "Fluffy"
+        species: "cat"
+        age: 3

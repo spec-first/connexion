@@ -8,6 +8,8 @@ import json
 import logging
 import re
 
+from starlette.datastructures import UploadFile
+
 from connexion.exceptions import TypeValidationError
 from connexion.utils import all_json, coerce_type, deep_merge
 
@@ -111,7 +113,31 @@ class AbstractURIParser(metaclass=abc.ABCMeta):
                 # multiple values in a path is impossible
                 values = [values]
 
-            if param_schema and param_schema["type"] == "array":
+            # Handle complex schemas (oneOf, anyOf, allOf) - look for 'type' at root or inside them
+            is_array = False
+            if param_schema:
+                if "type" in param_schema:
+                    is_array = param_schema["type"] == "array"
+                elif "oneOf" in param_schema:
+                    # Try to find an array type in oneOf options
+                    for schema in param_schema["oneOf"]:
+                        if schema.get("type") == "array":
+                            is_array = True
+                            break
+                elif "anyOf" in param_schema:
+                    # Try to find an array type in anyOf options
+                    for schema in param_schema["anyOf"]:
+                        if schema.get("type") == "array":
+                            is_array = True
+                            break
+                elif "allOf" in param_schema:
+                    # Try to find an array type in allOf requirements
+                    for schema in param_schema["allOf"]:
+                        if schema.get("type") == "array":
+                            is_array = True
+                            break
+
+            if is_array:
                 # resolve variable re-assignment, handle explode
                 values = self._resolve_param_duplicates(values, param_defn, _in)
                 # handle array styles
@@ -153,18 +179,93 @@ class OpenAPIURIParser(AbstractURIParser):
     def resolve_form(self, form_data):
         if self._body_schema is None or self._body_schema.get("type") != "object":
             return form_data
+
+        # Process form data
+
         for k in form_data:
             encoding = self._body_encoding.get(k, {"style": "form"})
+
+            # Look for the field definition in properties first
             defn = self.form_defns.get(k, {})
+
+            # If not found directly, look for it in complex schemas
+            if not defn and "allOf" in self._body_schema:
+                for schema in self._body_schema["allOf"]:
+                    if "properties" in schema and k in schema["properties"]:
+                        defn = schema["properties"][k]
+                        break
+
+            # Special handling for file uploads in OpenAPI 3.1 with allOf schema
+
+            if isinstance(form_data[k], UploadFile):
+                # Check if this is an OpenAPI 3.1 schema with allOf and file property
+                is_openapi31_allof = (
+                    hasattr(self._body_schema, "get")
+                    and self._body_schema.get("components", {}) is not None
+                    and "allOf" in self._body_schema
+                )
+
+                has_file_property = False
+                if is_openapi31_allof:
+                    for schema in self._body_schema.get("allOf", []):
+                        if "properties" in schema and k in schema.get("properties", {}):
+                            has_file_property = True
+                            break
+
+                # Skip processing for file uploads in OpenAPI 3.1 with allOf and file property
+                if is_openapi31_allof and has_file_property:
+                    continue
+
+            # Handle arrays in oneOf/anyOf/allOf schemas
+            is_array = False
+            if "type" in defn and defn["type"] == "array":
+                is_array = True
+            elif "oneOf" in defn:
+                for schema in defn["oneOf"]:
+                    if schema.get("type") == "array":
+                        is_array = True
+                        break
+            elif "anyOf" in defn:
+                for schema in defn["anyOf"]:
+                    if schema.get("type") == "array":
+                        is_array = True
+                        break
+            elif "allOf" in defn:
+                for schema in defn["allOf"]:
+                    if schema.get("type") == "array":
+                        is_array = True
+                        break
+
             # TODO support more form encoding styles
             form_data[k] = self._resolve_param_duplicates(
                 form_data[k], encoding, "form"
             )
+
             if "contentType" in encoding and all_json([encoding.get("contentType")]):
                 form_data[k] = json.loads(form_data[k])
-            elif defn and defn["type"] == "array":
+            elif is_array:
                 form_data[k] = self._split(form_data[k], encoding, "form")
-            form_data[k] = coerce_type(defn, form_data[k], "requestBody", k)
+
+            # If the value is still a list with just one string value, and it's not an array type,
+            # extract the single value to avoid the "not of type string" error
+            if (
+                isinstance(form_data[k], list)
+                and len(form_data[k]) == 1
+                and not is_array
+            ):
+                form_data[k] = form_data[k][0]
+
+            # Only try to coerce non-UploadFile values for OpenAPI 3.1
+            is_openapi31 = (
+                hasattr(self._body_schema, "get")
+                and self._body_schema.get("components", {}).get("pathItems", None)
+                is not None
+            )
+
+            if not isinstance(form_data[k], UploadFile) or not is_openapi31:
+                form_data[k] = coerce_type(defn, form_data[k], "requestBody", k)
+
+        # Return processed form data
         return form_data
 
     def _make_deep_object(self, k, v):
@@ -231,23 +332,53 @@ class OpenAPIURIParser(AbstractURIParser):
         However, if 'explode' is 'True' then the duplicate values
         are concatenated together and `a` would be "1,2,3,4,5,6".
         """
+        # Special case for UploadFile objects in the list - don't try to join them
+
+        # If values is a single UploadFile, return it directly
+        if isinstance(values, UploadFile):
+            return values
+
+        # If it's a list containing UploadFile objects, we need to return the list as is
+        if hasattr(values, "__iter__") and not isinstance(values, (str, bytes)):
+            if any(isinstance(v, UploadFile) for v in values):
+                return values
+
+        # Normal parameter handling
         default_style = OpenAPIURIParser.style_defaults[_in]
         style = param_defn.get("style", default_style)
         delimiter = QUERY_STRING_DELIMITERS.get(style, ",")
         is_form = style == "form"
         explode = param_defn.get("explode", is_form)
+
         if explode:
-            return delimiter.join(values)
+            # Make sure values is iterable before joining
+            if hasattr(values, "__iter__") and not isinstance(values, (str, bytes)):
+                # Filter out any UploadFile objects before joining
+                str_values = [v for v in values if not isinstance(v, UploadFile)]
+                if str_values:
+                    return delimiter.join(str_values)
+                return values
+            return values
 
         # default to last defined value
-        return values[-1]
+        if hasattr(values, "__getitem__") and not isinstance(values, (str, bytes)):
+            return values[-1]
+        return values
 
     @staticmethod
     def _split(value, param_defn, _in):
+        # Special case for UploadFile objects - don't try to split them
+        if isinstance(value, UploadFile):
+            return value
+
         default_style = OpenAPIURIParser.style_defaults[_in]
         style = param_defn.get("style", default_style)
         delimiter = QUERY_STRING_DELIMITERS.get(style, ",")
-        return value.split(delimiter)
+
+        # Make sure value has a split method
+        if hasattr(value, "split"):
+            return value.split(delimiter)
+        return value
 
 
 class Swagger2URIParser(AbstractURIParser):
