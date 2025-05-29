@@ -2,7 +2,7 @@ import json
 from struct import unpack
 
 import yaml
-from connexion.apps.flask_app import FlaskJSONEncoder
+from connexion.apps.flask_app import FlaskJSONProvider
 from werkzeug.test import Client, EnvironBuilder
 
 
@@ -63,11 +63,11 @@ def test_openapi_yaml_behind_proxy(reverse_proxied_app):
     spec = yaml.load(openapi_yaml.data.decode('utf-8'), Loader=yaml.BaseLoader)
 
     if reverse_proxied_app._spec_file == 'swagger.yaml':
-        assert b'url = "/behind/proxy/v1.0/swagger.json"' in swagger_ui.data
+        assert 'url: "/behind/proxy/v1.0/swagger.json"' in swagger_ui.text
         assert spec.get('basePath') == '/behind/proxy/v1.0', \
             "basePath should contains original URI"
     else:
-        assert b'url: "/behind/proxy/v1.0/openapi.json"' in swagger_ui.data
+        assert 'url: "/behind/proxy/v1.0/openapi.json"' in swagger_ui.text
         url = spec.get('servers', [{}])[0].get('url')
         assert url == '/behind/proxy/v1.0', \
             "basePath should contains original URI"
@@ -239,14 +239,14 @@ def test_nested_additional_properties(simple_openapi_app):
 
 def test_custom_encoder(simple_app):
 
-    class CustomEncoder(FlaskJSONEncoder):
+    class CustomProvider(FlaskJSONProvider):
         def default(self, o):
-            if o.__class__.__name__ == 'DummyClass':
+            if o.__class__.__name__ == "DummyClass":
                 return "cool result"
-            return FlaskJSONEncoder.default(self, o)
+            return super().default(o)
 
     flask_app = simple_app.app
-    flask_app.json_encoder = CustomEncoder
+    flask_app.json = CustomProvider(flask_app)
     app_client = flask_app.test_client()
 
     resp = app_client.get('/v1.0/custom-json-response')

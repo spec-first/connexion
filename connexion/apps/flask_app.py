@@ -5,12 +5,14 @@ This module defines a FlaskApp, a Connexion application to wrap a Flask applicat
 import datetime
 import logging
 import pathlib
+import json
 from decimal import Decimal
 from types import FunctionType  # NOQA
 
 import flask
 import werkzeug.exceptions
-from flask import json, signals
+from flask import signals
+from flask.json.provider import DefaultJSONProvider
 
 from ..apis.flask_api import FlaskApi
 from ..exceptions import ProblemException
@@ -33,7 +35,7 @@ class FlaskApp(AbstractApp):
 
     def create_app(self):
         app = flask.Flask(self.import_name, **self.server_args)
-        app.json_encoder = FlaskJSONEncoder
+        app.json = FlaskJSONProvider(app)
         app.url_map.converters['float'] = NumberConverter
         app.url_map.converters['int'] = IntegerConverter
         return app
@@ -150,16 +152,17 @@ class FlaskApp(AbstractApp):
             raise Exception(f'Server {self.server} not recognized')
 
 
-class FlaskJSONEncoder(json.JSONEncoder):
-    def default(self, o):
+class FlaskJSONProvider(DefaultJSONProvider):
+    @classmethod
+    def default(cls, o):
         if isinstance(o, datetime.datetime):
             if o.tzinfo:
                 # eg: '2015-09-25T23:14:42.588601+00:00'
-                return o.isoformat('T')
+                return o.isoformat("T")
             else:
                 # No timezone present - assume UTC.
                 # eg: '2015-09-25T23:14:42.588601Z'
-                return o.isoformat('T') + 'Z'
+                return o.isoformat("T") + "Z"
 
         if isinstance(o, datetime.date):
             return o.isoformat()
@@ -167,7 +170,12 @@ class FlaskJSONEncoder(json.JSONEncoder):
         if isinstance(o, Decimal):
             return float(o)
 
-        return json.JSONEncoder.default(self, o)
+        return super().default(o)
+
+
+class FlaskJSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        return FlaskJSONProvider.default(o)
 
 
 class NumberConverter(werkzeug.routing.BaseConverter):
