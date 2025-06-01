@@ -11,8 +11,11 @@ You can access them by importing them from ``connexion.context``:
     from connexion.context import context, operation, receive, request, scope
     from connexion import request  # alias for connexion.context.request
 
-Note that when trying to access these context variables outside of the request handling flow, or
-without running the ``ContextMiddleware``, the following ``RuntimeError`` will be thrown:
+The ``connexion.request`` is an alias for ``connexion.context.request``, providing a convenient way 
+to access the request object.
+
+When trying to access these context variables outside of the request handling flow, or without 
+running the ``ContextMiddleware``, the following ``RuntimeError`` will be thrown:
 
 .. code-block:: text
 
@@ -80,7 +83,8 @@ scope
 -----
 
 The ASGI scope as received by the ``ContextMiddleware``, thus containing any changes propagated by
-upstream middleware. The ASGI scope is presented as a ``dict``. Please refer to the `ASGI spec`_
+upstream middleware. The ASGI scope is presented as a ``dict``. It includes information about the
+connection, such as HTTP headers, query strings, and server information. Please refer to the `ASGI spec`_
 for more information on its contents.
 
 context.context
@@ -102,10 +106,14 @@ receive
 
 .. warning:: Advanced usage
 
-The receive channel as received by the ``ContextMiddleware``. Note that the receive channel might
-already be read by other parts of Connexion (eg. when accessing the body via the ``Request``, or
-when it is injected into your Python function), and that reading it yourself might make it
-unavailable for those parts of the application.
+The receive channel as received by the ``ContextMiddleware``. The receive channel is an asynchronous
+communication channel used in ASGI applications to receive incoming request data. It allows the
+application to read the request body in a non-blocking manner, which is essential for handling
+concurrent requests efficiently.
+
+Note that the receive channel might already be read by other parts of Connexion (e.g., when accessing
+the body via the ``Request``, or when it is injected into your Python function), and that reading it
+yourself might make it unavailable for those parts of the application.
 
 The receive channel can only be accessed from an ``async`` context and is therefore not relevant
 when using the ``FlaskApp``.

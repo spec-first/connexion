@@ -2,8 +2,9 @@ Lifespan
 ========
 
 You can register lifespan handlers to run code before the app starts, or after it shuts down.
-This ideal for setting up and tearing down database connections or machine learning models for
-instance.
+This is ideal for setting up and tearing down database connections or machine learning models, 
+for instance.
+
 
 .. tab-set::
 
@@ -25,7 +26,7 @@ instance.
                 yield {"client": client}
                 client.close()
 
-            def route():
+            def endpoint():
                 """Endpoint function called when receiving a request, you can access the state
                 on the request here."""
                 client = request.state.client
@@ -51,7 +52,7 @@ instance.
                 yield {"client": client}
                 client.close()
 
-            def route():
+            def endpoint():
                 """Endpoint function called when receiving a request, you can access the state
                 on the request here."""
                 client = request.state.client

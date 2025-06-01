@@ -117,7 +117,7 @@ built using either the `AsyncApp` or `FlaskApp`.
 - The `AsyncApp` is a lightweight application with native asynchronous support. Use it if you
   are starting a new project and have no specific reason to use one of the other options.
 
-  ```Python
+  ```python
       from connexion import AsyncApp
 
       app = AsyncApp(__name__)
@@ -155,7 +155,7 @@ The operation described in your specification is automatically linked to your Py
 **run.py**
 
 ```python
-   def post_greeting(name: str, greeting: str):  # Paramaeters are automatically unpacked
+   def post_greeting(name: str, greeting: str):  # Parameters are automatically unpacked
        return f"{greeting} {name}", 200          # Responses are automatically serialized
 
    app.add_api("openapi.yaml")
