@@ -30,7 +30,7 @@ def swagger_ui_app(app_class):
         app_class=app_class,
         spec_file=OPENAPI3_SPEC,
         validate_responses=True,
-        swagger_ui_options=SwaggerUIOptions(spec_path="/spec.json"),
+        swagger_ui_options=SwaggerUIOptions(spec_path="/spec.json", swagger_ui_path="/"),
     )
 
 
