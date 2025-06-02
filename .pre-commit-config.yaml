@@ -3,7 +3,7 @@ ci:
   autoupdate_schedule: monthly
 repos:
   - repo: https://github.com/pycqa/flake8
-    rev: 7.1.1
+    rev: 7.2.0
     hooks:
       - id: flake8
         files: "^connexion/"
@@ -11,7 +11,7 @@ repos:
           - flake8-rst-docstrings==0.2.3
 
   - repo: https://github.com/PyCQA/isort
-    rev: 5.12.0
+    rev: 6.0.1
     hooks:
       - id: isort
         name: isort
@@ -27,7 +27,7 @@ repos:
         args: ["--project", "conftest", "--thirdparty", "connexion", "--check-only", "--diff"]
 
   - repo: https://github.com/psf/black
-    rev: 22.3.0
+    rev: 25.1.0
     hooks:
       - id: black
         name: black
@@ -43,7 +43,7 @@ repos:
         args: ["tests"]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v0.981
+    rev: v1.16.0
     hooks:
       - id: mypy
         files: "^connexion/"
