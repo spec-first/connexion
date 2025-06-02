@@ -1,6 +1,7 @@
 """
 Validation Middleware.
 """
+
 import logging
 import typing as t
 
