@@ -1,6 +1,7 @@
 """
 Basic example of a resource server
 """
+
 import time
 from pathlib import Path
 
