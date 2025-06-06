@@ -5,23 +5,25 @@ This module defines a FlaskApp, a Connexion application to wrap a Flask applicat
 import datetime
 import logging
 import pathlib
+import json
 from decimal import Decimal
 from types import FunctionType  # NOQA
 
 import flask
 import werkzeug.exceptions
-from flask import json, signals
+from flask import signals
+from flask.json.provider import DefaultJSONProvider
 
 from ..apis.flask_api import FlaskApi
 from ..exceptions import ProblemException
 from ..problem import problem
 from .abstract import AbstractApp
 
-logger = logging.getLogger('connexion.app')
+logger = logging.getLogger("connexion.app")
 
 
 class FlaskApp(AbstractApp):
-    def __init__(self, import_name, server='flask', extra_files=None, **kwargs):
+    def __init__(self, import_name, server="flask", extra_files=None, **kwargs):
         """
         :param extra_files: additional files to be watched by the reloader, defaults to the swagger specs of added apis
         :type extra_files: list[str | pathlib.Path], optional
@@ -33,9 +35,9 @@ class FlaskApp(AbstractApp):
 
     def create_app(self):
         app = flask.Flask(self.import_name, **self.server_args)
-        app.json_encoder = FlaskJSONEncoder
-        app.url_map.converters['float'] = NumberConverter
-        app.url_map.converters['int'] = IntegerConverter
+        app.json = FlaskJSONProvider(app)
+        app.url_map.converters["float"] = NumberConverter
+        app.url_map.converters["int"] = IntegerConverter
         return app
 
     def get_root_path(self):
@@ -53,17 +55,24 @@ class FlaskApp(AbstractApp):
         """
         if isinstance(exception, ProblemException):
             response = problem(
-                status=exception.status, title=exception.title, detail=exception.detail,
-                type=exception.type, instance=exception.instance, headers=exception.headers,
-                ext=exception.ext)
+                status=exception.status,
+                title=exception.title,
+                detail=exception.detail,
+                type=exception.type,
+                instance=exception.instance,
+                headers=exception.headers,
+                ext=exception.ext,
+            )
         else:
             if not isinstance(exception, werkzeug.exceptions.HTTPException):
                 exception = werkzeug.exceptions.InternalServerError()
 
-            response = problem(title=exception.name,
-                               detail=exception.description,
-                               status=exception.code,
-                               headers=exception.get_headers())
+            response = problem(
+                title=exception.name,
+                detail=exception.description,
+                status=exception.code,
+                headers=exception.get_headers(),
+            )
 
         if response.status_code >= 500:
             signals.got_request_exception.send(self.app, exception=exception)
@@ -81,13 +90,9 @@ class FlaskApp(AbstractApp):
         # type: (int, FunctionType) -> None
         self.app.register_error_handler(error_code, function)
 
-    def run(self,
-            port=None,
-            server=None,
-            debug=None,
-            host=None,
-            extra_files=None,
-            **options):  # pragma: no cover
+    def run(
+        self, port=None, server=None, debug=None, host=None, extra_files=None, **options
+    ):  # pragma: no cover
         """
         Runs the application on a local development server.
 
@@ -111,7 +116,7 @@ class FlaskApp(AbstractApp):
         elif self.port is None:
             self.port = 5000
 
-        self.host = host or self.host or '0.0.0.0'
+        self.host = host or self.host or "0.0.0.0"
 
         if server is not None:
             self.server = server
@@ -122,44 +127,52 @@ class FlaskApp(AbstractApp):
         if extra_files is not None:
             self.extra_files.extend(extra_files)
 
-        logger.debug('Starting %s HTTP server..', self.server, extra=vars(self))
-        if self.server == 'flask':
-            self.app.run(self.host, port=self.port, debug=self.debug,
-                         extra_files=self.extra_files, **options)
-        elif self.server == 'tornado':
+        logger.debug("Starting %s HTTP server..", self.server, extra=vars(self))
+        if self.server == "flask":
+            self.app.run(
+                self.host,
+                port=self.port,
+                debug=self.debug,
+                extra_files=self.extra_files,
+                **options,
+            )
+        elif self.server == "tornado":
             try:
                 import tornado.httpserver
                 import tornado.ioloop
                 import tornado.wsgi
             except ImportError:
-                raise Exception('tornado library not installed')
+                raise Exception("tornado library not installed")
             wsgi_container = tornado.wsgi.WSGIContainer(self.app)
             http_server = tornado.httpserver.HTTPServer(wsgi_container, **options)
             http_server.listen(self.port, address=self.host)
-            logger.info('Listening on %s:%s..', self.host, self.port)
+            logger.info("Listening on %s:%s..", self.host, self.port)
             tornado.ioloop.IOLoop.instance().start()
-        elif self.server == 'gevent':
+        elif self.server == "gevent":
             try:
                 import gevent.pywsgi
             except ImportError:
-                raise Exception('gevent library not installed')
-            http_server = gevent.pywsgi.WSGIServer((self.host, self.port), self.app, **options)
-            logger.info('Listening on %s:%s..', self.host, self.port)
+                raise Exception("gevent library not installed")
+            http_server = gevent.pywsgi.WSGIServer(
+                (self.host, self.port), self.app, **options
+            )
+            logger.info("Listening on %s:%s..", self.host, self.port)
             http_server.serve_forever()
         else:
-            raise Exception(f'Server {self.server} not recognized')
+            raise Exception(f"Server {self.server} not recognized")
 
 
-class FlaskJSONEncoder(json.JSONEncoder):
-    def default(self, o):
+class FlaskJSONProvider(DefaultJSONProvider):
+    @classmethod
+    def default(cls, o):
         if isinstance(o, datetime.datetime):
             if o.tzinfo:
                 # eg: '2015-09-25T23:14:42.588601+00:00'
-                return o.isoformat('T')
+                return o.isoformat("T")
             else:
                 # No timezone present - assume UTC.
                 # eg: '2015-09-25T23:14:42.588601Z'
-                return o.isoformat('T') + 'Z'
+                return o.isoformat("T") + "Z"
 
         if isinstance(o, datetime.date):
             return o.isoformat()
@@ -167,11 +180,17 @@ class FlaskJSONEncoder(json.JSONEncoder):
         if isinstance(o, Decimal):
             return float(o)
 
-        return json.JSONEncoder.default(self, o)
+        return super().default(o)
+
+
+class FlaskJSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        return FlaskJSONProvider.default(o)
 
 
 class NumberConverter(werkzeug.routing.BaseConverter):
-    """ Flask converter for OpenAPI number type """
+    """Flask converter for OpenAPI number type"""
+
     regex = r"[+-]?[0-9]*(?:\.[0-9]*)?"
 
     def to_python(self, value):
@@ -179,7 +198,8 @@ class NumberConverter(werkzeug.routing.BaseConverter):
 
 
 class IntegerConverter(werkzeug.routing.BaseConverter):
-    """ Flask converter for OpenAPI integer type """
+    """Flask converter for OpenAPI integer type"""
+
     regex = r"[+-]?[0-9]+"
 
     def to_python(self, value):

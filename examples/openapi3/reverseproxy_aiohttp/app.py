@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-'''
+"""
 example of aiohttp connexion running behind a path-altering reverse-proxy
-'''
+"""
 
 import json
 import logging
@@ -16,7 +16,6 @@ X_FORWARDED_PATH = "X-Forwarded-Path"
 
 
 class XPathForwarded(XForwardedBase):
-
     def __init__(self, num=1):
         self._num = num
 
@@ -32,28 +31,28 @@ class XPathForwarded(XForwardedBase):
             "this demo is not secure by default!! "
             "You'll want to make sure these headers are coming from your proxy, "
             "and not directly from users on the web!"
-            )
+        )
         try:
             overrides = {}
             headers = request.headers
 
             forwarded_for = self.get_forwarded_for(headers)
             if forwarded_for:
-                overrides['remote'] = str(forwarded_for[-self._num])
+                overrides["remote"] = str(forwarded_for[-self._num])
 
             proto = self.get_forwarded_proto(headers)
             if proto:
-                overrides['scheme'] = proto[-self._num]
+                overrides["scheme"] = proto[-self._num]
 
             host = self.get_forwarded_host(headers)
             if host is not None:
-                overrides['host'] = host
+                overrides["host"] = host
 
             prefix = self.get_forwarded_path(headers)
             if prefix is not None:
-                prefix = '/' + prefix.strip('/') + '/'
-                request_path = URL(request.path.lstrip('/'))
-                overrides['rel_url'] = URL(prefix).join(request_path)
+                prefix = "/" + prefix.strip("/") + "/"
+                request_path = URL(request.path.lstrip("/"))
+                overrides["rel_url"] = URL(prefix).join(request_path)
 
             request = request.clone(**overrides)
 
@@ -68,14 +67,14 @@ def hello(request):
         "host": request.host,
         "scheme": request.scheme,
         "path": request.path,
-        "_href": str(request.url)
+        "_href": str(request.url),
     }
     return web.Response(text=json.dumps(ret), status=200)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = connexion.AioHttpApp(__name__)
-    app.add_api('openapi.yaml', pass_context_arg_name='request')
+    app.add_api("openapi.yaml", pass_context_arg_name="request")
     aio = app.app
     reverse_proxied = XPathForwarded()
     aio.middlewares.append(reverse_proxied.middleware)

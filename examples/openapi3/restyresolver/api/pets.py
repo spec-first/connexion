@@ -10,11 +10,11 @@ def post(body):
     tag = body.get("tag")
     count = len(pets)
     pet = {}
-    pet['id'] = count + 1
+    pet["id"] = count + 1
     pet["tag"] = tag
     pet["name"] = name
-    pet['last_updated'] = datetime.datetime.now()
-    pets[pet['id']] = pet
+    pet["last_updated"] = datetime.datetime.now()
+    pets[pet["id"]] = pet
     return pet, 201
 
 
@@ -26,7 +26,7 @@ def put(body):
     pet = pets.get(id_, {"id": id_})
     pet["name"] = name
     pet["tag"] = tag
-    pet['last_updated'] = datetime.datetime.now()
+    pet["last_updated"] = datetime.datetime.now()
     pets[id_] = pet
     return pets[id_]
 

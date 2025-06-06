@@ -15,14 +15,14 @@ from ..decorators.response import ResponseValidator
 from ..decorators.validation import ParameterValidator, RequestBodyValidator
 from ..utils import all_json, is_nullable
 
-logger = logging.getLogger('connexion.operations.abstract')
+logger = logging.getLogger("connexion.operations.abstract")
 
-DEFAULT_MIMETYPE = 'application/json'
+DEFAULT_MIMETYPE = "application/json"
 
 VALIDATOR_MAP = {
-    'parameter': ParameterValidator,
-    'body': RequestBodyValidator,
-    'response': ResponseValidator,
+    "parameter": ParameterValidator,
+    "body": RequestBodyValidator,
+    "response": ResponseValidator,
 }
 
 
@@ -44,12 +44,24 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
             if important:
                 serious_business(stuff)
     """
-    def __init__(self, api, method, path, operation, resolver,
-                 app_security=None, security_schemes=None,
-                 validate_responses=False, strict_validation=False,
-                 randomize_endpoint=None, validator_map=None,
-                 pythonic_params=False, uri_parser_class=None,
-                 pass_context_arg_name=None):
+
+    def __init__(
+        self,
+        api,
+        method,
+        path,
+        operation,
+        resolver,
+        app_security=None,
+        security_schemes=None,
+        validate_responses=False,
+        strict_validation=False,
+        randomize_endpoint=None,
+        validator_map=None,
+        pythonic_params=False,
+        uri_parser_class=None,
+        pass_context_arg_name=None,
+    ):
         """
         :param api: api that this operation is attached to
         :type api: apis.AbstractAPI
@@ -187,25 +199,37 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
         Convert input parameters into the correct type
         """
 
-    def _query_args_helper(self, query_defns, query_arguments,
-                           function_arguments, has_kwargs, sanitize):
+    def _query_args_helper(
+        self, query_defns, query_arguments, function_arguments, has_kwargs, sanitize
+    ):
         res = {}
         for key, value in query_arguments.items():
             sanitized_key = sanitize(key)
             if not has_kwargs and sanitized_key not in function_arguments:
-                logger.debug("Query Parameter '%s' (sanitized: '%s') not in function arguments",
-                             key, sanitized_key)
+                logger.debug(
+                    "Query Parameter '%s' (sanitized: '%s') not in function arguments",
+                    key,
+                    sanitized_key,
+                )
             else:
-                logger.debug("Query Parameter '%s' (sanitized: '%s') in function arguments",
-                             key, sanitized_key)
+                logger.debug(
+                    "Query Parameter '%s' (sanitized: '%s') in function arguments",
+                    key,
+                    sanitized_key,
+                )
                 try:
                     query_defn = query_defns[key]
                 except KeyError:  # pragma: no cover
-                    logger.error("Function argument '%s' (non-sanitized: %s) not defined in specification",
-                                 sanitized_key, key)
+                    logger.error(
+                        "Function argument '%s' (non-sanitized: %s) not defined in specification",
+                        sanitized_key,
+                        key,
+                    )
                 else:
-                    logger.debug('%s is a %s', key, query_defn)
-                    res.update({sanitized_key: self._get_val_from_param(value, query_defn)})
+                    logger.debug("%s is a %s", key, query_defn)
+                    res.update(
+                        {sanitized_key: self._get_val_from_param(value, query_defn)}
+                    )
         return res
 
     @abc.abstractmethod
@@ -270,31 +294,30 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
         :rtype: dict
         """
 
-    def get_arguments(self, path_params, query_params, body, files, arguments,
-                      has_kwargs, sanitize):
+    def get_arguments(
+        self, path_params, query_params, body, files, arguments, has_kwargs, sanitize
+    ):
         """
         get arguments for handler function
         """
         ret = {}
         ret.update(self._get_path_arguments(path_params, sanitize))
-        ret.update(self._get_query_arguments(query_params, arguments,
-                                             has_kwargs, sanitize))
+        ret.update(
+            self._get_query_arguments(query_params, arguments, has_kwargs, sanitize)
+        )
 
         if self.method.upper() in ["PATCH", "POST", "PUT"]:
-            ret.update(self._get_body_argument(body, arguments,
-                                               has_kwargs, sanitize))
+            ret.update(self._get_body_argument(body, arguments, has_kwargs, sanitize))
             ret.update(self._get_file_arguments(files, arguments, has_kwargs))
         return ret
 
-    def response_definition(self, status_code=None,
-                            content_type=None):
+    def response_definition(self, status_code=None, content_type=None):
         """
         response definition for this endpoint
         """
         content_type = content_type or self.get_mimetype()
         response_definition = self.responses.get(
-            str(status_code),
-            self.responses.get("default", {})
+            str(status_code), self.responses.get("default", {})
         )
         return response_definition
 
@@ -357,18 +380,20 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
         :rtype: types.FunctionType
         """
         function = parameter_to_arg(
-            self, self._resolution.function, self.pythonic_params,
-            self._pass_context_arg_name
+            self,
+            self._resolution.function,
+            self.pythonic_params,
+            self._pass_context_arg_name,
         )
 
         if self.validate_responses:
-            logger.debug('... Response validation enabled.')
+            logger.debug("... Response validation enabled.")
             response_decorator = self.__response_validation_decorator
-            logger.debug('... Adding response decorator (%r)', response_decorator)
+            logger.debug("... Adding response decorator (%r)", response_decorator)
             function = response_decorator(function)
 
         produces_decorator = self.__content_type_decorator
-        logger.debug('... Adding produces decorator (%r)', produces_decorator)
+        logger.debug("... Adding produces decorator (%r)", produces_decorator)
         function = produces_decorator(function)
 
         for validation_decorator in self.__validation_decorators:
@@ -379,7 +404,7 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
 
         # NOTE: the security decorator should be applied last to check auth before anything else :-)
         security_decorator = self.security_decorator
-        logger.debug('... Adding security decorator (%r)', security_decorator)
+        logger.debug("... Adding security decorator (%r)", security_decorator)
         function = security_decorator(function)
 
         function = self._request_response_decorator(function)
@@ -407,16 +432,16 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
         :rtype: types.FunctionType
         """
 
-        logger.debug('... Produces: %s', self.produces, extra=vars(self))
+        logger.debug("... Produces: %s", self.produces, extra=vars(self))
 
         mimetype = self.get_mimetype()
         if all_json(self.produces):  # endpoint will return json
-            logger.debug('... Produces json', extra=vars(self))
+            logger.debug("... Produces json", extra=vars(self))
             # TODO: Refactor this.
             return lambda f: f
 
         elif len(self.produces) == 1:
-            logger.debug('... Produces %s', mimetype, extra=vars(self))
+            logger.debug("... Produces %s", mimetype, extra=vars(self))
             decorator = Produces(mimetype)
             return decorator
 
@@ -428,16 +453,20 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
         """
         :rtype: types.FunctionType
         """
-        ParameterValidator = self.validator_map['parameter']
-        RequestBodyValidator = self.validator_map['body']
+        ParameterValidator = self.validator_map["parameter"]
+        RequestBodyValidator = self.validator_map["body"]
         if self.parameters:
-            yield ParameterValidator(self.parameters,
-                                     self.api,
-                                     strict_validation=self.strict_validation)
+            yield ParameterValidator(
+                self.parameters, self.api, strict_validation=self.strict_validation
+            )
         if self.body_schema:
-            yield RequestBodyValidator(self.body_schema, self.consumes, self.api,
-                                       is_nullable(self.body_definition),
-                                       strict_validation=self.strict_validation)
+            yield RequestBodyValidator(
+                self.body_schema,
+                self.consumes,
+                self.api,
+                is_nullable(self.body_definition),
+                strict_validation=self.strict_validation,
+            )
 
     @property
     def __response_validation_decorator(self):
@@ -445,7 +474,7 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
         Get a decorator for validating the generated Response.
         :rtype: types.FunctionType
         """
-        ResponseValidator = self.validator_map['response']
+        ResponseValidator = self.validator_map["response"]
         return ResponseValidator(self, self.get_mimetype())
 
     def json_loads(self, data):

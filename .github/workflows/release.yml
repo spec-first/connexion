@@ -19,13 +19,12 @@ jobs:
         python-version: 3.9
 
     - name: Update version
-      run: sed -i "s/__version__ = .*/__version__ = '${{github.ref_name}}'/" */__init__.py
+      run: sed -i "s/^version = .*/version = '${{github.ref_name}}'/" pyproject.toml
 
     - name: Build a binary wheel and a source tarball
       run: |
-        pip install --upgrade pip 
-        pip install wheel
-        python setup.py sdist bdist_wheel
+        pip install poetry
+        poetry build
 
     - name: Publish distribution 📦 to Test PyPI
       if: github.event_name == 'push'

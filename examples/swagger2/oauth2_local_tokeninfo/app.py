@@ -1,29 +1,26 @@
 #!/usr/bin/env python3
-'''
+"""
 Basic example of a resource server
-'''
+"""
 
 import connexion
 
 # our hardcoded mock "Bearer" access tokens
-TOKENS = {
-    '123': 'jdoe',
-    '456': 'rms'
-}
+TOKENS = {"123": "jdoe", "456": "rms"}
 
 
 def get_secret(user) -> str:
-    return f'You are: {user}'
+    return f"You are: {user}"
 
 
 def token_info(access_token) -> dict:
     uid = TOKENS.get(access_token)
     if not uid:
         return None
-    return {'uid': uid, 'scope': ['uid']}
+    return {"uid": uid, "scope": ["uid"]}
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = connexion.FlaskApp(__name__)
-    app.add_api('app.yaml')
+    app.add_api("app.yaml")
     app.run(port=8080)

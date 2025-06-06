@@ -28,8 +28,11 @@ def inspect_function_arguments(function):  # pragma: no cover
     :rtype: tuple[list[str], bool]
     """
     parameters = inspect.signature(function).parameters
-    bound_arguments = [name for name, p in parameters.items()
-                       if p.kind not in (p.VAR_POSITIONAL, p.VAR_KEYWORD)]
+    bound_arguments = [
+        name
+        for name, p in parameters.items()
+        if p.kind not in (p.VAR_POSITIONAL, p.VAR_KEYWORD)
+    ]
     has_kwargs = any(p.kind == p.VAR_KEYWORD for p in parameters.values())
     return list(bound_arguments), has_kwargs
 
@@ -49,9 +52,9 @@ def snake_and_shadow(name):
 
 
 def sanitized(name):
-    return name and re.sub('^[^a-zA-Z_]+', '',
-                           re.sub('[^0-9a-zA-Z_]', '',
-                                  re.sub(r'\[(?!])', '_', name)))
+    return name and re.sub(
+        "^[^a-zA-Z_]+", "", re.sub("[^0-9a-zA-Z_]", "", re.sub(r"\[(?!])", "_", name))
+    )
 
 
 def pythonic(name):
@@ -59,8 +62,9 @@ def pythonic(name):
     return sanitized(name)
 
 
-def parameter_to_arg(operation, function, pythonic_params=False,
-                     pass_context_arg_name=None):
+def parameter_to_arg(
+    operation, function, pythonic_params=False, pass_context_arg_name=None
+):
     """
     Pass query and body parameters as keyword arguments to handler function.
 
@@ -82,7 +86,7 @@ def parameter_to_arg(operation, function, pythonic_params=False,
     @functools.wraps(function)
     def wrapper(request):
         # type: (ConnexionRequest) -> Any
-        logger.debug('Function Arguments: %s', arguments)
+        logger.debug("Function Arguments: %s", arguments)
         kwargs = {}
 
         if all_json(consumes):
@@ -98,8 +102,15 @@ def parameter_to_arg(operation, function, pythonic_params=False,
             query = dict(request.query.items())
 
         kwargs.update(
-            operation.get_arguments(request.path_params, query, request_body,
-                                    request.files, arguments, has_kwargs, sanitize)
+            operation.get_arguments(
+                request.path_params,
+                query,
+                request_body,
+                request.files,
+                arguments,
+                has_kwargs,
+                sanitize,
+            )
         )
 
         # optionally convert parameter variable names to un-shadowed, snake_case form
