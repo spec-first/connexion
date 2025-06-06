@@ -1,0 +1,19 @@
+ci:
+  autoupdate_branch: "main"
+  autoupdate_schedule: monthly
+repos:
+  - repo: https://github.com/psf/black
+    rev: 22.3.0
+    hooks:
+      - id: black
+        name: black
+        files: "^connexion/"
+        args: ["connexion"]
+      - id: black
+        name: black examples
+        files: "^examples/"
+        args: ["examples"]
+      - id: black
+        name: black tests
+        files: "^tests/"
+        args: ["tests"]

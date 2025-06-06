@@ -9,8 +9,8 @@ from .security_handler_factory import AbstractSecurityHandlerFactory
 # use connection pool for OAuth tokeninfo
 adapter = requests.adapters.HTTPAdapter(pool_connections=100, pool_maxsize=100)
 session = requests.Session()
-session.mount('http://', adapter)
-session.mount('https://', adapter)
+session.mount("http://", adapter)
+session.mount("https://", adapter)
 
 
 class FlaskSecurityHandlerFactory(AbstractSecurityHandlerFactory):
@@ -25,6 +25,7 @@ class FlaskSecurityHandlerFactory(AbstractSecurityHandlerFactory):
         :type token_info_url: str
         :rtype: types.FunctionType
         """
+
         def wrapper(token):
             """
             Retrieve oauth token_info remotely using HTTP
@@ -32,9 +33,10 @@ class FlaskSecurityHandlerFactory(AbstractSecurityHandlerFactory):
             :type token: str
             :rtype: dict
             """
-            headers = {'Authorization': f'Bearer {token}'}
+            headers = {"Authorization": f"Bearer {token}"}
             token_request = session.get(token_info_url, headers=headers, timeout=5)
             if not token_request.ok:
                 return None
             return token_request.json()
+
         return wrapper

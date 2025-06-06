@@ -15,13 +15,14 @@ from .apis import AbstractAPI  # NOQA
 from .apps import AbstractApp  # NOQA
 from .decorators.produces import NoContent  # NOQA
 from .exceptions import ProblemException  # NOQA
+
 # add operation for backwards compatibility
 from .operations import compat
 from .problem import problem  # NOQA
 from .resolver import Resolution, Resolver, RestyResolver  # NOQA
 from .utils import not_installed_error  # NOQA
 
-full_name = f'{__package__}.operation'
+full_name = f"{__package__}.operation"
 sys.modules[full_name] = sys.modules[compat.__name__]
 
 
@@ -47,4 +48,4 @@ except ImportError as e:  # pragma: no cover
     AioHttpApp = _aiohttp_not_installed_error
 
 # This version is replaced during release process.
-__version__ = '2020.0.dev1'
+__version__ = "2020.0.dev1"

@@ -21,14 +21,13 @@ from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.security import FlaskSecurityHandlerFactory
 from connexion.utils import is_json_mimetype, yamldumper
 
-logger = logging.getLogger('connexion.apis.flask_api')
+logger = logging.getLogger("connexion.apis.flask_api")
 
 
 class FlaskApi(AbstractAPI):
-
     @staticmethod
     def make_security_handler_factory(pass_context_arg_name):
-        """ Create default SecurityHandlerFactory to create all security check handlers """
+        """Create default SecurityHandlerFactory to create all security check handlers"""
         return FlaskSecurityHandlerFactory(pass_context_arg_name)
 
     def _set_base_path(self, base_path):
@@ -36,23 +35,28 @@ class FlaskApi(AbstractAPI):
         self._set_blueprint()
 
     def _set_blueprint(self):
-        logger.debug('Creating API blueprint: %s', self.base_path)
+        logger.debug("Creating API blueprint: %s", self.base_path)
         endpoint = flask_utils.flaskify_endpoint(self.base_path) or "/"
-        self.blueprint = flask.Blueprint(endpoint, __name__, url_prefix=self.base_path,
-                                         template_folder=str(self.options.openapi_console_ui_from_dir))
+        self.blueprint = flask.Blueprint(
+            endpoint,
+            __name__,
+            url_prefix=self.base_path,
+            template_folder=str(self.options.openapi_console_ui_from_dir),
+        )
 
     def add_openapi_json(self):
         """
         Adds spec json to {base_path}/swagger.json
         or {base_path}/openapi.json (for oas3)
         """
-        logger.debug('Adding spec json: %s/%s', self.base_path,
-                     self.options.openapi_spec_path)
+        logger.debug(
+            "Adding spec json: %s/%s", self.base_path, self.options.openapi_spec_path
+        )
         endpoint_name = f"{self.blueprint.name}_openapi_json"
 
-        self.blueprint.add_url_rule(self.options.openapi_spec_path,
-                                    endpoint_name,
-                                    self._handlers.get_json_spec)
+        self.blueprint.add_url_rule(
+            self.options.openapi_spec_path, endpoint_name, self._handlers.get_json_spec
+        )
 
     def add_openapi_yaml(self):
         """
@@ -62,77 +66,90 @@ class FlaskApi(AbstractAPI):
         if not self.options.openapi_spec_path.endswith("json"):
             return
 
-        openapi_spec_path_yaml = \
-            self.options.openapi_spec_path[:-len("json")] + "yaml"
-        logger.debug('Adding spec yaml: %s/%s', self.base_path,
-                     openapi_spec_path_yaml)
+        openapi_spec_path_yaml = self.options.openapi_spec_path[: -len("json")] + "yaml"
+        logger.debug("Adding spec yaml: %s/%s", self.base_path, openapi_spec_path_yaml)
         endpoint_name = f"{self.blueprint.name}_openapi_yaml"
         self.blueprint.add_url_rule(
-            openapi_spec_path_yaml,
-            endpoint_name,
-            self._handlers.get_yaml_spec
+            openapi_spec_path_yaml, endpoint_name, self._handlers.get_yaml_spec
         )
 
     def add_swagger_ui(self):
         """
         Adds swagger ui to {base_path}/ui/
         """
-        console_ui_path = self.options.openapi_console_ui_path.strip('/')
-        logger.debug('Adding swagger-ui: %s/%s/',
-                     self.base_path,
-                     console_ui_path)
+        console_ui_path = self.options.openapi_console_ui_path.strip("/")
+        logger.debug("Adding swagger-ui: %s/%s/", self.base_path, console_ui_path)
 
         if self.options.openapi_console_ui_config is not None:
             config_endpoint_name = f"{self.blueprint.name}_swagger_ui_config"
-            config_file_url = '/{console_ui_path}/swagger-ui-config.json'.format(
-                console_ui_path=console_ui_path)
+            config_file_url = "/{console_ui_path}/swagger-ui-config.json".format(
+                console_ui_path=console_ui_path
+            )
 
-            self.blueprint.add_url_rule(config_file_url,
-                                        config_endpoint_name,
-                                        lambda: flask.jsonify(self.options.openapi_console_ui_config))
+            self.blueprint.add_url_rule(
+                config_file_url,
+                config_endpoint_name,
+                lambda: flask.jsonify(self.options.openapi_console_ui_config),
+            )
 
         static_endpoint_name = f"{self.blueprint.name}_swagger_ui_static"
-        static_files_url = '/{console_ui_path}/<path:filename>'.format(
-            console_ui_path=console_ui_path)
+        static_files_url = "/{console_ui_path}/<path:filename>".format(
+            console_ui_path=console_ui_path
+        )
 
-        self.blueprint.add_url_rule(static_files_url,
-                                    static_endpoint_name,
-                                    self._handlers.console_ui_static_files)
+        self.blueprint.add_url_rule(
+            static_files_url,
+            static_endpoint_name,
+            self._handlers.console_ui_static_files,
+        )
 
         index_endpoint_name = f"{self.blueprint.name}_swagger_ui_index"
-        console_ui_url = '/{console_ui_path}/'.format(
-            console_ui_path=console_ui_path)
+        console_ui_url = "/{console_ui_path}/".format(console_ui_path=console_ui_path)
 
-        self.blueprint.add_url_rule(console_ui_url,
-                                    index_endpoint_name,
-                                    self._handlers.console_ui_home)
+        self.blueprint.add_url_rule(
+            console_ui_url, index_endpoint_name, self._handlers.console_ui_home
+        )
 
     def add_auth_on_not_found(self, security, security_definitions):
         """
         Adds a 404 error handler to authenticate and only expose the 404 status if the security validation pass.
         """
-        logger.debug('Adding path not found authentication')
-        not_found_error = AuthErrorHandler(self, werkzeug.exceptions.NotFound(), security=security,
-                                           security_definitions=security_definitions)
+        logger.debug("Adding path not found authentication")
+        not_found_error = AuthErrorHandler(
+            self,
+            werkzeug.exceptions.NotFound(),
+            security=security,
+            security_definitions=security_definitions,
+        )
         endpoint_name = f"{self.blueprint.name}_not_found"
-        self.blueprint.add_url_rule('/<path:invalid_path>', endpoint_name, not_found_error.function)
+        self.blueprint.add_url_rule(
+            "/<path:invalid_path>", endpoint_name, not_found_error.function
+        )
 
     def _add_operation_internal(self, method, path, operation):
         operation_id = operation.operation_id
-        logger.debug('... Adding %s -> %s', method.upper(), operation_id,
-                     extra=vars(operation))
+        logger.debug(
+            "... Adding %s -> %s", method.upper(), operation_id, extra=vars(operation)
+        )
 
-        flask_path = flask_utils.flaskify_path(path, operation.get_path_parameter_types())
-        endpoint_name = flask_utils.flaskify_endpoint(operation.operation_id,
-                                                      operation.randomize_endpoint)
+        flask_path = flask_utils.flaskify_path(
+            path, operation.get_path_parameter_types()
+        )
+        endpoint_name = flask_utils.flaskify_endpoint(
+            operation.operation_id, operation.randomize_endpoint
+        )
         function = operation.function
-        self.blueprint.add_url_rule(flask_path, endpoint_name, function, methods=[method])
+        self.blueprint.add_url_rule(
+            flask_path, endpoint_name, function, methods=[method]
+        )
 
     @property
     def _handlers(self):
         # type: () -> InternalHandlers
-        if not hasattr(self, '_internal_handlers'):
-            self._internal_handlers = InternalHandlers(self.base_path, self.options, self.specification)
+        if not hasattr(self, "_internal_handlers"):
+            self._internal_handlers = InternalHandlers(
+                self.base_path, self.options, self.specification
+            )
         return self._internal_handlers
 
     @classmethod
@@ -148,28 +165,30 @@ class FlaskApi(AbstractAPI):
         :type response: flask.Response | (flask.Response,) | (flask.Response, int) | (flask.Response, dict) | (flask.Response, int, dict)
         :rtype: ConnexionResponse
         """
-        return cls._get_response(response, mimetype=mimetype, extra_context={"url": flask.request.url})
+        return cls._get_response(
+            response, mimetype=mimetype, extra_context={"url": flask.request.url}
+        )
 
     @classmethod
     def _is_framework_response(cls, response):
-        """ Return True if provided response is a framework type """
+        """Return True if provided response is a framework type"""
         return flask_utils.is_flask_response(response)
 
     @classmethod
     def _framework_to_connexion_response(cls, response, mimetype):
-        """ Cast framework response class to ConnexionResponse used for schema validation """
+        """Cast framework response class to ConnexionResponse used for schema validation"""
         return ConnexionResponse(
             status_code=response.status_code,
             mimetype=response.mimetype,
             content_type=response.content_type,
             headers=response.headers,
             body=response.get_data() if not response.direct_passthrough else None,
-            is_streamed=response.is_streamed
+            is_streamed=response.is_streamed,
         )
 
     @classmethod
     def _connexion_to_framework_response(cls, response, mimetype, extra_context=None):
-        """ Cast ConnexionResponse to framework response class """
+        """Cast ConnexionResponse to framework response class"""
         flask_response = cls._build_response(
             mimetype=response.mimetype or mimetype,
             content_type=response.content_type,
@@ -177,23 +196,36 @@ class FlaskApi(AbstractAPI):
             status_code=response.status_code,
             data=response.body,
             extra_context=extra_context,
-            )
+        )
 
         return flask_response
 
     @classmethod
-    def _build_response(cls, mimetype, content_type=None, headers=None, status_code=None, data=None, extra_context=None):
+    def _build_response(
+        cls,
+        mimetype,
+        content_type=None,
+        headers=None,
+        status_code=None,
+        data=None,
+        extra_context=None,
+    ):
         if cls._is_framework_response(data):
             return flask.current_app.make_response((data, status_code, headers))
 
-        data, status_code, serialized_mimetype = cls._prepare_body_and_status_code(data=data, mimetype=mimetype, status_code=status_code, extra_context=extra_context)
+        data, status_code, serialized_mimetype = cls._prepare_body_and_status_code(
+            data=data,
+            mimetype=mimetype,
+            status_code=status_code,
+            extra_context=extra_context,
+        )
 
         kwargs = {
-            'mimetype': mimetype or serialized_mimetype,
-            'content_type': content_type,
-            'headers': headers,
-            'response': data,
-            'status': status_code
+            "mimetype": mimetype or serialized_mimetype,
+            "content_type": content_type,
+            "headers": headers,
+            "response": data,
+            "status": status_code,
         }
         kwargs = {k: v for k, v in kwargs.items() if v is not None}
         return flask.current_app.response_class(**kwargs)
@@ -202,7 +234,7 @@ class FlaskApi(AbstractAPI):
     def _serialize_data(cls, data, mimetype):
         # TODO: harmonize flask and aiohttp serialization when mimetype=None or mimetype is not JSON
         #       (cases where it might not make sense to jsonify the data)
-        if (isinstance(mimetype, str) and is_json_mimetype(mimetype)):
+        if isinstance(mimetype, str) and is_json_mimetype(mimetype):
             body = cls.jsonifier.dumps(data)
         elif not (isinstance(data, bytes) or isinstance(data, str)):
             warnings.warn(
@@ -212,7 +244,7 @@ class FlaskApi(AbstractAPI):
                 "This will be replaced by something that is mimetype-specific and may "
                 "raise an error instead of silently converting everything to JSON. "
                 "Please make sure to specify media/mime types in your specs.",
-                FutureWarning  # a Deprecation targeted at application users.
+                FutureWarning,  # a Deprecation targeted at application users.
             )
             body = cls.jsonifier.dumps(data)
         else:
@@ -249,12 +281,14 @@ class FlaskApi(AbstractAPI):
             context=context_dict,
             cookies=flask_request.cookies,
         )
-        logger.debug('Getting data and status code',
-                     extra={
-                         'data': request.body,
-                         'data_type': type(request.body),
-                         'url': request.url
-                     })
+        logger.debug(
+            "Getting data and status code",
+            extra={
+                "data": request.body,
+                "data_type": type(request.body),
+                "url": request.url,
+            },
+        )
         return request
 
     @classmethod
@@ -291,22 +325,23 @@ class InternalHandlers:
         openapi_json_route_name = "{blueprint}.{prefix}_openapi_json"
         escaped = flask_utils.flaskify_endpoint(self.base_path)
         openapi_json_route_name = openapi_json_route_name.format(
-            blueprint=escaped,
-            prefix=escaped
+            blueprint=escaped, prefix=escaped
         )
         template_variables = {
-            'openapi_spec_url': flask.url_for(openapi_json_route_name),
+            "openapi_spec_url": flask.url_for(openapi_json_route_name),
             **self.options.openapi_console_ui_index_template_variables,
         }
         if self.options.openapi_console_ui_config is not None:
-            template_variables['configUrl'] = 'swagger-ui-config.json'
+            template_variables["configUrl"] = "swagger-ui-config.json"
 
         # Use `render_template_string` instead of `render_template` to circumvent the flask
         # template lookup mechanism and explicitly render the template of the current blueprint.
         # https://github.com/zalando/connexion/issues/1289#issuecomment-884105076
         template_dir = pathlib.Path(self.options.openapi_console_ui_from_dir)
-        index_path = template_dir / 'index.j2'
-        return flask.render_template_string(index_path.read_text(), **template_variables)
+        index_path = template_dir / "index.j2"
+        return flask.render_template_string(
+            index_path.read_text(), **template_variables
+        )
 
     def console_ui_static_files(self, filename):
         """
