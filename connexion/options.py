@@ -1,6 +1,7 @@
 """
 This module defines a Connexion specific options class to pass to the Connexion App or API.
 """
+
 import dataclasses
 import logging
 import typing as t
