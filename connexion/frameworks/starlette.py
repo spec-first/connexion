@@ -5,6 +5,7 @@ import typing as t
 import starlette.convertors
 from starlette.responses import JSONResponse as StarletteJSONResponse
 from starlette.responses import Response as StarletteResponse
+from starlette.responses import StreamingResponse as StarletteStreamingResponse
 from starlette.types import Receive, Scope
 
 from connexion.frameworks.abstract import Framework
@@ -37,6 +38,8 @@ class Starlette(Framework):
     ):
         if isinstance(data, dict) or isinstance(data, list):
             response_cls = StarletteJSONResponse
+        elif isinstance(data, t.Generator) or isinstance(data, t.AsyncGenerator):
+            response_cls = StarletteStreamingResponse
         else:
             response_cls = StarletteResponse
 
