@@ -6,7 +6,7 @@ Base = declarative_base()
 
 
 class Pet(Base):
-    __tablename__ = 'pets'
+    __tablename__ = "pets"
     id = Column(String(20), primary_key=True)
     name = Column(String(100))
     animal_type = Column(String(20))
@@ -21,12 +21,14 @@ class Pet(Base):
             self.created = created
 
     def dump(self):
-        return {k: v for k, v in vars(self).items() if not k.startswith('_')}
+        return {k: v for k, v in vars(self).items() if not k.startswith("_")}
 
 
 def init_db(uri):
     engine = create_engine(uri, convert_unicode=True)
-    db_session = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=engine))
+    db_session = scoped_session(
+        sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    )
     Base.query = db_session.query_property()
     Base.metadata.create_all(bind=engine)
     return db_session

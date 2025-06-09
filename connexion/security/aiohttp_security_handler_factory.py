@@ -8,7 +8,7 @@ import aiohttp
 
 from .async_security_handler_factory import AbstractAsyncSecurityHandlerFactory
 
-logger = logging.getLogger('connexion.api.security')
+logger = logging.getLogger("connexion.api.security")
 
 
 class AioHttpSecurityHandlerFactory(AbstractAsyncSecurityHandlerFactory):
@@ -27,13 +27,17 @@ class AioHttpSecurityHandlerFactory(AbstractAsyncSecurityHandlerFactory):
         :type token_info_url: str
         :rtype: types.FunctionType
         """
+
         async def wrapper(token):
             if not self.client_session:
                 # Must be created in a coroutine
                 self.client_session = aiohttp.ClientSession()
-            headers = {'Authorization': f'Bearer {token}'}
-            token_request = await self.client_session.get(token_info_url, headers=headers, timeout=5)
+            headers = {"Authorization": f"Bearer {token}"}
+            token_request = await self.client_session.get(
+                token_info_url, headers=headers, timeout=5
+            )
             if token_request.status != 200:
                 return None
             return token_request.json()
+
         return wrapper
