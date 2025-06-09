@@ -137,7 +137,6 @@ class OpenAPIOperation(AbstractOperation):
     def with_definitions(self, schema: dict):
         if self.components:
             schema.setdefault("schema", {})
-            schema["schema"]["components"] = self.components
         return schema
 
     def response_schema(self, status_code=None, content_type=None):
