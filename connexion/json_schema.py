@@ -13,9 +13,21 @@ from copy import deepcopy
 
 import requests
 import yaml
-from jsonschema import Draft4Validator, RefResolver
+from jsonschema import (
+    Draft4Validator,
+    Draft7Validator,
+    Draft202012Validator,
+    draft7_format_checker,
+    RefResolver,
+)
 from jsonschema.exceptions import RefResolutionError, ValidationError  # noqa
 from jsonschema.validators import extend
+
+# Add format checker for 2020-12 if available, otherwise fall back to draft7
+try:
+    from jsonschema import draft2020_format_checker
+except ImportError:
+    draft2020_format_checker = draft7_format_checker
 
 from .utils import deep_get
 
@@ -148,6 +160,50 @@ Draft4ResponseValidator = extend(
     {
         "type": NullableTypeValidator,
         "enum": NullableEnumValidator,
+        "writeOnly": validate_writeOnly,
+        "x-writeOnly": validate_writeOnly,
+    },
+)
+
+# Support for OpenAPI 3.0 with Draft7 validation
+NullableTypeValidator7 = allow_nullable(Draft7Validator.VALIDATORS["type"])
+NullableEnumValidator7 = allow_nullable(Draft7Validator.VALIDATORS["enum"])
+
+Draft7RequestValidator = extend(
+    Draft7Validator,
+    {
+        "type": NullableTypeValidator7,
+        "enum": NullableEnumValidator7,
+    },
+)
+
+Draft7ResponseValidator = extend(
+    Draft7Validator,
+    {
+        "type": NullableTypeValidator7,
+        "enum": NullableEnumValidator7,
+        "writeOnly": validate_writeOnly,
+        "x-writeOnly": validate_writeOnly,
+    },
+)
+
+# Support for OpenAPI 3.1 with Draft 2020-12 validation
+NullableTypeValidator2020 = allow_nullable(Draft202012Validator.VALIDATORS["type"])
+NullableEnumValidator2020 = allow_nullable(Draft202012Validator.VALIDATORS["enum"])
+
+Draft2020RequestValidator = extend(
+    Draft202012Validator,
+    {
+        "type": NullableTypeValidator2020,
+        "enum": NullableEnumValidator2020,
+    },
+)
+
+Draft2020ResponseValidator = extend(
+    Draft202012Validator,
+    {
+        "type": NullableTypeValidator2020,
+        "enum": NullableEnumValidator2020,
         "writeOnly": validate_writeOnly,
         "x-writeOnly": validate_writeOnly,
     },

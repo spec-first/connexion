@@ -1,0 +1,55 @@
+openapi: 3.1.0
+info:
+  title: PathItems in Components Test
+  version: 1.0.0
+  description: Testing pathItems in components for OpenAPI 3.1
+jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
+
+paths:
+  /pets:
+    $ref: '#/components/pathItems/PetsPathItem'
+
+components:
+  pathItems:
+    PetsPathItem:
+      get:
+        operationId: tests.fixtures.openapi_3_1.test_api.get_pets
+        summary: Get all pets
+        responses:
+          '200':
+            description: A list of pets
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Pet'
+      post:
+        operationId: tests.fixtures.openapi_3_1.test_api.add_pet
+        summary: Add a new pet
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pet'
+        responses:
+          '201':
+            description: Pet created
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Pet'
+  schemas:
+    Pet:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        species:
+          type: string
+      required:
+        - id
+        - species

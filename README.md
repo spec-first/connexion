@@ -18,7 +18,7 @@
 ---
 
 Connexion is a modern Python web framework that makes spec-first and api-first development easy.
-You describe your API in an [OpenAPI][OpenAPI] (or [Swagger][Swagger]) specification with as much 
+You describe your API in an [OpenAPI][OpenAPI] (OpenAPI 2.0, 3.0, and 3.1 supported) or [Swagger][Swagger] specification with as much 
 detail as you want and Connexion will guarantee that it works as you specified.
 
 It works either standalone, or in combination with any ASGI or WSGI-compatible framework!

@@ -36,6 +36,7 @@ class AbstractRequestBodyValidator:
         nullable: bool = False,
         encoding: str,
         strict_validation: bool,
+        schema_dialect: str = None,
         **kwargs,
     ):
         """
@@ -43,14 +44,16 @@ class AbstractRequestBodyValidator:
         :param required: Whether RequestBody is required
         :param nullable: Whether RequestBody is nullable
         :param encoding: Encoding of body (passed via Content-Type header)
-        :param kwargs: Additional arguments for subclasses
         :param strict_validation: Whether to allow parameters not defined in the spec
+        :param schema_dialect: JSON Schema dialect to use for validation
+        :param kwargs: Additional arguments for subclasses
         """
         self._schema = schema
         self._nullable = nullable
         self._required = required
         self._encoding = encoding
         self._strict_validation = strict_validation
+        self._schema_dialect = schema_dialect
 
     async def _parse(
         self, stream: t.AsyncGenerator[bytes, None], scope: Scope
@@ -167,16 +170,20 @@ class AbstractResponseBodyValidator:
 
     def __init__(
         self,
-        scope: Scope,
+        scope: t.Optional[Scope] = None,
         *,
         schema: dict,
         nullable: bool = False,
         encoding: str,
+        strict_validation: bool = False,
+        schema_dialect: str = None,
     ) -> None:
         self._scope = scope
         self._schema = schema
         self._nullable = nullable
         self._encoding = encoding
+        self._strict_validation = strict_validation
+        self._schema_dialect = schema_dialect
 
     def _parse(self, stream: t.Generator[bytes, None, None]) -> t.Any:
         """Parse the incoming stream."""

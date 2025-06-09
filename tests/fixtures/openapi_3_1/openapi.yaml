@@ -1,0 +1,70 @@
+openapi: 3.1.0
+info:
+  title: OpenAPI 3.1 Test API
+  version: 1.0.0
+  description: API for testing OpenAPI 3.1 support in Connexion
+jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
+paths:
+  /pets:
+    get:
+      operationId: tests.fixtures.openapi_3_1.test_api.get_pets
+      summary: Get all pets
+      responses:
+        '200':
+          description: A list of pets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Pet'
+    post:
+      operationId: tests.fixtures.openapi_3_1.test_api.add_pet
+      summary: Add a new pet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Pet'
+      responses:
+        '201':
+          description: Pet created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pet'
+  /pets/{pet_id}:
+    parameters:
+      - name: pet_id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      operationId: tests.fixtures.openapi_3_1.test_api.get_pet
+      summary: Get a pet by ID
+      responses:
+        '200':
+          description: A pet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pet'
+        '404':
+          description: Pet not found
+components:
+  schemas:
+    Pet:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        tag:
+          type: string
+          nullable: true
+      required:
+        - id
+        - name

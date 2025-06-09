@@ -40,7 +40,12 @@ async def test_async_injection():
     request = AsyncMock(name="request")
     request.path_params = {"p1": "123"}
     request.get_body.return_value = {}
-    request.files.return_value = {}
+    # Make sure files() properly returns a completed coroutine
+    mock_files = {}
+    request.files.return_value = mock_files
+    # Set a fixed mimetype to avoid warning with AsyncMock
+    request.mimetype = "application/json"
+    request.content_type = "application/json"
 
     func = MagicMock()
 
@@ -88,7 +93,12 @@ async def test_async_injection_with_context():
     request = AsyncMock(name="request")
     request.path_params = {"p1": "123"}
     request.get_body.return_value = {}
-    request.files.return_value = {}
+    # Make sure files() properly returns a completed coroutine
+    mock_files = {}
+    request.files.return_value = mock_files
+    # Set a fixed mimetype to avoid warning with AsyncMock
+    request.mimetype = "application/json"
+    request.content_type = "application/json"
 
     func = MagicMock()
 

@@ -1,0 +1,84 @@
+openapi: 3.1.0
+info:
+  title: File Upload with allOf Test
+  version: 1.0.0
+  description: Testing file uploads with allOf schemas in OpenAPI 3.1
+jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
+
+paths:
+  /upload/simple:
+    post:
+      operationId: tests.fixtures.openapi_3_1.file_upload_api.upload_simple
+      summary: Simple file upload
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                file:
+                  type: string
+                  format: binary
+              required:
+                - name
+                - file
+      responses:
+        '200':
+          description: Successful upload
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  filename:
+                    type: string
+                  size:
+                    type: integer
+                  content_type:
+                    type: string
+
+  /upload/with-allof:
+    post:
+      operationId: tests.fixtures.openapi_3_1.file_upload_api.upload_with_allof
+      summary: File upload with allOf schema
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/HeaderName'
+                - type: object
+                  properties:
+                    file:
+                      type: string
+                      format: binary
+                  required:
+                    - file
+      responses:
+        '200':
+          description: Successful upload
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  filename:
+                    type: string
+                  size:
+                    type: integer
+                  content_type:
+                    type: string
+
+components:
+  schemas:
+    HeaderName:
+      type: object
+      properties:
+        name:
+          type: string
+      required:
+        - name
