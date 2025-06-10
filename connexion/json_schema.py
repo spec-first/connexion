@@ -4,6 +4,7 @@ Module containing all code related to json schema validation.
 
 import contextlib
 import io
+import json
 import os
 import typing as t
 import urllib.parse
@@ -13,9 +14,11 @@ from copy import deepcopy
 
 import requests
 import yaml
-from jsonschema import Draft4Validator, RefResolver
-from jsonschema.exceptions import RefResolutionError, ValidationError  # noqa
+from jsonschema import Draft4Validator
+from jsonschema.exceptions import ValidationError
 from jsonschema.validators import extend
+from referencing import Registry, Resource
+from referencing.jsonschema import DRAFT4
 
 from .utils import deep_get
 
@@ -62,12 +65,27 @@ class URLHandler:
             return yaml.load(fh, ExtendedSafeLoader)
 
 
-handlers = {
-    "http": URLHandler(),
-    "https": URLHandler(),
-    "file": FileHandler(),
-    "": FileHandler(),
-}
+def resource_from_spec(spec: t.Dict[str, t.Any]) -> Resource:
+    """Create a `referencing.Resource` from a schema specification."""
+    return Resource.from_contents(spec, default_specification=DRAFT4)
+
+
+def retrieve(uri: str) -> Resource:
+    """Retrieve a resource from a URI.
+
+    This function is passed to the `referencing.Registry`,
+    which calls it any URI is not present in the registry is accessed."""
+    parsed = urllib.parse.urlsplit(uri)
+    if parsed.scheme in ("http", "https"):
+        content = URLHandler()(uri)
+    elif parsed.scheme in ("file", ""):
+        content = FileHandler()(uri)
+    else:  # pragma: no cover
+        # Default branch from jsonschema.RefResolver.resolve_remote()
+        # for backwards compatibility.
+        with urllib.request.urlopen(uri) as url:
+            content = json.loads(url.read().decode("utf-8"))
+    return resource_from_spec(content)
 
 
 def resolve_refs(spec, store=None, base_uri=""):
@@ -78,9 +96,14 @@ def resolve_refs(spec, store=None, base_uri=""):
     """
     spec = deepcopy(spec)
     store = store or {}
-    resolver = RefResolver(base_uri, spec, store, handlers=handlers)
+    registry = Registry(retrieve=retrieve).with_resources(
+        (
+            (base_uri, resource_from_spec(spec)),
+            *((key, resource_from_spec(value)) for key, value in store.items()),
+        )
+    )
 
-    def _do_resolve(node):
+    def _do_resolve(node, resolver):
         if isinstance(node, Mapping) and "$ref" in node:
             path = node["$ref"][2:].split("/")
             try:
@@ -88,22 +111,22 @@ def resolve_refs(spec, store=None, base_uri=""):
                 retrieved = deep_get(spec, path)
                 node.update(retrieved)
                 if isinstance(retrieved, Mapping) and "$ref" in retrieved:
-                    node = _do_resolve(node)
+                    node = _do_resolve(node, resolver)
                 node.pop("$ref", None)
                 return node
             except KeyError:
                 # resolve external references
-                with resolver.resolving(node["$ref"]) as resolved:
-                    return _do_resolve(resolved)
+                resolved = resolver.lookup(node["$ref"])
+                return _do_resolve(resolved.contents, resolved.resolver)
         elif isinstance(node, Mapping):
             for k, v in node.items():
-                node[k] = _do_resolve(v)
+                node[k] = _do_resolve(v, resolver)
         elif isinstance(node, (list, tuple)):
             for i, _ in enumerate(node):
-                node[i] = _do_resolve(node[i])
+                node[i] = _do_resolve(node[i], resolver)
         return node
 
-    res = _do_resolve(spec)
+    res = _do_resolve(spec, registry.resolver(base_uri))
     return res
 
 
