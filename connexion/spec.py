@@ -281,7 +281,7 @@ class Swagger2Specification(Specification):
 
     @base_path.setter
     def base_path(self, base_path):
-        base_path = canonical_base_path(base_path)
+        base_path = "/" + canonical_base_path(base_path).lstrip("/")
         self._raw_spec["basePath"] = base_path
         self._spec["basePath"] = base_path
 
