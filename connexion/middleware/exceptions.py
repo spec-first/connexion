@@ -58,7 +58,6 @@ class ExceptionMiddleware(StarletteExceptionMiddleware):
     def __init__(self, next_app: ASGIApp):
         super().__init__(next_app)
         self.add_exception_handler(ProblemException, self.problem_handler)  # type: ignore
-        self.add_exception_handler(Exception, self.common_error_handler)
 
     def add_exception_handler(
         self,
@@ -98,14 +97,6 @@ class ExceptionMiddleware(StarletteExceptionMiddleware):
             status=exc.status_code,
             headers=exc.headers,
         )
-
-    @staticmethod
-    def common_error_handler(
-        _request: StarletteRequest, exc: Exception
-    ) -> ConnexionResponse:
-        """Default handler for any unhandled Exception"""
-        logger.error("%r", exc, exc_info=exc)
-        return InternalServerError().to_problem()
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         await super().__call__(scope, receive, send)
