@@ -201,6 +201,9 @@ def test_relative_refs(relative_refs, spec):
     spec_path = relative_refs / spec
     specification = Specification.load(spec_path)
     assert "$ref" not in specification.raw
+    # clone specification
+    specification_clone = specification.clone()
+    assert "$ref" not in specification_clone.raw
 
 
 @pytest.fixture
