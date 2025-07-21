@@ -134,8 +134,8 @@ class OpenAPIOperation(AbstractOperation):
     def produces(self):
         return self._produces
 
-    def with_definitions(self, schema: dict):
-        if self.components:
+    def with_definitions(self, schema: dict, append_components=True):
+        if self.components and append_components:
             schema.setdefault("schema", {})
             schema["schema"]["components"] = self.components
         return schema
@@ -241,5 +241,5 @@ class OpenAPIOperation(AbstractOperation):
                 )
             content_type_dict = MediaTypeDict(self.request_body.get("content", {}))
             res = content_type_dict.get(content_type, {})
-            return self.with_definitions(res)
+            return self.with_definitions(res, append_components=False)
         return {}
