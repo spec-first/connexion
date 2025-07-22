@@ -654,8 +654,12 @@ def test_openapi_schema_validate_with_request_body_change(simple_app):
     app_client = simple_app.test_client()
 
     if simple_app._spec_file == "openapi.yaml":
-        response = app_client.post("/v1.0/test-default-object-body", headers={"content-type": "application/json"}, json={"image_version": "2015-08-26"})
+        response = app_client.post(
+            "/v1.0/test-default-object-body",
+            headers={"content-type": "application/json"},
+            json={"image_version": "2015-08-26"},
+        )
         assert response.status_code == 200
-        
+
         response = app_client.get("/v1.0/openapi.json")
         assert response.status_code == 200
