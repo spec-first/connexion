@@ -310,10 +310,8 @@ def extract_content_type(
 
         if decoded_key.lower() == "content-type":
             if isinstance(value, bytes):
-                content_type = value.decode("latin-1")
-            else:
-                content_type = value
-            break
+                value = value.decode("latin-1")
+            content_type = ",".join([content_type, value] if content_type else [value])
 
     return content_type
 
