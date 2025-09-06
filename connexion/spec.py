@@ -203,7 +203,6 @@ class Specification(Mapping):
             return Swagger2Specification(spec, base_uri=base_uri)
         return OpenAPISpecification(spec, base_uri=base_uri)
 
-
 def clone(self):
     # Check if spec contains only internal refs (starting with #)
     # For external refs, we need the processed spec to maintain resolved content
@@ -212,11 +211,8 @@ def clone(self):
     else:
         return type(self)(copy.deepcopy(self._spec))
 
-
 def _has_only_internal_refs(self):
     """Check if all $ref entries point to internal references only (starting with #)"""
-    import re
-
     def check_refs(obj):
         if isinstance(obj, dict):
             for key, value in obj.items():
@@ -235,7 +231,6 @@ def _has_only_internal_refs(self):
                 if not check_refs(item):
                     return False
         return True
-
     return check_refs(self._raw_spec)
 
     @classmethod
