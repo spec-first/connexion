@@ -492,7 +492,7 @@ class ConnexionMiddleware:
         else:
             app = self
 
-        uvicorn.run(app, **kwargs)
+        uvicorn.run(app, lifespan="on", **kwargs)
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if self.middleware_stack is None:
