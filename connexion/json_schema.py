@@ -134,21 +134,34 @@ def validate_required(validator, required, instance, schema):
 
     for prop in required:
         if prop not in instance:
-            properties = schema.get('properties')
+            properties = schema.get("properties")
             if properties is not None:
                 subschema = properties.get(prop)
                 if subschema is not None:
-                    if 'readOnly' in validator.VALIDATORS and subschema.get('readOnly'):
+                    if "readOnly" in validator.VALIDATORS and subschema.get("readOnly"):
                         continue
-                    if 'writeOnly' in validator.VALIDATORS and subschema.get('writeOnly'):
+                    if "writeOnly" in validator.VALIDATORS and subschema.get(
+                        "writeOnly"
+                    ):
                         continue
-                    if 'x-writeOnly' in validator.VALIDATORS and subschema.get('x-writeOnly') is True:
+                    if (
+                        "x-writeOnly" in validator.VALIDATORS
+                        and subschema.get("x-writeOnly") is True
+                    ):
                         continue
             yield ValidationError("%r is a required property" % prop)
 
 
 def validate_readOnly(validator, wo, instance, schema):
-    yield ValidationError("Property is read-only")
+    """
+    The OpenAPI specification states:
+    > [readOnly] means that it MAY be sent as part of a response
+    > but SHOULD NOT be sent as part of the request.
+    Note the phrase is "SHOULD NOT" (not "MUST NOT").
+    Presence of this no-op function indicates to `validate_required`
+    that the instance being validated is a request.
+    """
+    pass
 
 
 def validate_writeOnly(validator, wo, instance, schema):

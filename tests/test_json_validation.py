@@ -77,6 +77,20 @@ def test_readonly(json_validation_spec_dir, spec, app_class):
     )
     assert res.status_code == 200
 
+    # reject a response missing a required/readOnly field
+    res = app_client.get("/v1.0/user_without_userid")
+    assert res.status_code == 500
+    assert res.json()["detail"].startswith(
+        "Response body does not conform to specification"
+    )
+
+    # accept a request missing a required/readOnly field
+    res = app_client.post(
+        "/v1.0/user_without_userid",
+        json={"name": "max", "password": "1234"},
+    )
+    assert res.status_code == 200
+
 
 def test_writeonly(json_validation_spec_dir, spec, app_class):
     app = build_app_from_fixture(
