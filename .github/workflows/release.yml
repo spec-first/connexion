@@ -13,10 +13,10 @@ jobs:
     steps:
     - uses: actions/checkout@master
 
-    - name: Set up Python 3.9
+    - name: Set up Python 3.12
       uses: actions/setup-python@v1
       with:
-        python-version: 3.9
+        python-version: 3.12
 
     - name: Update version
       run: sed -i "s/^version = .*/version = '${{github.ref_name}}'/" pyproject.toml
@@ -28,7 +28,7 @@ jobs:
 
     - name: Publish distribution 📦 to Test PyPI
       if: github.event_name == 'push'
-      uses: pypa/gh-action-pypi-publish@v1.5.0
+      uses: pypa/gh-action-pypi-publish@v1.13.0
       with:
         user: __token__
         password: ${{ secrets.TEST_PYPI_API_TOKEN }}
@@ -36,7 +36,7 @@ jobs:
 
     - name: Publish distribution 📦 to PyPI if triggered by release
       if: github.event_name == 'release'
-      uses: pypa/gh-action-pypi-publish@v1.5.0
+      uses: pypa/gh-action-pypi-publish@v1.13.0
       with:
         user: __token__
         password: ${{ secrets.PYPI_API_TOKEN }}

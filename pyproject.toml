@@ -26,11 +26,12 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Internet",
     "Topic :: Internet :: WWW/HTTP",
     "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
@@ -44,7 +45,7 @@ classifiers = [
 connexion = 'connexion.cli:main'
 
 [tool.poetry.dependencies]
-python = '^3.8'
+python = '^3.9'
 asgiref = ">= 3.4"
 httpx = ">= 0.23"
 inflection = ">= 0.3.1"
@@ -71,7 +72,7 @@ mock = ["jsf"]
 
 [tool.poetry.group.tests.dependencies]
 pre-commit = "~2.21.0"
-pytest = "7.2.1"
+pytest = "8.4.2"
 pytest-asyncio = "~0.18.3"
 pytest-cov = "~2.12.1"
 
