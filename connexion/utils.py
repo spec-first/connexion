@@ -7,8 +7,8 @@ import functools
 import importlib
 import inspect
 import os
-import pkgutil
 import sys
+import typing
 import typing as t
 
 import yaml
@@ -391,6 +391,7 @@ def coerce_type(param, value, parameter_type, parameter_name=None):
             return value
 
 
+@typing.no_type_check
 def get_root_path(import_name: str) -> str:
     """Copied from Flask:
     https://github.com/pallets/flask/blob/836866dc19218832cf02f8b04911060ac92bfc0b/src/flask/helpers.py#L595
@@ -398,6 +399,8 @@ def get_root_path(import_name: str) -> str:
     Find the root path of a package, or the path that contains a
     module. If it cannot be found, returns the current working
     directory.
+
+    :meta private:
     """
     # Module already imported and has a file attribute. Use that first.
     mod = sys.modules.get(import_name)
@@ -406,16 +409,24 @@ def get_root_path(import_name: str) -> str:
         return os.path.dirname(os.path.abspath(mod.__file__))
 
     # Next attempt: check the loader.
-    loader = pkgutil.get_loader(import_name)
+    try:
+        spec = importlib.util.find_spec(import_name)
+
+        if spec is None:
+            raise ValueError
+    except (ImportError, ValueError):
+        loader = None
+    else:
+        loader = spec.loader
 
     # Loader does not exist or we're referring to an unloaded main
     # module or a main module without path (interactive sessions), go
     # with the current working directory.
-    if loader is None or import_name == "__main__":
+    if loader is None:
         return os.getcwd()
 
     if hasattr(loader, "get_filename"):
-        filepath = loader.get_filename(import_name)  # type: ignore
+        filepath = loader.get_filename(import_name)  # pyright: ignore
     else:
         # Fall back to imports.
         __import__(import_name)
@@ -436,7 +447,7 @@ def get_root_path(import_name: str) -> str:
             )
 
     # filepath is import_name.py for a module, or __init__.py for a package.
-    return os.path.dirname(os.path.abspath(filepath))
+    return os.path.dirname(os.path.abspath(filepath))  # type: ignore[no-any-return]
 
 
 def inspect_function_arguments(function: t.Callable) -> t.Tuple[t.List[str], bool]:
@@ -542,5 +553,9 @@ def build_example_from_schema(schema):
     except ImportError:
         return None
 
-    faker = JSF(schema)
-    return faker.generate()
+    try:
+        faker = JSF(schema)
+        return faker.generate()
+    except TypeError:
+
+        return None

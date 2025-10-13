@@ -1,3 +1,6 @@
+import sys
+
+import pytest
 from connexion.datastructures import NoContent
 from connexion.mock import MockResolver
 from connexion.operations import OpenAPIOperation, Swagger2Operation
@@ -195,6 +198,11 @@ def test_mock_resolver_example_nested_in_list_openapi():
     assert response == ["bar"]
 
 
+@pytest.mark.skipif(
+    sys.version_info >= (3, 14),
+    reason="This test fails on Python 3.14 due to lack of support from JSF dependency:"
+    "https://github.com/ghandic/jsf/issues/128.",
+)
 def test_mock_resolver_no_example_nested_in_object():
     resolver = MockResolver(mock_all=True)
 
@@ -229,6 +237,11 @@ def test_mock_resolver_no_example_nested_in_object():
     assert isinstance(response["foo"], str)
 
 
+@pytest.mark.skipif(
+    sys.version_info >= (3, 14),
+    reason="This test fails on Python 3.14 due to lack of support from JSF dependency:"
+    "https://github.com/ghandic/jsf/issues/128.",
+)
 def test_mock_resolver_no_example_nested_in_list_openapi():
     resolver = MockResolver(mock_all=True)
 

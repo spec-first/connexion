@@ -1,7 +1,15 @@
+import sys
 from datetime import datetime
 from re import fullmatch
 
+import pytest
 from connexion.utils import build_example_from_schema
+
+pytestmark = pytest.mark.skipif(
+    sys.version_info >= (3, 14),
+    reason="This test fails on Python 3.14 due to lack of support from JSF dependency:"
+    "https://github.com/ghandic/jsf/issues/128.",
+)
 
 
 def test_build_example_from_schema_string():
