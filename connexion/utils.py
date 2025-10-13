@@ -499,7 +499,7 @@ def sort_routes(routes, *, key=None):
             self.path_regex, _, _ = compile_path(self.path)
 
         def __lt__(self, other: "SortableRoute") -> bool:
-            return bool(other.path_regex.match(self.path))
+            return bool(other.path_regex.match(self.path)) or self.path < other.path
 
     return sorted(routes, key=lambda r: SortableRoute(key(r) if key else r))
 
