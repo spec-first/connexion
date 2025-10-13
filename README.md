@@ -54,7 +54,6 @@ Connexion also **helps you write your OpenAPI specification** and develop agains
 ## 🫶 Sponsors
 
 <a href="https://www.ml6.eu"><img src="https://raw.githubusercontent.com/spec-first/connexion/main/docs/images/sponsors/ML6.png" title=ML6 height="100"></a>
-<a href="https://www.devmark.ai/fern/?utm_source=connexion&utm_loc=readme&utm_type=logo"><img src="https://raw.githubusercontent.com/spec-first/connexion/main/docs/images/sponsors/Fern.png" title=Fern height="100"></a>
 
 Sponsors help us dedicate time to maintain Connexion. Want to help?
 
