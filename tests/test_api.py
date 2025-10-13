@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 import pytest
 from connexion import FlaskApi
 from connexion.exceptions import InvalidSpecification, ResolverError
+from connexion.jsonifier import Jsonifier
 from connexion.spec import Specification, canonical_base_path
 from yaml import YAMLError
 
@@ -200,7 +201,11 @@ def test_validation_error_on_completely_invalid_swagger_spec():
 def test_relative_refs(relative_refs, spec):
     spec_path = relative_refs / spec
     specification = Specification.load(spec_path)
-    assert "$ref" not in specification.raw
+
+    jsonifier = Jsonifier()
+
+    assert "$ref" in jsonifier.dumps(specification.raw)
+    assert "$ref" not in jsonifier.dumps(specification.spec)
 
 
 @pytest.fixture

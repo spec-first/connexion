@@ -81,6 +81,7 @@ class Specification(Mapping):
         self._set_defaults(raw_spec)
         self._validate_spec(raw_spec)
         self._spec = resolve_refs(raw_spec, base_uri=base_uri)
+        self._base_uri = base_uri
 
     @classmethod
     @abc.abstractmethod
@@ -106,6 +107,10 @@ class Specification(Mapping):
     @property
     def raw(self):
         return self._raw_spec
+
+    @property
+    def spec(self):
+        return self._spec
 
     @property
     def version(self):
@@ -204,7 +209,7 @@ class Specification(Mapping):
         return OpenAPISpecification(spec, base_uri=base_uri)
 
     def clone(self):
-        return type(self)(copy.deepcopy(self._spec))
+        return type(self)(copy.deepcopy(self._raw_spec), base_uri=self._base_uri)
 
     @classmethod
     def load(cls, spec, *, arguments=None):

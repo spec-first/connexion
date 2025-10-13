@@ -70,7 +70,7 @@ class SwaggerUIAPI(AbstractSpecAPI):
         This is needed when behind a path-altering reverse proxy.
         """
         base_path = self._base_path_for_prefix(request)
-        return self.specification.with_base_path(base_path).raw
+        return self.specification.with_base_path(base_path).spec
 
     def add_openapi_json(self):
         """
