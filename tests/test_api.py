@@ -199,13 +199,18 @@ def test_validation_error_on_completely_invalid_swagger_spec():
 
 
 def test_relative_refs(relative_refs, spec):
+    jsonifier = Jsonifier()
+
     spec_path = relative_refs / spec
     specification = Specification.load(spec_path)
 
-    jsonifier = Jsonifier()
-
     assert "$ref" in jsonifier.dumps(specification.raw)
     assert "$ref" not in jsonifier.dumps(specification.spec)
+
+    cloned_specification = specification.clone()
+
+    assert "$ref" in jsonifier.dumps(cloned_specification.raw)
+    assert "$ref" not in jsonifier.dumps(cloned_specification.spec)
 
 
 @pytest.fixture
