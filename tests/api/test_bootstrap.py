@@ -98,6 +98,16 @@ def test_swagger_ui(simple_api_spec_dir, spec):
         assert b"swagger-ui-config.json" not in swagger_ui.data
 
 
+@pytest.mark.parametrize("spec", ["basepath-slash.yaml", "servers-url-slash.yaml"])
+def test_swagger_ui_for_basepath_slash(simple_api_spec_dir, spec):
+    """Verify the Swagger UI is returned when spec has trivial base path."""
+    app = App(__name__, port=5001, specification_dir=simple_api_spec_dir, debug=True)
+    app.add_api(spec)
+    app_client = app.app.test_client()
+    swagger_ui = app_client.get("/ui/")  # type: flask.Response
+    assert swagger_ui.status_code == 200
+
+
 @pytest.mark.parametrize("spec", SPECS)
 def test_swagger_ui_with_config(simple_api_spec_dir, spec):
     swagger_ui_config = {"displayOperationId": True}

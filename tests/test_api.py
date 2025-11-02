@@ -42,6 +42,10 @@ def test_api_base_path_slash():
     assert api.blueprint.name == "/"
     assert api.blueprint.url_prefix == ""
 
+    api2 = FlaskApi(TEST_FOLDER / "fixtures/simple/servers-url-slash.yaml")
+    assert api2.blueprint.name == "/"
+    assert api2.blueprint.url_prefix == ""
+
 
 def test_template():
     api1 = FlaskApi(
