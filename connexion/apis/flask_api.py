@@ -323,7 +323,7 @@ class InternalHandlers:
         :return:
         """
         openapi_json_route_name = "{blueprint}.{prefix}_openapi_json"
-        escaped = flask_utils.flaskify_endpoint(self.base_path)
+        escaped = flask_utils.flaskify_endpoint(self.base_path) or "/"
         openapi_json_route_name = openapi_json_route_name.format(
             blueprint=escaped, prefix=escaped
         )
