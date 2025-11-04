@@ -47,7 +47,7 @@ connexion = 'connexion.cli:main'
 [tool.poetry.dependencies]
 python = '^3.9'
 asgiref = ">= 3.4"
-httpx = ">= 0.23"
+httpx = ">= 0.24"
 inflection = ">= 0.3.1"
 jsonschema = ">=4.17.3"
 Jinja2 = ">= 3.0.0"
