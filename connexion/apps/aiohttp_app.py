@@ -2,9 +2,9 @@
 This module defines an AioHttpApp, a Connexion application to wrap an AioHttp application.
 """
 
+import importlib.util
 import logging
 import pathlib
-import pkgutil
 import sys
 
 from aiohttp import web
@@ -30,11 +30,11 @@ class AioHttpApp(AbstractApp):
         if mod is not None and hasattr(mod, "__file__"):
             return pathlib.Path(mod.__file__).resolve().parent
 
-        loader = pkgutil.get_loader(self.import_name)
+        spec = importlib.util.find_spec(self.import_name)
         filepath = None
 
-        if hasattr(loader, "get_filename"):
-            filepath = loader.get_filename(self.import_name)
+        if hasattr(spec, "loader") and hasattr(spec.loader, "get_filename"):
+            filepath = spec.loader.get_filename(self.import_name)
 
         if filepath is None:
             raise RuntimeError(f"Invalid import name '{self.import_name}'")
