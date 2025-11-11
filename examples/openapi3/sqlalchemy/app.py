@@ -29,7 +29,9 @@ def put_pet(pet_id, pet):
         p.update(**pet)
     else:
         logging.info("Creating pet %s..", pet_id)
-        pet["created"] = datetime.datetime.utcnow()
+        pet["created"] = datetime.datetime.now(tz=datetime.timezone.utc).replace(
+            tzinfo=None
+        )
         db_session.add(orm.Pet(**pet))
     db_session.commit()
     return NoContent, (200 if p is not None else 201)
