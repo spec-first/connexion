@@ -74,7 +74,7 @@ def retrieve(uri: str) -> Resource:
     """Retrieve a resource from a URI.
 
     This function is passed to the `referencing.Registry`,
-    which calls it any URI is not present in the registry is accessed."""
+    which calls it whenever a URI not present in the registry is accessed."""
     parsed = urllib.parse.urlsplit(uri)
     if parsed.scheme in ("http", "https"):
         content = URLHandler()(uri)
