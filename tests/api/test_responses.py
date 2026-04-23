@@ -284,6 +284,20 @@ def test_empty_object_body(simple_app):
     assert response["stack"] == {}
 
 
+def test_json_body_without_content_type(simple_app):
+    """When the spec declares a single accepted content type (application/json),
+    a request without a Content-Type header should be parsed using that type
+    rather than falling back to raw bytes."""
+    app_client = simple_app.test_client()
+    body = {"foo": "bar"}
+    resp = app_client.post(
+        "/v1.0/test-empty-object-body",
+        content=json.dumps(body).encode("utf-8"),
+    )
+    assert resp.status_code == 200
+    assert resp.json()["stack"] == body
+
+
 def test_nested_additional_properties(simple_openapi_app):
     app_client = simple_openapi_app.test_client()
     resp = app_client.post(
