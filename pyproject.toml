@@ -108,6 +108,10 @@ exclude_lines = [
     "@t.overload",
 ]
 
+[tool.bandit]
+exclude_dirs = ["tests"]
+skips = ["B101"]
+
 [[tool.mypy.overrides]]
 module = "referencing.jsonschema.*"
 follow_imports = "skip"
