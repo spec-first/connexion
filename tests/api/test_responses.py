@@ -469,3 +469,32 @@ def test_oneof(simple_openapi_app):
         json={"name": "jsantos"},
     )
     assert post_greeting.status_code == 400
+
+
+def test_status_specific_content_type_inference(simple_app):
+    app_client = simple_app.test_client()
+    success_response = app_client.post(
+        "/v1.0/status-specific-content", json={"success": True}
+    )
+    assert success_response.status_code == 200
+    assert success_response.headers.get("content-type") == "application/json"
+    response_data = success_response.json()
+    assert "message" in response_data
+    assert "Success!" in response_data["message"]
+    error_response = app_client.post(
+        "/v1.0/status-specific-content", json={"success": False}
+    )
+    assert error_response.status_code == 400
+    content_type = error_response.headers.get("content-type", "")
+    if simple_app._spec_file == "openapi.yaml":
+        assert content_type.startswith(
+            "text/plain"
+        ), f"OpenAPI 3.0 expected text/plain, got {content_type}"
+        assert "Error!" in error_response.text
+    else:
+        assert (
+            content_type == "application/json"
+        ), f"Swagger 2.0 expected application/json, got {content_type}"
+        error_data = error_response.json()
+        assert "error" in error_data
+        assert "Error!" in error_data["error"]

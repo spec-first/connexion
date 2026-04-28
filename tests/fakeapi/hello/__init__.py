@@ -5,7 +5,9 @@ from http import HTTPStatus
 
 import flask
 from connexion import NoContent, ProblemException, context, request
+from connexion.context import operation
 from connexion.exceptions import OAuthProblem
+from connexion.operations.openapi import OpenAPIOperation
 from flask import redirect, send_file
 from starlette.responses import FileResponse, RedirectResponse
 
@@ -739,6 +741,21 @@ def get_streaming_response():
     except RuntimeError:
         # Not in Flask context
         return FileResponse(__file__)
+
+
+def status_specific_content(body):
+    if body.get("success", True):
+        return {"message": "Success! This should be application/json"}, 200
+    else:
+        if isinstance(operation, OpenAPIOperation):
+            return (
+                "Error! This should be text/plain in OpenAPI 3.0, JSON in Swagger 2.0",
+                400,
+            )
+        else:
+            return {
+                "error": "Error! This should be text/plain in OpenAPI 3.0, JSON in Swagger 2.0"
+            }, 400
 
 
 async def async_route():

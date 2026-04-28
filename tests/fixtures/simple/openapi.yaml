@@ -1310,6 +1310,35 @@ paths:
       responses:
         '200':
           description: Echo the validated request.
+  '/status-specific-content':
+    post:
+      summary: Returns different content types based on status code
+      operationId: fakeapi.hello.status_specific_content
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+      responses:
+        '200':
+          description: Success response with JSON content
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '400':
+          description: Error response with plain text content
+          content:
+            text/plain:
+              schema:
+                type: string
   /async-route:
     get:
       operationId: fakeapi.hello.async_route
