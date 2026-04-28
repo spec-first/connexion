@@ -639,6 +639,10 @@ def get_user():
     return {"user_id": 7, "name": "max"}
 
 
+def get_user_without_userid():
+    return {"name": "max"}
+
+
 def get_user_with_password():
     return {"user_id": 7, "name": "max", "password": "5678"}
 
@@ -647,6 +651,10 @@ def post_user(body):
     body["user_id"] = 8
     body.pop("password", None)
     return body
+
+
+def post_user_without_userid(body):
+    return post_user(body)
 
 
 def post_multipart_form(body):

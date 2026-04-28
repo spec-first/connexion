@@ -151,6 +151,42 @@ def allow_nullable(validation_fn: t.Callable) -> t.Callable:
     return nullable_validation_fn
 
 
+def validate_required(validator, required, instance, schema):
+    if not validator.is_type(instance, "object"):
+        return
+
+    for prop in required:
+        if prop not in instance:
+            properties = schema.get("properties")
+            if properties is not None:
+                subschema = properties.get(prop)
+                if subschema is not None:
+                    if "readOnly" in validator.VALIDATORS and subschema.get("readOnly"):
+                        continue
+                    if "writeOnly" in validator.VALIDATORS and subschema.get(
+                        "writeOnly"
+                    ):
+                        continue
+                    if (
+                        "x-writeOnly" in validator.VALIDATORS
+                        and subschema.get("x-writeOnly") is True
+                    ):
+                        continue
+            yield ValidationError("%r is a required property" % prop)
+
+
+def validate_readOnly(validator, wo, instance, schema):
+    """
+    The OpenAPI specification states:
+    > [readOnly] means that it MAY be sent as part of a response
+    > but SHOULD NOT be sent as part of the request.
+    Note the phrase is "SHOULD NOT" (not "MUST NOT").
+    Presence of this no-op function indicates to `validate_required`
+    that the instance being validated is a request.
+    """
+    pass
+
+
 def validate_writeOnly(validator, wo, instance, schema):
     yield ValidationError("Property is write-only")
 
@@ -163,6 +199,8 @@ Draft4RequestValidator = extend(
     {
         "type": NullableTypeValidator,
         "enum": NullableEnumValidator,
+        "readOnly": validate_readOnly,
+        "required": validate_required,
     },
 )
 
@@ -173,5 +211,6 @@ Draft4ResponseValidator = extend(
         "enum": NullableEnumValidator,
         "writeOnly": validate_writeOnly,
         "x-writeOnly": validate_writeOnly,
+        "required": validate_required,
     },
 )
