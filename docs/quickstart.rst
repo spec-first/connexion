@@ -15,7 +15,7 @@ Connexion provides 'extras' with optional dependencies to unlock additional feat
 - :code:`flask`: Enables the :code:`FlaskApp` to build applications compatible with the Flask
   ecosystem.
 - :code:`swagger-ui`: Enables a Swagger UI console for your application.
-- :code:`uvicorn`: Enables to run the your application using :code:`app.run()` for
+- :code:`uvicorn`: Enables running your application using :code:`app.run()` for
   development instead of using an external ASGI server.
 
 You can install them as follows:
@@ -23,7 +23,7 @@ You can install them as follows:
 .. code-block:: bash
 
     $ pip install connexion[<extra>]
-    $ pip install connexion[<extra1>,<extra2>].
+    $ pip install connexion[<extra1>,<extra2>]
 
 Creating your application
 -------------------------
@@ -38,7 +38,7 @@ built using either the :code:`AsyncApp` or :code:`FlaskApp`.
   connexion 2.X or you want to leverage the `Flask` ecosystem.
 - The :code:`ConnexionMiddleware` can be wrapped around any existing ASGI or WSGI application.
   Use it if you already have an application written in a different framework and want to add
-  functionality provided by connexion
+  functionality provided by Connexion.
 
 .. tab-set::
 
@@ -198,7 +198,7 @@ You can run your application using an ASGI server such as `uvicorn`. If you defi
     # assuming your application is defined as ``app`` in ``run.py``
     $ uvicorn run:app
 
-Or with gunicorn (which is recommended in production).
+Or with Gunicorn (which is recommended in production).
 
 .. code-block:: bash
 
@@ -257,7 +257,7 @@ The Swagger UI
 
 If you installed connexion using the :code:`swagger-ui` extra, a Swagger UI is available for each
 API, providing interactive documentation. By default the UI is hosted at :code:`{base_path}/ui/`
-where :code:`base_path`` is the base path of the API.
+where :code:`base_path` is the base path of the API.
 
 **https://{host}/{base_path}/ui/**
 

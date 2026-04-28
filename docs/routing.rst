@@ -10,7 +10,7 @@ be done in two ways:
 Explicit routing
 ----------------
 
-Connexion uses the :code:`operation_id` to link each `operation`_ in your API contract to
+Connexion uses the :code:`operationId` to link each `operation`_ in your API contract to
 the python function that should handle it.
 
 .. code-block:: python
