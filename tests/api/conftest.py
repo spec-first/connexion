@@ -24,11 +24,22 @@ def simple_openapi_app(app_class):
 
 
 @pytest.fixture(scope="session")
-def swagger_ui_app(app_class):
+def swagger_ui_app(spec, app_class):
     return build_app_from_fixture(
         "simple",
         app_class=app_class,
-        spec_file=OPENAPI3_SPEC,
+        spec_file=spec,
+        validate_responses=True,
+        swagger_ui_options=SwaggerUIOptions(spec_path="/spec.json"),
+    )
+
+
+@pytest.fixture(scope="session")
+def swagger_ui_basepath_app(app_class):
+    return build_app_from_fixture(
+        "simple",
+        app_class=app_class,
+        spec_file="basepath-slash.yaml",
         validate_responses=True,
         swagger_ui_options=SwaggerUIOptions(spec_path="/spec.json"),
     )
