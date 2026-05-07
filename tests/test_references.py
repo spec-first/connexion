@@ -1,8 +1,9 @@
 from unittest import mock
 
 import pytest
-from connexion.json_schema import RefResolutionError, resolve_refs
+from connexion.json_schema import resolve_refs
 from connexion.jsonifier import Jsonifier
+from referencing.exceptions import Unresolvable
 
 DEFINITIONS = {
     "new_stack": {
@@ -50,7 +51,7 @@ def test_non_existent_reference(api):
             }
         ]
     }
-    with pytest.raises(RefResolutionError) as exc_info:  # type: py.code.ExceptionInfo
+    with pytest.raises(Unresolvable) as exc_info:  # type: py.code.ExceptionInfo
         resolve_refs(op_spec, {})
 
     exception = exc_info.value
@@ -69,7 +70,7 @@ def test_invalid_reference(api):
         ]
     }
 
-    with pytest.raises(RefResolutionError) as exc_info:  # type: py.code.ExceptionInfo
+    with pytest.raises(Unresolvable) as exc_info:  # type: py.code.ExceptionInfo
         resolve_refs(
             op_spec, {"definitions": DEFINITIONS, "parameters": PARAMETER_DEFINITIONS}
         )
@@ -84,7 +85,7 @@ def test_resolve_invalid_reference(api):
         "parameters": [{"$ref": "/parameters/fail"}],
     }
 
-    with pytest.raises(RefResolutionError) as exc_info:
+    with pytest.raises(Unresolvable) as exc_info:
         resolve_refs(op_spec, {"parameters": PARAMETER_DEFINITIONS})
 
     exception = exc_info.value
