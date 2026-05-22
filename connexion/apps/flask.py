@@ -127,7 +127,13 @@ class FlaskApi(AbstractRoutingAPI):
 
 
 class FlaskASGIApp(SpecMiddleware):
-    def __init__(self, import_name, server_args: dict, **kwargs):
+    def __init__(
+        self,
+        import_name,
+        server_args: dict,
+        wsgi_workers: t.Optional[int] = None,
+        **kwargs,
+    ):
         self.app = flask.Flask(import_name, **server_args)
         self.app.json = flask_utils.FlaskJSONProvider(self.app)
         self.app.url_map.converters["float"] = flask_utils.NumberConverter
@@ -138,7 +144,13 @@ class FlaskASGIApp(SpecMiddleware):
         self.app.config["TRAP_BAD_REQUEST_ERRORS"] = True
         self.app.config["TRAP_HTTP_EXCEPTIONS"] = True
 
-        self.asgi_app = WSGIMiddleware(self.app.wsgi_app)
+        # When wsgi_workers is provided, forward it to a2wsgi's WSGIMiddleware
+        # so users can size the WSGI ThreadPoolExecutor. Otherwise we let
+        # a2wsgi pick its own default (currently 10).
+        wsgi_kwargs: t.Dict[str, t.Any] = {}
+        if wsgi_workers is not None:
+            wsgi_kwargs["workers"] = wsgi_workers
+        self.asgi_app = WSGIMiddleware(self.app.wsgi_app, **wsgi_kwargs)
 
     def add_api(self, specification, *, name: t.Optional[str] = None, **kwargs):
         api = FlaskApi(specification, **kwargs)
@@ -188,6 +200,7 @@ class FlaskApp(AbstractApp):
         validate_responses: t.Optional[bool] = None,
         validator_map: t.Optional[dict] = None,
         security_map: t.Optional[dict] = None,
+        wsgi_workers: t.Optional[int] = None,
     ):
         """
         :param import_name: The name of the package or module that this object belongs to. If you
@@ -223,8 +236,14 @@ class FlaskApp(AbstractApp):
             :obj:`validators.VALIDATOR_MAP`.
         :param security_map: A dictionary of security handlers to use. Defaults to
             :obj:`security.SECURITY_HANDLERS`
+        :param wsgi_workers: Number of WSGI worker threads used by the WSGI-to-ASGI bridge
+            (:class:`a2wsgi.WSGIMiddleware`) when serving the wrapped Flask app. When omitted,
+            ``a2wsgi``'s own default is used (currently 10). Raise this when your WSGI handlers
+            block on I/O and you observe contention on the WSGI thread pool.
         """
-        self._middleware_app = FlaskASGIApp(import_name, server_args or {})
+        self._middleware_app = FlaskASGIApp(
+            import_name, server_args or {}, wsgi_workers=wsgi_workers
+        )
 
         super().__init__(
             import_name,

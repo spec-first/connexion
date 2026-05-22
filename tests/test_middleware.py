@@ -109,3 +109,22 @@ def test_add_wsgi_middleware(spec):
     app_client.post("/v1.0/greeting/robbe")
 
     mock.assert_called_once()
+
+
+def test_flask_wsgi_workers_default():
+    """When wsgi_workers is not set, FlaskApp falls back to a2wsgi's default (10)."""
+    app = FlaskApp(__name__)
+    # a2wsgi's WSGIMiddleware exposes the ThreadPoolExecutor via .executor;
+    # its _max_workers reflects the requested pool size.
+    assert app._middleware_app.asgi_app.executor._max_workers == 10
+
+
+def test_flask_wsgi_workers_configurable():
+    """FlaskApp(wsgi_workers=N) sizes the WSGI ThreadPoolExecutor to N.
+
+    Regression test for https://github.com/spec-first/connexion/issues/1979
+    where the WSGI worker count was hard-coded to a2wsgi's default of 10
+    and could only be changed by monkey-patching.
+    """
+    app = FlaskApp(__name__, wsgi_workers=42)
+    assert app._middleware_app.asgi_app.executor._max_workers == 42
