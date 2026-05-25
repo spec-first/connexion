@@ -1,6 +1,7 @@
 """
 This module defines a FlaskApp, a Connexion application to wrap a Flask application.
 """
+
 import functools
 import pathlib
 import typing as t

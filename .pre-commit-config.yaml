@@ -27,7 +27,7 @@ repos:
         args: ["--project", "conftest", "--thirdparty", "connexion", "--check-only", "--diff"]
 
   - repo: https://github.com/psf/black
-    rev: 22.3.0
+    rev: 26.3.1
     hooks:
       - id: black
         name: black
