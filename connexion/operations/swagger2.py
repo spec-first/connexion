@@ -24,7 +24,6 @@ COLLECTION_FORMAT_MAPPING = {
 
 
 class Swagger2Operation(AbstractOperation):
-
     """
     Exposes a Swagger 2.0 operation under the AbstractOperation interface.
     The primary purpose of this class is to provide the `function()` method
