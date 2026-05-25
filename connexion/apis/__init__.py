@@ -12,5 +12,4 @@ When the API is registered on the Connexion APP, the underlying framework bluepr
 on the framework app.
 """
 
-
 from .abstract import AbstractAPI  # NOQA

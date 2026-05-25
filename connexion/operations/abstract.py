@@ -27,7 +27,6 @@ VALIDATOR_MAP = {
 
 
 class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
-
     """
     An API routes requests to an Operation by a (path, method) pair.
     The operation uses a resolver to resolve its handler function.
