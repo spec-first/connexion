@@ -106,10 +106,10 @@ class SecureOperation:
                         logger.warning("... x-tokenInfoFunc missing", extra=vars(self))
                         break
 
-                    sec_req_funcs[
-                        scheme_name
-                    ] = self._api.security_handler_factory.verify_oauth(
-                        token_info_func, scope_validate_func, required_scopes
+                    sec_req_funcs[scheme_name] = (
+                        self._api.security_handler_factory.verify_oauth(
+                            token_info_func, scope_validate_func, required_scopes
+                        )
                     )
 
                 # Swagger 2.0
@@ -123,9 +123,9 @@ class SecureOperation:
                         logger.warning("... x-basicInfoFunc missing", extra=vars(self))
                         break
 
-                    sec_req_funcs[
-                        scheme_name
-                    ] = self._api.security_handler_factory.verify_basic(basic_info_func)
+                    sec_req_funcs[scheme_name] = (
+                        self._api.security_handler_factory.verify_basic(basic_info_func)
+                    )
 
                 # OpenAPI 3.0.0
                 elif security_scheme["type"] == "http":
@@ -142,10 +142,10 @@ class SecureOperation:
                             )
                             break
 
-                        sec_req_funcs[
-                            scheme_name
-                        ] = self._api.security_handler_factory.verify_basic(
-                            basic_info_func
+                        sec_req_funcs[scheme_name] = (
+                            self._api.security_handler_factory.verify_basic(
+                                basic_info_func
+                            )
                         )
                     elif scheme == "bearer":
                         bearer_info_func = (
@@ -158,10 +158,10 @@ class SecureOperation:
                                 "... x-bearerInfoFunc missing", extra=vars(self)
                             )
                             break
-                        sec_req_funcs[
-                            scheme_name
-                        ] = self._api.security_handler_factory.verify_bearer(
-                            bearer_info_func
+                        sec_req_funcs[scheme_name] = (
+                            self._api.security_handler_factory.verify_bearer(
+                                bearer_info_func
+                            )
                         )
                     else:
                         logger.warning(
@@ -183,10 +183,10 @@ class SecureOperation:
                                 "... x-bearerInfoFunc missing", extra=vars(self)
                             )
                             break
-                        sec_req_funcs[
-                            scheme_name
-                        ] = self._api.security_handler_factory.verify_bearer(
-                            bearer_info_func
+                        sec_req_funcs[scheme_name] = (
+                            self._api.security_handler_factory.verify_bearer(
+                                bearer_info_func
+                            )
                         )
                     else:
                         apikey_info_func = (
@@ -200,12 +200,12 @@ class SecureOperation:
                             )
                             break
 
-                        sec_req_funcs[
-                            scheme_name
-                        ] = self._api.security_handler_factory.verify_api_key(
-                            apikey_info_func,
-                            security_scheme["in"],
-                            security_scheme["name"],
+                        sec_req_funcs[scheme_name] = (
+                            self._api.security_handler_factory.verify_api_key(
+                                apikey_info_func,
+                                security_scheme["in"],
+                                security_scheme["name"],
+                            )
                         )
 
                 else:

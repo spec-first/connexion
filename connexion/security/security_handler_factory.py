@@ -171,11 +171,9 @@ class AbstractSecurityHandlerFactory(abc.ABC):
         logger.debug("... Token scopes: %s", token_scopes)
         if not required_scopes <= token_scopes:
             logger.info(
-                textwrap.dedent(
-                    """
+                textwrap.dedent("""
                         ... Token scopes (%s) do not match the scopes necessary to call endpoint (%s).
-                         Aborting with 403."""
-                ).replace("\n", ""),
+                         Aborting with 403.""").replace("\n", ""),
                 token_scopes,
                 required_scopes,
             )
