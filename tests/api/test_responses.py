@@ -268,6 +268,7 @@ def test_required_body(simple_app):
         "/v1.0/test-required-body", headers={"content-type": "application/json"}
     )
     assert resp.status_code == 400
+    assert "Content-Length" in resp.json()["detail"]
 
     resp = app_client.post("/v1.0/test-required-body", json={"foo": "bar"})
     assert resp.status_code == 200
