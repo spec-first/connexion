@@ -439,6 +439,15 @@ contract. This can be useful for eg. ``/healthz`` or similar endpoints.
         When using the ``ConnexionMiddleware`` around an ASGI or WSGI application, you can
         register individual routes on the wrapped application.
 
+        .. note::
+
+            ``ConnexionMiddleware`` does not register the operations from your OpenAPI
+            specification as routes on the wrapped application. The wrapped application
+            therefore needs to define a route for each operation, otherwise it will return
+            a 404 even though Connexion resolved the ``operationId`` successfully. If you
+            don't already have an ASGI or WSGI application to wrap, use ``AsyncApp`` or
+            ``FlaskApp`` instead, which register the routes for you.
+
 
 API Versioning and basePath
 ---------------------------
