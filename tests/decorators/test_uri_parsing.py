@@ -147,6 +147,46 @@ async def test_uri_parser_path_params(
 
 
 @pytest.mark.parametrize(
+    "explode, path_in, expected",
+    [
+        (False, {"obj": "name,hello,num,1"}, {"name": "hello", "num": "1"}),
+        (True, {"obj": "name=hello,num=1"}, {"name": "hello", "num": "1"}),
+    ],
+)
+async def test_uri_parser_path_object_simple(explode, path_in, expected):
+    parameters = [
+        {
+            "name": "obj",
+            "in": "path",
+            "required": True,
+            "style": "simple",
+            "explode": explode,
+            "schema": {"type": "object"},
+        }
+    ]
+    parser = OpenAPIURIParser(parameters, {})
+    res = parser.resolve_path(path_in)
+    assert res["obj"] == expected
+
+
+async def test_uri_parser_path_object_simple_malformed():
+    parameters = [
+        {
+            "name": "obj",
+            "in": "path",
+            "required": True,
+            "style": "simple",
+            "explode": False,
+            "schema": {"type": "object"},
+        }
+    ]
+    parser = OpenAPIURIParser(parameters, {})
+    # odd number of parts cannot form key/value pairs; left for validation
+    res = parser.resolve_path({"obj": "name,hello,num"})
+    assert res["obj"] == "name,hello,num"
+
+
+@pytest.mark.parametrize(
     "parser_class, expected, query_in, collection_format",
     [
         (OpenAPIURIParser, ["d", "e", "f"], QUERY3, None),
