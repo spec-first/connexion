@@ -371,6 +371,8 @@ def coerce_type(param, value, parameter_type, parameter_name=None):
 
             def cast_leaves(d, schema):
                 if type(d) is not dict:
+                    if is_nullable(schema) and is_null(d):
+                        return None
                     try:
                         return make_type(d, schema["type"])
                     except (ValueError, TypeError):
