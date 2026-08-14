@@ -143,3 +143,48 @@ def test_sort_apis_by_basepath():
         api4,
         api1,
     ]
+
+
+def test_coerce_type_nullable_object_property():
+    """Nullable deepObject properties should become None, not the string 'null'."""
+    param = {
+        "name": "filter",
+        "in": "query",
+        "style": "deepObject",
+        "explode": True,
+        "schema": {
+            "type": "object",
+            "properties": {
+                "id": {"type": "integer", "nullable": True},
+                "name": {"type": "string"},
+            },
+        },
+    }
+    assert utils.coerce_type(param, {"id": "null", "name": "Ada"}, "query") == {
+        "id": None,
+        "name": "Ada",
+    }
+    assert utils.coerce_type(param, {"id": "None"}, "query") == {"id": None}
+
+
+def test_coerce_type_x_nullable_object_property():
+    param = {
+        "name": "filter",
+        "schema": {
+            "type": "object",
+            "properties": {"id": {"type": "integer", "x-nullable": True}},
+        },
+    }
+    assert utils.coerce_type(param, {"id": "null"}, "query") == {"id": None}
+
+
+def test_coerce_type_non_nullable_object_property_keeps_null_string():
+    param = {
+        "name": "filter",
+        "schema": {
+            "type": "object",
+            "properties": {"id": {"type": "integer"}},
+        },
+    }
+    # int("null") fails, so the original string is left for the validator to reject
+    assert utils.coerce_type(param, {"id": "null"}, "query") == {"id": "null"}

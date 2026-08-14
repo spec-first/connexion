@@ -319,3 +319,28 @@ def test_parameter_coercion():
 
     parsed_param = uri_parser.resolve_query(QueryParams(f"a1={quote_plus('1,2,3,4')}"))
     assert parsed_param == {"a1": [4]}  # Swagger2URIParser
+
+
+
+def test_deep_object_nullable_property():
+    """filter[id]=null should coerce to None when the property is nullable (#1503)."""
+    parameters = [
+        {
+            "name": "filter",
+            "in": "query",
+            "style": "deepObject",
+            "explode": True,
+            "schema": {
+                "type": "object",
+                "additionalProperties": False,
+                "properties": {
+                    "id": {"type": "integer", "nullable": True},
+                    "name": {"type": "string"},
+                },
+            },
+        }
+    ]
+    parser = OpenAPIURIParser(parameters, {})
+    query = MultiDict([("filter[id]", "null"), ("filter[name]", "Ada")])
+    parsed = parser.resolve_query(query.to_dict(flat=False))
+    assert parsed == {"filter": {"id": None, "name": "Ada"}}
