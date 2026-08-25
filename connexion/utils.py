@@ -330,10 +330,13 @@ def split_content_type(
     # Check for parameters
     if ";" in content_type:
         mime_type, parameters = content_type.split(";", maxsplit=1)
+        mime_type = mime_type.strip()
 
         # Find parameter describing the charset
         prefix = "charset="
         for parameter in parameters.split(";"):
+            # Parameters may be surrounded by optional whitespace (RFC 7231)
+            parameter = parameter.strip()
             if parameter.startswith(prefix):
                 encoding = parameter[len(prefix) :]
     else:
