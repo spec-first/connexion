@@ -1,7 +1,8 @@
+import os
 from unittest import mock
 
 import pytest
-from connexion.json_schema import resolve_refs
+from connexion.json_schema import FileHandler, resolve_refs
 from connexion.jsonifier import Jsonifier
 from referencing.exceptions import Unresolvable
 
@@ -98,6 +99,34 @@ def test_resolve_web_reference(api):
 
     spec = resolve_refs(op_spec, store=store)
     assert spec["parameters"][0]["name"] == "test"
+
+
+@pytest.mark.parametrize("ref", ["./schema.yaml", "schema.yaml"])
+def test_resolve_relative_file_reference(tmp_path, monkeypatch, ref):
+    (tmp_path / "schema.yaml").write_text("type: string\n", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+
+    assert FileHandler()(ref) == {"type": "string"}
+    assert resolve_refs({"properties": {"value": {"$ref": ref}}}) == {
+        "properties": {"value": {"type": "string"}}
+    }
+
+
+def test_resolve_file_uri(tmp_path):
+    schema = tmp_path / "schema with spaces.yaml"
+    schema.write_text("type: string\n", encoding="utf-8")
+
+    assert resolve_refs({"properties": {"value": {"$ref": schema.as_uri()}}}) == {
+        "properties": {"value": {"type": "string"}}
+    }
+
+
+@pytest.mark.skipif(os.name != "nt", reason="UNC paths require Windows")
+def test_file_uri_with_host():
+    assert (
+        FileHandler._uri_to_path("file://server/share/schema.yaml")
+        == r"\\server\share\schema.yaml"
+    )
 
 
 def test_resolve_ref_referring_to_another_ref(api):
