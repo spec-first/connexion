@@ -4,6 +4,8 @@ import typing as t
 from starlette.middleware.errors import (
     ServerErrorMiddleware as StarletteServerErrorMiddleware,
 )
+from starlette.requests import Request as StarletteRequest
+from starlette.responses import Response as StarletteResponse
 from starlette.types import ASGIApp
 
 from connexion.exceptions import InternalServerError
@@ -29,8 +31,13 @@ class ServerErrorMiddleware(StarletteServerErrorMiddleware):
         super().__init__(next_app, handler=handler)
 
     @staticmethod
-    @connexion_wrapper
-    def error_response(_request: ConnexionRequest, exc: Exception) -> ConnexionResponse:
+    def error_response(_request: StarletteRequest, exc: Exception) -> StarletteResponse:
         """Default handler for any unhandled Exception"""
         logger.error("%r", exc, exc_info=exc)
-        return InternalServerError().to_problem()
+        problem_response = InternalServerError().to_problem()
+        return StarletteResponse(
+            content=problem_response.body,
+            status_code=problem_response.status_code,
+            media_type=problem_response.mimetype,
+            headers=problem_response.headers,
+        )
