@@ -1,14 +1,18 @@
 """
 Validation Middleware.
 """
+
 import logging
 import typing as t
 
+from jsonschema import Draft4Validator, ValidationError
+from starlette.datastructures import Headers
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from connexion import utils
 from connexion.datastructures import MediaTypeDict
-from connexion.exceptions import NonConformingResponseHeaders
+from connexion.exceptions import NonConformingResponseHeaders, TypeValidationError
+from connexion.json_schema import Draft4ResponseValidator
 from connexion.middleware.abstract import RoutedAPI, RoutedMiddleware
 from connexion.operations import AbstractOperation
 from connexion.validators import VALIDATOR_MAP
@@ -86,6 +90,51 @@ class ResponseValidationOperation:
             ).format(pretty_list)
             raise NonConformingResponseHeaders(detail=msg)
 
+    @staticmethod
+    def validate_header_values(
+        headers: t.List[t.Tuple[bytes, bytes]], response_definition: dict
+    ) -> None:
+        response_headers = Headers(raw=headers)
+        for name, definition in response_definition.get("headers", {}).items():
+            if name.lower() == "content-type" or name not in response_headers:
+                continue
+            schema = definition.get("schema", definition)
+            value: t.Any = response_headers[name]
+            try:
+                if utils.is_nullable(schema) and utils.is_null(value):
+                    value = None
+                elif schema.get("type") == "array":
+                    delimiters = {"csv": ",", "ssv": " ", "tsv": "\t", "pipes": "|"}
+                    delimiter = delimiters.get(definition.get("collectionFormat"), ",")
+                    value = value.split(delimiter)
+                elif schema.get("type") == "object":
+                    parts = value.split(",") if value else []
+                    if definition.get("explode", False):
+                        value = dict(part.split("=", 1) for part in parts)
+                    else:
+                        if len(parts) % 2:
+                            raise ValueError("Expected comma-separated key/value pairs")
+                        value = dict(zip(parts[::2], parts[1::2]))
+                # Arrays have already been split using their declared format.
+                value = utils.coerce_type(definition, value, "response header", name)
+            except TypeValidationError as exception:
+                raise NonConformingResponseHeaders(
+                    detail=exception.detail
+                ) from exception
+            except ValueError as exception:
+                raise NonConformingResponseHeaders(
+                    detail=f"Invalid response header '{name}': {exception}"
+                ) from exception
+            try:
+                Draft4ResponseValidator(
+                    schema, format_checker=Draft4Validator.FORMAT_CHECKER
+                ).validate(value)
+            except ValidationError as exception:
+                raise NonConformingResponseHeaders(
+                    detail=f"Response header '{name}' does not conform to specification. "
+                    f"{exception.message}"
+                ) from exception
+
     async def __call__(self, scope: Scope, receive: Receive, send: Send):
         async def wrapped_send(message: t.MutableMapping[str, t.Any]) -> None:
             nonlocal send
@@ -102,6 +151,7 @@ class ResponseValidationOperation:
                     status, mime_type
                 )
                 self.validate_required_headers(headers, response_definition)
+                self.validate_header_values(headers, response_definition)
 
                 # Validate body
                 try:
