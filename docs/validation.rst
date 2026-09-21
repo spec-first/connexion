@@ -172,6 +172,18 @@ Response headers validation
 Connexion will check for any required response headers that are missing and will validate the
 ``Content-Type`` header against the responses defined in your specification.
 
+Values of response headers with a schema are also validated. For example, a header
+with ``type: integer`` and ``minimum: 0`` accepts ``"42"`` but rejects ``"invalid"``
+and ``"-1"``. Values are converted for validation without changing the headers sent
+to the client. Header names are matched case-insensitively; optional headers that
+are absent are not validated.
+
+Both OpenAPI 3 schemas and Swagger 2 header definitions are supported, including
+array collection formats and OpenAPI 3 ``simple`` object serialization. A value
+that does not conform to its schema results in a ``500 Internal Server Error``
+with the header name and validation error in the detail.
+
+
 .. note::
     If the content type is not explicitly set, Connexion will infer it
     (see :ref:`response:Headers`), and validate the inferred content type, which can still fail.
