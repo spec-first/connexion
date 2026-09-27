@@ -8,11 +8,13 @@ build:
   tools:
     python: "3.12"
   jobs:
-    post_create_environment:
-      # Install poetry
-      - python -m pip install poetry
-      # Tell poetry to not use a virtual environment
-      - poetry config virtualenvs.create false
-    post_install:
+    pre_create_environment:
+      # Install uv
+      - asdf plugin add uv
+      - asdf install uv latest
+      - asdf global uv latest
+    create_environment:
+      - uv venv "${READTHEDOCS_VIRTUALENV_PATH}"
+    install:
       # Install dependencies with 'docs' dependency group
-      - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH python -m poetry install --with docs --all-extras
+      - UV_PROJECT_ENVIRONMENT="${READTHEDOCS_VIRTUALENV_PATH}" uv sync --all-extras --no-default-groups --group docs
