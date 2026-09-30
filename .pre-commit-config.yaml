@@ -30,14 +30,17 @@ repos:
     rev: 22.3.0
     hooks:
       - id: black
+        language_version: python3.13
         name: black
         files: "^connexion/"
         args: ["connexion"]
       - id: black
+        language_version: python3.13
         name: black examples
         files: "^examples/"
         args: ["examples"]
       - id: black
+        language_version: python3.13
         name: black tests
         files: "^tests/"
         args: ["tests"]
@@ -46,6 +49,7 @@ repos:
     rev: v0.981
     hooks:
       - id: mypy
+        language_version: python3.12
         files: "^connexion/"
         args: ["--ignore-missing-imports", "connexion"]
         additional_dependencies:
