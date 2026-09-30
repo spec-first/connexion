@@ -49,6 +49,7 @@ repos:
     rev: v0.981
     hooks:
       - id: mypy
+        language_version: python3.12
         files: "^connexion/"
         args: ["--ignore-missing-imports", "connexion"]
         additional_dependencies:
