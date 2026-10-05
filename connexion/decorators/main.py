@@ -100,7 +100,8 @@ class WSGIDecorator(BaseDecorator):
     and provides Flask datastructures to the view function. This works for any WSGI app, since
     we get the request via the connexion context provided by WSGI middleware.
 
-    This decorator does not parse responses, but passes them directly to the WSGI App."""
+    This decorator does not parse responses, but passes them directly to the WSGI App.
+    """
 
     framework = FlaskFramework
 
@@ -152,7 +153,8 @@ class ASGIDecorator(BaseDecorator):
     and provides Starlette datastructures to the view function. This works for any ASGI app, since
     we get the request via the connexion context provided by ASGI middleware.
 
-    This decorator does not parse responses, but passes them directly to the ASGI App."""
+    This decorator does not parse responses, but passes them directly to the ASGI App.
+    """
 
     framework = StarletteFramework
 
