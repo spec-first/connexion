@@ -2,6 +2,7 @@
 This module defines interfaces for requests and responses used in Connexion for authentication,
 validation, serialization, etc.
 """
+
 import typing as t
 from collections import defaultdict
 

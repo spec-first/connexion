@@ -15,7 +15,6 @@ DEFAULT_MIMETYPE = "application/json"
 
 
 class AbstractOperation(metaclass=abc.ABCMeta):
-
     """
     An API routes requests to an Operation by a (path, method) pair.
     The operation uses a resolver to resolve its handler function.

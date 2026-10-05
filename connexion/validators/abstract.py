@@ -2,6 +2,7 @@
 This module defines a Validator interface with base functionality that can be subclassed
 for custom validators provided to the RequestValidationMiddleware.
 """
+
 import copy
 import json
 import typing as t
