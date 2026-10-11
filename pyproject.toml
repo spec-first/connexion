@@ -91,9 +91,6 @@ module-root = ""
 requires = ["uv_build>=0.10.9,<0.11.0"]
 build-backend = "uv_build"
 
-[tool.distutils.bdist_wheel]
-universal = true
-
 [tool.pytest.ini_options]
 filterwarnings = [
     "ignore::DeprecationWarning:connexion.*:",
