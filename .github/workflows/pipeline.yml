@@ -22,7 +22,7 @@ jobs:
         enable-cache: true
         cache-dependency-glob: pyproject.toml
     - name: Install dependencies
-      run: uv pip install --system "tox>=4.22" "tox-uv>=1.11" "tox-gh-actions>=3" "coveralls<4"
+      run: uv pip install --system "tox>=4.22,<5" "tox-uv>=1.11,<2" "tox-gh-actions>=3,<4" "coveralls<4"
     - name: Test with tox
       run: tox
     - name: Coveralls
