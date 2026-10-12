@@ -7,14 +7,12 @@ build:
   os: "ubuntu-22.04"
   tools:
     python: "3.12"
-  jobs:
-    pre_create_environment:
-      # Install uv
-      - asdf plugin add uv
-      - asdf install uv latest
-      - asdf global uv latest
-    create_environment:
-      - uv venv "${READTHEDOCS_VIRTUALENV_PATH}"
-    install:
-      # Install dependencies with 'docs' dependency group
-      - UV_PROJECT_ENVIRONMENT="${READTHEDOCS_VIRTUALENV_PATH}" uv sync --all-extras --no-default-groups --group docs
+
+python:
+  install:
+    # Install dependencies with 'docs' dependency group
+    - method: uv
+      command: sync
+      groups:
+        - docs
+      extras: all
