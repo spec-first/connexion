@@ -65,7 +65,6 @@ NO_VALUE = object()
 
 
 class AbstractSecurityHandler:
-
     required_scopes_kw = "required_scopes"
     request_kw = "request"
     client = None

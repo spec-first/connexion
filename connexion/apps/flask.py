@@ -288,5 +288,6 @@ class FlaskApp(AbstractApp):
         :param options: Options to pass to the middleware_class on initialization
         """
         self._middleware_app.asgi_app.app = middleware(
-            self._middleware_app.asgi_app.app, **options  # type: ignore
+            self._middleware_app.asgi_app.app,
+            **options,  # type: ignore
         )

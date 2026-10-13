@@ -70,7 +70,7 @@ OPERATION1 = {
             "schema": {"$ref": "#/definitions/new_stack"},
         },
         400: {
-            "description": "Stack was not created because request " "was invalid",
+            "description": "Stack was not created because request was invalid",
             "schema": {"$ref": "#/definitions/problem"},
         },
         401: {
@@ -111,7 +111,7 @@ OPERATION2 = {
             "schema": {"$ref": "#/definitions/new_stack"},
         },
         400: {
-            "description": "Stack was not created because request " "was invalid",
+            "description": "Stack was not created because request was invalid",
             "schema": {"$ref": "#/definitions/problem"},
         },
         401: {
@@ -152,7 +152,7 @@ OPERATION4 = {
             "schema": {"$ref": "#/definitions/new_stack"},
         },
         400: {
-            "description": "Stack was not created because request " "was invalid",
+            "description": "Stack was not created because request was invalid",
             "schema": {"$ref": "#/definitions/problem"},
         },
         401: {
@@ -187,7 +187,7 @@ OPERATION5 = {
             "schema": {"$ref": "#/definitions/new_stack"},
         },
         "400": {
-            "description": "Stack was not created because request " "was invalid",
+            "description": "Stack was not created because request was invalid",
             "schema": {"$ref": "#/definitions/problem"},
         },
         "401": {
@@ -243,7 +243,7 @@ OPERATION7 = {
             "schema": {"$ref": "#/definitions/new_stack"},
         },
         "400": {
-            "description": "Stack was not created because request " "was invalid",
+            "description": "Stack was not created because request was invalid",
             "schema": {"$ref": "#/definitions/problem"},
         },
         "401": {
@@ -278,7 +278,7 @@ OPERATION8 = {
             "schema": {"$ref": "#/definitions/new_stack"},
         },
         "400": {
-            "description": "Stack was not created because request " "was invalid",
+            "description": "Stack was not created because request was invalid",
             "schema": {"$ref": "#/definitions/problem"},
         },
         "401": {

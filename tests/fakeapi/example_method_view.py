@@ -2,7 +2,6 @@ from flask.views import MethodView
 
 
 class PetsView(MethodView):
-
     mycontent = "demonstrate return from MethodView class"
 
     def get(self, **kwargs):

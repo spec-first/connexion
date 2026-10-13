@@ -49,9 +49,9 @@ def test_routing_middleware(middleware_app):
 
     response = app_client.post("/v1.0/greeting/robbe")
 
-    assert (
-        response.headers.get("operation_id") == "fakeapi.hello.post_greeting"
-    ), response.status_code
+    assert response.headers.get("operation_id") == "fakeapi.hello.post_greeting", (
+        response.status_code
+    )
 
 
 def test_add_middleware(spec, app_class):
@@ -62,9 +62,9 @@ def test_add_middleware(spec, app_class):
     app_client = app.test_client()
     response = app_client.post("/v1.0/greeting/robbe")
 
-    assert (
-        response.headers.get("operation_id") == "fakeapi.hello.post_greeting"
-    ), response.status_code
+    assert response.headers.get("operation_id") == "fakeapi.hello.post_greeting", (
+        response.status_code
+    )
 
 
 def test_position(spec, app_class):

@@ -273,7 +273,7 @@ def test_handle_add_operation_error(simple_api_spec_dir, monkeypatch):
         mock.MagicMock(side_effect=Exception("operation error!")),
     )
     with pytest.raises(Exception):
-        app.add_api("swagger.yaml", resolver=lambda oid: (lambda foo: "bar"))
+        app.add_api("swagger.yaml", resolver=lambda oid: lambda foo: "bar")
         app.middleware._build_middleware_stack()
 
 

@@ -68,9 +68,9 @@ def test_openapi_yaml_behind_proxy(reverse_proxied_app):
 
     if reverse_proxied_app._spec_file == "swagger.yaml":
         assert 'url: "/behind/proxy/v1.0/swagger.json"' in swagger_ui.text
-        assert (
-            spec.get("basePath") == "/behind/proxy/v1.0"
-        ), "basePath should contains original URI"
+        assert spec.get("basePath") == "/behind/proxy/v1.0", (
+            "basePath should contains original URI"
+        )
     else:
         assert 'url: "/behind/proxy/v1.0/openapi.json"' in swagger_ui.text
         url = spec.get("servers", [{}])[0].get("url")
@@ -404,9 +404,9 @@ def test_post_wrong_content_type(simple_app):
         headers={"content-type": "application/json"},
         content="not a valid json",
     )
-    assert (
-        resp.status_code == 400
-    ), "Should return 400 when Content-Type is json but content not parsable"
+    assert resp.status_code == 400, (
+        "Should return 400 when Content-Type is json but content not parsable"
+    )
 
 
 def test_get_unicode_response(simple_app):

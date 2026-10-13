@@ -298,7 +298,9 @@ def extract_content_type(
     content_type: t.Optional[str] = None
 
     header_pairs_type = t.Collection[t.Tuple[t.Union[str, bytes], t.Union[str, bytes]]]
-    header_pairs: header_pairs_type = headers.items() if isinstance(headers, dict) else headers  # type: ignore
+    header_pairs: header_pairs_type = (
+        headers.items() if isinstance(headers, dict) else headers  # type: ignore
+    )
     for key, value in header_pairs:
         # Headers can always be decoded using latin-1:
         # https://stackoverflow.com/a/27357138/4098821
@@ -554,5 +556,4 @@ def build_example_from_schema(schema):
         faker = JSF(schema)
         return faker.generate()
     except TypeError:
-
         return None
