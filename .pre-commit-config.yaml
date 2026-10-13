@@ -53,3 +53,8 @@ repos:
           - types-PyYAML
           - types-requests
         pass_filenames: false
+
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.12.19
+    hooks:
+      - id: uv-lock
