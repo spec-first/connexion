@@ -10,7 +10,7 @@ build:
 
 python:
   install:
-    # Install dependencies with 'docs' dependency group
+    # Install the locked dependencies from uv.lock with the 'docs' dependency group
     - method: uv
       command: sync
       groups:
