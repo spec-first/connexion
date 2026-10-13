@@ -231,7 +231,7 @@ We welcome your ideas, issues, and pull requests. Just follow the
 usual/standard GitHub practices.
 
 For easy development, install connexion using [uv](https://docs.astral.sh/uv/) with all extras, and
-install the pre-commit hooks to automatically run black formatting and static analysis checks.
+install the pre-commit hooks to automatically run ruff formatting and static analysis checks.
 
 ```shell
     uv sync --all-extras

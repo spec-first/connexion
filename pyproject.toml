@@ -105,8 +105,21 @@ filterwarnings = [
 ]
 asyncio_mode = "auto"
 
-[tool.isort]
-profile = "black"
+[tool.ruff]
+extend-exclude = ["docs", "*.md"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I"]
+
+[tool.ruff.lint.pycodestyle]
+# Longest docstring in current code base
+max-line-length = 137
+
+[tool.ruff.lint.per-file-ignores]
+"connexion/__init__.py" = ["E", "W", "F"]
+# Only import sorting is enforced outside the connexion package
+"tests/**" = ["E", "W", "F"]
+"examples/**" = ["E", "W", "F"]
 
 [tool.coverage.report]
 exclude_lines = [
