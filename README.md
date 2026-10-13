@@ -238,7 +238,7 @@ install the pre-commit hooks to automatically run black formatting and static an
     uv run pre-commit install
 ```
 
-If you change the dependencies in `pyproject.toml`, run `uv lock` and commit the updated `uv.lock`.
+The pre-commit hooks also update `uv.lock` when you change the dependencies in `pyproject.toml`.
 
 You can find out more about how Connexion works and where to apply your changes by having a look
 at our [architecture][Architecture].
