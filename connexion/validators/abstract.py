@@ -75,7 +75,7 @@ class AbstractRequestBodyValidator:
         if body is None:
             return receive, scope
 
-        bytes_body = json.dumps(body).encode(self._encoding)
+        bytes_body = json.dumps(body).encode("utf-8")
 
         # Update the content-length header
         new_scope = scope.copy()

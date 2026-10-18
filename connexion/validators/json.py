@@ -51,14 +51,16 @@ class JSONRequestBodyValidator(AbstractRequestBodyValidator):
         self, stream: t.AsyncGenerator[bytes, None], scope: Scope
     ) -> t.Any:
         bytes_body = b"".join([message async for message in stream])
-        body = bytes_body.decode(self._encoding)
 
-        if not body:
+        if not bytes_body:
             return None
 
+        # Parse the raw bytes, like the frameworks do for the handler, so that the
+        # charset in the Content-Type header can not change the validated document.
+        # JSON is always UTF-8/16/32 (RFC 8259) and json.loads detects which.
         try:
-            return json.loads(body)
-        except json.decoder.JSONDecodeError as e:
+            return json.loads(bytes_body)
+        except (json.decoder.JSONDecodeError, UnicodeDecodeError) as e:
             raise BadRequestProblem(detail=str(e))
 
     def _validate(self, body: t.Any) -> t.Optional[dict]:
