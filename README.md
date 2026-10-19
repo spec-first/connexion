@@ -230,13 +230,12 @@ A full changelog is maintained on the [GitHub releases page][Releases].
 We welcome your ideas, issues, and pull requests. Just follow the
 usual/standard GitHub practices.
 
-For easy development, install connexion using poetry with all extras, and
+For easy development, install connexion using [uv](https://docs.astral.sh/uv/) with all extras, and
 install the pre-commit hooks to automatically run black formatting and static analysis checks.
 
 ```shell
-    pip install poetry
-    poetry install --all-extras
-    pre-commit install
+    uv sync --all-extras
+    uv run pre-commit install
 ```
 
 You can find out more about how Connexion works and where to apply your changes by having a look

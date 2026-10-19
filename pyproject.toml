@@ -1,27 +1,26 @@
-[tool.poetry]
+[project]
 name = "connexion"
 version = "3.0.dev0"
 description = "Connexion - API first applications with OpenAPI/Swagger"
 readme = "README.md"
+requires-python = ">=3.9"
 keywords = ["api", "swagger", "openapi"]
 license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
 authors = [
-    "Robbe Sneyders <robbe.sneyders@gmail.com>",
-    "Ruwan Lambrichts <ruwan.lambrichts@ml6.eu>",
-    "Daniel Grossmann-Kavanagh <me@danielgk.com>",
-    "Henning Jacobs <henning.jacobs@zalando.de>",
-    "João Santos <joao.santos@zalando.de>",
+    { name = "Robbe Sneyders", email = "robbe.sneyders@gmail.com" },
+    { name = "Ruwan Lambrichts", email = "ruwan.lambrichts@ml6.eu" },
+    { name = "Daniel Grossmann-Kavanagh", email = "me@danielgk.com" },
+    { name = "Henning Jacobs", email = "henning.jacobs@zalando.de" },
+    { name = "João Santos", email = "joao.santos@zalando.de" },
 ]
 maintainers = [
-    "Robbe Sneyders <robbe.sneyders@gmail.com>",
-    "Ruwan Lambrichts <ruwan.lambrichts@ml6.eu>",
+    { name = "Robbe Sneyders", email = "robbe.sneyders@gmail.com" },
+    { name = "Ruwan Lambrichts", email = "ruwan.lambrichts@ml6.eu" },
 ]
-repository = "https://github.com/spec-first/connexion"
-include = ["*.txt", "*.rst"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
@@ -40,56 +39,57 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Typing :: Typed",
 ]
+dependencies = [
+    "asgiref>=3.4",
+    "httpx>=0.23",
+    "inflection>=0.3.1",
+    "jsonschema>=4.17.3",
+    "Jinja2>=3.0.0",
+    "python-multipart>=0.0.15",
+    "PyYAML>=5.1",
+    "requests>=2.27",
+    "referencing>=0.12.0",
+    "starlette>=0.35",
+    "typing-extensions>=4.6.1",
+    "werkzeug>=2.2.1",
+]
 
-[tool.poetry.scripts]
-connexion = 'connexion.cli:main'
+[project.optional-dependencies]
+flask = ["a2wsgi>=1.7", "flask[async]>=2.2"]
+swagger-ui = ["swagger-ui-bundle>=1.1.0"]
+uvicorn = ["uvicorn[standard]>=0.17.6"]
+mock = ["jsf>=0.10.0"]
 
-[tool.poetry.dependencies]
-python = '^3.9'
-asgiref = ">= 3.4"
-httpx = ">= 0.23"
-inflection = ">= 0.3.1"
-jsonschema = ">=4.17.3"
-Jinja2 = ">= 3.0.0"
-python-multipart = ">= 0.0.15"
-PyYAML = ">= 5.1"
-requests = ">= 2.27"
-referencing = ">= 0.12.0"
-starlette = ">= 0.35"
-typing-extensions = ">= 4.6.1"
-werkzeug = ">= 2.2.1"
+[project.scripts]
+connexion = "connexion.cli:main"
 
-a2wsgi = { version = ">= 1.7", optional = true }
-flask = { version = ">= 2.2", extras = ["async"], optional = true }
-swagger-ui-bundle = { version = ">= 1.1.0", optional = true }
-uvicorn = { version = ">= 0.17.6", extras = ["standard"], optional = true }
-jsf = { version = ">=0.10.0", optional = true }
+[project.urls]
+Repository = "https://github.com/spec-first/connexion"
 
-[tool.poetry.extras]
-flask = ["a2wsgi", "flask"]
-swagger-ui = ["swagger-ui-bundle"]
-uvicorn = ["uvicorn"]
-mock = ["jsf"]
+[dependency-groups]
+tests = [
+    "pre-commit~=2.21.0",
+    "pytest==8.4.2",
+    "pytest-asyncio~=0.18.3",
+    "pytest-cov~=2.12.1",
+]
+docs = [
+    "sphinx==5.3.0",
+    "sphinx_copybutton==0.5.2",
+    "sphinx_design==0.4.1",
+    "sphinx-rtd-theme==1.2.0",
+    "sphinxemoji==0.3.1",
+]
 
-[tool.poetry.group.tests.dependencies]
-pre-commit = "~2.21.0"
-pytest = "8.4.2"
-pytest-asyncio = "~0.18.3"
-pytest-cov = "~2.12.1"
+[tool.uv]
+default-groups = ["tests"]
 
-[tool.poetry.group.docs.dependencies]
-sphinx = "5.3.0"
-sphinx_copybutton = "0.5.2"
-sphinx_design = "0.4.1"
-sphinx-rtd-theme = "1.2.0"
-sphinxemoji = "0.3.1"
+[tool.uv.build-backend]
+module-root = ""
 
 [build-system]
-requires = ["poetry-core>=1.2.0"]
-build-backend = "poetry.core.masonry.api"
-
-[tool.distutils.bdist_wheel]
-universal = true
+requires = ["uv_build>=0.10.9,<0.11.0"]
+build-backend = "uv_build"
 
 [tool.pytest.ini_options]
 filterwarnings = [
