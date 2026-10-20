@@ -36,6 +36,10 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     steps:
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v7
+      with:
+        python-version: '3.12'
     - name: Install coveralls
       run: pip install "coveralls>=4.1,<5"
     - name: Coveralls Finished
