@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13', '3.14']
+        python-version: ['3.10', '3.11', '3.12', '3.13', '3.14', '3.15']
     steps:
     - uses: actions/checkout@v7
     - name: Set up Python ${{ matrix.python-version }}
@@ -22,7 +22,7 @@ jobs:
         enable-cache: true
         cache-dependency-glob: pyproject.toml
     - name: Install dependencies
-      run: uv pip install --system "tox>=4.22,<5" "tox-uv>=1.11,<2" "tox-gh-actions>=3,<4" "coveralls<4"
+      run: uv pip install --system "tox>=4.22,<5" "tox-uv>=1.11,<2" "tox-gh-actions>=3,<4" "coveralls>=4.1,<5"
     - name: Test with tox
       run: tox
     - name: Coveralls
@@ -36,8 +36,12 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     steps:
-    - name: Install "coveralls<4"
-      run: pip install coveralls
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v7
+      with:
+        python-version: '3.12'
+    - name: Install coveralls
+      run: pip install "coveralls>=4.1,<5"
     - name: Coveralls Finished
       run: coveralls --service github --finish
       env:
