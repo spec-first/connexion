@@ -22,7 +22,7 @@ jobs:
         enable-cache: true
         cache-dependency-glob: pyproject.toml
     - name: Install dependencies
-      run: uv pip install --system "tox>=4.22,<5" "tox-uv>=1.11,<2" "tox-gh-actions>=3,<4" "coveralls<4"
+      run: uv pip install --system "tox>=4.22,<5" "tox-uv>=1.11,<2" "tox-gh-actions>=3,<4" "coveralls>=4.1,<5"
     - name: Test with tox
       run: tox
     - name: Coveralls
@@ -36,8 +36,8 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     steps:
-    - name: Install "coveralls<4"
-      run: pip install coveralls
+    - name: Install coveralls
+      run: pip install "coveralls>=4.1,<5"
     - name: Coveralls Finished
       run: coveralls --service github --finish
       env:
