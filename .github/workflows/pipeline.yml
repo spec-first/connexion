@@ -45,13 +45,11 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     steps:
-    - name: Set up Python 3.12
-      uses: actions/setup-python@v7
+    - name: Install uv
+      uses: astral-sh/setup-uv@v10.2.0
       with:
         python-version: '3.12'
-    - name: Install coveralls
-      run: pip install "coveralls>=4.1,<5"
     - name: Coveralls Finished
-      run: coveralls --service github --finish
+      run: uvx --from "coveralls>=4.1,<5" coveralls --service github --finish
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
