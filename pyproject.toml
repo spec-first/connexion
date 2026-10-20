@@ -69,7 +69,7 @@ Repository = "https://github.com/spec-first/connexion"
 [dependency-groups]
 tests = [
     "pre-commit~=2.21.0",
-    "pytest==8.4.2",
+    "pytest==9.0.3",
     "pytest-asyncio~=0.18.3",
     "pytest-cov~=2.12.1",
 ]
