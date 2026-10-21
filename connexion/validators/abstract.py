@@ -126,7 +126,9 @@ class AbstractRequestBodyValidator:
         if not int(headers.get("content-length", 0)):
             body = self._schema.get("default")
             if body is None and self._required:
-                raise BadRequestProblem("RequestBody is required")
+                raise BadRequestProblem(
+                    "RequestBody is empty or the Content-Length header is missing or zero"
+                )
             # The default body is encoded as a `receive` channel to mimic an incoming body
             receive, scope = self._insert_body(receive, body=body, scope=scope)
 
