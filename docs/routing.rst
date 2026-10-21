@@ -399,20 +399,26 @@ Individual paths
 You can also add individual paths to your application which are not described in your API
 contract. This can be useful for eg. ``/healthz`` or similar endpoints.
 
-.. code-block:: python
-    :caption: **api.py**
-
-    @app.route("/healthz")
-    def healthz():
-        return 200
-
-    # Or as alternative to the decorator
-    app.add_url_rule("/healthz", "healthz", healthz)
-
 .. tab-set::
 
     .. tab-item:: AsyncApp
         :sync: AsyncApp
+
+        For an ``AsyncApp``, the view function receives a Starlette ``Request`` and returns a
+        Starlette ``Response``.
+
+        .. code-block:: python
+            :caption: **api.py**
+
+            from starlette.requests import Request
+            from starlette.responses import Response
+
+            @app.route("/healthz")
+            def healthz(request: Request):
+                return Response(status_code=200)
+
+            # Or as alternative to the decorator
+            app.add_url_rule("/healthz", "healthz", healthz)
 
         .. dropdown:: View a detailed reference of the ``route`` and ``add_url_rule`` methods
             :icon: eye
@@ -424,6 +430,18 @@ contract. This can be useful for eg. ``/healthz`` or similar endpoints.
 
     .. tab-item:: FlaskApp
         :sync: FlaskApp
+
+        For a ``FlaskApp``, the view function works the same way as a regular Flask view.
+
+        .. code-block:: python
+            :caption: **api.py**
+
+            @app.route("/healthz")
+            def healthz():
+                return "", 200
+
+            # Or as alternative to the decorator
+            app.add_url_rule("/healthz", "healthz", healthz)
 
         .. dropdown:: View a detailed reference of the ``route`` and ``add_url_rule`` methods
             :icon: eye
