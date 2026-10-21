@@ -121,8 +121,8 @@ You can register error handlers on:
 
 Default Exception Handling
 --------------------------
-By default connexion exceptions are JSON serialized according to
-`Problem Details for HTTP APIs`_
+By default, Connexion exceptions are JSON serialized according to
+`Problem Details for HTTP APIs`_.
 
 Application can return errors using ``connexion.problem.problem`` or raise exceptions that inherit
 either from ``connexion.ProblemException`` or one of its subclasses to achieve the same behavior.
@@ -150,7 +150,7 @@ Using this, we can rewrite the handler above:
 
 Connexion Exceptions
 --------------------
-There are several exception types in connexion that contain extra information to help you render appropriate
+There are several exception types in Connexion that contain extra information to help you render appropriate
 messages to your user beyond the default description and status code:
 
 .. automodule:: connexion.exceptions

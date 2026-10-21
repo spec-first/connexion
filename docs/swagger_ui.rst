@@ -3,7 +3,7 @@ The Swagger UI
 
 If you installed connexion using the :code:`swagger-ui` extra, a Swagger UI is available for each
 API, providing interactive documentation. By default the UI is hosted at :code:`{base_path}/ui/`
-where :code:`base_path`` is the base path of the API.
+where :code:`base_path` is the base path of the API.
 
 **https://{host}/{base_path}/ui/**
 
@@ -12,8 +12,8 @@ where :code:`base_path`` is the base path of the API.
 Configuring the Swagger UI
 --------------------------
 
-You can change this path through the ``swagger_ui_options`` argument, either whe instantiating
-your application, or when adding your api:
+You can change this path through the :code:`swagger_ui_options` argument, either when instantiating
+your application, or when adding your API:
 
 
 .. tab-set::
@@ -60,7 +60,7 @@ your application, or when adding your api:
 
             app = App(__name__)
             app = ConnexionMiddleware(app, swagger_ui_options=options)
-            app.add_api("openapi.yaml", swagger_ui_options=options):
+            app.add_api("openapi.yaml", swagger_ui_options=options)
 
 For a description of all available options, check the :class:`.SwaggerUIOptions`
 class.

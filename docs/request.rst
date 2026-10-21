@@ -20,7 +20,7 @@ Automatic parameter handling
         :sync: AsyncApp
 
         Connexion automatically maps the parameters defined in your endpoint specification to the
-        arguments defined your associated Python function, parsing and casting values when
+        arguments defined in your associated Python function, parsing and casting values when
         possible. All you need to do, is make sure the arguments of your function match the
         parameters in your specification.
 
@@ -28,7 +28,7 @@ Automatic parameter handling
         :sync: FlaskApp
 
         Connexion automatically maps the parameters defined in your endpoint specification to the
-        arguments defined your associated Python function, parsing and casting values when
+        arguments defined in your associated Python function, parsing and casting values when
         possible. All you need to do, is make sure the arguments of your function match the
         parameters in your specification.
 
@@ -36,7 +36,7 @@ Automatic parameter handling
         :sync: ConnexionMiddleware
 
         Connexion can automatically map the parameters defined in your endpoint specification to
-        the arguments defined your associated Python function, parsing and casting values when
+        the arguments defined in your associated Python function, parsing and casting values when
         possible. All you need to do, is make sure the arguments of your function match the
         parameters in your specification.
 
@@ -157,11 +157,11 @@ The body will also be passed to your function.
             :caption: **api.py**
 
             # Default
-            def foo_get(body)
+            def foo_get(body):
                 ...
 
             # Based on x-body-name
-            def foo_get(payload)
+            def foo_get(payload):
                 ...
 
     .. tab-item:: Swagger 2
@@ -187,7 +187,7 @@ The body will also be passed to your function.
         .. code-block:: python
             :caption: **api.py**
 
-            def foo_get(payload)
+            def foo_get(payload):
                 ...
 
         Form data
@@ -217,7 +217,7 @@ The body will also be passed to your function.
         .. code-block:: python
             :caption: **api.py**
 
-            def foo_get(field1, field2)
+            def foo_get(field1, field2):
                 ...
 
 Connexion will not automatically pass in the default values defined in your ``requestBody``
@@ -281,7 +281,7 @@ Connexion extracts the files from the body and passes them into your view functi
         .. code-block:: python
             :caption: **api.py**
 
-                    def foo_get(file)
+                    def foo_get(file):
                         assert isinstance(file, starlette.UploadFile)
                         ...
 
@@ -294,7 +294,7 @@ Connexion extracts the files from the body and passes them into your view functi
         .. code-block:: python
             :caption: **api.py**
 
-                    def foo_get(file)
+                    def foo_get(file):
                         assert isinstance(file, werkzeug.FileStorage)
                         ...
 
@@ -317,7 +317,7 @@ They will be provided to your view function as a list.
         .. code-block:: python
             :caption: **api.py**
 
-                    def foo_get(file)
+                    def foo_get(file):
                         assert isinstance(file, list)
                         assert isinstance(file[0], starlette.UploadFile)
                         ...
@@ -329,7 +329,7 @@ They will be provided to your view function as a list.
         .. code-block:: python
             :caption: **api.py**
 
-                    def foo_get(file)
+                    def foo_get(file):
                         assert isinstance(file, list)
                         assert isinstance(file[0], werkzeug.FileStorage)
                         ...
@@ -352,7 +352,7 @@ default value:
 .. code-block:: python
     :caption: **api.py**
 
-    def foo_get(optional_argument=None)
+    def foo_get(optional_argument=None):
         ...
 
 Missing arguments and kwargs
@@ -409,7 +409,7 @@ either the application or the API:
             from connexion import FlaskApp
 
             app = FlaskApp(__name__, pythonic_params=True)
-            app.add_api("openapi.yaml", pythonic_params=True):
+            app.add_api("openapi.yaml", pythonic_params=True)
 
     .. tab-item:: ConnexionMiddleware
         :sync: ConnexionMiddleware
