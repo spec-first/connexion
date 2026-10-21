@@ -109,3 +109,26 @@ def test_add_wsgi_middleware(spec):
     app_client.post("/v1.0/greeting/robbe")
 
     mock.assert_called_once()
+
+
+def test_server_error_middleware():
+    """Test that ServerErrorMiddleware returns an RFC 7807 problem response for unhandled exceptions."""
+    from connexion.middleware.server_error import ServerErrorMiddleware
+    from starlette.testclient import TestClient
+
+    async def broken_app(scope, receive, send):
+        raise RuntimeError("Unexpected failure")
+
+    middleware = ServerErrorMiddleware(broken_app)
+
+    client_handling = TestClient(middleware, raise_server_exceptions=False)
+    response = client_handling.get("/")
+    assert response.status_code == 500
+    assert response.headers["content-type"] == "application/problem+json"
+    data = response.json()
+    assert data["title"] == "Internal Server Error"
+    assert data["status"] == 500
+
+    client_raising = TestClient(middleware, raise_server_exceptions=True)
+    with pytest.raises(RuntimeError, match="Unexpected failure"):
+        client_raising.get("/")

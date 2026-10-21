@@ -1,6 +1,8 @@
 ci:
   autoupdate_branch: "main"
   autoupdate_schedule: monthly
+default_language_version:
+  python: python3.13
 repos:
   - repo: https://github.com/pycqa/flake8
     rev: 7.1.1
