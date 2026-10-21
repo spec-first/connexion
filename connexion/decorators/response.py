@@ -186,10 +186,12 @@ class AsyncResponseDecorator(BaseResponseDecorator):
         async def wrapper(*args, **kwargs):
             """
             This method converts a handler response to a framework response.
-            The handler response can be a ConnexionResponse, a framework response, a tuple or an
-            object.
+            The handler response can be a ConnexionResponse, a framework response, a tuple, an
+            object or a coroutine.
             """
             handler_response = await function(*args, **kwargs)
+            if isinstance(handler_response, t.Coroutine):
+                handler_response = await handler_response
             if self.framework.is_framework_response(handler_response):
                 return handler_response
             elif isinstance(handler_response, ConnexionResponse):
