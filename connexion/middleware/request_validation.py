@@ -33,14 +33,17 @@ class RequestValidationOperation:
 
     def extract_content_type(
         self, headers: t.List[t.Tuple[bytes, bytes]]
-    ) -> t.Tuple[str, str]:
+    ) -> t.Tuple[str, str, bool]:
         """Extract the mime type and encoding from the content type headers.
 
         :param headers: Headers from ASGI scope
 
-        :return: A tuple of mime type, encoding
+        :return: A tuple of (mime_type, encoding, inferred) where ``inferred``
+            is ``True`` when no ``Content-Type`` header was present in the
+            request and the mime type was guessed from the operation spec.
         """
         content_type = utils.extract_content_type(headers)
+        inferred = content_type is None
         mime_type, encoding = utils.split_content_type(content_type)
         if mime_type is None:
             # Content-type header is not required. Take a best guess.
@@ -51,7 +54,7 @@ class RequestValidationOperation:
         if encoding is None:
             encoding = "utf-8"
 
-        return mime_type, encoding
+        return mime_type, encoding, inferred
 
     def validate_mime_type(self, mime_type: str) -> None:
         """Validate the mime type against the spec if it defines which mime types are accepted.
@@ -111,8 +114,18 @@ class RequestValidationOperation:
 
         # Extract content type
         headers = scope["headers"]
-        mime_type, encoding = self.extract_content_type(headers)
+        mime_type, encoding, inferred = self.extract_content_type(headers)
         self.validate_mime_type(mime_type)
+
+        # Propagate the inferred Content-Type downstream so that request body
+        # parsing (ConnexionRequest.get_body / content_type) uses the same
+        # mime type that was used for validation.
+        if inferred:
+            synthesized = f"{mime_type}; charset={encoding}".encode("latin-1")
+            scope = {
+                **scope,
+                "headers": list(headers) + [(b"content-type", synthesized)],
+            }
 
         # Validate body
         schema = self._operation.body_schema(mime_type)
