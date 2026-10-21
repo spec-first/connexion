@@ -91,6 +91,13 @@ class AbstractURIParser(metaclass=abc.ABCMeta):
         the parameter definition.
         """
 
+    def _deserialize_object(self, value, param_defn, _in):
+        """Deserialize a serialized object parameter into a dict.
+
+        The default implementation leaves the value untouched.
+        """
+        return value
+
     def resolve_params(self, params, _in):
         """
         takes a dict of parameters, and resolves the values into
@@ -116,6 +123,10 @@ class AbstractURIParser(metaclass=abc.ABCMeta):
                 values = self._resolve_param_duplicates(values, param_defn, _in)
                 # handle array styles
                 resolved_param[k] = self._split(values, param_defn, _in)
+            elif param_schema and param_schema["type"] == "object":
+                resolved_param[k] = self._deserialize_object(
+                    values[-1], param_defn, _in
+                )
             else:
                 resolved_param[k] = values[-1]
 
@@ -248,6 +259,31 @@ class OpenAPIURIParser(AbstractURIParser):
         style = param_defn.get("style", default_style)
         delimiter = QUERY_STRING_DELIMITERS.get(style, ",")
         return value.split(delimiter)
+
+    @staticmethod
+    def _deserialize_object(value, param_defn, _in):
+        """Deserialize an object parameter serialized with the simple style.
+
+        With explode=False the value is a flat ``k,v,k,v`` list, while with
+        explode=True it is a ``k=v,k=v`` list. Non-string values and other
+        styles are left untouched and handled by validation.
+        """
+        if not isinstance(value, str):
+            return value
+        default_style = OpenAPIURIParser.style_defaults[_in]
+        style = param_defn.get("style", default_style)
+        if style != "simple":
+            return value
+        explode = param_defn.get("explode", False)
+        if explode:
+            try:
+                return dict(pair.split("=", 1) for pair in value.split(","))
+            except ValueError:
+                return value
+        parts = value.split(",")
+        if len(parts) % 2 != 0:
+            return value
+        return dict(zip(parts[::2], parts[1::2]))
 
 
 class Swagger2URIParser(AbstractURIParser):
