@@ -10,6 +10,7 @@ from connexion.http_facts import METHODS
 from connexion.operations import AbstractOperation
 from connexion.resolver import Resolver
 from connexion.spec import Specification
+from connexion.utils import sort_routes
 
 logger = logging.getLogger(__name__)
 
@@ -85,7 +86,8 @@ class AbstractRoutingAPI(AbstractSpecAPI, t.Generic[OP]):
         Adds the paths defined in the specification as operations.
         """
         paths = t.cast(dict, paths or self.specification.get("paths", dict()))
-        for path, methods in paths.items():
+        for path in sort_routes(list(paths.keys())):
+            methods = paths[path]
             logger.debug("Adding %s%s...", self.base_path, path)
 
             for method in methods:
