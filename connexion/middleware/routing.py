@@ -14,6 +14,7 @@ from connexion.middleware.abstract import (
 from connexion.operations import AbstractOperation
 from connexion.resolver import Resolver
 from connexion.spec import Specification
+from connexion.utils import sort_routes
 
 _scope: ContextVar[dict] = ContextVar("SCOPE")
 
@@ -133,6 +134,8 @@ class RoutingMiddleware(SpecMiddleware):
             next_app=self.app,
             **kwargs,
         )
+        # sort routes to make sure that more specific routes are matched first
+        api.router.routes = sort_routes(api.router.routes, key=lambda r: r.path)
 
         # If an API with the same base_path was already registered, chain the new API as its
         # default. This way, if no matching route is found on the first API, the request is
