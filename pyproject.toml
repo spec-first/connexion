@@ -81,6 +81,8 @@ docs = [
 ]
 
 [tool.uv]
+# Also picked up by setup-uv in CI. Keep in line with the uv-pre-commit rev.
+required-version = ">=0.13.5,<0.14"
 default-groups = ["tests"]
 
 [tool.uv.build-backend]

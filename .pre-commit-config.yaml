@@ -1,6 +1,9 @@
 ci:
   autoupdate_branch: "main"
   autoupdate_schedule: monthly
+  # pre-commit.ci runs hooks without network access, which uv-lock needs. The
+  # lock is checked by the `lock` job in GitHub Actions instead.
+  skip: [uv-lock]
 repos:
   - repo: https://github.com/pycqa/flake8
     rev: 7.1.1
@@ -55,6 +58,7 @@ repos:
         pass_filenames: false
 
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.12.19
+    # Keep in line with `required-version` in pyproject.toml
+    rev: 0.13.5
     hooks:
       - id: uv-lock
