@@ -29,13 +29,12 @@ jobs:
       uses: astral-sh/setup-uv@v10.2.0
       with:
         enable-cache: true
-        cache-dependency-glob: pyproject.toml
     - name: Install dependencies
-      run: uv pip install --system "tox>=4.22,<5" "tox-uv>=1.11,<2" "tox-gh-actions>=3,<4" "coveralls>=4.1,<5"
+      run: uv sync --locked --only-group ci --python ${{ matrix.python-version }}
     - name: Test with tox
-      run: tox
+      run: uv run --no-sync tox
     - name: Coveralls
-      run: coveralls --service github
+      run: uv run --no-sync coveralls --service github
       env:
         COVERALLS_PARALLEL: true
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -45,11 +44,10 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v7
     - name: Install uv
       uses: astral-sh/setup-uv@v10.2.0
-      with:
-        python-version: '3.12'
     - name: Coveralls Finished
-      run: uvx --from "coveralls>=4.1,<5" coveralls --service github --finish
+      run: uv run --locked --only-group ci coveralls --service github --finish
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
