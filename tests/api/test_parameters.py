@@ -4,6 +4,8 @@ from typing import List
 
 import pytest
 
+from conftest import OPENAPI3_SPEC, build_app_from_fixture
+
 
 def test_parameter_validation(simple_app):
     app_client = simple_app.test_client()
@@ -648,6 +650,42 @@ def test_cookie_param(simple_app):
     response = app_client.get("/v1.0/test-cookie-param")
     assert response.status_code == 200
     assert response.json() == {"cookie_value": "hello"}
+
+
+def test_form_object_query_params(simple_openapi_app):
+    app_client = simple_openapi_app.test_client()
+
+    # style=form, explode=true (the default): one query parameter per property
+    response = app_client.get("/v1.0/form-object-param?foo=bar&fooint=2")
+    assert response.status_code == 200, response.text
+    assert response.json()["id"] == {"foo": "bar", "fooint": 2}
+
+    # style=form, explode=false: a single comma-separated value
+    response = app_client.get("/v1.0/form-object-param?packed=foo,bar,fooint,3")
+    assert response.status_code == 200, response.text
+    assert response.json()["packed"] == {"foo": "bar", "fooint": 3}
+
+    # property values are still validated
+    response = app_client.get("/v1.0/form-object-param?fooint=abc")
+    assert response.status_code == 400
+
+    # a malformed serialized object is rejected instead of being partly parsed
+    response = app_client.get("/v1.0/form-object-param?packed=foo,bar,fooint")
+    assert response.status_code == 400
+
+
+def test_form_object_query_params_strict_validation(app_class):
+    app = build_app_from_fixture(
+        "simple", app_class=app_class, spec_file=OPENAPI3_SPEC, strict_validation=True
+    )
+    app_client = app.test_client()
+
+    # property keys consumed by an object parameter are not "extra" parameters
+    response = app_client.get("/v1.0/form-object-param?foo=bar&fooint=2")
+    assert response.status_code == 200, response.text
+
+    response = app_client.get("/v1.0/form-object-param?foo=bar&unknown=1")
+    assert response.status_code == 400
 
 
 def test_header_params(simple_openapi_app):

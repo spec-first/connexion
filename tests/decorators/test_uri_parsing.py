@@ -328,6 +328,45 @@ OBJECT_SCHEMA = {
 
 
 @pytest.mark.parametrize(
+    "param, query_in, expected",
+    [
+        # style=form, explode=true (default): one query parameter per property
+        (
+            {"name": "obj", "in": "query", "schema": OBJECT_SCHEMA},
+            {"name": ["hello"], "num": ["1"]},
+            {"obj": {"name": "hello", "num": 1}},
+        ),
+        # style=form, explode=false: a single k,v,k,v value
+        (
+            {"name": "obj", "in": "query", "explode": False, "schema": OBJECT_SCHEMA},
+            {"obj": ["name,hello,num,1"]},
+            {"obj": {"name": "hello", "num": 1}},
+        ),
+        # malformed values are left for validation
+        (
+            {"name": "obj", "in": "query", "explode": False, "schema": OBJECT_SCHEMA},
+            {"obj": ["name,hello,num"]},
+            {"obj": "name,hello,num"},
+        ),
+    ],
+)
+def test_uri_parser_query_form_object(param, query_in, expected):
+    parser = OpenAPIURIParser([param], {})
+    assert parser.resolve_query(query_in) == expected
+
+
+def test_uri_parser_query_form_object_keeps_declared_params():
+    # a property key that is also a parameter of its own is passed to both
+    parameters = [
+        {"name": "obj", "in": "query", "schema": OBJECT_SCHEMA},
+        {"name": "num", "in": "query", "schema": {"type": "integer"}},
+    ]
+    parser = OpenAPIURIParser(parameters, {})
+    res = parser.resolve_query({"name": ["hello"], "num": ["1"]})
+    assert res == {"obj": {"name": "hello", "num": 1}, "num": 1}
+
+
+@pytest.mark.parametrize(
     "param, headers, expected",
     [
         (
@@ -420,3 +459,18 @@ def test_uri_parser_swagger2_header_collection_format():
     ]
     parser = Swagger2URIParser(parameters, {})
     assert parser.resolve_headers({"X-Ids": "1|2"}) == {"X-Ids": [1, 2]}
+
+
+def test_uri_parser_query_form_object_property_named_like_path_param():
+    # a consumed property key that is only a *path* parameter is not kept as a query
+    # parameter (it would be reported as unknown with strict_validation)
+    parameters = [
+        {"name": "id", "in": "path", "required": True, "schema": {"type": "string"}},
+        {
+            "name": "obj",
+            "in": "query",
+            "schema": {"type": "object", "properties": {"id": {"type": "string"}}},
+        },
+    ]
+    parser = OpenAPIURIParser(parameters, {})
+    assert parser.resolve_query({"id": ["x"]}) == {"obj": {"id": "x"}}

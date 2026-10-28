@@ -100,6 +100,13 @@ class AbstractURIParser(metaclass=abc.ABCMeta):
         the parameter definition.
         """
 
+    def _deserialize_object(self, value, param_defn, _in):
+        """Deserialize a serialized object parameter into a dict.
+
+        The default implementation leaves the value untouched.
+        """
+        return value
+
     def _deserialize_header(self, value, param_defn):
         """Deserialize a header value according to the parameter definition.
 
@@ -145,7 +152,8 @@ class AbstractURIParser(metaclass=abc.ABCMeta):
         """
         takes a dict of parameters, and resolves the values into
         the correct array type handling duplicate values, and splitting
-        based on the collectionFormat defined in the spec..
+        based on the collectionFormat defined in the spec. Serialized
+        objects are deserialized by ``_deserialize_object``.
         """
         resolved_param = {}
         for k, values in params.items():
@@ -166,6 +174,10 @@ class AbstractURIParser(metaclass=abc.ABCMeta):
                 values = self._resolve_param_duplicates(values, param_defn, _in)
                 # handle array styles
                 resolved_param[k] = self._split(values, param_defn, _in)
+            elif param_schema and param_schema.get("type") == "object":
+                resolved_param[k] = self._deserialize_object(
+                    values[-1], param_defn, _in
+                )
             else:
                 resolved_param[k] = values[-1]
 
@@ -280,6 +292,17 @@ class OpenAPIURIParser(AbstractURIParser):
             return value
         return dict(zip(parts[::2], parts[1::2]))
 
+    def _deserialize_object(self, value, param_defn, _in):
+        """Deserialize a ``style: form``, ``explode: false`` object query parameter
+        (``?param=k1,v1,k2,v2``). Other styles are left untouched.
+        """
+        if not isinstance(value, str) or _in != "query":
+            return value
+        style = param_defn.get("style", self.style_defaults[_in])
+        if style != "form" or param_defn.get("explode", True):
+            return value
+        return self._parse_object(value, explode=False)
+
     def _deserialize_header(self, value, param_defn):
         """Deserialize a ``style: simple`` object header (``k1,v1,k2,v2`` or, with
         ``explode: true``, ``k1=v1,k2=v2``). Arrays are split in ``resolve_headers``.
@@ -288,7 +311,40 @@ class OpenAPIURIParser(AbstractURIParser):
             return value
         return self._parse_object(value, param_defn.get("explode", False))
 
+    def _preprocess_form_objects(self, query_data):
+        """An object with ``style: form`` and ``explode: true`` (the default for query
+        parameters) is serialized as one query parameter per property
+        (``?name=a&size=3``). Collect the keys of its declared ``properties`` into the
+        object parameter, and drop the ones that are not query parameters themselves.
+        Keys that would only match ``additionalProperties`` are not collected, as they
+        cannot be told apart from unknown parameters.
+        """
+        original = query_data
+        query_data = dict(query_data)
+        consumed = set()
+        for name, param_defn in self.param_defns.items():
+            schema = param_defn.get("schema", {})
+            if (
+                param_defn.get("in") != "query"
+                or schema.get("type") != "object"
+                or param_defn.get("style", "form") != "form"
+                or not param_defn.get("explode", True)
+            ):
+                continue
+            properties = schema.get("properties", {})
+            obj = {key: original[key][-1] for key in properties if key in original}
+            if obj:
+                query_data[name] = [obj]
+                consumed.update(obj)
+        declared_query = {
+            name for name, defn in self.param_defns.items() if defn.get("in") == "query"
+        }
+        for key in consumed - declared_query:
+            query_data.pop(key, None)
+        return query_data
+
     def resolve_query(self, query_data):
+        query_data = self._preprocess_form_objects(query_data)
         query_data = self._preprocess_deep_objects(query_data)
         return self.resolve_params(query_data, "query")
 

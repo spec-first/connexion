@@ -150,6 +150,37 @@ paths:
       responses:
         '204':
           description: empty
+  /form-object-param:
+    get:
+      summary: Returns the deserialized style=form object query parameters
+      operationId: fakeapi.hello.test_form_object_param
+      parameters:
+        - name: id
+          in: query
+          schema:
+            type: object
+            properties:
+              foo:
+                type: string
+              fooint:
+                type: integer
+        - name: packed
+          in: query
+          explode: false
+          schema:
+            type: object
+            properties:
+              foo:
+                type: string
+              fooint:
+                type: integer
+      responses:
+        '200':
+          description: object response
+          content:
+            application/json:
+              schema:
+                type: object
   /header-params:
     get:
       summary: Validates typed header parameters
