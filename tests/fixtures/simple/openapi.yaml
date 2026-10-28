@@ -150,6 +150,76 @@ paths:
       responses:
         '204':
           description: empty
+  /header-params:
+    get:
+      summary: Validates typed header parameters
+      operationId: fakeapi.hello.test_header_params
+      parameters:
+        - name: X-Rate
+          in: header
+          schema:
+            type: integer
+            maximum: 10
+        - name: X-Ids
+          in: header
+          schema:
+            type: array
+            items:
+              type: integer
+        - name: X-Trace
+          in: header
+          schema:
+            type: object
+            properties:
+              id:
+                type: string
+              hops:
+                type: integer
+            required:
+              - id
+        - name: X-Exploded
+          in: header
+          explode: true
+          schema:
+            type: object
+            properties:
+              id:
+                type: string
+              hops:
+                type: integer
+        - name: X-Flag
+          in: header
+          schema:
+            type: boolean
+        - name: X-Ratio
+          in: header
+          schema:
+            type: number
+            nullable: true
+      responses:
+        '200':
+          description: header parameters as parsed by Connexion
+          content:
+            application/json:
+              schema:
+                type: object
+  /required-header-param:
+    get:
+      summary: Requires a typed header parameter
+      operationId: fakeapi.hello.test_required_header_param
+      parameters:
+        - name: X-Required
+          in: header
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
   /exploded-deep-object-param:
     get:
       summary: Returns dict response

@@ -648,3 +648,53 @@ def test_cookie_param(simple_app):
     response = app_client.get("/v1.0/test-cookie-param")
     assert response.status_code == 200
     assert response.json() == {"cookie_value": "hello"}
+
+
+def test_header_params(simple_openapi_app):
+    app_client = simple_openapi_app.test_client()
+
+    # header values are parsed (style=simple) and coerced before validation
+    response = app_client.get(
+        "/v1.0/header-params",
+        headers={
+            "X-Rate": "5",
+            "X-Ids": "1,2,3",
+            "x-trace": "id,abc,hops,3",
+            "X-Exploded": "id=xyz,hops=4",
+            "X-Flag": "true",
+            "X-Ratio": "0.5",
+        },
+    )
+    assert response.status_code == 200, response.text
+
+    # nullable header
+    response = app_client.get("/v1.0/header-params", headers={"X-Ratio": "null"})
+    assert response.status_code == 200, response.text
+
+    # coerced values are validated against the schema
+    for headers in [
+        {"X-Rate": "11"},  # maximum: 10
+        {"X-Rate": "abc"},
+        {"X-Ids": "1,a"},
+        {"X-Trace": "hops,3"},  # missing required property
+        {"X-Trace": "id,abc,hops,x"},  # hops is not an integer
+        {"X-Trace": "id,abc,hops"},  # malformed: odd number of tokens
+        {"X-Exploded": "id=xyz,hops"},  # malformed: segment without '='
+        {"X-Flag": "maybe"},
+        {"X-Ratio": "abc"},
+    ]:
+        response = app_client.get("/v1.0/header-params", headers=headers)
+        assert response.status_code == 400, headers
+
+
+def test_required_header_param(simple_openapi_app):
+    app_client = simple_openapi_app.test_client()
+
+    response = app_client.get("/v1.0/required-header-param")
+    assert response.status_code == 400
+    assert "Missing header parameter 'X-Required'" in response.text
+
+    response = app_client.get(
+        "/v1.0/required-header-param", headers={"x-required": "1"}
+    )
+    assert response.status_code == 200, response.text
