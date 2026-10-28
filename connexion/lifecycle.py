@@ -152,6 +152,7 @@ class ConnexionRequest(_RequestInterface):
         self._mimetype = None
         self._path_params = None
         self._query_params = None
+        self._header_params = None
         self._form = None
         self._files = None
 
@@ -198,6 +199,16 @@ class ConnexionRequest(_RequestInterface):
             query_params = {k: args.getlist(k) for k in args}
             self._query_params = self.uri_parser.resolve_query(query_params)
         return self._query_params
+
+    @property
+    def header_params(self) -> t.Dict[str, t.Any]:
+        """The header parameters defined in the spec, deserialized and coerced to
+        their schema types. ``headers`` still holds the raw request headers."""
+        if self._header_params is None:
+            self._header_params = self.uri_parser.resolve_headers(
+                self._starlette_request.headers
+            )
+        return self._header_params
 
     async def form(self):
         if self._form is None:

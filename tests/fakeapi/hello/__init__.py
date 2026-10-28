@@ -410,6 +410,18 @@ def test_exploded_deep_object_param(id):
     return id
 
 
+def test_form_object_param(id=None, packed=None):
+    return {"id": id, "packed": packed}
+
+
+def test_header_params():
+    return {}
+
+
+def test_required_header_param():
+    return {}
+
+
 def test_nested_exploded_deep_object_param(id):
     return id
 
