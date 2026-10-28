@@ -1,10 +1,8 @@
 import abc
 import typing as t
 
-from typing_extensions import Protocol
 
-
-class Framework(Protocol):
+class Framework(t.Protocol):
     @staticmethod
     @abc.abstractmethod
     def is_framework_response(response: t.Any) -> bool:
