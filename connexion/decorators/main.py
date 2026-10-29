@@ -1,6 +1,6 @@
 import abc
-import asyncio
 import functools
+import inspect
 import json
 import typing as t
 
@@ -117,7 +117,7 @@ class WSGIDecorator(BaseDecorator):
         def decorator(function: t.Callable) -> t.Callable:
             @functools.wraps(function)
             def wrapper(*args, **kwargs) -> t.Callable:
-                if asyncio.iscoroutinefunction(function):
+                if inspect.iscoroutinefunction(function):
                     return async_to_sync(function)(*args, **kwargs)
                 else:
                     return function(*args, **kwargs)
@@ -169,7 +169,7 @@ class ASGIDecorator(BaseDecorator):
         def decorator(function: t.Callable) -> t.Callable:
             @functools.wraps(function)
             async def wrapper(*args, **kwargs):
-                if asyncio.iscoroutinefunction(function):
+                if inspect.iscoroutinefunction(function):
                     return await function(*args, **kwargs)
                 else:
                     return await run_in_threadpool(function, *args, **kwargs)
