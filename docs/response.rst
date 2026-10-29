@@ -172,6 +172,35 @@ Responses defined in your OpenAPI spec:
   because of backward-compatibility, and can be circumvented easily by defining a response
   content type in your OpenAPI specification.
 
+Status-Code-Specific Content-Type Inference
+````````````````````````````````````````````
+
+Connexion can infer different content types based on the specific HTTP status code being returned.
+This allows you to define APIs where different status codes return different content types.
+
+For example, you can define an API where successful responses return JSON, but error responses
+return plain text:
+
+.. code-block:: yaml
+
+    responses:
+      '200':
+        description: Success response
+        content:
+          application/json:
+            schema:
+              type: object
+      '400':
+        description: Error response
+        content:
+          text/plain:
+            schema:
+              type: string
+
+With this specification:
+- A 200 response will automatically use ``application/json`` content-type
+- A 400 response will automatically use ``text/plain`` content-type
+
 Skipping response serialization
 -------------------------------
 
