@@ -2,7 +2,6 @@
 This module provides general utility functions used within Connexion.
 """
 
-import asyncio
 import functools
 import importlib
 import inspect
@@ -215,10 +214,10 @@ def has_coroutine(function, api=None):
     """
 
     def iscorofunc(func):
-        iscorofunc = asyncio.iscoroutinefunction(func)
+        iscorofunc = inspect.iscoroutinefunction(func)
         while not iscorofunc and hasattr(func, "__wrapped__"):
             func = func.__wrapped__
-            iscorofunc = asyncio.iscoroutinefunction(func)
+            iscorofunc = inspect.iscoroutinefunction(func)
         return iscorofunc
 
     if api is None:
