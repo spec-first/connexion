@@ -1,4 +1,5 @@
 import contextlib
+import importlib.metadata
 import io
 import logging
 from unittest.mock import MagicMock
@@ -9,11 +10,6 @@ from connexion.exceptions import ResolverError
 from connexion.options import SwaggerUIOptions
 
 from conftest import FIXTURES_FOLDER
-
-try:
-    import importlib_metadata
-except ImportError:
-    import importlib.metadata as importlib_metadata
 
 
 @pytest.fixture(scope="function")
@@ -74,7 +70,7 @@ def test_print_version():
         main(["--version"])
 
     assert e_info.value.code == 0
-    assert f"Connexion {importlib_metadata.version('connexion')}" in output.getvalue()
+    assert f"Connexion {importlib.metadata.version('connexion')}" in output.getvalue()
 
 
 def test_run_missing_spec():
