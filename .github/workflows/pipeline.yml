@@ -5,6 +5,15 @@ on:
       - main
   pull_request:
 jobs:
+  lock:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+    - name: Install uv
+      uses: astral-sh/setup-uv@v10.2.0
+    - name: Check uv.lock is up to date with pyproject.toml
+      run: uv lock --check
+
   test:
     runs-on: ubuntu-latest
     strategy:
@@ -12,21 +21,16 @@ jobs:
         python-version: ['3.10', '3.11', '3.12', '3.13', '3.14', '3.15']
     steps:
     - uses: actions/checkout@v7
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v7
-      with:
-        python-version: ${{ matrix.python-version }}
     - name: Install uv
       uses: astral-sh/setup-uv@v10.2.0
       with:
         enable-cache: true
-        cache-dependency-glob: pyproject.toml
     - name: Install dependencies
-      run: uv pip install --system "tox>=4.22,<5" "tox-uv>=1.11,<2" "tox-gh-actions>=3,<4" "coveralls>=4.1,<5"
+      run: uv sync --locked --only-group ci --python ${{ matrix.python-version }}
     - name: Test with tox
-      run: tox
+      run: uv run --no-sync tox
     - name: Coveralls
-      run: coveralls --service github
+      run: uv run --no-sync coveralls --service github
       env:
         COVERALLS_PARALLEL: true
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -36,13 +40,10 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     steps:
-    - name: Set up Python 3.12
-      uses: actions/setup-python@v7
-      with:
-        python-version: '3.12'
-    - name: Install coveralls
-      run: pip install "coveralls>=4.1,<5"
+    - uses: actions/checkout@v7
+    - name: Install uv
+      uses: astral-sh/setup-uv@v10.2.0
     - name: Coveralls Finished
-      run: coveralls --service github --finish
+      run: uv run --locked --only-group ci coveralls --service github --finish
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
