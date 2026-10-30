@@ -2,7 +2,7 @@ import base64
 import json
 
 import pytest
-from connexion import App
+from connexion import App, AsyncApp
 from connexion.exceptions import OAuthProblem
 from connexion.security import NO_VALUE, BasicSecurityHandler, OAuthSecurityHandler
 
@@ -374,4 +374,49 @@ def test_security_map_custom_type(secure_api_spec_dir):
         "/v1.0/greeting_oidc",
         headers={"Authorization": f"bearer {valid_token}"},
     )
+    assert res.status_code == 200
+
+
+def test_security_with_shared_operation_id():
+    """Operations resolving to the same function should keep their own security."""
+    spec = {
+        "openapi": "3.0.0",
+        "info": {"title": "Shared operation id", "version": "1.0"},
+        "components": {
+            "securitySchemes": {
+                "basic": {
+                    "type": "http",
+                    "scheme": "basic",
+                    "x-basicInfoFunc": "fakeapi.auth.fake_basic_auth",
+                }
+            }
+        },
+        "paths": {
+            "/secure": {
+                "get": {
+                    "operationId": "fakeapi.hello.get",
+                    "security": [{"basic": []}],
+                    "responses": {"200": {"description": "OK"}},
+                }
+            },
+            "/public": {
+                "get": {
+                    "operationId": "fakeapi.hello.get",
+                    "security": [],
+                    "responses": {"200": {"description": "OK"}},
+                }
+            },
+        },
+    }
+    app = AsyncApp(__name__)
+    app.add_api(spec)
+    app_client = app.test_client()
+
+    res = app_client.get("/secure")
+    assert res.status_code == 401
+
+    res = app_client.get("/secure", headers={"Authorization": "Basic dGVzdDp0ZXN0"})
+    assert res.status_code == 200
+
+    res = app_client.get("/public")
     assert res.status_code == 200

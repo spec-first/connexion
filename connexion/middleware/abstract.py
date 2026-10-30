@@ -15,6 +15,18 @@ logger = logging.getLogger(__name__)
 
 ROUTING_CONTEXT = "connexion_routing"
 
+OperationKey = t.Tuple[t.Optional[str], str, str]
+"""Key identifying an operation by its operation id, method and path"""
+
+
+def get_operation_key(operation: AbstractOperation) -> OperationKey:
+    """Return the key identifying an operation across middleware.
+
+    The operation id alone is not unique, since multiple operations can resolve to the same
+    function, so the method and path are included as well.
+    """
+    return operation.operation_id, operation.method, operation.path
+
 
 class SpecMiddleware(abc.ABC):
     """Middlewares that need the specification(s) to be registered on them should inherit from this
@@ -179,7 +191,7 @@ class RoutedAPI(AbstractSpecAPI, t.Generic[OP]):
     ) -> None:
         super().__init__(specification, *args, **kwargs)
         self.next_app = next_app
-        self.operations: t.MutableMapping[t.Optional[str], OP] = {}
+        self.operations: t.MutableMapping[t.Optional[OperationKey], OP] = {}
 
     def add_paths(self) -> None:
         paths = self.specification.get("paths", {})
@@ -203,7 +215,7 @@ class RoutedAPI(AbstractSpecAPI, t.Generic[OP]):
             uri_parser_class=self.uri_parser_class,
         )
         routed_operation = self.make_operation(operation)
-        self.operations[operation.operation_id] = routed_operation
+        self.operations[get_operation_key(operation)] = routed_operation
 
     @abc.abstractmethod
     def make_operation(self, operation: AbstractOperation) -> OP:
@@ -220,8 +232,8 @@ class RoutedMiddleware(SpecMiddleware, t.Generic[API]):
     its operations.
 
     The RoutingMiddleware adds the operation_id to the ASGI scope. This middleware registers its
-    operations by operation_id at startup. At request time, the operation is fetched by an
-    operation_id lookup.
+    operations by operation key at startup. At request time, the operation is fetched by an
+    operation key lookup.
     """
 
     api_cls: t.Type[API]
@@ -254,7 +266,7 @@ class RoutedMiddleware(SpecMiddleware, t.Generic[API]):
             for api in self.apis[api_base_path]:
                 operation_id = connexion_context.get("operation_id")
                 try:
-                    operation = api.operations[operation_id]
+                    operation = api.operations[connexion_context.get("operation_key")]
                 except KeyError:
                     if operation_id is None:
                         logger.debug("Skipping operation without id.")
