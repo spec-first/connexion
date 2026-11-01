@@ -108,7 +108,7 @@ class AbstractApp:
 
     def add_middleware(
         self,
-        middleware_class: t.Type[ASGIApp],
+        middleware_class: t.Callable[..., ASGIApp],
         position: MiddlewarePosition = MiddlewarePosition.BEFORE_CONTEXT,
         **options: t.Any,
     ) -> None:

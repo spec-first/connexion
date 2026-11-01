@@ -33,7 +33,7 @@ class Starlette(Framework):
         *,
         content_type: t.Optional[str] = None,
         headers: t.Optional[dict] = None,
-        status_code: int = None,
+        status_code: t.Optional[int] = None,
     ):
         if isinstance(data, dict) or isinstance(data, list):
             response_cls = StarletteJSONResponse

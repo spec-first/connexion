@@ -42,7 +42,7 @@ class BaseDecorator:
         self,
         *,
         pythonic_params: bool = False,
-        uri_parser_class: AbstractURIParser = None,
+        uri_parser_class: t.Optional[AbstractURIParser] = None,
         jsonifier=json,
     ) -> None:
         self.pythonic_params = pythonic_params

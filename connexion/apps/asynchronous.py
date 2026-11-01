@@ -114,7 +114,7 @@ class AsyncASGIApp(RoutedMiddleware[AsyncApi]):
         rule,
         endpoint: t.Optional[str] = None,
         view_func: t.Optional[t.Callable] = None,
-        methods: t.List[str] = None,
+        methods: t.Optional[t.List[str]] = None,
         **options,
     ):
         self.router.add_route(rule, endpoint=view_func, name=endpoint, methods=methods)
