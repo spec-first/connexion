@@ -5,6 +5,7 @@ import pytest
 from connexion import FlaskApp
 from connexion.middleware import ConnexionMiddleware, MiddlewarePosition
 from connexion.middleware.swagger_ui import SwaggerUIMiddleware
+from connexion.spec import Specification
 from connexion.types import Environ, ResponseStream, StartResponse, WSGIApp
 from starlette.datastructures import MutableHeaders
 
@@ -52,6 +53,47 @@ def test_routing_middleware(middleware_app):
     assert (
         response.headers.get("operation_id") == "fakeapi.hello.post_greeting"
     ), response.status_code
+
+
+@pytest.mark.parametrize("static_first", [False, True])
+def test_routing_prefers_static_paths(
+    simple_api_spec_dir, spec, app_class, static_first
+):
+    specification = Specification.load(simple_api_spec_dir / spec).raw
+    paths = {
+        "/bye/{name}": specification["paths"]["/bye/{name}"],
+        "/bye/me": {
+            "head": {
+                "operationId": "fakeapi.hello.get",
+                "responses": {"200": {"description": "The current user headers"}},
+            },
+            "get": {
+                "operationId": "fakeapi.hello.api_list",
+                "responses": {"200": {"description": "The current user"}},
+            },
+        },
+    }
+    specification["paths"] = (
+        dict(reversed(list(paths.items()))) if static_first else paths
+    )
+    app = app_class(__name__)
+    app.add_api(specification)
+    app.add_middleware(TestMiddleware)
+    client = app.test_client()
+
+    response = client.get("/v1.0/bye/me")
+    assert response.status_code == 200
+    assert response.headers["operation_id"] == "fakeapi.hello.api_list"
+    assert response.json() == "a"
+
+    response = client.head("/v1.0/bye/me")
+    assert response.status_code == 200
+    assert response.headers["operation_id"] == "fakeapi.hello.get"
+
+    response = client.get("/v1.0/bye/Ada")
+    assert response.status_code == 200
+    assert response.headers["operation_id"] == "fakeapi.hello.get_bye"
+    assert response.text == "Goodbye Ada"
 
 
 def test_add_middleware(spec, app_class):
