@@ -23,7 +23,7 @@ class Framework(t.Protocol):
         *,
         content_type: t.Optional[str] = None,
         headers: t.Optional[dict] = None,
-        status_code: int = None
+        status_code: int = None,
     ):
         raise NotImplementedError
 

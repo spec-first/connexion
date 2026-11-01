@@ -40,7 +40,7 @@ class Flask(Framework):
         *,
         content_type: t.Optional[str] = None,
         headers: t.Optional[dict] = None,
-        status_code: int = None
+        status_code: int = None,
     ):
         if cls.is_framework_response(data):
             return flask.current_app.make_response((data, status_code, headers))
