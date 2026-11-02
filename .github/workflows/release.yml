@@ -26,7 +26,7 @@ jobs:
 
     - name: Publish distribution 📦 to Test PyPI
       if: github.event_name == 'push'
-      uses: pypa/gh-action-pypi-publish@v1.13.0
+      uses: pypa/gh-action-pypi-publish@v1.14.3
       with:
         user: __token__
         password: ${{ secrets.TEST_PYPI_API_TOKEN }}
@@ -34,7 +34,7 @@ jobs:
 
     - name: Publish distribution 📦 to PyPI if triggered by release
       if: github.event_name == 'release'
-      uses: pypa/gh-action-pypi-publish@v1.13.0
+      uses: pypa/gh-action-pypi-publish@v1.14.3
       with:
         user: __token__
         password: ${{ secrets.PYPI_API_TOKEN }}
