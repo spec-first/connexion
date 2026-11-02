@@ -44,11 +44,6 @@ Sponsors
    :height: 100px
    :target: https://www.ml6.eu
 
-.. image:: https://raw.githubusercontent.com/spec-first/connexion/main/docs/images/sponsors/Fern.png
-   :alt: Fern
-   :height: 100px
-   :target: https://www.devmark.ai/fern/?utm_source=connexion&utm_loc=website&utm_type=logo
-
 Sponsors help us dedicate time to maintain Connexion. Want to help?
 
 .. raw:: html
