@@ -134,6 +134,7 @@ class AbstractRoutingAPI(AbstractSpecAPI, t.Generic[OP]):
         """Build an operation to register on the API."""
 
     @staticmethod
+    @abc.abstractmethod
     def _framework_path_and_name(
         operation: AbstractOperation, path: str
     ) -> t.Tuple[str, str]:

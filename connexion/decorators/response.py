@@ -118,7 +118,7 @@ class BaseResponseDecorator:
 
     @staticmethod
     def _unpack_handler_response(
-        handler_response: t.Union[str, bytes, dict, list, tuple]
+        handler_response: t.Union[str, bytes, dict, list, tuple],
     ) -> t.Tuple[t.Union[str, bytes, dict, list, None], t.Optional[int], dict]:
         """Unpack the handler response into data, status_code and headers.
 

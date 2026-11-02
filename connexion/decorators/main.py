@@ -1,6 +1,6 @@
 import abc
-import asyncio
 import functools
+import inspect
 import json
 import typing as t
 
@@ -42,7 +42,7 @@ class BaseDecorator:
         self,
         *,
         pythonic_params: bool = False,
-        uri_parser_class: AbstractURIParser = None,
+        uri_parser_class: t.Optional[AbstractURIParser] = None,
         jsonifier=json,
     ) -> None:
         self.pythonic_params = pythonic_params
@@ -100,7 +100,8 @@ class WSGIDecorator(BaseDecorator):
     and provides Flask datastructures to the view function. This works for any WSGI app, since
     we get the request via the connexion context provided by WSGI middleware.
 
-    This decorator does not parse responses, but passes them directly to the WSGI App."""
+    This decorator does not parse responses, but passes them directly to the WSGI App.
+    """
 
     framework = FlaskFramework
 
@@ -117,7 +118,7 @@ class WSGIDecorator(BaseDecorator):
         def decorator(function: t.Callable) -> t.Callable:
             @functools.wraps(function)
             def wrapper(*args, **kwargs) -> t.Callable:
-                if asyncio.iscoroutinefunction(function):
+                if inspect.iscoroutinefunction(function):
                     return async_to_sync(function)(*args, **kwargs)
                 else:
                     return function(*args, **kwargs)
@@ -152,7 +153,8 @@ class ASGIDecorator(BaseDecorator):
     and provides Starlette datastructures to the view function. This works for any ASGI app, since
     we get the request via the connexion context provided by ASGI middleware.
 
-    This decorator does not parse responses, but passes them directly to the ASGI App."""
+    This decorator does not parse responses, but passes them directly to the ASGI App.
+    """
 
     framework = StarletteFramework
 
@@ -169,7 +171,7 @@ class ASGIDecorator(BaseDecorator):
         def decorator(function: t.Callable) -> t.Callable:
             @functools.wraps(function)
             async def wrapper(*args, **kwargs):
-                if asyncio.iscoroutinefunction(function):
+                if inspect.iscoroutinefunction(function):
                     return await function(*args, **kwargs)
                 else:
                     return await run_in_threadpool(function, *args, **kwargs)

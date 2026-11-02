@@ -1,5 +1,6 @@
 import asyncio
 import functools
+import inspect
 import logging
 import typing as t
 
@@ -23,7 +24,7 @@ logger = logging.getLogger(__name__)
 def connexion_wrapper(
     handler: t.Callable[
         [ConnexionRequest, Exception], MaybeAwaitable[ConnexionResponse]
-    ]
+    ],
 ) -> t.Callable[[StarletteRequest, Exception], t.Awaitable[StarletteResponse]]:
     """Wrapper that translates Starlette requests to Connexion requests before passing
     them to the error handler, and translates the returned Connexion responses to
@@ -33,7 +34,7 @@ def connexion_wrapper(
     async def wrapper(request: StarletteRequest, exc: Exception) -> StarletteResponse:
         request = ConnexionRequest.from_starlette_request(request)
 
-        if asyncio.iscoroutinefunction(handler):
+        if inspect.iscoroutinefunction(handler):
             response = await handler(request, exc)  # type: ignore
         else:
             response = await run_in_threadpool(handler, request, exc)

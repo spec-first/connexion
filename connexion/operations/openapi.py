@@ -15,7 +15,6 @@ logger = logging.getLogger("connexion.operations.openapi3")
 
 
 class OpenAPIOperation(AbstractOperation):
-
     """
     A single API operation on a path.
     """

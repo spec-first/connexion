@@ -1,6 +1,7 @@
 """
 Basic example of a resource server
 """
+
 import time
 from pathlib import Path
 
@@ -37,9 +38,7 @@ def get_secret(user, token_info) -> str:
     return """
     You are user_id {user} and the secret is 'wbevuec'.
     Decoded token claims: {token_info}.
-    """.format(
-        user=user, token_info=token_info
-    )
+    """.format(user=user, token_info=token_info)
 
 
 def _current_timestamp() -> int:

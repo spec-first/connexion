@@ -2,6 +2,7 @@
 This module defines an AbstractApp, which defines a standardized user interface for a Connexion
 application.
 """
+
 import abc
 import pathlib
 import typing as t
@@ -107,7 +108,7 @@ class AbstractApp:
 
     def add_middleware(
         self,
-        middleware_class: t.Type[ASGIApp],
+        middleware_class: t.Callable[..., ASGIApp],
         position: MiddlewarePosition = MiddlewarePosition.BEFORE_CONTEXT,
         **options: t.Any,
     ) -> None:

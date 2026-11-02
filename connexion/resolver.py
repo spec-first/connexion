@@ -210,7 +210,9 @@ class MethodResolverBase(RestyResolver):
         str, t.Dict[str, t.Union[t.Iterable, t.Dict[str, t.Any]]]
     ]
 
-    def __init__(self, *args, class_arguments: _class_arguments_type = None, **kwargs):
+    def __init__(
+        self, *args, class_arguments: t.Optional[_class_arguments_type] = None, **kwargs
+    ):
         """
         :param args: Arguments passed to :class:`~RestyResolver`
         :param class_arguments: Arguments to instantiate the View Class in the format below

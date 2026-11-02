@@ -50,7 +50,6 @@ dependencies = [
     "requests>=2.27",
     "referencing>=0.12.0",
     "starlette>=0.35",
-    "typing-extensions>=4.6.1",
     "werkzeug>=2.2.1",
 ]
 
@@ -69,7 +68,7 @@ Repository = "https://github.com/spec-first/connexion"
 [dependency-groups]
 tests = [
     "pre-commit~=2.21.0",
-    "pytest==8.4.2",
+    "pytest==9.0.3",
     "pytest-asyncio~=0.18.3",
     "pytest-cov~=2.12.1",
 ]

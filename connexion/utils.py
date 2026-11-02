@@ -2,7 +2,6 @@
 This module provides general utility functions used within Connexion.
 """
 
-import asyncio
 import functools
 import importlib
 import inspect
@@ -215,10 +214,10 @@ def has_coroutine(function, api=None):
     """
 
     def iscorofunc(func):
-        iscorofunc = asyncio.iscoroutinefunction(func)
+        iscorofunc = inspect.iscoroutinefunction(func)
         while not iscorofunc and hasattr(func, "__wrapped__"):
             func = func.__wrapped__
-            iscorofunc = asyncio.iscoroutinefunction(func)
+            iscorofunc = inspect.iscoroutinefunction(func)
         return iscorofunc
 
     if api is None:
@@ -288,7 +287,7 @@ def not_installed_error(exc, *, msg=None):  # pragma: no cover
 
 
 def extract_content_type(
-    headers: t.Union[t.List[t.Tuple[bytes, bytes]], t.Dict[str, str]]
+    headers: t.Union[t.List[t.Tuple[bytes, bytes]], t.Dict[str, str]],
 ) -> t.Optional[str]:
     """Extract the mime type and encoding from the content type headers.
 
@@ -469,13 +468,11 @@ T = t.TypeVar("T")
 
 
 @t.overload
-def sort_routes(routes: t.List[str], *, key: None = None) -> t.List[str]:
-    ...
+def sort_routes(routes: t.List[str], *, key: None = None) -> t.List[str]: ...
 
 
 @t.overload
-def sort_routes(routes: t.List[T], *, key: t.Callable[[T], str]) -> t.List[T]:
-    ...
+def sort_routes(routes: t.List[T], *, key: t.Callable[[T], str]) -> t.List[T]: ...
 
 
 def sort_routes(routes, *, key=None):

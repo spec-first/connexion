@@ -1,10 +1,8 @@
 import abc
 import typing as t
 
-from typing_extensions import Protocol
 
-
-class Framework(Protocol):
+class Framework(t.Protocol):
     @staticmethod
     @abc.abstractmethod
     def is_framework_response(response: t.Any) -> bool:
@@ -25,7 +23,7 @@ class Framework(Protocol):
         *,
         content_type: t.Optional[str] = None,
         headers: t.Optional[dict] = None,
-        status_code: int = None
+        status_code: t.Optional[int] = None,
     ):
         raise NotImplementedError
 

@@ -1,7 +1,5 @@
-import sys
 from unittest.mock import AsyncMock, MagicMock
 
-import pytest
 from connexion.decorators.parameter import (
     AsyncParameterDecorator,
     SyncParameterDecorator,
@@ -33,9 +31,6 @@ def test_sync_injection():
     func.assert_called_with(p1="123")
 
 
-@pytest.mark.skipif(
-    sys.version_info < (3, 8), reason="AsyncMock only available from 3.8."
-)
 async def test_async_injection():
     request = AsyncMock(name="request")
     request.path_params = {"p1": "123"}
@@ -81,9 +76,6 @@ def test_sync_injection_with_context():
         func.assert_called_with(context, p1="123", test="success")
 
 
-@pytest.mark.skipif(
-    sys.version_info < (3, 8), reason="AsyncMock only available from 3.8."
-)
 async def test_async_injection_with_context():
     request = AsyncMock(name="request")
     request.path_params = {"p1": "123"}

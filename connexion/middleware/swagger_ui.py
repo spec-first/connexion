@@ -31,7 +31,7 @@ class SwaggerUIAPI(AbstractSpecAPI):
         *args,
         default: ASGIApp,
         swagger_ui_options: t.Optional[SwaggerUIOptions] = None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(*args, **kwargs)
 
@@ -197,7 +197,7 @@ class SwaggerUIMiddleware(SpecMiddleware):
         specification: Specification,
         base_path: t.Optional[str] = None,
         arguments: t.Optional[dict] = None,
-        **kwargs
+        **kwargs,
     ) -> None:
         """Add an API to the router based on a OpenAPI spec.
 
@@ -210,7 +210,7 @@ class SwaggerUIMiddleware(SpecMiddleware):
             base_path=base_path,
             arguments=arguments,
             default=self.default_fn,
-            **kwargs
+            **kwargs,
         )
         self.router.mount(api.base_path, app=api.router)
 

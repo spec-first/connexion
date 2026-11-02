@@ -1,6 +1,7 @@
 """
 Basic example of a resource server
 """
+
 from pathlib import Path
 
 import connexion

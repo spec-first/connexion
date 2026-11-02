@@ -1,6 +1,7 @@
 """
 This module defines functionality specific to the Flask framework.
 """
+
 import functools
 import random
 import re
@@ -39,7 +40,7 @@ class Flask(Framework):
         *,
         content_type: t.Optional[str] = None,
         headers: t.Optional[dict] = None,
-        status_code: int = None
+        status_code: t.Optional[int] = None,
     ):
         if cls.is_framework_response(data):
             return flask.current_app.make_response((data, status_code, headers))

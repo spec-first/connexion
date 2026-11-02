@@ -1,8 +1,6 @@
 import contextlib
-import sys
 from unittest import mock
 
-import pytest
 from connexion import AsyncApp, ConnexionMiddleware
 
 
@@ -22,9 +20,6 @@ def test_lifespan_handler(app_class):
     m.shutdown.assert_called()
 
 
-@pytest.mark.skipif(
-    sys.version_info < (3, 8), reason="AsyncMock only available from 3.8."
-)
 async def test_lifespan():
     """Test that lifespan events are passed through if no handler is registered."""
     lifecycle_handler = mock.Mock()
