@@ -16,4 +16,3 @@ venv/
 .venv/
 src/
 *.un~
-uv.lock
