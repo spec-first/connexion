@@ -13,6 +13,10 @@ jobs:
       uses: astral-sh/setup-uv@v10.2.0
     - name: Check uv.lock is up to date with pyproject.toml
       run: uv lock --check
+    # pre-commit.ci skips the uv-lock hook, so run it here. This fails if the
+    # hook's rev no longer satisfies `required-version` in pyproject.toml.
+    - name: Check the uv-lock pre-commit hook
+      run: uv run --locked --only-group tests pre-commit run uv-lock --all-files --show-diff-on-failure
 
   test:
     runs-on: ubuntu-latest
