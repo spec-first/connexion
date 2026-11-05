@@ -17,6 +17,7 @@ def test_media_type_dict():
     assert d["application/x-www-form-urlencoded"] == "*/*"
     assert d["multipart/form-data"] == "multipart/form-data"
     assert d["multipart/byteranges"] == "multipart/*"
+    assert d["Multipart/Form-Data"] == "multipart/form-data"
 
     # Test __contains__
     assert "application/json" in d
