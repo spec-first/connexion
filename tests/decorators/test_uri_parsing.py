@@ -319,3 +319,158 @@ def test_parameter_coercion():
 
     parsed_param = uri_parser.resolve_query(QueryParams(f"a1={quote_plus('1,2,3,4')}"))
     assert parsed_param == {"a1": [4]}  # Swagger2URIParser
+
+
+OBJECT_SCHEMA = {
+    "type": "object",
+    "properties": {"name": {"type": "string"}, "num": {"type": "integer"}},
+}
+
+
+@pytest.mark.parametrize(
+    "param, query_in, expected",
+    [
+        # style=form, explode=true (default): one query parameter per property
+        (
+            {"name": "obj", "in": "query", "schema": OBJECT_SCHEMA},
+            {"name": ["hello"], "num": ["1"]},
+            {"obj": {"name": "hello", "num": 1}},
+        ),
+        # style=form, explode=false: a single k,v,k,v value
+        (
+            {"name": "obj", "in": "query", "explode": False, "schema": OBJECT_SCHEMA},
+            {"obj": ["name,hello,num,1"]},
+            {"obj": {"name": "hello", "num": 1}},
+        ),
+        # malformed values are left for validation
+        (
+            {"name": "obj", "in": "query", "explode": False, "schema": OBJECT_SCHEMA},
+            {"obj": ["name,hello,num"]},
+            {"obj": "name,hello,num"},
+        ),
+    ],
+)
+def test_uri_parser_query_form_object(param, query_in, expected):
+    parser = OpenAPIURIParser([param], {})
+    assert parser.resolve_query(query_in) == expected
+
+
+def test_uri_parser_query_form_object_keeps_declared_params():
+    # a property key that is also a parameter of its own is passed to both
+    parameters = [
+        {"name": "obj", "in": "query", "schema": OBJECT_SCHEMA},
+        {"name": "num", "in": "query", "schema": {"type": "integer"}},
+    ]
+    parser = OpenAPIURIParser(parameters, {})
+    res = parser.resolve_query({"name": ["hello"], "num": ["1"]})
+    assert res == {"obj": {"name": "hello", "num": 1}, "num": 1}
+
+
+@pytest.mark.parametrize(
+    "param, headers, expected",
+    [
+        (
+            {"name": "X-Rate", "in": "header", "schema": {"type": "integer"}},
+            {"x-rate": "5"},
+            {"X-Rate": 5},
+        ),
+        (
+            {
+                "name": "X-Ids",
+                "in": "header",
+                "schema": {"type": "array", "items": {"type": "integer"}},
+            },
+            {"X-Ids": "1,2,3"},
+            {"X-Ids": [1, 2, 3]},
+        ),
+        (
+            {"name": "X-Obj", "in": "header", "schema": OBJECT_SCHEMA},
+            {"X-Obj": "name,hello,num,1"},
+            {"X-Obj": {"name": "hello", "num": 1}},
+        ),
+        (
+            {"name": "X-Obj", "in": "header", "explode": True, "schema": OBJECT_SCHEMA},
+            {"X-Obj": "name=hello,num=1"},
+            {"X-Obj": {"name": "hello", "num": 1}},
+        ),
+        # malformed values are left for validation
+        (
+            {"name": "X-Obj", "in": "header", "schema": OBJECT_SCHEMA},
+            {"X-Obj": "name,hello,num"},
+            {"X-Obj": "name,hello,num"},
+        ),
+        # headers that are not defined as parameters are not included
+        (
+            {"name": "X-Rate", "in": "header", "schema": {"type": "integer"}},
+            {"X-Other": "1"},
+            {},
+        ),
+    ],
+)
+def test_uri_parser_headers(param, headers, expected):
+    parser = OpenAPIURIParser([param], {})
+    assert parser.resolve_headers(headers) == expected
+
+
+def test_uri_parser_header_and_query_with_same_name():
+    parameters = [
+        {"name": "id", "in": "query", "schema": {"type": "string"}},
+        {"name": "id", "in": "header", "schema": {"type": "integer"}},
+    ]
+    parser = OpenAPIURIParser(parameters, {})
+    assert parser.resolve_query({"id": ["abc"]}) == {"id": "abc"}
+    assert parser.resolve_headers({"id": "3"}) == {"id": 3}
+
+
+def test_uri_parser_repeated_headers():
+    from starlette.datastructures import Headers
+
+    parameters = [
+        {
+            "name": "X-Ids",
+            "in": "header",
+            "schema": {"type": "array", "items": {"type": "integer"}},
+        },
+        {"name": "X-Rate", "in": "header", "schema": {"type": "integer"}},
+    ]
+    parser = OpenAPIURIParser(parameters, {})
+    headers = Headers(
+        raw=[
+            (b"x-ids", b"1,2"),
+            (b"x-ids", b"3"),
+            (b"x-rate", b"5"),
+            (b"x-rate", b"6"),
+        ]
+    )
+    # repeated lines of an array header are combined; otherwise the first line is
+    # used, like headers.get()
+    assert parser.resolve_headers(headers) == {"X-Ids": [1, 2, 3], "X-Rate": 5}
+
+
+def test_uri_parser_swagger2_header_collection_format():
+    parameters = [
+        {
+            "name": "X-Ids",
+            "in": "header",
+            "type": "array",
+            "collectionFormat": "pipes",
+            "items": {"type": "integer"},
+        }
+    ]
+    parser = Swagger2URIParser(parameters, {})
+    assert parser.resolve_headers({"X-Ids": "1|2"}) == {"X-Ids": [1, 2]}
+
+
+def test_uri_parser_query_form_object_property_named_like_path_param():
+    # a consumed property key that is only a *path* parameter is not kept as a query
+    # parameter (it would be reported as unknown with strict_validation)
+    parameters = [
+        {"name": "id", "in": "path", "required": True, "schema": {"type": "string"}},
+        {
+            "name": "obj",
+            "in": "query",
+            "schema": {"type": "object", "properties": {"id": {"type": "string"}}},
+        },
+    ]
+    parser = OpenAPIURIParser(parameters, {})
+    assert parser.resolve_query({"id": ["x"]}) == {"obj": {"id": "x"}}

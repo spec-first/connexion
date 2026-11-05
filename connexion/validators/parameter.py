@@ -90,7 +90,7 @@ class ParameterValidator:
         return self.validate_parameter("path", val, param)
 
     def validate_header_parameter(self, param, request):
-        val = request.headers.get(param["name"])
+        val = request.header_params.get(param["name"])
         return self.validate_parameter("header", val, param)
 
     def validate_cookie_parameter(self, param, request):

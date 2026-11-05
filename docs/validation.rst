@@ -107,6 +107,11 @@ Headers and cookies are also validated against your specification. If their vali
 Connexion will return a ``400 Bad Request`` response with information on the failure in the
 description.
 
+Header parameter values are first deserialized according to their ``style`` (``simple``: arrays
+like ``1,2,3`` and objects like ``id,abc,hops,3`` or, with ``explode: true``, ``id=abc,hops=3``)
+and coerced to their schema types, so that for instance an ``integer`` header is validated as a
+number. For an array header, repeated header lines are combined; otherwise the first line is used.
+
 The ``Content-Type`` header is validated separately. If it fails validation, Connexion returns a
 ``415 Unsupported Media Type`` error.
 
