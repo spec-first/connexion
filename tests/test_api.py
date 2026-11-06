@@ -20,6 +20,40 @@ def test_canonical_base_path():
     assert canonical_base_path("/api/") == "/api"
 
 
+def _swagger2_spec(base_path=None):
+    spec = {
+        "swagger": "2.0",
+        "info": {"title": "t", "version": "1.0"},
+        "paths": {},
+    }
+    if base_path is not None:
+        spec["basePath"] = base_path
+    return spec
+
+
+def test_swagger2_empty_base_path_is_omitted():
+    # A spec without basePath must not gain an empty, schema-invalid
+    # basePath when served without a proxy prefix.
+    spec = Specification.from_dict(_swagger2_spec())
+    served = spec.with_base_path("").spec
+    assert "basePath" not in served
+    assert spec.with_base_path("").base_path == ""
+
+
+def test_swagger2_slash_base_path_is_omitted():
+    # basePath "/" canonicalizes to "" and is equivalent to no base
+    # path, so it must not be served as an empty string either.
+    spec = Specification.from_dict(_swagger2_spec("/"))
+    served = spec.with_base_path("").spec
+    assert "basePath" not in served
+
+
+def test_swagger2_nonempty_base_path_is_kept():
+    spec = Specification.from_dict(_swagger2_spec("/v1"))
+    served = spec.with_base_path("/behind/proxy").spec
+    assert served["basePath"] == "/behind/proxy"
+
+
 def test_api():
     api = FlaskApi(
         Specification.load(TEST_FOLDER / "fixtures/simple/swagger.yaml"),

@@ -287,6 +287,14 @@ class Swagger2Specification(Specification):
     @base_path.setter
     def base_path(self, base_path):
         base_path = canonical_base_path(base_path)
+        if not base_path:
+            # An empty base path is not a valid Swagger 2.0 basePath
+            # (the schema requires it to start with "/"). Omitting the
+            # key is equivalent to the default "/" and keeps the
+            # served spec valid when no prefix applies.
+            self._raw_spec.pop("basePath", None)
+            self._spec.pop("basePath", None)
+            return
         self._raw_spec["basePath"] = base_path
         self._spec["basePath"] = base_path
 
