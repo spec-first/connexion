@@ -81,6 +81,41 @@ def deep_merge(a, b):
     return a
 
 
+def merge_all_of(schema: dict) -> dict:
+    """Merge the ``allOf`` subschemas of a schema into a single schema, to look up keywords which
+    can be defined in any of them. This is not meant to validate against, since keywords overwrite
+    each other.
+
+    Properties defined by multiple subschemas are combined in a new ``allOf``, instead of being
+    merged recursively, since schemas with recursive references can be cyclic.
+
+    >>> merge_all_of({"allOf": [{"type": "object"}, {"properties": {"a": {"type": "string"}}}]})
+    {'type': 'object', 'properties': {'a': {'type': 'string'}}}
+    """
+    if "allOf" not in schema:
+        return schema
+
+    merged: dict = {}
+    properties: dict = {}
+    for subschema in (*map(merge_all_of, schema["allOf"]), schema):
+        merged.update(subschema)
+        for name, property_ in subschema.get("properties", {}).items():
+            if name in properties:
+                property_ = {"allOf": [properties[name], property_]}
+            properties[name] = property_
+
+    del merged["allOf"]
+    if properties:
+        merged["properties"] = properties
+    return merged
+
+
+def get_schema_properties(schema: dict) -> dict:
+    """Return the property schemas of an object schema, taking ``allOf`` into account."""
+    properties = merge_all_of(schema).get("properties", {})
+    return {name: merge_all_of(property_) for name, property_ in properties.items()}
+
+
 def deep_getattr(obj, attr):
     """
     Recurses through an attribute chain to get the ultimate value.
@@ -360,7 +395,9 @@ def coerce_type(param, value, parameter_type, parameter_name=None):
             value = value.split(",")
         for v in value:
             try:
-                converted = make_type(v, param_schema["items"]["type"])
+                converted = make_type(
+                    v, merge_all_of(param_schema["items"]).get("type")
+                )
             except (ValueError, TypeError):
                 converted = v
             converted_params.append(converted)

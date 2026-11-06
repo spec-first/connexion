@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock, MagicMock
 from connexion.decorators.parameter import (
     AsyncParameterDecorator,
     SyncParameterDecorator,
+    _get_typed_body_values,
     pythonic,
 )
 from connexion.frameworks.flask import Flask as FlaskFramework
@@ -103,3 +104,16 @@ async def test_async_injection_with_context():
 def test_pythonic_params():
     assert pythonic("orderBy[eq]") == "order_by_eq"
     assert pythonic("ids[]") == "ids"
+
+
+def test_get_typed_body_values_property_without_type():
+    body_props = {"a": {"schema": {"anyOf": [{"type": "string"}, {"type": "integer"}]}}}
+    for additional_props in (True, False, {"type": "string"}):
+        assert _get_typed_body_values({"a": 1}, body_props, additional_props) == {
+            "a": 1
+        }
+
+
+def test_get_typed_body_values_additional_properties():
+    assert _get_typed_body_values({"a": 1}, {}, False) == {}
+    assert _get_typed_body_values({"a": 1}, {}, True) == {"a": 1}
