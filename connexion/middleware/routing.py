@@ -112,6 +112,9 @@ class RoutingMiddleware(SpecMiddleware):
         starlette.convertors.register_url_convertor(
             "int", starlette_utils.IntegerConverter()
         )
+        starlette.convertors.register_url_convertor(
+            "path", starlette_utils.PathConverter()
+        )
 
     def add_api(
         self,

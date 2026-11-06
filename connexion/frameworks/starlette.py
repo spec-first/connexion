@@ -93,3 +93,9 @@ class IntegerConverter(starlette.convertors.IntegerConvertor):
     """Starlette converter for OpenAPI integer type"""
 
     regex = r"[+-]?[0-9]+"
+
+
+class PathConverter(starlette.convertors.PathConvertor):
+    """Starlette converter for paths, which also matches URL-encoded newlines"""
+
+    regex = r"(?s:.*)"
