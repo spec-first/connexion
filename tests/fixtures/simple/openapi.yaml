@@ -664,6 +664,21 @@ paths:
               required:
                 - formData
                 - file
+  /test-formData-allOf:
+    post:
+      summary: Test form data with a schema composed using allOf
+      operationId: fakeapi.hello.test_formdata_all_of
+      responses:
+        '200':
+          description: OK
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/formDataAllOf'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/formDataAllOf'
   /test-formData-file-upload-missing-param:
     post:
       summary: 'Test formData with file type, missing parameter in handler'
@@ -1367,6 +1382,41 @@ components:
       summary: a basic example.
       value: Good evening, doctor.
   schemas:
+    formDataAllOf:
+      allOf:
+        - $ref: '#/components/schemas/formDataBase'
+        - type: object
+          properties:
+            name:
+              minLength: 2
+            count:
+              allOf:
+                - type: integer
+            tags:
+              type: array
+              items:
+                allOf:
+                  - type: integer
+            file:
+              allOf:
+                - type: string
+                  format: binary
+            files:
+              type: array
+              items:
+                type: string
+                format: binary
+            anyOfParam:
+              anyOf:
+                - type: string
+                - type: array
+    formDataBase:
+      type: object
+      properties:
+        name:
+          type: string
+      required:
+        - name
     new_stack:
       type: object
       properties:

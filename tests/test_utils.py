@@ -143,3 +143,57 @@ def test_sort_apis_by_basepath():
         api4,
         api1,
     ]
+
+
+def test_merge_all_of_without_all_of():
+    schema = {"type": "string"}
+    assert utils.merge_all_of(schema) is schema
+
+
+def test_merge_all_of():
+    schema = {
+        "description": "outer",
+        "allOf": [
+            {"type": "object", "description": "inner", "required": ["a"]},
+            {"allOf": [{"properties": {"a": {"type": "string"}}}]},
+            {"properties": {"a": {"minLength": 1}, "b": {"type": "integer"}}},
+        ],
+    }
+    assert utils.merge_all_of(schema) == {
+        "type": "object",
+        "description": "outer",
+        "required": ["a"],
+        "properties": {
+            "a": {"allOf": [{"type": "string"}, {"minLength": 1}]},
+            "b": {"type": "integer"},
+        },
+    }
+    # The original schema is used for validation and should be left untouched
+    assert "allOf" in schema
+    assert "properties" not in schema
+
+
+def test_get_schema_properties():
+    schema = {
+        "allOf": [
+            {"properties": {"a": {"type": "string"}}},
+            {
+                "properties": {
+                    "a": {"minLength": 1},
+                    "b": {"allOf": [{"type": "array"}]},
+                }
+            },
+        ]
+    }
+    assert utils.get_schema_properties(schema) == {
+        "a": {"type": "string", "minLength": 1},
+        "b": {"type": "array"},
+    }
+    assert utils.get_schema_properties({"type": "string"}) == {}
+
+
+def test_get_schema_properties_recursive_schema():
+    node = {"type": "object", "properties": {}}
+    node["properties"]["child"] = {"allOf": [node]}
+    properties = utils.get_schema_properties({"allOf": [node]})
+    assert properties["child"]["properties"]["child"] == {"allOf": [node]}

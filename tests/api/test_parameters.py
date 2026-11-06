@@ -4,6 +4,8 @@ from typing import List
 
 import pytest
 
+from conftest import OPENAPI3_SPEC, build_app_from_fixture
+
 
 def test_parameter_validation(simple_app):
     app_client = simple_app.test_client()
@@ -353,6 +355,81 @@ def test_formdata_file_upload_missing_param(simple_app):
         files={"missing_fileData": ("example.txt", BytesIO(b"file contents"))},
     )
     assert resp.status_code == 200, resp.text
+
+
+def test_formdata_all_of(simple_openapi_app):
+    app_client = simple_openapi_app.test_client()
+    resp = app_client.post(
+        "/v1.0/test-formData-allOf",
+        data={"name": "foo", "count": "1", "tags": "1,2", "anyOfParam": "bar"},
+        files=[
+            ("file", ("file.txt", BytesIO(b"file contents"))),
+            ("files", ("file1.txt", BytesIO(b"file1 contents"))),
+            ("files", ("file2.txt", BytesIO(b"file2 contents"))),
+        ],
+    )
+    assert resp.status_code == 200, resp.text
+    assert resp.json() == {
+        "body": {"name": "foo", "count": 1, "tags": [1, 2], "anyOfParam": "bar"},
+        "file": "file contents",
+        "files": ["file1 contents", "file2 contents"],
+    }
+
+
+def test_formdata_all_of_urlencoded(simple_openapi_app):
+    app_client = simple_openapi_app.test_client()
+    resp = app_client.post(
+        "/v1.0/test-formData-allOf", data={"name": "foo", "count": "1"}
+    )
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["body"] == {"name": "foo", "count": 1}
+
+
+@pytest.mark.parametrize(
+    "data, files, detail",
+    [
+        ({}, None, "'name' is a required property"),
+        ({"name": "f"}, None, "'f' is too short - 'name'"),
+        (
+            {"name": "foo", "count": "bar"},
+            None,
+            "Wrong type, expected 'integer' for requestBody parameter 'count'",
+        ),
+        (
+            {"name": "foo"},
+            [
+                ("file", ("file1.txt", b"file1 contents")),
+                ("file", ("file2.txt", b"file2 contents")),
+            ],
+            "['', ''] is not of type 'string' - 'file'",
+        ),
+    ],
+)
+def test_formdata_all_of_bad_request(simple_openapi_app, data, files, detail):
+    app_client = simple_openapi_app.test_client()
+    # Add a file so the request is always sent as multipart/form-data
+    files = files or [("other", ("other.txt", b"other contents"))]
+    resp = app_client.post("/v1.0/test-formData-allOf", data=data, files=files)
+    assert resp.status_code == 400
+    assert resp.json()["detail"] == detail
+
+
+def test_strict_formdata_all_of(app_class):
+    app = build_app_from_fixture(
+        "simple",
+        app_class=app_class,
+        spec_file=OPENAPI3_SPEC,
+        strict_validation=True,
+    )
+    app_client = app.test_client()
+    url = "/v1.0/test-formData-allOf"
+
+    resp = app_client.post(url, data={"name": "foo"})
+    assert resp.status_code == 200, resp.text
+
+    resp = app_client.post(url, data={"name": "foo", "extra": "bar"})
+    assert resp.status_code == 400
+    assert resp.json()["detail"] == "Extra formData parameter(s) extra not in spec"
 
 
 def test_body_not_allowed_additional_properties(simple_app):
