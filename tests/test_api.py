@@ -20,6 +20,52 @@ def test_canonical_base_path():
     assert canonical_base_path("/api/") == "/api"
 
 
+def test_server_url_with_undeclared_template_variable_raises_invalid_spec():
+    """Verify server URL with undeclared template variable raises InvalidSpecification (#2157)."""
+    spec = Specification.from_dict(
+        {
+            "openapi": "3.0.0",
+            "info": {"title": "t", "version": "1.0"},
+            "servers": [{"url": "https://example.com/{version}/api"}],
+            "paths": {},
+        }
+    )
+    with pytest.raises(InvalidSpecification) as exc_info:
+        _ = spec.base_path
+    assert "contains undeclared variable: 'version'" in str(exc_info.value)
+
+
+def test_server_url_with_declared_template_variable_resolves_base_path():
+    """Verify server URL with properly declared template variable resolves base_path correctly."""
+    spec = Specification.from_dict(
+        {
+            "openapi": "3.0.0",
+            "info": {"title": "t", "version": "1.0"},
+            "servers": [
+                {
+                    "url": "https://example.com/{env}/api",
+                    "variables": {"env": {"default": "v1"}},
+                }
+            ],
+            "paths": {},
+        }
+    )
+    assert spec.base_path == "/v1/api"
+
+
+def test_server_url_empty_servers_resolves_empty_base_path():
+    """Verify empty servers list resolves to empty base_path."""
+    spec = Specification.from_dict(
+        {
+            "openapi": "3.0.0",
+            "info": {"title": "t", "version": "1.0"},
+            "servers": [],
+            "paths": {},
+        }
+    )
+    assert spec.base_path == ""
+
+
 def test_api():
     api = FlaskApi(
         Specification.load(TEST_FOLDER / "fixtures/simple/swagger.yaml"),
