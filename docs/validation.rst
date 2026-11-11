@@ -92,7 +92,9 @@ types (see :ref:`validation:Custom validators`).
     Connexion assumes the request to have this content type and will validate it accordingly. If
     your specification specifies no or multiple content types it accepts, Connexion will assume
     the request to have content type ``application/octet-stream; charset=utf-8`` and will skip
-    ``requestBody`` validation.
+    ``requestBody`` validation. In either case, the inferred content type is propagated
+    downstream so that body parsing (e.g. JSON decoding) uses the same content type as
+    validation.
 
 If ``requestBody`` validation fails, Connexion will return a ``400 Bad Request`` response with
 information on the failure in the description.
