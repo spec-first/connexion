@@ -25,6 +25,8 @@ class SwaggerUIOptions:
 
     :param serve_spec: Whether to serve the Swagger / OpenAPI Specification
     :param spec_path: Where to serve the Swagger / OpenAPI Specification
+    :param resolve_spec_refs: Whether to resolve references in the served Swagger / OpenAPI
+        Specification.
 
     :param swagger_ui: Whether to serve the Swagger UI
     :param swagger_ui_path: Where to serve the Swagger UI
@@ -38,6 +40,7 @@ class SwaggerUIOptions:
 
     serve_spec: bool = True
     spec_path: t.Optional[str] = None
+    resolve_spec_refs: bool = True
 
     swagger_ui: bool = True
     swagger_ui_config: dict = dataclasses.field(default_factory=dict)
@@ -76,6 +79,11 @@ class SwaggerUIConfig:
     def openapi_spec_path(self) -> str:
         """Path to host the Swagger UI."""
         return self._options.spec_path or self.spec_path
+
+    @property
+    def resolve_spec_refs(self) -> bool:
+        """Whether to resolve references in the served Swagger / OpenAPI Specification."""
+        return self._options.resolve_spec_refs
 
     @property
     def swagger_ui_available(self) -> bool:

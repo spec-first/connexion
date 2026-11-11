@@ -130,6 +130,19 @@ def test_swagger_json_app(simple_api_spec_dir, spec):
     url = url.format(spec=spec.replace("yaml", "json"))
     spec_json = app_client.get(url)
     assert spec_json.status_code == 200
+    assert '"$ref"' not in spec_json.text
+
+
+def test_swagger_json_can_preserve_refs(simple_api_spec_dir, spec):
+    """Verify the spec json file can preserve the authored references."""
+    app = App(__name__, specification_dir=simple_api_spec_dir)
+    app.add_api(spec, swagger_ui_options=SwaggerUIOptions(resolve_spec_refs=False))
+    app_client = app.test_client()
+    url = "/v1.0/{spec}"
+    url = url.format(spec=spec.replace("yaml", "json"))
+    spec_json = app_client.get(url)
+    assert spec_json.status_code == 200
+    assert '"$ref"' in spec_json.text
 
 
 def test_swagger_yaml_app(simple_api_spec_dir, spec):
