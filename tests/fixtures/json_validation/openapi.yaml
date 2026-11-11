@@ -12,7 +12,21 @@ components:
     User:
       type: object
       required:
-      - name
+        - name
+      properties:
+        user_id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+        password:
+          type: string
+          writeOnly: true
+    UserWithRequiredReadOnly:
+      type: object
+      required:
+        - user_id
+        - name
       properties:
         user_id:
           type: integer
@@ -58,21 +72,47 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
+                $ref: "#/components/schemas/User"
     post:
       operationId: fakeapi.hello.post_user
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/User'
+              $ref: "#/components/schemas/User"
       responses:
         '200':
           description: User object
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
+                $ref: "#/components/schemas/User"
+
+  /user_without_userid:
+    get:
+      operationId: fakeapi.hello.get_user_without_userid
+      responses:
+        200:
+          description: User object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserWithRequiredReadOnly"
+    post:
+      operationId: fakeapi.hello.post_user_without_userid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserWithRequiredReadOnly"
+      responses:
+        200:
+          description: User object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserWithRequiredReadOnly"
+
   /user_with_password:
     get:
       operationId: fakeapi.hello.get_user_with_password
@@ -82,7 +122,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
+                $ref: "#/components/schemas/User"
 
   /nullable_default:
     get:
@@ -120,7 +160,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/X"
-
 
   /multipart_form_json_array:
     post:

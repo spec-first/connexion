@@ -10,7 +10,21 @@ definitions:
   User:
     type: object
     required:
-    - name
+      - name
+    properties:
+      user_id:
+        type: integer
+        readOnly: true
+      name:
+        type: string
+      password:
+        type: string
+        x-writeOnly: true
+  UserWithRequiredReadOnly:
+    type: object
+    required:
+      - user_id
+      - name
     properties:
       user_id:
         type: integer
@@ -47,7 +61,7 @@ paths:
         '200':
           description: User object
           schema:
-            $ref: '#/definitions/User'
+            $ref: "#/definitions/User"
     post:
       operationId: fakeapi.hello.post_user
       parameters:
@@ -55,12 +69,35 @@ paths:
           in: body
           required: true
           schema:
-            $ref: '#/definitions/User'
+            $ref: "#/definitions/User"
       responses:
         '200':
           description: User object
           schema:
-            $ref: '#/definitions/User'
+            $ref: "#/definitions/User"
+
+  /user_without_userid:
+    get:
+      operationId: fakeapi.hello.get_user_without_userid
+      responses:
+        200:
+          description: User object
+          schema:
+            $ref: "#/definitions/UserWithRequiredReadOnly"
+    post:
+      operationId: fakeapi.hello.post_user_without_userid
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/UserWithRequiredReadOnly"
+      responses:
+        200:
+          description: User object
+          schema:
+            $ref: "#/definitions/UserWithRequiredReadOnly"
+
   /user_with_password:
     get:
       operationId: fakeapi.hello.get_user_with_password
@@ -68,7 +105,7 @@ paths:
         '200':
           description: User object
           schema:
-            $ref: '#/definitions/User'
+            $ref: "#/definitions/User"
 
   /nullable_default:
     get:
