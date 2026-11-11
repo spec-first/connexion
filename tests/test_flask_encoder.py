@@ -18,7 +18,10 @@ def test_json_encoder():
     s = json.dumps(datetime.date.today(), cls=json_encoder)
     assert len(s) == 12
 
-    s = json.dumps(datetime.datetime.utcnow(), cls=json_encoder)
+    s = json.dumps(
+        datetime.datetime.now(tz=datetime.timezone.utc).replace(tzinfo=None),
+        cls=json_encoder,
+    )
     assert s.endswith('Z"')
 
     s = json.dumps(Decimal(1.01), cls=json_encoder)
