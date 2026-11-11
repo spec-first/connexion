@@ -157,7 +157,7 @@ def is_json_mimetype(mimetype):
     if mimetype is None:
         return False
 
-    maintype, subtype = mimetype.split("/")  # type: str, str
+    maintype, subtype = mimetype.split("/", maxsplit=1)  # type: str, str
     if ";" in subtype:
         subtype, parameter = subtype.split(";", maxsplit=1)
     return maintype == "application" and (
@@ -309,10 +309,8 @@ def extract_content_type(
 
         if decoded_key.lower() == "content-type":
             if isinstance(value, bytes):
-                content_type = value.decode("latin-1")
-            else:
-                content_type = value
-            break
+                value = value.decode("latin-1")
+            content_type = ",".join([content_type, value] if content_type else [value])
 
     return content_type
 

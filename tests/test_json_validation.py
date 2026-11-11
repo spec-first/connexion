@@ -175,3 +175,26 @@ def test_defaults_body(json_validation_spec_dir, spec):
     )
     assert res.status_code == 200
     assert res.json().get("human")
+
+
+def test_multiple_json_content_type(json_validation_spec_dir, spec):
+    """ensure that defaults applied that modify the body"""
+
+    class MyDefaultsJSONBodyValidator(DefaultsJSONRequestBodyValidator):
+        pass
+
+    validator_map = {"body": {"application/json": MyDefaultsJSONBodyValidator}}
+
+    app = App(__name__, specification_dir=json_validation_spec_dir)
+    app.add_api(spec, validate_responses=True, validator_map=validator_map)
+    app_client = app.test_client()
+
+    res = app_client.post(
+        "/v1.0/user",
+        data=json.dumps({"name": "foo"}),
+        headers={
+            "content-type": "application/json",
+            "Content-Type": "application/json",
+        },
+    )
+    assert res.status_code == 415

@@ -62,16 +62,29 @@ def test_deep_get_list():
     assert utils.deep_get(obj, ["0", "properties", "id"]) == {"type": "string"}
 
 
-def test_is_json_mimetype():
-    assert utils.is_json_mimetype("application/json")
-    assert utils.is_json_mimetype("application/vnd.com.myEntreprise.v6+json")
-    assert utils.is_json_mimetype(
-        "application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0"
-    )
-    assert utils.is_json_mimetype(
-        "application/vnd.com.myEntreprise.v6+json; charset=UTF-8"
-    )
-    assert not utils.is_json_mimetype("text/html")
+@pytest.mark.parametrize(
+    "mime_type",
+    [
+        "application/json",
+        "application/vnd.com.myEntreprise.v6+json",
+        "application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0",
+        "application/vnd.com.myEntreprise.v6+json; charset=UTF-8",
+    ],
+)
+def test_is_json_mimetype_true(mime_type: str):
+    assert utils.is_json_mimetype(mime_type)
+
+
+@pytest.mark.parametrize(
+    "mime_type",
+    [
+        "application/json,application/json",
+        "text/html",
+        "text/json",
+    ],
+)
+def test_is_json_mimetype_false(mime_type: str):
+    assert not utils.is_json_mimetype(mime_type)
 
 
 def test_sort_routes():
