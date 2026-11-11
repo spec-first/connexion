@@ -62,7 +62,7 @@ You can register error handlers on:
 
             .. warning::
 
-                ⚠️ **The following is not recommended as it complicates the exception handling logic,**
+                ⚠️ **The following is not recommended as it complicates the exception handling logic!**
 
             You can also register error handlers on the underlying flask application directly.
 
@@ -115,7 +115,8 @@ You can register error handlers on:
 
 .. note::
 
-    Error handlers can be ``async`` coroutines as well.
+    Error handlers can be ``async`` coroutines as well. If the error handler needs to log
+    the exception, pass the exception using the Python logger's ``exc_info`` parameter.
 
 .. _Flask documentation: https://flask.palletsprojects.com/en/latest/errorhandling/#error-handlers
 
