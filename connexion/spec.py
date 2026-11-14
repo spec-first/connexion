@@ -316,16 +316,20 @@ class OpenAPISpecification(Specification):
     @property
     def base_path(self):
         servers = self._spec.get("servers", [])
+        if not servers:
+            return canonical_base_path("")
+
+        server = copy.deepcopy(servers[0])
+        server_vars = server.pop("variables", {})
         try:
-            # assume we're the first server in list
-            server = copy.deepcopy(servers[0])
-            server_vars = server.pop("variables", {})
             server["url"] = server["url"].format(
                 **{k: v["default"] for k, v in server_vars.items()}
             )
-            base_path = urlsplit(server["url"]).path
-        except IndexError:
-            base_path = ""
+        except KeyError as e:
+            raise InvalidSpecification(
+                f"Server URL '{server['url']}' contains undeclared variable: {e}"
+            ) from e
+        base_path = urlsplit(server["url"]).path
         return canonical_base_path(base_path)
 
     @base_path.setter
