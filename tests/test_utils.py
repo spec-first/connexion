@@ -74,6 +74,25 @@ def test_is_json_mimetype():
     assert not utils.is_json_mimetype("text/html")
 
 
+def test_split_content_type():
+    # No parameters
+    assert utils.split_content_type("application/json") == ("application/json", None)
+    # charset directly after the separator
+    assert utils.split_content_type("application/json;charset=utf-8") == (
+        "application/json",
+        "utf-8",
+    )
+    # charset after optional whitespace, as allowed by RFC 7231
+    assert utils.split_content_type("application/json; charset=utf-8") == (
+        "application/json",
+        "utf-8",
+    )
+    # charset preceded by another parameter
+    assert utils.split_content_type(
+        "multipart/form-data; boundary=foo; charset=iso-8859-1"
+    ) == ("multipart/form-data", "iso-8859-1")
+
+
 def test_sort_routes():
     routes = ["/users/me", "/users/{username}"]
     expected = ["/users/me", "/users/{username}"]
