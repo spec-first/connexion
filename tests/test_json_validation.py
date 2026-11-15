@@ -54,6 +54,24 @@ def test_validator_map(json_validation_spec_dir, spec):
     assert res.status_code == 400
 
 
+def test_body_charset_ignored(json_validation_spec_dir, spec, app_class):
+    """The body handed to the handler is parsed without the charset parameter,
+    so validation has to ignore it too."""
+    app = build_app_from_fixture(
+        json_validation_spec_dir, app_class=app_class, spec_file=spec
+    )
+    app_client = app.test_client()
+
+    # foo is an integer when parsed as UTF-8, but a string when decoded as UTF-7
+    body = b'{"foo": 1, "x": "+ACIALAAi-foo+ACIAOgAi-bar"}'
+    res = app_client.post(
+        "/v1.0/minlength",
+        content=body,
+        headers={"Content-Type": "application/json;charset=utf-7"},
+    )
+    assert res.status_code == 400
+
+
 def test_readonly(json_validation_spec_dir, spec, app_class):
     app = build_app_from_fixture(
         json_validation_spec_dir,
