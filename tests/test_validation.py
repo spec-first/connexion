@@ -28,7 +28,7 @@ def test_parameter_validator(monkeypatch):
     uri_parser = Swagger2URIParser(params, {})
     validator = ParameterValidator(params, uri_parser=uri_parser)
 
-    kwargs = {"query_params": {}, "headers": {}, "cookies": {}}
+    kwargs = {"query_params": {}, "header_params": {}, "cookies": {}}
     request = MagicMock(path_params={}, **kwargs)
     with pytest.raises(BadRequestProblem) as exc:
         validator.validate_request(request)
@@ -55,14 +55,14 @@ def test_parameter_validator(monkeypatch):
         assert exc.value.detail.startswith("'1.2' is not of type 'integer'")
 
     request = MagicMock(
-        path_params={"p1": 1}, query_params={"q1": 4}, headers={}, cookies={}
+        path_params={"p1": 1}, query_params={"q1": 4}, header_params={}, cookies={}
     )
     with pytest.raises(BadRequestProblem) as exc:
         validator.validate_request(request)
         assert exc.value.detail.startswith("4 is greater than the maximum of 3")
 
     request = MagicMock(
-        path_params={"p1": 1}, query_params={"q1": 3}, headers={}, cookies={}
+        path_params={"p1": 1}, query_params={"q1": 3}, header_params={}, cookies={}
     )
     try:
         validator.validate_request(request)
@@ -70,7 +70,7 @@ def test_parameter_validator(monkeypatch):
         pytest.fail(str(e))
 
     request = MagicMock(
-        path_params={"p1": 1}, query_params={"a1": [1, 2]}, headers={}, cookies={}
+        path_params={"p1": 1}, query_params={"a1": [1, 2]}, header_params={}, cookies={}
     )
     try:
         validator.validate_request(request)
@@ -78,14 +78,17 @@ def test_parameter_validator(monkeypatch):
         pytest.fail(str(e))
 
     request = MagicMock(
-        path_params={"p1": 1}, query_params={"a1": [1, "a"]}, headers={}, cookies={}
+        path_params={"p1": 1},
+        query_params={"a1": [1, "a"]},
+        header_params={},
+        cookies={},
     )
     with pytest.raises(BadRequestProblem) as exc:
         validator.validate_request(request)
         assert exc.value.detail.startswith("'a' is not of type 'integer'")
 
     request = MagicMock(
-        path_params={"p1": 123}, query_params={}, headers={}, cookies={"c1": "b"}
+        path_params={"p1": 123}, query_params={}, header_params={}, cookies={"c1": "b"}
     )
     try:
         validator.validate_request(request)
@@ -93,35 +96,41 @@ def test_parameter_validator(monkeypatch):
         pytest.fail(str(e))
 
     request = MagicMock(
-        path_params={"p1": 123}, query={}, headers={}, cookies={"c1": "x"}
+        path_params={"p1": 123}, query={}, header_params={}, cookies={"c1": "x"}
     )
     with pytest.raises(BadRequestProblem) as exc:
         assert validator.validate_request(request)
         assert exc.value.detail.startswith("'x' is not one of ['a', 'b']")
 
     request = MagicMock(
-        path_params={"p1": 1}, query_params={"a1": [1, -1]}, headers={}, cookies={}
+        path_params={"p1": 1},
+        query_params={"a1": [1, -1]},
+        header_params={},
+        cookies={},
     )
     with pytest.raises(BadRequestProblem) as exc:
         validator.validate_request(request)
         assert exc.value.detail.startswith("-1 is less than the minimum of 0")
 
     request = MagicMock(
-        path_params={"p1": 1}, query_params={"a1": 1}, headers={}, cookies={}
+        path_params={"p1": 1}, query_params={"a1": 1}, header_params={}, cookies={}
     )
     with pytest.raises(BadRequestProblem) as exc:
         validator.validate_request(request)
         assert exc.value.detail.startswith("[1] is too short")
 
     request = MagicMock(
-        path_params={"p1": 1}, query_params={"a1": [1, 2, 3, 4]}, headers={}, cookies={}
+        path_params={"p1": 1},
+        query_params={"a1": [1, 2, 3, 4]},
+        header_params={},
+        cookies={},
     )
     with pytest.raises(BadRequestProblem) as exc:
         validator.validate_request(request)
         assert exc.value.detail.startswith("[1, 2, 3, 4] is too long")
 
     request = MagicMock(
-        path_params={"p1": 123}, query_params={}, headers={"h1": "a"}, cookies={}
+        path_params={"p1": 123}, query_params={}, header_params={"h1": "a"}, cookies={}
     )
     try:
         validator.validate_request(request)
@@ -129,7 +138,7 @@ def test_parameter_validator(monkeypatch):
         pytest.fail(str(e))
 
     request = MagicMock(
-        path_params={"p1": 123}, query_params={}, headers={"h1": "x"}, cookies={}
+        path_params={"p1": 123}, query_params={}, header_params={"h1": "x"}, cookies={}
     )
     with pytest.raises(BadRequestProblem) as exc:
         validator.validate_request(request)

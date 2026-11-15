@@ -4,6 +4,8 @@ from typing import List
 
 import pytest
 
+from conftest import OPENAPI3_SPEC, build_app_from_fixture
+
 
 def test_parameter_validation(simple_app):
     app_client = simple_app.test_client()
@@ -648,3 +650,89 @@ def test_cookie_param(simple_app):
     response = app_client.get("/v1.0/test-cookie-param")
     assert response.status_code == 200
     assert response.json() == {"cookie_value": "hello"}
+
+
+def test_form_object_query_params(simple_openapi_app):
+    app_client = simple_openapi_app.test_client()
+
+    # style=form, explode=true (the default): one query parameter per property
+    response = app_client.get("/v1.0/form-object-param?foo=bar&fooint=2")
+    assert response.status_code == 200, response.text
+    assert response.json()["id"] == {"foo": "bar", "fooint": 2}
+
+    # style=form, explode=false: a single comma-separated value
+    response = app_client.get("/v1.0/form-object-param?packed=foo,bar,fooint,3")
+    assert response.status_code == 200, response.text
+    assert response.json()["packed"] == {"foo": "bar", "fooint": 3}
+
+    # property values are still validated
+    response = app_client.get("/v1.0/form-object-param?fooint=abc")
+    assert response.status_code == 400
+
+    # a malformed serialized object is rejected instead of being partly parsed
+    response = app_client.get("/v1.0/form-object-param?packed=foo,bar,fooint")
+    assert response.status_code == 400
+
+
+def test_form_object_query_params_strict_validation(app_class):
+    app = build_app_from_fixture(
+        "simple", app_class=app_class, spec_file=OPENAPI3_SPEC, strict_validation=True
+    )
+    app_client = app.test_client()
+
+    # property keys consumed by an object parameter are not "extra" parameters
+    response = app_client.get("/v1.0/form-object-param?foo=bar&fooint=2")
+    assert response.status_code == 200, response.text
+
+    response = app_client.get("/v1.0/form-object-param?foo=bar&unknown=1")
+    assert response.status_code == 400
+
+
+def test_header_params(simple_openapi_app):
+    app_client = simple_openapi_app.test_client()
+
+    # header values are parsed (style=simple) and coerced before validation
+    response = app_client.get(
+        "/v1.0/header-params",
+        headers={
+            "X-Rate": "5",
+            "X-Ids": "1,2,3",
+            "x-trace": "id,abc,hops,3",
+            "X-Exploded": "id=xyz,hops=4",
+            "X-Flag": "true",
+            "X-Ratio": "0.5",
+        },
+    )
+    assert response.status_code == 200, response.text
+
+    # nullable header
+    response = app_client.get("/v1.0/header-params", headers={"X-Ratio": "null"})
+    assert response.status_code == 200, response.text
+
+    # coerced values are validated against the schema
+    for headers in [
+        {"X-Rate": "11"},  # maximum: 10
+        {"X-Rate": "abc"},
+        {"X-Ids": "1,a"},
+        {"X-Trace": "hops,3"},  # missing required property
+        {"X-Trace": "id,abc,hops,x"},  # hops is not an integer
+        {"X-Trace": "id,abc,hops"},  # malformed: odd number of tokens
+        {"X-Exploded": "id=xyz,hops"},  # malformed: segment without '='
+        {"X-Flag": "maybe"},
+        {"X-Ratio": "abc"},
+    ]:
+        response = app_client.get("/v1.0/header-params", headers=headers)
+        assert response.status_code == 400, headers
+
+
+def test_required_header_param(simple_openapi_app):
+    app_client = simple_openapi_app.test_client()
+
+    response = app_client.get("/v1.0/required-header-param")
+    assert response.status_code == 400
+    assert "Missing header parameter 'X-Required'" in response.text
+
+    response = app_client.get(
+        "/v1.0/required-header-param", headers={"x-required": "1"}
+    )
+    assert response.status_code == 200, response.text
