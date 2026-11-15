@@ -1,1 +1,6 @@
+# Format files with black
 600ed4ed94a3c9868370aa0d6e0c40a5ebd455be
+# Reformat with black 26.3.1 (#2148)
+a4f63860c737d6f3e169516a877bf3967bebc186
+# Replace flake8, isort and black with ruff (#2165)
+68536390462fa4694b58292a8a74d44bca7d75f3
