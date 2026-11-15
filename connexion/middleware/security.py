@@ -6,7 +6,7 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 
 from connexion.exceptions import ProblemException
 from connexion.lifecycle import ConnexionRequest
-from connexion.middleware.abstract import RoutedAPI, RoutedMiddleware
+from connexion.middleware.abstract import OperationKey, RoutedAPI, RoutedMiddleware
 from connexion.operations import AbstractOperation
 from connexion.security import SecurityHandlerFactory
 from connexion.spec import Specification
@@ -126,7 +126,9 @@ class SecurityAPI(RoutedAPI[SecurityOperation]):
         if auth_all_paths:
             self.add_auth_on_not_found()
         else:
-            self.operations: t.MutableMapping[t.Optional[str], SecurityOperation] = {}
+            self.operations: t.MutableMapping[
+                t.Optional[OperationKey], SecurityOperation
+            ] = {}
 
         self.add_paths()
 

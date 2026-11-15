@@ -9,7 +9,9 @@ from connexion.frameworks import starlette as starlette_utils
 from connexion.middleware.abstract import (
     ROUTING_CONTEXT,
     AbstractRoutingAPI,
+    OperationKey,
     SpecMiddleware,
+    get_operation_key,
 )
 from connexion.operations import AbstractOperation
 from connexion.resolver import Resolver
@@ -19,13 +21,23 @@ _scope: ContextVar[dict] = ContextVar("SCOPE")
 
 
 class RoutingOperation:
-    def __init__(self, operation_id: t.Optional[str], next_app: ASGIApp) -> None:
+    def __init__(
+        self,
+        operation_id: t.Optional[str],
+        next_app: ASGIApp,
+        operation_key: t.Optional[OperationKey] = None,
+    ) -> None:
         self.operation_id = operation_id
         self.next_app = next_app
+        self.operation_key = operation_key
 
     @classmethod
     def from_operation(cls, operation: AbstractOperation, next_app: ASGIApp):
-        return cls(operation.operation_id, next_app)
+        return cls(
+            operation.operation_id,
+            next_app,
+            operation_key=get_operation_key(operation),
+        )
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         """Attach operation to scope and pass it to the next app"""
@@ -43,7 +55,11 @@ class RoutingOperation:
         extensions = original_scope.setdefault("extensions", {})
         connexion_routing = extensions.setdefault(ROUTING_CONTEXT, {})
         connexion_routing.update(
-            {"api_base_path": api_base_path, "operation_id": self.operation_id}
+            {
+                "api_base_path": api_base_path,
+                "operation_id": self.operation_id,
+                "operation_key": self.operation_key,
+            }
         )
         await self.next_app(original_scope, receive, send)
 
