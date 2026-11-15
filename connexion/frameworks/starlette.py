@@ -50,7 +50,7 @@ class Starlette(Framework):
     @staticmethod
     def get_request(
         *, scope: Scope, receive: Receive, uri_parser: AbstractURIParser, **kwargs
-    ) -> ConnexionRequest:  # type: ignore
+    ) -> ConnexionRequest:
         return ConnexionRequest(scope, receive, uri_parser=uri_parser)
 
 

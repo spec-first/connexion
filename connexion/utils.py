@@ -299,7 +299,7 @@ def extract_content_type(
 
     header_pairs_type = t.Collection[t.Tuple[t.Union[str, bytes], t.Union[str, bytes]]]
     header_pairs: header_pairs_type = (
-        headers.items() if isinstance(headers, dict) else headers  # type: ignore
+        headers.items() if isinstance(headers, dict) else headers
     )
     for key, value in header_pairs:
         # Headers can always be decoded using latin-1:
