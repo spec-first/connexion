@@ -1,5 +1,4 @@
 class PetsView:
-
     mycontent = "demonstrate return from MethodView class"
 
     def get(self, **kwargs):

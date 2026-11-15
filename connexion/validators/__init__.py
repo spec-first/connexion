@@ -5,8 +5,8 @@ from .abstract import (  # NOQA
     AbstractResponseBodyValidator,
 )
 from .form_data import FormDataValidator, MultiPartFormDataValidator
-from .json import DefaultsJSONRequestBodyValidator  # NOQA
 from .json import (
+    DefaultsJSONRequestBodyValidator,  # NOQA
     JSONRequestBodyValidator,
     JSONResponseBodyValidator,
     TextResponseBodyValidator,

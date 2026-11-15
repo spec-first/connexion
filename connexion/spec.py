@@ -73,7 +73,6 @@ def canonical_base_path(base_path):
 
 
 class Specification(Mapping):
-
     operation_cls: t.Type[AbstractOperation]
 
     def __init__(self, raw_spec, *, base_uri=""):

@@ -91,7 +91,6 @@ class AsyncApi(RoutedAPI[AsyncOperation]):
 
 
 class AsyncASGIApp(RoutedMiddleware[AsyncApi]):
-
     api_cls = AsyncApi
 
     def __init__(self) -> None:

@@ -5,6 +5,14 @@ ci:
   # lock is checked by the `lock` job in GitHub Actions instead.
   skip: [uv-lock]
 repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.10
+    hooks:
+      - id: ruff-check
+      - id: ruff-format
+
+  # Ruff has no equivalent of flake8-rst-docstrings, so flake8 is kept for the
+  # RST checks only. Configured in tox.ini.
   - repo: https://github.com/pycqa/flake8
     rev: 7.1.1
     hooks:
@@ -12,38 +20,6 @@ repos:
         files: "^connexion/"
         additional_dependencies:
           - flake8-rst-docstrings==0.2.3
-
-  - repo: https://github.com/PyCQA/isort
-    rev: 5.12.0
-    hooks:
-      - id: isort
-        name: isort
-        files: "^connexion/"
-        args: ["--project", "connexion", "--check-only", "--diff"]
-      - id: isort
-        name: isort examples
-        files: "^examples/"
-        args: ["--thirdparty", "connexion", "--check-only", "--diff"]
-      - id: isort
-        name: isort tests
-        files: "^tests/"
-        args: ["--project", "conftest", "--thirdparty", "connexion", "--check-only", "--diff"]
-
-  - repo: https://github.com/psf/black
-    rev: 26.3.1
-    hooks:
-      - id: black
-        name: black
-        files: "^connexion/"
-        args: ["connexion"]
-      - id: black
-        name: black examples
-        files: "^examples/"
-        args: ["examples"]
-      - id: black
-        name: black tests
-        files: "^tests/"
-        args: ["tests"]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v2.4.1

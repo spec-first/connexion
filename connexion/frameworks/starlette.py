@@ -48,7 +48,9 @@ class Starlette(Framework):
         )
 
     @staticmethod
-    def get_request(*, scope: Scope, receive: Receive, uri_parser: AbstractURIParser, **kwargs) -> ConnexionRequest:  # type: ignore
+    def get_request(
+        *, scope: Scope, receive: Receive, uri_parser: AbstractURIParser, **kwargs
+    ) -> ConnexionRequest:
         return ConnexionRequest(scope, receive, uri_parser=uri_parser)
 
 
@@ -60,7 +62,7 @@ def convert_path_parameter(match, types):
     name = match.group(1)
     swagger_type = types.get(name)
     converter = PATH_PARAMETER_CONVERTERS.get(swagger_type)
-    return f'{{{name.replace("-", "_")}{":" if converter else ""}{converter or ""}}}'
+    return f"{{{name.replace('-', '_')}{':' if converter else ''}{converter or ''}}}"
 
 
 def starlettify_path(swagger_path, types=None):

@@ -1,0 +1,7 @@
+extend = "../pyproject.toml"
+# Resolve first-party modules from the repo root, like isort did
+src = [".."]
+
+[lint.isort]
+known-first-party = ["conftest"]
+known-third-party = ["connexion"]
