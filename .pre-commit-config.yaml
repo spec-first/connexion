@@ -11,6 +11,16 @@ repos:
       - id: ruff-check
       - id: ruff-format
 
+  # Ruff has no equivalent of flake8-rst-docstrings, so flake8 is kept for the
+  # RST checks only. Configured in tox.ini.
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.1.1
+    hooks:
+      - id: flake8
+        files: "^connexion/"
+        additional_dependencies:
+          - flake8-rst-docstrings==0.2.3
+
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v2.4.1
     hooks:
