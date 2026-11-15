@@ -1,4 +1,4 @@
-from fnmatch import fnmatch
+from fnmatch import fnmatchcase
 
 # special marker object to return empty content for any status code
 # e.g. in app method do "return NoContent, 201"
@@ -10,13 +10,13 @@ class MediaTypeDict(dict):
     A dictionary where keys can be either media types or media type ranges. When fetching a
     value from the dictionary, the provided key is checked against the ranges. The most specific
     key is chosen as prescribed by the OpenAPI spec, with `type/*` being preferred above
-    `*/subtype`.
+    `*/subtype`. Media types are matched case-insensitively.
     """
 
     def __getitem__(self, item):
         # Sort keys in order of specificity
         for key in sorted(self, key=lambda k: ("*" not in k, k), reverse=True):
-            if fnmatch(item, key):
+            if fnmatchcase(item.lower(), key.lower()):
                 return super().__getitem__(key)
         raise super().__getitem__(item)
 

@@ -71,6 +71,7 @@ def test_is_json_mimetype():
     assert utils.is_json_mimetype(
         "application/vnd.com.myEntreprise.v6+json; charset=UTF-8"
     )
+    assert utils.is_json_mimetype("Application/JSON")
     assert not utils.is_json_mimetype("text/html")
 
 

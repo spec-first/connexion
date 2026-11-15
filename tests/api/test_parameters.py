@@ -269,6 +269,20 @@ def test_strict_formdata_extra_param(strict_app):
     )
 
 
+def test_strict_formdata_extra_param_uppercase_content_type(strict_app):
+    app_client = strict_app.test_client()
+    resp = app_client.post(
+        "/v1.0/test-formData-param",
+        headers={"Content-Type": "Application/X-WWW-Form-Urlencoded"},
+        data={"formData": "test", "extra_formData": "test"},
+    )
+    assert resp.status_code == 400
+    assert (
+        resp.json()["detail"]
+        == "Extra formData parameter(s) extra_formData not in spec"
+    )
+
+
 def test_formdata_file_upload(simple_app):
     """Test that a single file is accepted and provided to the user as a file object if the openapi
     specification defines single file. Do not accept multiple files."""
