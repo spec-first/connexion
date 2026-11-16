@@ -174,12 +174,13 @@ class OpenAPIURIParser(AbstractURIParser):
         root_key = None
         if k in self.param_schemas.keys():
             return k, v, False
-        else:
-            for key in self.param_schemas.keys():
-                if k.startswith(key) and "[" in k:
-                    root_key = key.replace(k, "")
 
-        if not root_key:
+        matching_keys = [
+            key for key in self.param_schemas.keys() if k.startswith(f"{key}[")
+        ]
+        if matching_keys:
+            root_key = max(matching_keys, key=len)
+        else:
             root_key = k.split("[", 1)[0]
             if k == root_key:
                 return k, v, False

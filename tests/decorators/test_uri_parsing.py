@@ -319,3 +319,30 @@ def test_parameter_coercion():
 
     parsed_param = uri_parser.resolve_query(QueryParams(f"a1={quote_plus('1,2,3,4')}"))
     assert parsed_param == {"a1": [4]}  # Swagger2URIParser
+
+
+def test_deep_object_query_param_prefix_misattribution():
+    """Ensure deepObject query parameter is not misattributed when another
+    parameter name shares a common prefix (#2158)."""
+    params = [
+        {
+            "name": "abc",
+            "in": "query",
+            "schema": {"type": "object", "properties": {"foo": {"type": "string"}}},
+        },
+        {
+            "name": "a",
+            "in": "query",
+            "style": "deepObject",
+            "explode": True,
+            "schema": {"type": "object", "properties": {"foo": {"type": "string"}}},
+        },
+    ]
+    parser = OpenAPIURIParser(params, {})
+    assert parser.resolve_query({"abc[foo]": ["bar"]}) == {"abc[foo]": ["bar"]}
+    assert parser.resolve_query({"a[foo]": ["bar"]}) == {"a": {"foo": "bar"}}
+
+    params_reversed = list(reversed(params))
+    parser_reversed = OpenAPIURIParser(params_reversed, {})
+    assert parser_reversed.resolve_query({"abc[foo]": ["bar"]}) == {"abc[foo]": ["bar"]}
+    assert parser_reversed.resolve_query({"a[foo]": ["bar"]}) == {"a": {"foo": "bar"}}
