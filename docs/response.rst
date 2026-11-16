@@ -159,6 +159,22 @@ The headers can be used to define any response headers to return. If your OpenAP
 defines multiple responses with different content types, you can explicitly set the
 ``Content-Type`` header to tell Connexion which response to validate against.
 
+Streaming
+---------
+
+Connexion supports streaming responses for long-lived connections such as server-sent events or
+chunked downloads.
+
+* With ``FlaskApp`` you can return a ``flask.Response`` object or a plain generator and Connexion
+  will relay the stream as it is produced.
+* With ``AsyncApp`` Connexion runs on Starlette/ASGI, which requires an asynchronous iterator for
+  the response body. Wrap the stream in ``starlette.responses.StreamingResponse`` and yield chunks
+  from an ``async`` generator so the event loop is never blocked.
+
+For a complete runnable example, see ``examples/streaming`` in the repository. The example includes
+an ``AsyncApp`` handler and matching OpenAPI spec that stream server-sent events clients can consume
+with ``curl -N http://localhost:8080/stream``.
+
 If you do not explicitly return a ``Content-Type`` header, Connexion's behavior depends on the
 Responses defined in your OpenAPI spec:
 
