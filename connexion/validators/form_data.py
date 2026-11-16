@@ -9,6 +9,7 @@ from starlette.types import Scope
 from connexion.exceptions import BadRequestProblem, ExtraParameterProblem
 from connexion.json_schema import Draft4RequestValidator, format_error_with_path
 from connexion.uri_parsing import AbstractURIParser
+from connexion.utils import get_schema_properties, merge_all_of
 from connexion.validators import AbstractRequestBodyValidator
 
 logger = logging.getLogger("connexion.validators.form_data")
@@ -55,12 +56,14 @@ class FormDataValidator(AbstractRequestBodyValidator):
             # Don't parse file_data
             form_data = {}
             file_data: t.Dict[str, t.Union[str, t.List[str]]] = {}
+            properties = get_schema_properties(self._schema)
             for key in data.keys():
                 # Extract files
-                param_schema = self._schema.get("properties", {}).get(key, {})
+                param_schema = properties.get(key, {})
                 value = data.getlist(key)
 
                 def is_file(schema):
+                    schema = merge_all_of(schema)
                     return schema.get("type") == "string" and schema.get("format") in [
                         "binary",
                         "base64",
@@ -110,7 +113,7 @@ class FormDataValidator(AbstractRequestBodyValidator):
 
     def _validate_params_strictly(self, data: dict) -> None:
         form_params = data.keys()
-        spec_params = self._schema.get("properties", {}).keys()
+        spec_params = get_schema_properties(self._schema).keys()
         errors = set(form_params).difference(set(spec_params))
         if errors:
             raise ExtraParameterProblem(param_type="formData", extra_params=errors)

@@ -385,6 +385,21 @@ async def test_mixed_formdata3(file, formData):
     return {"data": formData, "files": {filename: content.decode()}}
 
 
+async def test_formdata_all_of(body, file=None, files=None):
+    async def read(file_):
+        content = file_.read()
+        if asyncio.iscoroutine(content):
+            # AsyncApp
+            content = await content
+        return content.decode()
+
+    return {
+        "body": body,
+        "file": await read(file) if file else None,
+        "files": [await read(file_) for file_ in files or []],
+    }
+
+
 def test_formdata_file_upload_missing_param():
     return ""
 

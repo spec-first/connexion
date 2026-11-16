@@ -21,10 +21,12 @@ from connexion.lifecycle import ConnexionRequest, WSGIRequest
 from connexion.operations import AbstractOperation, Swagger2Operation
 from connexion.utils import (
     deep_merge,
+    get_schema_properties,
     inspect_function_arguments,
     is_null,
     is_nullable,
     make_type,
+    merge_all_of,
 )
 
 logger = logging.getLogger(__name__)
@@ -434,10 +436,10 @@ def _get_body_argument_form(
     body: dict, *, operation: AbstractOperation, content_type: str
 ) -> dict:
     # now determine the actual value for the body (whether it came in or is default)
-    default_body = operation.body_schema(content_type).get("default", {})
+    body_schema = operation.body_schema(content_type)
+    default_body = merge_all_of(body_schema).get("default", {})
     body_props = {
-        k: {"schema": v}
-        for k, v in operation.body_schema(content_type).get("properties", {}).items()
+        k: {"schema": v} for k, v in get_schema_properties(body_schema).items()
     }
 
     # by OpenAPI specification `additionalProperties` defaults to `true`
@@ -473,7 +475,11 @@ def _get_typed_body_values(body_arg, body_props, additional_props):
         try:
             prop_defn = body_props[key]
             res[key] = _get_val_from_param(value, prop_defn)
-        except KeyError:  # pragma: no cover
+        except KeyError:
+            if key in body_props:
+                # Property without a single type to cast to, eg. using anyOf or oneOf
+                res[key] = value
+                continue
             if not additional_props:
                 logger.error(f"Body property '{key}' not defined in body schema")
                 continue
@@ -486,10 +492,11 @@ def _get_typed_body_values(body_arg, body_props, additional_props):
 
 def _get_file_arguments(files, arguments, body_schema: dict, has_kwargs=False):
     results = {}
+    properties = get_schema_properties(body_schema)
     for k, v in files.items():
         if not (k in arguments or has_kwargs):
             continue
-        if body_schema.get("properties", {}).get(k, {}).get("type") != "array":
+        if properties.get(k, {}).get("type") != "array":
             v = v[0]
         results[k] = v
 
