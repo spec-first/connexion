@@ -457,6 +457,35 @@ def test_array_in_path(simple_app):
     ]
 
 
+@pytest.mark.parametrize(
+    "encoded, decoded",
+    [
+        ("e%0Aric", "e\nric"),
+        ("eric%0A", "eric\n"),
+        ("%0Aeric", "\neric"),
+        ("e%0D%0Aric", "e\r\nric"),
+    ],
+)
+def test_path_parameter_encoded_newline(simple_app, encoded, decoded):
+    app_client = simple_app.test_client()
+    resp = app_client.post(f"/v1.0/greeting/{encoded}")
+    assert resp.status_code == 200
+    assert resp.json()["greeting"] == f"Hello {decoded}"
+
+
+def test_path_format_parameter_encoded_newline(simple_app):
+    app_client = simple_app.test_client()
+    resp = app_client.post("/v1.0/greeting/e%0Aric/a%0Ab/c%0A")
+    assert resp.status_code == 200
+    assert resp.json()["greeting"] == "Hello e\nric thanks for a\nb/c\n"
+
+
+def test_unknown_path_encoded_newline(simple_app):
+    app_client = simple_app.test_client()
+    resp = app_client.get("/v1.0/does-not-exist%0Afoo")
+    assert resp.status_code == 404
+
+
 def test_nullable_parameter(simple_app):
     app_client = simple_app.test_client()
     resp = app_client.get("/v1.0/nullable-parameters?time_start=null")

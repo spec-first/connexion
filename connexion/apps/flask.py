@@ -133,6 +133,7 @@ class FlaskASGIApp(SpecMiddleware):
         self.app.json = flask_utils.FlaskJSONProvider(self.app)
         self.app.url_map.converters["float"] = flask_utils.NumberConverter
         self.app.url_map.converters["int"] = flask_utils.IntegerConverter
+        self.app.url_map.converters["path"] = flask_utils.PathConverter
 
         # Propagate Errors so we can handle them in the middleware
         self.app.config["PROPAGATE_EXCEPTIONS"] = True

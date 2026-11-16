@@ -145,3 +145,9 @@ class IntegerConverter(werkzeug.routing.BaseConverter):
 
     def to_python(self, value):
         return int(value)
+
+
+class PathConverter(werkzeug.routing.PathConverter):
+    """Flask converter for paths, which also matches URL-encoded newlines"""
+
+    regex = r"[^/](?s:.*?)"
