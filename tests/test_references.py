@@ -1,7 +1,7 @@
 from unittest import mock
 
 import pytest
-from connexion.json_schema import resolve_refs
+from connexion.json_schema import Draft4RequestValidator, resolve_refs
 from connexion.jsonifier import Jsonifier
 from referencing.exceptions import Unresolvable
 
@@ -119,3 +119,91 @@ def test_resolve_ref_referring_to_another_ref(api):
     spec = resolve_refs(op_spec)
     assert spec["parameters"][0]["schema"] == expected
     assert spec["definitions"]["A"] == expected
+
+
+def test_resolve_nested_ref_inside_inlined_schema(api):
+    """References nested inside an inlined schema resolve at the use site."""
+    op_spec = {
+        "parameters": [
+            {
+                "schema": {"$ref": "#/definitions/Wrapper"},
+            }
+        ],
+        "definitions": {
+            "Wrapper": {
+                "type": "object",
+                "properties": {"inner": {"$ref": "#/definitions/Inner"}},
+            },
+            "Inner": {"type": "string"},
+        },
+    }
+
+    spec = resolve_refs(op_spec)
+    assert spec["parameters"][0]["schema"]["properties"]["inner"] == {"type": "string"}
+
+
+def test_recursive_reference_does_not_create_cycle(api):
+    """A schema referencing itself must not become a cyclic object graph.
+
+    Inlining a self-referential schema used to share sub-objects with the
+    spec, so the resolved schema contained a cycle: serializing it failed
+    and validating a request body against it looped forever. The recursive
+    reference is now left in place, to be resolved against the components
+    section by the validator (as request/response body schemas already do).
+    """
+    import json
+
+    op_spec = {
+        "paths": {
+            "/": {
+                "post": {
+                    "requestBody": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "bar": {"$ref": "#/components/schemas/Bar"}
+                                    },
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "components": {
+            "schemas": {
+                "Bar": {
+                    "type": "object",
+                    "properties": {"child": {"$ref": "#/components/schemas/Bar"}},
+                }
+            }
+        },
+    }
+
+    spec = resolve_refs(op_spec)
+    # No cyclic object graph: the resolved spec must serialize.
+    json.dumps(spec)
+    bar = spec["paths"]["/"]["post"]["requestBody"]["content"]["application/json"][
+        "schema"
+    ]["properties"]["bar"]
+    assert bar["properties"]["child"] == {"$ref": "#/components/schemas/Bar"}
+    # The components definition itself is expanded one level, with the
+    # recursion point left as a reference at the second level.
+    assert spec["components"]["schemas"]["Bar"]["properties"]["child"] == {
+        "type": "object",
+        "properties": {"child": {"$ref": "#/components/schemas/Bar"}},
+    }
+
+    # And validation against the body schema (with components attached,
+    # as OpenAPI operations do) terminates and follows the instance depth.
+    body_schema = spec["paths"]["/"]["post"]["requestBody"]["content"][
+        "application/json"
+    ]["schema"]
+    body_schema["components"] = spec["components"]
+    validator = Draft4RequestValidator(body_schema)
+    assert list(validator.iter_errors({"bar": {"child": {"child": {}}}})) == []
+    errors = list(validator.iter_errors({"bar": {"child": 5}}))
+    assert len(errors) == 1
+    assert "is not of type 'object'" in errors[0].message

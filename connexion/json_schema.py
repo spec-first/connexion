@@ -103,27 +103,50 @@ def resolve_refs(spec, store=None, base_uri=""):
         )
     )
 
-    def _do_resolve(node, resolver):
+    def _do_resolve(node, resolver, _expanding=()):
         if isinstance(node, Mapping) and "$ref" in node:
-            path = node["$ref"][2:].split("/")
+            ref = node["$ref"]
+            if ref in _expanding:
+                # Recursive reference (e.g. a schema that references itself
+                # through its own properties). Inlining it would build a
+                # cyclic object graph, which makes validation loop forever
+                # and breaks anything that walks the resolved spec. Leave
+                # the reference in place: consumers that attach the
+                # components section (e.g. request/response body validation)
+                # resolve it against the document, following the instance
+                # depth instead of looping over the schema.
+                return node
+            path = ref[2:].split("/")
             try:
                 # resolve known references
                 retrieved = deep_get(spec, path)
-                node.update(retrieved)
-                if isinstance(retrieved, Mapping) and "$ref" in retrieved:
-                    node = _do_resolve(node, resolver)
-                node.pop("$ref", None)
-                return node
             except KeyError:
                 # resolve external references
-                resolved = resolver.lookup(node["$ref"])
-                return _do_resolve(resolved.contents, resolved.resolver)
+                resolved = resolver.lookup(ref)
+                return _do_resolve(
+                    deepcopy(resolved.contents), resolved.resolver, _expanding + (ref,)
+                )
+            # Copy before inlining: updating the node with the retrieved
+            # object as-is shares its sub-objects with the spec, so a
+            # later resolution step mutating the shared object turns a
+            # recursive reference into a cycle in the resolved spec.
+            # Resolve nested references inside the copy as well, so an
+            # inlined schema does not depend on the components section
+            # being walked later.
+            resolved_target = _do_resolve(
+                deepcopy(retrieved), resolver, _expanding + (ref,)
+            )
+            if isinstance(resolved_target, Mapping):
+                node.update(resolved_target)
+                node.pop("$ref", None)
+                return node
+            return resolved_target
         elif isinstance(node, Mapping):
             for k, v in node.items():
-                node[k] = _do_resolve(v, resolver)
+                node[k] = _do_resolve(v, resolver, _expanding)
         elif isinstance(node, (list, tuple)):
             for i, _ in enumerate(node):
-                node[i] = _do_resolve(node[i], resolver)
+                node[i] = _do_resolve(node[i], resolver, _expanding)
         return node
 
     res = _do_resolve(spec, registry.resolver(base_uri))
