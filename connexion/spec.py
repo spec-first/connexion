@@ -212,6 +212,16 @@ class Specification(Mapping):
 
     @classmethod
     def load(cls, spec, *, arguments=None):
+        """
+        Load a specification from a file path, URL or dict. An already loaded
+        :class:`Specification` is returned unchanged.
+
+        :param spec: Path to a YAML or JSON file, URL, dict, or :class:`Specification` instance.
+        :param arguments: Arguments to substitute the specification using Jinja. Only used when
+            loading from a file.
+        """
+        if isinstance(spec, Specification):
+            return spec
         if isinstance(spec, str) and (
             spec.startswith("http://") or spec.startswith("https://")
         ):

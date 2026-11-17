@@ -164,6 +164,12 @@ You can add as many APIs as you want to a single application. The :code:`add_api
 provides a lot of configuration options. When an option is provided both to the App and the API,
 the API value will take precedence.
 
+The specification can be passed to :code:`add_api()` as a path to a YAML or JSON file, a URL, a
+:code:`dict`, or an already loaded :code:`connexion.spec.Specification` instance. The instance is
+not modified, so loading a specification once with :code:`Specification.load()` and passing it to
+multiple applications avoids parsing and validating it every time. This is useful in tests or when
+a large specification is slow to load.
+
 .. dropdown:: View a detailed reference of the options accepted by the :code:`add_api()` method
     :icon: eye
 
