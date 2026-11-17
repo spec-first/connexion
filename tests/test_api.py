@@ -52,6 +52,11 @@ def test_api_base_path_slash():
     assert api.blueprint.url_prefix == ""
 
 
+def test_load_specification_instance():
+    spec = Specification.load(TEST_FOLDER / "fixtures/simple/openapi.yaml")
+    assert Specification.load(spec) is spec
+
+
 def test_remote_api():
     api = FlaskApi(
         Specification.load(

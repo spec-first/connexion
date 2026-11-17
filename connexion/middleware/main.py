@@ -349,7 +349,7 @@ class ConnexionMiddleware:
 
     def add_api(
         self,
-        specification: t.Union[pathlib.Path, str, dict],
+        specification: t.Union[pathlib.Path, str, dict, Specification],
         *,
         base_path: t.Optional[str] = None,
         name: t.Optional[str] = None,
@@ -372,7 +372,8 @@ class ConnexionMiddleware:
         Multiple APIs can be registered on a single middleware.
 
         :param specification: OpenAPI specification. Can be provided either as dict, a path
-            to file, or a URL.
+            to file, a URL, or an already loaded :class:`spec.Specification` instance. The
+            instance is not modified, so it can be reused for multiple APIs or applications.
         :param base_path: Base path to host the API. This overrides the basePath / servers in the
             specification.
         :param name: Name to register the API with. If no name is passed, the base_path is used
@@ -406,7 +407,11 @@ class ConnexionMiddleware:
         if self.middleware_stack is not None:
             raise RuntimeError("Cannot add api after an application has started")
 
-        if isinstance(specification, str) and (
+        if isinstance(specification, Specification):
+            if base_path is not None:
+                # Work on a copy so the instance passed by the user is not modified
+                specification = specification.with_base_path(base_path)
+        elif isinstance(specification, str) and (
             specification.startswith("http://") or specification.startswith("https://")
         ):
             pass

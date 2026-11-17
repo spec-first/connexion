@@ -16,6 +16,7 @@ from connexion.middleware import ConnexionMiddleware, MiddlewarePosition, SpecMi
 from connexion.middleware.lifespan import Lifespan
 from connexion.options import SwaggerUIOptions
 from connexion.resolver import Resolver
+from connexion.spec import Specification
 from connexion.types import MaybeAwaitable
 from connexion.uri_parsing import AbstractURIParser
 
@@ -122,7 +123,7 @@ class AbstractApp:
 
     def add_api(
         self,
-        specification: t.Union[pathlib.Path, str, dict],
+        specification: t.Union[pathlib.Path, str, dict, Specification],
         *,
         base_path: t.Optional[str] = None,
         name: t.Optional[str] = None,
@@ -145,7 +146,8 @@ class AbstractApp:
         Multiple APIs can be registered on a single application.
 
         :param specification: OpenAPI specification. Can be provided either as dict, a path
-            to file, or a URL.
+            to file, a URL, or an already loaded :class:`spec.Specification` instance. The
+            instance is not modified, so it can be reused for multiple APIs or applications.
         :param base_path: Base path to host the API. This overrides the basePath / servers in the
             specification.
         :param name: Name to register the API with. If no name is passed, the base_path is used

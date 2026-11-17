@@ -11,6 +11,7 @@ from connexion.json_schema import ExtendedSafeLoader
 from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from connexion.middleware.abstract import AbstractRoutingAPI
 from connexion.options import SwaggerUIOptions
+from connexion.spec import Specification
 
 from conftest import TEST_FOLDER, build_app_from_fixture
 
@@ -180,6 +181,44 @@ def test_dict_as_yaml_path(simple_api_spec_dir, spec):
     url = "/v1.0/{spec}".format(spec=spec.replace("yaml", "json"))
     swagger_json = app_client.get(url)
     assert swagger_json.status_code == 200
+
+
+def test_app_with_specification_object(simple_api_spec_dir, spec, app_class):
+    specification = Specification.load(simple_api_spec_dir / spec)
+
+    app = app_class(__name__)
+    app.add_api(specification)
+    app_client = app.test_client()
+    get_bye = app_client.get("/v1.0/bye/jsantos")
+    assert get_bye.status_code == 200
+    assert get_bye.text == "Goodbye jsantos"
+
+    # The same instance can be shared between applications, so the specification only
+    # needs to be parsed and validated once.
+    other_app = app_class(__name__)
+    other_app.add_api(specification, base_path="/v2.0")
+    other_app_client = other_app.test_client()
+    get_bye = other_app_client.get("/v2.0/bye/jsantos")
+    assert get_bye.status_code == 200
+    assert get_bye.text == "Goodbye jsantos"
+
+    # Overriding the base path does not modify the shared instance
+    assert specification.base_path == "/v1.0"
+    third_app = app_class(__name__)
+    third_app.add_api(specification)
+    get_bye = third_app.test_client().get("/v1.0/bye/jsantos")
+    assert get_bye.status_code == 200
+    assert get_bye.text == "Goodbye jsantos"
+
+    # Each application keeps serving its own base path
+    get_bye = app_client.get("/v1.0/bye/jsantos")
+    assert get_bye.status_code == 200
+    spec_json = app_client.get("/v1.0/{spec}".format(spec=spec.replace("yaml", "json")))
+    assert spec_json.status_code == 200
+    if "openapi" in spec:
+        assert spec_json.json()["servers"] == [{"url": "/v1.0"}]
+    else:
+        assert spec_json.json()["basePath"] == "/v1.0"
 
 
 def test_swagger_json_api(simple_api_spec_dir, spec):
