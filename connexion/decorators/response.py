@@ -27,17 +27,21 @@ class BaseResponseDecorator:
 
     def build_framework_response(self, handler_response):
         data, status_code, headers = self._unpack_handler_response(handler_response)
-        content_type = self._infer_content_type(data, headers)
-        if not self.framework.is_framework_response(data):
+        is_custom_response = not self.framework.is_framework_response(data)
+        if status_code is None and is_custom_response:
+            status_code = self._infer_status_code(data)
+        content_type = self._infer_content_type(data, status_code, headers)
+        if is_custom_response:
             data = self._serialize_data(data, content_type=content_type)
-            status_code = status_code or self._infer_status_code(data)
             headers = self._update_headers(headers, content_type=content_type)
         return self.framework.build_response(
             data, content_type=content_type, status_code=status_code, headers=headers
         )
 
     @staticmethod
-    def _infer_content_type(data: t.Any, headers: dict) -> t.Optional[str]:
+    def _infer_content_type(
+        data: t.Any, status_code: int, headers: dict
+    ) -> t.Optional[str]:
         """Infer the response content type from the returned data, headers and operation spec.
 
         :param data: Response data
@@ -50,7 +54,9 @@ class BaseResponseDecorator:
         content_type = utils.extract_content_type(headers)
 
         # TODO: don't default
-        produces = list(set(operation.produces))
+        produces = list(
+            set(operation.responses.get(str(status_code), {}).get("content", {}).keys())
+        ) or list(set(operation.produces))
         if data is not None and not produces:
             produces = ["application/json"]
 
