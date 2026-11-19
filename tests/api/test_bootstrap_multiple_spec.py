@@ -1,6 +1,7 @@
 import json
 
 import pytest
+from connexion import AsyncApp
 
 from conftest import TEST_FOLDER
 
@@ -46,3 +47,17 @@ def test_app_with_multiple_definition(
     response = app_client.get("/v1.0/bye/Musti")
     assert response.status_code == 200
     assert response.text == "Goodbye Musti"
+
+
+def test_app_with_prefix_basepath():
+    app = AsyncApp(
+        __name__,
+        specification_dir=TEST_FOLDER / "fixtures" / "multiple_yaml_prefix_basepath",
+    )
+    # Register the narrower base path first. The broader one must not shadow it.
+    app.add_api(specification="openapi_path1.yaml")
+    app.add_api(specification="openapi_root.yaml")
+    app_client = app.test_client()
+
+    assert app_client.get("/path1/endpoint2").status_code == 200
+    assert app_client.get("/endpoint1").status_code == 200
