@@ -47,7 +47,9 @@ class FileHandler:
     @staticmethod
     def _uri_to_path(uri):
         parsed = urllib.parse.urlparse(uri)
-        host = "{0}{0}{mnt}{0}".format(os.path.sep, mnt=parsed.netloc)
+        host = ""
+        if parsed.netloc:
+            host = "{0}{0}{mnt}{0}".format(os.path.sep, mnt=parsed.netloc)
         return os.path.abspath(
             os.path.join(host, urllib.request.url2pathname(parsed.path))
         )
