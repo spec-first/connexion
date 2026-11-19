@@ -2,7 +2,7 @@ import typing as t
 from contextvars import ContextVar
 
 import starlette.convertors
-from starlette.routing import Router
+from starlette.routing import Mount, Router
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from connexion.frameworks import starlette as starlette_utils
@@ -145,6 +145,16 @@ class RoutingMiddleware(SpecMiddleware):
                 route.app.default = api.router
 
         self.router.mount(api.base_path, app=api.router)
+
+        # Starlette inserts new mounts ahead of existing ones. A broader base path
+        # registered after a narrower one would then shadow it, so keep mounts
+        # ordered from most to least specific.
+        self.router.routes.sort(
+            key=lambda route: (
+                len(getattr(route, "path", "")) if isinstance(route, Mount) else -1
+            ),
+            reverse=True,
+        )
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         """Route request to matching operation, and attach it to the scope before calling the
