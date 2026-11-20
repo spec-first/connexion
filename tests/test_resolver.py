@@ -37,6 +37,12 @@ def test_missing_operation_id():
         RestyResolver("connexion").resolve_function_from_operation_id(None)
 
 
+def test_missing_operation_id_error_message():
+    with pytest.raises(ResolverError) as e:
+        Resolver().resolve_function_from_operation_id(None)
+    assert "Operation has no operation_id" in str(e.value)
+
+
 def test_bad_operation_id():
     # Unresolvable operationIDs should result in a well-defined error that can
     # be handled upstream.
