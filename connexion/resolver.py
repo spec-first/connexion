@@ -65,6 +65,9 @@ class Resolver:
 
         :type operation_id: str
         """
+        if operation_id is None:
+            raise ResolverError("Operation has no operation_id")
+
         try:
             return self.function_resolver(operation_id)
         except ImportError as e:
@@ -258,6 +261,8 @@ class MethodResolverBase(RestyResolver):
 
         :type operation_id: str
         """
+        if operation_id is None:
+            raise ResolverError("Operation has no operation_id")
 
         try:
             module_name, view_name, meth_name = operation_id.rsplit(".", 2)
